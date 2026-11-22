@@ -89,7 +89,8 @@ import { useConfirm } from '../ConfirmDialog';
 import { useToast } from '../Toast';
 import { ClubScanModal } from './ClubScanModal';
 import ArenaQrCodesModal from '../ArenaQrCodesModal';
-import { useRemoteApi } from '../../api/remoteApi';
+import { remoteAvailable, useRemoteApi } from '../../api/remoteApi';
+import { useTrainingApi } from '../../api/trainingApi';
 
 interface RemoteState {
   active: boolean;
@@ -234,6 +235,7 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
   const { confirm } = useConfirm();
   const api = useClubApi();
   const remoteServer = useRemoteApi();
+  const training = useTrainingApi();
 
   const [sessions, setSessions] = useState<ClubSession[]>([]);
   const [members, setMembers] = useState<ClubMember[]>([]);
@@ -317,7 +319,7 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
   }, [api, remote.active, currentId, load]);
 
   // Score validé sur une tablette arbitre : la séance se met à jour
-  useEffect(() => window.electronAPI?.onTrainingMatchFinished?.(() => void load()), [load]);
+  useEffect(() => training.onMatchFinished(() => void load()), [training, load]);
 
   const run = async (fn: () => Promise<unknown>) => {
     try {
@@ -791,8 +793,8 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
 
   /** Thème des écrans et mot de passe commun des pistes, sur le serveur en cours */
   const applyScreens = async (theme: ClubRemoteSettings['theme'], pwd: string, strips: number) => {
-    const res = await window.electronAPI?.training?.setTheme?.(theme);
-    if (res && !res.success) throw new Error(res.error ?? t('clubSession.remote_error'));
+    const res = await training.setTheme(theme);
+    if (!res.success) throw new Error(res.error ?? t('clubSession.remote_error'));
     for (let n = 1; n <= strips; n++) {
       const r = await remoteServer.setArenaPassword(TRAINING_SERVER_ID, `arena${n}`, pwd);
       if (!r.success) throw new Error(r.error ?? t('clubSession.remote_error'));
@@ -818,8 +820,7 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
   };
 
   const startRemote = async () => {
-    const training = window.electronAPI?.training;
-    if (!training) return;
+    if (!remoteAvailable()) return;
     setRemoteBusy(true);
     try {
       const remoteWeapon = current.weapon ?? settings.weapon;
@@ -847,8 +848,7 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
   };
 
   const stopRemote = async () => {
-    const training = window.electronAPI?.training;
-    if (!training) return;
+    if (!remoteAvailable()) return;
     setRemoteBusy(true);
     await api.linkRemote(null).catch(() => undefined);
     await training.stopSession().catch(() => undefined);

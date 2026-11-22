@@ -25,6 +25,7 @@ import { dtViewOperations } from './contractDtView';
 import { clubOperations } from './contractClub';
 import { stationOperations } from './contractStation';
 import { remoteOperations } from './contractRemote';
+import { trainingOperations } from './contractTraining';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
@@ -1425,6 +1426,8 @@ export const contract = {
   ...stationOperations,
   // Serveur distant : pilotage et avis, jamais sur le réseau (docs/adr/0022)
   ...remoteOperations,
+  // Serveur d'entraînement : pilotage et avis, jamais sur le réseau (docs/adr/0022)
+  ...trainingOperations,
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────

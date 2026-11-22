@@ -53,6 +53,7 @@ import { useCompetitionTabs } from './hooks/useCompetitionTabs';
 import { useAppGlobalEffects } from './hooks/useAppGlobalEffects';
 import { AppTabBar } from './components/app/AppTabBar';
 import { AppHeader } from './components/app/AppHeader';
+import { trainingAvailable } from './api/trainingApi';
 
 const AppContent: React.FC = () => {
   const { t, changeTheme, changeLanguage } = useTranslation();
@@ -303,7 +304,7 @@ const AppContent: React.FC = () => {
                   onDelete={handleDeleteCompetition}
                   onExport={handleExportCompetition}
                   onNewCompetition={() => setShowNewCompetitionModal(true)}
-                  onStartDemo={window.electronAPI?.training ? handleStartDemo : undefined}
+                  onStartDemo={trainingAvailable() ? handleStartDemo : undefined}
                   onOpenFile={
                     window.electronAPI?.file?.openDialog
                       ? () => void window.electronAPI.file.openDialog()

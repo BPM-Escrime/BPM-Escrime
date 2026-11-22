@@ -62,6 +62,7 @@ import {
   onRemoteClients,
   remoteClientsHandlers,
 } from '../commands/remoteClients';
+import { onTrainingActivity, trainingHandlers } from '../commands/training';
 import { competitionStats } from '../commands/competitionStats';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
@@ -245,6 +246,9 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   ...remoteClientsHandlers,
   onRemoteActivity,
   onRemoteClients,
+  // Serveur d'entraînement (docs/adr/0022) : pilotage et avis ; sans journal
+  ...trainingHandlers,
+  onTrainingActivity,
 };
 
 export const isOperation = (name: unknown): name is OperationName =>

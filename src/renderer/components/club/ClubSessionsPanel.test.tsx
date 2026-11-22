@@ -14,6 +14,7 @@ import { ClubSessionsPanel } from './ClubSessionsPanel';
 import { Weapon } from '../../../shared/types';
 import { clubElectron } from '../../testUtils/clubBridge';
 import { remoteHandlers } from '../../testUtils/remoteBridge';
+import { trainingHandlers } from '../../testUtils/trainingBridge';
 
 const m = (id: string, lastName: string) => ({
   id,
@@ -95,12 +96,15 @@ beforeEach(() => {
   remoteApi = { setArenaPassword: vi.fn().mockResolvedValue({ success: true }) };
   localStorage.clear();
   (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron(api, {
-    training,
-    // Serveur distant par le contrat : mot de passe des pistes et interfaces réseau
-    api: remoteHandlers({
-      ...remoteApi,
-      getNetworkInterfaces: vi.fn().mockResolvedValue({ success: false }),
-    }),
+    // Serveur distant et serveur d'entraînement par le contrat : mot de passe des pistes,
+    // interfaces réseau, démarrage, session et thème
+    api: {
+      ...remoteHandlers({
+        ...remoteApi,
+        getNetworkInterfaces: vi.fn().mockResolvedValue({ success: false }),
+      }),
+      ...trainingHandlers(training),
+    },
   });
 });
 

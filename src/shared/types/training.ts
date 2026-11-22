@@ -27,3 +27,9 @@ export interface TrainingServerInfo {
   useHttps: boolean;
   certFingerprint?: string;
 }
+
+/**
+ * Avis du serveur d'entraînement à l'écran (onTrainingActivity, docs/adr/0022), union typée par
+ * `kind`. Match fini sur une tablette : dernière ligne de l'historique, null s'il est vide.
+ */
+export type TrainingActivity = { kind: 'match_finished'; record: TrainingMatchRecord | null };

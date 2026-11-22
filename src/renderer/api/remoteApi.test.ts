@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { contract, type OperationName } from '../../shared/api/contract';
+import { trainingOperations } from '../../shared/api/contractTraining';
 import { ApiError, type ApiBridge } from '../../shared/api/client';
 import type { Fencer } from '../../shared/types';
 import { IpcClient } from './IpcClient';
@@ -178,8 +179,9 @@ describe('remoteApi : entrées du contrat', () => {
       await call();
       called.add(seen[0].name);
     }
-    const ops = (Object.keys(contract) as OperationName[]).filter(n =>
-      contract[n].permission.startsWith('remote:')
+    // Le serveur d'entraînement (même droit) a sa couche : trainingApi.test.ts
+    const ops = (Object.keys(contract) as OperationName[]).filter(
+      n => contract[n].permission.startsWith('remote:') && !(n in trainingOperations)
     );
     // Les abonnements ont leurs propres tests ; les autres opérations sont toutes appelées
     const missing = ops.filter(n => contract[n].kind !== 'subscription' && !called.has(n));

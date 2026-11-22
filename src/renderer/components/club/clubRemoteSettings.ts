@@ -6,7 +6,7 @@
  */
 import { isTrainingTheme, type TrainingTheme } from '../../../shared/utils/trainingThemes';
 
-/** Identifiant du serveur d'entraînement côté main (TRAINING_ID, ipc/trainingHandlers.ts) */
+/** Identifiant du serveur d'entraînement côté main (TRAINING_ID, trainingServer.ts) */
 export const TRAINING_SERVER_ID = '__training__';
 export const ALL_INTERFACES = '0.0.0.0';
 export const DEFAULT_REMOTE_PORT = 8066;

@@ -140,7 +140,7 @@ bellepoule-modern/
 - **Serveur distant** : une instance `RemoteScoreServer` par compétition
   (opération `startRemoteServer` du contrat, `src/shared/api/contractRemote.ts`), port 8066 ou premier port libre, interface réseau choisie,
   HTTPS optionnel (activé par défaut dans l'UI).
-- **Mode entraînement** : serveur dédié (`training:*`), règles personnalisées (durée,
+- **Mode entraînement** : serveur dédié (opérations `startTrainingServer`… du contrat, `src/shared/api/contractTraining.ts`), règles personnalisées (durée,
   zones autorisées, mort subite désactivée).
 - **Mises à jour** : `autoUpdater.ts` (vérification d'intégrité SHA-256, mode silencieux).
 

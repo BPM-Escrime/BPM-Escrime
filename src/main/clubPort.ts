@@ -12,7 +12,7 @@ import { publishClubSynced } from './engine/api/events';
 import { ClubSyncService } from './clubSync';
 import { createClubBackup, listClubBackups, restoreClubBackup } from './clubBackups';
 import { remoteServers } from './remoteRegistry';
-import { TRAINING_ID } from './ipc/trainingHandlers';
+import { TRAINING_ID } from './trainingServer';
 import { trainingFinishListeners, type TrainingFinishRecord } from './remote/matchFinish';
 import {
   clubBoutIdOf,

@@ -6,6 +6,7 @@
 import { EventEmitter } from 'events';
 import type { RemoteActivity, RemoteClientsEvent } from '../../../shared/types/remote';
 import type { ConnectedClient } from '../../../shared/types/preload';
+import type { TrainingActivity } from '../../../shared/types/training';
 
 export interface CompetitionEventPayload {
   type: string;
@@ -65,5 +66,17 @@ export function onRemoteClientsEvent(
   bus.on('remote:clients', cb);
   return () => {
     bus.off('remote:clients', cb);
+  };
+}
+
+/** Serveur d'entraînement : match fini sur une tablette (onTrainingActivity, docs/adr/0022) */
+export function publishTrainingActivity(event: TrainingActivity): void {
+  bus.emit('training:activity', event);
+}
+
+export function onTrainingActivityEvent(cb: (event: TrainingActivity) => void): () => void {
+  bus.on('training:activity', cb);
+  return () => {
+    bus.off('training:activity', cb);
   };
 }
