@@ -5,6 +5,7 @@
  */
 
 import type { PdfTemplate } from '../../types/pdfTemplate.types';
+import { defaultPlatform, PlatformError } from '../../platform/platforms';
 
 // ─── Traduction des PDF (#1159) ───────────────────────────────────────────────
 
@@ -34,36 +35,32 @@ export function pdfT(key: string, fr: string, params?: PdfParams): string {
   return fr.replace(/\{\{(\w+)\}\}/g, (m, k) => (params[k] === undefined ? m : String(params[k])));
 }
 
-/** Sauvegarde PDF via Electron IPC, avec dialogue de fichier. */
+/** Cause d'échec du main si elle existe, sinon le libellé traduit */
+const failure = (e: unknown, key: string, fr: string): Error =>
+  new Error(e instanceof PlatformError && e.detail ? e.detail : pdfT(key, fr));
+
+/** Enregistre le HTML en PDF (dialogue du poste, ADR-0021) ; rien si annulé. */
 export async function savePDF(html: string, defaultName: string): Promise<void> {
-  const api = window.electronAPI;
-  if (!api?.dialog?.saveFile || !api?.file?.printHtmlToPDF) {
+  const platform = defaultPlatform;
+  if (!platform.capabilities.printToPdf || !platform.exportPdf) {
     throw new Error(pdfT('api_unavailable', 'API Electron non disponible'));
   }
-
-  const result = await api.dialog.saveFile({
-    title: pdfT('save_title', 'Enregistrer le PDF'),
-    defaultPath: defaultName,
-    filters: [{ name: 'PDF', extensions: ['pdf'] }],
-  });
-
-  if (!result || result.canceled || !result.filePath) return;
-
-  const res = await api.file.printHtmlToPDF(html, result.filePath);
-  if (!res.success) {
-    throw new Error(res.error ?? pdfT('generation_failed', 'Échec de la génération PDF'));
+  try {
+    await platform.exportPdf(html, {
+      title: pdfT('save_title', 'Enregistrer le PDF'),
+      suggestedName: defaultName,
+    });
+  } catch (e) {
+    throw failure(e, 'generation_failed', 'Échec de la génération PDF');
   }
 }
 
-/** Impression via `file.printHtml` : boîte d'impression intégrée (aperçu) ou boîte système (#1214). */
+/** Impression : boîte d'impression intégrée (aperçu) dans Electron (#1214), sinon celle du navigateur. */
 export async function printHTML(html: string): Promise<void> {
-  const api = window.electronAPI;
-  if (!api?.file?.printHtml) {
-    throw new Error(pdfT('api_unavailable', 'API Electron non disponible'));
-  }
-  const res = await api.file.printHtml(html);
-  if (!res?.success) {
-    throw new Error(res?.error ?? pdfT('print_failed', "Échec de l'impression"));
+  try {
+    await defaultPlatform.print(html);
+  } catch (e) {
+    throw failure(e, 'print_failed', "Échec de l'impression");
   }
 }
 

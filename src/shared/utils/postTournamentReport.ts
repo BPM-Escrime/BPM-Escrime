@@ -13,6 +13,7 @@ import {
   PoolRanking,
 } from '../types';
 import { getActiveLocale } from './localeFormat';
+import { defaultPlatform } from '../platform/platforms';
 import { escHtml } from './pdfExport/bookToc';
 
 interface MatchWithReferee {
@@ -476,12 +477,7 @@ export async function exportPostTournamentPDF(
   );
 
   const title = competition.title ?? (competition as { name?: string }).name ?? 'competition';
-  const result = await api.dialog.saveFile({
-    defaultPath: `rapport-${title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
-    filters: [{ name: 'PDF', extensions: ['pdf'] }],
+  await defaultPlatform.exportPdf!(html, {
+    suggestedName: `rapport-${title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
   });
-  if (!result || result.canceled || !result.filePath) return;
-
-  const res = await api.file.printHtmlToPDF(html, result.filePath);
-  if (res && !res.success) throw new Error(res.error ?? 'PDF export failed');
 }

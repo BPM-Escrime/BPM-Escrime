@@ -54,6 +54,7 @@ import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
 import { useConfirm } from '../ConfirmDialog';
 import { useToast } from '../Toast';
+import { usePlatform } from '../../platform/PlatformContext';
 import { ClubListModal } from './ClubListModal';
 import { ClubItemEditor } from './ClubItemEditor';
 import { ClubLoanModal } from './ClubLoanModal';
@@ -78,6 +79,7 @@ type ReturnTarget = { loan: ClubLoan } | null;
 export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const platform = usePlatform();
   const { confirm } = useConfirm();
   const api = window.electronAPI?.club;
   const [items, setItems] = useState<ClubItem[]>([]);
@@ -354,9 +356,7 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
       none: '—',
     };
     const html = buildLoanContractHtml(l, labels, localIsoDate());
-    void window.electronAPI.file.printHtml(html).then(res => {
-      if (!res.success && res.error) showToast(res.error, 'error');
-    });
+    platform.print(html).catch((e: Error) => showToast(e.message, 'error'));
   };
 
   const loanRow = (l: ClubLoan, open: boolean) => (

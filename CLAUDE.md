@@ -243,6 +243,7 @@ Database (src/database/)
 ### Key Patterns
 
 1. **IPC via Preload**: All renderer-to-main communication uses `window.electronAPI` exposed by `preload.ts`. Never use `remote` or direct IPC in the renderer.
+   Données de l'épreuve → `useBpmClient()` (contrat). Fonctions du poste (enregistrer, ouvrir, imprimer, PDF, lien externe) → `usePlatform()` / `defaultPlatform` (`src/shared/platform`, ADR-0021), en contenu et jamais en chemin.
 
 2. **Database**: better-sqlite3-multiple-ciphers (SQLCipher, clé dans safeStorage, #1882) provides synchronous native SQLite (rebuilt via electron-rebuild postinstall). All operations go through `DatabaseManager`. Atomic writes (temp file + rename). Autosave every 2 minutes; save on quit.
 

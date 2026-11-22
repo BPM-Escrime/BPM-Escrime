@@ -22,11 +22,11 @@ export async function saveTextFile(
 
 /** Ouvre un fichier JSON ; null si annulé */
 export async function openTextFile(title: string): Promise<string | null> {
-  const r = await window.electronAPI?.dialog?.openFile({
+  const r = await defaultPlatform.openFile({
     title,
     filters: [{ name: 'JSON', extensions: ['json'] }],
   });
-  return r?.filePath ? (r.content ?? '') : null;
+  return r ? r.content : null;
 }
 
 const readAsDataUrl = (file: Blob): Promise<string> =>

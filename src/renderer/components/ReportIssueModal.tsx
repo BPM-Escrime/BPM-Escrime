@@ -10,6 +10,7 @@ import Modal from './common/Modal';
 import { useToast } from './Toast';
 import { getActiveLocale } from '../../shared/utils/localeFormat';
 import { Button } from './common/Button';
+import { defaultPlatform } from '../platform/PlatformContext';
 
 interface ReportIssueModalProps {
   onClose: () => void;
@@ -104,11 +105,7 @@ _Issue créée automatiquement depuis BellePoule Modern_`;
     const githubUrl = `https://github.com/BellePoule-Modern/bellepoule-modern/issues/new?${params.toString()}`;
 
     // Ouvrir dans le navigateur
-    if (window.electronAPI?.openExternal) {
-      window.electronAPI.openExternal(githubUrl);
-    } else {
-      window.open(githubUrl, '_blank');
-    }
+    defaultPlatform.openExternal(githubUrl);
 
     onClose();
   };

@@ -9,6 +9,7 @@ import { Competition, FencerCompetitionStats, Weapon } from '../../../shared/typ
 import { FencerMatchRecord } from '../../../shared/types/preload';
 import { useTranslation } from '../../../renderer/contexts/TranslationContext';
 import { useBpmClient } from '../../../renderer/api/BpmClientContext';
+import { usePlatform } from '../../../renderer/platform/PlatformContext';
 import { CardIcon } from '../../../renderer/components/common/CardIcon';
 import { FencerDetailModal } from './FencerDetailModal';
 import {
@@ -34,6 +35,7 @@ function formatDuration(seconds: number): string {
 
 const FencerStatsTableComponent: React.FC<FencerStatsTableProps> = ({ competition }) => {
   const { t } = useTranslation();
+  const platform = usePlatform();
   const client = useBpmClient();
   const [stats, setStats] = useState<FencerCompetitionStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -202,13 +204,9 @@ const FencerStatsTableComponent: React.FC<FencerStatsTableProps> = ({ competitio
       </tr></thead><tbody>${rows}</tbody></table>
       </body></html>`;
 
-    const result = await window.electronAPI.dialog.saveFile({
-      filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      defaultPath: `stats-${competition.title.replace(/\s+/g, '-')}.pdf`,
+    await platform.exportPdf?.(html, {
+      suggestedName: `stats-${competition.title.replace(/\s+/g, '-')}.pdf`,
     });
-    if (result?.filePath) {
-      await window.electronAPI.file.printHtmlToPDF(html, result.filePath);
-    }
   };
 
   const Th: React.FC<{ k: keyof FencerCompetitionStats; label: React.ReactNode }> = ({

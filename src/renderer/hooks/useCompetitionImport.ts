@@ -11,6 +11,7 @@ import { useToast } from '../components/Toast';
 import { useTranslation } from './useTranslation';
 import type { useFencerManagement } from './useFencerManagement';
 import { useBpmClient } from '../api/BpmClientContext';
+import { usePlatform } from '../platform/PlatformContext';
 import { refereeFromDTO, registerRefereeInput } from '../api/refereeMapping';
 import { persistCompetitionUpdate } from '../api/competitionUpdate';
 
@@ -38,6 +39,7 @@ export function useCompetitionImport({
 }: UseCompetitionImportParams) {
   const { showToast } = useToast();
   const client = useBpmClient();
+  const platform = usePlatform();
   const { t } = useTranslation();
   const [importData, setImportData] = useState<ImportData | null>(null);
   // Compétition à jour pour les traitements asynchrones (import tireurs puis arbitres)
@@ -112,15 +114,15 @@ export function useCompetitionImport({
       },
     };
     const cfg = configs[type];
-    const result = await window.electronAPI.dialog.openFile({
+    const result = await platform.openFile({
       title: cfg.title,
       filters: [...cfg.filters, { name: 'Tous les fichiers', extensions: ['*'] }],
-      properties: ['openFile'],
     });
 
-    if (result && result.filePath) {
-      const filepath = result.filePath;
-      const content = result.content || '';
+    if (result) {
+      // Nom seul : la fenêtre d'import n'affiche que le nom du fichier
+      const filepath = result.name;
+      const content = result.content;
       const extension = filepath.split('.').pop()?.toLowerCase();
 
       // TXT simple → parseur libre ; CSV/Excel → parseur FFE (modèle d'import : en-tête + colonnes)

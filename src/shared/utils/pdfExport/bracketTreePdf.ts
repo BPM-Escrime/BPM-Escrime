@@ -5,7 +5,7 @@
  */
 
 import type { PdfTemplate } from '../../types/pdfTemplate.types';
-import { savePDF, buildCssOverrides, pdfLang, pdfT } from './core';
+import { savePDF, printHTML, buildCssOverrides, pdfLang, pdfT } from './core';
 import { TableauMatchForPDF, getTableauRoundName } from './tableauPdf';
 import { getActiveLocale } from '../localeFormat';
 
@@ -614,9 +614,5 @@ export async function printBracketTreeHTML(
     tableauSize >= 32
       ? generateBracketTreeMultiPageHTML(matches, title, logoBase64, template)
       : generateBracketTreeHTML(matches, title, logoBase64, template);
-  const api = window.electronAPI;
-  if (!api?.file?.printHtml)
-    throw new Error(pdfT('api_unavailable', 'API Electron non disponible'));
-  const res = await api.file.printHtml(html);
-  if (!res?.success) throw new Error(res?.error ?? pdfT('print_failed', "Échec de l'impression"));
+  await printHTML(html);
 }

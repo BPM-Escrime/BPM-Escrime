@@ -72,22 +72,21 @@ export function useRapieresTeams({
 
   // Import d'un export d'inscriptions (CSV / XLSX), une équipe par ligne (#1211)
   const handleImportRapieresTeams = async () => {
-    const result = await window.electronAPI.dialog.openFile({
+    const result = await platform.openFile({
       title: t('rapieres.import_teams'),
       filters: [
         { name: 'CSV / Excel', extensions: ['csv', 'xlsx'] },
         { name: '*', extensions: ['*'] },
       ],
-      properties: ['openFile'],
     });
-    if (!result?.filePath) return;
+    if (!result) return;
     const refDate = competitionDate ? new Date(competitionDate) : new Date();
     const { teams, skipped } = parseRapieresTeams(result.content || '', refDate);
     if (teams.length === 0) {
       notify(t('rapieres.import_empty'), 'error');
       return;
     }
-    const filename = result.filePath.split(/[/\\]/).pop() || result.filePath;
+    const filename = result.name;
     setRapieresImport({ filename, teams, skipped });
   };
 

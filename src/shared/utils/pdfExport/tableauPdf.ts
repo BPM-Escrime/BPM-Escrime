@@ -7,6 +7,7 @@
 import type { PdfTemplate } from '../../types/pdfTemplate.types';
 import {
   savePDF,
+  printHTML,
   buildCssOverrides,
   assembleBody,
   templateFor,
@@ -495,12 +496,5 @@ export async function printTableauHTML(
     signatures,
     options
   );
-  const api = window.electronAPI;
-  if (!api?.file?.printHtml) {
-    throw new Error(pdfT('api_unavailable', 'API Electron non disponible'));
-  }
-  const res = await api.file.printHtml(html);
-  if (!res?.success) {
-    throw new Error(res?.error ?? pdfT('print_failed', "Échec de l'impression"));
-  }
+  await printHTML(html);
 }
