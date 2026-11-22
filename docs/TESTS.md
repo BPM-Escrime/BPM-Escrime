@@ -5565,7 +5565,7 @@ Unitaires : 529 fichiers, 4092 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - ajoute une issue de secours collée au mur, sans alerte
   - ajoute une zone bloquée et permet de changer sa largeur
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
-  - modifier une dimension annule le maximum affiché
+  - ne permet jamais plus d'arènes que le maximum de la zone
 
 </details>
 
