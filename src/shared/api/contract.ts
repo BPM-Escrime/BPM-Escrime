@@ -130,6 +130,14 @@ const CompetitionStateSchema = z.object({
 });
 export type CompetitionStateDTO = z.infer<typeof CompetitionStateSchema>;
 
+const RapieresFencerSchema = z.object({
+  firstName: z.string().max(200),
+  lastName: z.string().max(200),
+  category: z.enum(['M20', 'SENIOR', 'V1', 'V2', 'V3', 'V4', 'HANDI']),
+  gender: z.enum(['M', 'F']).optional(),
+  birthDate: z.string().max(10).optional(),
+});
+
 const FencerRefSchema = z.object({
   id: z.string(),
   lastName: z.string(),
@@ -433,6 +441,38 @@ export const contract = {
     }),
     permission: 'score:write',
     mcp: { name: 'launch_rapieres_wave', title: 'Lancer une vague (rapières)' },
+  }),
+
+  setRapieresTeams: command({
+    description:
+      'Tournoi des rapières : composition des équipes (binômes ; l’équipe est un tireur de l’épreuve) : niveau, deux tireurs, club, région.',
+    input: z.object({
+      competitionId: CompetitionId,
+      teams: z
+        .array(
+          z.object({
+            fencerId: Id.describe('Tireur de l’épreuve portant l’équipe'),
+            info: z.object({
+              level: z.enum(['beginner', 'intermediate', 'expert']),
+              fencers: z.tuple([RapieresFencerSchema, RapieresFencerSchema]),
+              club: z.string().max(200).optional(),
+              region: z.string().max(200).optional(),
+            }),
+          })
+        )
+        .min(1)
+        .max(1000),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), teams: z.number().int(), revision: Revision }),
+    permission: 'fencers:write',
+    mcp: {
+      name: 'set_rapieres_teams',
+      title: 'Composition des équipes (rapières)',
+      idempotent: true,
+    },
   }),
 
   endRapieresWaves: command({

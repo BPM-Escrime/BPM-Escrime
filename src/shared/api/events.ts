@@ -32,6 +32,7 @@ export const JOURNAL_EVENT = {
   rankingAdjusted: 'RankingAdjusted',
   poolsSkipped: 'PoolsSkipped',
   tableauCleared: 'TableauCleared',
+  rapieresTeamsUpdated: 'RapieresTeamsUpdated',
 } as const;
 
 const member = <T extends string, P extends z.ZodType>(type: T, payload: P) =>
@@ -152,6 +153,8 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
   ),
   member(JOURNAL_EVENT.poolsSkipped, z.object({ fencerIds: z.array(Id) })),
   member(JOURNAL_EVENT.tableauCleared, z.object({})),
+  // Composition des équipes des rapières : identifiants seulement (RGPD), non rejouable
+  member(JOURNAL_EVENT.rapieresTeamsUpdated, z.object({ fencerIds: z.array(Id) })),
   member(
     JOURNAL_EVENT.fencerReinstated,
     z.object({ fencerId: Id, restoredStatus: z.string(), restoredMatchIds: z.array(Id) })

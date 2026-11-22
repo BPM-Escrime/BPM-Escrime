@@ -924,3 +924,35 @@ d('classement ajusté, poules passées, tableau retiré (docs/adr/0017)', () => 
     });
   });
 });
+
+d('setRapieresTeams (docs/adr/0017)', () => {
+  it('composition écrite dans l’état ; journal sans nom ; tireur inconnu refusé', async () => {
+    const comp = await setup(2);
+    db.updateCompetition(comp.id, {
+      settings: { ...comp.settings, specialMode: 'rapieres' },
+    } as never);
+    const [team] = db.getFencersByCompetition(comp.id);
+    const info = {
+      level: 'expert' as const,
+      fencers: [
+        { firstName: 'Ann', lastName: 'DUPONT', category: 'SENIOR' as const },
+        { firstName: 'Bob', lastName: 'MARTIN', category: 'V1' as const },
+      ],
+      club: 'Paris',
+    };
+    await invoke(ctx, 'setRapieresTeams', {
+      competitionId: comp.id,
+      teams: [{ fencerId: team.id, info }],
+    });
+    expect((db.getSessionState(comp.id) as any).rapieres.teams[team.id]).toEqual(info);
+    const all = db.eventLog.getSince(comp.id);
+    expect(all[all.length - 1]).toMatchObject({
+      type: 'RapieresTeamsUpdated',
+      payload: { fencerIds: [team.id] },
+    });
+    expect(JSON.stringify(all)).not.toContain('DUPONT');
+    await expect(
+      invoke(ctx, 'setRapieresTeams', { competitionId: comp.id, teams: [{ fencerId: 'x', info }] })
+    ).rejects.toMatchObject({ code: 'fencer_not_found' });
+  });
+});

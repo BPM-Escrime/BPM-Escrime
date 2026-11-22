@@ -65,6 +65,7 @@ Ne plus ajouter d'appel direct à `window.electronAPI` pour une opération du co
 | `clearScore` | commande — score annulé : match de poule remis à jouer, match de tableau rouvert ; `ScoreCleared` | `clear_score` |
 | `assignMatches` | commande — arbitres et pistes des poules et des matchs (hors journal tant que les tablettes ont leur chemin) | `assign_matches` |
 | `adjustRanking` / `skipPools` / `clearTableau` | commandes — classement ajusté (ou recalculé), épreuve sans poules, tableau retiré | `adjust_ranking` / `skip_pools` / `clear_tableau` |
+| `setRapieresTeams` | commande — composition des équipes des rapières (journal : identifiants seulement) | `set_rapieres_teams` |
 | `withdrawFencer` | commande — abandon, forfait, exclusion (carton noir) selon la phase ([ADR-0016](adr/0016-retrait-reintegration-tireur.md)) | `withdraw_fencer` |
 | `reinstateFencer` | commande — annule un retrait depuis l'instantané | `reinstate_fencer` |
 | `setRefereeingSettings` | commande (`referees:write`) — réglages d'affectation, fusion côté moteur ([ADR-0014](adr/0014-affectation-arbitres-moteur-unique.md)) | `set_refereeing_settings` |
@@ -206,6 +207,7 @@ et remplissage automatique du tableau traduits en commandes (`clearScore`, `reco
 gardé dans le navigateur par épreuve (`posteUiState`), plus dans l'état partagé ; au chargement,
 l'onglet du poste est rouvert s'il ne devance pas la phase de l'épreuve. **Exception documentée**
 (décision du mainteneur, 2026-11-21, révisable) : les tableaux séparés après les poules restent
-écrits par l'écran, comme les épreuves par équipes ; l'étape 4c ne les couvre pas. Restent avant
-4c : composition des équipes des rapières, tableaux de classement du remplissage « toutes les
-places » (test) ; puis 4c ; 5.
+écrits par l'écran, comme les épreuves par équipes ; l'étape 4c ne les couvre pas. Composition des
+équipes des rapières par `setRapieresTeams` (`RapieresTeamsUpdated`, identifiants seulement :
+la composition, personnelle, n'est pas rejouable). Reste avant 4c : tableaux de classement du
+remplissage « toutes les places » (test) ; puis 4c ; 5.

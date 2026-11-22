@@ -86,3 +86,42 @@ export function endRapieresWaves(
   emitSession(ctx, comp.id);
   return report;
 }
+
+/**
+ * Composition des équipes (binômes) : l'équipe est un tireur de l'épreuve, sa composition vit
+ * dans l'état (clé rapieres.teams). Données personnelles (noms des deux tireurs) : l'événement
+ * ne porte que les identifiants (RGPD), la composition n'est pas rejouable depuis le journal.
+ */
+export function setRapieresTeams(
+  ctx: CommandContext,
+  input: {
+    competitionId: string;
+    teams: Array<{ fencerId: string; info: RapieresSession['teams'][string] }>;
+    dryRun?: boolean;
+  }
+) {
+  const comp = rapieresCompetition(ctx, input.competitionId);
+  const known = new Set(ctx.db.getFencersByCompetition(comp.id).map(f => f.id));
+  for (const t of input.teams) {
+    if (!known.has(t.fencerId)) {
+      throw new CommandError('fencer_not_found', `Équipe introuvable : ${t.fencerId}`);
+    }
+  }
+  const report = { dryRun: !!input.dryRun, teams: input.teams.length };
+  if (input.dryRun) return report;
+  ctx.db.transaction(() => {
+    const session = readSession(ctx, comp.id);
+    const state = rapieresState(session);
+    const teams = { ...state.teams };
+    for (const t of input.teams) teams[t.fencerId] = t.info;
+    writeSession(ctx, comp.id, { rapieres: { ...state, teams } });
+    recordEvents(ctx, comp.id, [
+      {
+        type: EVENT.rapieresTeamsUpdated,
+        payload: { fencerIds: input.teams.map(t => t.fencerId) },
+      },
+    ]);
+  });
+  emitSession(ctx, comp.id);
+  return report;
+}

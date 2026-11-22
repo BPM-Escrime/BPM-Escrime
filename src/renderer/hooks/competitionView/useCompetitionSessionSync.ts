@@ -442,7 +442,14 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     addFencer,
     bulkAddFencers,
     updateFencer,
-    setRapieresTeam,
+    // Composition par le moteur (setRapieresTeams, docs/adr/0017) ; repli local hors moteur
+    setRapieresTeam: (id, info) => {
+      void runCompetitionCommand('setRapieresTeams', { teams: [{ fencerId: id, info }] }).then(
+        outcome => {
+          if (outcome === 'local') setRapieresTeam(id, info);
+        }
+      );
+    },
     notify: ctx.showToast,
   });
   const { rapieresFencerFields, handleSaveRapieresTeam } = rapieresTeams;
