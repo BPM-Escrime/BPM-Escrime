@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 127 | 1040 |
+| `src/main/` | 128 | 1047 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 122 | 655 |
@@ -119,9 +119,9 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
-| **Total** | **543** | **4151** |
+| **Total** | **544** | **4158** |
 
-Unitaires : 530 fichiers, 4109 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 531 fichiers, 4116 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3235,6 +3235,19 @@ Unitaires : 530 fichiers, 4109 tests. E2E : 13 fichiers, 42 tests (comptage stat
 - événements d’une commande : même commandId, fourni par l’appelant
 - sans commandId : un identifiant généré par commande
 - commande rejouée (même commandId) : refusée, rien de réécrit (idempotence)
+
+</details>
+
+<details>
+<summary><code>src/main/engine/api/wsAdapter.test.ts</code> — 7 tests</summary>
+
+- refuse une poignée de main sans jeton valide
+- sert une requête de lecture de l’épreuve du serveur
+- refuse commandes, autres épreuves et entrées sans épreuve (permission\_denied)
+- même erreur que l’IPC : opération inconnue, entrée invalide
+- retire licence et date de naissance, masque les noms selon le réglage RGPD
+- abonnement : événements de l’épreuve, désabonnement, libération à la déconnexion
+- wsRefusal : seuls les droits de lecture passent
 
 </details>
 
