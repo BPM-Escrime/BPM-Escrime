@@ -75,7 +75,6 @@ export interface CleanupTargets {
   scoreLimiter: MinuteRateLimiter;
   trainerTokens: Map<string, number>;
   checkinTokens: Map<string, number>;
-  dtTokens: Map<string, number>;
   arenaTokens: Map<string, Map<string, number>>;
   scoreUpdateDebounce: Map<string, number>;
 }
@@ -87,7 +86,6 @@ export function startCleanupTimer(t: CleanupTargets): ReturnType<typeof setInter
     t.loginGuard.purge(now);
     purgeExpiredTokens(t.trainerTokens, now);
     purgeExpiredTokens(t.checkinTokens, now);
-    purgeExpiredTokens(t.dtTokens, now);
     for (const tokens of t.arenaTokens.values()) purgeExpiredTokens(tokens, now);
     t.scoreLimiter.purge(now);
     for (const [key, ts] of t.scoreUpdateDebounce) {

@@ -84,7 +84,7 @@ import {
 import { registerPageRoutes } from './remote/routes/pageRoutes';
 import { registerResultsRoutes } from './remote/routes/resultsRoutes';
 import { registerRegistrationRoutes } from './remote/routes/registrationRoutes';
-import { DtViewAccess } from './remote/dtView';
+import { DT_VIEW_CONTEXT_KEYS, DtViewAccess, type DtViewHost } from './remote/dtView';
 import { registerPoolRoutes } from './remote/routes/poolRoutes';
 import { registerMatchRoutes } from './remote/routes/matchRoutes';
 import {
@@ -363,8 +363,7 @@ export class RemoteScoreServer {
   private checkinEnabled: boolean = true;
   private checkinPassword: string | null = null;
   private checkinTokens: Map<string, number> = new Map(); // token → expiresAt
-  /** Espace Vue DT : contrat en lecture seule sur /api (docs/adr/0020) */
-  readonly dtView = new DtViewAccess();
+  readonly dtView = new DtViewAccess(); // Vue DT : contrat en lecture seule sur /api (ADR-0020)
   // Espace formateurs (#989) : commentaires d'arbitrage, mot de passe indépendant des pistes
   private trainerEnabled: boolean = false;
   private trainerPassword: string | null = null;
@@ -548,39 +547,21 @@ export class RemoteScoreServer {
       scoreLimiter: this.scoreLimiter,
       trainerTokens: this.trainerTokens,
       checkinTokens: this.checkinTokens,
-      dtTokens: this.dtView.tokens,
       arenaTokens: this.arenaTokens,
       scoreUpdateDebounce: this.scoreUpdateDebounce,
     });
 
-    // Charger le client socket.io AVANT le HTML (injection inline dans loadHtmlFiles)
-    this.loadSocketIoClient();
+    // Client socket.io AVANT le HTML (injection inline dans loadHtmlFiles, remote/htmlLoader.ts)
+    this.socketIoClientJs = loadSocketIoClient();
     // Charger les fichiers HTML en mémoire au démarrage
     this.loadHtmlFiles();
 
     this.setupMiddleware();
     this.setupRoutes();
     this.setupSocketHandlers();
-    this.dtView.attach(
-      this.io,
-      { db: this.db, emitChange: () => undefined },
-      () => {
-        const id = this.session?.competitionId;
-        return id && id !== '__training__' ? id : undefined;
-      },
-      {
-        maxSocketsPerIp: this.MAX_SOCKETS_PER_IP,
-        eventBurst: this.SOCKET_EVENT_BURST,
-        eventsPerSec: this.SOCKET_EVENTS_PER_SEC,
-      }
-    );
+    this.dtView.mount(this.ctx<DtViewHost>(DT_VIEW_CONTEXT_KEYS));
     this.initializeArenas();
     logger.info(NET, `[RemoteScoreServer] Serveur initialisé avec ${this.arenaCount} arènes`);
-  }
-
-  // Client socket.io + pages HTML en mémoire (src/main/remote/htmlLoader.ts)
-  private loadSocketIoClient(): void {
-    this.socketIoClientJs = loadSocketIoClient();
   }
 
   private loadHtmlFiles(): void {
@@ -747,10 +728,6 @@ export class RemoteScoreServer {
 
   private setupRoutes(): void {
     logger.info(NET, '[RemoteScoreServer] Configuration des routes...');
-    this.dtView.registerRoutes(this.app, {
-      loginGuard: this.loginGuard,
-      clientIp: req => this.getClientIp(req),
-    });
     registerApiRoutes(this.routeContext());
     registerPageRoutes(this.routeContext());
     registerRegistrationRoutes(this.routeContext());

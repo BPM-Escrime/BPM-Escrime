@@ -19,6 +19,7 @@ import {
   type LoginGuard,
 } from './auth';
 import { isLoopbackAddress, normalizeIp } from './network';
+import type { DatabaseManager } from '../../database';
 import { registerWsApi, WS_API_NAMESPACE } from '../engine/api/wsAdapter';
 import type { CommandContext, DtViewPort } from '../engine/commands/context';
 import { logger, LogCategory } from '../../shared/services/logger';
@@ -37,6 +38,33 @@ export interface DtViewLimits {
   eventBurst: number;
   eventsPerSec: number;
 }
+
+/** Champs et méthodes du serveur distant lus par mount() (liveContext, #1896) */
+export interface DtViewHost {
+  readonly app: express.Application;
+  readonly io: SocketIOServer;
+  readonly db: DatabaseManager;
+  readonly loginGuard: LoginGuard;
+  readonly session: { competitionId?: string } | null;
+  readonly MAX_SOCKETS_PER_IP: number;
+  readonly SOCKET_EVENT_BURST: number;
+  readonly SOCKET_EVENTS_PER_SEC: number;
+  getClientIp(req: express.Request): string;
+}
+
+export const DT_VIEW_CONTEXT_KEYS = {
+  state: [
+    'app',
+    'io',
+    'db',
+    'loginGuard',
+    'session',
+    'MAX_SOCKETS_PER_IP',
+    'SOCKET_EVENT_BURST',
+    'SOCKET_EVENTS_PER_SEC',
+  ],
+  methods: ['getClientIp'],
+} as const;
 
 export class DtViewAccess implements DtViewPort {
   private enabled = false;
@@ -77,6 +105,24 @@ export class DtViewAccess implements DtViewPort {
   private revoke(): void {
     this.tokens.clear();
     this.nsp?.disconnectSockets(true);
+  }
+
+  /** Routes de connexion et espace de noms /api sur le serveur distant de l'épreuve */
+  mount(host: DtViewHost): void {
+    this.registerRoutes(host.app, {
+      loginGuard: host.loginGuard,
+      clientIp: req => host.getClientIp(req),
+    });
+    // Épreuve de la session en cours (pas l'entraînement)
+    const served = () => {
+      const id = host.session?.competitionId;
+      return id && id !== '__training__' ? id : undefined;
+    };
+    this.attach(host.io, { db: host.db, emitChange: () => undefined }, served, {
+      maxSocketsPerIp: host.MAX_SOCKETS_PER_IP,
+      eventBurst: host.SOCKET_EVENT_BURST,
+      eventsPerSec: host.SOCKET_EVENTS_PER_SEC,
+    });
   }
 
   registerRoutes(
