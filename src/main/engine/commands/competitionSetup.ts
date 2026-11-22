@@ -16,6 +16,19 @@ import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCo
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
+import {
+  validateFormulaSettings,
+  type FormulaIssue,
+} from '../../../shared/domain/formula/validateFormulaSettings';
+
+/** Formule hors bornes ou incohérente : refus avec le détail (docs/adr/0012) */
+function assertFormula(issues: FormulaIssue[]): void {
+  if (issues.length === 0) return;
+  throw new CommandError(
+    'invalid_settings',
+    `Réglages refusés : ${issues.map(i => `${i.field} (${i.message})`).join(' ; ')}`
+  );
+}
 
 /** Réglages figés une fois les poules tirées (ou le tableau généré) : ils changent les règles */
 const FROZEN_SETTINGS: ReadonlySet<string> = new Set(['specialMode', 'customFormula']);
@@ -66,6 +79,7 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
     ...buildDefaultCompetitionSettings({ weapon: input.weapon, category: input.category }),
     ...patch,
   } as CompetitionSettings;
+  assertFormula(validateFormulaSettings(settings));
   if (input.dryRun) return { dryRun: true, competitionId: null };
   const created = ctx.db.createCompetition({
     title: input.title.trim(),
@@ -150,6 +164,15 @@ export function updateCompetitionSettings(
     throw new CommandError(
       'draw_done',
       `Poules tirées ou tableau généré : réglage figé (${frozen.join(', ')})`
+    );
+  }
+  // Seuls les réglages modifiés sont jugés : une épreuve 2.0 hors bornes reste modifiable
+  if (Object.keys(patch).length) {
+    assertFormula(
+      validateFormulaSettings(
+        { ...comp.settings, ...patch },
+        Object.keys(patch) as Array<keyof CompetitionSettings>
+      )
     );
   }
   const update: Partial<Competition> = {};
