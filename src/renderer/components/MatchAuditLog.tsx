@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import type { MatchEventEntry, MatchEventType } from '../../shared/types';
 import { useMatchAuditStore } from '../../features/matchAuditLog/hooks/useMatchAuditStore';
 import { useToast } from './Toast';
+import { usePlatform } from '../platform/PlatformContext';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import MatchReplay from './MatchReplay';
@@ -120,6 +121,7 @@ const MatchAuditLogComponent: React.FC<MatchAuditLogProps> = ({
   onClose,
 }) => {
   const { showToast } = useToast();
+  const platform = usePlatform();
   const { t } = useTranslation();
   const modalRef = useFocusTrap<HTMLDivElement>(!!onClose, onClose);
   const [refereeView, setRefereeView] = useState(false);
@@ -264,14 +266,13 @@ const MatchAuditLogComponent: React.FC<MatchAuditLogProps> = ({
             : `competition_${competitionId}`);
       const json = exportMatchTimelineJSON(scopedEntries, title, competitionName);
       const filename = `journal_${title.replace(/\s+/g, '_')}_${Date.now()}.json`;
-      const result = await window.electronAPI.dialog.saveFile({
-        defaultPath: filename,
+      const saved = await platform.saveFile({
+        suggestedName: filename,
         filters: [{ name: 'JSON', extensions: ['json'] }],
+        content: json,
+        mimeType: 'application/json',
       });
-      if (result?.filePath) {
-        await window.electronAPI.file.writeContent(result.filePath, json);
-        showToast('Export JSON réussi', 'success');
-      }
+      if (saved) showToast('Export JSON réussi', 'success');
     } catch {
       showToast("Erreur lors de l'export", 'error');
     }
@@ -283,6 +284,7 @@ const MatchAuditLogComponent: React.FC<MatchAuditLogProps> = ({
     matchLabelOf,
     competitionId,
     competitionName,
+    platform,
   ]);
 
   const content = (

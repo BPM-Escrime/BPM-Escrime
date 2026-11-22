@@ -17,6 +17,7 @@ import { useConfirm } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { useDebounce } from '../useDebounce';
 import { SortableCol, COLUMNS, FencerListProps } from '../../components/fencerListShared';
+import { usePlatform } from '../../platform/PlatformContext';
 
 /** Colonnes masquées de la liste d'appel (#1504) */
 const HIDDEN_COLS_KEY = 'bellepoule-fencer-hidden-cols';
@@ -51,6 +52,7 @@ export function useFencerListState(ctx: Ctx) {
   } = ctx;
 
   const { t } = useTranslation();
+  const platform = usePlatform();
   const { confirm } = useConfirm();
   const { runOperation } = useOperation();
   const { showToast } = useToast();
@@ -267,36 +269,31 @@ export function useFencerListState(ctx: Ctx) {
     const extension = format === 'fff' ? 'fff' : 'txt';
     const filterName = format === 'fff' ? 'Fichier FFE' : 'Fichier texte';
 
-    const result = await window.electronAPI.dialog.saveFile({
+    await platform.saveFile({
       title: t('dialogs.exportFencers', { ext: extension }),
-      defaultPath: `tireurs.${extension}`,
+      suggestedName: `tireurs.${extension}`,
       filters: [
         { name: filterName, extensions: [extension] },
         { name: t('fencerList.all_files'), extensions: ['*'] },
       ],
-    });
-
-    if (result && !result.canceled && result.filePath) {
-      const content =
+      content:
         format === 'fff'
           ? exportFencersToFFF(ctx.competition!, fencers)
-          : exportFencersToTXT(fencers);
-      await window.electronAPI.file.writeContent(result.filePath, content);
-    }
+          : exportFencersToTXT(fencers),
+    });
   };
 
   const handleDownloadImportTemplate = async () => {
-    const result = await window.electronAPI.dialog.saveFile({
+    await platform.saveFile({
       title: t('fencerList.import_template'),
-      defaultPath: 'modele-import-tireurs.csv',
+      suggestedName: 'modele-import-tireurs.csv',
       filters: [
         { name: 'CSV', extensions: ['csv'] },
         { name: t('fencerList.all_files'), extensions: ['*'] },
       ],
+      content: buildFencerImportTemplate(),
+      mimeType: 'text/csv;charset=utf-8',
     });
-    if (result && !result.canceled && result.filePath) {
-      await window.electronAPI.file.writeContent(result.filePath, buildFencerImportTemplate());
-    }
   };
 
   const handleImportFencers = (type: 'xml' | 'fff' | 'ranking') => {

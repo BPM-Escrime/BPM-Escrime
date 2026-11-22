@@ -8,6 +8,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CustomTheme, ThemeTargetType } from '../../shared/types/remote';
 import { REFEREE_DARK_MATCH_VARS } from '../../shared/utils/trainingThemes';
 import { useTranslation } from '../hooks/useTranslation';
+import { usePlatform } from '../platform/PlatformContext';
 import { Copy } from 'lucide-react';
 import { RankMedal } from './common/RankMedal';
 import { getEditorBuiltinThemes, isBuiltinThemeId } from './remote/builtinThemes';
@@ -456,6 +457,7 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const platform = usePlatform();
   const effectiveType = (targetType ?? 'arena') as ThemeTargetType;
   const isKiosk = effectiveType === 'kiosk';
   const activeDefaults =
@@ -660,13 +662,12 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({
     };
     const json = JSON.stringify(theme, null, 2);
     const safeName = theme.name.replace(/[^a-z0-9_-]/gi, '-');
-    const result = await window.electronAPI.dialog.saveFile({
-      defaultPath: `theme-${safeName}.json`,
+    await platform.saveFile({
+      suggestedName: `theme-${safeName}.json`,
       filters: [{ name: 'Thème JSON', extensions: ['json'] }],
+      content: json,
+      mimeType: 'application/json',
     });
-    if (result && !result.canceled && result.filePath) {
-      await window.electronAPI.file.writeContent(result.filePath, json);
-    }
   };
 
   const handleImport = async () => {
