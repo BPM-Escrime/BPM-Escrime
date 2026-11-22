@@ -259,3 +259,82 @@ function rectsOverlap(a: RoomItem, b: RoomItem): boolean {
     a.x < b.x + b.widthM && b.x < a.x + a.widthM && a.y < b.y + b.heightM && b.y < a.y + a.heightM
   );
 }
+
+/** Pas d'un quinconce : deux rangées voisines sont décalées de 6 m, espacées de 12·√3/2. */
+export const HEX_ROW_SPACING_M = (2 * ARENA_SAFETY_RADIUS_M * Math.sqrt(3)) / 2;
+/** Pas de recherche de l'optimiseur (décalage de la grille). */
+export const OPTIMIZER_STEP_M = 0.5;
+
+export type ArenaLattice = 'square' | 'hex';
+
+export interface OptimizedLayout {
+  count: number;
+  lattice: ArenaLattice;
+  centers: Point[];
+}
+
+/** Arène valide : cercle de sécurité dans la salle (marge comprise), hors zones bloquées. */
+function isValidCenter(c: Point, room: RoomSize, marginM: number, blocked: RoomItem[]): boolean {
+  const r = ARENA_SAFETY_RADIUS_M;
+  if (c.x - r < marginM || c.y - r < marginM) return false;
+  if (c.x + r > room.widthM - marginM || c.y + r > room.lengthM - marginM) return false;
+  return !blocked.some(b => rectIntersectsCircle(b, c, r));
+}
+
+/** Toutes les arènes possibles pour un quinconce ou une grille carrée, décalée de (ox, oy). */
+function latticeCenters(
+  lattice: ArenaLattice,
+  ox: number,
+  oy: number,
+  room: RoomSize,
+  marginM: number,
+  blocked: RoomItem[]
+): Point[] {
+  const pitch = 2 * ARENA_SAFETY_RADIUS_M;
+  const rowStep = lattice === 'hex' ? HEX_ROW_SPACING_M : pitch;
+  const out: Point[] = [];
+  const startY = marginM + ARENA_SAFETY_RADIUS_M + oy;
+  for (let j = 0, y = startY; y <= room.lengthM; j++, y = startY + j * rowStep) {
+    const shift = lattice === 'hex' && j % 2 === 1 ? ARENA_SAFETY_RADIUS_M : 0;
+    const startX = marginM + ARENA_SAFETY_RADIUS_M + ((ox + shift) % pitch);
+    for (let x = startX; x <= room.widthM; x += pitch) {
+      const c = { x, y };
+      if (isValidCenter(c, room, marginM, blocked)) out.push(c);
+    }
+  }
+  return out;
+}
+
+/**
+ * Cherche la disposition qui place le plus d'arènes dans la salle : grille
+ * carrée ou quinconce (le plus dense pour des cercles de sécurité), avec un
+ * décalage cherché par pas de 0,5 m. Respecte la marge au mur et les zones
+ * bloquées. Ne tient pas compte des tables ni des prises (à placer ensuite).
+ */
+export function optimizeArenaLayout(
+  room: RoomSize,
+  marginM: number,
+  blocked: RoomItem[] = []
+): OptimizedLayout {
+  const pitch = 2 * ARENA_SAFETY_RADIUS_M;
+  let best: OptimizedLayout = { count: 0, lattice: 'square', centers: [] };
+  const lattices: ArenaLattice[] = ['square', 'hex'];
+  for (const lattice of lattices) {
+    const maxOy = lattice === 'hex' ? HEX_ROW_SPACING_M : pitch;
+    for (let ox = 0; ox < pitch; ox += OPTIMIZER_STEP_M) {
+      for (let oy = 0; oy < maxOy; oy += OPTIMIZER_STEP_M) {
+        const centers = latticeCenters(lattice, ox, oy, room, marginM, blocked);
+        // Strictement plus : à égalité, on garde la grille carrée (plus simple à mettre en place)
+        if (centers.length > best.count) {
+          best = { count: centers.length, lattice, centers };
+        }
+      }
+    }
+  }
+  return best;
+}
+
+/** Arrondit une coordonnée au pas donné (aimantation de l'éditeur). */
+export function snapToStep(value: number, step = OPTIMIZER_STEP_M): number {
+  return Math.round(value / step) * step;
+}

@@ -1,23 +1,207 @@
 /* BellePoule Modern - Planificateur de placement d'arène (#2075) — Licensed under GPL-3.0 */
 
+.arena-planner-lead {
+  margin-bottom: 0.75rem;
+}
+
+.arena-planner-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .arena-planner-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.arena-planner-sidebar,
+.arena-planner-main {
+  min-width: 0;
+}
+
+.arena-planner-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.6rem;
+}
+
+.arena-planner-hint {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin: 0.15rem 0 0.4rem;
+}
+
+.arena-planner-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.4rem 0 0;
+}
+
+.arena-planner-actions,
+.arena-planner-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0;
+}
+
+.arena-planner-status {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
 .arena-planner-svg {
   width: 100%;
   max-height: 60vh;
-  background: #ffffff;
   touch-action: none;
+  border-radius: 0.5rem;
+  background: #ffffff;
+}
+
+.arena-planner-room {
+  fill: #ffffff;
+  stroke: #475569;
+  stroke-width: 0.1;
+}
+
+.arena-planner-grid {
+  stroke: #e2e8f0;
+  stroke-width: 0.03;
+}
+
+.arena-planner-dim {
+  fill: #334155;
+  font-size: 0.6px;
+  font-weight: 600;
+}
+
+.arena-planner-safety {
+  fill: none;
+  stroke: #2e7d32;
+  stroke-width: 0.08;
+  stroke-dasharray: 0.4 0.2;
+}
+
+.arena-planner-zone {
+  fill: #fde047;
+  fill-opacity: 0.6;
+  stroke: #dc2626;
+  stroke-width: 0.08;
+}
+
+.arena-planner-guard-red {
+  stroke: #dc2626;
+  stroke-width: 0.12;
+}
+
+.arena-planner-guard-green {
+  stroke: #2e7d32;
+  stroke-width: 0.12;
+}
+
+.arena-planner-role {
+  fill: #111827;
+}
+
+.arena-planner-role-label {
+  fill: #ffffff;
+  font-size: 0.45px;
+}
+
+.arena-planner-item-group {
+  cursor: grab;
+  outline: none;
+}
+
+.arena-planner-item-group:focus-visible rect {
+  stroke: #2563eb;
+  stroke-width: 0.2;
 }
 
 .arena-planner-item {
-  cursor: grab;
+  stroke: #111827;
+  stroke-width: 0.05;
 }
 
-.arena-planner-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.arena-planner-item-table {
+  fill: #93c5fd;
+}
+
+.arena-planner-item-outlet {
+  fill: #fbbf24;
+}
+
+.arena-planner-item-accessory {
+  fill: #c4b5fd;
+}
+
+.arena-planner-item-exit {
+  fill: #86efac;
+}
+
+.arena-planner-item-blocked {
+  fill: #9ca3af;
+  fill-opacity: 0.85;
+}
+
+.arena-planner-item-selected {
+  stroke: #2563eb;
+  stroke-width: 0.15;
+}
+
+.arena-planner-item-conflict {
+  stroke: #dc2626;
+  stroke-width: 0.15;
+}
+
+.arena-planner-item-label {
+  fill: #111827;
+  font-size: 0.35px;
+}
+
+.arena-planner-inspector {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  opacity: 0.95;
+}
+
+.arena-planner-inspector h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.4rem;
 }
 
 .arena-planner-fields {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 0.5rem;
+  align-items: end;
+}
+
+.arena-planner-legend {
+  font-size: 0.85rem;
+  margin: 0.6rem 0 0.2rem 1rem;
+  list-style: disc;
+}
+
+.arena-planner-help {
+  margin-top: 0.75rem;
+}
+
+.arena-planner-help summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.arena-planner-help ol,
+.arena-planner-help ul {
+  font-size: 0.85rem;
+  padding-left: 1.2rem;
+  margin: 0.4rem 0;
 }
