@@ -1,8 +1,8 @@
 # ADR-0023 — Les appareils de piste se déclarent sur la salle ; l'épreuve peut seulement passer une piste en manuel
 
-- **Statut** : Proposée
+- **Statut** : Acceptée (2026-11-22)
 - **Date** : 2026-11-22
-- **Tickets** : #1981 (ADR-0022, groupe appareils), #1829, #1960, #1878, #2075 ; s'appuie sur
+- **Tickets** : #2117, #1981 (ADR-0022, groupe appareils), #1829, #1960, #1878, #2033, #2075 ; s'appuie sur
   l'[ADR-0019](0019-plan-arene-salle.md)
 
 ## Contexte
@@ -100,6 +100,8 @@ avec le droit `remote:admin`, jamais servies sur le réseau :
   piste vers l'épreuve dont la tablette l'occupe, comme aujourd'hui (`pisteHub`). Une piste
   passée en manuel par une épreuve reste disponible pour l'autre.
 - Le planificateur de salle (#2075) et les appareils décrivent la même salle.
+- La configuration de la salle peut piloter directement ses appareils hors compétition : arme,
+  noms et nationalités, en masse (#2117). Ce sont des ordres d'affichage, pas des faits d'épreuve.
 - La reprise automatique peut placer un appareil sur la mauvaise salle quand une installation a
   plusieurs salles sans journée. Le diagnostic le signale, et la correction se fait dans les
   réglages de la salle.
