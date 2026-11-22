@@ -8,6 +8,8 @@ import {
   ARENA_GUARD_OFFSET_M,
   ARENA_SAFETY_RADIUS_M,
   checkRoomItems,
+  createRoomItem,
+  moveRoomItem,
   computeArenaGeometry,
   planArenaGrid,
   polarPoint,
@@ -120,5 +122,22 @@ describe('checkRoomItems', () => {
       item({ x: 21.5, y: 14.5, widthM: 0.5, heightM: 0.5 }),
     ]);
     expect(issues).toEqual([]);
+  });
+});
+
+describe('createRoomItem / moveRoomItem', () => {
+  const room = { widthM: 10, lengthM: 8 };
+
+  it('crée un élément à la taille par défaut, dans la salle', () => {
+    const it = createRoomItem('table', 'a', 'Table', room);
+    expect(it).toMatchObject({ kind: 'table', widthM: 1.5, heightM: 0.8 });
+    expect(it.x).toBeGreaterThanOrEqual(0);
+    expect(it.x + it.widthM).toBeLessThanOrEqual(room.widthM);
+  });
+
+  it('déplace un élément et le retient dans la salle', () => {
+    const base = createRoomItem('accessory', 'b', 'Écran', room);
+    expect(moveRoomItem(base, 3, 2, room)).toMatchObject({ x: 3, y: 2 });
+    expect(moveRoomItem(base, 99, -5, room)).toMatchObject({ x: room.widthM - base.widthM, y: 0 });
   });
 });

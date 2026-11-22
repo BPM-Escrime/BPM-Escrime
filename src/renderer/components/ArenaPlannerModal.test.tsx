@@ -41,4 +41,22 @@ describe('ArenaPlannerModal', () => {
     fireEvent.change(screen.getByLabelText('arenaPlanner.width'), { target: { value: '0' } });
     expect(screen.getByRole('alert')).toHaveTextContent('arenaPlanner.invalid');
   });
+
+  it('ajoute un élément et le déplace au clavier (flèches), retenu dans la salle', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.click(screen.getByText('arenaPlanner.add_table'));
+    const item = screen.getByRole('button', { name: /arenaPlanner\.kind_table 1/ });
+    const before = item.querySelector('rect')!.getAttribute('x');
+    fireEvent.keyDown(item, { key: 'ArrowRight', shiftKey: true });
+    const after = item.querySelector('rect')!.getAttribute('x');
+    expect(Number(after)).toBeGreaterThan(Number(before));
+  });
+
+  it("supprime l'élément sélectionné avec la touche Suppr", () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.click(screen.getByText('arenaPlanner.add_outlet'));
+    const item = screen.getByRole('button', { name: /arenaPlanner\.kind_outlet 1/ });
+    fireEvent.keyDown(item, { key: 'Delete' });
+    expect(screen.queryByRole('button', { name: /arenaPlanner\.kind_outlet 1/ })).toBeNull();
+  });
 });

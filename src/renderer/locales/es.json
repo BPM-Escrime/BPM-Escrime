@@ -4266,6 +4266,22 @@
     "legend_guard": "Líneas de guardia",
     "legend_roles": "Combatientes y árbitros (1 a 6)",
     "invalid": "Introduce dimensiones positivas.",
-    "note": "Posiciones de los árbitros estimadas del esquema del reglamento: a validar."
+    "note": "Posiciones de los árbitros estimadas del esquema del reglamento: a validar.",
+    "add_table": "+ Mesa",
+    "add_outlet": "+ Enchufe",
+    "add_accessory": "+ Accesorio",
+    "remove": "Eliminar selección",
+    "export_pdf": "Exportar a PDF",
+    "export_png": "Exportar a PNG",
+    "items_title": "Material colocado",
+    "item_line": "{{label}}: x {{x}} m, y {{y}} m ({{width}} × {{height}} m)",
+    "summary_room": "Sala: {{width}} m × {{length}} m",
+    "summary_arenas": "{{count}} arena(s), disposición {{columns}} × {{rows}}",
+    "kind_table": "Mesa",
+    "kind_outlet": "Enchufe",
+    "kind_accessory": "Accesorio",
+    "drag_hint": "Arrastre los elementos con el ratón (flechas para ajuste fino, Supr para eliminar).",
+    "conflict": "Un elemento está fuera de la sala o en una zona de seguridad (contorno rojo).",
+    "export_error": "Exportación fallida. Inténtelo de nuevo."
   }
 }

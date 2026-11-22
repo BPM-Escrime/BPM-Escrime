@@ -182,3 +182,34 @@ function rectIntersectsCircle(rect: RoomItem, c: Point, r: number): boolean {
   const dy = c.y - nearestY;
   return dx * dx + dy * dy < r * r;
 }
+
+/** Dimensions par défaut (m) d'un élément posé à la main sur le plan. */
+export const ROOM_ITEM_SIZES: Record<RoomItem['kind'], { widthM: number; heightM: number }> = {
+  table: { widthM: 1.5, heightM: 0.8 },
+  outlet: { widthM: 0.3, heightM: 0.3 },
+  accessory: { widthM: 0.6, heightM: 0.6 },
+};
+
+/** Crée un élément au coin nord-ouest de la salle, décalé pour rester visible. */
+export function createRoomItem(
+  kind: RoomItem['kind'],
+  id: string,
+  label: string,
+  room: RoomSize
+): RoomItem {
+  const size = ROOM_ITEM_SIZES[kind];
+  const x = Math.min(0.5, Math.max(0, room.widthM - size.widthM));
+  const y = Math.min(0.5, Math.max(0, room.lengthM - size.heightM));
+  return { id, kind, label, x, y, ...size };
+}
+
+/** Déplace un élément en le gardant entièrement dans la salle. */
+export function moveRoomItem(item: RoomItem, x: number, y: number, room: RoomSize): RoomItem {
+  const maxX = Math.max(0, room.widthM - item.widthM);
+  const maxY = Math.max(0, room.lengthM - item.heightM);
+  return {
+    ...item,
+    x: Math.min(maxX, Math.max(0, x)),
+    y: Math.min(maxY, Math.max(0, y)),
+  };
+}

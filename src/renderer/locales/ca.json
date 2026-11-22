@@ -4266,6 +4266,22 @@
     "legend_guard": "Línies de guarda",
     "legend_roles": "Combatents i àrbitres (1 a 6)",
     "invalid": "Introdueix dimensions positives.",
-    "note": "Posicions dels àrbitres estimades de l’esquema del reglament: a validar."
+    "note": "Posicions dels àrbitres estimades de l’esquema del reglament: a validar.",
+    "add_table": "+ Taula",
+    "add_outlet": "+ Endoll",
+    "add_accessory": "+ Accessori",
+    "remove": "Suprimeix la selecció",
+    "export_pdf": "Exporta a PDF",
+    "export_png": "Exporta a PNG",
+    "items_title": "Material col·locat",
+    "item_line": "{{label}}: x {{x}} m, y {{y}} m ({{width}} × {{height}} m)",
+    "summary_room": "Sala: {{width}} m × {{length}} m",
+    "summary_arenas": "{{count}} arena(es), disposició {{columns}} × {{rows}}",
+    "kind_table": "Taula",
+    "kind_outlet": "Endoll",
+    "kind_accessory": "Accessori",
+    "drag_hint": "Arrossega els elements amb el ratolí (fletxes per a l’ajust fi, Supr per eliminar).",
+    "conflict": "Un element és fora de la sala o en una zona de seguretat (contorn vermell).",
+    "export_error": "L’exportació ha fallat. Torna-ho a provar."
   }
 }

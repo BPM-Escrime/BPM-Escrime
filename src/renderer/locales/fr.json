@@ -4266,6 +4266,22 @@
     "legend_guard": "Lignes de mise en garde",
     "legend_roles": "Combattants et arbitres (1 à 6)",
     "invalid": "Saisissez des dimensions positives.",
-    "note": "Positions des arbitres estimées sur le schéma du livret : à valider."
+    "note": "Positions des arbitres estimées sur le schéma du livret : à valider.",
+    "add_table": "+ Table",
+    "add_outlet": "+ Prise",
+    "add_accessory": "+ Accessoire",
+    "remove": "Supprimer la sélection",
+    "export_pdf": "Exporter en PDF",
+    "export_png": "Exporter en PNG",
+    "items_title": "Matériel placé",
+    "item_line": "{{label}} : x {{x}} m, y {{y}} m ({{width}} × {{height}} m)",
+    "summary_room": "Salle : {{width}} m × {{length}} m",
+    "summary_arenas": "{{count}} arène(s), disposition {{columns}} × {{rows}}",
+    "kind_table": "Table",
+    "kind_outlet": "Prise",
+    "kind_accessory": "Accessoire",
+    "drag_hint": "Glissez les éléments à la souris (flèches du clavier pour un réglage fin, Suppr pour retirer).",
+    "conflict": "Un élément est hors de la salle ou dans une zone de sécurité (contour rouge).",
+    "export_error": "Export impossible. Réessayez."
   }
 }

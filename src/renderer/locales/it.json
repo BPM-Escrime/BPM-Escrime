@@ -4266,6 +4266,22 @@
     "legend_guard": "Linee di guardia",
     "legend_roles": "Combattenti e arbitri (da 1 a 6)",
     "invalid": "Inserisci dimensioni positive.",
-    "note": "Posizioni degli arbitri stimate dallo schema del regolamento: da verificare."
+    "note": "Posizioni degli arbitri stimate dallo schema del regolamento: da verificare.",
+    "add_table": "+ Tavolo",
+    "add_outlet": "+ Presa",
+    "add_accessory": "+ Accessorio",
+    "remove": "Rimuovi selezione",
+    "export_pdf": "Esporta in PDF",
+    "export_png": "Esporta in PNG",
+    "items_title": "Materiale posizionato",
+    "item_line": "{{label}}: x {{x}} m, y {{y}} m ({{width}} × {{height}} m)",
+    "summary_room": "Sala: {{width}} m × {{length}} m",
+    "summary_arenas": "{{count}} arena/e, disposizione {{columns}} × {{rows}}",
+    "kind_table": "Tavolo",
+    "kind_outlet": "Presa",
+    "kind_accessory": "Accessorio",
+    "drag_hint": "Trascina gli elementi con il mouse (frecce per la regolazione fine, Canc per rimuovere).",
+    "conflict": "Un elemento è fuori dalla sala o in una zona di sicurezza (contorno rosso).",
+    "export_error": "Esportazione non riuscita. Riprova."
   }
 }

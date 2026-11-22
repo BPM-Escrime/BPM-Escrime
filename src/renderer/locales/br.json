@@ -4266,6 +4266,22 @@
     "legend_guard": "Linennoù gwarez",
     "legend_roles": "Emgannerien ha barnerien (1 da 6)",
     "invalid": "Merkit dimensionoù positivel.",
-    "note": "Lec’hiennoù ar barnerien a zo estimet diwar ar skeudenn: gwiriit."
+    "note": "Lec’hiennoù ar barnerien a zo estimet diwar ar skeudenn: gwiriit.",
+    "add_table": "+ Taolenn",
+    "add_outlet": "+ Plug",
+    "add_accessory": "+ Dafar",
+    "remove": "Dilemel an dibab",
+    "export_pdf": "Ezporzhiañ e PDF",
+    "export_png": "Ezporzhiañ e PNG",
+    "items_title": "Traoù lakaet",
+    "item_line": "{{label}}: x {{x}} m, y {{y}} m ({{width}} × {{height}} m)",
+    "summary_room": "Sal: {{width}} m × {{length}} m",
+    "summary_arenas": "{{count}} arenenn, lakadur {{columns}} × {{rows}}",
+    "kind_table": "Taolenn",
+    "kind_outlet": "Plug",
+    "kind_accessory": "Dafar",
+    "drag_hint": "Stardit ar pezhioù gant al logodenn (saetennoù evit kempenn vanus, Dilemel evit tennañ).",
+    "conflict": "Unan eus ar pezhioù zo er-maez eus ar sal pe en ur vaez surentez (kont ruz).",
+    "export_error": "Ezporzhiadur c’hwitet. Klaskit en-dro."
   }
 }

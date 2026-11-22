@@ -4266,6 +4266,22 @@
     "legend_guard": "警戒線",
     "legend_roles": "選手及裁判（1 至 6）",
     "invalid": "請輸入正數尺寸。",
-    "note": "裁判位置依規程示意圖估算，待核實。"
+    "note": "裁判位置依規程示意圖估算，待核實。",
+    "add_table": "+ 桌子",
+    "add_outlet": "+ 插座",
+    "add_accessory": "+ 配件",
+    "remove": "刪除所選",
+    "export_pdf": "匯出 PDF",
+    "export_png": "匯出 PNG",
+    "items_title": "已放置設備",
+    "item_line": "{{label}}：x {{x}} 米，y {{y}} 米（{{width}} × {{height}} 米）",
+    "summary_room": "場館：{{width}} 米 × {{length}} 米",
+    "summary_arenas": "{{count}} 個劍場，佈局 {{columns}} × {{rows}}",
+    "kind_table": "桌子",
+    "kind_outlet": "插座",
+    "kind_accessory": "配件",
+    "drag_hint": "用滑鼠拖動元件（方向鍵微調，Delete 刪除）。",
+    "conflict": "有元件在場館外或位於安全區內（紅色外框）。",
+    "export_error": "匯出失敗，請再試。"
   }
 }
