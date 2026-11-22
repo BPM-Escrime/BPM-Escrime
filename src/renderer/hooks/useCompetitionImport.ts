@@ -11,6 +11,7 @@ import { useToast } from '../components/Toast';
 import { useTranslation } from './useTranslation';
 import type { useFencerManagement } from './useFencerManagement';
 import { useBpmClient } from '../api/BpmClientContext';
+import { refereeFromDTO, registerRefereeInput } from '../api/refereeMapping';
 
 export interface ImportData {
   format: string;
@@ -51,27 +52,26 @@ export function useCompetitionImport({
 
   /** Arbitres du bloc <Arbitres> d'un XML (#1504) ; doublons nom + prénom ignorés */
   const handleImportReferees = async (imported: ImportedReferee[]) => {
-    if (!window.electronAPI?.db?.createReferee) return;
     // Doublon : même licence, ou même nom + prénom (clés partagées avec le MCP, #1880)
     const known = new Set(referees.flatMap(r => importIdentityKeys(r)));
-    const created: Referee[] = [];
+    const fresh: ImportedReferee[] = [];
     for (const ref of imported) {
       const keys = importIdentityKeys(ref);
       if (keys.some(k => known.has(k))) continue;
       keys.forEach(k => known.add(k));
+      fresh.push(ref);
+    }
+    const created: Referee[] = [];
+    if (fresh.length > 0) {
       try {
-        created.push(
-          await window.electronAPI.db.createReferee(competition.id, {
-            name: `${ref.firstName} ${ref.lastName}`.trim(),
-            club: ref.club,
-            license: ref.license,
-            category: ref.category,
-            nationality: ref.nationality,
-            gender: ref.gender,
-          })
-        );
+        // Inscription par le moteur (registerReferees, docs/adr/0018)
+        const r = await client.call('registerReferees', {
+          competitionId: competition.id,
+          referees: fresh.map(registerRefereeInput),
+        });
+        created.push(...r.referees.map(refereeFromDTO));
       } catch (err) {
-        logger.error(LogCategory.UI, 'Failed to import referee', err as Error);
+        logger.error(LogCategory.UI, 'Failed to import referees', err as Error);
       }
     }
     if (created.length > 0) setReferees?.(prev => [...prev, ...created]);

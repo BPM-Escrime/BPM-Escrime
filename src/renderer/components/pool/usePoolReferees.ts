@@ -7,6 +7,8 @@ import { useCallback } from 'react';
 import type { Referee } from '../../../shared/types';
 import { useStateGroup } from '../../hooks/useStateGroup';
 import { POOL_REFEREE_INIT } from './poolViewState';
+import { useBpmClient } from '../../api/BpmClientContext';
+import { refereeFromDTO } from '../../api/refereeMapping';
 
 interface UsePoolRefereesOptions {
   poolId: string;
@@ -23,6 +25,7 @@ export function usePoolReferees({
   maxRefereesPerPool,
   onRefereeAssigned,
 }: UsePoolRefereesOptions) {
+  const client = useBpmClient();
   const {
     showRefereeModal,
     setShowRefereeModal,
@@ -44,8 +47,9 @@ export function usePoolReferees({
     setShowRefereeModal(true);
     if (competitionId) {
       setIsLoadingReferees(true);
-      window.electronAPI.db
-        .getRefereesByCompetition(competitionId)
+      client
+        .query('listReferees', { competitionId })
+        .then(dtos => dtos.map(refereeFromDTO))
         .then(refs =>
           // Arbitres non pointés masqués, sauf ceux déjà assignés (#977)
           setCompetitionReferees(
@@ -54,9 +58,11 @@ export function usePoolReferees({
             )
           )
         )
+        .catch(() => setCompetitionReferees([]))
         .finally(() => setIsLoadingReferees(false));
     }
   }, [
+    client,
     competitionId,
     assignedReferees,
     setPendingRefereeIds,

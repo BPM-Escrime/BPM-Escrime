@@ -207,6 +207,31 @@ const FencerDetailsShape = {
   photo: z.string().max(2_000_000).nullable().optional().describe('Image en base64'),
 };
 
+/** Arbitre exposé par le contrat (listReferees, commandes d'inscription, docs/adr/0018) */
+const RefereeSchema = z.object({
+  id: z.string(),
+  ref: z.number(),
+  firstName: z.string(),
+  lastName: z.string(),
+  gender: z.string(),
+  club: z.string().nullable(),
+  license: z.string().nullable(),
+  nationality: z.string().nullable(),
+  region: z.string().nullable(),
+  category: z.string().nullable(),
+  status: z.enum(['available', 'assigned', 'unavailable']),
+});
+
+/** Identité d'un arbitre, sans règle */
+const RefereeDetailsShape = {
+  firstName: Text.optional(),
+  gender: z.enum(['M', 'F', 'X']).optional(),
+  nationality: z.string().trim().min(2).max(3).optional().describe('Code ISO (FRA)'),
+  club: Text.nullable().optional(),
+  license: z.string().trim().max(40).nullable().optional(),
+  category: Text.nullable().optional().describe('Niveau : régional, national, international…'),
+};
+
 const CompetitionStateSchema = z.object({
   currentPhase: z.number().int(),
   pools: z.array(z.custom<Pool>()),
@@ -831,6 +856,77 @@ export const contract = {
     permission: 'fencers:write',
   }),
 
+  registerReferees: command({
+    description:
+      'Inscrit un ou plusieurs arbitres, non pointés (docs/adr/0018). Doublons (licence, ou nom et prénom) signalés dans « duplicates », pas refusés.',
+    input: z.object({
+      competitionId: CompetitionId,
+      referees: z
+        .array(z.object({ lastName: Text.min(1), ...RefereeDetailsShape }))
+        .min(1)
+        .max(1000),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      referees: z.array(RefereeSchema),
+      duplicates: z.array(z.object({ index: z.number().int(), refereeId: z.string() })),
+      revision: Revision,
+    }),
+    permission: 'referees:write',
+  }),
+
+  updateRefereeDetails: command({
+    description:
+      'Identité d’un arbitre : nom, prénom, sexe, nation, club, licence, niveau. Jamais sa disponibilité (setRefereeAvailability).',
+    input: z.object({
+      competitionId: CompetitionId,
+      refereeId: Id,
+      details: z.strictObject({ lastName: Text.min(1).optional(), ...RefereeDetailsShape }),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), referee: RefereeSchema, revision: Revision }),
+    permission: 'referees:write',
+  }),
+
+  setRefereeAvailability: command({
+    description:
+      'Pointage des arbitres : disponibles (« available: true ») ou non pointés. Même effet que l’appel distant.',
+    input: z.object({
+      competitionId: CompetitionId,
+      refereeIds: z.array(Id).min(1).max(1000),
+      available: z.boolean(),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      status: z.enum(['available', 'unavailable']),
+      updated: z.number().int(),
+      unknown: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'referees:write',
+  }),
+
+  unregisterReferee: command({
+    description: 'Désinscrit un arbitre. Refusé (« referee_busy ») s’il arbitre un match en cours.',
+    input: z.object({
+      competitionId: CompetitionId,
+      refereeId: Id,
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), refereeId: z.string(), revision: Revision }),
+    permission: 'referees:write',
+  }),
+
   withdrawFencer: command({
     description:
       'Retire un tireur de l’épreuve : abandon (médical), forfait ou exclusion (« blackCard » : carton noir). ' +
@@ -973,17 +1069,26 @@ export const contract = {
     description:
       'Arbitres d’une épreuve : identité, club, nationalité, niveau et disponibilité (« unavailable » : non pointé). Écran : choix de l’arbitre d’une poule ou d’un match.',
     input: z.object({ competitionId: CompetitionId }),
+    output: z.array(RefereeSchema),
+    permission: 'competition:read',
+  }),
+
+  listRefereeMatches: query({
+    description:
+      'Matchs de poule d’une épreuve avec leur arbitre : historique des arbitrages (numéro, poule, tireurs, score, statut).',
+    input: z.object({ competitionId: CompetitionId }),
     output: z.array(
       z.object({
-        id: z.string(),
-        ref: z.number(),
-        firstName: z.string(),
-        lastName: z.string(),
-        club: z.string().nullable(),
-        nationality: z.string().nullable(),
-        region: z.string().nullable(),
-        category: z.string().nullable(),
-        status: z.enum(['available', 'assigned', 'unavailable']),
+        matchId: z.string(),
+        matchNumber: z.number(),
+        poolName: z.string().nullable(),
+        fencerAName: z.string(),
+        fencerBName: z.string(),
+        scoreA: z.number().nullable(),
+        scoreB: z.number().nullable(),
+        status: z.string(),
+        refereeId: z.string().nullable(),
+        refereeName: z.string().nullable(),
       })
     ),
     permission: 'competition:read',
