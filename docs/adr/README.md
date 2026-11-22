@@ -30,6 +30,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0019](0019-plan-arene-salle.md)                   | Disposition d'arène rattachée à la salle, salle liée à la compétition (proposée)                                                             | Proposée            |
 | [0018](0018-commandes-inscription.md)              | Commandes d'inscription : tireurs, arbitres, épreuves, saison (pas de patch libre, pas de journal)                                           | Acceptée            |
 | [0020](0020-transport-websocket-contrat.md)        | Le contrat passe aussi par Socket.IO (`/api`, `WsClient`), en lecture seule jusqu'à #1982                                                    | Proposée            |
+| [0021](0021-services-plateforme.md)                | Fonctions propres à Electron (fichiers, impression, liens) derrière `PlatformServices`, en contenu et non en chemin                          | Proposée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.
