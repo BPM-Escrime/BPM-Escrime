@@ -38,6 +38,7 @@ const fmt = (n: number) => (Math.round(n * 10) / 10).toString();
 
 type DragState =
   | { mode: 'move'; id: string; dx: number; dy: number }
+  | { mode: 'arena'; index: number; dx: number; dy: number }
   | { mode: 'resize'; id: string; cx: number; cy: number; rot: number }
   | { mode: 'rotate'; id: string; cx: number; cy: number };
 
@@ -52,6 +53,7 @@ export interface ArenaPlanCanvasProps {
   svgRef: React.RefObject<SVGSVGElement | null>;
   onSelect: (id: string | null) => void;
   onMove: (id: string, x: number, y: number) => void;
+  onMoveArena: (index: number, x: number, y: number) => void;
   onResize: (id: string, widthM: number, heightM: number) => void;
   onRotate: (id: string, deg: number) => void;
   onDelete: (id: string) => void;
@@ -68,6 +70,7 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   svgRef,
   onSelect,
   onMove,
+  onMoveArena,
   onResize,
   onRotate,
   onDelete,
@@ -91,7 +94,7 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   const startDrag = (e: React.PointerEvent<SVGElement>, state: DragState) => {
     e.stopPropagation();
     dragRef.current = state;
-    onSelect(state.id);
+    if ('id' in state) onSelect(state.id);
     svgRef.current?.setPointerCapture(e.pointerId);
   };
 
@@ -125,6 +128,12 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
     if (!drag) return;
     const p = toMetres(e.clientX, e.clientY);
     if (!p) return;
+    if (drag.mode === 'arena') {
+      const rawX = p.x - drag.dx;
+      const rawY = p.y - drag.dy;
+      onMoveArena(drag.index, snap ? snapToStep(rawX) : rawX, snap ? snapToStep(rawY) : rawY);
+      return;
+    }
     if (drag.mode === 'move') {
       const rawX = p.x - drag.dx;
       const rawY = p.y - drag.dy;
@@ -258,8 +267,15 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
             cx={g.center.x}
             cy={g.center.y}
             r={ARENA_ZONE_RADIUS_M}
-            className="arena-planner-zone"
-          />
+            className="arena-planner-zone arena-planner-arena-grab"
+            onPointerDown={e => {
+              const p = toMetres(e.clientX, e.clientY);
+              if (!p) return;
+              startDrag(e, { mode: 'arena', index: i, dx: p.x - g.center.x, dy: p.y - g.center.y });
+            }}
+          >
+            <title>{t('arenaPlanner.handle_arena')}</title>
+          </circle>
           <line
             x1={g.center.x + g.guardLines.red}
             y1={g.center.y - 0.6}

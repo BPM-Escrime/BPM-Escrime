@@ -446,3 +446,94 @@ export function optimizeArenaLayout(
 export function snapToStep(value: number, step = OPTIMIZER_STEP_M): number {
   return Math.round(value / step) * step;
 }
+
+/** Pas de poussée d'un élément hors d'un cercle de sécurité (mètres). */
+const PUSH_STEP_M = 0.1;
+/** Déplacement maximal d'un élément poussé (mètres) : au-delà, il reste à sa place. */
+const PUSH_MAX_M = 30;
+
+/** Éloigne un élément d'un cercle, pas à pas, dans la direction centre de l'élément → centre du cercle. */
+function pushItemOutOfCircle(item: RoomItem, c: Point, room: RoomSize, r: number): RoomItem {
+  let current = item;
+  const steps = Math.round(PUSH_MAX_M / PUSH_STEP_M);
+  for (let k = 0; k < steps; k++) {
+    if (!polygonIntersectsCircle(itemCorners(current), c, r)) return current;
+    const cx = current.x + current.widthM / 2;
+    const cy = current.y + current.heightM / 2;
+    let dx = cx - c.x;
+    let dy = cy - c.y;
+    let len = Math.hypot(dx, dy);
+    if (len < 1e-9) {
+      dx = 1;
+      dy = 0;
+      len = 1;
+    }
+    current = moveRoomItem(
+      current,
+      current.x + (dx / len) * PUSH_STEP_M,
+      current.y + (dy / len) * PUSH_STEP_M,
+      room
+    );
+  }
+  return current;
+}
+
+/**
+ * Déplace l'arène `index` au point `target` (borné à la salle et à la marge),
+ * puis repousse les autres arènes qui se chevauchent (distance minimale 2 × rayon
+ * de sécurité) et tous les éléments qui touchent un cercle de sécurité.
+ * Les éléments sont repoussés sans sortir de la salle ; s'ils ne peuvent pas
+ * l'être, la contrainte reste signalée par checkRoomItems.
+ */
+export function moveArenaWithPush(
+  centers: Point[],
+  index: number,
+  target: Point,
+  room: RoomSize,
+  marginM: number,
+  items: RoomItem[]
+): { centers: Point[]; items: RoomItem[] } {
+  const r = ARENA_SAFETY_RADIUS_M;
+  const pitch = 2 * r;
+  const minX = marginM + r;
+  const maxX = room.widthM - marginM - r;
+  const minY = marginM + r;
+  const maxY = room.lengthM - marginM - r;
+  const clampPoint = (p: Point): Point => ({
+    x: Math.min(Math.max(p.x, minX), Math.max(minX, maxX)),
+    y: Math.min(Math.max(p.y, minY), Math.max(minY, maxY)),
+  });
+
+  const next = centers.map(c => ({ ...c }));
+  next[index] = clampPoint(target);
+
+  // Arènes voisines : poussées sur la droite centre → centre, à 2 × rayon
+  for (let j = 0; j < next.length; j++) {
+    if (j === index) continue;
+    const a = next[index];
+    const b = next[j];
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const d = Math.hypot(dx, dy);
+    if (d >= pitch - 1e-6) continue;
+    const ux = d < 1e-9 ? 1 : dx / d;
+    const uy = d < 1e-9 ? 0 : dy / d;
+    next[j] = clampPoint({ x: a.x + ux * pitch, y: a.y + uy * pitch });
+  }
+
+  // Éléments qui touchent un cercle de sécurité : repoussés hors du cercle
+  let moved = items.map(i => ({ ...i }));
+  for (const c of next) {
+    moved = moved.map(i =>
+      i.kind === 'exit' ||
+      i.kind === 'table' ||
+      i.kind === 'outlet' ||
+      i.kind === 'accessory' ||
+      i.kind === 'blocked'
+        ? pushItemOutOfCircle(i, c, room, r)
+        : i
+    );
+  }
+
+  return { centers: next, items: moved };
+}

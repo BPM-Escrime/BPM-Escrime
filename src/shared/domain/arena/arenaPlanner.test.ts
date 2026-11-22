@@ -18,6 +18,7 @@ import {
   normalizeRotation,
   optimizeArenaLayout,
   snapToStep,
+  moveArenaWithPush,
   computeArenaGeometry,
   planArenaGrid,
   polarPoint,
@@ -297,5 +298,36 @@ describe('technicalDimensions', () => {
     const t = { ...createRoomItem('table', 't', 'Table', room), x: 1, y: 1 };
     const d = technicalDimensions(room, [], [t]);
     expect(d.texts[0].label).toBe('1.5 m × 0.8 m');
+  });
+});
+
+describe('moveArenaWithPush', () => {
+  const room = { widthM: 40, lengthM: 30 };
+
+  it("repousse une arène voisine qui chevauche l'arène déplacée", () => {
+    const r = moveArenaWithPush(
+      [
+        { x: 10, y: 10 },
+        { x: 30, y: 10 },
+      ],
+      0,
+      { x: 20, y: 10 },
+      room,
+      1,
+      []
+    );
+    expect(r.centers[1].x - r.centers[0].x).toBeCloseTo(12, 6);
+    expect(r.centers[0]).toEqual({ x: 20, y: 10 });
+  });
+
+  it('repousse un élément posé dans le cercle de sécurité hors du cercle', () => {
+    const table = { ...createRoomItem('table', 't', 'Table', room), x: 10, y: 9.2 };
+    const r = moveArenaWithPush([{ x: 10, y: 10 }], 0, { x: 10, y: 10 }, room, 1, [table]);
+    expect(checkRoomItems(room, r.centers, r.items)).toEqual([]);
+  });
+
+  it("borne l'arène déplacée à la marge de la salle", () => {
+    const r = moveArenaWithPush([{ x: 10, y: 10 }], 0, { x: -50, y: 10 }, room, 1, []);
+    expect(r.centers[0].x).toBe(7);
   });
 });
