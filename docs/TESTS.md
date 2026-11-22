@@ -106,13 +106,13 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 134 | 1104 |
+| `src/main/` | 131 | 1126 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 123 | 659 |
 | E2E Playwright (`e2e/`) | 14 | 43 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 6 | 22 |
+| `src/renderer/api/` | 7 | 30 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
 | `src/shared/platform/` | 1 | 8 |
-| **Total** | **558** | **4245** |
+| **Total** | **556** | **4275** |
 
-Unitaires : 544 fichiers, 4202 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 542 fichiers, 4232 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3259,14 +3259,16 @@ Unitaires : 544 fichiers, 4202 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/api/wsLocalRefusal.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/engine/api/wsLocalRefusal.test.ts</code> — 5 tests</summary>
 
 - **wsRefusal : opérations %s\*** _(each)_
   - le contrat compte des opérations de ce groupe
   - aucun droit du groupe n’est servi sur le réseau
   - %s est refusé (permission\_denied) _(each)_
 - **opérations du poste : pas d’outil MCP**
-  - aucune opération station:admin n’est exposée à l’agent
+  - aucune opération club:\*, station:\* ou remote:\* n’est exposée à l’agent
+- **STATION\_PERMISSIONS (pas de journal, pas de réseau)**
+  - couvre exactement les droits club:, station: et remote: du contrat
 
 </details>
 
@@ -3366,6 +3368,51 @@ Unitaires : 544 fichiers, 4202 tests. E2E : 14 fichiers, 43 tests (comptage stat
 - registerReferees : non pointés, doublons signalés ; listReferees
 - updateRefereeDetails, setRefereeAvailability, unregisterReferee
 - unregisterReferee : refusé pour l’arbitre d’un match en cours
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/remote.test.ts</code> — 31 tests</summary>
+
+- **cycle de vie du serveur**
+  - démarre, rend l’adresse, puis arrête (commandes asynchrones, sans journal)
+  - refuse un double démarrage et un port pris, avec le port en donnée
+  - arrêt d’un serveur absent : remote\_not\_running
+  - rechargement : serveur absent refusé, port hors bornes refusé par le schéma
+  - empreinte du certificat et diagnostic du pare-feu
+  - sans port du poste (MCP, tests) : unavailable
+- **session et pistes**
+  - session : démarrage, lecture, nombre de pistes, arrêt
+  - serveur sans session : getRemoteSession rend null
+  - pistes et rencontres d’équipe
+  - signature d’un match : piste absente refusée
+  - vague active : mémorisée par le port, même serveur arrêté
+- **synchro d’affichage : l’écran pousse son état, aucun fait écrit**
+  - chaque poussée appelle la méthode du serveur, sans toucher au journal
+  - fin ou remise à zéro d’un match, serveur absent : rien à prévenir
+  - un score hors bornes est refusé par le schéma
+- **mots de passe, inscription, pointage, espace formateurs**
+  - mot de passe de piste : trop court → weak\_password, piste inconnue → remote\_refused
+  - configureCheckin et configureTrainerSpace : ouverture et mot de passe, ensemble ou séparés
+  - serveur absent : toutes ces opérations refusent par remote\_not\_running
+- **thèmes, kiosque, fond d’écran**
+  - thème de l’épreuve, d’une piste et d’un type d’écran
+  - un thème invalide est refusé par le schéma
+  - kiosque et fond d’écran
+- **note d’organisation et avis**
+  - setOrgNote et clearOrgNote : serveur prévenu, avis publié à l’écran
+  - une note aux champs inconnus est refusée
+  - onRemoteActivity : filtre par épreuve, livre les avis sans épreuve à tous
+  - onRemoteClients relaie la liste des clients du serveur émetteur
+- **clients connectés**
+  - serveur arrêté : aucun client
+  - liste, commandes, nom, identification, mode kiosque
+  - une commande inconnue est refusée par le schéma
+  - commande sur un serveur arrêté : remote\_not\_running
+- **réglages valables pour tous les serveurs**
+  - webhook poussé à chaque serveur actif
+  - test du webhook : succès, URL refusée, échec du service
+  - logo et synthèse vocale : validés puis confiés au port
 
 </details>
 
@@ -3606,74 +3653,21 @@ Unitaires : 544 fichiers, 4202 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/privacyHandlers.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/ipc/logoTtsHandlers.test.ts</code> — 3 tests</summary>
 
-- **handlers privacy:\* restants**
-  - ne déclare plus que les canaux à dialogue natif ou chemin de fichier
-  - archive chiffrée : mot de passe trop court, aucun fichier en attente
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/remoteClientsHandlers.test.ts</code> — 4 tests</summary>
-
-- **registerRemoteClientsHandlers (#1341)**
-  - enregistre les canaux clients et synthèse vocale
-  - getConnectedClients : serveur absent → liste vide
+- **registerLogoTtsHandlers (#1341)**
+  - enregistre les canaux de lecture des logos et de la synthèse vocale
   - getLogos : fichier absent → liste vide
   - saveLogos : entrée non tableau refusée
 
 </details>
 
 <details>
-<summary><code>src/main/ipc/remoteDisplayHandlers.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/ipc/privacyHandlers.test.ts</code> — 2 tests</summary>
 
-- **registerRemoteDisplayHandlers (#1341)**
-  - enregistre les canaux écrans / notes / signature
-  - clearOrgNote : serveur absent
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/remoteMatchHandlers.test.ts</code> — 2 tests</summary>
-
-- **registerRemoteMatchHandlers (#1341)**
-  - enregistre tous les canaux de session / rencontres
-  - refuse proprement quand le serveur n’est pas démarré
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/remoteServerHandlers.test.ts</code> — 8 tests</summary>
-
-- **registerRemoteServerHandlers (#1341)**
-  - enregistre les canaux de cycle de vie du serveur
-  - getServerInfo / stopServer : serveur absent
-  - getNetworkInterfaces propose toujours 0.0.0.0
-  - **reloadServer (rechargement à chaud)**
-    - serveur absent
-    - port invalide refusé sans redémarrage
-    - port d’un autre serveur refusé
-    - change port et interface, met à jour le registre (même instance conservée)
-    - échec du redémarrage : registre inchangé
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/remoteSessionHandlers.test.ts</code> — 2 tests</summary>
-
-- **registerRemoteSessionHandlers (#1341)**
-  - enregistre les canaux de session et de réglages
-  - stopSession : serveur absent
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/remoteSettingsHandlers.test.ts</code> — 2 tests</summary>
-
-- **registerRemoteSettingsHandlers (#1341)**
-  - enregistre les canaux de réglages
-  - setCheckinEnabled : serveur absent
+- **handlers privacy:\* restants**
+  - ne déclare plus que les canaux à dialogue natif ou chemin de fichier
+  - archive chiffrée : mot de passe trop court, aucun fichier en attente
 
 </details>
 
@@ -4597,6 +4591,21 @@ Unitaires : 544 fichiers, 4202 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - takeover hors entraînement : refusé
   - validation : piste inconnue 404, client invalide 400
   - release libère la piste (ou toutes sans numéro)
+
+</details>
+
+<details>
+<summary><code>src/main/remoteLifecycle.test.ts</code> — 7 tests</summary>
+
+- **cycle de vie du serveur distant (#1341, #1981)**
+  - serveur absent : pas d’adresse
+  - listNetworkInterfaces propose toujours 0.0.0.0 en premier
+  - **reloadRemoteServer (rechargement à chaud)**
+    - serveur absent
+    - port invalide refusé sans redémarrage
+    - port d’un autre serveur refusé
+    - change port et interface, met à jour le registre (même instance conservée)
+    - échec du redémarrage : registre inchangé
 
 </details>
 
@@ -8260,6 +8269,23 @@ Unitaires : 544 fichiers, 4202 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - rien de changé : aucune commande
   - titre et lieu → updateCompetitionDetails ; réglage modifié seul → updateCompetitionSettings
   - arme changée : updateCompetitionSettings sans réglages
+
+</details>
+
+<details>
+<summary><code>src/renderer/api/remoteApi.test.ts</code> — 8 tests</summary>
+
+- **remoteApi : entrées du contrat**
+  - %s _(each)_
+  - chaque opération du contrat est atteignable par un appel de l’écran
+- **remoteApi : enveloppe historique**
+  - une réponse est rangée dans son champ
+  - un refus du contrat devient success: false, avec le code traduisible
+  - une entrée refusée par le schéma revient avec son message
+  - hors Electron (pas de pont) : success: false, jamais de rejet
+- **remoteApi : avis**
+  - onActivity ne livre que le genre demandé
+  - onClientListUpdate livre la liste et l’épreuve du serveur émetteur
 
 </details>
 
