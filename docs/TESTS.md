@@ -104,10 +104,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 269 |
-| `src/main/` | 126 | 1036 |
+| `src/main/` | 127 | 1038 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 120 | 641 |
+| `src/renderer/components/` | 121 | 645 |
 | E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 2 | 6 |
@@ -116,9 +116,9 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/domain/` | 25 | 218 |
-| **Total** | **534** | **4078** |
+| **Total** | **536** | **4084** |
 
-Unitaires : 521 fichiers, 4036 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 523 fichiers, 4042 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3283,6 +3283,14 @@ Unitaires : 521 fichiers, 4036 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/season.test.ts</code> — 2 tests</summary>
+
+- includeInSeason : classement calculé par le moteur, reversement sans doublon
+- excludeFromSeason et resetSeason
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/settings.test.ts</code> — 8 tests</summary>
 
 - valeurs par défaut, validation, reprise douce des valeurs localStorage
@@ -6096,6 +6104,17 @@ Unitaires : 521 fichiers, 4036 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - masque les entrées au-delà des premières en mode compact, puis les réaffiche
 - **ScoreAuditLog — motif de correction après tirage du tableau (#1996)**
   - motif affiché pour une correction, motif technique masqué, auteur générique non affiché
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/__tests__/SeasonRankingView.test.tsx</code> — 4 tests</summary>
+
+- **Classement de saison par le contrat (docs/adr/0018)**
+  - lit le classement et les épreuves versées par getSeasonRanking
+  - verse une épreuve : includeInSeason, puis relecture
+  - retire une épreuve : excludeFromSeason
+  - remise à zéro après confirmation : resetSeason
 
 </details>
 
