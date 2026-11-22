@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Competition } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
+import { useBpmClient } from '../api/BpmClientContext';
+import { competitionFromDTO } from '../api/competitionMapping';
 
 type View = 'home' | 'competition' | 'club';
 
@@ -43,6 +45,7 @@ export interface AppStateActions {
 export function useAppState(
   showToast: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void
 ): AppState & AppStateActions {
+  const client = useBpmClient();
   const [view, setView] = useState<View>('home');
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [currentCompetition, setCurrentCompetition] = useState<Competition | null>(null);
@@ -57,15 +60,14 @@ export function useAppState(
   const loadCompetitions = useCallback(async () => {
     setIsLoading(true);
     try {
-      if (window.electronAPI) {
-        const comps = await window.electronAPI.db.getAllCompetitions();
-        setCompetitions(comps);
-      }
+      // Lecture par le contrat (docs/adr/0018) ; hors Electron : liste vide
+      const comps = await client.query('listCompetitions', {});
+      setCompetitions(comps.map(competitionFromDTO));
     } catch (error) {
       logger.error(LogCategory.UI, 'Failed to load competitions', error as Error);
     }
     setIsLoading(false);
-  }, []);
+  }, [client]);
 
   const handleUpdateCompetition = useCallback((updated: Competition) => {
     setCurrentCompetition(prev => (prev?.id === updated.id ? updated : prev));

@@ -44,6 +44,7 @@ import {
   updateRefereeDetails,
 } from '../commands/referees';
 import {
+  competitionDTO,
   createCompetition,
   deleteCompetition,
   updateCompetitionDetails,
@@ -144,6 +145,9 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     ranking: ctx.db.getSeasonRanking(),
     competitions: ctx.db.getSeasonCompetitions(),
   }),
+  getCompetition: (ctx, { competitionId }) =>
+    competitionDTO(getCompetitionOrThrow(ctx, competitionId)),
+  listCompetitions: ctx => ctx.db.getAllCompetitions().map(competitionDTO),
   listReferees: (ctx, { competitionId }) => {
     getCompetitionOrThrow(ctx, competitionId);
     return ctx.db.getRefereesByCompetition(competitionId).map(refereeDTO);

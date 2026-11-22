@@ -10,6 +10,8 @@ import { logger, LogCategory } from '@shared/services/logger';
 import type { Competition } from '../../shared/types';
 import { installAppSettingsMirror } from '../services/appSettingsMirror';
 import type { OpenCompetition } from './useAppState';
+import { defaultBpmClient } from '../api/IpcClient';
+import { loadCompetition } from '../api/competitionMapping';
 
 interface AppGlobalEffectsParams {
   loadCompetitions: () => unknown;
@@ -35,7 +37,7 @@ export function useAppGlobalEffects(params: AppGlobalEffectsParams): void {
       void ref.current.loadCompetitions();
       const id = event.competitionId;
       if (!id) return;
-      void window.electronAPI.db.getCompetition(id).then(fresh => {
+      void loadCompetition(defaultBpmClient, id).then(fresh => {
         if (!fresh) return;
         const merge = (c: Competition): Competition =>
           c.id === id ? { ...c, ...fresh, fencers: c.fencers, referees: c.referees } : c;
