@@ -25,6 +25,7 @@ import {
 } from '../../../shared/utils/clubAge';
 import { AgeRangeSelect, ageRangeText } from './ClubAgeRange';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
 
@@ -74,7 +75,7 @@ const StatHeaders: React.FC = () => {
 
 export const ClubStatsPanel: React.FC<{ clubId: string }> = ({ clubId }) => {
   const { t } = useTranslation();
-  const api = window.electronAPI?.club;
+  const api = useClubApi();
   const [scope, setScope] = useState<Scope>('season');
   const [sessionId, setSessionId] = useState('');
   const [sessions, setSessions] = useState<ClubSession[]>([]);
@@ -93,7 +94,6 @@ export const ClubStatsPanel: React.FC<{ clubId: string }> = ({ clubId }) => {
   );
 
   useEffect(() => {
-    if (!api) return;
     void (async () => {
       const [list, mem] = await Promise.all([
         api.listSessions(clubId),
@@ -106,7 +106,7 @@ export const ClubStatsPanel: React.FC<{ clubId: string }> = ({ clubId }) => {
   }, [api, clubId]);
 
   const loadBoard = useCallback(async () => {
-    if (api) setBoard(await api.getLeaderboard(filter));
+    setBoard(await api.getLeaderboard(filter));
   }, [api, filter]);
 
   useEffect(() => {
@@ -114,12 +114,12 @@ export const ClubStatsPanel: React.FC<{ clubId: string }> = ({ clubId }) => {
   }, [loadBoard]);
 
   useEffect(() => {
-    if (!api || !selected) return;
+    if (!selected) return;
     void api.getMemberReport(selected, filter, groupBy).then(setReport);
   }, [api, selected, filter, groupBy]);
 
   useEffect(() => {
-    if (!api || !selected) return;
+    if (!selected) return;
     void api.getMemberFeedback(selected).then(setRemarks);
   }, [api, selected]);
 
@@ -137,8 +137,6 @@ export const ClubStatsPanel: React.FC<{ clubId: string }> = ({ clubId }) => {
     const m = byId.get(id);
     return m ? `${m.lastName} ${m.firstName}` : '?';
   };
-
-  if (!api) return null;
 
   const scopeBar = (
     <div className="club-row">

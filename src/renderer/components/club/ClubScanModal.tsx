@@ -15,6 +15,7 @@ import {
   type ScanState,
 } from '../../../shared/utils/clubScanFlow';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
 import { QrScanner } from './QrScanner';
@@ -30,7 +31,7 @@ const fullName = (m: ClubMember | undefined) => (m ? `${m.lastName} ${m.firstNam
 
 export const ClubScanModal: React.FC<ClubScanModalProps> = ({ session, onClose, onLaunched }) => {
   const { t } = useTranslation();
-  const api = window.electronAPI?.club;
+  const api = useClubApi();
   const [scan, setScan] = useState<ScanState>(EMPTY_SCAN);
   const [members, setMembers] = useState<Record<string, ClubMember>>({});
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
@@ -43,7 +44,7 @@ export const ClubScanModal: React.FC<ClubScanModalProps> = ({ session, onClose, 
 
   const launch = useCallback(
     async (state: ScanState) => {
-      if (!api || state.strip === null) return;
+      if (state.strip === null) return;
       const [a, b] = state.memberIds;
       await api.setAttendance(session.id, a, true);
       await api.setAttendance(session.id, b, true);
@@ -66,7 +67,7 @@ export const ClubScanModal: React.FC<ClubScanModalProps> = ({ session, onClose, 
   const onDecode = useCallback(
     async (text: string) => {
       const now = Date.now();
-      if (!api || busy.current || isRepeatScan(last.current, text, now)) return;
+      if (busy.current || isRepeatScan(last.current, text, now)) return;
       last.current = { text, at: now };
       const data = parseClubQr(text);
       if (!data) {

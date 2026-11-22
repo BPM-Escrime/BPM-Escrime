@@ -532,133 +532,14 @@ export interface ClubItemBrandDef {
   updatedAt: string;
 }
 
-/** Mode Club : membres, séances, combats libres, statistiques (#1872) */
+/**
+ * Mode Club : fonctions du poste portant un chemin de fichier (#1872, docs/adr/0021). Tout le
+ * reste (membres, séances, combats, inventaire, synchro…) est dans le contrat d'API :
+ * shared/api/contractClub.ts (docs/adr/0022).
+ */
 export interface ClubAPI {
-  /** Clubs avec effectif et séance ouverte (accueil) */
-  listClubs: () => Promise<ClubSummary[]>;
-  getClub: (id: string) => Promise<Club | null>;
-  createClub: (data: { name: string; stripCount?: number }) => Promise<Club>;
-  /** logo: null efface le logo */
-  updateClub: (id: string, data: ClubUpdate) => Promise<Club | null>;
-  /** Supprime le club et toutes ses données (membres, séances, combats) */
-  deleteClub: (id: string) => Promise<void>;
-  /** Saisie distante : serveur d'entraînement actif, URL, nombre d'arènes */
-  remoteStatus: () => Promise<{ active: boolean; url: string | null; strips: number }>;
-  /** Envoie le combat à la tablette arbitre de sa piste */
-  pushBout: (boutId: string) => Promise<'ok' | 'no_server' | 'no_arena' | 'busy'>;
-  /** Séance dont les tablettes peuvent lancer des combats par scan des cartes (null = aucune) */
-  linkRemote: (sessionId: string | null) => Promise<void>;
-  /** Combat annulé : libère l'arène */
-  releaseBout: (boutId: string) => Promise<void>;
   /** Photos d'un ZIP (fichiers nommés par licence, comme en compétition) */
   importPhotos: (clubId: string, filepath: string) => Promise<{ matched: number; total: number }>;
-  listMembers: (clubId: string, includeInactive?: boolean) => Promise<ClubMember[]>;
-  /** Membre d'après le code lu sur sa carte (actifs seulement ; clubId : de ce club) */
-  findMemberByCardCode: (code: string, clubId?: string) => Promise<ClubMember | null>;
-  /** Nouveau code : l'ancienne carte devient invalide */
-  regenerateCardCode: (id: string) => Promise<ClubMember | null>;
-  createMember: (clubId: string, data: ClubMemberInput) => Promise<ClubMember>;
-  updateMember: (id: string, data: Partial<ClubMemberInput>) => Promise<ClubMember | null>;
-  /** Effacement définitif (RGPD) : présences et combats compris ; archiver = active:false */
-  deleteMember: (id: string) => Promise<void>;
-  /** Maîtres d'armes ; archivés inclus si includeInactive */
-  listCoaches: (clubId: string, includeInactive?: boolean) => Promise<ClubCoach[]>;
-  createCoach: (clubId: string, data: ClubCoachInput) => Promise<ClubCoach>;
-  updateCoach: (id: string, data: Partial<ClubCoachInput>) => Promise<ClubCoach | null>;
-  /** Suppression définitive (retiré des séances) */
-  deleteCoach: (id: string) => Promise<void>;
-  /** Import en lot : nouveaux créés, existants complétés (licence puis nom), doublons ignorés */
-  importMembers: (
-    clubId: string,
-    inputs: ClubMemberInput[]
-  ) => Promise<import('../utils/clubImport').ClubImportResult>;
-  listSessions: (clubId: string, range?: { from?: string; to?: string }) => Promise<ClubSession[]>;
-  getSession: (id: string) => Promise<ClubSession | null>;
-  createSession: (clubId: string, data: ClubSessionInput) => Promise<ClubSession>;
-  /** Séances préparées répétées (même plan, une série) ; renvoie les séances créées */
-  createSeries: (
-    clubId: string,
-    data: ClubSessionInput,
-    recurrence: ClubRecurrence
-  ) => Promise<ClubSession[]>;
-  /** Séances préparées sur les jours d'ouverture entre deux dates (une série) */
-  generateSessions: (
-    clubId: string,
-    data: ClubSessionInput,
-    options: ClubScheduleOptions
-  ) => Promise<ClubScheduleResult>;
-  /** Fermeture : supprime les séances prévues (ni ouvertes ni closes) sur une ou plusieurs périodes ; renvoie le nombre */
-  deletePlannedInPeriods: (clubId: string, periods: ClubDateRange[]) => Promise<number>;
-  updateSession: (id: string, data: Partial<ClubSessionInput>) => Promise<ClubSession | null>;
-  /** Ferme la séance : combats non terminés annulés */
-  closeSession: (id: string) => Promise<ClubSession | null>;
-  reopenSession: (id: string) => Promise<ClubSession | null>;
-  /** Remarque pour un tireur présent (vide = effacée) */
-  setMemberFeedback: (sessionId: string, memberId: string, text: string) => Promise<void>;
-  /** Remarques reçues par un tireur, plus récentes d'abord */
-  getMemberFeedback: (memberId: string) => Promise<ClubMemberFeedback[]>;
-  /** Bibliothèque d'exercices */
-  listExercises: () => Promise<ClubExercise[]>;
-  createExercise: (data: ClubExerciseInput) => Promise<ClubExercise>;
-  updateExercise: (id: string, data: Partial<ClubExerciseInput>) => Promise<ClubExercise | null>;
-  deleteExercise: (id: string) => Promise<void>;
-  /** Import d'un fichier partagé : doublons (même titre et famille) ignorés */
-  importExercises: (list: ClubExerciseInput[]) => Promise<{ created: number; skipped: number }>;
-  /** Séance préparée → ouverte (une seule séance ouverte par club) */
-  startSession: (id: string) => Promise<ClubSession | null>;
-  deleteSession: (id: string) => Promise<void>;
-  /** Renvoie les présents de la séance */
-  setAttendance: (sessionId: string, memberId: string, present: boolean) => Promise<string[]>;
-  listBouts: (filter?: ClubBoutFilter) => Promise<ClubBout[]>;
-  createBout: (data: ClubBoutInput) => Promise<ClubBout>;
-  startBout: (id: string) => Promise<ClubBout | null>;
-  updateBoutScore: (id: string, scoreA: number, scoreB: number) => Promise<ClubBout | null>;
-  finishBout: (id: string, result: ClubBoutResult) => Promise<ClubBout | null>;
-  cancelBout: (id: string) => Promise<ClubBout | null>;
-  deleteBout: (id: string) => Promise<void>;
-  getLeaderboard: (filter?: ClubBoutFilter) => Promise<ClubMemberStats[]>;
-  getMemberReport: (
-    memberId: string,
-    filter?: ClubBoutFilter,
-    groupBy?: ClubPeriodKind
-  ) => Promise<ClubMemberReport>;
-  /** Inventaire : matériel du club (réformés inclus si includeRetired) */
-  listItems: (clubId: string, includeRetired?: boolean) => Promise<ClubItem[]>;
-  createItem: (clubId: string, data: ClubItemInput) => Promise<ClubItem>;
-  /** Ajout en série : count fiches « Nom-01 … » (1 exemplaire chacune), sans doublon de nom */
-  createItemSeries: (clubId: string, data: ClubItemInput, count: number) => Promise<ClubItem[]>;
-  updateItem: (id: string, data: Partial<ClubItemInput>) => Promise<ClubItem | null>;
-  /** Refusé si du matériel est prêté ; l'historique des prêts rendus est effacé avec lui */
-  deleteItem: (id: string) => Promise<void>;
-  /** Prêts (défaut : tous), plus récents d'abord */
-  listLoans: (clubId: string, filter?: ClubLoanFilter) => Promise<ClubLoan[]>;
-  /** Prête `quantity` exemplaires à un tireur (dans la limite des disponibles) */
-  lendItem: (data: ClubLoanInput) => Promise<ClubLoan>;
-  returnLoan: (id: string, data?: ClubLoanReturn) => Promise<ClubLoan | null>;
-  /** Supprime un prêt rendu (correction de saisie) ; un prêt en cours se rend d'abord */
-  deleteLoan: (id: string) => Promise<void>;
-  /** Catégories créées par le club (triées par nom) */
-  listCategories: (clubId: string) => Promise<ClubItemCategoryDef[]>;
-  /** Nom unique dans le club (sans tenir compte de la casse) */
-  createCategory: (clubId: string, name: string) => Promise<ClubItemCategoryDef>;
-  renameCategory: (id: string, name: string) => Promise<ClubItemCategoryDef | null>;
-  /** Refusé si des fiches utilisent la catégorie */
-  deleteCategory: (id: string) => Promise<void>;
-  /** Catalogue de marques (triées par nom) */
-  listBrands: (clubId: string) => Promise<ClubItemBrandDef[]>;
-  createBrand: (clubId: string, name: string) => Promise<ClubItemBrandDef>;
-  /** Les fiches portant l'ancienne marque prennent le nouveau nom */
-  renameBrand: (id: string, name: string) => Promise<ClubItemBrandDef | null>;
-  /** Refusé si des fiches portent la marque */
-  deleteBrand: (id: string) => Promise<void>;
-  /** Verrou : inventaire en consultation seule (true) ou modifiable (false) */
-  getInventoryLock: (clubId: string) => Promise<boolean>;
-  setInventoryLock: (clubId: string, locked: boolean) => Promise<boolean>;
-  /** Import CSV / Excel : fiches ajoutées ; doublons de n° de série ignorés */
-  importItems: (
-    clubId: string,
-    items: ClubItemInput[]
-  ) => Promise<{ created: number; skipped: number }>;
   /** Sauvegarde complète du club dans un fichier .bpclub (chemin choisi par dialogue) */
   exportBackup: (clubId: string, filePath: string) => Promise<{ clubName: string }>;
   /**
@@ -669,22 +550,6 @@ export interface ClubAPI {
     filePath: string,
     replace?: boolean
   ) => Promise<{ clubId: string; clubName: string; replaced: boolean; rows: number }>;
-  /** Synchronisation vers un dossier (Drive, Dropbox…) : état d'un club */
-  syncStatus: (clubId: string) => Promise<ClubSyncStatus>;
-  /** Sélecteur de dossier puis activation ; null si annulé */
-  syncEnable: (clubId: string) => Promise<ClubSyncStatus | null>;
-  syncDisable: (clubId: string) => Promise<ClubSyncStatus>;
-  syncNow: (clubId: string) => Promise<ClubSyncStatus>;
-  /** Conflit : « file » garde le fichier, « app » garde ce poste */
-  syncResolve: (clubId: string, keep: 'file' | 'app') => Promise<ClubSyncStatus>;
-  /** Sauvegardes locales du club (2 max, les plus récentes d'abord) */
-  backupList: (clubId: string) => Promise<ClubBackupEntry[]>;
-  /** Nouvelle sauvegarde ; la plus ancienne est supprimée. Renvoie la liste à jour */
-  backupCreate: (clubId: string) => Promise<ClubBackupEntry[]>;
-  /** Restaure une sauvegarde : remplace les données du club sur ce poste */
-  backupRestore: (clubId: string, id: string) => Promise<{ clubName: string }>;
-  /** Reprise du fichier par synchro : la vue doit se recharger. Renvoie la désinscription. */
-  onSynced: (callback: (clubId: string) => void) => () => void;
 }
 
 export type ClubSyncState = 'off' | 'synced' | 'conflict' | 'error';

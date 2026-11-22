@@ -11,6 +11,7 @@ vi.mock('../../hooks/useTranslation', () => import('../../testUtils/i18nMock'));
 import { ClubCoachesPanel } from './ClubCoachesPanel';
 import { ClubCoachPicker, coachNames } from './ClubCoachPicker';
 import type { ClubCoach } from '../../../shared/types/club';
+import { clubElectron } from '../../testUtils/clubBridge';
 
 const coach = (id: string, lastName: string, extra: Partial<ClubCoach> = {}): ClubCoach => ({
   id,
@@ -40,7 +41,7 @@ beforeEach(() => {
     updateCoach: vi.fn(),
     deleteCoach: vi.fn(),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { club: api };
+  (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron(api);
 });
 
 describe('ClubCoachesPanel', () => {

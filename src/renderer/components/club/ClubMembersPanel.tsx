@@ -41,6 +41,7 @@ import { categoryLabel } from '../../../shared/utils/categoryLabel';
 import { AgeCategoryFilter } from './ClubAgeRange';
 import { FencerPhoto } from '../FencerPhoto';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
 import { ToggleChip } from '../common/ToggleChip';
@@ -68,7 +69,7 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
   const { t } = useTranslation();
   const { showToast } = useToast();
   const { confirm } = useConfirm();
-  const api = window.electronAPI?.club;
+  const api = useClubApi();
 
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [showArchived, setShowArchived] = useState(false);
@@ -87,7 +88,6 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
   } | null>(null);
 
   const load = useCallback(async () => {
-    if (!api) return;
     const list = await api.listMembers(clubId, showArchived);
     setMembers(list);
     // Sélection : seuls les membres encore présents restent cochés
@@ -129,8 +129,6 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
 
   const selectedVisible = filtered.filter(m => selected.has(m.id));
   const allSelected = filtered.length > 0 && selectedVisible.length === filtered.length;
-
-  if (!api) return null;
 
   /** 1er clic : coche tous les membres affichés ; 2e clic : décoche tout */
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set(filtered.map(m => m.id)));
@@ -219,9 +217,11 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
       title: t('dialogs.importPhotos'),
       filters: [{ name: 'ZIP', extensions: ['zip'] }],
     });
-    if (!result?.filePath) return;
+    const files = window.electronAPI?.club;
+    if (!result?.filePath || !files) return;
     await run(async () => {
-      const { matched, total } = await api.importPhotos(clubId, result.filePath);
+      // Chemin de fichier : fonction du poste hors contrat (docs/adr/0021)
+      const { matched, total } = await files.importPhotos(clubId, result.filePath);
       showToast(
         t('fencerList.photos_imported', { count: total, matched: String(matched) }),
         'success'

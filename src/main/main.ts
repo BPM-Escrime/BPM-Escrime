@@ -29,7 +29,7 @@ import { registerEventDayHandlers } from './ipc/eventDayHandlers';
 import { registerDayStripHandlers } from './ipc/dayStripHandlers';
 import { dayStripServer } from './remote/stripHandover';
 import { registerClubHandlers } from './ipc/clubHandlers';
-import { registerClubSyncHandlers, stopClubSync } from './ipc/clubSyncHandlers';
+import { createClubStation } from './clubPort';
 import { applyStoredPrivacySettings, createPrivacyHandlers } from './ipc/privacyHandlers';
 import { registerRemoteClientsHandlers } from './ipc/remoteClientsHandlers';
 import { registerRemoteSettingsHandlers } from './ipc/remoteSettingsHandlers';
@@ -129,6 +129,8 @@ const buildMenu = (language?: string): void =>
   );
 
 registerDbHandlers({ db, remoteServers, stopRemoteServer });
+// Mode Club : tablettes, synchro, sauvegardes du poste (port du contrat, docs/adr/0022)
+const clubStation = createClubStation({ db, userDataPath: app.getPath('userData') });
 // Contrat d'API unique (#1981) : api:invoke / api:subscribe
 registerApiHandlers({
   db,
@@ -148,6 +150,7 @@ registerApiHandlers({
     // Espace Vue DT du serveur de l'épreuve (docs/adr/0020)
     dtView: id => remoteServers.get(id)?.server.dtView,
   },
+  club: clubStation.port,
 });
 registerEventDayHandlers({ db });
 registerDayStripHandlers({
@@ -158,7 +161,6 @@ registerDayStripHandlers({
   },
 });
 registerClubHandlers({ db });
-registerClubSyncHandlers({ db, userDataPath: app.getPath('userData') });
 privacyHandlers.register();
 registerFileHandlers({ db, getMainWindow: () => mainWindow });
 
@@ -574,7 +576,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   void mcp.stop();
-  stopClubSync();
+  clubStation.stop();
   shutdownDb(db); // no-op si déjà fermé
 });
 

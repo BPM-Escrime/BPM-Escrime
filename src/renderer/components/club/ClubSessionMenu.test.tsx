@@ -11,6 +11,7 @@ const confirmMock = vi.fn();
 vi.mock('../ConfirmDialog', () => ({ useConfirm: () => ({ confirm: confirmMock }) }));
 vi.mock('../Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import { ClubSessionMenu } from './ClubSessionMenu';
+import { clubElectron } from '../../testUtils/clubBridge';
 
 const s = (id: string, date: string, status: string, label?: string) => ({
   id,
@@ -37,7 +38,7 @@ const setup = (sessions: unknown[]) => {
     startSession: vi.fn(),
     reopenSession: vi.fn(),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { club: api };
+  (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron(api);
 };
 
 const renderMenu = (props: Partial<React.ComponentProps<typeof ClubSessionMenu>> = {}) =>

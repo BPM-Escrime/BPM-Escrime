@@ -8,6 +8,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 vi.mock('../../hooks/useTranslation', () => import('../../testUtils/i18nMock'));
 import { ClubStatsPanel, scopeFilter } from './ClubStatsPanel';
+import { clubElectron } from '../../testUtils/clubBridge';
 
 const stats = (memberId: string, v: number, d: number) => ({
   memberId,
@@ -65,7 +66,7 @@ beforeEach(() => {
       ],
     }),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { club: api };
+  (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron(api);
 });
 
 describe('scopeFilter', () => {

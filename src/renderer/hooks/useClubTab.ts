@@ -6,6 +6,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { useClubApi } from '../api/clubApi';
 
 /** Onglet Club ouvert, mémorisé localement */
 export const CLUB_TAB_KEY = 'bp_club_tab_open';
@@ -30,6 +31,7 @@ const write = (key: string, value: string | null): void => {
 };
 
 export function useClubTab(view: string) {
+  const api = useClubApi();
   const [clubTabOpen, setClubTabOpenState] = useState<boolean>(() => read(CLUB_TAB_KEY) === '1');
   const setClubTabOpen = useCallback((open: boolean) => {
     setClubTabOpenState(open);
@@ -45,8 +47,7 @@ export function useClubTab(view: string) {
   // Club affiché : logo (remplace le bouclier) et nom de l'onglet
   const [activeClub, setActiveClub] = useState<{ name: string; logo?: string } | null>(null);
   useEffect(() => {
-    const api = window.electronAPI?.club;
-    if (!api || !activeClubId) {
+    if (!activeClubId) {
       setActiveClub(null);
       return;
     }
@@ -58,7 +59,7 @@ export function useClubTab(view: string) {
     return () => {
       alive = false;
     };
-  }, [activeClubId, view]);
+  }, [api, activeClubId, view]);
 
   return { clubTabOpen, setClubTabOpen, activeClubId, setActiveClubId, activeClub };
 }

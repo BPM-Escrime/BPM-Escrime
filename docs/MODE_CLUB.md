@@ -83,8 +83,7 @@ l'accueil. Un parcours guidé accompagne la première ouverture.
 - **Fermeture** (même fenêtre, « Supprimer les séances prévues ») : supprime les séances
   **prévues** sur une ou plusieurs périodes (ex. Toussaint et Noël en une seule action), après
   confirmation. Les séances ouvertes ou closes ne sont jamais supprimées.
-  API : `club.generateSessions`, `club.deletePlannedInPeriods` (`club:generateSessions`,
-  `club:deletePlannedInPeriods`). Code : `ClubRepo.generateSessions` / `deletePlannedInPeriods`,
+  API : `generateClubSessions`, `cancelPlannedClubSessions` (contrat d'API, ADR-0022). Code : `ClubRepo.generateSessions` / `deletePlannedInPeriods`,
   `weekdayDates` (`clubAge.ts`), `ClubScheduleModal.tsx`.
 - Listes des séances préparées et passées filtrables par catégorie d'âge.
 - **Plusieurs séances ouvertes** : ouvrir, démarrer ou rouvrir une séance ne ferme pas les
@@ -444,14 +443,14 @@ Interface : `src/renderer/components/club/ClubInventoryPanel.tsx`, `ClubItemEdit
 
 | Élément                 | Fichier                                                                                                                                                                       |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Types, API IPC `club.*` | `src/shared/types/club.ts`, `src/main/preload.ts`                                                                                                                             |
+| Types, contrat d'API    | `src/shared/types/club.ts`, `src/shared/api/contractClub.ts` (ADR-0022), `src/renderer/api/clubApi.ts`                                                                                                                             |
 | Dépôt SQLite            | `src/database/repos/clubRepo.ts` (tables `clubs`, `club_members`, `club_coaches`, `club_sessions`, `club_session_coaches`, `club_attendance`, `club_bouts`, `club_exercises`) |
-| Handlers IPC            | `src/main/ipc/clubHandlers.ts`                                                                                                                                                |
+| Commandes et requêtes   | `src/main/engine/commands/club.ts`, `clubStation.ts` (port `ctx.club` : `src/main/clubPort.ts`) ; IPC restant (photos ZIP, .bpclub) : `src/main/ipc/clubHandlers.ts`                                                                                                                                                |
 | Saisie distante         | `src/main/remote/clubArena.ts`, `src/main/remote/routes/clubRoutes.ts`, `src/remote/js/refereeClubCards.js`                                                                   |
 | Utilitaires             | `src/shared/utils/club*.ts` (âge, QR, import, plan, partage, stats, scan)                                                                                                     |
 | PDF                     | `src/shared/utils/pdfExport/clubCardsPdf.ts`, `clubPlanPdf.ts`                                                                                                                |
 | Inventaire              | `src/database/repos/clubInventoryRepo.ts`, `src/shared/utils/clubInventory.ts`, `src/renderer/components/club/ClubInventoryPanel.tsx` (tables `club_items`, `club_loans`)     |
-| Synchronisation dossier | `src/main/clubSync.ts` (décision pure `decideSync`, service), `src/main/ipc/clubSyncHandlers.ts` (IPC `club:sync*`), `src/renderer/components/club/ClubSyncModal.tsx`         |
+| Synchronisation dossier | `src/main/clubSync.ts` (décision pure `decideSync`, service), `src/main/clubPort.ts` (opérations `enableClubSync`, `syncClubNow`…), `src/renderer/components/club/ClubSyncModal.tsx`         |
 | Sauvegarde              | `src/database/repos/clubBackupRepo.ts`, `src/main/clubBackupFile.ts`, `src/renderer/components/club/clubBackup.ts` (IPC `club:exportBackup`, `club:importBackup`)             |
 | Interface               | `src/renderer/components/club/`                                                                                                                                               |
 

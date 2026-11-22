@@ -11,6 +11,7 @@ import { CalendarClock, ClipboardList, Eye, Lock, Play, Unlock } from 'lucide-re
 import type { ClubSession } from '../../../shared/types/club';
 import { weaponLabel } from '../../../shared/utils/categoryLabel';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
 import { useConfirm } from '../ConfirmDialog';
@@ -43,21 +44,18 @@ export const ClubSessionMenu: React.FC<ClubSessionMenuProps> = ({
   const { t } = useTranslation();
   const { confirm } = useConfirm();
   const { showToast } = useToast();
-  const api = window.electronAPI?.club;
+  const api = useClubApi();
   const [sessions, setSessions] = useState<ClubSession[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    if (!api) return;
     setSessions(await api.listSessions(clubId));
   }, [api, clubId]);
 
   useEffect(() => {
     void load();
   }, [load, revision]);
-
-  if (!api) return null;
 
   const opened = openSessions(sessions);
   const planned = sessions

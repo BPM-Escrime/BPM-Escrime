@@ -13,7 +13,9 @@ export type Permission =
   | 'fencers:write'
   | 'score:write'
   | 'cards:read'
-  | 'referees:write';
+  | 'referees:write'
+  | 'club:read'
+  | 'club:write';
 
 export type OperationKind = 'command' | 'query' | 'subscription';
 

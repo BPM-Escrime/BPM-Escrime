@@ -5,6 +5,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 vi.mock('../../hooks/useTranslation', () => import('../../testUtils/i18nMock'));
 import { ClubInventoryPanel } from './ClubInventoryPanel';
+import { clubElectron } from '../../testUtils/clubBridge';
 
 const item = (over = {}) => ({
   id: 'i1',
@@ -94,7 +95,7 @@ beforeEach(() => {
     returnLoan: vi.fn().mockResolvedValue({}),
     deleteLoan: vi.fn().mockResolvedValue(undefined),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { club: api };
+  (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron(api);
   localStorage.clear();
 });
 

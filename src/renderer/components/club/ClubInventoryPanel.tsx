@@ -49,6 +49,7 @@ import {
   rowsToItems,
 } from '../../../shared/utils/clubInventoryIO';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { ToggleChip } from '../common/ToggleChip';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
@@ -81,7 +82,7 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
   const { showToast } = useToast();
   const platform = usePlatform();
   const { confirm } = useConfirm();
-  const api = window.electronAPI?.club;
+  const api = useClubApi();
   const [items, setItems] = useState<ClubItem[]>([]);
   const [loans, setLoans] = useState<ClubLoan[]>([]);
   const [members, setMembers] = useState<ClubMember[]>([]);
@@ -132,7 +133,6 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
     });
 
   const load = useCallback(async () => {
-    if (!api) return;
     const [i, l, m, c, b, lk] = await Promise.all([
       api.listItems(clubId, true),
       api.listLoans(clubId),
@@ -192,7 +192,6 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
       .join(' · ');
 
   const cellCtx = { t, cols, today, labelOf };
-  if (!api) return null;
 
   const run = async (fn: () => Promise<unknown>, okMsg?: string) => {
     try {

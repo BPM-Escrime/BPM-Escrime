@@ -82,6 +82,7 @@ import { ClubCoachPicker, coachNames } from './ClubCoachPicker';
 import { ClubSessionPlanCard } from './ClubSessionPlanCard';
 import { activeSession, openClubSession, openSessions } from './clubSessionSwitch';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
 import { useConfirm } from '../ConfirmDialog';
@@ -230,7 +231,7 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
   const { t } = useTranslation();
   const { showToast } = useToast();
   const { confirm } = useConfirm();
-  const api = window.electronAPI?.club;
+  const api = useClubApi();
 
   const [sessions, setSessions] = useState<ClubSession[]>([]);
   const [members, setMembers] = useState<ClubMember[]>([]);
@@ -270,7 +271,6 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
   const opened = openSessions(sessions);
 
   const load = useCallback(async () => {
-    if (!api) return;
     const [list, mem, coachList] = await Promise.all([
       api.listSessions(clubId),
       api.listMembers(clubId),
@@ -308,7 +308,7 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
   // Saisie distante active : séance reliée (cartes scannées sur les tablettes) et
   // rafraîchissement régulier (combats lancés ou terminés depuis les tablettes)
   useEffect(() => {
-    if (!api || !remote.active || !currentId) return;
+    if (!remote.active || !currentId) return;
     void api.linkRemote(currentId);
     const timer = window.setInterval(() => void load(), 5000);
     return () => window.clearInterval(timer);
@@ -332,8 +332,6 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
     const m = byId.get(id);
     return m ? `${m.lastName} ${m.firstName}` : '?';
   };
-
-  if (!api) return null;
 
   const planned = sessions
     .filter(s => s.status === 'planned' && forCategory(s, listCategory))

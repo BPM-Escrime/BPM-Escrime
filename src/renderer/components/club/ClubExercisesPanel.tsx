@@ -19,6 +19,7 @@ import {
   shareFileName,
 } from '../../../shared/utils/clubShare';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
 import { useConfirm } from '../ConfirmDialog';
@@ -32,7 +33,7 @@ export const ClubExercisesPanel: React.FC = () => {
   const { t } = useTranslation();
   const { showToast } = useToast();
   const { confirm } = useConfirm();
-  const api = window.electronAPI?.club;
+  const api = useClubApi();
   const [list, setList] = useState<ClubExercise[]>([]);
   const [category, setCategory] = useState<ClubExerciseCategory | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -41,7 +42,7 @@ export const ClubExercisesPanel: React.FC = () => {
   const [editing, setEditing] = useState<{ exercise: ClubExercise | null } | null>(null);
 
   const load = useCallback(async () => {
-    if (api) setList(await api.listExercises());
+    setList(await api.listExercises());
   }, [api]);
 
   useEffect(() => {
@@ -59,8 +60,6 @@ export const ClubExercisesPanel: React.FC = () => {
         (!q || `${e.title} ${e.details ?? ''}`.toLowerCase().includes(q))
     );
   }, [list, category, search, ageCategory, weapon]);
-
-  if (!api) return null;
 
   const run = async (fn: () => Promise<unknown>) => {
     try {

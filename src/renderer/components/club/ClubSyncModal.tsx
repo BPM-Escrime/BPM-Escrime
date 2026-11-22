@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, FolderOpen, RefreshCw, Save } from 'lucide-react';
 import type { ClubBackupEntry, ClubSyncStatus } from '../../../shared/types/club';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { useConfirm } from '../ConfirmDialog';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
@@ -25,13 +26,12 @@ export function ClubSyncModal({ clubId, onChanged, onClose }: ClubSyncModalProps
   const { t } = useTranslation();
   const { showToast } = useToast();
   const { confirm } = useConfirm();
+  const api = useClubApi();
   const [status, setStatus] = useState<ClubSyncStatus | null>(null);
   const [backups, setBackups] = useState<ClubBackupEntry[]>([]);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const api = window.electronAPI?.club;
-    if (!api) return;
     try {
       const [nextStatus, nextBackups] = await Promise.all([
         api.syncStatus(clubId),
@@ -42,7 +42,7 @@ export function ClubSyncModal({ clubId, onChanged, onClose }: ClubSyncModalProps
     } catch (e) {
       showToast(errText(e), 'error');
     }
-  }, [clubId, showToast]);
+  }, [api, clubId, showToast]);
 
   useEffect(() => {
     void load();
@@ -87,10 +87,9 @@ export function ClubSyncModal({ clubId, onChanged, onClose }: ClubSyncModalProps
       confirmLabel: t('clubs.backup_restore'),
     });
     if (!ok) return;
-    await runBackup(() => api!.backupRestore(clubId, id), t('clubs.backup_restored'));
+    await runBackup(() => api.backupRestore(clubId, id), t('clubs.backup_restored'));
   };
 
-  const api = window.electronAPI?.club;
   const enabled = status !== null && status.state !== 'off';
 
   const stateLine = (): { text: string; tone: 'ok' | 'warn' | 'off' } => {
@@ -113,7 +112,7 @@ export function ClubSyncModal({ clubId, onChanged, onClose }: ClubSyncModalProps
             <Button
               variant="ghost"
               disabled={busy}
-              onClick={() => void run(() => api!.syncDisable(clubId))}
+              onClick={() => void run(() => api.syncDisable(clubId))}
             >
               {t('clubs.sync_disable')}
             </Button>
@@ -121,7 +120,7 @@ export function ClubSyncModal({ clubId, onChanged, onClose }: ClubSyncModalProps
               <Button
                 icon={<RefreshCw size={15} aria-hidden="true" />}
                 disabled={busy}
-                onClick={() => void run(() => api!.syncNow(clubId))}
+                onClick={() => void run(() => api.syncNow(clubId))}
               >
                 {t('clubs.sync_now')}
               </Button>
@@ -175,7 +174,7 @@ export function ClubSyncModal({ clubId, onChanged, onClose }: ClubSyncModalProps
                 <Button
                   disabled={busy}
                   onClick={() =>
-                    void run(() => api!.syncResolve(clubId, 'file'), t('clubs.sync_resolved'))
+                    void run(() => api.syncResolve(clubId, 'file'), t('clubs.sync_resolved'))
                   }
                 >
                   {t('clubs.sync_keep_file')}
@@ -184,7 +183,7 @@ export function ClubSyncModal({ clubId, onChanged, onClose }: ClubSyncModalProps
                   variant="ghost"
                   disabled={busy}
                   onClick={() =>
-                    void run(() => api!.syncResolve(clubId, 'app'), t('clubs.sync_resolved'))
+                    void run(() => api.syncResolve(clubId, 'app'), t('clubs.sync_resolved'))
                   }
                 >
                   {t('clubs.sync_keep_app')}
@@ -203,7 +202,7 @@ export function ClubSyncModal({ clubId, onChanged, onClose }: ClubSyncModalProps
             icon={<Save size={15} aria-hidden="true" />}
             disabled={busy}
             onClick={() =>
-              void runBackup(() => api!.backupCreate(clubId), t('clubs.backup_created'))
+              void runBackup(() => api.backupCreate(clubId), t('clubs.backup_created'))
             }
           >
             {t('clubs.backup_create')}
@@ -234,7 +233,7 @@ export function ClubSyncModal({ clubId, onChanged, onClose }: ClubSyncModalProps
         <Button
           icon={<FolderOpen size={15} aria-hidden="true" />}
           disabled={busy}
-          onClick={() => void run(() => api!.syncEnable(clubId), t('clubs.sync_enabled'))}
+          onClick={() => void run(() => api.syncEnable(clubId), t('clubs.sync_enabled'))}
         >
           {t('clubs.sync_enable')}
         </Button>
