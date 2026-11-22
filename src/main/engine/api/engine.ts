@@ -24,7 +24,7 @@ import { checkInFencers } from '../commands/checkIn';
 import { reinstateFencer, withdrawFencer } from '../commands/withdrawal';
 import { addPoolFencer } from '../commands/poolComposition';
 import { closePoolRound } from '../commands/poolRound';
-import { endRapieresWaves, launchRapieresWave } from '../commands/rapieres';
+import { endRapieresWaves, launchRapieresWave, setRapieresTeams } from '../commands/rapieres';
 import { clearScore } from '../commands/scoreClear';
 import { assignMatches } from '../commands/assignments';
 import { adjustRanking, clearTableau, skipPools } from '../commands/ranking';
@@ -62,6 +62,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     buildBracket(ctx, competitionId, options),
   launchRapieresWave: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     launchRapieresWave(ctx, input),
+  setRapieresTeams: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    setRapieresTeams(ctx, input),
   endRapieresWaves: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     endRapieresWaves(ctx, input),
   clearScore: (ctx, { expectedRevision: _r, commandId: _c, ...input }) => clearScore(ctx, input),
