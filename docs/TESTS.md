@@ -104,10 +104,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 269 |
-| `src/main/` | 124 | 1029 |
+| `src/main/` | 125 | 1032 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 119 | 633 |
+| `src/renderer/components/` | 120 | 641 |
 | E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 1 | 3 |
@@ -116,9 +116,9 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/domain/` | 25 | 218 |
-| **Total** | **530** | **4060** |
+| **Total** | **532** | **4071** |
 
-Unitaires : 517 fichiers, 4018 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 519 fichiers, 4029 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3249,6 +3249,15 @@ Unitaires : 517 fichiers, 4018 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/referees.test.ts</code> — 3 tests</summary>
+
+- registerReferees : non pointés, doublons signalés ; listReferees
+- updateRefereeDetails, setRefereeAvailability, unregisterReferee
+- unregisterReferee : refusé pour l’arbitre d’un match en cours
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/replay.test.ts</code> — 9 tests</summary>
 
 - épreuve complète : appel, poules, abandon, annulation, retrait et réintégration, tableau
@@ -6050,6 +6059,21 @@ Unitaires : 517 fichiers, 4018 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - manuel : serveur + exclusions envoyés au clic sur Appliquer
   - refus du main → message d’adresse invalide
   - test de connexion : route affichée
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/__tests__/RefereeManager.test.tsx</code> — 8 tests</summary>
+
+- **Gestion des arbitres par les commandes du contrat (docs/adr/0018)**
+  - ajout par la touche Entrée : prénom et nom séparés, arbitre ajouté à la liste
+  - nom vide : message, aucune commande
+  - modification : identité envoyée à updateRefereeDetails
+  - pointage d’un arbitre : setRefereeAvailability
+  - « Tout pointer » : une seule commande pour tous les non pointés
+  - suppression : unregisterReferee, arbitre retiré de la liste
+  - suppression refusée par le moteur (match en cours) : message, liste inchangée
+  - historique : lu par listRefereeMatches
 
 </details>
 
