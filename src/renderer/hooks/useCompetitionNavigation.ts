@@ -34,6 +34,7 @@ import type { useFencerManagement } from './useFencerManagement';
 import type { usePoolManagement } from './usePoolManagement';
 import { useTranslation } from './useTranslation';
 import { useBpmClient } from '../api/BpmClientContext';
+import { persistCompetitionUpdate } from '../api/competitionUpdate';
 import { isTableauEligible } from '../../shared/domain/fencers/fencerStatus';
 
 type PoolManagement = ReturnType<typeof usePoolManagement>;
@@ -143,9 +144,9 @@ export function useCompetitionNavigation({
         },
       };
       onUpdate(updatedCompetition);
-      await window.electronAPI?.db.updateCompetition(competition.id, updatedCompetition);
+      await persistCompetitionUpdate(client, competition, updatedCompetition);
     },
-    [competition, onUpdate]
+    [client, competition, onUpdate]
   );
 
   const handleGoToRanking = () => {
@@ -271,9 +272,9 @@ export function useCompetitionNavigation({
     const settings = { ...competition.settings, ...extra, thirdPlaceMatch: thirdPlace };
     const updatedCompetition = { ...competition, settings };
 
-    if (window.electronAPI) {
-      window.electronAPI.db.updateCompetition(competition.id, updatedCompetition);
-    }
+    void persistCompetitionUpdate(client, competition, updatedCompetition).catch(e =>
+      showToast((e as Error).message, 'error')
+    );
 
     onUpdate(updatedCompetition);
     void clearTableau();

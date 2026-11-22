@@ -12,6 +12,7 @@ import { useTranslation } from './useTranslation';
 import type { useFencerManagement } from './useFencerManagement';
 import { useBpmClient } from '../api/BpmClientContext';
 import { refereeFromDTO, registerRefereeInput } from '../api/refereeMapping';
+import { persistCompetitionUpdate } from '../api/competitionUpdate';
 
 export interface ImportData {
   format: string;
@@ -84,7 +85,7 @@ export function useCompetitionImport({
       };
       onUpdate(updated);
       try {
-        await window.electronAPI.db.updateCompetition?.(current.id, updated);
+        await persistCompetitionUpdate(client, current, updated);
       } catch (err) {
         logger.error(LogCategory.UI, 'Failed to enable referee feature', err as Error);
       }

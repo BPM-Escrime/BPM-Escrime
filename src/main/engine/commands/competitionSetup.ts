@@ -1,0 +1,219 @@
+/**
+ * BellePoule Modern - Création, réglages et suppression d'une épreuve (#1981, docs/adr/0018)
+ * createCompetition, updateCompetitionDetails, updateCompetitionSettings, deleteCompetition :
+ * commandes d'intention à la place de db.createCompetition / updateCompetition /
+ * deleteCompetition. Pas de journal (docs/adr/0018).
+ * Licensed under GPL-3.0
+ */
+import {
+  type Category,
+  type Gender,
+  type Weapon,
+  type Competition,
+  type CompetitionSettings,
+} from '../../../shared/types';
+import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
+import { CommandError, type CommandContext } from './context';
+import { getCompetitionOrThrow } from './competitions';
+import { drawDone } from './fencers';
+
+/** Clés de réglage admises (CompetitionSettings) : une clé inconnue est refusée */
+export const COMPETITION_SETTING_KEYS = [
+  'defaultPoolMaxScore',
+  'defaultTableMaxScore',
+  'defaultPoolTimerSeconds',
+  'defaultTableTimerSeconds',
+  'restTimeSeconds',
+  'poolRounds',
+  'poolRoundQualifiers',
+  'poolSizeMin',
+  'poolSizeMax',
+  'refereeing',
+  'hasDirectElimination',
+  'thirdPlaceMatch',
+  'signTableauMatches',
+  'manualRanking',
+  'defaultRanking',
+  'randomScore',
+  'minTeamSize',
+  'teamReserveCount',
+  'laserTeamMode',
+  'teamRelayStepSize',
+  'teamFormat',
+  'questConfig',
+  'refereeFeatureEnabled',
+  'blackCardEnabled',
+  'trainerCommentsEnabled',
+  'backupDir',
+  'customFormula',
+  'specialMode',
+  'playAllPositions',
+  'expertMode',
+  'maxRefereesPerPool',
+  'maxRefereesPerMatch',
+  'poolWinnersOnly',
+  'postPoolSplitCriteria',
+  'splitOffCompetitionIds',
+  'splitFromCompetitionId',
+  'federal',
+  'schedule',
+  'gregLevel',
+  'poolBoutOrder',
+] as const satisfies readonly (keyof CompetitionSettings)[];
+
+/** Réglages figés une fois les poules tirées (ou le tableau généré) : ils changent les règles */
+const FROZEN_SETTINGS: ReadonlySet<string> = new Set(['specialMode', 'customFormula']);
+
+function checkSettingKeys(patch: Record<string, unknown>): void {
+  const known: ReadonlySet<string> = new Set(COMPETITION_SETTING_KEYS);
+  const unknown = Object.keys(patch).filter(k => !known.has(k));
+  if (unknown.length) {
+    throw new CommandError('unknown_setting', `Réglage inconnu : ${unknown.join(', ')}`);
+  }
+}
+
+export interface CreateCompetitionInput {
+  title: string;
+  date: string;
+  weapon: Weapon;
+  gender: Gender;
+  category: Category;
+  location?: string;
+  color?: string;
+  isTeamEvent?: boolean;
+  /** Réglages choisis à la création, fusionnés sur les défauts du moteur */
+  settings?: Record<string, unknown>;
+  dryRun?: boolean;
+}
+
+export function createCompetition(ctx: CommandContext, input: CreateCompetitionInput) {
+  const date = new Date(input.date);
+  if (Number.isNaN(date.getTime())) throw new CommandError('invalid_date', 'Date invalide');
+  const patch = input.settings ?? {};
+  checkSettingKeys(patch);
+  const settings = {
+    ...buildDefaultCompetitionSettings({ weapon: input.weapon, category: input.category }),
+    ...patch,
+  } as CompetitionSettings;
+  if (input.dryRun) return { dryRun: true, competitionId: null };
+  const created = ctx.db.createCompetition({
+    title: input.title.trim(),
+    date,
+    weapon: input.weapon,
+    gender: input.gender,
+    category: input.category,
+    ...(input.location ? { location: input.location } : {}),
+    ...(input.color ? { color: input.color } : {}),
+    isTeamEvent: !!input.isTeamEvent,
+    settings,
+  });
+  ctx.emitChange?.({ scope: 'competitions', competitionIds: [created.id] });
+  return { dryRun: false, competitionId: created.id };
+}
+
+export interface CompetitionDetailsInput {
+  title?: string;
+  date?: string;
+  location?: string | null;
+  organizer?: string | null;
+}
+
+/** Titre, date, lieu, organisateur : données sans règle */
+export function updateCompetitionDetails(
+  ctx: CommandContext,
+  input: { competitionId: string; details: CompetitionDetailsInput; dryRun?: boolean }
+) {
+  const comp = getCompetitionOrThrow(ctx, input.competitionId);
+  const d = input.details;
+  const patch: Partial<Competition> = {};
+  if (d.title !== undefined) {
+    if (!d.title.trim()) throw new CommandError('invalid_title', 'Le titre est obligatoire');
+    patch.title = d.title.trim();
+  }
+  if (d.date !== undefined) {
+    const date = new Date(d.date);
+    if (Number.isNaN(date.getTime())) throw new CommandError('invalid_date', 'Date invalide');
+    patch.date = date;
+  }
+  if (d.location !== undefined) patch.location = d.location ?? '';
+  if (d.organizer !== undefined) patch.organizer = d.organizer ?? '';
+  const changed = Object.keys(patch);
+  if (!input.dryRun && changed.length) {
+    ctx.db.updateCompetition(comp.id, patch);
+    ctx.emitChange?.({ scope: 'competitions', competitionIds: [comp.id] });
+  }
+  return { dryRun: !!input.dryRun, competitionId: comp.id, changed };
+}
+
+/**
+ * Arme, sexe, catégorie, épreuve par équipes et réglages (fusion de premier niveau). Arme,
+ * format par équipes et mode spécial figés après le tirage. Tablettes prévenues.
+ */
+export function updateCompetitionSettings(
+  ctx: CommandContext,
+  input: {
+    competitionId: string;
+    weapon?: Weapon;
+    gender?: Gender;
+    category?: Category;
+    isTeamEvent?: boolean;
+    settings?: Record<string, unknown>;
+    dryRun?: boolean;
+  }
+) {
+  const comp = getCompetitionOrThrow(ctx, input.competitionId);
+  const patch = input.settings ?? {};
+  checkSettingKeys(patch);
+  const frozen = [
+    ...(input.weapon !== undefined && input.weapon !== comp.weapon ? ['weapon'] : []),
+    ...(input.isTeamEvent !== undefined && input.isTeamEvent !== !!comp.isTeamEvent
+      ? ['isTeamEvent']
+      : []),
+    ...Object.keys(patch).filter(
+      k =>
+        FROZEN_SETTINGS.has(k) &&
+        JSON.stringify(patch[k]) !==
+          JSON.stringify((comp.settings as unknown as Record<string, unknown>)?.[k])
+    ),
+  ];
+  if (frozen.length && drawDone(ctx, comp.id)) {
+    throw new CommandError(
+      'draw_done',
+      `Poules tirées ou tableau généré : réglage figé (${frozen.join(', ')})`
+    );
+  }
+  const update: Partial<Competition> = {};
+  if (input.weapon !== undefined) update.weapon = input.weapon;
+  if (input.gender !== undefined) update.gender = input.gender;
+  if (input.category !== undefined) update.category = input.category;
+  if (input.isTeamEvent !== undefined) update.isTeamEvent = input.isTeamEvent;
+  if (Object.keys(patch).length) {
+    update.settings = { ...comp.settings, ...patch } as CompetitionSettings;
+  }
+  const changed = [
+    ...Object.keys(update).filter(k => k !== 'settings'),
+    ...Object.keys(patch).map(k => `settings.${k}`),
+  ];
+  if (!input.dryRun && changed.length) {
+    ctx.db.updateCompetition(comp.id, update);
+    ctx.emitChange?.({ scope: 'competitions', competitionIds: [comp.id] });
+    if (Object.keys(patch).length) {
+      ctx.remote?.settingsChanged(comp.id, patch as Partial<CompetitionSettings>);
+    }
+  }
+  return { dryRun: !!input.dryRun, competitionId: comp.id, changed };
+}
+
+/** Supprime l'épreuve et ses lignes (RGPD) ; saisie distante arrêtée avant (#1009) */
+export function deleteCompetition(
+  ctx: CommandContext,
+  input: { competitionId: string; dryRun?: boolean }
+) {
+  const comp = getCompetitionOrThrow(ctx, input.competitionId);
+  if (!input.dryRun) {
+    ctx.remote?.stop(comp.id);
+    ctx.db.deleteCompetition(comp.id);
+    ctx.emitChange?.({ scope: 'competitions', competitionIds: [comp.id] });
+  }
+  return { dryRun: !!input.dryRun, competitionId: comp.id };
+}

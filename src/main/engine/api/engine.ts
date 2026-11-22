@@ -43,6 +43,12 @@ import {
   unregisterReferee,
   updateRefereeDetails,
 } from '../commands/referees';
+import {
+  createCompetition,
+  deleteCompetition,
+  updateCompetitionDetails,
+  updateCompetitionSettings,
+} from '../commands/competitionSetup';
 import { getCompetitionOrThrow } from '../commands/competitions';
 import { readSession } from '../commands/sessionView';
 import { competitionState } from '../commands/competitionState';
@@ -91,6 +97,12 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     clearTableau(ctx, input),
   rebuildCompetitionState: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     rebuildCompetitionState(ctx, input),
+  createCompetition: (ctx, { commandId: _c, ...input }) => createCompetition(ctx, input),
+  updateCompetitionDetails: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    updateCompetitionDetails(ctx, input),
+  updateCompetitionSettings: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    updateCompetitionSettings(ctx, input),
+  deleteCompetition: (ctx, { commandId: _c, ...input }) => deleteCompetition(ctx, input),
   registerFencers: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     registerFencers(ctx, input),
   updateFencerDetails: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>

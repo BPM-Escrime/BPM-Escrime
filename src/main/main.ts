@@ -134,6 +134,18 @@ registerApiHandlers({
   db,
   actor: { source: 'screen' },
   emitChange: emitChangeVia((type, competitionId) => emitCompetitionEvent(type, competitionId)),
+  // Épreuve supprimée ou réglages changés : tablettes de la saisie distante (docs/adr/0018)
+  remote: {
+    stop: id => void stopRemoteServer(id),
+    settingsChanged: (id, patch) => {
+      const server = remoteServers.get(id)?.server;
+      if (!server) return;
+      if (patch.blackCardEnabled !== undefined) {
+        server.updateBlackCardEnabled(patch.blackCardEnabled === true);
+      }
+      server.refreshCompetitionSettings();
+    },
+  },
 });
 registerEventDayHandlers({ db });
 registerDayStripHandlers({

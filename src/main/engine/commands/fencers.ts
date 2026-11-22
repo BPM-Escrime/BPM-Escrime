@@ -61,7 +61,7 @@ export function fencerDTO(f: Fencer) {
 }
 
 /** Poules tirées, épreuve sans poules ou tableau généré : l'inscription est close */
-function drawDone(ctx: CommandContext, competitionId: string): boolean {
+export function drawDone(ctx: CommandContext, competitionId: string): boolean {
   const session = readSession(ctx, competitionId);
   return (
     sessionPools(session).length > 0 ||

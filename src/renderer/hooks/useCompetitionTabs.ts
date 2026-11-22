@@ -5,8 +5,7 @@
  */
 
 import React, { useCallback, useRef } from 'react';
-import type { Competition } from '../../shared/types';
-import type { CompetitionCreateData } from '../../shared/types/preload';
+import { Category, Gender, Weapon, type Competition } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
 import type { AppState, AppStateActions } from './useAppState';
 import type { ToastType } from '../components/Toast';
@@ -14,6 +13,7 @@ import type { ConfirmOptions } from '../components/ConfirmDialog';
 import type { FederalCreationPayload } from './useFederalImport';
 import { applyFederalImport } from '../services/federalCreation';
 import { translateStatic } from '../contexts/TranslationContext';
+import { useBpmClient } from '../api/BpmClientContext';
 
 interface CompetitionTabsParams
   extends
@@ -48,22 +48,27 @@ export function useCompetitionTabs({
   runOperation,
   confirm,
 }: CompetitionTabsParams) {
+  // Création et suppression par les commandes du contrat (docs/adr/0018)
+  const client = useBpmClient();
   const handleCreateCompetition = useCallback(
     async (data: Partial<Competition>, imported?: FederalCreationPayload) => {
       try {
         if (window.electronAPI) {
-          // Assurer que le titre est défini
-          const competitionData = {
+          const created = await client.call('createCompetition', {
             title: data.title || 'Nouvelle compétition',
-            date: data.date || new Date(),
-            weapon: data.weapon || 'FOIL',
-            gender: data.gender || 'M',
-            category: data.category || 'SENIOR',
-            ...data,
-          };
-          const newComp = await window.electronAPI.db.createCompetition(
-            competitionData as unknown as CompetitionCreateData
-          );
+            date: new Date(data.date ?? Date.now()).toISOString(),
+            weapon: data.weapon ?? Weapon.FOIL,
+            gender: data.gender ?? Gender.MALE,
+            category: data.category ?? Category.SENIOR,
+            ...(data.location ? { location: data.location } : {}),
+            ...(data.color ? { color: data.color } : {}),
+            ...(data.isTeamEvent ? { isTeamEvent: true } : {}),
+            ...(data.settings
+              ? { settings: data.settings as unknown as Record<string, unknown> }
+              : {}),
+          });
+          const newComp = await window.electronAPI.db.getCompetition(created.competitionId!);
+          if (!newComp) throw new Error('Épreuve créée introuvable');
           setCompetitions(prev => [newComp, ...prev]);
 
           // Tireurs, équipes et arbitres des fichiers de l'extranet (#1938)
@@ -91,6 +96,7 @@ export function useCompetitionTabs({
       setShowNewCompetitionModal(false);
     },
     [
+      client,
       setActiveTabId,
       setCompetitions,
       setCurrentCompetition,
@@ -258,7 +264,7 @@ export function useCompetitionTabs({
     async (id: string) => {
       try {
         if (window.electronAPI) {
-          await window.electronAPI.db.deleteCompetition(id);
+          await client.call('deleteCompetition', { competitionId: id });
           localStorage.removeItem(`bellepoule-remote-launched-${id}`);
           localStorage.removeItem(`bellepoule-remote-port-${id}`);
           setCompetitions(prev => prev.filter(c => c.id !== id));
@@ -289,6 +295,7 @@ export function useCompetitionTabs({
       }
     },
     [
+      client,
       activeTabId,
       currentCompetition,
       setActiveTabId,
