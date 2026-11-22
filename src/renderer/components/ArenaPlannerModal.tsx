@@ -9,6 +9,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import Modal from './common/Modal';
+import { Button } from './common/Button';
 import { logger, LogCategory } from '@shared/services/logger';
 import {
   ARENA_SAFETY_RADIUS_M,
@@ -22,7 +23,6 @@ import {
   type Point,
   type RoomItem,
 } from '@shared/domain/arena/arenaPlanner';
-import { exportArenaPlanPdf, exportArenaPlanPng } from './arenaPlanner/arenaPlanExport';
 
 interface ArenaPlannerModalProps {
   onClose: () => void;
@@ -196,7 +196,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
         viewBox={`${-pad} ${-pad} ${vbW} ${vbH}`}
         role="img"
         aria-label={t('arenaPlanner.title')}
-        style={{ width: '100%', maxHeight: '60vh', background: '#ffffff', touchAction: 'none' }}
+        className="arena-planner-svg"
         onPointerMove={onSvgPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
@@ -272,7 +272,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               role="button"
               tabIndex={0}
               aria-label={`${item.label}: ${t('arenaPlanner.drag_hint')}`}
-              style={{ cursor: 'grab' }}
+              className="arena-planner-item"
               onPointerDown={e => onItemPointerDown(e, item)}
               onKeyDown={e => onItemKeyDown(e, item)}
             >
@@ -342,8 +342,10 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     setExportError('');
     try {
       if (kind === 'pdf') {
+        const { exportArenaPlanPdf } = await import('./arenaPlanner/arenaPlanExport');
         await exportArenaPlanPdf(svgRef.current, text, 'plan-arenes.pdf');
       } else {
+        const { exportArenaPlanPng } = await import('./arenaPlanner/arenaPlanExport');
         await exportArenaPlanPng(svgRef.current, 'plan-arenes.png');
       }
     } catch (error) {
@@ -424,25 +426,25 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
             })}
           </p>
 
-          <div className="form-group" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <button type="button" className="btn" onClick={() => addItem('table')}>
+          <div className="form-group arena-planner-actions">
+            <Button type="button" onClick={() => addItem('table')}>
               {t('arenaPlanner.add_table')}
-            </button>
-            <button type="button" className="btn" onClick={() => addItem('outlet')}>
+            </Button>
+            <Button type="button" onClick={() => addItem('outlet')}>
               {t('arenaPlanner.add_outlet')}
-            </button>
-            <button type="button" className="btn" onClick={() => addItem('accessory')}>
+            </Button>
+            <Button type="button" onClick={() => addItem('accessory')}>
               {t('arenaPlanner.add_accessory')}
-            </button>
-            <button type="button" className="btn" onClick={() => addItem('exit')}>
+            </Button>
+            <Button type="button" onClick={() => addItem('exit')}>
               {t('arenaPlanner.add_exit')}
-            </button>
-            <button type="button" className="btn" onClick={() => addItem('blocked')}>
+            </Button>
+            <Button type="button" onClick={() => addItem('blocked')}>
               {t('arenaPlanner.add_blocked')}
-            </button>
-            <button type="button" className="btn" onClick={removeSelected} disabled={!selectedId}>
+            </Button>
+            <Button type="button" onClick={removeSelected} disabled={!selectedId}>
               {t('arenaPlanner.remove')}
-            </button>
+            </Button>
           </div>
           <p>{t('arenaPlanner.drag_hint')}</p>
 
@@ -459,7 +461,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
             <p role="alert">{t('arenaPlanner.blocked_overlap')}</p>
           )}
           {selectedItem?.kind === 'blocked' && (
-            <div className="form-group" style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="form-group arena-planner-fields">
               <label className="form-label" htmlFor="block-width">
                 {t('arenaPlanner.block_width')}
                 <input
@@ -493,13 +495,13 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
           </ul>
           <p>{t('arenaPlanner.note')}</p>
 
-          <div className="form-group" style={{ display: 'flex', gap: '0.5rem' }}>
-            <button type="button" className="btn btn-primary" onClick={() => runExport('pdf')}>
+          <div className="form-group arena-planner-fields">
+            <Button type="button" variant="primary" onClick={() => runExport('pdf')}>
               {t('arenaPlanner.export_pdf')}
-            </button>
-            <button type="button" className="btn" onClick={() => runExport('png')}>
+            </Button>
+            <Button type="button" onClick={() => runExport('png')}>
               {t('arenaPlanner.export_png')}
-            </button>
+            </Button>
           </div>
           {exportError && <p role="alert">{exportError}</p>}
         </>
