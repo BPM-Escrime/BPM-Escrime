@@ -37,6 +37,7 @@ Give answer. Stop.
 - Erreur → code du catalogue `src/shared/api/errors.ts` (ADR-0009) : snake_case, anglais, message en français ; réutiliser un code existant, sinon l'ajouter avec sa catégorie puis `npm run docs:mcp` (docs/API_CONTRACT.md)
 - Migration → ADR acceptée citée dans `description` (`docs/adr/00NN`, ADR-0011) ; une migration mergée ne se modifie plus
 - Garde-fous CI : `lint:errors`, `check:quality` (`electronApiUses`, `ipcChannels`…), `contractNaming.test.ts`, `migrationsAdr.test.ts`. Ne jamais relever une référence pour passer
+- Revue a posteriori : `adr-review.yml` (hebdo) commente l'issue « Revue ADR hebdomadaire ». Pas de CODEOWNERS ni de revue obligatoire du mainteneur
 
 ## Routage des modèles – coût
 - Tâche à faible valeur → déléguer à `Agent` avec `model: "haiku"` (ou `subagent_type: "Explore"` pour la recherche en lecture seule) : grep/recherche de fichiers, listing, `check:i18n`, lint/format, traductions, doc mécanique, résumé de logs, vérif de présence d'un symbole

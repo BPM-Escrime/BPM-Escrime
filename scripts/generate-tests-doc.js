@@ -176,6 +176,8 @@ ou sort de la fenêtre ; captures + \`report.json\` dans \`test-results/i18n-cap
 
 Sécurité : \`.github/workflows/codeql.yml\` (CodeQL JS/TS, PR vers \`dev\` + hebdo) et \`security.yml\` (\`npm audit --omit=dev\` non bloquant + SBOM CycloneDX), Dependabot (\`.github/dependabot.yml\`).
 
+Revue ADR : \`.github/workflows/adr-review.yml\` (lundi 6 h UTC, non bloquant) publie \`scripts/adr-review-report.js\` en commentaire de l'issue « Revue ADR hebdomadaire » (label \`revue-adr\`) : références du cliquet relevées, fichiers garde-fous modifiés, migrations et ADR citée, lignes apparues à vérifier (\`eslint-disable\`, \`any\`, écritures directes en base dans \`src/main/remote\` et \`src/main/mcp\`, canaux IPC, \`window.electronAPI\`).
+
 Revue de code automatique : \`.github/workflows/claude-code-review.yml\` sur les PR.
 
 ## Tests unitaires — Vitest
