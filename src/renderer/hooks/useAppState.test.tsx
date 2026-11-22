@@ -8,6 +8,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAppState } from './useAppState';
 import { Competition } from '../../shared/types';
+import { fakeApiBridge } from '../testUtils/apiBridge';
 
 const noopToast = (_m: string, _t?: 'info' | 'success' | 'warning' | 'error') => {};
 const comp = (id: string): Competition => ({ id, title: 'C' + id }) as unknown as Competition;
@@ -94,15 +95,22 @@ describe('handleTabSwitch', () => {
 });
 
 describe('loadCompetitions', () => {
-  it('charge depuis electronAPI et termine le chargement', async () => {
+  it('charge par listCompetitions (contrat) et termine le chargement', async () => {
+    const dto = (id: string) => ({
+      ...comp(id),
+      date: '2026-12-06T00:00:00.000Z',
+      createdAt: '2026-11-01T00:00:00.000Z',
+      updatedAt: '2026-11-01T00:00:00.000Z',
+    });
     (window as any).electronAPI = {
-      db: { getAllCompetitions: vi.fn(async () => [comp('1'), comp('2')]) },
+      api: fakeApiBridge({ listCompetitions: vi.fn(async () => [dto('1'), dto('2')]) }),
     };
     const { result } = renderHook(() => useAppState(noopToast));
     await act(async () => {
       await result.current.loadCompetitions();
     });
     await waitFor(() => expect(result.current.competitions).toHaveLength(2));
+    expect(result.current.competitions[0].date).toBeInstanceOf(Date);
     expect(result.current.isLoading).toBe(false);
   });
 });

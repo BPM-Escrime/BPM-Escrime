@@ -17,59 +17,31 @@ import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
 
-/** Clés de réglage admises (CompetitionSettings) : une clé inconnue est refusée */
-export const COMPETITION_SETTING_KEYS = [
-  'defaultPoolMaxScore',
-  'defaultTableMaxScore',
-  'defaultPoolTimerSeconds',
-  'defaultTableTimerSeconds',
-  'restTimeSeconds',
-  'poolRounds',
-  'poolRoundQualifiers',
-  'poolSizeMin',
-  'poolSizeMax',
-  'refereeing',
-  'hasDirectElimination',
-  'thirdPlaceMatch',
-  'signTableauMatches',
-  'manualRanking',
-  'defaultRanking',
-  'randomScore',
-  'minTeamSize',
-  'teamReserveCount',
-  'laserTeamMode',
-  'teamRelayStepSize',
-  'teamFormat',
-  'questConfig',
-  'refereeFeatureEnabled',
-  'blackCardEnabled',
-  'trainerCommentsEnabled',
-  'backupDir',
-  'customFormula',
-  'specialMode',
-  'playAllPositions',
-  'expertMode',
-  'maxRefereesPerPool',
-  'maxRefereesPerMatch',
-  'poolWinnersOnly',
-  'postPoolSplitCriteria',
-  'splitOffCompetitionIds',
-  'splitFromCompetitionId',
-  'federal',
-  'schedule',
-  'gregLevel',
-  'poolBoutOrder',
-] as const satisfies readonly (keyof CompetitionSettings)[];
-
 /** Réglages figés une fois les poules tirées (ou le tableau généré) : ils changent les règles */
 const FROZEN_SETTINGS: ReadonlySet<string> = new Set(['specialMode', 'customFormula']);
 
-function checkSettingKeys(patch: Record<string, unknown>): void {
-  const known: ReadonlySet<string> = new Set(COMPETITION_SETTING_KEYS);
-  const unknown = Object.keys(patch).filter(k => !known.has(k));
-  if (unknown.length) {
-    throw new CommandError('unknown_setting', `Réglage inconnu : ${unknown.join(', ')}`);
-  }
+/** Épreuve exposée par le contrat (getCompetition, listCompetitions) : dates en ISO 8601 */
+export function competitionDTO(c: Competition) {
+  const iso = (d: unknown) => new Date((d as Date | string | undefined) ?? 0).toISOString();
+  return {
+    id: c.id,
+    title: c.title,
+    shortTitle: c.shortTitle ?? null,
+    date: iso(c.date),
+    location: c.location || null,
+    organizer: c.organizer || null,
+    weapon: c.weapon,
+    gender: c.gender,
+    category: c.category,
+    championship: c.championship ?? null,
+    color: c.color ?? null,
+    isTeamEvent: !!c.isTeamEvent,
+    status: c.status ?? null,
+    fencerCount: c.fencerCount ?? null,
+    settings: c.settings ?? {},
+    createdAt: iso(c.createdAt),
+    updatedAt: iso(c.updatedAt),
+  };
 }
 
 export interface CreateCompetitionInput {
@@ -82,7 +54,7 @@ export interface CreateCompetitionInput {
   color?: string;
   isTeamEvent?: boolean;
   /** Réglages choisis à la création, fusionnés sur les défauts du moteur */
-  settings?: Record<string, unknown>;
+  settings?: Partial<CompetitionSettings>;
   dryRun?: boolean;
 }
 
@@ -90,7 +62,6 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
   const date = new Date(input.date);
   if (Number.isNaN(date.getTime())) throw new CommandError('invalid_date', 'Date invalide');
   const patch = input.settings ?? {};
-  checkSettingKeys(patch);
   const settings = {
     ...buildDefaultCompetitionSettings({ weapon: input.weapon, category: input.category }),
     ...patch,
@@ -157,13 +128,12 @@ export function updateCompetitionSettings(
     gender?: Gender;
     category?: Category;
     isTeamEvent?: boolean;
-    settings?: Record<string, unknown>;
+    settings?: Partial<CompetitionSettings>;
     dryRun?: boolean;
   }
 ) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
   const patch = input.settings ?? {};
-  checkSettingKeys(patch);
   const frozen = [
     ...(input.weapon !== undefined && input.weapon !== comp.weapon ? ['weapon'] : []),
     ...(input.isTeamEvent !== undefined && input.isTeamEvent !== !!comp.isTeamEvent
@@ -172,7 +142,7 @@ export function updateCompetitionSettings(
     ...Object.keys(patch).filter(
       k =>
         FROZEN_SETTINGS.has(k) &&
-        JSON.stringify(patch[k]) !==
+        JSON.stringify((patch as Record<string, unknown>)[k]) !==
           JSON.stringify((comp.settings as unknown as Record<string, unknown>)?.[k])
     ),
   ];

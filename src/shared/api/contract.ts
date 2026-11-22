@@ -9,6 +9,7 @@
  */
 import { z } from 'zod';
 import { JournalEventSchema } from './events';
+import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
 import type { ConsolationBracket, FinalResult, TableauMatch } from '../domain/tableau/tableauTypes';
 import type { RapieresLegacyState, RapieresSession } from '../domain/rapieres/rapieres.types';
@@ -240,11 +241,8 @@ const RefereeDetailsShape = {
 const WeaponEnum = z.enum(Weapon);
 const GenderEnum = z.enum(Gender);
 const CategoryEnum = z.enum(Category);
-/**
- * Réglages d'une épreuve (fusion de premier niveau) : clés de CompetitionSettings vérifiées par le
- * moteur (« unknown_setting »), valeurs libres tant que la formule n'a pas son schéma (ADR-0012)
- */
-const SettingsPatch = z.record(z.string(), z.unknown());
+/** Réglages d'une épreuve (fusion de premier niveau) : clés et valeurs vérifiées */
+const SettingsPatch = CompetitionSettingsPatchSchema;
 
 const CompetitionStateSchema = z.object({
   currentPhase: z.number().int(),
@@ -821,7 +819,7 @@ export const contract = {
 
   updateCompetitionSettings: command({
     description:
-      'Arme, sexe, catégorie, format par équipes et réglages (fusion de premier niveau, clé inconnue refusée). ' +
+      'Arme, sexe, catégorie, format par équipes et réglages (fusion de premier niveau ; clé inconnue ou valeur invalide refusées à l’entrée). ' +
       'Arme, format par équipes, mode spécial et formule à la carte figés (« draw_done ») après le tirage. Tablettes prévenues.',
     input: z.object({
       competitionId: CompetitionId,
@@ -1220,6 +1218,22 @@ export const contract = {
         })
       ),
     }),
+    permission: 'competition:read',
+  }),
+
+  getCompetition: query({
+    description:
+      'Une épreuve : identité, arme, catégorie, statut et réglages (dates en ISO 8601). Tireurs : listFencers ; arbitres : listReferees.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: CompetitionSchema,
+    permission: 'competition:read',
+  }),
+
+  listCompetitions: query({
+    description:
+      'Toutes les épreuves du poste, les plus récentes d’abord, avec leur nombre de tireurs.',
+    input: z.object({}),
+    output: z.array(CompetitionSchema),
     permission: 'competition:read',
   }),
 

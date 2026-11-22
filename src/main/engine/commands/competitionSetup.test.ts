@@ -43,7 +43,7 @@ const call = (op: string, input: Record<string, unknown>) =>
   invoke(ctx, op as never, { competitionId, ...input } as never) as Promise<any>;
 
 d('épreuves (docs/adr/0018)', () => {
-  it('createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue refusée', async () => {
+  it('createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue et valeur invalide refusées', async () => {
     const r = await invoke(
       ctx,
       'createCompetition' as never,
@@ -76,7 +76,11 @@ d('épreuves (docs/adr/0018)', () => {
           settings: { inconnu: 1 },
         } as never
       )
-    ).rejects.toMatchObject({ code: 'unknown_setting' });
+    ).rejects.toMatchObject({ code: 'invalid_input' });
+    // Valeur invalide : refusée à l'entrée (schéma des réglages)
+    await expect(
+      call('updateCompetitionSettings', { settings: { defaultPoolMaxScore: 'cinq' } })
+    ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 
   it('updateCompetitionDetails : titre, date, lieu ; entrée stricte', async () => {
@@ -131,5 +135,18 @@ d('épreuves (docs/adr/0018)', () => {
     await call('deleteCompetition', {});
     expect(remote.stop).toHaveBeenCalledWith(competitionId);
     expect(db.getCompetition(competitionId)).toBeNull();
+  });
+
+  it('getCompetition et listCompetitions : dates ISO, réglages, nombre de tireurs', async () => {
+    db.addFencer(competitionId, { lastName: 'A', firstName: 'A' });
+    const one = (await invoke(ctx, 'getCompetition' as never, { competitionId } as never)) as any;
+    expect(one).toMatchObject({ id: competitionId, title: 'Inscription', weapon: 'E' });
+    expect(one.date).toMatch(/^2026-12-06/);
+    expect(one.settings.defaultPoolMaxScore).toBeGreaterThan(0);
+    const all = (await invoke(ctx, 'listCompetitions' as never, {} as never)) as any[];
+    expect(all).toEqual([expect.objectContaining({ id: competitionId, fencerCount: 1 })]);
+    await expect(
+      invoke(ctx, 'getCompetition' as never, { competitionId: 'inconnue' } as never)
+    ).rejects.toMatchObject({ code: 'competition_not_found' });
   });
 });

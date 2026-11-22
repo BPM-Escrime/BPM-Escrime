@@ -143,6 +143,7 @@ Ne plus ajouter d'appel direct à `window.electronAPI` pour une opération du co
 | `setRefereeingSettings`                                                                              | commande (`referees:write`) — réglages d'affectation, fusion côté moteur ([ADR-0014](adr/0014-affectation-arbitres-moteur-unique.md))                                                                                                                                                          | `set_refereeing_settings`                         |
 | `assignReferees`                                                                                     | commande (`referees:write`) — arbitres des poules par le moteur unique                                                                                                                                                                                                                         | `assign_referees`                                 |
 | `assignReferee`                                                                                      | commande (`referees:write`) — arbitre d'une poule à la main, neutralité signalée                                                                                                                                                                                                               | `assign_referee`                                  |
+| `getCompetition` / `listCompetitions`                                                                | requêtes — une épreuve, ou toutes (nombre de tireurs) : identité, statut, réglages en schéma strict (`src/shared/api/competitionSchema.ts`), dates ISO 8601                                                                                                                                    | —                                                 |
 | `listFencers`                                                                                        | requête — tireurs d'une épreuve, ordre des dossards, dates ISO 8601                                                                                                                                                                                                                            | —                                                 |
 | `getSeasonRanking`                                                                                   | requête — classement de saison (cumul par tireur) et épreuves versées                                                                                                                                                                                                                          | —                                                 |
 | `listReferees`                                                                                       | requête — arbitres d'une épreuve (identité, club, nationalité, niveau, disponibilité) pour l'écran                                                                                                                                                                                             | —                                                 |
@@ -178,10 +179,13 @@ Arbitres (ADR-0018) : `RefereeManager`, l'import d'arbitres et le choix d'arbitr
 passent par les commandes et `listReferees` / `listRefereeMatches`.
 Épreuves (ADR-0018) : création, suppression, propriétés, petite finale, configuration Quest et
 activation des arbitres passent par les commandes (`persistCompetitionUpdate`) ; la lecture
-d'une épreuve reste sur `db.getCompetition` en attendant le schéma des réglages (ADR-0012).
+d'une épreuve passe par `getCompetition` / `listCompetitions` : les réglages ont un schéma zod
+strict, vérifié à la compilation contre `CompetitionSettings` ; il valide aussi les réglages en
+entrée (valeur invalide refusée). Seule la formule à la carte garde son type sans validation de
+valeur, en attendant `validateFormulaSettings` (ADR-0012).
 Saison (ADR-0018) : `SeasonRankingView` lit `getSeasonRanking` et verse, retire ou vide par les
 commandes ; le moteur calcule le classement Quest de l'épreuve versée.
-Cliquet `electronApiCalls` : 113.
+Cliquet `electronApiCalls` : 112.
 
 Lots suivants : suite de la migration de l'écran par domaine (2), `WsClient` + adaptateur WebSocket (3),
 `PlatformServices` (4), pages distantes (5).

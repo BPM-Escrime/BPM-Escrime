@@ -14,6 +14,7 @@ import type { FederalCreationPayload } from './useFederalImport';
 import { applyFederalImport } from '../services/federalCreation';
 import { translateStatic } from '../contexts/TranslationContext';
 import { useBpmClient } from '../api/BpmClientContext';
+import { loadCompetition } from '../api/competitionMapping';
 
 interface CompetitionTabsParams
   extends
@@ -67,7 +68,7 @@ export function useCompetitionTabs({
               ? { settings: data.settings as unknown as Record<string, unknown> }
               : {}),
           });
-          const newComp = await window.electronAPI.db.getCompetition(created.competitionId!);
+          const newComp = await loadCompetition(client, created.competitionId!);
           if (!newComp) throw new Error('Épreuve créée introuvable');
           setCompetitions(prev => [newComp, ...prev]);
 
@@ -81,9 +82,9 @@ export function useCompetitionTabs({
             showToast(translateStatic('federalImport.imported', { ...counts }), 'success');
           }
 
-          // Ouvrir la compétition dans un nouvel onglet
-          const fencers = await window.electronAPI.db.getFencersByCompetition(newComp.id);
-          newComp.fencers = fencers;
+          // Ouvrir la compétition dans un nouvel onglet (tireurs importés compris)
+          const withFencers = await loadCompetition(client, newComp.id, { withFencers: true });
+          newComp.fencers = withFencers?.fencers ?? [];
 
           setOpenCompetitions(prev => [...prev, { competition: newComp, isDirty: false }]);
           setActiveTabId(newComp.id);
@@ -125,12 +126,9 @@ export function useCompetitionTabs({
             setCurrentCompetition(existingOpenComp.competition);
             setView('competition');
           } else {
-            const comp = await window.electronAPI.db.getCompetition(competition.id);
+            const comp = await loadCompetition(client, competition.id, { withFencers: true });
 
             if (comp) {
-              const fencers = await window.electronAPI.db.getFencersByCompetition(competition.id);
-              comp.fencers = fencers;
-
               setOpenCompetitions(prev => [...prev, { competition: comp, isDirty: false }]);
               setActiveTabId(comp.id);
               setCurrentCompetition(comp);
@@ -149,6 +147,7 @@ export function useCompetitionTabs({
       }
     },
     [
+      client,
       openCompetitions,
       showToast,
       setActiveTabId,
@@ -161,7 +160,7 @@ export function useCompetitionTabs({
   // Ouvrir une compétition par id (ex : compétition séparée créée après poules)
   const handleOpenCompetitionById = useCallback(
     async (competitionId: string) => {
-      const comp = await window.electronAPI?.db.getCompetition(competitionId);
+      const comp = await loadCompetition(client, competitionId).catch(() => null);
       if (!comp) {
         showToast('Erreur: Compétition non trouvée', 'error');
         return;
@@ -169,15 +168,14 @@ export function useCompetitionTabs({
       setCompetitions(prev => (prev.some(c => c.id === comp.id) ? prev : [comp, ...prev]));
       await handleSelectCompetition(comp);
     },
-    [handleSelectCompetition, showToast, setCompetitions]
+    [client, handleSelectCompetition, showToast, setCompetitions]
   );
 
   // Ouvre (ou recharge) une compétition fusionnée depuis un .bpm (#1117)
   const openImportedCompetition = useCallback(
     async (id: string) => {
-      const comp = await window.electronAPI.db.getCompetition(id);
+      const comp = await loadCompetition(client, id, { withFencers: true });
       if (!comp) return;
-      comp.fencers = await window.electronAPI.db.getFencersByCompetition(id);
       // Onglet déjà ouvert : le démonter pour relire l'état importé
       setOpenCompetitions(prev => prev.filter(open => open.competition.id !== id));
       setCurrentCompetition(null);
@@ -191,7 +189,7 @@ export function useCompetitionTabs({
       setCurrentCompetition(comp);
       setView('competition');
     },
-    [setOpenCompetitions, setCurrentCompetition, setActiveTabId, setView]
+    [client, setOpenCompetitions, setCurrentCompetition, setActiveTabId, setView]
   );
   const openImportedCompetitionRef = useRef(openImportedCompetition);
   openImportedCompetitionRef.current = openImportedCompetition;
