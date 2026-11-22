@@ -109,7 +109,9 @@ function mockElectronAPI(fencers: Fencer[], session: unknown = null) {
           data:
             name === 'checkIn'
               ? { dryRun: false, status: 'x', matched: 1, updated: 1, skipped: 0, unknown: [] }
-              : null,
+              : name === 'listFencers'
+                ? fencers
+                : null,
         });
       },
       subscribe: () => Promise.resolve({ ok: true, data: null }),
