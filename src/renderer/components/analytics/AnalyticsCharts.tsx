@@ -15,6 +15,7 @@ import {
 } from '../../../shared/types';
 import { TouchZoneHeatmap, type HeatmapVariant } from './TouchZoneHeatmap';
 import { useTranslation } from '../../hooks/useTranslation';
+import { defaultPlatform } from '../../platform/PlatformContext';
 import { ChartColumn, Download } from 'lucide-react';
 import { Icon } from '../common/Icon';
 import {
@@ -498,14 +499,12 @@ async function exportCSV(t: TFn, competition: Competition, stats: FencerCompetit
     .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
-  if (!window.electronAPI?.file) return;
-  const result = await window.electronAPI.dialog.saveFile({
+  await defaultPlatform.saveFile({
     filters: [{ name: 'CSV', extensions: ['csv'] }],
-    defaultPath: `stats-${competition.title.replace(/\s+/g, '-')}.csv`,
+    suggestedName: `stats-${competition.title.replace(/\s+/g, '-')}.csv`,
+    content: csv,
+    mimeType: 'text/csv;charset=utf-8',
   });
-  if (result?.filePath) {
-    await window.electronAPI.file.writeContent(result.filePath, csv);
-  }
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────

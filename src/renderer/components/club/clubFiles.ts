@@ -3,23 +3,21 @@
  * Licensed under GPL-3.0
  */
 
-/** Enregistre un texte via la boîte « Enregistrer sous » ; false si annulé */
+import { defaultPlatform } from '../../platform/PlatformContext';
+
+/** Enregistre un texte (« Enregistrer sous », ou téléchargement hors Electron) ; false si annulé */
 export async function saveTextFile(
   defaultPath: string,
   content: string,
   title: string,
   ext: 'json' | 'csv' | 'fff' = 'json'
 ): Promise<boolean> {
-  const api = window.electronAPI;
-  if (!api?.dialog?.saveFile || !api.file?.writeContent) return false;
-  const r = await api.dialog.saveFile({
+  return defaultPlatform.saveFile({
     title,
-    defaultPath,
+    suggestedName: defaultPath,
     filters: [{ name: ext.toUpperCase(), extensions: [ext] }],
+    content,
   });
-  if (!r || r.canceled || !r.filePath) return false;
-  await api.file.writeContent(r.filePath, content);
-  return true;
 }
 
 /** Ouvre un fichier JSON ; null si annulé */

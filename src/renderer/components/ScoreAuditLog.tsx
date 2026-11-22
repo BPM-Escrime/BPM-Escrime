@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { ScoreAuditEntry, ScoreIpConflict } from '../../shared/types/preload';
 import { useToast } from './Toast';
+import { usePlatform } from '../platform/PlatformContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { getRoundName } from '../../shared/domain/tableau/tableauCalculations';
 import type { MatchAuditOption } from './MatchAuditLog';
@@ -114,6 +115,7 @@ function buildSorters(refereeOf: RefereeLookup): Record<SortMode, Sorter> {
 
 const ScoreAuditLog_: React.FC<Props> = ({ competitionId, matchOptions }) => {
   const { showToast } = useToast();
+  const platform = usePlatform();
   const { t } = useTranslation();
   const [entries, setEntries] = useState<ScoreAuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -197,19 +199,18 @@ const ScoreAuditLog_: React.FC<Props> = ({ competitionId, matchOptions }) => {
     });
     const csv = header + rows.join('\n');
     try {
-      const result = await window.electronAPI.dialog.saveFile({
+      const saved = await platform.saveFile({
         title: t('dialogs.exportScoreHistory'),
-        defaultPath: `historique_scores_${new Date().toISOString().slice(0, 10)}.csv`,
+        suggestedName: `historique_scores_${new Date().toISOString().slice(0, 10)}.csv`,
         filters: [{ name: 'CSV / TXT', extensions: ['csv', 'txt'] }],
+        content: csv,
+        mimeType: 'text/csv;charset=utf-8',
       });
-      if (result && !result.canceled && result.filePath) {
-        await window.electronAPI.file.writeContent(result.filePath, csv);
-        showToast('Fichier exporté', 'success');
-      }
+      if (saved) showToast('Fichier exporté', 'success');
     } catch {
       showToast('Erreur export', 'error');
     }
-  }, [filtered, refereeOf, showToast, t]);
+  }, [filtered, refereeOf, showToast, t, platform]);
 
   const visibleRows = collapsed ? filtered.slice(0, COMPACT_ROW_COUNT) : filtered;
   const hiddenCount = filtered.length - visibleRows.length;
