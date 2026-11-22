@@ -63,3 +63,12 @@ export interface ApiBridge {
   unsubscribe: (id: string) => void;
   onEvent: (callback: (id: string, event: unknown) => void) => () => void;
 }
+
+/** Protocole WebSocket du contrat (docs/adr/0020) : espace de noms et messages, comme l'IPC */
+export const WS_API_NAMESPACE = '/api';
+export const WS_API_EVENTS = {
+  invoke: 'api:invoke',
+  subscribe: 'api:subscribe',
+  unsubscribe: 'api:unsubscribe',
+  event: 'api:event',
+} as const;
