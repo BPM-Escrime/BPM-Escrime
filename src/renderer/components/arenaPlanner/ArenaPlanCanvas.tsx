@@ -6,8 +6,9 @@
  * Licensed under GPL-3.0
  */
 
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
+import { technicalDimensions, type DimensionLine } from '@shared/domain/arena/arenaDimensions';
 import {
   ARENA_SAFETY_RADIUS_M,
   ARENA_ZONE_RADIUS_M,
@@ -47,6 +48,7 @@ export interface ArenaPlanCanvasProps {
   selectedId: string | null;
   conflictIds: Set<string>;
   snap: boolean;
+  showDims: boolean;
   svgRef: React.RefObject<SVGSVGElement | null>;
   onSelect: (id: string | null) => void;
   onMove: (id: string, x: number, y: number) => void;
@@ -62,6 +64,7 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   selectedId,
   conflictIds,
   snap,
+  showDims,
   svgRef,
   onSelect,
   onMove,
@@ -180,6 +183,10 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   const gridX = Array.from({ length: Math.floor(W) + 1 }, (_, i) => i);
   const gridY = Array.from({ length: Math.floor(L) + 1 }, (_, i) => i);
   const geos = centers.map(c => computeArenaGeometry(c));
+  const dims = useMemo(
+    () => (showDims ? technicalDimensions(room, centers, items) : null),
+    [showDims, room, centers, items]
+  );
 
   return (
     <svg
@@ -200,18 +207,36 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
       {gridY.map(y => (
         <line key={`gy${y}`} x1={0} y1={y} x2={W} y2={y} className="arena-planner-grid" />
       ))}
-      <text x={W / 2} y={-0.7} className="arena-planner-dim" textAnchor="middle">
-        {`${fmt(W)} m`}
-      </text>
-      <text
-        x={-0.7}
-        y={L / 2}
-        className="arena-planner-dim"
-        textAnchor="middle"
-        transform={`rotate(-90 ${-0.7} ${L / 2})`}
-      >
-        {`${fmt(L)} m`}
-      </text>
+      {dims ? null : (
+        <>
+          <text x={W / 2} y={-0.7} className="arena-planner-dim" textAnchor="middle">
+            {`${fmt(W)} m`}
+          </text>
+          <text
+            x={-0.7}
+            y={L / 2}
+            className="arena-planner-dim"
+            textAnchor="middle"
+            transform={`rotate(-90 ${-0.7} ${L / 2})`}
+          >
+            {`${fmt(L)} m`}
+          </text>
+        </>
+      )}
+      {dims ? dims.lines.map((l, i) => <DimensionLineView key={`dl${i}`} line={l} />) : null}
+      {dims
+        ? dims.texts.map((tx, i) => (
+            <text
+              key={`dt${i}`}
+              x={tx.x}
+              y={tx.y}
+              className="arena-planner-dimtext"
+              textAnchor="middle"
+            >
+              {tx.label}
+            </text>
+          ))
+        : null}
 
       {geos.map((g, i) => (
         <g key={`arena${i}`} className="arena-planner-arena">
@@ -334,6 +359,46 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
         );
       })}
     </svg>
+  );
+};
+
+const TICK_M = 0.15;
+
+/** Cote technique : ligne, deux traits obliques aux extrémités, valeur au milieu. */
+const DimensionLineView: React.FC<{ line: DimensionLine }> = ({ line }) => {
+  const { orientation: o, from, to, at, label: text } = line;
+  const [x1, y1, x2, y2] = o === 'h' ? [from, at, to, at] : [at, from, at, to];
+  const mid = (from + to) / 2;
+  const tick = (x: number, y: number) => (
+    <line
+      x1={x - TICK_M}
+      y1={y + TICK_M}
+      x2={x + TICK_M}
+      y2={y - TICK_M}
+      className="arena-planner-dimline"
+    />
+  );
+  return (
+    <g className="arena-planner-dim-group">
+      <line x1={x1} y1={y1} x2={x2} y2={y2} className="arena-planner-dimline" />
+      {tick(x1, y1)}
+      {tick(x2, y2)}
+      {o === 'h' ? (
+        <text x={mid} y={at - 0.25} className="arena-planner-dimtext" textAnchor="middle">
+          {text}
+        </text>
+      ) : (
+        <text
+          x={at - 0.25}
+          y={mid}
+          className="arena-planner-dimtext"
+          textAnchor="middle"
+          transform={`rotate(-90 ${at - 0.25} ${mid})`}
+        >
+          {text}
+        </text>
+      )}
+    </g>
   );
 };
 

@@ -224,3 +224,14 @@
   stroke: #2563eb;
   stroke-width: 0.06;
 }
+
+.arena-planner-dimline {
+  stroke: #1d4ed8;
+  stroke-width: 0.05;
+}
+
+.arena-planner-dimtext {
+  fill: #1d4ed8;
+  font-size: 0.45px;
+  font-weight: 600;
+}

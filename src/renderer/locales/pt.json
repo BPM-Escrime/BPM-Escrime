@@ -4330,6 +4330,8 @@
     "handles_hint": "Quadrado: aumentar com o rato. Círculo: rodar com o rato (tecla R: 90°).",
     "rotate_label": "Rotação (°)",
     "rotate_90": "Rodar 90°",
-    "too_many": "Pedidas {{requested}} arenas, mas a zona só comporta {{max}}. Só o máximo é colocado."
+    "too_many": "Pedidas {{requested}} arenas, mas a zona só comporta {{max}}. Só o máximo é colocado.",
+    "dims_option": "Cotas técnicas (planta e exportação)",
+    "dims_hint": "Acrescenta à planta e às exportações as cotas da sala, das arenas, dos espaçamentos, das margens e dos elementos."
   }
 }

@@ -4330,6 +4330,8 @@
     "handles_hint": "Quadrat: mit der Maus vergrößern. Kreis: mit der Maus drehen (Taste R: 90°).",
     "rotate_label": "Drehung (°)",
     "rotate_90": "Um 90° drehen",
-    "too_many": "{{requested}} Arenen angefragt, die Fläche fasst aber nur {{max}}. Es wird nur das Maximum platziert."
+    "too_many": "{{requested}} Arenen angefragt, die Fläche fasst aber nur {{max}}. Es wird nur das Maximum platziert.",
+    "dims_option": "Technische Bemaßung (Plan und Export)",
+    "dims_hint": "Fügt dem Plan und den Exporten Maße der Halle, Arenen, Abstände, Ränder und Elemente hinzu."
   }
 }

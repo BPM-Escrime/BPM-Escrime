@@ -4,6 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { technicalDimensions } from './arenaDimensions';
 import {
   ARENA_GUARD_OFFSET_M,
   ARENA_SAFETY_RADIUS_M,
@@ -262,5 +263,35 @@ describe('createRoomItem / moveRoomItem', () => {
     expect(r.x + r.widthM / 2).toBeCloseTo(base.x + base.widthM / 2, 6);
     expect(r.y + r.heightM / 2).toBeCloseTo(base.y + base.heightM / 2, 6);
     expect(r.widthM).toBe(4);
+  });
+});
+
+describe('technicalDimensions', () => {
+  it('donne la salle, le diamètre des arènes et les espacements alignés', () => {
+    const room = { widthM: 30, lengthM: 30 };
+    const centers = [
+      { x: 7, y: 7 },
+      { x: 19, y: 7 },
+      { x: 7, y: 19 },
+      { x: 19, y: 19 },
+    ];
+    const d = technicalDimensions(room, centers, []);
+    expect(d.lines).toContainEqual(
+      expect.objectContaining({ orientation: 'h', from: 0, to: 30, label: '30 m' })
+    );
+    expect(d.lines.filter(l => l.label === 'Ø 12 m')).toHaveLength(4);
+    expect(
+      d.lines.filter(l => l.orientation === 'h' && l.label === '12 m' && l.from !== 0)
+    ).toHaveLength(2);
+    expect(
+      d.lines.filter(l => l.orientation === 'v' && l.label === '12 m' && l.from !== 0)
+    ).toHaveLength(2);
+  });
+
+  it('donne les dimensions des éléments', () => {
+    const room = { widthM: 10, lengthM: 10 };
+    const t = { ...createRoomItem('table', 't', 'Table', room), x: 1, y: 1 };
+    const d = technicalDimensions(room, [], [t]);
+    expect(d.texts[0].label).toBe('1.5 m × 0.8 m');
   });
 });

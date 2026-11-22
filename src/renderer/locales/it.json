@@ -4330,6 +4330,8 @@
     "handles_hint": "Quadrato: ingrandisci con il mouse. Cerchio: ruota con il mouse (tasto R: 90°).",
     "rotate_label": "Rotazione (°)",
     "rotate_90": "Ruota di 90°",
-    "too_many": "Richieste {{requested}} arene, ma la zona ne contiene solo {{max}}. Viene posizionato solo il massimo."
+    "too_many": "Richieste {{requested}} arene, ma la zona ne contiene solo {{max}}. Viene posizionato solo il massimo.",
+    "dims_option": "Quote tecniche (pianta ed esportazione)",
+    "dims_hint": "Aggiunge alla pianta e alle esportazioni le quote di sala, arene, distanze, margini ed elementi."
   }
 }

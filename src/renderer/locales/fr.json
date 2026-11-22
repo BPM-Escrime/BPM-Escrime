@@ -4330,6 +4330,8 @@
     "handles_hint": "Carré : agrandir à la souris. Rond : tourner à la souris (touche R : 90°).",
     "rotate_label": "Rotation (°)",
     "rotate_90": "Tourner de 90°",
-    "too_many": "{{requested}} arènes demandées, mais la zone n’en contient que {{max}}. Seul le maximum est placé."
+    "too_many": "{{requested}} arènes demandées, mais la zone n’en contient que {{max}}. Seul le maximum est placé.",
+    "dims_option": "Cotes techniques (plan et export)",
+    "dims_hint": "Ajoute au plan et aux exports les cotes de la salle, des arènes, des espacements, des marges et des éléments."
   }
 }

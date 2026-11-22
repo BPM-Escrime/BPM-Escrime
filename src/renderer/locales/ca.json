@@ -4330,6 +4330,8 @@
     "handles_hint": "Quadrat: amplia amb el ratolí. Cercle: gira amb el ratolí (tecla R: 90°).",
     "rotate_label": "Rotació (°)",
     "rotate_90": "Gira 90°",
-    "too_many": "Demanades {{requested}} arenes, però la zona només n’admet {{max}}. Només es col·loca el màxim."
+    "too_many": "Demanades {{requested}} arenes, però la zona només n’admet {{max}}. Només es col·loca el màxim.",
+    "dims_option": "Cotes tècniques (plànol i exportació)",
+    "dims_hint": "Afegeix al plànol i a les exportacions les cotes de la sala, les arenes, els espais, els marges i els elements."
   }
 }

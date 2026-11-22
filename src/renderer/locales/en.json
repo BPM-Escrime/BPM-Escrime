@@ -4330,6 +4330,8 @@
     "handles_hint": "Square: resize with the mouse. Round: rotate with the mouse (R key: 90°).",
     "rotate_label": "Rotation (°)",
     "rotate_90": "Rotate 90°",
-    "too_many": "{{requested}} arenas requested, but the zone only fits {{max}}. Only the maximum is placed."
+    "too_many": "{{requested}} arenas requested, but the zone only fits {{max}}. Only the maximum is placed.",
+    "dims_option": "Technical dimensions (plan and export)",
+    "dims_hint": "Adds room, arena, spacing, margin and item dimensions to the plan and the exports."
   }
 }

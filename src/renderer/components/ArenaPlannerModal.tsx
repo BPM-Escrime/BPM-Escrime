@@ -67,6 +67,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const [items, setItems] = useState<RoomItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snap, setSnap] = useState(true);
+  const [showDims, setShowDims] = useState(false);
   const [exportError, setExportError] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
   const idCounter = useRef(0);
@@ -365,6 +366,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
                 selectedId={selectedId}
                 conflictIds={conflictIds}
                 snap={snap}
+                showDims={showDims}
                 svgRef={svgRef}
                 onSelect={setSelectedId}
                 onMove={moveItem}
@@ -460,6 +462,15 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               </ul>
               <p className="arena-planner-hint">{t('arenaPlanner.note')}</p>
 
+              <label className="arena-planner-check">
+                <input
+                  type="checkbox"
+                  checked={showDims}
+                  onChange={e => setShowDims(e.target.checked)}
+                />
+                {t('arenaPlanner.dims_option')}
+              </label>
+              <p className="arena-planner-hint">{t('arenaPlanner.dims_hint')}</p>
               <div className="arena-planner-actions">
                 <Button type="button" variant="primary" onClick={() => runExport('pdf')}>
                   {t('arenaPlanner.export_pdf')}

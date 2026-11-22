@@ -94,4 +94,11 @@ describe('ArenaPlannerModal', () => {
     expect(screen.getByRole('status')).toHaveTextContent('arenaPlanner.optimize_result');
     expect(screen.getAllByRole('img')[0].querySelectorAll('.arena-planner-safety')).toHaveLength(4);
   });
+
+  it('affiche les cotes techniques quand la case est cochée', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    expect(document.querySelectorAll('.arena-planner-dimline')).toHaveLength(0);
+    fireEvent.click(screen.getByLabelText('arenaPlanner.dims_option'));
+    expect(document.querySelectorAll('.arena-planner-dimline').length).toBeGreaterThan(0);
+  });
 });
