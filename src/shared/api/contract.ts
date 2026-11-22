@@ -105,6 +105,14 @@ const ResolvedRefereeing = z.object({
  * matchs de tableau…) sont typés par leurs interfaces : z.custom, sans contrôle à l'exécution.
  * Les champs d'interface (phase affichée, paramètres de préparation, pistes) sortent à l'étape 4b.
  */
+/** Écart entre le journal rejoué et l'état (compareWithState) : identifiants et nombres seulement */
+const DivergenceSchema = z.object({
+  kind: z.string(),
+  id: z.string(),
+  expected: z.unknown().optional(),
+  actual: z.unknown().optional(),
+});
+
 const CompetitionStateSchema = z.object({
   currentPhase: z.number().int(),
   pools: z.array(z.custom<Pool>()),
@@ -604,6 +612,35 @@ export const contract = {
     output: z.object({ dryRun: z.boolean(), cleared: z.number().int(), revision: Revision }),
     permission: 'score:write',
     mcp: { name: 'clear_tableau', title: 'Retirer le tableau', destructive: true },
+  }),
+
+  rebuildCompetitionState: command({
+    description:
+      'Maintenance (docs/adr/0017) : rejoue le journal de l’épreuve et le compare à son état. ' +
+      '« dryRun: true » (conseillé d’abord) rend les écarts sans rien écrire. Sinon l’état est aligné sur le journal pour les faits rejouables : ' +
+      'statuts des tireurs, scores de poule du tour courant, décisions du tableau et des tableaux de classement, vagues des rapières ; classements et classement final recalculés. ' +
+      'Les écarts de structure (poules, tours, placement du tableau) et les abandons sans touches restent dans « remaining ». Journal incomplet (épreuve antérieure) : statuts seuls.',
+    input: z.object({
+      competitionId: CompetitionId,
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      /** Journal complet : il commence par un tirage (sinon les tables font foi) */
+      complete: z.boolean(),
+      revision: Revision,
+      divergences: z.array(DivergenceSchema),
+      repaired: z.array(z.object({ kind: z.string(), id: z.string() })),
+      remaining: z.array(DivergenceSchema),
+    }),
+    permission: 'score:write',
+    mcp: {
+      name: 'rebuild_competition_state',
+      title: 'Vérifier et réparer l’état d’une épreuve',
+      destructive: true,
+    },
   }),
 
   withdrawFencer: command({

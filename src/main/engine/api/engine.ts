@@ -28,6 +28,7 @@ import { endRapieresWaves, launchRapieresWave, setRapieresTeams } from '../comma
 import { clearScore } from '../commands/scoreClear';
 import { assignMatches } from '../commands/assignments';
 import { adjustRanking, clearTableau, skipPools } from '../commands/ranking';
+import { rebuildCompetitionState } from '../commands/rebuild';
 import { getCompetitionOrThrow } from '../commands/competitions';
 import { readSession } from '../commands/sessionView';
 import { competitionState } from '../commands/competitionState';
@@ -74,6 +75,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   skipPools: (ctx, { expectedRevision: _r, commandId: _c, ...input }) => skipPools(ctx, input),
   clearTableau: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     clearTableau(ctx, input),
+  rebuildCompetitionState: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    rebuildCompetitionState(ctx, input),
   withdrawFencer: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     withdrawFencer(ctx, input),
   reinstateFencer: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>

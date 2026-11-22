@@ -245,3 +245,86 @@ d('rejeu du journal (docs/adr/0017, étape 5)', () => {
     ]);
   });
 });
+
+d('rebuildCompetitionState (docs/adr/0017, étape 5)', () => {
+  const rebuild = (competitionId: string, dryRun?: boolean) =>
+    call('rebuildCompetitionState', { competitionId, dryRun }) as Promise<{
+      dryRun: boolean;
+      complete: boolean;
+      divergences: Array<{ kind: string; id: string }>;
+      repaired: Array<{ kind: string; id: string }>;
+      remaining: Array<{ kind: string; id: string }>;
+    }>;
+
+  it('état conforme : rien à faire', async () => {
+    const comp = setup(4);
+    await checkInAll(comp.id);
+    await call('generatePools', { competitionId: comp.id, poolCount: 1 });
+    await playAll(comp.id, 'pool');
+    const r = await rebuild(comp.id);
+    expect(r).toMatchObject({ complete: true, divergences: [], repaired: [], remaining: [] });
+  });
+
+  it('score de poule et statut modifiés hors commande : dryRun puis réparation', async () => {
+    const comp = setup(4);
+    const ids = await checkInAll(comp.id);
+    await call('generatePools', { competitionId: comp.id, poolCount: 1 });
+    await playAll(comp.id, 'pool');
+    const session = db.getSessionState(comp.id) as any;
+    const m = session.pools[0].matches[0];
+    const before = JSON.stringify(session.overallRanking);
+    // Score inversé hors commande : vainqueur et classement faussés
+    m.scoreA = { ...m.scoreA, value: 1, isVictory: false };
+    m.scoreB = { ...m.scoreB, value: 5, isVictory: true };
+    db.saveSessionState(comp.id, session);
+    db.updateFencer(ids[1], { status: FencerStatus.NOT_CHECKED_IN });
+
+    const dry = await rebuild(comp.id, true);
+    expect(dry.dryRun).toBe(true);
+    expect(dry.divergences.map(x => x.kind).sort()).toEqual(['fencer_status', 'pool_result']);
+    expect((db.getSessionState(comp.id) as any).pools[0].matches[0].scoreA.value).toBe(1);
+
+    const r = await rebuild(comp.id);
+    expect(r.repaired.map(x => x.kind).sort()).toEqual(['fencer_status', 'pool_result']);
+    expect(r.remaining).toEqual([]);
+    const after = db.getSessionState(comp.id) as any;
+    expect(after.pools[0].matches[0].scoreA).toMatchObject({ value: 5, isVictory: true });
+    expect(JSON.stringify(after.overallRanking)).toBe(before);
+    expect(db.getFencer(ids[1])?.status).toBe(FencerStatus.CHECKED_IN);
+    expect(replay(comp.id).divergences).toEqual([]);
+  });
+
+  it('décision du tableau effacée hors commande : vainqueur rendu, tableau propagé', async () => {
+    const comp = setup(6);
+    await checkInAll(comp.id);
+    await call('generatePools', { competitionId: comp.id, poolCount: 1 });
+    await playAll(comp.id, 'pool');
+    await call('generateTableau', { competitionId: comp.id, thirdPlaceMatch: false });
+    await playAll(comp.id, 'bracket');
+    const session = db.getSessionState(comp.id) as any;
+    const expectedFinal = JSON.stringify(session.finalResults);
+    const final = session.tableauMatches.find((x: any) => x.round === 2);
+    final.winner = null;
+    session.finalResults = [];
+    db.saveSessionState(comp.id, session);
+
+    const r = await rebuild(comp.id);
+    expect(r.repaired).toEqual([{ kind: 'bracket_result', id: final.id }]);
+    expect(r.remaining).toEqual([]);
+    expect(JSON.stringify((db.getSessionState(comp.id) as any).finalResults)).toBe(expectedFinal);
+  });
+
+  it('écart de structure : rendu, non corrigé', async () => {
+    const comp = setup(6);
+    await checkInAll(comp.id);
+    await call('generatePools', { competitionId: comp.id, poolCount: 2 });
+    const session = db.getSessionState(comp.id) as any;
+    const removed = session.pools.pop();
+    db.saveSessionState(comp.id, session);
+    const r = await rebuild(comp.id);
+    expect(r.repaired).toEqual([]);
+    expect(r.remaining).toEqual([
+      expect.objectContaining({ kind: 'pool_missing', id: removed.id }),
+    ]);
+  });
+});
