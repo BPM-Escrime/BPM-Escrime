@@ -66,6 +66,14 @@ export async function refuseAsync<T>(fn: () => Promise<T>): Promise<T> {
 
 function asRefusal(e: unknown): unknown {
   if (e instanceof CommandError || e instanceof ApiError) return e;
+  // Panne de la base (SQLite) : erreur interne journalisée, jamais son texte brut à l'écran
+  const code = (e as { code?: unknown })?.code;
+  if (
+    (typeof code === 'string' && code.startsWith('SQLITE')) ||
+    (e as Error)?.name === 'SqliteError'
+  ) {
+    return e;
+  }
   return new CommandError('club_refused', e instanceof Error ? e.message : String(e));
 }
 

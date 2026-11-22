@@ -128,7 +128,7 @@ npm run e2e:debug       # Playwright debug mode
 ```
 Main Process (src/main/)
 ├── main.ts                  # Window management, menu (i18n: fr/en/de), IPC handlers, DB lifecycle
-├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), trainingHandlers (training:*), eventDayHandlers (eventDay:*, journée multi-épreuves #1714), dayStripHandlers (pistes libérées et réservation, #1878), cyranoHandlers (cyrano:*, #1720), opp2Handlers (opp2:*, #1960), clubHandlers (club:*, Mode Club #1872), privacyHandlers (privacy:*, RGPD #1882) — registerXxxHandlers(ctx)
+├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), trainingHandlers (training:*), eventDayHandlers (eventDay:*, journée multi-épreuves #1714), dayStripHandlers (pistes libérées et réservation, #1878), cyranoHandlers (cyrano:*, #1720), opp2Handlers (opp2:*, #1960), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:*, RGPD #1882) — registerXxxHandlers(ctx)
 ├── menuLabels.ts            # Libellés du menu natif (fr/en/de/zh-HK)
 ├── remoteRegistry.ts        # Serveurs distants actifs (remoteServers, ports, stopRemoteServer)
 ├── preload.ts               # Secure IPC bridge (contextIsolation: true)

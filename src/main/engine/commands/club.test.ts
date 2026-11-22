@@ -467,3 +467,22 @@ describe('Mode Club : jamais sur le réseau (docs/adr/0022)', () => {
     for (const n of clubOps) expect((contract[n] as { mcp?: unknown }).mcp).toBeUndefined();
   });
 });
+
+describe('erreurs du Mode Club', () => {
+  it('refus du dépôt : club_refused avec son message ; panne SQLite : erreur interne', async () => {
+    const { refuse } = await import('./club');
+    expect(() =>
+      refuse(() => {
+        throw new Error('Séance fermée');
+      })
+    ).toThrow(expect.objectContaining({ code: 'club_refused', message: 'Séance fermée' }));
+    const sqlite = Object.assign(new Error('SQLITE_CONSTRAINT: UNIQUE failed: club_members.id'), {
+      code: 'SQLITE_CONSTRAINT_UNIQUE',
+    });
+    expect(() =>
+      refuse(() => {
+        throw sqlite;
+      })
+    ).toThrow(sqlite);
+  });
+});
