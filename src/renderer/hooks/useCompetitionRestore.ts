@@ -24,6 +24,8 @@ type PoolManagement = ReturnType<typeof usePoolManagement>;
 
 interface UseCompetitionRestoreParams {
   competitionId: string;
+  /** Exceptions de l'étape 4c (tableaux séparés, équipes) : l'écran écrit encore l'état */
+  persistLocally?: boolean;
   currentPhase: Phase;
   setCurrentPhase: Setter<Phase>;
   currentPoolRound: number;
@@ -63,6 +65,7 @@ interface UseCompetitionRestoreParams {
 /** Sauvegarde la session (phase, poules, tableau…) et la restaure au chargement. */
 export function useCompetitionRestore({
   competitionId,
+  persistLocally,
   currentPhase,
   setCurrentPhase,
   currentPoolRound,
@@ -110,6 +113,7 @@ export function useCompetitionRestore({
   // Session state persistence
   const { isLoaded, restoredState, flushPendingSave } = useCompetitionSession({
     competitionId: competitionId,
+    persistLocally,
     currentPhase,
     currentPoolRound,
     pools,

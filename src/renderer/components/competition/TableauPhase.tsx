@@ -131,6 +131,24 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
     setTableauMatches(next);
   };
 
+  // Tableaux de classement (« toutes les places ») : scores des matchs connus du moteur par
+  // commandes ; les tableaux de classement eux-mêmes sont créés par le moteur
+  const handleBracketsChange = (next: ConsolationBracket[]) => {
+    if (onRecordScore && onClearScore) {
+      const known = new Set(consolationBrackets.flatMap(b => b.matches.map(m => m.id)));
+      const before = consolationBrackets.flatMap(b => b.matches);
+      const after = next.flatMap(b => b.matches).filter(m => known.has(m.id));
+      const ops = before.length === after.length ? tableauScoreOps(before, after) : null;
+      if (ops && (ops.clears.length || ops.records.length)) {
+        void applyScoreOps(ops).then(outcome => {
+          if (outcome === 'local') setConsolationBrackets(next);
+        });
+        return;
+      }
+    }
+    setConsolationBrackets(next);
+  };
+
   const applyScoreOps = async (ops: TableauScoreOps): Promise<'recorded' | 'local' | 'refused'> => {
     for (const matchId of ops.clears) {
       const outcome = await onClearScore!(matchId);
@@ -180,7 +198,7 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
         matches={tableauMatches}
         onMatchesChange={handleMatchesChange}
         consolationBrackets={consolationBrackets}
-        onConsolationBracketsChange={setConsolationBrackets}
+        onConsolationBracketsChange={handleBracketsChange}
         maxScore={tableMaxScore === 0 ? 999 : tableMaxScore}
         thirdPlaceMatch={thirdPlaceMatch}
         playAllPositions={playAllPositions}

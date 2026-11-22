@@ -209,5 +209,12 @@ l'onglet du poste est rouvert s'il ne devance pas la phase de l'épreuve. **Exce
 (décision du mainteneur, 2026-11-21, révisable) : les tableaux séparés après les poules restent
 écrits par l'écran, comme les épreuves par équipes ; l'étape 4c ne les couvre pas. Composition des
 équipes des rapières par `setRapieresTeams` (`RapieresTeamsUpdated`, identifiants seulement :
-la composition, personnelle, n'est pas rejouable). Reste avant 4c : tableaux de classement du
-remplissage « toutes les places » (test) ; puis 4c ; 5.
+la composition, personnelle, n'est pas rejouable). Tableaux de classement du
+remplissage « toutes les places » : scores des matchs connus du moteur par commandes.
+
+**Étape 4c faite** : l'écran n'écrit plus l'état de l'épreuve (`useCompetitionSession` ne
+sauvegarde plus, ni en différé ni à la fermeture) ; seul le moteur l'écrit, l'écran le relit
+(`getCompetitionState`). Exceptions documentées, où l'écran l'écrit encore : tableaux séparés
+après les poules, épreuves par équipes (`persistLocally`). La préparation des poules (avant
+« Lancer ») reste un brouillon de l'écran, non conservé au redémarrage. Reste l'étape 5
+(`rebuildCompetitionState`, `projectCompetition`, test de rejeu).
