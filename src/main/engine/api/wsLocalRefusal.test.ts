@@ -40,3 +40,12 @@ describe('opérations du poste : pas d’outil MCP', () => {
     expect(exposed).toEqual([]);
   });
 });
+
+describe('STATION_PERMISSIONS (pas de journal, pas de réseau)', () => {
+  it('couvre exactement les droits club:, station: et remote: du contrat', async () => {
+    const { STATION_PERMISSIONS } = await import('../../../shared/api/contractDef');
+    const local = new Set(localOps.map(n => contract[n].permission));
+    expect([...STATION_PERMISSIONS].sort()).toEqual([...local].sort());
+    expect([...STATION_PERMISSIONS].filter(p => WS_READ_PERMISSIONS.has(p))).toEqual([]);
+  });
+});

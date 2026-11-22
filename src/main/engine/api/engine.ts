@@ -12,6 +12,7 @@ import {
   type Output,
   type ParsedInput,
 } from '../../../shared/api/contract';
+import { STATION_PERMISSIONS } from '../../../shared/api/contractDef';
 import { ApiError } from '../../../shared/api/client';
 import { CommandError, type CommandContext } from '../commands/context';
 import { buildBracket, generatePools, recordScore, separationFromKeys } from '../commands/sport';
@@ -287,9 +288,9 @@ export async function invoke(ctx: CommandContext, name: unknown, raw: unknown): 
   }
   const input = parseInput(op, raw);
   const handler = handlers[op] as (c: CommandContext, i: unknown) => unknown;
-  // Commandes du serveur distant : pas de journal (docs/adr/0022), ni transaction, ni synchrone
+  // Fonctions du poste (docs/adr/0022) : pas de journal, ni transaction du journal
   const log =
-    contract[op].kind === 'command' && !contract[op].permission.startsWith('remote:')
+    contract[op].kind === 'command' && !STATION_PERMISSIONS.has(contract[op].permission)
       ? journalOf(ctx, input)
       : null;
   if (!log) {
