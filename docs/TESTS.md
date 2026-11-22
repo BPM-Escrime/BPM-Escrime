@@ -104,9 +104,9 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 269 |
-| `src/main/` | 123 | 1025 |
+| `src/main/` | 124 | 1029 |
 | `src/renderer/services/` | 11 | 57 |
-| `src/renderer/hooks/` | 40 | 209 |
+| `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 119 | 633 |
 | E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
@@ -116,9 +116,9 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/domain/` | 25 | 218 |
-| **Total** | **529** | **4055** |
+| **Total** | **530** | **4060** |
 
-Unitaires : 516 fichiers, 4013 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 517 fichiers, 4018 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3227,6 +3227,16 @@ Unitaires : 516 fichiers, 4013 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/fencers.test.ts</code> — 4 tests</summary>
+
+- registerFencers : inscrit, statut pointé admis, doublons signalés
+- updateFencerDetails : identité seulement, champ effacé par null
+- setFencerRankings et unregisterFencers : avant le tirage seulement
+- listFencers : ordre des dossards, dates ISO
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/refereeing.test.ts</code> — 6 tests</summary>
 
 - fusionne côté moteur sans toucher aux autres réglages de l’épreuve
@@ -5166,13 +5176,14 @@ Unitaires : 516 fichiers, 4013 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useFencerManagement.test.tsx</code> — 13 tests</summary>
+<summary><code>src/renderer/hooks/useFencerManagement.test.tsx</code> — 14 tests</summary>
 
 - **addFencer**
   - ajoute le tireur et notifie le parent
   - lève une erreur si l’API est absente
 - **updateFencer**
   - met à jour le tireur et notifie
+  - classement par setFencerRankings, statut écrit directement (formats hors moteur)
 - **setFencersStatus**
   - met à jour plusieurs tireurs en un seul état (#1051)
 - **updateFencers**
