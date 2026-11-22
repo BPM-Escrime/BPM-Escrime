@@ -106,13 +106,13 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 132 | 1078 |
+| `src/main/` | 134 | 1104 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 123 | 659 |
 | E2E Playwright (`e2e/`) | 14 | 43 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 5 | 18 |
+| `src/renderer/api/` | 6 | 22 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
 | `src/shared/platform/` | 1 | 8 |
-| **Total** | **555** | **4215** |
+| **Total** | **558** | **4245** |
 
-Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 544 fichiers, 4202 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3259,12 +3259,14 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/api/wsClubRefusal.test.ts</code> — 3 tests</summary>
+<summary><code>src/main/engine/api/wsLocalRefusal.test.ts</code> — 4 tests</summary>
 
-- **wsRefusal : opérations club:\***
-  - le contrat compte des opérations club:\*
-  - aucun droit club:\* n’est servi sur le réseau
+- **wsRefusal : opérations %s\*** _(each)_
+  - le contrat compte des opérations de ce groupe
+  - aucun droit du groupe n’est servi sur le réseau
   - %s est refusé (permission\_denied) _(each)_
+- **opérations du poste : pas d’outil MCP**
+  - aucune opération station:admin n’est exposée à l’agent
 
 </details>
 
@@ -3310,12 +3312,39 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/eventDay.test.ts</code> — 4 tests</summary>
+
+- **opérations de la journée (#1714)**
+  - importe les arbitres des épreuves puis synchronise toutes les épreuves (#1872)
+  - rattacher importe et synchronise la journée, détacher non
+  - vue d’ensemble : statut commun et conflits
+  - occupé ailleurs : vide hors journée, sinon autres épreuves seulement
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/fencers.test.ts</code> — 4 tests</summary>
 
 - registerFencers : inscrit, statut pointé admis, doublons signalés
 - updateFencerDetails : identité seulement, champ effacé par null
 - setFencerRankings et unregisterFencers : avant le tirage seulement
 - listFencers : ordre des dossards, dates ISO
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/privacy.test.ts</code> — 8 tests</summary>
+
+- **applyRetention**
+  - anonymise par défaut, supprime sur demande
+  - restreint à la sélection
+  - ignore une compétition ouverte, compacte la base après purge (#1882)
+- **opérations RGPD du contrat**
+  - enregistre et applique les réglages (noms abrégés à chaud)
+  - entrées non fiables refusées par le schéma, requête tronquée à 100 caractères
+  - compétition ouverte : anonymisation et effacement refusés (#1882)
+  - effacement : base compactée ensuite (#1882)
+  - conservation par le contrat : seuls les identifiants listés sont traités
 
 </details>
 
@@ -3430,6 +3459,36 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/station.test.ts</code> — 23 tests</summary>
+
+- lit les valeurs par défaut, modifie puis relit
+- refuse une clé inconnue ou les dossiers de l’agent (schéma), une valeur invalide (dépôt)
+- résout le nombre de pistes : journée, sinon salle par défaut
+- reprise des réglages localStorage : « missing » ne remplace pas, « write » écrit
+- dossiers de l’agent : défauts du poste, retrait
+- onStationSettingsChanged : relaie les changements de paramètres, pas les autres
+- crée, renomme, désigne par défaut et supprime
+- refus du dépôt rendus en station\_refused, message gardé
+- enregistre, remplace par identifiant, supprime
+- deux sauvegardes concurrentes ne s’écrasent pas ; thème invalide refusé
+- sans port du poste : unavailable
+- crée, modifie, rattache des épreuves, supprime
+- arbitres de la journée : inscription, armes, vue d’ensemble, report dans les épreuves
+- occupation des pistes : une entrée par piste de la salle, toutes libres au départ
+- pistes en temps réel : tableau sans serveur ouvert, réservation, affectation automatique
+- retrouve une personne par nom ou licence, exporte ses données
+- anonymise : la personne n’est plus retrouvée, l’autre reste
+- efface ; une épreuve ouverte ou servie refuse l’anonymisation et l’effacement
+- réglages : enregistrés dans le dossier du poste, assainis
+- conservation : candidats échus, application aux seuls identifiants listés
+- sans port du poste : réglages indisponibles, droits des personnes fonctionnent
+- état, réglages, jeton, journal : par le port du serveur
+- **contrat du poste**
+  - 43 opérations, chacune avec son gestionnaire
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/withdrawal.test.ts</code> — 7 tests</summary>
 
 - à l’appel : forfait DNS, journal, puis réintégration
@@ -3487,17 +3546,6 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/dayStripHandlers.test.ts</code> — 4 tests</summary>
-
-- **dayStripHandlers (#1878)**
-  - tableau des pistes : occupée, libre avec proposition
-  - affectation : piste hors salle ou réservée refusée, piste libre acceptée
-  - réservation : entrées invalides refusées, null retire la réservation
-  - affectation automatique : la piste libre est prise sans clic
-
-</details>
-
-<details>
 <summary><code>src/main/ipc/dbHandlers.test.ts</code> — 5 tests</summary>
 
 - **bus d’événements db (#1298)**
@@ -3506,17 +3554,6 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - db:updateMatch : motif de correction au journal, jamais écrit dans le match (#1996)
   - db:updateMatch : score déjà en base (écrit par recordScore) ni réécrit ni journalisé (#1980)
   - db:addFencer émet fencers:changed pour la compétition
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/eventDayHandlers.test.ts</code> — 4 tests</summary>
-
-- **handlers eventDay:\* (#1714)**
-  - importe les arbitres des épreuves puis synchronise toutes les épreuves (#1872)
-  - rattacher importe et synchronise la journée, détacher non
-  - vue d’ensemble : statut commun et conflits
-  - occupé ailleurs : vide hors journée, sinon autres épreuves seulement
 
 </details>
 
@@ -3569,26 +3606,10 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/mcpHandlers.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/ipc/privacyHandlers.test.ts</code> — 2 tests</summary>
 
-- **contrôleur MCP**
-  - désactivé par défaut ; --mcp l’active sans toucher aux réglages enregistrés
-  - jeton illisible : serveur non démarré, erreur token\_unreadable, puis régénération
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/privacyHandlers.test.ts</code> — 8 tests</summary>
-
-- **applyRetention**
-  - anonymise par défaut, supprime sur demande
-  - restreint à la sélection
-  - ignore une compétition ouverte, compacte la base après purge (#1882)
-- **handlers privacy:\***
-  - enregistre et applique les réglages (noms abrégés à chaud)
-  - filtre les entrées non fiables
-  - compétition ouverte : anonymisation et effacement refusés (#1882)
-  - effacement : base compactée ensuite (#1882)
+- **handlers privacy:\* restants**
+  - ne déclare plus que les canaux à dialogue natif ou chemin de fichier
   - archive chiffrée : mot de passe trop court, aucun fichier en attente
 
 </details>
@@ -3716,6 +3737,15 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
 - met à jour le bilan et les notes ; refuse une mise à jour vide
 - refuse les écritures quand l’écriture n’est pas autorisée
 - liste les séances avec filtres de période et de statut
+
+</details>
+
+<details>
+<summary><code>src/main/mcp/mcpController.test.ts</code> — 2 tests</summary>
+
+- **contrôleur MCP**
+  - désactivé par défaut ; --mcp l’active sans toucher aux réglages enregistrés
+  - jeton illisible : serveur non démarré, erreur token\_unreadable, puis régénération
 
 </details>
 
@@ -4223,6 +4253,17 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - piste occupée ou travail inconnu : refus
   - affectation automatique : une proposition par piste libre, jamais deux fois la même
   - aucune saisie distante ouverte : tableau hors ligne, sans proposition
+
+</details>
+
+<details>
+<summary><code>src/main/remote/dayStripService.test.ts</code> — 4 tests</summary>
+
+- **dayStripService (#1878)**
+  - tableau des pistes : occupée, libre avec proposition
+  - affectation : piste hors salle ou réservée refusée, piste libre acceptée
+  - réservation : entrées invalides refusées, null retire la réservation
+  - affectation automatique : la piste libre est prise sans clic
 
 </details>
 
@@ -8222,6 +8263,17 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
 
 </details>
 
+<details>
+<summary><code>src/renderer/api/stationApi.test.ts</code> — 4 tests</summary>
+
+- **createStationApi : entrées du contrat**
+  - %s _(each)_
+  - couvre toutes les méthodes de l’écran
+  - toutes les opérations station:admin du contrat sont appelées par l’écran
+  - une entrée hors bornes est refusée par le contrat
+
+</details>
+
 ### `src/renderer/contexts/`
 
 <details>
@@ -8233,8 +8285,8 @@ Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - paramètre 0 interpolé (plus remplacé par le gabarit)
   - pluriel : clés \_one / \_other selon Intl.PluralRules
 - **TranslationContext : réglages changés par l’agent (#1880)**
-  - applique la langue et le thème de la base sur settings:changed
-  - ignore les autres événements, les valeurs identiques et inconnues
+  - applique la langue et le thème de la base sur onStationSettingsChanged
+  - ignore les valeurs identiques et inconnues
   - se désabonne au démontage
 
 </details>
