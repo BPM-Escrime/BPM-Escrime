@@ -216,5 +216,19 @@ remplissage « toutes les places » : scores des matchs connus du moteur par com
 sauvegarde plus, ni en différé ni à la fermeture) ; seul le moteur l'écrit, l'écran le relit
 (`getCompetitionState`). Exceptions documentées, où l'écran l'écrit encore : tableaux séparés
 après les poules, épreuves par équipes (`persistLocally`). La préparation des poules (avant
-« Lancer ») reste un brouillon de l'écran, non conservé au redémarrage. Reste l'étape 5
-(`rebuildCompetitionState`, `projectCompetition`, test de rejeu).
+« Lancer ») reste un brouillon de l'écran, non conservé au redémarrage.
+
+**Étape 5 commencée** : `projectCompetition(events)` (`src/shared/domain/journal`) rejoue le
+journal et rend les faits rejouables : statuts des tireurs nommés par le journal, tours de poules
+(composition, ordre des matchs, résultats, clôture), tableau tiré et décisions du tableau principal
+et des tableaux de classement, vague des rapières. Les dérivés (classements, tableaux de
+classement, classement final) n'y sont pas. `compareWithState` liste les écarts entre ces faits et
+l'état tenu par le moteur (identifiants et nombres seulement). Un journal est **complet** s'il
+commence, après l'appel, par `PoolsGenerated`, `PoolsSkipped` ou `TableauGenerated` ; sinon seuls
+les faits qu'il contient sont comparés. Ignorés au rejeu : `PoolCompleted`, `TableauCompleted`
+(signaux), `RankingAdjusted` (dérivé), `RapieresTeamsUpdated` (composition personnelle). Les
+tableaux de classement ont un identifiant déterministe, tiré de leur parent et de leur tour
+(`cons-16`, `cons-16-8`) : plus d'heure dans l'identifiant. Test de rejeu
+(`src/main/engine/commands/replay.test.ts`) : épreuve complète jouée par les commandes (appel,
+poules, abandon, annulation, retrait et réintégration, tableau, « toutes les places », tours
+multiples), journal rejoué, aucun écart. Reste `rebuildCompetitionState` (commande de maintenance).

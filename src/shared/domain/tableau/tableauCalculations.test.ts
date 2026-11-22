@@ -43,7 +43,7 @@ describe('autoFillAllPositions', () => {
       15,
       size,
       ranking,
-      { random: Math.random, now: 1 }
+      { random: Math.random }
     );
 
     expect(updatedMatches.every(m => m.isBye || !!m.winner)).toBe(true);

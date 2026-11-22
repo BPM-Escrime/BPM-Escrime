@@ -172,8 +172,7 @@ export function useTableauViewScoring(ctx: Ctx) {
   useEffect(() => {
     if (!playAllPositions || matches.length === 0) return;
     setConsolationBrackets(
-      prevBrackets =>
-        syncConsolationBrackets(matches, prevBrackets, tableauSize, ranking, Date.now()).brackets
+      prevBrackets => syncConsolationBrackets(matches, prevBrackets, tableauSize, ranking).brackets
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matches, tableauSize, playAllPositions]);
@@ -299,7 +298,7 @@ export function useTableauViewScoring(ctx: Ctx) {
         effectiveMax,
         tableauSize,
         ranking,
-        { random: Math.random, now: Date.now() }
+        { random: Math.random }
       );
       setConsolationBrackets(
         updatedBrackets.map(b => ({ ...b, matches: withAutoReferees(b.matches) }))
