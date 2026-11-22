@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 128 | 1047 |
+| `src/main/` | 129 | 1056 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 122 | 655 |
@@ -119,9 +119,9 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
-| **Total** | **545** | **4163** |
+| **Total** | **546** | **4172** |
 
-Unitaires : 532 fichiers, 4121 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 533 fichiers, 4130 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -4109,10 +4109,12 @@ Unitaires : 532 fichiers, 4121 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/auth.test.ts</code> — 10 tests</summary>
+<summary><code>src/main/remote/auth.test.ts</code> — 12 tests</summary>
 
 - **parseCookies**
   - décode les paires et ignore les parties malformées
+  - readCookie : un seul cookie, parties malformées ignorées
+  - ignore les noms qui viseraient le prototype
 - **mots de passe scrypt**
   - hash salé, vérification à temps constant
   - variante asynchrone équivalente (#1154)
@@ -4219,6 +4221,19 @@ Unitaires : 532 fichiers, 4121 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - enchaîne classement → tableau → classement final → nouveau tournoi
   - ignore un score inconnu
   - classement de poule : V/M puis indice
+
+</details>
+
+<details>
+<summary><code>src/main/remote/dtView.test.ts</code> — 7 tests</summary>
+
+- fermé par défaut : connexion refusée, statut
+- mot de passe faux refusé ; juste : cookie, puis /api servi
+- débit limité par IP : 429 au-delà de 60 requêtes par minute
+- session non démarrée : rien n’est servi
+- fermeture ou nouveau mot de passe : vues déconnectées, jeton invalidé
+- serveur arrêté : statut éteint, réglage refusé
+- ouvrir exige un mot de passe robuste ; dryRun sans effet
 
 </details>
 
