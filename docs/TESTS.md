@@ -25,7 +25,7 @@ Nix de `flake.nix`. Ce n'est pas une dépendance des builds par plateforme.
 | E2E (PR) | job `e2e` : `npx playwright install --with-deps chromium` puis `xvfb-run -a npm run test:e2e` (build compris) | un test Playwright échoue : interface dans le navigateur (`chromium`) ou application Electron réelle (`electron`) ; rapport `playwright-report` en artefact (#2045) |
 | Build Nix | `nix build .#default` (job `nix-build`) | le paquet `flake.nix` ne build pas : `npmDepsHash` périmé vs `package-lock.json`, dépendance native cassée, etc. |
 | Tests unitaires | `npm run test:run` | un test Vitest échoue |
-| Budget bundle | `npm run build:renderer` + `node scripts/check-bundle-size.js` | JS renderer : initial > 2.75 MiB, un chunk à la demande > 1.25 MiB, total > 6.5 MiB, ou aucun chunk à la demande (`scripts/check-bundle-size.js`) |
+| Budget bundle | `npm run build:renderer` + `node scripts/check-bundle-size.js` | JS renderer : initial > 2.75 MiB, un chunk à la demande > 1.25 MiB, total > 8.5 MiB, aucun chunk à la demande, ou vue DT (`dist/remote/dt/dt.js`, ADR-0020) > 2.25 MiB (`scripts/check-bundle-size.js`) |
 
 Hors CI (manuel) : `npm run lint` (avertissements compris), `npm run format:check`, `npm run test:coverage`. Débordements de libellés dans les dix langues à 1024×768 (#1543) :
 `npm run check:i18n-visual` (`scripts/capture-i18n.js`, Electron, après `npm run build` ;
@@ -106,22 +106,23 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 129 | 1056 |
+| `src/main/` | 129 | 1057 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 122 | 655 |
-| E2E Playwright (`e2e/`) | 13 | 42 |
+| `src/renderer/components/` | 123 | 659 |
+| E2E Playwright (`e2e/`) | 14 | 43 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 4 | 14 |
 | `src/renderer/contexts/` | 1 | 7 |
+| `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
-| **Total** | **546** | **4172** |
+| **Total** | **550** | **4185** |
 
-Unitaires : 533 fichiers, 4130 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 536 fichiers, 4142 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -4225,11 +4226,12 @@ Unitaires : 533 fichiers, 4130 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/dtView.test.ts</code> — 7 tests</summary>
+<summary><code>src/main/remote/dtView.test.ts</code> — 8 tests</summary>
 
 - fermé par défaut : connexion refusée, statut
 - mot de passe faux refusé ; juste : cookie, puis /api servi
 - débit limité par IP : 429 au-delà de 60 requêtes par minute
+- page /dt/ : coquille en mémoire avec CSP ; épreuve donnée une fois connecté
 - session non démarrée : rien n’est servi
 - fermeture ou nouveau mot de passe : vues déconnectées, jeton invalidé
 - serveur arrêté : statut éteint, réglage refusé
@@ -6816,6 +6818,17 @@ Unitaires : 533 fichiers, 4130 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/remote/DtViewPanel.test.tsx</code> — 4 tests</summary>
+
+- **DtViewPanel (docs/adr/0020)**
+  - affiche l’URL /dt/ ; ouverture impossible sans mot de passe
+  - mot de passe puis ouverture : commandes du contrat
+  - refus du moteur : message affiché
+  - saisie distante arrêtée : réglage désactivé
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/remote/GregAutoPublishToggle.test.tsx</code> — 2 tests</summary>
 
 - **GregAutoPublishToggle**
@@ -7148,6 +7161,13 @@ Unitaires : 533 fichiers, 4130 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - créer une compétition ouvre son onglet
   - la compétition créée figure sur l’accueil et se rouvre
   - supprimer une compétition la retire de l’accueil
+
+</details>
+
+<details>
+<summary><code>e2e/electron/dt-view.spec.ts</code> — 1 test</summary>
+
+- vue DT : connexion par mot de passe, épreuve suivie en lecture seule
 
 </details>
 
@@ -8127,7 +8147,7 @@ Unitaires : 533 fichiers, 4130 tests. E2E : 13 fichiers, 42 tests (comptage stat
 - abonnement : événements reçus, rouvert après reconnexion, puis fermé
 - abonnement refusé : écouteur retiré
 - **WsClient : coupures**
-  - non connecté : unavailable sans rien envoyer
+  - non connecté : envoi à la connexion ; sinon unavailable au délai, sans rien envoyer
   - coupure pendant l’appel, ou délai dépassé : unavailable
 
 </details>
@@ -8166,6 +8186,30 @@ Unitaires : 533 fichiers, 4130 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - applique la langue et le thème de la base sur settings:changed
   - ignore les autres événements, les valeurs identiques et inconnues
   - se désabonne au démontage
+
+</details>
+
+### `src/renderer/dt/`
+
+<details>
+<summary><code>src/renderer/dt/DtApp.test.tsx</code> — 3 tests</summary>
+
+- **DtApp : accès**
+  - espace fermé : message
+  - mot de passe faux puis juste : connexion par cookie, épreuve chargée
+- **DtCompetition : lecture seule**
+  - feuille de poule affichée, relue au signal
+
+</details>
+
+<details>
+<summary><code>src/renderer/dt/dtFormat.test.ts</code> — 4 tests</summary>
+
+- **dtFormat**
+  - browserLanguage : première langue prise en charge, zh → zh-HK, sinon fr
+  - fencerName : NOM Prénom, tiret sans tireur
+  - poolCell : score de la ligne contre la colonne, V au maximum, statuts
+  - tableauRounds : du plus grand tour à la finale, exempts retirés, ordre des positions
 
 </details>
 
