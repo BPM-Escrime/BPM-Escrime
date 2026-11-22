@@ -104,22 +104,22 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 127 | 1038 |
+| `src/main/` | 127 | 1039 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 122 | 654 |
 | E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 2 | 6 |
+| `src/renderer/api/` | 3 | 9 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 26 | 243 |
-| **Total** | **541** | **4130** |
+| **Total** | **542** | **4134** |
 
-Unitaires : 528 fichiers, 4088 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 529 fichiers, 4092 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3237,12 +3237,13 @@ Unitaires : 528 fichiers, 4088 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 5 tests</summary>
 
-- createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue refusée
+- createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue et valeur invalide refusées
 - updateCompetitionDetails : titre, date, lieu ; entrée stricte
 - updateCompetitionSettings : fusion, serveur distant prévenu, arme figée après le tirage
 - deleteCompetition : saisie distante arrêtée, épreuve supprimée
+- getCompetition et listCompetitions : dates ISO, réglages, nombre de tireurs
 
 </details>
 
@@ -5048,7 +5049,7 @@ Unitaires : 528 fichiers, 4088 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - bascule sur l’onglet ouvert correspondant
   - ne fait rien pour un onglet inexistant
 - **loadCompetitions**
-  - charge depuis electronAPI et termine le chargement
+  - charge par listCompetitions (contrat) et termine le chargement
 - **setters de modals**
   - basculent les drapeaux d’affichage
 
@@ -8084,6 +8085,16 @@ Unitaires : 528 fichiers, 4088 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - commande : donnée de l’enveloppe ; erreur : ApiError avec code
   - hors Electron : ApiError « unavailable »
   - abonnement : événements routés par id, désabonnement
+
+</details>
+
+<details>
+<summary><code>src/renderer/api/competitionMapping.test.ts</code> — 3 tests</summary>
+
+- **loadCompetition**
+  - épreuve convertie : Date, réglages, sans tireurs par défaut
+  - avec les tireurs : listFencers joint
+  - épreuve absente : null ; autre erreur : propagée
 
 </details>
 
