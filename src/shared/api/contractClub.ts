@@ -59,7 +59,6 @@ const WeaponEnum = z.enum(Weapon);
 const ClubWeapon = z.union([WeaponEnum, z.literal('A')]) satisfies z.ZodType<ClubWeaponCode>;
 /** Image en data URL (plan de cours, exercice) : 1,4 M de caractères au plus comme le dépôt */
 const Image = z.string().max(1_400_000);
-const Count = z.number().int().min(0).max(1_000_000);
 const Score = z.number().int().min(0).max(999);
 
 const ExerciseCategory = z.enum([
