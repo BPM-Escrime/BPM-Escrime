@@ -12,6 +12,7 @@ export type RemoteSectionId =
   | 'displayOptions'
   | 'overlay'
   | 'checkin'
+  | 'dtView'
   | 'trainer'
   | 'lobby'
   | 'cyrano'
@@ -27,6 +28,7 @@ const SECTION_LABEL_KEYS: Record<RemoteSectionId, string> = {
   displayOptions: 'rsm.sec_display',
   overlay: 'rsm.overlay_card',
   checkin: 'rsm.checkin_card',
+  dtView: 'rsm.dt_card',
   trainer: 'rsm.trainer_card',
   lobby: 'rsm.lobby_card',
   cyrano: 'rsm.cyrano_card',
