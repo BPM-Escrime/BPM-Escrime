@@ -9,13 +9,18 @@
  */
 import { z } from 'zod';
 import { JournalEventSchema } from './events';
-import type { Fencer, Pool, PoolRanking } from '../types';
+import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
 import type { ConsolationBracket, FinalResult, TableauMatch } from '../domain/tableau/tableauTypes';
 import type { RapieresLegacyState, RapieresSession } from '../domain/rapieres/rapieres.types';
 
 /** Droits (utilisés par le sous-ticket 4, rôles et permissions) */
 export type Permission =
-  'competition:read' | 'fencers:write' | 'score:write' | 'cards:read' | 'referees:write';
+  | 'competition:read'
+  | 'competition:write'
+  | 'fencers:write'
+  | 'score:write'
+  | 'cards:read'
+  | 'referees:write';
 
 export type OperationKind = 'command' | 'query' | 'subscription';
 
@@ -231,6 +236,15 @@ const RefereeDetailsShape = {
   license: z.string().trim().max(40).nullable().optional(),
   category: Text.nullable().optional().describe('Niveau : régional, national, international…'),
 };
+
+const WeaponEnum = z.enum(Weapon);
+const GenderEnum = z.enum(Gender);
+const CategoryEnum = z.enum(Category);
+/**
+ * Réglages d'une épreuve (fusion de premier niveau) : clés de CompetitionSettings vérifiées par le
+ * moteur (« unknown_setting »), valeurs libres tant que la formule n'a pas son schéma (ADR-0012)
+ */
+const SettingsPatch = z.record(z.string(), z.unknown());
 
 const CompetitionStateSchema = z.object({
   currentPhase: z.number().int(),
@@ -760,6 +774,85 @@ export const contract = {
       title: 'Vérifier et réparer l’état d’une épreuve',
       destructive: true,
     },
+  }),
+
+  createCompetition: command({
+    description:
+      'Crée une épreuve (docs/adr/0018) : réglages par défaut calculés par le moteur pour l’arme et la catégorie, puis réglages choisis fusionnés (« settings »).',
+    input: z.object({
+      title: Text.min(1),
+      date: z.string().describe('AAAA-MM-JJ ou ISO 8601'),
+      weapon: WeaponEnum,
+      gender: GenderEnum,
+      category: CategoryEnum,
+      location: Text.optional(),
+      color: z.string().max(20).optional(),
+      isTeamEvent: z.boolean().optional(),
+      settings: SettingsPatch.optional(),
+      dryRun: DryRun,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), competitionId: z.string().nullable() }),
+    permission: 'competition:write',
+  }),
+
+  updateCompetitionDetails: command({
+    description: 'Titre, date, lieu et organisateur d’une épreuve : données sans règle.',
+    input: z.object({
+      competitionId: CompetitionId,
+      details: z.strictObject({
+        title: Text.min(1).optional(),
+        date: z.string().optional(),
+        location: Text.nullable().optional(),
+        organizer: Text.nullable().optional(),
+      }),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      competitionId: z.string(),
+      changed: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'competition:write',
+  }),
+
+  updateCompetitionSettings: command({
+    description:
+      'Arme, sexe, catégorie, format par équipes et réglages (fusion de premier niveau, clé inconnue refusée). ' +
+      'Arme, format par équipes, mode spécial et formule à la carte figés (« draw_done ») après le tirage. Tablettes prévenues.',
+    input: z.object({
+      competitionId: CompetitionId,
+      weapon: WeaponEnum.optional(),
+      gender: GenderEnum.optional(),
+      category: CategoryEnum.optional(),
+      isTeamEvent: z.boolean().optional(),
+      settings: SettingsPatch.optional(),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      competitionId: z.string(),
+      changed: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'competition:write',
+  }),
+
+  deleteCompetition: command({
+    description:
+      'Supprime une épreuve et toutes ses données (RGPD) ; sa saisie distante est arrêtée. Résultats déjà versés au classement de saison conservés.',
+    input: z.object({
+      competitionId: CompetitionId,
+      dryRun: DryRun,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), competitionId: z.string() }),
+    permission: 'competition:write',
   }),
 
   registerFencers: command({

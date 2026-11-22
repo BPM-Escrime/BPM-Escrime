@@ -5,6 +5,7 @@
  */
 import type { DatabaseManager } from '../../../database';
 import type { EventAuthor } from '../../../database/repos/eventLogRepo';
+import type { CompetitionSettings } from '../../../shared/types';
 
 /** Écriture faite hors de l'écran : l'écran ouvert recharge les données concernées */
 export interface DomainChange {
@@ -32,6 +33,14 @@ export interface CommandContext {
    * de la tablette (détection de conflit), motif (#1980)
    */
   scoreAudit?: { refereeId?: string; refereeName?: string; ipAddress?: string; reason?: string };
+  /**
+   * Serveur distant de l'épreuve (tablettes), quand le poste en a un : arrêté à la suppression
+   * de l'épreuve, prévenu d'un changement de réglages (docs/adr/0018). Absent : MCP, tests.
+   */
+  remote?: {
+    stop(competitionId: string): void;
+    settingsChanged(competitionId: string, patch: Partial<CompetitionSettings>): void;
+  };
 }
 
 /** Erreur métier : message destiné à l'opérateur (ou à l'agent), code stable */

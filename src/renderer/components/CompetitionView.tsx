@@ -52,6 +52,8 @@ import QuestSection from './competition/QuestSection';
 import PoolsPhase from './competition/PoolsPhase';
 import RankingPhase from './competition/RankingPhase';
 import { rankingTableauNavAction } from './competition/competitionDerived';
+import { useBpmClient } from '../api/BpmClientContext';
+import { persistCompetitionUpdate } from '../api/competitionUpdate';
 
 const RemoteScoreManager = React.lazy(() => import('./RemoteScoreManager'));
 const MatchAuditLog = React.lazy(() =>
@@ -65,6 +67,7 @@ const TeamManagerView = React.lazy(() =>
 // ─── Static style constants ───────────────────────────────────────────────────
 
 const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewProps) => {
+  const client = useBpmClient();
   const competitionCore = useCompetitionCore({ ...props });
   const competitionSessionSync = useCompetitionSessionSync({ ...props, ...competitionCore });
   const competitionPhaseFlow = useCompetitionPhaseFlow({
@@ -778,9 +781,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             const updatedCompetition = { ...competition, ...updates };
             // Mettre à jour l'UI immédiatement avant l'écriture DB pour éviter le flash
             onUpdate(updatedCompetition);
-            if (window.electronAPI) {
-              await window.electronAPI.db.updateCompetition(competition.id, updatedCompetition);
-            }
+            // Par les commandes du contrat (docs/adr/0018) : un refus remonte à la modale
+            await persistCompetitionUpdate(client, competition, updates);
           }}
           onClose={() => modals.setShowPropertiesModal(false)}
         />
