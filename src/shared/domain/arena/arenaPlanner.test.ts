@@ -279,7 +279,11 @@ describe('technicalDimensions', () => {
     expect(d.lines).toContainEqual(
       expect.objectContaining({ orientation: 'h', from: 0, to: 30, label: '30 m' })
     );
-    expect(d.lines.filter(l => l.label === 'Ø 12 m')).toHaveLength(4);
+    // Chaque centre est coté depuis le mur gauche et le mur haut (2 cotes par arène)
+    expect(d.lines.filter(l => l.orientation === 'h' && l.from === 0)).toHaveLength(5);
+    expect(d.lines.filter(l => l.orientation === 'v' && l.from === 0)).toHaveLength(5);
+    expect(d.lines.filter(l => l.label === '7 m')).toHaveLength(4);
+    expect(d.centers).toHaveLength(4);
     expect(
       d.lines.filter(l => l.orientation === 'h' && l.label === '12 m' && l.from !== 0)
     ).toHaveLength(2);

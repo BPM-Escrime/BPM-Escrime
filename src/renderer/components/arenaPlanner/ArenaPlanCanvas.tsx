@@ -225,6 +225,14 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
       )}
       {dims ? dims.lines.map((l, i) => <DimensionLineView key={`dl${i}`} line={l} />) : null}
       {dims
+        ? dims.centers.map((c, i) => (
+            <g key={`cc${i}`} className="arena-planner-centre-mark">
+              <line x1={c.x - 0.4} y1={c.y} x2={c.x + 0.4} y2={c.y} />
+              <line x1={c.x} y1={c.y - 0.4} x2={c.x} y2={c.y + 0.4} />
+            </g>
+          ))
+        : null}
+      {dims
         ? dims.texts.map((tx, i) => (
             <text
               key={`dt${i}`}
