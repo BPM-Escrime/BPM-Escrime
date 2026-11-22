@@ -24,6 +24,34 @@ export interface ArenaPlanExportText {
   note: string;
 }
 
+/** Propriétés SVG recopiées dans les attributs : l'image rastérisée n'a pas accès aux feuilles de style de la page. */
+const INLINED_PROPS = [
+  'fill',
+  'fill-opacity',
+  'stroke',
+  'stroke-width',
+  'stroke-dasharray',
+  'font-size',
+  'font-weight',
+  'font-family',
+  'opacity',
+];
+
+/** Copie les styles calculés de chaque élément de la source dans son clone (même ordre de parcours). */
+const inlineSvgStyles = (source: SVGSVGElement, clone: SVGSVGElement) => {
+  const from = [source, ...Array.from(source.querySelectorAll('*'))];
+  const to = [clone, ...Array.from(clone.querySelectorAll('*'))];
+  from.forEach((src, i) => {
+    const dst = to[i];
+    if (!dst) return;
+    const cs = getComputedStyle(src);
+    for (const prop of INLINED_PROPS) {
+      const value = cs.getPropertyValue(prop);
+      if (value) dst.setAttribute(prop, value);
+    }
+  });
+};
+
 const svgToImage = (
   svg: SVGSVGElement,
   width: number
@@ -31,6 +59,7 @@ const svgToImage = (
   const vb = svg.viewBox.baseVal;
   const height = Math.round(width * (vb.height / vb.width));
   const clone = svg.cloneNode(true) as SVGSVGElement;
+  inlineSvgStyles(svg, clone);
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   clone.setAttribute('width', String(width));
   clone.setAttribute('height', String(height));
