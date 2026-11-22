@@ -27,6 +27,8 @@ export interface DimensionText {
 export interface TechnicalDimensions {
   lines: DimensionLine[];
   texts: DimensionText[];
+  /** Centres des arènes : repères (croix) à matérialiser sur le plan */
+  centers: Point[];
 }
 
 /** Décalage des cotes par rapport aux bords (en mètres) */
@@ -62,15 +64,22 @@ export function technicalDimensions(
     label: label(room.lengthM),
   });
 
-  const r = ARENA_SAFETY_RADIUS_M;
+  // Cotes utilisables pour l'installation : chaque centre d'arène mesuré depuis le mur
+  // gauche (x) et le mur haut (y). Les diamètres ne sont pas cotés.
   centers.forEach(c => {
-    // Diamètre de la limite de sécurité
     lines.push({
       orientation: 'h',
-      from: c.x - r,
-      to: c.x + r,
+      from: 0,
+      to: c.x,
       at: c.y + ARENA_OFFSET_M,
-      label: `Ø ${label(2 * r)}`,
+      label: label(c.x),
+    });
+    lines.push({
+      orientation: 'v',
+      from: 0,
+      to: c.y,
+      at: c.x - ARENA_OFFSET_M,
+      label: label(c.y),
     });
   });
 
@@ -104,32 +113,6 @@ export function technicalDimensions(
     }
   });
 
-  // Marges : entre le mur et l'arène la plus proche de chaque bord
-  if (centers.length > 0) {
-    const left = centers.reduce((m, c) => (c.x < m.x ? c : m), centers[0]);
-    const top = centers.reduce((m, c) => (c.y < m.y ? c : m), centers[0]);
-    const marginLeft = left.x - r;
-    const marginTop = top.y - r;
-    if (marginLeft > ALIGN_EPS) {
-      lines.push({
-        orientation: 'h',
-        from: 0,
-        to: left.x - r,
-        at: left.y + ARENA_OFFSET_M + 0.8,
-        label: label(marginLeft),
-      });
-    }
-    if (marginTop > ALIGN_EPS) {
-      lines.push({
-        orientation: 'v',
-        from: 0,
-        to: top.y - r,
-        at: top.x - ARENA_OFFSET_M - 0.8,
-        label: label(marginTop),
-      });
-    }
-  }
-
   // Dimensions de chaque élément, sous son nom
   items.forEach(i => {
     texts.push({
@@ -139,5 +122,5 @@ export function technicalDimensions(
     });
   });
 
-  return { lines, texts };
+  return { lines, texts, centers: centers.map(c => ({ ...c })) };
 }
