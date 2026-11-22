@@ -32,6 +32,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0020](0020-transport-websocket-contrat.md)        | Le contrat passe aussi par Socket.IO (`/api`, `WsClient`), en lecture seule jusqu'à #1982                                                    | Proposée            |
 | [0021](0021-services-plateforme.md)                | Fonctions propres à Electron (fichiers, impression, liens) derrière `PlatformServices`, en contenu et non en chemin                          | Proposée            |
 | [0022](0022-fonctions-du-poste-contrat.md)         | Fonctions du poste (serveur distant, Mode Club, appareils, réglages) dans le contrat, sans journal et jamais sur le réseau                   | Proposée            |
+| [0023](0023-appareils-de-piste-salle.md)           | Appareils de piste déclarés sur les pistes de la salle ; l'épreuve ne fait que passer une piste en manuel                                    | Acceptée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.
