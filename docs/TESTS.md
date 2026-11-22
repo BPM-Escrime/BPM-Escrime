@@ -96,14 +96,11 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/utils/` | 85 | 954 |
 | `src/shared/services/` | 8 | 87 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 16 |
-| Feature `bracket` (`src/features/bracket/`) | 2 | 26 |
-| Feature `competition` (`src/features/competition/`) | 3 | 20 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
 | Feature `latefencers` (`src/features/latefencers/`) | 1 | 14 |
 | Feature `matchAuditLog` (`src/features/matchAuditLog/`) | 1 | 9 |
 | Feature `pdfTemplates` (`src/features/pdfTemplates/`) | 1 | 6 |
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
-| Feature `pools` (`src/features/pools/`) | 3 | 32 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 269 |
@@ -119,9 +116,9 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/domain/` | 25 | 218 |
-| **Total** | **537** | **4133** |
+| **Total** | **529** | **4055** |
 
-Unitaires : 524 fichiers, 4091 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 516 fichiers, 4013 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2070,102 +2067,6 @@ Unitaires : 524 fichiers, 4091 tests. E2E : 13 fichiers, 42 tests (comptage stat
 
 </details>
 
-### Feature `bracket` (`src/features/bracket/`)
-
-<details>
-<summary><code>src/features/bracket/services/bracketGenerator.test.ts</code> — 16 tests</summary>
-
-- **BracketGenerator.generate**
-  - generates correct node count for table of 8
-  - generates correct node count for table of 16
-  - generates correct node count for table of 4
-  - generates correct node count for table of 2
-  - assigns unique node IDs
-  - final match is at round=1 (lowest round)
-  - first competition round (highest round number) has tableSize/2 nodes
-  - all rounds except the first competition round have parent links
-  - parent links point to valid node IDs
-  - isBye is false on generated nodes by default
-  - accepts empty seededFencers without error
-- **BracketGenerator.generateByes**
-  - returns empty array when fencerCount equals tableSize
-  - returns correct bye count
-  - returns tableSize byes when fencerCount is 0
-  - bye positions are within bracket bounds
-  - returns 1 bye for 15 fencers in table of 16
-
-</details>
-
-<details>
-<summary><code>src/features/bracket/services/bracketService.test.ts</code> — 10 tests</summary>
-
-- **generateBracket - emptyTable**
-  - retourne un tableau vide sans electronAPI, taille = puissance de 2 ≥ count
-  - arrondit la taille (12 → 16, 64 → 64)
-  - vide aussi si la liste de tireurs est vide
-- **generateBracket - avec tireurs**
-  - construit un tableau et y injecte le competitionId
-- **updateMatchResult**
-  - ne fait rien si le match est introuvable
-  - marque la victoire du bon tireur (A) et termine le match
-  - gère les scores absents (value null)
-- **getProgression**
-  - valeurs par défaut sans electronAPI
-  - agrège complétés/total et déduit le tour courant
-  - currentRound = totalRounds quand tout est terminé
-
-</details>
-
-### Feature `competition` (`src/features/competition/`)
-
-<details>
-<summary><code>src/features/competition/hooks/useCompetitionStore.test.tsx</code> — 8 tests</summary>
-
-- **loadCompetitions**
-  - charge les compétitions via le service
-  - positionne une erreur si la DB est indisponible
-- **createCompetition**
-  - ajoute en tête et définit la compétition courante
-  - propage l’erreur et la stocke
-- **selectCompetition / deleteCompetition**
-  - selectCompetition met à jour la compétition courante
-  - deleteCompetition retire de la liste
-- **setCurrentCompetition / clearError**
-  - définit la compétition courante
-  - efface l’erreur
-
-</details>
-
-<details>
-<summary><code>src/features/competition/services/competitionService.test.ts</code> — 6 tests</summary>
-
-- **garde "Database not available"**
-  - chaque méthode rejette sans electronAPI
-- **délégation à la DB**
-  - getAll / getById relaient les appels DB
-  - create transmet les champs et settings par défaut {}
-  - create conserve les settings fournis
-  - update appelle updateCompetition et retourne le patch
-  - delete appelle deleteCompetition
-
-</details>
-
-<details>
-<summary><code>src/features/competition/utils/competitionUtils.test.ts</code> — 6 tests</summary>
-
-- **validateCompetition**
-  - retourne null pour des données valides
-  - exige un titre non vide
-  - exige date, arme, genre, catégorie
-- **generateCompetitionId**
-  - génère des UUID distincts
-- **formatCompetitionDate**
-  - formate en français lisible
-- **generateCompetitionTitle**
-  - assemble arme/genre/catégorie/date
-
-</details>
-
 ### Feature `doubleelimination` (`src/features/doubleelimination/`)
 
 <details>
@@ -2332,68 +2233,6 @@ Unitaires : 524 fichiers, 4091 tests. E2E : 13 fichiers, 42 tests (comptage stat
 - **getImpactDescription**
   - jaune = avertissement, noir = exclusion
   - rouge = retrait de touches avec accord pluriel
-
-</details>
-
-### Feature `pools` (`src/features/pools/`)
-
-<details>
-<summary><code>src/features/pools/hooks/usePoolStore.test.tsx</code> — 5 tests</summary>
-
-- **loadPools**
-  - charge les poules via le service
-  - retourne une liste vide sans API (pas d’erreur)
-- **computeRanking**
-  - stocke le classement calculé
-- **setCurrentPool / clearError**
-  - définit la poule courante
-  - efface l’erreur
-
-</details>
-
-<details>
-<summary><code>src/features/pools/services/poolCalculator.test.ts</code> — 19 tests</summary>
-
-- **PoolCalculator.calculatePoolDistribution**
-  - returns 1 pool when fencer count fits single pool
-  - returns correct distribution for 35 fencers (5-7)
-  - fencersPerPool sums to fencerCount
-  - falls back to single pool when no valid distribution exists
-  - uses default min=5 max=7 when not provided
-  - returns pool count of 1 for small number of fencers within range
-- **PoolCalculator.isPoolComplete**
-  - returns false for empty matches
-  - returns true when all matches are finished
-  - returns false when any match is not finished
-  - returns false when matches array is undefined
-- **PoolCalculator.calculateRankings**
-  - returns rankings for all fencers
-  - returns isComplete=true when all matches finished
-  - returns isComplete=false with pending match
-  - returns correct completedMatches count
-  - returns 0 averageTouchesPerMatch when no completed matches
-  - calculates correct average touches per match
-- **PoolCalculator.calculateVictoryRatio**
-  - returns 1.0 for fencer who won all matches
-  - returns 0.0 for fencer who lost all matches
-  - returns 0.5 for fencer with equal wins and losses
-
-</details>
-
-<details>
-<summary><code>src/features/pools/services/poolService.test.ts</code> — 8 tests</summary>
-
-- **getByCompetition**
-  - retourne \[\] sans electronAPI
-  - agrège les poules de toutes les phases
-- **updateScore**
-  - ne fait rien sans electronAPI.db.updateMatch
-  - construit les scores avec victoire du gagnant A
-  - positionne le flag abandon sur le perdant
-  - laisse un score à undefined s’il n’est pas fourni
-- **computeOverallRanking**
-  - retourne \[\] s’il n’y a pas de poule
-  - trie par ratio puis index et réassigne les rangs
 
 </details>
 
@@ -6758,7 +6597,7 @@ Unitaires : 524 fichiers, 4091 tests. E2E : 13 fichiers, 42 tests (comptage stat
 
 - **usePoolReferees**
   - bascule la sélection sans dépasser maxRefereesPerPool
-  - enregistre l’affectation et notifie le parent
+  - notifie le parent, qui l’écrit par le moteur, sans écriture directe en base
 
 </details>
 
