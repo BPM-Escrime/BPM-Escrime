@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useConfirm } from './ConfirmDialog';
 import { useToast } from './Toast';
+import { usePlatform } from '../platform/PlatformContext';
 import { Button } from './common/Button';
 import { HINT, BOLD, SMALL_BTN, TOGGLE_LABEL } from './settingsModal.styles';
 import type {
@@ -225,6 +226,7 @@ const PersonItem: React.FC = () => {
   const { t } = useTranslation();
   const { confirm } = useConfirm();
   const { showToast } = useToast();
+  const platform = usePlatform();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PrivacyPerson[] | null>(null);
 
@@ -270,14 +272,11 @@ const PersonItem: React.FC = () => {
         raw: t('privacy.pdf_raw'),
       };
       const html = personalDataHtml(data, labels);
-      const result = await window.electronAPI.dialog.saveFile({
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-        defaultPath: `${nameOf(p).replace(/[^\p{L}\p{N}]+/gu, '_') || 'donnees'}.pdf`,
+      if (!platform.exportPdf) return;
+      const saved = await platform.exportPdf(html, {
+        suggestedName: `${nameOf(p).replace(/[^\p{L}\p{N}]+/gu, '_') || 'donnees'}.pdf`,
       });
-      if (result?.filePath) {
-        await window.electronAPI.file.printHtmlToPDF(html, result.filePath);
-        showToast(t('privacy.exported'), 'success');
-      }
+      if (saved) showToast(t('privacy.exported'), 'success');
     });
 
   const anonymize = async (p: PrivacyPerson) => {

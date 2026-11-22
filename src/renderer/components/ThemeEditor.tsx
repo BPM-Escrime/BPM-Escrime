@@ -671,9 +671,8 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({
   };
 
   const handleImport = async () => {
-    const result = await window.electronAPI.dialog.openFile({
+    const result = await platform.openFile({
       filters: [{ name: 'Thème JSON', extensions: ['json'] }],
-      properties: ['openFile'],
     });
     if (!result || !result.content) return;
     try {

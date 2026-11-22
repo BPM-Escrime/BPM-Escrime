@@ -6,6 +6,7 @@
 import { FencerMatchRecord } from '../types/preload';
 import { Competition, FencerCompetitionStats } from '../types';
 import { pdfLang, pdfT } from './pdfExport/core';
+import { defaultPlatform } from '../platform/platforms';
 import {
   STATS_CHARTS_CSS,
   clubSummaryHtml,
@@ -383,13 +384,7 @@ export async function exportFencerDetailPDF(
     /[^a-zA-Z0-9]/g,
     '_'
   );
-  const result = await window.electronAPI.dialog.saveFile({
-    filters: [{ name: 'PDF', extensions: ['pdf'] }],
-    defaultPath: `${safeName}-stats.pdf`,
-  });
-  if (result?.filePath) {
-    await window.electronAPI.file.printHtmlToPDF(html, result.filePath);
-  }
+  await defaultPlatform.exportPdf!(html, { suggestedName: `${safeName}-stats.pdf` });
 }
 
 export async function exportCompetitionDetailPDF(
@@ -424,11 +419,5 @@ export async function exportCompetitionDetailPDF(
 
   const html = wrapHtml(pages);
   const safeName = competition.title.replace(/[^a-zA-Z0-9]/g, '_');
-  const result = await window.electronAPI.dialog.saveFile({
-    filters: [{ name: 'PDF', extensions: ['pdf'] }],
-    defaultPath: `${safeName}-statistiques.pdf`,
-  });
-  if (result?.filePath) {
-    await window.electronAPI.file.printHtmlToPDF(html, result.filePath);
-  }
+  await defaultPlatform.exportPdf!(html, { suggestedName: `${safeName}-statistiques.pdf` });
 }
