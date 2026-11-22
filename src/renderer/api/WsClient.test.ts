@@ -3,7 +3,7 @@
  * WsClient (docs/adr/0020) contre le vrai adaptateur /api : mêmes résultats et erreurs
  * qu'IpcClient, abonnements rouverts à la reconnexion, coupure → unavailable.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { createServer, type Server as HttpServer } from 'http';
 import { Server } from 'socket.io';
 import { io } from 'socket.io-client';
@@ -132,9 +132,18 @@ describe('WsClient : coupures', () => {
     return { socket, fire: (ev: string, ...a: unknown[]) => handlers.get(ev)?.(...a) };
   }
 
-  it('non connecté : unavailable sans rien envoyer', async () => {
-    const { socket } = fakeSocket(false);
-    const client = new WsClient(socket);
+  it('non connecté : envoi à la connexion ; sinon unavailable au délai, sans rien envoyer', async () => {
+    const { socket, fire } = fakeSocket(false);
+    const client = new WsClient(socket, { timeoutMs: 30 });
+    const later = client.query('getCompetition', { competitionId: 'c' });
+    (socket as { connected: boolean }).connected = true;
+    fire('connect');
+    expect(socket.emit).toHaveBeenCalledTimes(1);
+    const ack = (socket.emit as unknown as Mock).mock.calls[0][3] as (e: unknown) => void;
+    ack({ ok: true, data: { id: 'c' } });
+    await expect(later).resolves.toEqual({ id: 'c' });
+    (socket.emit as unknown as Mock).mockClear();
+    (socket as { connected: boolean }).connected = false;
     await expect(client.query('getCompetition', { competitionId: 'c' })).rejects.toMatchObject({
       code: 'unavailable',
     });

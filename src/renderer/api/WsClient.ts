@@ -1,7 +1,8 @@
 /**
  * BellePoule Modern - Client WebSocket du contrat d'API (#1981 lot 3, docs/adr/0020)
  * Transport navigateur : espace de noms Socket.IO `/api` du serveur distant (wsAdapter).
- * Même interface et mêmes erreurs qu'IpcClient. Coupure ou délai dépassé → ApiError('unavailable').
+ * Même interface et mêmes erreurs qu'IpcClient. Un appel fait avant la connexion part à la
+ * connexion ; coupure en cours d'appel ou délai dépassé → ApiError('unavailable').
  * Les abonnements sont rouverts à chaque reconnexion.
  * Importé seulement par la vue DT : le bundle de l'écran Electron n'embarque pas socket.io-client.
  * Licensed under GPL-3.0
@@ -38,6 +39,8 @@ let nextId = 0;
 export class WsClient implements BpmClient {
   private readonly subs = new Map<string, Subscription>();
   private readonly pending = new Set<(e: ApiError) => void>();
+  /** Appels en attente de connexion */
+  private readonly queued = new Set<() => void>();
   private readonly timeoutMs: number;
 
   constructor(
@@ -49,6 +52,7 @@ export class WsClient implements BpmClient {
     // Reconnexion : le serveur a libéré les abonnements du socket précédent
     socket.on('connect', () => {
       for (const [id, s] of this.subs) this.open(id, s);
+      for (const emit of [...this.queued]) emit();
     });
     socket.on('disconnect', () => {
       for (const reject of [...this.pending]) reject(unavailable('connexion perdue'));
@@ -57,24 +61,33 @@ export class WsClient implements BpmClient {
 
   private send(name: string, input: unknown): Promise<never> {
     return new Promise<never>((resolve, reject) => {
-      if (!this.socket.connected) return reject(unavailable('non connecté'));
       const settle = (fn: () => void) => {
         clearTimeout(timer);
         this.pending.delete(fail);
+        this.queued.delete(emit);
         fn();
       };
       const fail = (e: ApiError) => settle(() => reject(e));
-      const timer = setTimeout(() => fail(unavailable('délai dépassé')), this.timeoutMs);
-      this.pending.add(fail);
-      this.socket.emit(WS_API_EVENTS.invoke, name, input, (env: ApiEnvelope) =>
-        settle(() => {
-          try {
-            resolve(unwrap(env) as never);
-          } catch (e) {
-            reject(e);
-          }
-        })
+      const emit = () => {
+        this.queued.delete(emit);
+        this.pending.add(fail);
+        this.socket.emit(WS_API_EVENTS.invoke, name, input, (env: ApiEnvelope) =>
+          settle(() => {
+            try {
+              resolve(unwrap(env) as never);
+            } catch (e) {
+              reject(e);
+            }
+          })
+        );
+      };
+      // Pas encore (ou plus) connecté : envoi à la connexion, dans le même délai
+      const timer = setTimeout(
+        () => fail(unavailable(this.socket.connected ? 'délai dépassé' : 'non connecté')),
+        this.timeoutMs
       );
+      if (this.socket.connected) emit();
+      else this.queued.add(emit);
     });
   }
 
