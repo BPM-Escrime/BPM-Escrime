@@ -11,6 +11,8 @@ import {
   createRoomItem,
   moveRoomItem,
   resizeRoomItem,
+  optimizeArenaLayout,
+  snapToStep,
   computeArenaGeometry,
   planArenaGrid,
   polarPoint,
@@ -176,5 +178,49 @@ describe('createRoomItem / moveRoomItem', () => {
     const r = resizeRoomItem(block, 50, 3, room);
     expect(r.widthM).toBe(room.widthM);
     expect(r.heightM).toBe(3);
+  });
+
+  it('optimise : une arène par défaut dans 14 × 14 m, marge 1 m', () => {
+    expect(optimizeArenaLayout({ widthM: 14, lengthM: 14 }, 1).count).toBe(1);
+  });
+
+  it('optimise : quatre arènes en carré dans 30 × 30 m, marge 1 m', () => {
+    const r = optimizeArenaLayout({ widthM: 30, lengthM: 30 }, 1);
+    expect(r.count).toBe(4);
+    expect(r.lattice).toBe('square');
+  });
+
+  it('optimise : les arènes trouvées ne se chevauchent pas et restent dans la salle', () => {
+    const room = { widthM: 47, lengthM: 36 };
+    const r = optimizeArenaLayout(room, 1.5);
+    for (let i = 0; i < r.centers.length; i++) {
+      const c = r.centers[i];
+      expect(c.x - ARENA_SAFETY_RADIUS_M).toBeGreaterThanOrEqual(1.5 - 1e-9);
+      expect(c.x + ARENA_SAFETY_RADIUS_M).toBeLessThanOrEqual(room.widthM - 1.5 + 1e-9);
+      expect(c.y + ARENA_SAFETY_RADIUS_M).toBeLessThanOrEqual(room.lengthM - 1.5 + 1e-9);
+      for (let j = i + 1; j < r.centers.length; j++) {
+        const d = Math.hypot(c.x - r.centers[j].x, c.y - r.centers[j].y);
+        expect(d).toBeGreaterThanOrEqual(2 * ARENA_SAFETY_RADIUS_M - 1e-6);
+      }
+    }
+  });
+
+  it("optimise : une zone bloquée réduit le nombre d'arènes possibles", () => {
+    const room = { widthM: 30, lengthM: 30 };
+    const free = optimizeArenaLayout(room, 1).count;
+    const block = {
+      ...createRoomItem('blocked', 'z', 'Zone', room),
+      x: 0,
+      y: 0,
+      widthM: 30,
+      heightM: 30,
+    };
+    expect(free).toBe(4);
+    expect(optimizeArenaLayout(room, 1, [block]).count).toBe(0);
+  });
+
+  it('snapToStep arrondit au demi-mètre', () => {
+    expect(snapToStep(3.2)).toBe(3);
+    expect(snapToStep(3.3)).toBe(3.5);
   });
 });

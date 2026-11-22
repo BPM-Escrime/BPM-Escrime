@@ -70,9 +70,25 @@ describe('ArenaPlannerModal', () => {
   it('ajoute une zone bloquée et permet de changer sa largeur', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
     fireEvent.click(screen.getByText('arenaPlanner.add_blocked'));
-    const width = screen.getByLabelText(/arenaPlanner\.block_width/) as HTMLInputElement;
+    const width = screen.getByLabelText('arenaPlanner.size_w') as HTMLInputElement;
     fireEvent.change(width, { target: { value: '3' } });
     const item = screen.getByRole('button', { name: /arenaPlanner\.kind_blocked 1/ });
     expect(item.querySelector('rect')!.getAttribute('width')).toBe('3');
+  });
+
+  it("Optimiser affiche le maximum trouvé et règle le nombre d'arènes", () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.change(screen.getByLabelText('arenaPlanner.width'), { target: { value: '30' } });
+    fireEvent.change(screen.getByLabelText('arenaPlanner.length'), { target: { value: '30' } });
+    fireEvent.click(screen.getByText('arenaPlanner.optimize'));
+    expect(screen.getByRole('status')).toHaveTextContent('arenaPlanner.optimize_result');
+    expect((screen.getByLabelText('arenaPlanner.arenas') as HTMLInputElement).value).toBe('4');
+  });
+
+  it('modifier une dimension annule le maximum affiché', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.click(screen.getByText('arenaPlanner.optimize'));
+    fireEvent.change(screen.getByLabelText('arenaPlanner.width'), { target: { value: '25' } });
+    expect(screen.getByRole('status')).not.toHaveTextContent('arenaPlanner.optimize_result');
   });
 });
