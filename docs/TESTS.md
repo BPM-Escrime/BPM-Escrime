@@ -115,12 +115,13 @@ npm run e2e:debug                                 # mode debug
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 1 | 3 |
 | `src/renderer/contexts/` | 1 | 7 |
+| `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/domain/` | 24 | 212 |
-| **Total** | **533** | **4115** |
+| **Total** | **534** | **4116** |
 
-Unitaires : 521 fichiers, 4074 tests. E2E : 12 fichiers, 41 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 522 fichiers, 4075 tests. E2E : 12 fichiers, 41 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8147,6 +8148,16 @@ Unitaires : 521 fichiers, 4074 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - applique la langue et le thème de la base sur settings:changed
   - ignore les autres événements, les valeurs identiques et inconnues
   - se désabonne au démontage
+
+</details>
+
+### `src/renderer/locales/`
+
+<details>
+<summary><code>src/renderer/locales/placeholders.test.ts</code> — 1 test</summary>
+
+- **locales : paramètres {{nom}}**
+  - %s : aucun paramètre à accolade simple _(each)_
 
 </details>
 
