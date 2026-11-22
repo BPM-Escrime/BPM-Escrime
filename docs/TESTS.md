@@ -104,21 +104,21 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 269 |
-| `src/main/` | 125 | 1032 |
+| `src/main/` | 126 | 1036 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 120 | 641 |
 | E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 1 | 3 |
+| `src/renderer/api/` | 2 | 6 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/domain/` | 25 | 218 |
-| **Total** | **532** | **4071** |
+| **Total** | **534** | **4078** |
 
-Unitaires : 519 fichiers, 4029 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 521 fichiers, 4036 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3223,6 +3223,16 @@ Unitaires : 519 fichiers, 4029 tests. E2E : 13 fichiers, 42 tests (comptage stat
 - événements d’une commande : même commandId, fourni par l’appelant
 - sans commandId : un identifiant généré par commande
 - commande rejouée (même commandId) : refusée, rien de réécrit (idempotence)
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 4 tests</summary>
+
+- createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue refusée
+- updateCompetitionDetails : titre, date, lieu ; entrée stricte
+- updateCompetitionSettings : fusion, serveur distant prévenu, arme figée après le tirage
+- deleteCompetition : saisie distante arrêtée, épreuve supprimée
 
 </details>
 
@@ -8029,6 +8039,16 @@ Unitaires : 519 fichiers, 4029 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - commande : donnée de l’enveloppe ; erreur : ApiError avec code
   - hors Electron : ApiError « unavailable »
   - abonnement : événements routés par id, désabonnement
+
+</details>
+
+<details>
+<summary><code>src/renderer/api/competitionUpdate.test.ts</code> — 3 tests</summary>
+
+- **persistCompetitionUpdate**
+  - rien de changé : aucune commande
+  - titre et lieu → updateCompetitionDetails ; réglage modifié seul → updateCompetitionSettings
+  - arme changée : updateCompetitionSettings sans réglages
 
 </details>
 
