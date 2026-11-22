@@ -87,6 +87,20 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     assignPoolReferees(ctx, competitionId, options),
   assignReferee: (ctx, { competitionId, expectedRevision: _r, ...input }) =>
     assignPoolReferee(ctx, competitionId, input),
+  listReferees: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getRefereesByCompetition(competitionId).map(r => ({
+      id: r.id,
+      ref: r.ref,
+      firstName: r.firstName,
+      lastName: r.lastName,
+      club: r.club ?? null,
+      nationality: r.nationality ?? null,
+      region: r.region ?? null,
+      category: r.category ?? null,
+      status: r.status,
+    }));
+  },
   getMatchCards: (ctx, { matchId }) => ctx.db.getCards(matchId),
   getCardsByMatchIds: (ctx, { matchIds }) => ctx.db.getCardsByMatchIds(matchIds),
   getCompetitionEvents: (ctx, { competitionId, since, limit }) => {

@@ -32,12 +32,14 @@ import {
 import { useTranslation } from '../useTranslation';
 import { stripAtIndex } from '../../../shared/utils/stripRange';
 import { useStripAvailability } from '../useStripAvailability';
+import { useBpmClient } from '../../api/BpmClientContext';
 import { TableauViewProps } from '../../components/tableau/tableauViewShared';
 
 type Ctx = TableauViewProps;
 
 /** État du tableau d'élimination : taille, annulation, colonnes, arbitres, connecteurs (extrait de TableauViewComponent, #1599) */
 export function useTableauViewState(ctx: Ctx) {
+  const client = useBpmClient();
   const {
     ranking,
     matches,
@@ -185,14 +187,14 @@ export function useTableauViewState(ctx: Ctx) {
     (matchId: string) => {
       if (competitionId) {
         Promise.resolve()
-          .then(() => window.electronAPI.db.getRefereesByCompetition(competitionId))
+          .then(() => client.query('listReferees', { competitionId }))
           .then(refs => {
             setCompetitionReferees(
-              (refs ?? []).map(r => ({
+              refs.map(r => ({
                 id: r.id,
                 firstName: r.firstName,
                 lastName: r.lastName,
-                club: r.club,
+                club: r.club ?? undefined,
                 status: r.status,
               }))
             );
@@ -202,7 +204,7 @@ export function useTableauViewState(ctx: Ctx) {
       setSelectedMatchForReferee(matchId);
       setShowRefereeModal(true);
     },
-    [competitionId]
+    [client, competitionId]
   );
 
   // Tours repliés (#1115) : le plus grand tour déplié sert de première colonne

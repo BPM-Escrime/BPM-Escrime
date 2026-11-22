@@ -157,10 +157,11 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   // Modifications de préparation gardées au retour vers l'appel (#1649)
   const [poolPrepDraft, setPoolPrepDraft] = useState<PoolPrepDraft | null>(null);
 
+  // Étape 4c (docs/adr/0017) : seul le moteur écrit l'état, sauf exceptions documentées
+  const persistLocally = !!competition.settings?.postPoolSplitCriteria || !!competition.isTeamEvent;
   const { isLoaded, flushPendingSave } = useCompetitionRestore({
     competitionId: competition.id,
-    // Étape 4c (docs/adr/0017) : seul le moteur écrit l'état, sauf exceptions documentées
-    persistLocally: !!competition.settings?.postPoolSplitCriteria || !!competition.isTeamEvent,
+    persistLocally,
     currentPhase,
     setCurrentPhase,
     currentPoolRound,
@@ -306,6 +307,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     tableauMatches,
     isLoaded,
     tableMaxScore: effectiveSettings?.defaultTableMaxScore,
+    persistLocally,
   });
 
   // Menu natif

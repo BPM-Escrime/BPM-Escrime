@@ -72,6 +72,7 @@ Ne plus ajouter d'appel direct à `window.electronAPI` pour une opération du co
 | `setRefereeingSettings`                        | commande (`referees:write`) — réglages d'affectation, fusion côté moteur ([ADR-0014](adr/0014-affectation-arbitres-moteur-unique.md))                                  | `set_refereeing_settings`                         |
 | `assignReferees`                               | commande (`referees:write`) — arbitres des poules par le moteur unique                                                                                                 | `assign_referees`                                 |
 | `assignReferee`                                | commande (`referees:write`) — arbitre d'une poule à la main, neutralité signalée                                                                                       | `assign_referee`                                  |
+| `listReferees`                                 | requête — arbitres d'une épreuve (identité, club, nationalité, niveau, disponibilité) pour l'écran                                                                     | —                                                 |
 | `getMatchCards`                                | requête                                                                                                                                                                | —                                                 |
 | `getCardsByMatchIds`                           | requête                                                                                                                                                                | —                                                 |
 | `getCompetitionEvents`                         | requête                                                                                                                                                                | `get_competition_events`                          |
@@ -79,7 +80,12 @@ Ne plus ajouter d'appel direct à `window.electronAPI` pour une opération du co
 | `getMatchHistory`                              | requête                                                                                                                                                                | —                                                 |
 | `onCompetitionEvents`                          | abonnement                                                                                                                                                             | —                                                 |
 
-Lots suivants : migration de l'écran par domaine (2), `WsClient` + adaptateur WebSocket (3),
+Lot 2 commencé : `useCompetitionEvent` s'abonne par `onCompetitionEvents`, le choix d'arbitre
+du tableau lit `listReferees`. `useMatchDbSync` n'écrit plus les matchs que pour les formats hors
+moteur (tableaux séparés, équipes) : ailleurs le moteur les écrit dans la transaction de la
+commande. Cliquet `electronApiCalls` : 123.
+
+Lots suivants : suite de la migration de l'écran par domaine (2), `WsClient` + adaptateur WebSocket (3),
 `PlatformServices` (4), pages distantes (5).
 
 ## Journal des événements par épreuve (#1980)

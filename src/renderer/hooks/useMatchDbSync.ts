@@ -15,20 +15,26 @@ interface UseMatchDbSyncParams {
   isLoaded: boolean;
   /** Score maximum d'un match de tableau (défaut 15 si non défini) */
   tableMaxScore: number | undefined;
+  /**
+   * Formats que le moteur ne pilote pas (tableaux séparés, équipes : docs/adr/0017) : l'écran
+   * écrit encore les matchs. Ailleurs, le moteur les écrit dans la transaction de la commande.
+   */
+  persistLocally: boolean;
 }
 
-/** Répercute en base les scores/statuts de poule modifiés et les matchs de tableau. */
+/** Répercute en base les scores/statuts de poule modifiés et les matchs de tableau (formats hors moteur). */
 export function useMatchDbSync({
   competitionId,
   pools,
   tableauMatches,
   isLoaded,
   tableMaxScore,
+  persistLocally,
 }: UseMatchDbSyncParams) {
   // Sync scores/statuts des matches de poule vers la DB quand ils changent
   const prevPoolsRef = useRef(pools);
   useEffect(() => {
-    if (!window.electronAPI?.db?.updateMatch || !isLoaded) return;
+    if (!persistLocally || !window.electronAPI?.db?.updateMatch || !isLoaded) return;
     const prev = prevPoolsRef.current;
     prevPoolsRef.current = pools;
     pools.forEach((pool, pIdx) => {
@@ -71,11 +77,11 @@ export function useMatchDbSync({
         }
       });
     });
-  }, [pools, isLoaded]);
+  }, [pools, isLoaded, persistLocally]);
 
   // Sync matchs tableau vers DB (batch, inclut la 3e place)
   useEffect(() => {
-    if (!competitionId || tableauMatches.length === 0) return;
+    if (!persistLocally || !competitionId || tableauMatches.length === 0) return;
     const maxScore = tableMaxScore ?? 15;
     window.electronAPI.db
       .upsertMultipleTableauMatches(
@@ -106,5 +112,5 @@ export function useMatchDbSync({
           e instanceof Error ? e : undefined
         )
       );
-  }, [tableauMatches, competitionId]);
+  }, [tableauMatches, competitionId, persistLocally]);
 }
