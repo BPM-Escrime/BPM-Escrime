@@ -27,6 +27,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0015](0015-plan-des-pistes-moteur.md)             | Le plan des pistes est une donnée du moteur (migration 47)                                                                                   | Acceptée (principe) |
 | [0016](0016-retrait-reintegration-tireur.md)       | Retrait et réintégration d'un tireur : `withdrawFencer`, `reinstateFencer`                                                                   | Acceptée            |
 | [0017](0017-projections-etat-epreuve.md)           | L'état de l'épreuve devient une projection du moteur (`session_state` en cache, `getCompetitionState`, journal source de vérité par paliers) | Proposée            |
+| [0019](0019-plan-arene-salle.md)                   | Disposition d'arène rattachée à la salle, salle liée à la compétition (proposée)                                                             | Proposée            |
 | [0018](0018-commandes-inscription.md)              | Commandes d'inscription : tireurs, arbitres, épreuves, saison (pas de patch libre, pas de journal)                                           | Acceptée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
