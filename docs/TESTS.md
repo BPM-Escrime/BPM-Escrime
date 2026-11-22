@@ -97,7 +97,7 @@ npm run e2e:debug                                 # mode debug
 |---|---:|---:|
 | `src/shared/utils/` | 85 | 954 |
 | `src/shared/services/` | 8 | 87 |
-| Feature `analytics` (`src/features/analytics/`) | 3 | 16 |
+| Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
 | Feature `latefencers` (`src/features/latefencers/`) | 1 | 14 |
 | Feature `matchAuditLog` (`src/features/matchAuditLog/`) | 1 | 9 |
@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 129 | 1057 |
+| `src/main/` | 130 | 1061 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 123 | 659 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
 | `src/shared/platform/` | 1 | 8 |
-| **Total** | **551** | **4193** |
+| **Total** | **552** | **4194** |
 
-Unitaires : 537 fichiers, 4150 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 538 fichiers, 4151 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2044,15 +2044,11 @@ Unitaires : 537 fichiers, 4150 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/features/analytics/services/analyticsService.test.ts</code> — 8 tests</summary>
+<summary><code>src/features/analytics/services/analyticsService.test.ts</code> — 5 tests</summary>
 
-- **getPoolStats**
-  - retourne des zéros sans electronAPI
-  - agrège matchs, terminés et durée moyenne
-  - durée moyenne 0 si aucun match terminé
 - **getCompetitionStats**
   - retourne une structure vide sans electronAPI
-  - agrège matchs sur phases/poules et calcule la durée moyenne
+  - passe par la requête getCompetitionStats ; palmarès converti en tireurs
 - **getCompetitionMetrics**
   - dérive totalFencers et completedMatches de getCompetitionStats
 - **getCompetitionFencerStats / getFencerCompetitionStats**
@@ -3308,6 +3304,16 @@ Unitaires : 537 fichiers, 4150 tests. E2E : 14 fichiers, 43 tests (comptage stat
 - score de poule et statut modifiés hors commande : dryRun puis réparation
 - décision du tableau effacée hors commande : vainqueur rendu, tableau propagé
 - écart de structure : rendu, non corrigé
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/reports.test.ts</code> — 4 tests</summary>
+
+- getCompetitionStats : matchs de poule, durée moyenne, palmarès
+- listScoreAudit : historique des scores de l’épreuve
+- listRefereeComments : tous, ou ceux d’un arbitre
+- getTableauSignatures : signatures des matchs demandés
 
 </details>
 
