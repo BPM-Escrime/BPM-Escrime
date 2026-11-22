@@ -112,16 +112,16 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/components/` | 122 | 655 |
 | E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 3 | 9 |
+| `src/renderer/api/` | 4 | 14 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
-| **Total** | **544** | **4158** |
+| **Total** | **545** | **4163** |
 
-Unitaires : 531 fichiers, 4116 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 532 fichiers, 4121 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8102,6 +8102,18 @@ Unitaires : 531 fichiers, 4116 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - commande : donnée de l’enveloppe ; erreur : ApiError avec code
   - hors Electron : ApiError « unavailable »
   - abonnement : événements routés par id, désabonnement
+
+</details>
+
+<details>
+<summary><code>src/renderer/api/WsClient.test.ts</code> — 5 tests</summary>
+
+- requête servie, erreur du moteur levée en ApiError
+- abonnement : événements reçus, rouvert après reconnexion, puis fermé
+- abonnement refusé : écouteur retiré
+- **WsClient : coupures**
+  - non connecté : unavailable sans rien envoyer
+  - coupure pendant l’appel, ou délai dépassé : unavailable
 
 </details>
 
