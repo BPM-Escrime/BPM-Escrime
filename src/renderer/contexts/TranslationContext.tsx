@@ -21,6 +21,7 @@ import {
 } from '@shared/utils/pseudoLocale';
 import { getActiveLanguage, pluralKeys, setActiveLanguage } from '@shared/utils/localeFormat';
 import { setPdfTranslator } from '@shared/utils/pdfExport/core';
+import { stationAvailable, useStationApi } from '../api/stationApi';
 import frTranslations from '../locales/fr.json';
 
 export type Language = 'fr' | 'en' | 'br' | 'ca' | 'de' | 'es' | 'pt' | 'it' | 'ru' | 'zh-HK';
@@ -228,13 +229,12 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
   // boucle (les valeurs identiques sont ignorées, les valeurs inconnues aussi)
   const currentRef = useRef({ language, theme });
   currentRef.current = { language, theme };
+  const settingsApi = useStationApi().settings;
   useEffect(() => {
-    const subscribe = window.electronAPI?.onCompetitionEvent;
-    if (!subscribe) return;
-    return subscribe(event => {
-      if (event.type !== 'settings:changed') return;
-      void window.electronAPI?.settings
-        ?.get()
+    if (!stationAvailable()) return;
+    return settingsApi.onChanged(() => {
+      void settingsApi
+        .get()
         .then(settings => {
           const { language: lang, theme: th } = currentRef.current;
           if (KNOWN_LANGUAGES.includes(settings.language) && settings.language !== lang) {
@@ -246,7 +246,7 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
         })
         .catch(() => undefined);
     });
-  }, [changeLanguage, changeTheme]);
+  }, [settingsApi, changeLanguage, changeTheme]);
 
   useEffect(() => {
     const initialize = async () => {

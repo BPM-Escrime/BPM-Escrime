@@ -25,6 +25,7 @@ import { formatAssignment } from './eventDayFormat';
 import { DayStripBoardPanel } from './DayStripBoardPanel';
 import { useConfirm } from './ConfirmDialog';
 import { ToggleChip } from './common/ToggleChip';
+import { stationAvailable, useStationApi } from '../api/stationApi';
 
 const REFEREE_WEAPONS: Weapon[] = [Weapon.FOIL, Weapon.EPEE, Weapon.SABRE, Weapon.LASER];
 const POLL_MS = 10_000;
@@ -60,7 +61,7 @@ const WeaponChecks: React.FC<{
 export const EventDayModal: React.FC<EventDayModalProps> = ({ competitions, onClose }) => {
   const { t } = useTranslation();
   const { confirm } = useConfirm();
-  const api = window.electronAPI?.eventDay;
+  const api = useStationApi().eventDay;
   const [days, setDays] = useState<EventDay[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState({ name: '', date: today(), stripCount: 16 });
@@ -102,7 +103,7 @@ export const EventDayModal: React.FC<EventDayModalProps> = ({ competitions, onCl
   const loadDays = useCallback(
     () =>
       api
-        ?.list()
+        .list()
         .then(list => {
           setDays(list);
           setSelectedId(prev => prev ?? list[0]?.id ?? null);
@@ -113,7 +114,7 @@ export const EventDayModal: React.FC<EventDayModalProps> = ({ competitions, onCl
 
   const loadDay = useCallback(
     () =>
-      api && selectedId
+      selectedId
         ? Promise.all([
             api.listReferees(selectedId),
             api.getOverview(selectedId),
@@ -153,7 +154,7 @@ export const EventDayModal: React.FC<EventDayModalProps> = ({ competitions, onCl
     return m;
   }, [days]);
 
-  if (!api) return null;
+  if (!stationAvailable()) return null;
 
   const syncMessage = (r: DaySyncResult) =>
     [

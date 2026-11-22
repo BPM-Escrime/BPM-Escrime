@@ -6,6 +6,7 @@
  * Licensed under GPL-3.0
  */
 import { LEGACY_LOCAL_STORAGE_KEYS } from '../../shared/types/appSettings';
+import { stationApi, stationAvailable } from '../api/stationApi';
 
 const KEYS = Object.keys(LEGACY_LOCAL_STORAGE_KEYS);
 /** Réglages choisis à l'écran à chaque démarrage : recopiés tels quels en base */
@@ -16,14 +17,13 @@ let mirrored: Storage | null = null;
 const PATCHED = Symbol.for('bellepoule.appSettingsMirror');
 
 function send(values: Record<string, string | null>, mode: 'missing' | 'write'): void {
-  const api = window.electronAPI?.settings;
-  if (!api) return;
-  void api.importLegacy(values, mode).catch(() => undefined);
+  if (!stationAvailable()) return;
+  void stationApi.settings.importLegacy(values, mode).catch(() => undefined);
 }
 
 /** À appeler une fois la base prête ; sans effet si déjà installé */
 export function installAppSettingsMirror(storage: Storage = window.localStorage): void {
-  if (installed || !window.electronAPI?.settings) return;
+  if (installed || !stationAvailable()) return;
   installed = true;
   // Langue et thème : l'écran fait foi (le splash vient de les confirmer) ; sinon un agent
   // qui déclenche « settings:changed » ramènerait l'écran à une ancienne langue en base

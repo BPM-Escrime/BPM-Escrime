@@ -23,6 +23,7 @@ import {
 import { reportOperations } from './contractReports';
 import { dtViewOperations } from './contractDtView';
 import { clubOperations } from './contractClub';
+import { stationOperations } from './contractStation';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
@@ -1419,6 +1420,8 @@ export const contract = {
   ...reportOperations,
   // Mode Club : données du poste, jamais sur le réseau (docs/adr/0022)
   ...clubOperations,
+  // Poste : réglages, salles, thèmes, journée, RGPD, agent ; jamais sur le réseau (docs/adr/0022)
+  ...stationOperations,
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────

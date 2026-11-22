@@ -8,6 +8,7 @@ import { useCallback, useEffect } from 'react';
 import { useStateGroup } from '../../hooks/useStateGroup';
 import type { CustomTheme, DisplayTheme } from '../../../shared/types/remote';
 import type { GlobalThemeSection } from './builtinThemes';
+import { useStationApi } from '../../api/stationApi';
 
 interface UseArenaThemesOptions {
   competitionId: string;
@@ -16,6 +17,7 @@ interface UseArenaThemesOptions {
 }
 
 export function useArenaThemes({ competitionId, hasSession }: UseArenaThemesOptions) {
+  const themesApi = useStationApi().themes;
   // Thèmes, kiosque et éditeur de thème regroupés (#1241)
   const themeState = useStateGroup({
     displayTheme: 'dark' as 'dark' | 'light' | 'neon' | 'unicorn',
@@ -118,11 +120,11 @@ export function useArenaThemes({ competitionId, hasSession }: UseArenaThemesOpti
 
   // Charger tous les thèmes depuis l'app (+ migration one-shot depuis localStorage)
   const refreshSavedThemes = useCallback(() => {
-    window.electronAPI.themes
+    themesApi
       .list()
       .then(setSavedThemes)
       .catch(() => {});
-  }, []);
+  }, [themesApi]);
 
   useEffect(() => {
     const MIGRATION_KEY = 'bp-themes-migrated-v1';
@@ -131,11 +133,7 @@ export function useArenaThemes({ competitionId, hasSession }: UseArenaThemesOpti
         const raw = localStorage.getItem('bellepoule-custom-themes');
         if (raw) {
           const old: CustomTheme[] = JSON.parse(raw);
-          Promise.all(
-            old.map(t =>
-              window.electronAPI.themes.save({ ...t, targetType: t.targetType ?? 'arena' })
-            )
-          )
+          Promise.all(old.map(t => themesApi.save({ ...t, targetType: t.targetType ?? 'arena' })))
             .then(() => {
               localStorage.setItem(MIGRATION_KEY, '1');
               refreshSavedThemes();
@@ -149,7 +147,7 @@ export function useArenaThemes({ competitionId, hasSession }: UseArenaThemesOpti
       }
     }
     refreshSavedThemes();
-  }, [refreshSavedThemes]);
+  }, [themesApi, refreshSavedThemes]);
 
   return {
     ...themeState,

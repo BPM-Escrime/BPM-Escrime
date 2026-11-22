@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { _resetAppSettingsMirror, installAppSettingsMirror } from './appSettingsMirror';
+import { stationElectron } from '../testUtils/stationBridge';
 
 let importLegacy: ReturnType<typeof vi.fn>;
 
@@ -12,7 +13,9 @@ beforeEach(() => {
   _resetAppSettingsMirror();
   localStorage.clear();
   importLegacy = vi.fn(async () => []);
-  (window as unknown as { electronAPI: unknown }).electronAPI = { settings: { importLegacy } };
+  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({
+    settings: { importLegacy },
+  });
 });
 
 describe('installAppSettingsMirror', () => {

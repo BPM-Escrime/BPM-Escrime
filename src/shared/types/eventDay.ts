@@ -134,10 +134,8 @@ export interface DayStripBoard {
   strips: DayStripLive[];
 }
 
-/** API IPC des pistes en temps réel : occupation, réservation, propositions (#1878) */
-export interface DayStripAPI {
-  getStripBoard: (dayId: string) => Promise<DayStripBoard | null>;
-  assignStrip: (dayId: string, strip: number, key: string) => Promise<boolean>;
-  setStripRule: (dayId: string, strip: number, rule: StripRule | null) => Promise<boolean>;
-  setAutoAssign: (dayId: string, on: boolean) => Promise<boolean>;
+/** Statut commun des arbitres de la journée et conflits (getEventDayOverview) */
+export interface EventDayOverview {
+  statuses: DayRefereeStatus[];
+  conflicts: DayRefereeConflict[];
 }

@@ -32,14 +32,3 @@ export interface McpLogEntry {
   ok: boolean;
   ms: number;
 }
-
-export interface McpAPI {
-  getStatus: () => Promise<McpStatus>;
-  setSettings: (settings: {
-    enabled?: boolean;
-    port?: number;
-    allowWrite?: boolean;
-  }) => Promise<McpStatus>;
-  regenerateToken: () => Promise<McpStatus>;
-  getLog: () => Promise<McpLogEntry[]>;
-}

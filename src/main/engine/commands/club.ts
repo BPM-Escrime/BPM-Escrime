@@ -15,8 +15,8 @@ import {
   computeMemberStats,
   statsByPeriod,
 } from '../../../shared/utils/clubStats';
-import { ApiError } from '../../../shared/api/client';
-import { CommandError, type CommandContext } from './context';
+import type { CommandContext } from './context';
+import { refusing, refusingAsync } from './refusal';
 
 type Ops = typeof clubOperations;
 
@@ -48,34 +48,10 @@ export function buildMemberReport(
  * « Matériel encore prêté »…) : le contrat la rend sous le code `club_refused`, message gardé
  * (sans cela l'écran n'afficherait que « Erreur interne »).
  */
-export function refuse<T>(fn: () => T): T {
-  try {
-    return fn();
-  } catch (e) {
-    throw asRefusal(e);
-  }
-}
+export const refuse = <T>(fn: () => T): T => refusing('club_refused', fn);
 
-export async function refuseAsync<T>(fn: () => Promise<T>): Promise<T> {
-  try {
-    return await fn();
-  } catch (e) {
-    throw asRefusal(e);
-  }
-}
-
-function asRefusal(e: unknown): unknown {
-  if (e instanceof CommandError || e instanceof ApiError) return e;
-  // Panne de la base (SQLite) : erreur interne journalisée, jamais son texte brut à l'écran
-  const code = (e as { code?: unknown })?.code;
-  if (
-    (typeof code === 'string' && code.startsWith('SQLITE')) ||
-    (e as Error)?.name === 'SqliteError'
-  ) {
-    return e;
-  }
-  return new CommandError('club_refused', e instanceof Error ? e.message : String(e));
-}
+export const refuseAsync = <T>(fn: () => Promise<T>): Promise<T> =>
+  refusingAsync('club_refused', fn);
 
 const repo = (ctx: CommandContext) => ctx.db.club;
 const inv = (ctx: CommandContext) => ctx.db.clubInventory;

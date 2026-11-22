@@ -10,6 +10,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 vi.mock('../hooks/useTranslation', () => import('../testUtils/i18nMock'));
 import { EventDayModal } from './EventDayModal';
+import { stationElectron } from '../testUtils/stationBridge';
 import { Weapon, type Competition } from '../../shared/types';
 
 const day = {
@@ -73,7 +74,7 @@ beforeEach(() => {
     getBusyElsewhere: vi.fn(),
     getStripOccupation: vi.fn().mockResolvedValue([]),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { eventDay: api };
+  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({ eventDay: api });
 });
 
 describe('EventDayModal', () => {

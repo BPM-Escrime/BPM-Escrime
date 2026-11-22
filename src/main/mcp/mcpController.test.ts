@@ -9,11 +9,9 @@ import * as os from 'os';
 import * as path from 'path';
 import type { AddressInfo } from 'net';
 
-vi.mock('electron', () => ({ ipcMain: { handle: vi.fn() } }));
-
-import { createMcpController } from './mcpHandlers';
-import type { McpWriteDeps } from '../mcp/mcpWriteTools';
-import { getMcpToken, readMcpSettings, type SecretBox } from '../mcp/mcpSettings';
+import { createMcpController } from './mcpController';
+import type { McpWriteDeps } from './mcpWriteTools';
+import { getMcpToken, readMcpSettings, type SecretBox } from './mcpSettings';
 
 const box = (available: boolean): SecretBox => ({
   isAsyncEncryptionAvailable: async () => available,

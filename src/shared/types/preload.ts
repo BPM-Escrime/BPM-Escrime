@@ -22,19 +22,9 @@ import {
   MatchTiming,
 } from '../types';
 import type { MatchSignatureRequest, RemoteSession, Arena, ArenaUpdate } from './remote';
-import type {
-  DayReferee,
-  DayRefereeAssignment,
-  DayRefereeConflict,
-  DayRefereeInput,
-  DayRefereeStatus,
-  DaySyncResult,
-  DayStripAPI,
-  EventDay,
-} from './eventDay';
 import type { ClubAPI } from './club';
 import type { PrivacyAPI } from './privacy';
-import type { McpAPI, McpScreenEvent } from './mcp';
+import type { McpScreenEvent } from './mcp';
 export type { ClubAPI, ClubMemberReport } from './club';
 
 // Re-export Pool for preload
@@ -1219,34 +1209,6 @@ export interface CryptoAPI {
   unprotect: (ciphertext: string) => Promise<string | null>;
 }
 
-/** Journée multi-épreuves : pistes et arbitres partagés (#1714) */
-/** Pistes en temps réel d'une journée (#1878) : voir eventDay.ts */
-export interface EventDayAPI extends DayStripAPI {
-  list: () => Promise<EventDay[]>;
-  create: (data: { name: string; date: string; stripCount?: number }) => Promise<EventDay>;
-  update: (
-    id: string,
-    updates: { name?: string; date?: string; stripCount?: number }
-  ) => Promise<EventDay | null>;
-  delete: (id: string) => Promise<void>;
-  setCompetitionDay: (competitionId: string, dayId: string | null) => Promise<DaySyncResult>;
-  listReferees: (dayId: string) => Promise<DayReferee[]>;
-  createReferee: (dayId: string, data: DayRefereeInput) => Promise<DayReferee>;
-  updateReferee: (id: string, data: DayRefereeInput) => Promise<void>;
-  deleteReferee: (id: string) => Promise<void>;
-  /** Reporte les arbitres de la journée dans chaque épreuve selon son arme */
-  syncReferees: (dayId: string) => Promise<DaySyncResult>;
-  /** Statut commun des arbitres + conflits sur toute la journée */
-  getOverview: (dayId: string) => Promise<EventDayOverview>;
-  getBusyElsewhere: (competitionId: string) => Promise<Record<string, DayRefereeAssignment[]>>;
-  getStripOccupation: (dayId: string) => Promise<import('./eventDay').DayStripStatus[]>;
-}
-
-export interface EventDayOverview {
-  statuses: DayRefereeStatus[];
-  conflicts: DayRefereeConflict[];
-}
-
 export interface TrainingAPI {
   startServer: (
     port?: number,
@@ -1415,14 +1377,12 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   backup: BackupAPI;
   privacy: PrivacyAPI;
   /** Serveur MCP intégré, agent IA en lecture (#1880) */
-  mcp: McpAPI;
   diagnostic: DiagnosticAPI;
   greg: GregAPI;
   ftp: FtpAPI;
   crypto: CryptoAPI;
   remote: RemoteServerAPI & import('./remote').RemoteFirewallAPI;
   training: TrainingAPI;
-  eventDay: EventDayAPI;
   settings: SettingsAPI;
   club: ClubAPI;
   cyrano: CyranoAPI;
@@ -1490,11 +1450,4 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   ) => Promise<{ success: boolean; error?: string }>;
   getTtsConfig: () => Promise<TtsConfig | null>;
   onLogoLoaded: (callback: (logo: string | null) => void) => () => void;
-  themes: {
-    list: () => Promise<import('../types/remote').CustomTheme[]>;
-    save: (
-      theme: import('../types/remote').CustomTheme
-    ) => Promise<{ success: boolean; error?: string }>;
-    delete: (id: string) => Promise<{ success: boolean; error?: string }>;
-  };
 }

@@ -10,6 +10,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 vi.mock('../hooks/useTranslation', () => import('../testUtils/i18nMock'));
 import McpSettingsSection, { mcpClientConfig } from './McpSettingsSection';
 import type { McpStatus } from '../../shared/types/mcp';
+import { stationElectron } from '../testUtils/stationBridge';
 
 const status: McpStatus = {
   enabled: true,
@@ -23,6 +24,7 @@ const defaults = ['/home/dt/Documents'];
 
 let mcp: Record<string, ReturnType<typeof vi.fn>>;
 let settings: Record<string, ReturnType<typeof vi.fn>>;
+let addAgentFolder: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   mcp = {
@@ -33,10 +35,14 @@ beforeEach(() => {
   };
   settings = {
     getAgentFolders: vi.fn(async () => ({ folders: [], defaults })),
-    addAgentFolder: vi.fn(async () => ({ folders: ['/media/usb'], defaults })),
     removeAgentFolder: vi.fn(async () => ({ folders: [], defaults })),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { mcp, settings };
+  // Le dialogue natif d'ajout d'un dossier reste en IPC (window.electronAPI.settings)
+  addAgentFolder = vi.fn(async () => ({ folders: ['/media/usb'], defaults }));
+  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron(
+    { mcp, settings },
+    { settings: { addAgentFolder } }
+  );
 });
 afterEach(cleanup);
 

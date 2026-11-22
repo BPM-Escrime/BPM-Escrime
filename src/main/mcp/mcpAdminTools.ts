@@ -8,7 +8,7 @@
 import type { Competition } from '../../shared/types';
 import type { ImportedReferee } from '../../shared/utils/fileParser';
 import { parseEngardeRefereeFile, parseXMLFile } from '../../shared/utils/fileParser';
-import { syncDay } from '../ipc/eventDayHandlers';
+import { syncDay } from '../engine/commands/eventDay';
 import {
   getSettings,
   listVenues,

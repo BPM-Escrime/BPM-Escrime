@@ -12,6 +12,7 @@ import type { McpLogEntry, McpStatus } from '../../shared/types/mcp';
 import type { AgentFolders } from '../../shared/types/settingsApi';
 import { HINT, BOLD, TOGGLE_LABEL } from './settingsModal.styles';
 import { Button } from './common/Button';
+import { useStationApi } from '../api/stationApi';
 
 /** Configuration à coller dans `.mcp.json` (Claude Code, plugin bellepoule) */
 export function mcpClientConfig(status: Pick<McpStatus, 'port' | 'token'>): string {
@@ -40,8 +41,7 @@ const McpSettingsSection: React.FC = () => {
   const [showToken, setShowToken] = useState(false);
   const [copied, setCopied] = useState(false);
   const [folders, setFolders] = useState<AgentFolders>({ folders: [], defaults: [] });
-  const api = window.electronAPI?.mcp;
-  const settingsApi = window.electronAPI?.settings;
+  const { mcp: api, settings: settingsApi } = useStationApi();
 
   const apply = (s: McpStatus) => {
     setStatus(s);
@@ -50,14 +50,14 @@ const McpSettingsSection: React.FC = () => {
 
   useEffect(() => {
     api
-      ?.getStatus()
+      .getStatus()
       .then(apply)
       .catch(() => undefined);
   }, [api]);
 
   useEffect(() => {
     settingsApi
-      ?.getAgentFolders?.()
+      .getAgentFolders()
       .then(setFolders)
       .catch(() => undefined);
   }, [settingsApi]);
@@ -66,15 +66,17 @@ const McpSettingsSection: React.FC = () => {
   const [log, setLog] = useState<McpLogEntry[]>([]);
   const refreshLog = () =>
     void api
-      ?.getLog()
+      .getLog()
       .then(entries => setLog(entries.slice(-LOG_SHOWN).reverse()))
       .catch(() => undefined);
   useEffect(refreshLog, [api]);
 
   const changeFolders = (action: Promise<AgentFolders> | undefined) =>
     void action?.then(setFolders).catch(() => undefined);
+  /** Réglage ou jeton changé : l'état du serveur affiché est celui que rend le main */
+  const change = (action: Promise<McpStatus>) => void action.then(apply).catch(() => undefined);
 
-  if (!api || !status) return null;
+  if (!status) return null;
 
   const copyConfig = async () => {
     try {
@@ -94,7 +96,7 @@ const McpSettingsSection: React.FC = () => {
         <input
           type="checkbox"
           checked={status.enabled}
-          onChange={e => void api.setSettings({ enabled: e.target.checked }).then(apply)}
+          onChange={e => change(api.setSettings({ enabled: e.target.checked }))}
         />
         {t('settings.mcp_enable')}
       </label>
@@ -103,7 +105,7 @@ const McpSettingsSection: React.FC = () => {
           <input
             type="checkbox"
             checked={status.allowWrite}
-            onChange={e => void api.setSettings({ allowWrite: e.target.checked }).then(apply)}
+            onChange={e => change(api.setSettings({ allowWrite: e.target.checked }))}
           />
           {t('settings.mcp_allow_write')}
         </label>
@@ -118,7 +120,7 @@ const McpSettingsSection: React.FC = () => {
           max={65535}
           value={port}
           onChange={e => setPort(e.target.value)}
-          onBlur={() => void api.setSettings({ port: Number(port) }).then(apply)}
+          onBlur={() => change(api.setSettings({ port: Number(port) }))}
         />
       </div>
       <p style={HINT} role="status">
@@ -139,7 +141,7 @@ const McpSettingsSection: React.FC = () => {
             <Button type="button" variant="ghost" onClick={() => setShowToken(v => !v)}>
               {t(showToken ? 'settings.mcp_hide_token' : 'settings.mcp_show_token')}
             </Button>
-            <Button type="button" onClick={() => void api.regenerateToken().then(apply)}>
+            <Button type="button" onClick={() => change(api.regenerateToken())}>
               {t('settings.mcp_regenerate')}
             </Button>
           </div>
@@ -165,7 +167,7 @@ const McpSettingsSection: React.FC = () => {
                       type="button"
                       variant="ghost"
                       aria-label={t('settings.mcp_folder_remove', { folder })}
-                      onClick={() => changeFolders(settingsApi?.removeAgentFolder(folder))}
+                      onClick={() => changeFolders(settingsApi.removeAgentFolder(folder))}
                     >
                       <Trash2 size={14} aria-hidden="true" />
                     </Button>
@@ -173,7 +175,10 @@ const McpSettingsSection: React.FC = () => {
                 ))}
           </ul>
           <div className="u-row">
-            <Button type="button" onClick={() => changeFolders(settingsApi?.addAgentFolder())}>
+            <Button
+              type="button"
+              onClick={() => changeFolders(window.electronAPI?.settings?.addAgentFolder())}
+            >
               {t('settings.mcp_folder_add')}
             </Button>
           </div>

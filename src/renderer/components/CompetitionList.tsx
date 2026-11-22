@@ -57,6 +57,7 @@ import { BrandLogo } from './common/BrandLogo';
 import { EventDayModal } from './EventDayModal';
 import { Button } from './common/Button';
 import { Icon } from './common/Icon';
+import { stationAvailable } from '../api/stationApi';
 
 interface CompetitionListProps {
   competitions: Competition[];
@@ -337,7 +338,7 @@ const CompetitionListComponent: React.FC<CompetitionListProps> = ({
               {t('demo.button')}
             </Button>
           )}
-          {window.electronAPI?.eventDay && competitions.length > 0 && (
+          {stationAvailable() && competitions.length > 0 && (
             <Button
               type="button"
               size="lg"

@@ -7,19 +7,19 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from './Toast';
+import { stationAvailable, useStationApi } from '../api/stationApi';
 import { HINT, BOLD, TOGGLE_LABEL } from './settingsModal.styles';
-
-const api = () => window.electronAPI?.settings;
 
 export const InkSavingSettingsSection: React.FC = () => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const api = useStationApi().settings;
   const [enabled, setEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
     let alive = true;
-    void api()
-      ?.get()
+    void api
+      .get()
       .then(s => {
         if (alive) setEnabled(s.inkSaving === true);
       })
@@ -29,14 +29,14 @@ export const InkSavingSettingsSection: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [api]);
 
-  if (!api()) return null;
+  if (!stationAvailable()) return null;
 
   const handleChange = async (checked: boolean) => {
     setEnabled(checked);
     try {
-      const s = await api()!.update({ inkSaving: checked });
+      const s = await api.update({ inkSaving: checked });
       setEnabled(s.inkSaving === true);
     } catch {
       setEnabled(!checked);

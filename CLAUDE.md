@@ -128,7 +128,7 @@ npm run e2e:debug       # Playwright debug mode
 ```
 Main Process (src/main/)
 ├── main.ts                  # Window management, menu (i18n: fr/en/de), IPC handlers, DB lifecycle
-├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), trainingHandlers (training:*), eventDayHandlers (eventDay:*, journée multi-épreuves #1714), dayStripHandlers (pistes libérées et réservation, #1878), cyranoHandlers (cyrano:*, #1720), opp2Handlers (opp2:*, #1960), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:*, RGPD #1882) — registerXxxHandlers(ctx)
+├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), trainingHandlers (training:*), cyranoHandlers (cyrano:*, #1720), opp2Handlers (opp2:*, #1960), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:* restants : export JSON d'une personne et .bpm chiffrés ; le reste du RGPD par le contrat), settingsHandlers (settings:addAgentFolder, dialogue natif) — registerXxxHandlers(ctx) ; réglages du poste, salles, thèmes, journée multi-épreuves (#1714, #1878), RGPD et agent MCP : contrat (`contractStation.ts`, ADR-0022), port `ctx.station` (`stationPort.ts`)
 ├── menuLabels.ts            # Libellés du menu natif (fr/en/de/zh-HK)
 ├── remoteRegistry.ts        # Serveurs distants actifs (remoteServers, ports, stopRemoteServer)
 ├── preload.ts               # Secure IPC bridge (contextIsolation: true)
@@ -142,7 +142,7 @@ Main Process (src/main/)
 ├── engine/                  # Moteur (#1979, docs/adr/0003)
 │   ├── api/                 # Contrat d'API unique (#1981) : engine (validation zod, ApiError, handlers), ipcAdapter (api:invoke/api:subscribe), mcpAdapter (outils MCP générés), events — docs/API_CONTRACT.md
 │   └── commands/            # Commandes (ex-main/domain, #1880) : sport (poules, scores, tableau hors écran), refereeing (réglages et affectation des arbitres, ADR-0014), checkIn, exportResults, settings (resolveSetting), files (dossiers de l'agent) ; CommandContext, CommandError. Pas de règle ici : elles sont dans src/shared/domain
-├── mcp/                     # Serveur MCP intégré (#1880) : mcpServer (HTTP JSON-RPC, jeton, loopback), mcpSettings, mcpTools (lecture), mcpWriteTools / mcpAdminTools / mcpSportTools (écriture sur autorisation) — docs/MCP.md
+├── mcp/                     # Serveur MCP intégré (#1880) : mcpServer (HTTP JSON-RPC, jeton, loopback), mcpController (activation, jeton, journal), mcpSettings, mcpTools (lecture), mcpWriteTools / mcpAdminTools / mcpSportTools (écriture sur autorisation) — docs/MCP.md
 ├── cliArgs.ts / batchImport.ts  # --headless, --batch-import manifeste.json [--dry-run], --mcp / --mcp-port=N / --mcp-write, --mcp-print-config, --mcp-new-token
 ├── privacySettings.ts       # Réglages RGPD <userData>/privacy-settings.json (noms sur le réseau, conservation) — docs/RGPD.md
 ├── bpmCrypto.ts             # Archives .bpm chiffrées (AES-256-GCM, scrypt)
@@ -257,16 +257,13 @@ Database (src/database/)
    - `dialog.*` – Open/save file dialogs
    - `remote.*` – Start/stop server, manage arenas/sessions/themes/passwords
    - `training.*` – Training-mode server
-   - `eventDay.*` – Journée multi-épreuves : épreuves regroupées, arbitres partagés, conflits (docs/JOURNEE_MULTI_EPREUVES.md)
    - `updater.*` – Auto-update control
    - `crypto.*` – safeStorage protect/unprotect
-   - `themes.*` – Screen themes
    - `cyrano.*` – Appareils de piste Cyrano : start/stop UDP, pistes, statuts, log (#1720)
    - `opp2.*` – Appareils de piste OPP2 : broker MQTT intégré start/stop, pistes, statuts (#1960, docs/OPP2.md)
    - `club.*` – Mode Club : membres, séances, pointage, combats libres, stats par période (#1872)
-   - `mcp.*` – Serveur MCP intégré (agent IA, 127.0.0.1 + jeton, désactivé par défaut) : statut, réglages, jeton, journal (#1880, docs/MCP.md)
-   - `settings.*` – Paramétrage du poste (table app_settings), salles (venues, venue_strips), dossiers accessibles à l'agent (#1880)
-   - `privacy.*` – RGPD : recherche d'une personne, export JSON/PDF, anonymisation, effacement, durée de conservation, noms sur le réseau, .bpm chiffrés (#1882, docs/RGPD.md)
+   - `settings.addAgentFolder` – Dossier de l'agent choisi par dialogue natif (#1880) ; réglages du poste, salles, thèmes, journée multi-épreuves et agent MCP : contrat d'API (`contractStation.ts`, ADR-0022)
+   - `privacy.*` – RGPD, restent en IPC : export JSON d'une personne, .bpm chiffrés (dialogue natif, chemin de fichier) ; droits des personnes et conservation par le contrat (#1882, docs/RGPD.md)
    - `notifyLanguageChanged(lang)` – Rebuild native menu when UI language changes
 
 ## TypeScript Configuration

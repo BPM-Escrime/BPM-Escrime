@@ -11,6 +11,7 @@ vi.mock('../hooks/useTranslation', () => import('../testUtils/i18nMock'));
 import VenuesSettingsSection, { resizeStrips } from './VenuesSettingsSection';
 import { ConfirmProvider } from './ConfirmDialog';
 import { ToastProvider } from './Toast';
+import { stationElectron } from '../testUtils/stationBridge';
 import type { Venue } from '../../shared/types/appSettings';
 
 const venue = (over: Partial<Venue> = {}): Venue => ({
@@ -35,7 +36,7 @@ beforeEach(() => {
     setDefaultVenue: vi.fn(async () => undefined),
     deleteVenue: vi.fn(async () => undefined),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { settings };
+  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({ settings });
 });
 
 const wrap = () =>

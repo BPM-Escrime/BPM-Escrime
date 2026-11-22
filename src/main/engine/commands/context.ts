@@ -13,6 +13,10 @@ import type {
   ClubMember,
   ClubSyncStatus,
 } from '../../../shared/types/club';
+import type { DayStripBoard } from '../../../shared/types/eventDay';
+import type { McpLogEntry, McpStatus } from '../../../shared/types/mcp';
+import type { PrivacySettings } from '../../../shared/types/privacy';
+import type { CustomTheme } from '../../../shared/types/remote';
 
 /** Écriture faite hors de l'écran : l'écran ouvert recharge les données concernées */
 export interface DomainChange {
@@ -55,6 +59,47 @@ export interface CommandContext {
    * sauvegardes) : dépendent d'Electron, branchés par main.ts (docs/adr/0022). Absent : tests.
    */
   club?: ClubPort;
+  /**
+   * Services du poste hors base (thèmes d'écrans, réglages RGPD, serveur MCP, pistes de la
+   * journée, dossiers par défaut de l'agent) : branchés par main.ts (docs/adr/0022). Absent :
+   * tests, MCP ; les opérations qui en ont besoin refusent par « unavailable ».
+   */
+  station?: StationPort;
+}
+
+/** Services du poste (réglages, thèmes, RGPD, agent, journée) : ce qui dépasse la base */
+export interface StationPort {
+  /** Dossiers accessibles à l'agent tant que l'opérateur n'en a pas choisi */
+  defaultAgentFolders(): string[];
+  /** Bibliothèque de thèmes d'écrans (<userData>/themes.json) */
+  themes: {
+    list(): Promise<CustomTheme[]>;
+    save(theme: CustomTheme): Promise<void>;
+    remove(themeId: string): Promise<void>;
+  };
+  /** Réglages RGPD (<userData>/privacy-settings.json) et épreuves occupées */
+  privacy: {
+    settings(): PrivacySettings;
+    /** Fusionne, assainit, enregistre et applique l'affichage des noms sur le réseau */
+    update(input: Partial<PrivacySettings>): PrivacySettings;
+    /** Épreuve ouverte à l'écran ou servie aux tablettes : à ne pas anonymiser ni effacer */
+    isCompetitionBusy(competitionId: string): boolean;
+  };
+  /** Serveur MCP intégré : réglages, jeton, journal des appels */
+  mcp: {
+    status(): Promise<McpStatus>;
+    /** Enregistre les réglages puis démarre, redémarre ou arrête le serveur */
+    update(input: { enabled?: boolean; port?: number; allowWrite?: boolean }): Promise<McpStatus>;
+    regenerateToken(): Promise<McpStatus>;
+    log(): McpLogEntry[];
+  };
+  /** Pistes de la journée en temps réel (serveurs distants des épreuves) */
+  dayStrips: {
+    board(dayId: string): DayStripBoard | null;
+    assign(dayId: string, strip: number, key: string): boolean;
+    setRule(dayId: string, strip: number, rule: unknown): boolean;
+    setAutoAssign(dayId: string, on: boolean): boolean;
+  };
 }
 
 /** Mode Club : ce qui dépasse la base (serveur d'entraînement, dossier de synchro, sauvegardes) */

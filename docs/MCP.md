@@ -19,7 +19,7 @@ interroge la salle en langage naturel, prépare une journée, tire les poules, s
   Téléchargements et Bureau) : les fichiers d'import ne sont lus, et les exports écrits, que dans
   ces dossiers (chemin réel contrôlé). L'agent ne peut pas modifier cette liste.
 - Rendu PDF (`export_results`) dans une session isolée : ni fichier local ni réseau ; données échappées.
-- Journal des derniers appels (outil, durée, succès) : Paramètres → Système → Agent IA (MCP), IPC `mcp:getLog`.
+- Journal des derniers appels (outil, durée, succès) : Paramètres → Système → Agent IA (MCP), opération `listMcpLog` du contrat (ADR-0022).
 - Lots JSON-RPC : 20 messages au plus, traités l'un après l'autre.
 - Données personnelles minimales : ni date de naissance, ni licence, ni photo (RGPD, `docs/RGPD.md`).
 
@@ -171,7 +171,7 @@ encore envoyée à l'écran du club après une écriture de l'agent.
 | `src/main/batchImport.ts`, `src/main/cliArgs.ts` | `--batch-import`, `--mcp*` |
 | `src/main/mcp/mcpServer.ts` | Serveur HTTP JSON-RPC, jeton, contrôle Host / Origin |
 | `src/main/mcp/mcpSettings.ts` | Réglages et jeton chiffré |
-| `src/main/ipc/mcpHandlers.ts` | IPC `mcp:*`, démarrage à l'ouverture de la base |
+| `src/main/mcp/mcpController.ts` | Contrôleur du serveur (réglages, jeton, journal), démarrage à l'ouverture de la base ; opérations `getMcpStatus`, `updateMcpSettings`, `regenerateMcpToken`, `listMcpLog` par le port du poste (ADR-0022) |
 | `src/renderer/components/McpSettingsSection.tsx` | Section des Paramètres |
 | `plugins/bellepoule/` | Plugin Claude Code : `.mcp.json`, skill, commandes `/bp-etat`, `/bp-journee`, `/bp-epreuve` ; marketplace `.claude-plugin/marketplace.json` |
 

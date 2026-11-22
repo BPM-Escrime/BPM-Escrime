@@ -1,18 +1,10 @@
 /**
- * Handlers IPC des pistes d'une journée (#1878) : contrôle des entrées, réservation,
- * affectation en un clic et automatique sur des serveurs d'épreuve simulés.
+ * Pistes d'une journée (#1878) : contrôle des entrées, réservation, affectation en un clic
+ * et automatique sur des serveurs d'épreuve simulés.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-const handlers = new Map<string, (...args: unknown[]) => unknown>();
-vi.mock('electron', () => ({
-  ipcMain: {
-    handle: (channel: string, fn: (...args: unknown[]) => unknown) => handlers.set(channel, fn),
-  },
-}));
-
-import { registerDayStripHandlers } from './dayStripHandlers';
-import type { WaitingWork } from '../remote/stripHandover';
+import { createDayStripService } from './dayStripService';
+import type { WaitingWork } from './stripHandover';
 import type { StripRule } from '../../shared/types/eventDay';
 
 function setup() {
@@ -50,19 +42,26 @@ function setup() {
     getMatch: () => null,
     getCompetitionPools: () => [],
   };
-  const dispose = registerDayStripHandlers({
+  const service = createDayStripService({
     db: db as never,
     getServer: id => (id === 'c1' ? (server as never) : undefined),
     autoAssignIntervalMs: 20,
   });
-  const call = (channel: string, ...args: unknown[]) => handlers.get(channel)!({}, ...args);
+  const dispose = () => service.dispose();
+  /** Les anciens canaux eventDay:* nomment les opérations du service */
+  const calls: Record<string, (...args: unknown[]) => unknown> = {
+    'eventDay:getStripBoard': service.board,
+    'eventDay:assignStrip': service.assign,
+    'eventDay:setStripRule': service.setRule,
+    'eventDay:setAutoAssign': service.setAutoAssign,
+  };
+  const call = (channel: string, ...args: unknown[]) => calls[channel](...args);
   return { call, server, dispose, rules };
 }
 
-describe('dayStripHandlers (#1878)', () => {
+describe('dayStripService (#1878)', () => {
   let ctx: ReturnType<typeof setup>;
   beforeEach(() => {
-    handlers.clear();
     ctx = setup();
   });
   afterEach(() => ctx.dispose());

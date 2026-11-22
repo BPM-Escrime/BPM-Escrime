@@ -54,6 +54,10 @@ export const ERRORS = {
   already_withdrawn: e('conflict', 'Tireur déjà retiré'),
   referee_busy: e('conflict', 'Arbitre déjà occupé sur ce créneau'),
   file_exists: e('conflict', 'Fichier déjà présent'),
+  competition_open: e(
+    'conflict',
+    'Épreuve ouverte ou servie aux tablettes : à fermer avant l’anonymisation ou l’effacement'
+  ),
 
   // ── rule ──
   score_invalid: e('rule', 'Score non entier ou négatif'),
@@ -96,6 +100,10 @@ export const ERRORS = {
   remote_not_running: e('rule', 'Saisie distante de l’épreuve non démarrée'),
   weak_password: e('rule', 'Mot de passe trop court'),
   club_refused: e('rule', 'Mode Club : demande refusée (message pour l’opérateur)'),
+  station_refused: e(
+    'rule',
+    'Réglages du poste, salles, journée, RGPD ou agent : demande refusée (message pour l’opérateur)'
+  ),
 
   // ── permission ──
   permission_denied: e('permission', 'Droit manquant pour cette opération'),

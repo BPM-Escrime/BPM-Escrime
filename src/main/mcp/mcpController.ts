@@ -1,11 +1,12 @@
 /**
- * BellePoule Modern - IPC mcp:* (#1880) : activation du serveur MCP, jeton, journal des appels.
+ * BellePoule Modern - Contrôleur du serveur MCP (#1880) : activation, jeton, journal des appels.
+ * Les opérations getMcpStatus, updateMcpSettings, regenerateMcpToken et listMcpLog du contrat
+ * passent par le port `mcp` du poste (docs/adr/0022).
  * Licensed under GPL-3.0
  */
 
-import { ipcMain } from 'electron';
-import { McpServer } from '../mcp/mcpServer';
-import type { McpWriteDeps } from '../mcp/mcpWriteTools';
+import { McpServer } from './mcpServer';
+import type { McpWriteDeps } from './mcpWriteTools';
 import {
   getMcpToken,
   McpTokenUnreadableError,
@@ -14,11 +15,11 @@ import {
   sanitizeMcpSettings,
   writeMcpSettings,
   type SecretBox,
-} from '../mcp/mcpSettings';
+} from './mcpSettings';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
 import type { McpStatus } from '../../shared/types/mcp';
 
-export interface McpHandlersContext {
+export interface McpControllerContext {
   deps: McpWriteDeps;
   userDataDir: () => string;
   secretBox: SecretBox;
@@ -36,7 +37,7 @@ export function createMcpController({
   secretBox,
   version,
   override,
-}: McpHandlersContext) {
+}: McpControllerContext) {
   const server = new McpServer();
   let lastError: string | undefined;
 
@@ -108,26 +109,28 @@ export function createMcpController({
     },
   });
 
-  const register = (): void => {
-    ipcMain.handle('mcp:getStatus', () => status());
-    ipcMain.handle('mcp:setSettings', async (_, input: unknown) => {
-      const current = readMcpSettings(userDataDir());
-      const next = sanitizeMcpSettings({
-        ...current,
-        ...(input && typeof input === 'object' ? (input as Record<string, unknown>) : {}),
-      });
-      writeMcpSettings(userDataDir(), next);
-      return apply();
-    });
-    ipcMain.handle('mcp:regenerateToken', async () => {
-      await regenerateMcpToken(userDataDir(), secretBox);
-      return apply();
-    });
-    ipcMain.handle('mcp:getLog', () => server.getLog());
+  /** Enregistre les réglages (assainis) puis démarre, redémarre ou arrête le serveur */
+  const update = async (input: {
+    enabled?: boolean;
+    port?: number;
+    allowWrite?: boolean;
+  }): Promise<McpStatus> => {
+    const current = readMcpSettings(userDataDir());
+    writeMcpSettings(userDataDir(), sanitizeMcpSettings({ ...current, ...input }));
+    return apply();
+  };
+
+  /** Nouveau jeton puis redémarrage du serveur */
+  const regenerateAndApply = async (): Promise<McpStatus> => {
+    await regenerateMcpToken(userDataDir(), secretBox);
+    return apply();
   };
 
   return {
-    register,
+    status,
+    update,
+    regenerateAndApply,
+    log: () => server.getLog(),
     apply,
     stop: () => server.stop(),
     clientConfig,

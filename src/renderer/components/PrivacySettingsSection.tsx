@@ -10,6 +10,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { useConfirm } from './ConfirmDialog';
 import { useToast } from './Toast';
 import { usePlatform } from '../platform/PlatformContext';
+import { stationAvailable, useStationApi } from '../api/stationApi';
 import { Button } from './common/Button';
 import { HINT, BOLD, SMALL_BTN, TOGGLE_LABEL } from './settingsModal.styles';
 import type {
@@ -27,8 +28,6 @@ export type PrivacyItemId =
 const MASKINGS: NameMasking[] = ['full', 'initial', 'initials'];
 const MIN_PASSWORD = 8;
 
-const api = () => window.electronAPI?.privacy;
-
 const refOf = (p: PrivacyPerson): PrivacyPersonRef => ({
   fencerIds: p.fencers.map(f => f.fencerId),
   memberIds: p.members.map(m => m.memberId),
@@ -39,19 +38,26 @@ const nameOf = (p: { lastName: string; firstName: string }) =>
 
 /** Réglages RGPD chargés depuis le main ; null hors Electron */
 function usePrivacySettings() {
+  const api = useStationApi().privacy;
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
   useEffect(() => {
-    api()
-      ?.getSettings?.()
+    api
+      .getSettings()
       .then(setSettings)
       .catch(() => {
         // hors Electron (tests, navigateur)
       });
-  }, []);
-  const update = useCallback(async (patch: Partial<PrivacySettings>) => {
-    const res = await api()?.setSettings(patch);
-    if (res?.success && res.settings) setSettings(res.settings);
-  }, []);
+  }, [api]);
+  const update = useCallback(
+    async (patch: Partial<PrivacySettings>) => {
+      try {
+        setSettings(await api.setSettings(patch));
+      } catch {
+        // réglage refusé : l'affichage garde les valeurs enregistrées
+      }
+    },
+    [api]
+  );
   return { settings, update };
 }
 
@@ -89,16 +95,17 @@ const RetentionItem: React.FC<{
   const { t } = useTranslation();
   const { confirm } = useConfirm();
   const { showToast } = useToast();
+  const api = useStationApi().privacy;
   const [candidates, setCandidates] = useState<RetentionCandidates | null>(null);
 
   const months = (v: string) => Math.max(0, Math.min(600, Math.floor(Number(v) || 0)));
 
   const check = async () => {
     try {
-      setCandidates((await api()?.retentionCandidates()) ?? null);
+      setCandidates(await api.retentionCandidates());
     } catch (e) {
       // Compétition ouverte : son état en mémoire réécrirait les noms (#1882)
-      const open = e instanceof Error && e.message.includes('competition_open');
+      const open = (e as { code?: unknown } | null)?.code === 'competition_open';
       showToast(t(open ? 'privacy.competition_open' : 'privacy.error'), 'error');
     }
   };
@@ -120,7 +127,7 @@ const RetentionItem: React.FC<{
     });
     if (!ok) return;
     try {
-      const r = await api()!.applyRetention({
+      const r = await api.applyRetention({
         competitionIds: candidates.competitions.map(c => c.id),
         memberIds: candidates.members.map(m => m.id),
       });
@@ -227,6 +234,7 @@ const PersonItem: React.FC = () => {
   const { confirm } = useConfirm();
   const { showToast } = useToast();
   const platform = usePlatform();
+  const api = useStationApi().privacy;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PrivacyPerson[] | null>(null);
 
@@ -236,7 +244,7 @@ const PersonItem: React.FC = () => {
       return;
     }
     try {
-      setResults((await api()?.findPersons(q)) ?? []);
+      setResults(await api.findPersons(q));
     } catch {
       showToast(t('privacy.error'), 'error');
     }
@@ -253,13 +261,14 @@ const PersonItem: React.FC = () => {
 
   const exportJson = (p: PrivacyPerson) =>
     run(async () => {
-      const r = await api()!.exportPerson(refOf(p), nameOf(p));
+      // Boîte d'enregistrement du main : reste en IPC (chemin de fichier, ADR-0021)
+      const r = await window.electronAPI.privacy.exportPerson(refOf(p), nameOf(p));
       if (r.success) showToast(t('privacy.exported'), 'success');
     });
 
   const exportPdf = (p: PrivacyPerson) =>
     run(async () => {
-      const data = await api()!.getPersonData(refOf(p));
+      const data = await api.getPersonData(refOf(p));
       const labels: PersonalDataLabels = {
         heading: t('privacy.pdf_heading', { name: nameOf(p) }),
         generated: t('privacy.pdf_generated', { date: new Date().toLocaleString() }),
@@ -286,7 +295,7 @@ const PersonItem: React.FC = () => {
     });
     if (!ok) return;
     await run(async () => {
-      const r = await api()!.anonymizePerson(refOf(p));
+      const r = await api.anonymizePerson(refOf(p));
       showToast(t('privacy.anonymized', { pseudonym: r.pseudonym }), 'success');
     });
   };
@@ -298,7 +307,7 @@ const PersonItem: React.FC = () => {
     });
     if (!ok) return;
     await run(async () => {
-      await api()!.erasePerson(refOf(p));
+      await api.erasePerson(refOf(p));
       showToast(t('privacy.erased'), 'success');
     });
   };
@@ -386,7 +395,7 @@ const BpmItem: React.FC = () => {
     if (password !== password2) return setError(t('privacy.bpm_mismatch'));
     setError(null);
     try {
-      const r = await api()!.exportEncryptedBpm(scope || null, password);
+      const r = await window.electronAPI.privacy.exportEncryptedBpm(scope || null, password);
       if (r.success) {
         showToast(t('privacy.bpm_saved'), 'success');
         setPassword('');
@@ -451,7 +460,7 @@ const BpmItem: React.FC = () => {
 
 const PrivacySettingsSection: React.FC<{ item: PrivacyItemId }> = ({ item }) => {
   const { settings, update } = usePrivacySettings();
-  if (!api()) return null;
+  if (!stationAvailable()) return null;
   switch (item) {
     case 'privacy_network':
       return settings ? <NetworkItem settings={settings} update={p => void update(p)} /> : null;
