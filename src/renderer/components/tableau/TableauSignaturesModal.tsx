@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTranslation } from '../../contexts/TranslationContext';
 import { ipcErrorText } from '../../services/ipcError';
+import { useBpmClient } from '../../api/BpmClientContext';
 import { TableauMatch } from '../../../shared/domain/tableau/tableauTypes';
 import { Button } from '../common/Button';
 
@@ -41,6 +42,7 @@ const TableauSignaturesModal: React.FC<TableauSignaturesModalProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const client = useBpmClient();
   const [loading, setLoading] = useState(true);
   const [sigs, setSigs] = useState<{ A?: string; B?: string }>({});
   const [arenas, setArenas] = useState<ArenaOption[]>([]);
@@ -51,8 +53,7 @@ const TableauSignaturesModal: React.FC<TableauSignaturesModalProps> = ({
   const loadSigs = useCallback(
     async (isCancelled: () => boolean = () => false) => {
       try {
-        const rows =
-          (await window.electronAPI?.db?.getDEMatchSignaturesByMatchIds?.([match.id])) ?? [];
+        const rows = await client.query('getTableauSignatures', { matchIds: [match.id] });
         const out: { A?: string; B?: string } = {};
         for (const row of rows) {
           if (row.fencerId === match.fencerA?.id) out.A = row.signatureData;
@@ -65,7 +66,7 @@ const TableauSignaturesModal: React.FC<TableauSignaturesModalProps> = ({
         if (!isCancelled()) setLoading(false);
       }
     },
-    [match.id, match.fencerA?.id, match.fencerB?.id]
+    [client, match.id, match.fencerA?.id, match.fencerB?.id]
   );
 
   useEffect(() => {

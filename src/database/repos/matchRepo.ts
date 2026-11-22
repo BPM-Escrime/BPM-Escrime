@@ -378,6 +378,8 @@ export class MatchRepo {
         referee: row.referee_id
           ? (refereesById.get(row.referee_id as string) ?? undefined)
           : undefined,
+        // Durée en secondes (updateMatchTiming) : moyenne des chiffres de l'épreuve
+        ...(row.duration != null ? { duration: Number(row.duration) } : {}),
         createdAt: new Date(row.created_at as string),
         updatedAt: new Date(row.updated_at as string),
       };

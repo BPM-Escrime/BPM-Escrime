@@ -10,6 +10,8 @@ import { addFencerToPool } from '../../shared/domain/pools/poolComposition';
 import type { RecordScoreOutcome } from './tableau/tableauViewShared';
 import { logger, LogCategory } from '@shared/services/logger';
 import { useToast } from './Toast';
+import { useBpmClient } from '../api/BpmClientContext';
+import { fencerFromDTO } from '../api/fencerMapping';
 import { useDebounce } from '../hooks/useDebounce';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useTranslation } from '../hooks/useTranslation';
@@ -68,6 +70,7 @@ const AddFencerToPoolModalComponent: React.FC<AddFencerToPoolModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const client = useBpmClient();
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
   const [allFencers, setAllFencers] = useState<Fencer[]>([]);
   const [search, setSearch] = useState('');
@@ -77,14 +80,14 @@ const AddFencerToPoolModalComponent: React.FC<AddFencerToPoolModalProps> = ({
 
   useEffect(() => {
     setIsFetching(true);
-    window.electronAPI.db
-      .getFencersByCompetition(competitionId)
-      .then(setAllFencers)
+    client
+      .query('listFencers', { competitionId })
+      .then(list => setAllFencers(list.map(fencerFromDTO)))
       .catch(err =>
         logger.error(LogCategory.DATABASE, 'getFencersByCompetition failed', err as Error)
       )
       .finally(() => setIsFetching(false));
-  }, [competitionId]);
+  }, [client, competitionId]);
 
   const debouncedSearch = useDebounce(search, 250);
   const available = useMemo(() => {

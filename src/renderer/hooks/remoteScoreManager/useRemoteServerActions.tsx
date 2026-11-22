@@ -21,12 +21,15 @@ import { Button } from '../../components/common/Button';
 import { RemoteScoreManagerProps } from '../../components/remote/remoteScoreManagerShared';
 import { resolveAllSourcesTheme, resolveBuiltinTheme } from '../../components/remote/builtinThemes';
 import { useRemoteServerState } from './useRemoteServerState';
+import { useBpmClient } from '../../api/BpmClientContext';
+import { refereeFromDTO } from '../../api/refereeMapping';
 import { isWithdrawn } from '../../../shared/domain/fencers/fencerStatus';
 
 type Ctx = RemoteScoreManagerProps & ReturnType<typeof useRemoteServerState>;
 
 /** Actions du serveur de saisie distante : arrêt, mots de passe, formateur, thèmes, URLs d'écrans (extrait de RemoteScoreManager, #1599) */
 export function useRemoteServerActions(ctx: Ctx) {
+  const client = useBpmClient();
   const {
     setCommittedStart,
     onStripStartChange,
@@ -252,10 +255,11 @@ export function useRemoteServerActions(ctx: Ctx) {
 
   const exportTrainerComments = async () => {
     try {
-      const [referees, comments] = await Promise.all([
-        window.electronAPI.db.getRefereesByCompetition(competition.id),
-        window.electronAPI.db.getRefereeComments(competition.id),
+      const [refereeDTOs, comments] = await Promise.all([
+        client.query('listReferees', { competitionId: competition.id }),
+        client.query('listRefereeComments', { competitionId: competition.id }),
       ]);
+      const referees = refereeDTOs.map(refereeFromDTO);
       if (comments.length === 0) {
         showToast('Aucun commentaire enregistré', 'info');
         return;

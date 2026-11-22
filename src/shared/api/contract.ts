@@ -18,7 +18,9 @@ import {
   subscription,
   type ApiContract,
   type OperationKind,
+  FencerSchema,
 } from './contractDef';
+import { reportOperations } from './contractReports';
 import { dtViewOperations } from './contractDtView';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
@@ -134,27 +136,6 @@ const MatchEventEntrySchema = z.object({
 });
 
 /** Tireur exposé par le contrat (docs/adr/0018) : dates en ISO 8601 */
-const FencerSchema = z.object({
-  id: z.string(),
-  ref: z.number(),
-  lastName: z.string(),
-  firstName: z.string(),
-  birthDate: z.string().nullable(),
-  gender: z.string(),
-  nationality: z.string(),
-  region: z.string().nullable(),
-  department: z.string().nullable(),
-  club: z.string().nullable(),
-  license: z.string().nullable(),
-  ranking: z.number().nullable(),
-  handedness: z.enum(['R', 'L']).nullable(),
-  status: z.string(),
-  exclusionReason: z.string().nullable(),
-  seedNumber: z.number().nullable(),
-  initialRanking: z.number().nullable(),
-  finalRanking: z.number().nullable(),
-  photo: z.string().nullable(),
-});
 
 const Text = z.string().trim().max(200);
 /** Identité d'un tireur, sans règle (updateFencerDetails, registerFencers) */
@@ -1433,6 +1414,8 @@ export const contract = {
   }),
   // Espace « Vue DT » du serveur distant (docs/adr/0020)
   ...dtViewOperations,
+  // Relevés : historique des scores, commentaires, signatures du tableau, chiffres de l'épreuve
+  ...reportOperations,
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────
