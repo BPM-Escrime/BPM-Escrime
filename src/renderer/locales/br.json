@@ -4285,6 +4285,12 @@
     "export_error": "Ezporzhiadur c’hwitet. Klaskit en-dro.",
     "add_exit": "+ Dor-mad a-berzh",
     "kind_exit": "Dor-mad a-berzh",
-    "exit_wall": "Ret eo d’ur gerdor-mad touch ur voger eus ar sal (kont ruz all)."
+    "exit_wall": "Ret eo d’ur gerdor-mad touch ur voger eus ar sal (kont ruz all).",
+    "add_blocked": "+ Takad serret",
+    "kind_blocked": "Takad serret",
+    "block_width": "Ledander (m)",
+    "block_height": "Hirder (m)",
+    "blocked_arena": "Un arenenn a gevredek gant ur takad serret.",
+    "blocked_overlap": "Ur pezh a zo war ur takad serret."
   }
 }

@@ -4285,6 +4285,12 @@
     "export_error": "L’exportació ha fallat. Torna-ho a provar.",
     "add_exit": "+ Sortida d’emergència",
     "kind_exit": "Sortida d’emergència",
-    "exit_wall": "Una sortida d’emergència ha de tocar una paret de la sala (si no, contorn vermell)."
+    "exit_wall": "Una sortida d’emergència ha de tocar una paret de la sala (si no, contorn vermell).",
+    "add_blocked": "+ Zona bloquejada",
+    "kind_blocked": "Zona bloquejada",
+    "block_width": "Amplada (m)",
+    "block_height": "Llargada (m)",
+    "blocked_arena": "Una arena se superposa amb una zona bloquejada.",
+    "blocked_overlap": "Un element és sobre una zona bloquejada."
   }
 }

@@ -66,4 +66,13 @@ describe('ArenaPlannerModal', () => {
     expect(screen.getByRole('button', { name: /arenaPlanner\.kind_exit 1/ })).toBeInTheDocument();
     expect(screen.queryByText('arenaPlanner.exit_wall')).toBeNull();
   });
+
+  it('ajoute une zone bloquée et permet de changer sa largeur', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.click(screen.getByText('arenaPlanner.add_blocked'));
+    const width = screen.getByLabelText(/arenaPlanner\.block_width/) as HTMLInputElement;
+    fireEvent.change(width, { target: { value: '3' } });
+    const item = screen.getByRole('button', { name: /arenaPlanner\.kind_blocked 1/ });
+    expect(item.querySelector('rect')!.getAttribute('width')).toBe('3');
+  });
 });

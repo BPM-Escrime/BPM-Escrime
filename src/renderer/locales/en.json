@@ -4285,6 +4285,12 @@
     "export_error": "Export failed. Please try again.",
     "add_exit": "+ Emergency exit",
     "kind_exit": "Emergency exit",
-    "exit_wall": "An emergency exit must touch a room wall (red outline otherwise)."
+    "exit_wall": "An emergency exit must touch a room wall (red outline otherwise).",
+    "add_blocked": "+ Blocked zone",
+    "kind_blocked": "Blocked zone",
+    "block_width": "Width (m)",
+    "block_height": "Length (m)",
+    "blocked_arena": "An arena overlaps a blocked zone.",
+    "blocked_overlap": "An item sits on a blocked zone."
   }
 }

@@ -4285,6 +4285,12 @@
     "export_error": "匯出失敗，請再試。",
     "add_exit": "+ 緊急出口",
     "kind_exit": "緊急出口",
-    "exit_wall": "緊急出口必須靠近場館牆壁（否則為紅色外框）。"
+    "exit_wall": "緊急出口必須靠近場館牆壁（否則為紅色外框）。",
+    "add_blocked": "+ 禁用區域",
+    "kind_blocked": "禁用區域",
+    "block_width": "寬度（米）",
+    "block_height": "長度（米）",
+    "blocked_arena": "有劍場與禁用區域重疊。",
+    "blocked_overlap": "有元件位於禁用區域上。"
   }
 }

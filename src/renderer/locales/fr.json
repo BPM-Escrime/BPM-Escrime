@@ -4285,6 +4285,12 @@
     "export_error": "Export impossible. Réessayez.",
     "add_exit": "+ Issue de secours",
     "kind_exit": "Issue de secours",
-    "exit_wall": "Une issue de secours doit toucher un mur de la salle (contour rouge sinon)."
+    "exit_wall": "Une issue de secours doit toucher un mur de la salle (contour rouge sinon).",
+    "add_blocked": "+ Zone bloquée",
+    "kind_blocked": "Zone bloquée",
+    "block_width": "Largeur (m)",
+    "block_height": "Longueur (m)",
+    "blocked_arena": "Une arène chevauche une zone bloquée.",
+    "blocked_overlap": "Un élément est posé sur une zone bloquée."
   }
 }

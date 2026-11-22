@@ -4285,6 +4285,12 @@
     "export_error": "Export fehlgeschlagen. Bitte erneut versuchen.",
     "add_exit": "+ Notausgang",
     "kind_exit": "Notausgang",
-    "exit_wall": "Ein Notausgang muss eine Hallenwand berühren (sonst roter Rand)."
+    "exit_wall": "Ein Notausgang muss eine Hallenwand berühren (sonst roter Rand).",
+    "add_blocked": "+ Gesperrter Bereich",
+    "kind_blocked": "Gesperrter Bereich",
+    "block_width": "Breite (m)",
+    "block_height": "Länge (m)",
+    "blocked_arena": "Eine Arena überlappt einen gesperrten Bereich.",
+    "blocked_overlap": "Ein Element liegt auf einem gesperrten Bereich."
   }
 }

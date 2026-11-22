@@ -10,6 +10,7 @@ import {
   checkRoomItems,
   createRoomItem,
   moveRoomItem,
+  resizeRoomItem,
   computeArenaGeometry,
   planArenaGrid,
   polarPoint,
@@ -150,5 +151,30 @@ describe('createRoomItem / moveRoomItem', () => {
   it('accepte une issue de secours collée à un mur', () => {
     const exit = { ...createRoomItem('exit', 'e', 'Issue 1', room), x: 0, y: 3 };
     expect(checkRoomItems(room, [], [exit])).toEqual([]);
+  });
+
+  it('signale un élément posé sur une zone bloquée', () => {
+    const block = { ...createRoomItem('blocked', 'z', 'Zone', room), x: 5, y: 5 };
+    const table = { ...createRoomItem('table', 't', 'Table', room), x: 5.5, y: 5.2 };
+    expect(checkRoomItems(room, [], [block, table])).toContainEqual({
+      itemId: 't',
+      type: 'overlapsBlocked',
+    });
+  });
+
+  it('signale une zone bloquée qui recouvre une arène', () => {
+    const block = { ...createRoomItem('blocked', 'z', 'Zone', room), x: 14, y: 14 };
+    expect(checkRoomItems(room, [{ x: 15, y: 15 }], [block])).toContainEqual({
+      itemId: 'z',
+      type: 'arenaBlocked',
+      arenaIndex: 0,
+    });
+  });
+
+  it('redimensionne une zone bloquée sans sortir de la salle', () => {
+    const block = createRoomItem('blocked', 'z', 'Zone', room);
+    const r = resizeRoomItem(block, 50, 3, room);
+    expect(r.widthM).toBe(room.widthM);
+    expect(r.heightM).toBe(3);
   });
 });

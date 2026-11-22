@@ -138,7 +138,7 @@ export function planArenaGrid(room: RoomSize, arenaCount: number, marginM = 1): 
 /** Élément matériel posé sur le plan (table, prise, accessoire), rectangle en mètres. */
 export interface RoomItem {
   id: string;
-  kind: 'table' | 'outlet' | 'accessory' | 'exit';
+  kind: 'table' | 'outlet' | 'accessory' | 'exit' | 'blocked';
   label: string;
   x: number;
   y: number;
@@ -148,7 +148,7 @@ export interface RoomItem {
 
 export interface LayoutIssue {
   itemId: string;
-  type: 'outOfRoom' | 'inSafetyZone' | 'exitNotOnWall';
+  type: 'outOfRoom' | 'inSafetyZone' | 'exitNotOnWall' | 'overlapsBlocked' | 'arenaBlocked';
   arenaIndex?: number;
 }
 
@@ -160,6 +160,7 @@ export function checkRoomItems(
   safetyRadiusM = ARENA_SAFETY_RADIUS_M
 ): LayoutIssue[] {
   const issues: LayoutIssue[] = [];
+  const blocked = items.filter(i => i.kind === 'blocked');
   for (const item of items) {
     const right = item.x + item.widthM;
     const bottom = item.y + item.heightM;
@@ -169,8 +170,15 @@ export function checkRoomItems(
     if (item.kind === 'exit' && !touchesWall(item, room)) {
       issues.push({ itemId: item.id, type: 'exitNotOnWall' });
     }
+    if (item.kind !== 'blocked' && blocked.some(b => rectsOverlap(item, b))) {
+      issues.push({ itemId: item.id, type: 'overlapsBlocked' });
+    }
     arenaCenters.forEach((c, arenaIndex) => {
-      if (rectIntersectsCircle(item, c, safetyRadiusM)) {
+      if (item.kind === 'blocked') {
+        if (rectIntersectsCircle(item, c, safetyRadiusM)) {
+          issues.push({ itemId: item.id, type: 'arenaBlocked', arenaIndex });
+        }
+      } else if (rectIntersectsCircle(item, c, safetyRadiusM)) {
         issues.push({ itemId: item.id, type: 'inSafetyZone', arenaIndex });
       }
     });
@@ -202,7 +210,10 @@ export const ROOM_ITEM_SIZES: Record<RoomItem['kind'], { widthM: number; heightM
   outlet: { widthM: 0.3, heightM: 0.3 },
   accessory: { widthM: 0.6, heightM: 0.6 },
   exit: { widthM: 1.2, heightM: 0.5 },
+  blocked: { widthM: 2, heightM: 2 },
 };
+
+export const MIN_ITEM_SIZE_M = 0.1;
 
 /** Une issue de secours doit toucher un mur de la salle (tolérance en mètres). */
 export const EXIT_WALL_TOLERANCE_M = 0.5;
@@ -229,4 +240,22 @@ export function moveRoomItem(item: RoomItem, x: number, y: number, room: RoomSiz
     x: Math.min(maxX, Math.max(0, x)),
     y: Math.min(maxY, Math.max(0, y)),
   };
+}
+
+/** Redimensionne un élément (zone bloquée notamment), borné à la salle. */
+export function resizeRoomItem(
+  item: RoomItem,
+  widthM: number,
+  heightM: number,
+  room: RoomSize
+): RoomItem {
+  const w = Math.min(room.widthM, Math.max(MIN_ITEM_SIZE_M, widthM));
+  const h = Math.min(room.lengthM, Math.max(MIN_ITEM_SIZE_M, heightM));
+  return moveRoomItem({ ...item, widthM: w, heightM: h }, item.x, item.y, room);
+}
+
+function rectsOverlap(a: RoomItem, b: RoomItem): boolean {
+  return (
+    a.x < b.x + b.widthM && b.x < a.x + a.widthM && a.y < b.y + b.heightM && b.y < a.y + a.heightM
+  );
 }

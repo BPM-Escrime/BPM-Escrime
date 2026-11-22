@@ -4285,6 +4285,12 @@
     "export_error": "Esportazione non riuscita. Riprova.",
     "add_exit": "+ Uscita di emergenza",
     "kind_exit": "Uscita di emergenza",
-    "exit_wall": "Un’uscita di emergenza deve toccare una parete della sala (altrimenti contorno rosso)."
+    "exit_wall": "Un’uscita di emergenza deve toccare una parete della sala (altrimenti contorno rosso).",
+    "add_blocked": "+ Zona bloccata",
+    "kind_blocked": "Zona bloccata",
+    "block_width": "Larghezza (m)",
+    "block_height": "Lunghezza (m)",
+    "blocked_arena": "Un’arena si sovrappone a una zona bloccata.",
+    "blocked_overlap": "Un elemento si trova su una zona bloccata."
   }
 }

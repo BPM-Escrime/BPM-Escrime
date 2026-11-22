@@ -18,6 +18,7 @@ import {
   createRoomItem,
   moveRoomItem,
   planArenaGrid,
+  resizeRoomItem,
   type Point,
   type RoomItem,
 } from '@shared/domain/arena/arenaPlanner';
@@ -32,6 +33,7 @@ const ITEM_FILL: Record<RoomItem['kind'], string> = {
   outlet: '#fbbf24',
   accessory: '#c4b5fd',
   exit: '#86efac',
+  blocked: '#9ca3af',
 };
 
 const parseNumber = (value: string): number | null => {
@@ -107,6 +109,22 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     const item = createRoomItem(kind, id, label, { widthM: parsed.w, lengthM: parsed.l });
     setItems(prev => [...prev, item]);
     setSelectedId(id);
+  };
+
+  const selectedItem = useMemo(
+    () => items.find(i => i.id === selectedId) ?? null,
+    [items, selectedId]
+  );
+
+  const resizeSelected = (w: string | null, h: string | null) => {
+    if (!parsed || !selectedItem) return;
+    const wn = w === null ? selectedItem.widthM : parseNumber(w);
+    const hn = h === null ? selectedItem.heightM : parseNumber(h);
+    if (wn === null || hn === null) return;
+    const room = { widthM: parsed.w, lengthM: parsed.l };
+    setItems(prev =>
+      prev.map(i => (i.id === selectedItem.id ? resizeRoomItem(i, wn, hn, room) : i))
+    );
   };
 
   const removeSelected = () => {
@@ -419,6 +437,9 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
             <button type="button" className="btn" onClick={() => addItem('exit')}>
               {t('arenaPlanner.add_exit')}
             </button>
+            <button type="button" className="btn" onClick={() => addItem('blocked')}>
+              {t('arenaPlanner.add_blocked')}
+            </button>
             <button type="button" className="btn" onClick={removeSelected} disabled={!selectedId}>
               {t('arenaPlanner.remove')}
             </button>
@@ -430,6 +451,38 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
           {conflictIds.size > 0 && <p role="alert">{t('arenaPlanner.conflict')}</p>}
           {issues.some(i => i.type === 'exitNotOnWall') && (
             <p role="alert">{t('arenaPlanner.exit_wall')}</p>
+          )}
+          {issues.some(i => i.type === 'arenaBlocked') && (
+            <p role="alert">{t('arenaPlanner.blocked_arena')}</p>
+          )}
+          {issues.some(i => i.type === 'overlapsBlocked') && (
+            <p role="alert">{t('arenaPlanner.blocked_overlap')}</p>
+          )}
+          {selectedItem?.kind === 'blocked' && (
+            <div className="form-group" style={{ display: 'flex', gap: '0.5rem' }}>
+              <label className="form-label" htmlFor="block-width">
+                {t('arenaPlanner.block_width')}
+                <input
+                  id="block-width"
+                  className="form-input"
+                  type="text"
+                  inputMode="decimal"
+                  value={fmt(selectedItem.widthM)}
+                  onChange={e => resizeSelected(e.target.value, null)}
+                />
+              </label>
+              <label className="form-label" htmlFor="block-height">
+                {t('arenaPlanner.block_height')}
+                <input
+                  id="block-height"
+                  className="form-input"
+                  type="text"
+                  inputMode="decimal"
+                  value={fmt(selectedItem.heightM)}
+                  onChange={e => resizeSelected(null, e.target.value)}
+                />
+              </label>
+            </div>
           )}
 
           <ul>
