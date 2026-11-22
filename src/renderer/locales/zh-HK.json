@@ -4282,6 +4282,9 @@
     "kind_accessory": "配件",
     "drag_hint": "用滑鼠拖動元件（方向鍵微調，Delete 刪除）。",
     "conflict": "有元件在場館外或位於安全區內（紅色外框）。",
-    "export_error": "匯出失敗，請再試。"
+    "export_error": "匯出失敗，請再試。",
+    "add_exit": "+ 緊急出口",
+    "kind_exit": "緊急出口",
+    "exit_wall": "緊急出口必須靠近場館牆壁（否則為紅色外框）。"
   }
 }

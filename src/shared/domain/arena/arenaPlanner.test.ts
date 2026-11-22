@@ -140,4 +140,15 @@ describe('createRoomItem / moveRoomItem', () => {
     expect(moveRoomItem(base, 3, 2, room)).toMatchObject({ x: 3, y: 2 });
     expect(moveRoomItem(base, 99, -5, room)).toMatchObject({ x: room.widthM - base.widthM, y: 0 });
   });
+
+  it('signale une issue de secours qui ne touche aucun mur', () => {
+    const exit = { ...createRoomItem('exit', 'e', 'Issue 1', room), x: 4, y: 3 };
+    const issues = checkRoomItems(room, [], [exit]);
+    expect(issues).toContainEqual({ itemId: 'e', type: 'exitNotOnWall' });
+  });
+
+  it('accepte une issue de secours collée à un mur', () => {
+    const exit = { ...createRoomItem('exit', 'e', 'Issue 1', room), x: 0, y: 3 };
+    expect(checkRoomItems(room, [], [exit])).toEqual([]);
+  });
 });

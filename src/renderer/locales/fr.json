@@ -4282,6 +4282,9 @@
     "kind_accessory": "Accessoire",
     "drag_hint": "Glissez les éléments à la souris (flèches du clavier pour un réglage fin, Suppr pour retirer).",
     "conflict": "Un élément est hors de la salle ou dans une zone de sécurité (contour rouge).",
-    "export_error": "Export impossible. Réessayez."
+    "export_error": "Export impossible. Réessayez.",
+    "add_exit": "+ Issue de secours",
+    "kind_exit": "Issue de secours",
+    "exit_wall": "Une issue de secours doit toucher un mur de la salle (contour rouge sinon)."
   }
 }

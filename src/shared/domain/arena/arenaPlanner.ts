@@ -138,7 +138,7 @@ export function planArenaGrid(room: RoomSize, arenaCount: number, marginM = 1): 
 /** Élément matériel posé sur le plan (table, prise, accessoire), rectangle en mètres. */
 export interface RoomItem {
   id: string;
-  kind: 'table' | 'outlet' | 'accessory';
+  kind: 'table' | 'outlet' | 'accessory' | 'exit';
   label: string;
   x: number;
   y: number;
@@ -148,7 +148,7 @@ export interface RoomItem {
 
 export interface LayoutIssue {
   itemId: string;
-  type: 'outOfRoom' | 'inSafetyZone';
+  type: 'outOfRoom' | 'inSafetyZone' | 'exitNotOnWall';
   arenaIndex?: number;
 }
 
@@ -166,6 +166,9 @@ export function checkRoomItems(
     if (item.x < 0 || item.y < 0 || right > room.widthM || bottom > room.lengthM) {
       issues.push({ itemId: item.id, type: 'outOfRoom' });
     }
+    if (item.kind === 'exit' && !touchesWall(item, room)) {
+      issues.push({ itemId: item.id, type: 'exitNotOnWall' });
+    }
     arenaCenters.forEach((c, arenaIndex) => {
       if (rectIntersectsCircle(item, c, safetyRadiusM)) {
         issues.push({ itemId: item.id, type: 'inSafetyZone', arenaIndex });
@@ -173,6 +176,16 @@ export function checkRoomItems(
     });
   }
   return issues;
+}
+
+function touchesWall(rect: RoomItem, room: RoomSize): boolean {
+  const tol = EXIT_WALL_TOLERANCE_M;
+  return (
+    rect.x <= tol ||
+    rect.y <= tol ||
+    rect.x + rect.widthM >= room.widthM - tol ||
+    rect.y + rect.heightM >= room.lengthM - tol
+  );
 }
 
 function rectIntersectsCircle(rect: RoomItem, c: Point, r: number): boolean {
@@ -188,7 +201,11 @@ export const ROOM_ITEM_SIZES: Record<RoomItem['kind'], { widthM: number; heightM
   table: { widthM: 1.5, heightM: 0.8 },
   outlet: { widthM: 0.3, heightM: 0.3 },
   accessory: { widthM: 0.6, heightM: 0.6 },
+  exit: { widthM: 1.2, heightM: 0.5 },
 };
+
+/** Une issue de secours doit toucher un mur de la salle (tolérance en mètres). */
+export const EXIT_WALL_TOLERANCE_M = 0.5;
 
 /** Crée un élément au coin nord-ouest de la salle, décalé pour rester visible. */
 export function createRoomItem(

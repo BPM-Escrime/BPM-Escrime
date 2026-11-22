@@ -4282,6 +4282,9 @@
     "kind_accessory": "Accessory",
     "drag_hint": "Drag items with the mouse (arrow keys for fine tuning, Delete to remove).",
     "conflict": "An item is outside the room or inside a safety zone (red outline).",
-    "export_error": "Export failed. Please try again."
+    "export_error": "Export failed. Please try again.",
+    "add_exit": "+ Emergency exit",
+    "kind_exit": "Emergency exit",
+    "exit_wall": "An emergency exit must touch a room wall (red outline otherwise)."
   }
 }

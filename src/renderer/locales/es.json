@@ -4282,6 +4282,9 @@
     "kind_accessory": "Accesorio",
     "drag_hint": "Arrastre los elementos con el ratón (flechas para ajuste fino, Supr para eliminar).",
     "conflict": "Un elemento está fuera de la sala o en una zona de seguridad (contorno rojo).",
-    "export_error": "Exportación fallida. Inténtelo de nuevo."
+    "export_error": "Exportación fallida. Inténtelo de nuevo.",
+    "add_exit": "+ Salida de emergencia",
+    "kind_exit": "Salida de emergencia",
+    "exit_wall": "Una salida de emergencia debe tocar una pared de la sala (si no, contorno rojo)."
   }
 }

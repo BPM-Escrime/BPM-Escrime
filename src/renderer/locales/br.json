@@ -4282,6 +4282,9 @@
     "kind_accessory": "Dafar",
     "drag_hint": "Stardit ar pezhioù gant al logodenn (saetennoù evit kempenn vanus, Dilemel evit tennañ).",
     "conflict": "Unan eus ar pezhioù zo er-maez eus ar sal pe en ur vaez surentez (kont ruz).",
-    "export_error": "Ezporzhiadur c’hwitet. Klaskit en-dro."
+    "export_error": "Ezporzhiadur c’hwitet. Klaskit en-dro.",
+    "add_exit": "+ Dor-mad a-berzh",
+    "kind_exit": "Dor-mad a-berzh",
+    "exit_wall": "Ret eo d’ur gerdor-mad touch ur voger eus ar sal (kont ruz all)."
   }
 }

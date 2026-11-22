@@ -31,6 +31,7 @@ const ITEM_FILL: Record<RoomItem['kind'], string> = {
   table: '#93c5fd',
   outlet: '#fbbf24',
   accessory: '#c4b5fd',
+  exit: '#86efac',
 };
 
 const parseNumber = (value: string): number | null => {
@@ -415,6 +416,9 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
             <button type="button" className="btn" onClick={() => addItem('accessory')}>
               {t('arenaPlanner.add_accessory')}
             </button>
+            <button type="button" className="btn" onClick={() => addItem('exit')}>
+              {t('arenaPlanner.add_exit')}
+            </button>
             <button type="button" className="btn" onClick={removeSelected} disabled={!selectedId}>
               {t('arenaPlanner.remove')}
             </button>
@@ -424,6 +428,9 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
           {svg}
 
           {conflictIds.size > 0 && <p role="alert">{t('arenaPlanner.conflict')}</p>}
+          {issues.some(i => i.type === 'exitNotOnWall') && (
+            <p role="alert">{t('arenaPlanner.exit_wall')}</p>
+          )}
 
           <ul>
             <li>{t('arenaPlanner.legend_zone')}</li>

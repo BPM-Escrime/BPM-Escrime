@@ -4282,6 +4282,9 @@
     "kind_accessory": "Zubehör",
     "drag_hint": "Elemente mit der Maus ziehen (Pfeiltasten zur Feinjustierung, Entf zum Entfernen).",
     "conflict": "Ein Element liegt außerhalb der Halle oder in einer Sicherheitszone (roter Rand).",
-    "export_error": "Export fehlgeschlagen. Bitte erneut versuchen."
+    "export_error": "Export fehlgeschlagen. Bitte erneut versuchen.",
+    "add_exit": "+ Notausgang",
+    "kind_exit": "Notausgang",
+    "exit_wall": "Ein Notausgang muss eine Hallenwand berühren (sonst roter Rand)."
   }
 }

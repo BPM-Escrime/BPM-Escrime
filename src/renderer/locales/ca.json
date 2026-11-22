@@ -4282,6 +4282,9 @@
     "kind_accessory": "Accessori",
     "drag_hint": "Arrossega els elements amb el ratolí (fletxes per a l’ajust fi, Supr per eliminar).",
     "conflict": "Un element és fora de la sala o en una zona de seguretat (contorn vermell).",
-    "export_error": "L’exportació ha fallat. Torna-ho a provar."
+    "export_error": "L’exportació ha fallat. Torna-ho a provar.",
+    "add_exit": "+ Sortida d’emergència",
+    "kind_exit": "Sortida d’emergència",
+    "exit_wall": "Una sortida d’emergència ha de tocar una paret de la sala (si no, contorn vermell)."
   }
 }

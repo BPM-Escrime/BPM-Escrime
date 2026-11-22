@@ -59,4 +59,11 @@ describe('ArenaPlannerModal', () => {
     fireEvent.keyDown(item, { key: 'Delete' });
     expect(screen.queryByRole('button', { name: /arenaPlanner\.kind_outlet 1/ })).toBeNull();
   });
+
+  it('ajoute une issue de secours collée au mur, sans alerte', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.click(screen.getByText('arenaPlanner.add_exit'));
+    expect(screen.getByRole('button', { name: /arenaPlanner\.kind_exit 1/ })).toBeInTheDocument();
+    expect(screen.queryByText('arenaPlanner.exit_wall')).toBeNull();
+  });
 });
