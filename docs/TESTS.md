@@ -107,7 +107,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 127 | 1038 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 122 | 652 |
+| `src/renderer/components/` | 122 | 654 |
 | E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 2 | 6 |
@@ -116,10 +116,10 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 26 | 238 |
-| **Total** | **541** | **4123** |
+| `src/shared/domain/` | 26 | 243 |
+| **Total** | **541** | **4130** |
 
-Unitaires : 528 fichiers, 4081 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 528 fichiers, 4088 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5553,7 +5553,7 @@ Unitaires : 528 fichiers, 4081 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 7 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 9 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5563,6 +5563,8 @@ Unitaires : 528 fichiers, 4081 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - supprime l'élément sélectionné avec la touche Suppr
   - ajoute une issue de secours collée au mur, sans alerte
   - ajoute une zone bloquée et permet de changer sa largeur
+  - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
+  - modifier une dimension annule le maximum affiché
 
 </details>
 
@@ -8256,7 +8258,7 @@ Unitaires : 528 fichiers, 4081 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 20 tests</summary>
+<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 25 tests</summary>
 
 - **computeArenaGeometry**
   - place les lignes de mise en garde à 2 m du centre, soit 4 m entre elles
@@ -8283,6 +8285,11 @@ Unitaires : 528 fichiers, 4081 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - signale un élément posé sur une zone bloquée
   - signale une zone bloquée qui recouvre une arène
   - redimensionne une zone bloquée sans sortir de la salle
+  - optimise : une arène par défaut dans 14 × 14 m, marge 1 m
+  - optimise : quatre arènes en carré dans 30 × 30 m, marge 1 m
+  - optimise : les arènes trouvées ne se chevauchent pas et restent dans la salle
+  - optimise : une zone bloquée réduit le nombre d'arènes possibles
+  - snapToStep arrondit au demi-mètre
 
 </details>
 
