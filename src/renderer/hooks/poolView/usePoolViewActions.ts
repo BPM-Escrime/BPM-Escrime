@@ -17,6 +17,7 @@ import type { PoolViewProps } from '../../components/pool/poolViewTypes';
 import { usePoolViewInput } from './usePoolViewInput';
 import { usePoolViewState } from './usePoolViewState';
 import { withMatchCards } from '../../services/poolCards';
+import { useBpmClient } from '../../api/BpmClientContext';
 
 type Ctx = PoolViewProps &
   ReturnType<typeof usePoolViewState> &
@@ -24,6 +25,7 @@ type Ctx = PoolViewProps &
 
 /** Actions de la vue de poule : validation des scores, statuts spéciaux, impression, remplissage automatique (extrait de PoolViewComponent, #1599) */
 export function usePoolViewActions(ctx: Ctx) {
+  const client = useBpmClient();
   const {
     inlineEditCell,
     inlineSingleScore,
@@ -265,7 +267,7 @@ export function usePoolViewActions(ctx: Ctx) {
   // Options communes à l'export PDF et à l'impression de la feuille de poule
   const buildPoolPrintOptions = async () => {
     const logo = localStorage.getItem('bellepoule-logo') ?? undefined;
-    const sigsArray = await window.electronAPI.db.getPoolSignatures(pool.id);
+    const sigsArray = await client.query('getPoolSignatures', { poolId: pool.id });
     const signatures = Object.fromEntries(sigsArray.map(s => [s.fencerId, s.signatureData]));
     return {
       title: `Poule ${pool.number} - ${pool.fencers.length} tireurs`,

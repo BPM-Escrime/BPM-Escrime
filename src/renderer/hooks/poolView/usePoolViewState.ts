@@ -16,11 +16,13 @@ import { useHistory } from '../useHistory';
 import type { PoolViewProps, ViewMode } from '../../components/pool/poolViewTypes';
 import { useTranslation } from '../useTranslation';
 import { readInputModes } from '../../components/settingsModal.helpers';
+import { useBpmClient } from '../../api/BpmClientContext';
 
 type Ctx = PoolViewProps;
 
 /** État de la vue de poule : affichage, colonnes, arbitres, annulation, ordre des matchs (extrait de PoolViewComponent, #1599) */
 export function usePoolViewState(ctx: Ctx) {
+  const client = useBpmClient();
   const {
     pool,
     maxScore = 5,
@@ -278,16 +280,17 @@ export function usePoolViewState(ctx: Ctx) {
 
   // Charger les signatures au montage et écouter les mises à jour en temps réel
   useEffect(() => {
-    window.electronAPI.db.getPoolSignatures(pool.id).then(sigs => {
-      setSignedFencerIds(sigs.map(s => s.fencerId));
-    });
+    client
+      .query('getPoolSignatures', { poolId: pool.id })
+      .then(sigs => setSignedFencerIds(sigs.map(s => s.fencerId)))
+      .catch(() => {});
     const unsub = window.electronAPI.onPoolSignatureUpdated(data => {
       if (data.poolId === pool.id) {
         setSignedFencerIds(data.signedFencerIds);
       }
     });
     return unsub;
-  }, [pool.id]);
+  }, [client, pool.id]);
 
   // Raccourcis clavier
 

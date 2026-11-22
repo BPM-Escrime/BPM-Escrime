@@ -8,6 +8,8 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { useShallow } from 'zustand/shallow';
 import type { MatchEventEntry, MatchEventType } from '../../../shared/types';
+// Store hors React : client par défaut de l'écran (contrat, #1981)
+import { defaultBpmClient } from '../../../renderer/api/IpcClient';
 
 interface MatchAuditState {
   entries: MatchEventEntry[];
@@ -39,7 +41,7 @@ export const useMatchAuditStore = create<MatchAuditState & MatchAuditActions>()(
       loadMatchTimeline: async (matchId: string) => {
         set({ isLoading: true, error: null, activeMatchId: matchId, activeCompetitionId: null });
         try {
-          const data = await window.electronAPI.db.getMatchTimeline(matchId);
+          const data = await defaultBpmClient.query('getMatchTimeline', { matchId });
           set({ entries: data, isLoading: false });
         } catch (e) {
           set({ error: e instanceof Error ? e.message : 'Erreur chargement', isLoading: false });
@@ -54,7 +56,7 @@ export const useMatchAuditStore = create<MatchAuditState & MatchAuditActions>()(
           activeMatchId: null,
         });
         try {
-          const data = await window.electronAPI.db.getCompetitionTimeline(competitionId);
+          const data = await defaultBpmClient.query('getCompetitionTimeline', { competitionId });
           set({ entries: data, isLoading: false });
         } catch (e) {
           set({ error: e instanceof Error ? e.message : 'Erreur chargement', isLoading: false });
