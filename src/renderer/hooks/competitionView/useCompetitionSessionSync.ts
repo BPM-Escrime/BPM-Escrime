@@ -159,6 +159,8 @@ export function useCompetitionSessionSync(ctx: Ctx) {
 
   const { isLoaded, flushPendingSave } = useCompetitionRestore({
     competitionId: competition.id,
+    // Étape 4c (docs/adr/0017) : seul le moteur écrit l'état, sauf exceptions documentées
+    persistLocally: !!competition.settings?.postPoolSplitCriteria || !!competition.isTeamEvent,
     currentPhase,
     setCurrentPhase,
     currentPoolRound,
