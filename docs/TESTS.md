@@ -116,14 +116,14 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
-| `src/renderer/platform/` | 1 | 4 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
-| **Total** | **551** | **4189** |
+| `src/shared/platform/` | 1 | 8 |
+| **Total** | **551** | **4193** |
 
-Unitaires : 537 fichiers, 4146 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 537 fichiers, 4150 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8224,21 +8224,6 @@ Unitaires : 537 fichiers, 4146 tests. E2E : 14 fichiers, 43 tests (comptage stat
 
 </details>
 
-### `src/renderer/platform/`
-
-<details>
-<summary><code>src/renderer/platform/platforms.test.ts</code> — 4 tests</summary>
-
-- **ElectronPlatform**
-  - dialogue natif puis écriture du contenu au chemin choisi
-  - annulation : false, rien n’est écrit
-- **BrowserPlatform**
-  - téléchargement : lien Blob au nom proposé, URL libérée
-- **détection**
-  - Electron si le préload est là, navigateur sinon ; défaut résolu à chaque appel
-
-</details>
-
 ### `src/renderer/styles/`
 
 <details>
@@ -8835,5 +8820,25 @@ Unitaires : 537 fichiers, 4146 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - palier progressif plafonné à la cible
   - relais terminé au palier ou au bout de 3 minutes
   - vainqueur au cumul, null si égalité
+
+</details>
+
+### `src/shared/platform/`
+
+<details>
+<summary><code>src/shared/platform/platforms.test.ts</code> — 8 tests</summary>
+
+- **ElectronPlatform**
+  - dialogue natif puis écriture du contenu au chemin choisi
+  - annulation : false, rien n’est écrit
+- **BrowserPlatform**
+  - téléchargement : lien Blob au nom proposé, URL libérée
+- **détection**
+  - Electron si le préload est là, navigateur sinon ; défaut résolu à chaque appel
+- **ouvrir, imprimer, PDF, liens (ADR-0021)**
+  - Electron : ouvrir rend le nom seul et le contenu ; annulé → null
+  - Electron : impression et PDF, cause du main gardée en détail
+  - navigateur : choix de fichier lu en texte, annulation, pas de PDF, lien dans un onglet
+  - navigateur : impression par une iframe retirée ensuite
 
 </details>
