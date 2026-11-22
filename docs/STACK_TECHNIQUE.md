@@ -55,6 +55,7 @@ reste est intégré par Webpack.
 |---|---|---|
 | express | 5.3.0 | Serveur HTTP(S) des tablettes (`remoteScoreServer.ts`). |
 | socket.io | 4.8.4 | Temps réel. Client servi en mémoire sur `/bp-sio.js`. |
+| socket.io-client | 4.8.4 | Client du contrat pour la vue DT dans un navigateur (`WsClient`, ADR-0020). Absent du bundle de l'écran Electron. |
 
 ### Build et packaging
 

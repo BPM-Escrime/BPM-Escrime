@@ -8,19 +8,17 @@
  */
 import type { Namespace, Socket } from 'socket.io';
 import { contract, type Permission } from '../../../shared/api/contract';
-import { ApiError, type ApiEnvelope } from '../../../shared/api/client';
+import {
+  ApiError,
+  WS_API_EVENTS,
+  WS_API_NAMESPACE,
+  type ApiEnvelope,
+} from '../../../shared/api/client';
 import type { CommandContext } from '../commands/context';
 import { invokeEnvelope } from './ipcAdapter';
 import { isOperation, subscribe, toApiError } from './engine';
 
-export const WS_API_NAMESPACE = '/api';
-
-export const WS_API_EVENTS = {
-  invoke: 'api:invoke',
-  subscribe: 'api:subscribe',
-  unsubscribe: 'api:unsubscribe',
-  event: 'api:event',
-} as const;
+export { WS_API_EVENTS, WS_API_NAMESPACE };
 
 /** Droits servis sur le réseau tant que #1982 n'est pas livré (docs/adr/0020) */
 export const WS_READ_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([

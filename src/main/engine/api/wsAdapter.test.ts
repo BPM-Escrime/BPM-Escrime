@@ -4,9 +4,8 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createServer, type Server as HttpServer } from 'http';
-import { createRequire } from 'module';
-import { dirname, join } from 'path';
 import { Server } from 'socket.io';
+import { io, type Socket as ClientSocket } from 'socket.io-client';
 import { DatabaseManager } from '../../../database';
 import { hasNodeSqlite } from '../../../database/testing/nodeSqliteDatabase';
 import { Category, Gender, Weapon } from '../../../shared/types';
@@ -22,12 +21,6 @@ vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
 }));
 
-// Client Socket.IO livré avec le serveur (même version), utilisable sous Node
-const requireCjs = createRequire(__filename);
-const io = requireCjs(
-  join(dirname(requireCjs.resolve('socket.io')), '..', 'client-dist', 'socket.io.js')
-) as (url: string, opts: Record<string, unknown>) => any;
-
 const d = hasNodeSqlite ? describe : describe.skip;
 
 let db: DatabaseManager;
@@ -37,7 +30,7 @@ let other: string;
 let http: HttpServer;
 let server: Server;
 let url: string;
-const clients: any[] = [];
+const clients: ClientSocket[] = [];
 
 const newCompetition = (title: string) =>
   db.createCompetition({
@@ -82,7 +75,7 @@ afterEach(async () => {
 });
 
 /** Client connecté (ou refusé : message de connect_error) */
-function connect(token = 'ok'): Promise<any> {
+function connect(token = 'ok'): Promise<ClientSocket> {
   const c = io(url, { transports: ['websocket'], auth: { token }, reconnection: false });
   clients.push(c);
   return new Promise((resolve, reject) => {
@@ -91,7 +84,7 @@ function connect(token = 'ok'): Promise<any> {
   });
 }
 
-const call = (c: any, name: string, input: unknown) =>
+const call = (c: ClientSocket, name: string, input: unknown) =>
   new Promise<ApiEnvelope<any>>(r => c.emit(WS_API_EVENTS.invoke, name, input, r));
 
 d('adaptateur WebSocket du contrat (docs/adr/0020)', () => {
