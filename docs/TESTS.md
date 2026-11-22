@@ -107,7 +107,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 269 |
-| `src/main/` | 122 | 1016 |
+| `src/main/` | 123 | 1025 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 209 |
 | `src/renderer/components/` | 119 | 633 |
@@ -118,10 +118,10 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
-| `src/shared/domain/` | 24 | 212 |
-| **Total** | **535** | **4118** |
+| `src/shared/domain/` | 25 | 218 |
+| **Total** | **537** | **4133** |
 
-Unitaires : 522 fichiers, 4076 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 524 fichiers, 4091 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3396,6 +3396,21 @@ Unitaires : 522 fichiers, 4076 tests. E2E : 13 fichiers, 42 tests (comptage stat
 - par le contrat : sortie validée, outil MCP « assign\_referees »
 - arbitre non neutre accepté et signalé ; null retire l’arbitre
 - poule ou arbitre inconnus : erreurs codées
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/replay.test.ts</code> — 9 tests</summary>
+
+- épreuve complète : appel, poules, abandon, annulation, retrait et réintégration, tableau
+- « toutes les places » : tableaux de classement à identifiants déterministes
+- tours multiples : tour clos archivé, éliminés, tour 2
+- écart détecté : score modifié hors commande, tableau retiré hors journal
+- journal sans tirage : incomplet, seuls les statuts sont comparés
+- état conforme : rien à faire
+- score de poule et statut modifiés hors commande : dryRun puis réparation
+- décision du tableau effacée hors commande : vainqueur rendu, tableau propagé
+- écart de structure : rendu, non corrigé
 
 </details>
 
@@ -8302,6 +8317,19 @@ Unitaires : 522 fichiers, 4076 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - dernier tour non retirable
   - laser : Tour Quest sans poules → 0 tour, poules ajoutées → 1 tour
   - scission vide : clé retirée
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 6 tests</summary>
+
+- **projectCompetition**
+  - journal complet seulement s’il commence (après l’appel) par un tirage
+  - tirage refait sur le même tour : il remplace le précédent
+  - score, annulation ; statut spécial : perdant seulement
+  - correction avec tableau à refaire : tableau retiré
+  - tableau : décision, retrait puis réintégration (match rouvert)
+  - rapières : vague, arrêt, remise à zéro au tirage suivant
 
 </details>
 
