@@ -5,6 +5,7 @@
  * Licensed under GPL-3.0
  */
 import type { CommandName, Input, Output, QueryName, SubscriptionName } from './contract';
+import { isApiErrorCode, type ApiErrorCode } from './errors';
 
 export interface BpmClient {
   call<K extends CommandName>(name: K, input: Input<K>): Promise<Output<K>>;
@@ -16,8 +17,8 @@ export interface BpmClient {
   ): () => void;
 }
 
-/** Codes communs ; une erreur métier garde son code (ex. score_above_max) */
-export type ApiErrorCode = 'invalid_input' | 'unknown_operation' | 'internal' | (string & {});
+/** Catalogue des codes : ./errors (ADR-0009) */
+export type { ApiErrorCode } from './errors';
 
 export interface ApiErrorData {
   code: ApiErrorCode;
@@ -50,7 +51,9 @@ export class ApiError extends Error {
 export function unwrap<T>(envelope: ApiEnvelope<T>): T {
   if (envelope && envelope.ok) return envelope.data;
   const error = envelope && !envelope.ok ? envelope.error : undefined;
-  throw new ApiError(error?.code ?? 'internal', error?.message ?? 'Réponse invalide', error?.data);
+  // Code inconnu du catalogue (serveur plus récent) : internal, message d'origine gardé
+  const code = isApiErrorCode(error?.code) ? error.code : 'internal';
+  throw new ApiError(code, error?.message ?? 'Réponse invalide', error?.data);
 }
 
 /** Transport IPC du contrat d'API (préload → IpcClient) */

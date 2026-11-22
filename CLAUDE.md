@@ -29,6 +29,15 @@ Give answer. Stop.
 - Jamais plus de 450 lignes de diff par réponse
 - HTML : jamais de nettoyage par regex (`replace(/<script…/)`) → jsdom (scripts/tests) ou `escHtml` (remote). Sinon alerte CodeQL `js/incomplete-multi-character-sanitization`
 
+## Nouvelle fonctionnalité – ADR (toujours actives)
+- Avant de coder : lire `docs/adr/README.md`, puis les ADR touchées. Une décision de couche, de schéma SQL, de format d'événement, de nommage du contrat ou de transport → ADR d'abord (ADR-0001)
+- Règle métier → `src/shared/domain`, pure : heure et hasard injectés (ADR-0002). `src/features` = interface (ADR-0004)
+- Écriture → commande du contrat (`src/shared/api/contract.ts`, handler dans `src/main/engine`), dans une transaction par `runCommand` (ADR-0005, 0006, 0018). Écran, tablettes, MCP, appareils : même commande. Jamais de nouveau canal `ipcMain.handle`, ni de nouvel appel `window.electronAPI` / `useElectronDB()` dans l'interface
+- Nommage (ADR-0008) : commande = verbe + objet, requête `get…`/`list…`, abonnement `on…`, outil MCP = même nom en snake_case. Événement du journal au passé, PascalCase, identifiants seulement (ADR-0007)
+- Erreur → code du catalogue `src/shared/api/errors.ts` (ADR-0009) : snake_case, anglais, message en français ; réutiliser un code existant, sinon l'ajouter avec sa catégorie puis `npm run docs:mcp` (docs/API_CONTRACT.md)
+- Migration → ADR acceptée citée dans `description` (`docs/adr/00NN`, ADR-0011) ; une migration mergée ne se modifie plus
+- Garde-fous CI : `lint:errors`, `check:quality` (`electronApiUses`, `ipcChannels`…), `contractNaming.test.ts`, `migrationsAdr.test.ts`. Ne jamais relever une référence pour passer
+
 ## Routage des modèles – coût
 - Tâche à faible valeur → déléguer à `Agent` avec `model: "haiku"` (ou `subagent_type: "Explore"` pour la recherche en lecture seule) : grep/recherche de fichiers, listing, `check:i18n`, lint/format, traductions, doc mécanique, résumé de logs, vérif de présence d'un symbole
 - Implémentation courante, tests, refactor local, doc technique → `model: "sonnet"` (Sonnet 5.5, `claude-sonnet-5-5`)
@@ -41,6 +50,13 @@ Give answer. Stop.
 - `docs/TESTS.md` est généré : ne jamais l'éditer à la main
 - **Ne jamais committer `docs/TESTS.md` dans une PR** : la CI `build-dev.yml` le régénère au push sur `dev` (commit `🔖 Dev Build`). Évite les conflits sur les totaux
 - Nouveau contrôle CI ou script de test → mettre à jour la partie fixe dans `scripts/generate-tests-doc.js`
+
+## Documentation i18n – règle absolue (bloque les PR)
+- `docs/I18N.md` est généré (`npm run docs:i18n`) et vérifié par la CI (`npm run check:i18n-doc`, job « i18n documentation up to date »). Ne jamais l'éditer à la main
+- Contrairement à `docs/TESTS.md`, la CI `build-dev.yml` **ne le régénère pas** : il doit être committé **dans la PR**
+- Toute modification de `src/renderer/locales/*.json`, `src/remote/i18n/*.js`, `src/remote/i18n.js`, d'un attribut `data-i18n*` dans `src/remote/*.html` ou de `scripts/i18n-allow-same.json` → avant commit : `npm run docs:i18n`, puis `npm run check:i18n && npm run check:i18n-doc`, et committer `docs/I18N.md` avec le reste
+- Clé `data-i18n` d'une page distante absente de `src/remote/i18n/<langue>.js` → échec de `check:i18n-doc` : ajouter la clé dans chaque langue avant de pousser
+- Avant d'ouvrir ou de marquer « ready » une PR touchant ces fichiers : vérifier que `check:i18n-doc` passe localement
 
 ## Mise à jour documentation – mode activé par défaut
 Quand on te demande (ou implique) de mettre à jour la doc :
@@ -219,7 +235,7 @@ Database (src/database/)
 ├── index.ts             # DatabaseManager class (better-sqlite3-multiple-ciphers, SQLCipher), file <userData>/bellepoule.db
 ├── repos/              # Dépôts par domaine (session, competition, fencer, match, pool, referee, team, signature, eventDay, club, privacy) composés par DatabaseManager ; rowMappers.ts, sqlExecutor.ts
 ├── validation.ts        # Input validation
-└── migrations/          # Schema migrations (index.ts runner + migrations.ts, 39 versions)
+└── migrations/          # Schema migrations (index.ts runner + migrations.ts, 46 versions ; ADR acceptée exigée, docs/adr/0011)
 ```
 
 ### Key Patterns

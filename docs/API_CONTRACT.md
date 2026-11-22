@@ -28,14 +28,81 @@ recordScore: command({
 | IPC       | `src/main/engine/api/ipcAdapter.ts` | `api:invoke`, `api:subscribe` / `api:unsubscribe`, événements `api:event` |
 | MCP       | `src/main/engine/api/mcpAdapter.ts` | `tools/call`                                                              |
 
-Même validation partout. Erreur : `ApiError { code, message }`.
+Même validation partout. Erreur : `ApiError { code, message, data? }`. Les codes viennent d'un
+catalogue unique, `src/shared/api/errors.ts` ([ADR-0009](adr/0009-codes-erreur.md)) : un code
+absent ne compile pas (`CommandError`, `ApiError`). Un code inconnu reçu par le client devient
+`internal`. Retirer ou renommer un code est un changement cassant (notes de version).
 
-| Code                | Cas                                                                      |
-| ------------------- | ------------------------------------------------------------------------ |
-| `invalid_input`     | entrée refusée par le schéma (`Entrée invalide pour « op » — champ : …`) |
-| `unknown_operation` | opération absente du contrat, ou abonnement appelé en commande           |
-| code métier         | `DomainError` du domaine (`competition_not_found`, `score_above_max`…)   |
-| `internal`          | autre erreur (journalisée)                                               |
+Catégories : `transport` (corriger l'appel), `not_found` (relire les identifiants), `conflict`
+(relire puis renvoyer), `rule` (corriger la demande), `permission`, `internal` (panne
+journalisée). Données jointes : `revision_conflict` → `{ revision, missing }`,
+`command_already_applied` → `{ revision, commandId }` (`ApiErrorDataByCode`).
+
+<!-- codes-erreur:début (généré par npm run docs:mcp, ne pas éditer) -->
+
+| Code | Catégorie | Sens |
+| --- | --- | --- |
+| `invalid_input` | transport | Entrée refusée par le schéma de l’opération |
+| `unknown_operation` | transport | Opération absente du contrat |
+| `competition_not_found` | not_found | Épreuve introuvable |
+| `fencer_not_found` | not_found | Tireur introuvable dans l’épreuve |
+| `referee_not_found` | not_found | Arbitre introuvable |
+| `pool_not_found` | not_found | Poule introuvable |
+| `match_not_found` | not_found | Match introuvable |
+| `withdrawal_not_found` | not_found | Aucun retrait à annuler pour ce tireur |
+| `dir_not_found` | not_found | Dossier introuvable |
+| `revision_conflict` | conflict | Révision attendue périmée : relire le journal puis renvoyer |
+| `command_already_applied` | conflict | Commande déjà appliquée (même commandId) |
+| `bracket_exists` | conflict | Tableau déjà construit |
+| `bracket_has_scores` | conflict | Tableau déjà commencé : scores saisis |
+| `pools_have_scores` | conflict | Poules déjà commencées : scores saisis |
+| `next_match_played` | conflict | Un match qui suit a déjà été joué |
+| `round_closed` | conflict | Tour de poules déjà clos |
+| `draw_done` | conflict | Tirage déjà fait |
+| `already_withdrawn` | conflict | Tireur déjà retiré |
+| `referee_busy` | conflict | Arbitre déjà occupé sur ce créneau |
+| `file_exists` | conflict | Fichier déjà présent |
+| `score_invalid` | rule | Score non entier ou négatif |
+| `score_above_max` | rule | Score au-delà du score maximal |
+| `tie_at_max` | rule | Égalité au score maximal (o.17) |
+| `draw_needs_winner` | rule | Égalité : vainqueur ou priorité requis |
+| `draw_not_allowed` | rule | Égalité interdite (Sabre Laser) |
+| `priority_not_allowed` | rule | Priorité non prévue pour cette arme |
+| `winner_required` | rule | Vainqueur requis |
+| `winner_contradicts_score` | rule | Vainqueur contraire au score |
+| `winner_unresolved` | rule | Vainqueur impossible à déterminer |
+| `correction_special_refused` | rule | Correction après tirage : pas de statut spécial |
+| `match_not_ready` | rule | Match pas encore formé |
+| `pools_not_complete` | rule | Poules non terminées |
+| `no_pools` | rule | Aucune poule |
+| `no_ranking` | rule | Aucun classement |
+| `no_direct_elimination` | rule | Pas de tableau dans la formule |
+| `no_final_results` | rule | Résultats finals pas encore disponibles |
+| `no_referees` | rule | Aucun arbitre disponible |
+| `not_enough_fencers` | rule | Pas assez de tireurs |
+| `not_enough_qualifiers` | rule | Pas assez de qualifiés |
+| `fencer_already_in_pool` | rule | Tireur déjà dans une poule |
+| `tableau_complete` | rule | Tableau terminé |
+| `invalid_composition` | rule | Composition invalide |
+| `invalid_pool_count` | rule | Nombre de poules invalide |
+| `invalid_pool_size` | rule | Taille de poule invalide |
+| `invalid_wave` | rule | Vague invalide |
+| `invalid_title` | rule | Titre invalide |
+| `invalid_date` | rule | Date invalide |
+| `invalid_name` | rule | Nom invalide |
+| `not_in_season` | rule | Épreuve hors saison |
+| `unknown_setting` | rule | Réglage inconnu |
+| `unsupported_format` | rule | Format d’épreuve non pris en charge |
+| `invalid_path` | rule | Chemin invalide |
+| `invalid_extension` | rule | Extension de fichier refusée |
+| `path_not_allowed` | rule | Chemin hors des dossiers autorisés |
+| `pdf_unavailable` | rule | Export PDF indisponible dans ce mode |
+| `unavailable` | rule | Fonction indisponible dans ce mode |
+| `permission_denied` | permission | Droit manquant pour cette opération |
+| `internal` | internal | Panne interne, journalisée |
+| `write_failed` | internal | Écriture impossible |
+
+<!-- codes-erreur:fin -->
 
 En MCP, le message devient `message (code)` dans un résultat `isError`.
 

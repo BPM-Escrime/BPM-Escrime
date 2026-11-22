@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
- * Régénère la référence des outils MCP dans docs/MCP.md depuis leurs schémas (#1880).
+ * Régénère la référence des outils MCP dans docs/MCP.md depuis leurs schémas (#1880),
+ * et le catalogue des codes d'erreur dans docs/API_CONTRACT.md (src/shared/api/errors.test.ts,
+ * UPDATE_ERRORS_DOC=1, ADR-0009).
  *
  *   node scripts/generate-mcp-doc.js          → réécrit la section générée de docs/MCP.md
  *   node scripts/generate-mcp-doc.js --check  → échoue (exit 1) si elle n'est plus à jour
@@ -14,9 +16,17 @@ const path = require('path');
 
 const check = process.argv.includes('--check');
 const vitest = path.join(__dirname, '..', 'node_modules', 'vitest', 'vitest.mjs');
-const result = spawnSync(process.execPath, [vitest, 'run', 'src/main/mcp/mcpDoc.test.ts'], {
-  cwd: path.join(__dirname, '..'),
-  stdio: 'inherit',
-  env: { ...process.env, UPDATE_MCP_DOC: check ? '' : '1' },
-});
+const result = spawnSync(
+  process.execPath,
+  [vitest, 'run', 'src/main/mcp/mcpDoc.test.ts', 'src/shared/api/errors.test.ts'],
+  {
+    cwd: path.join(__dirname, '..'),
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      UPDATE_MCP_DOC: check ? '' : '1',
+      UPDATE_ERRORS_DOC: check ? '' : '1',
+    },
+  }
+);
 process.exit(result.status ?? 1);

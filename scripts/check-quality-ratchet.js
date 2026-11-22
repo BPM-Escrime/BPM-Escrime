@@ -47,6 +47,13 @@
  *   - electronApiCalls : fichiers de l'interface (src/renderer hors src/renderer/api,
  *                  src/features) qui appellent `window.electronAPI` directement → client
  *                  d'API du contrat (#1981, docs/adr/0008)
+ *   - electronApiUses : chaque occurrence de `window.electronAPI` et chaque appel de
+ *                  `useElectronDB()` dans l'interface (mêmes fichiers) : un nouvel appel dans un
+ *                  fichier déjà compté fait monter ce compteur → commande du contrat
+ *                  (docs/adr/0005, 0008, 0018)
+ *   - ipcChannels : canaux `ipcMain.handle` / `ipcMain.on` / `ipcMain.handleOnce` de src/main.
+ *                  Une nouvelle écriture passe par `api:invoke` (contrat), pas par un nouveau
+ *                  canal `db:*` / `club:*` (docs/adr/0005, 0018)
  *
  * Plafond de longueur (#1155) : aucun fichier source de src/ (hors tests) ne dépasse
  * MAX_LINES lignes. Les fichiers déjà au-dessus sont listés dans `lineExceptions`
@@ -83,6 +90,8 @@ const COUNTERS = [
   'rendererImports',
   'featuresImports',
   'electronApiCalls',
+  'electronApiUses',
+  'ipcChannels',
 ];
 /**
  * Un bouton a un nom accessible s'il a du texte visible (directement ou dans un élément
@@ -199,6 +208,9 @@ function moduleSpecifier(node) {
   return null;
 }
 
+/** Enregistrement d'un canal IPC dans le process principal */
+const IPC_REGISTER = new Set(['handle', 'on', 'handleOnce']);
+
 /** `window.electronAPI` (ou `window?.electronAPI`) */
 const isWindowElectronApi = node =>
   ts.isPropertyAccessExpression(node) &&
@@ -230,7 +242,28 @@ function analyze(file) {
       if (layer === 'renderer') once('rendererImports', at(node));
       if (layer === 'features') once('featuresImports', at(node));
     }
-    if (interfaceLayer && isWindowElectronApi(node)) once('electronApiCalls', at(node));
+    if (interfaceLayer && isWindowElectronApi(node)) {
+      once('electronApiCalls', at(node));
+      hits.electronApiUses.push(at(node));
+    }
+    if (
+      interfaceLayer &&
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'useElectronDB'
+    ) {
+      hits.electronApiUses.push(at(node));
+    }
+    if (
+      main &&
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      ts.isIdentifier(node.expression.expression) &&
+      node.expression.expression.text === 'ipcMain' &&
+      IPC_REGISTER.has(node.expression.name.text)
+    ) {
+      hits.ipcChannels.push(at(node));
+    }
     if (node.kind === ts.SyntaxKind.AnyKeyword) hits.any.push(at(node));
     if (
       ts.isCallExpression(node) &&

@@ -13,6 +13,8 @@
   "rendererImports": 0,
   "featuresImports": 0,
   "electronApiCalls": 112,
+  "electronApiUses": 364,
+  "ipcChannels": 357,
   "remoteUnescaped": 0,
   "remoteHardLocale": 3,
   "remoteHardColor": 0,

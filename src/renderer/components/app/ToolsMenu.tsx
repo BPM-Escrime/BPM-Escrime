@@ -6,7 +6,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PlayCircle, Sparkles, Tv2, Wifi, Wrench } from 'lucide-react';
+import { LayoutGrid, PlayCircle, Sparkles, Tv2, Wifi, Wrench } from 'lucide-react';
 import { Button } from '../common/Button';
 import { useTranslation } from '../../hooks/useTranslation';
 import { restartGuidedTour } from '../guidedTourFlags';
@@ -14,10 +14,16 @@ import { restartGuidedTour } from '../guidedTourFlags';
 interface ToolsMenuProps {
   onWifiQR: () => void;
   onTVRemote: () => void;
+  onArenaPlanner: () => void;
   onStartDemo: () => void;
 }
 
-export const ToolsMenu: React.FC<ToolsMenuProps> = ({ onWifiQR, onTVRemote, onStartDemo }) => {
+export const ToolsMenu: React.FC<ToolsMenuProps> = ({
+  onWifiQR,
+  onTVRemote,
+  onArenaPlanner,
+  onStartDemo,
+}) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, right: 0 });
@@ -72,6 +78,12 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({ onWifiQR, onTVRemote, onSt
               onClick={pick(onTVRemote)}
             >
               <Tv2 size={15} /> {t('app.tv_remote')}
+            </button>
+            <button
+              className="comp-header-dropdown-item tools-menu-item"
+              onClick={pick(onArenaPlanner)}
+            >
+              <LayoutGrid size={15} /> {t('app.arena_planner')}
             </button>
             <button
               className="comp-header-dropdown-item tools-menu-item"
