@@ -56,6 +56,8 @@ Faits :
   avant même la validation de l'entrée.
 - La liste des droits admis est une constante de l'adaptateur, testée. #1982 la remplacera par
   le rôle du compte connecté.
+- Le serveur distant est lancé par épreuve : son `/api` ne sert que cette épreuve. Une entrée
+  sans `competitionId`, ou avec celui d'une autre épreuve, est refusée avec `permission_denied`.
 
 ### Accès
 
@@ -73,8 +75,9 @@ Faits :
 - Chaque sortie passe par le filtre de `publicDto.ts`, comme le reste du serveur distant :
   - les noms suivent le réglage RGPD ;
   - la licence, la date de naissance et l'IP sont retirées.
-- Le filtre s'applique dans l'adaptateur, pas dans les handlers. L'IPC et le MCP local gardent
-  les données complètes.
+- Le filtre est l'analyseur Socket.IO du serveur (`createPublicParser`), qui couvre déjà tous
+  les paquets sortants, `/api` compris. Les handlers n'en savent rien : l'IPC et le MCP local
+  gardent les données complètes.
 
 ### Client et page
 
@@ -85,7 +88,7 @@ Faits :
   - Une coupure en cours d'appel rend `ApiError('unavailable')`.
 - La vue DT est une entrée Webpack à part (`dt`, cible `web`), servie par le serveur distant
   sous `/dt/`. Elle n'embarque que des composants qui n'appellent plus `window.electronAPI` :
-  - liste des épreuves ;
+  - fiche de l'épreuve (`getCompetition`) ;
   - état de l'épreuve (`getCompetitionState`), avec poules, tableau et classement ;
   - historique (`getCompetitionTimeline`).
 - La page se met à jour par `onCompetitionEvents`, puis par les abonnements de
