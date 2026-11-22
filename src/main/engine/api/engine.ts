@@ -101,6 +101,12 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
       status: r.status,
     }));
   },
+  getMatchTimeline: (ctx, { matchId }) => ctx.db.getMatchTimeline(matchId),
+  getCompetitionTimeline: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getCompetitionTimeline(competitionId);
+  },
+  getPoolSignatures: (ctx, { poolId }) => ctx.db.getPoolSignatures(poolId),
   getMatchCards: (ctx, { matchId }) => ctx.db.getCards(matchId),
   getCardsByMatchIds: (ctx, { matchIds }) => ctx.db.getCardsByMatchIds(matchIds),
   getCompetitionEvents: (ctx, { competitionId, since, limit }) => {

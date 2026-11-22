@@ -113,6 +113,36 @@ const DivergenceSchema = z.object({
   actual: z.unknown().optional(),
 });
 
+/** Valeur de score d'une ligne du journal des matchs */
+const ScoreValue = z.object({ value: z.number().nullable() }).nullable();
+
+/** Ligne du journal d'un match (scores, touches, cartons, sorties d'arène) */
+const MatchEventEntrySchema = z.object({
+  id: z.string(),
+  matchId: z.string(),
+  eventType: z.enum(['score_change', 'touch', 'card', 'arena_exit']),
+  timestamp: z.string(),
+  fencerId: z.string().nullable(),
+  fencerLastName: z.string().nullable(),
+  fencerFirstName: z.string().nullable(),
+  fencerSide: z.enum(['A', 'B']).nullable(),
+  previousScoreA: ScoreValue,
+  previousScoreB: ScoreValue,
+  newScoreA: ScoreValue,
+  newScoreB: ScoreValue,
+  changedBy: z.string().nullable(),
+  refereeName: z.string().nullable(),
+  ipAddress: z.string().nullable(),
+  changeReason: z.string().nullable(),
+  zone: z.string().nullable(),
+  points: z.number().nullable(),
+  cardType: z.string().nullable(),
+  cardReason: z.string().nullable(),
+  cardGroup: z.number().nullable(),
+  resultingExclusion: z.boolean().nullable(),
+  exitType: z.string().nullable(),
+});
+
 const CompetitionStateSchema = z.object({
   currentPhase: z.number().int(),
   pools: z.array(z.custom<Pool>()),
@@ -791,6 +821,28 @@ export const contract = {
         status: z.enum(['available', 'assigned', 'unavailable']),
       })
     ),
+    permission: 'competition:read',
+  }),
+
+  getMatchTimeline: query({
+    description:
+      'Journal d’un match en ordre chronologique : changements de score (auteur, motif), touches, cartons, sorties d’arène.',
+    input: z.object({ matchId: Id }),
+    output: z.array(MatchEventEntrySchema),
+    permission: 'competition:read',
+  }),
+
+  getCompetitionTimeline: query({
+    description: 'Journal de tous les matchs d’une épreuve, en ordre chronologique.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(MatchEventEntrySchema),
+    permission: 'competition:read',
+  }),
+
+  getPoolSignatures: query({
+    description: 'Signatures de la feuille d’une poule (tablette) : une image par tireur.',
+    input: z.object({ poolId: Id }),
+    output: z.array(z.object({ fencerId: z.string(), signatureData: z.string() })),
     permission: 'competition:read',
   }),
 

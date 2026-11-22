@@ -10,6 +10,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import PoolView from './PoolView';
 import { Pool, Fencer, Match, MatchStatus, Gender, FencerStatus } from '../../shared/types';
+import { fakeApiBridge } from '../testUtils/apiBridge';
 
 vi.mock('../hooks/useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
@@ -58,9 +59,7 @@ const testPool: Pool = {
 describe('PoolView - saisie simplifiée : suppression au survol', () => {
   beforeEach(() => {
     (window as any).electronAPI = {
-      db: {
-        getPoolSignatures: vi.fn().mockResolvedValue([]),
-      },
+      api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
       onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'true');
@@ -108,9 +107,7 @@ describe('PoolView - saisie simplifiée : suppression au survol', () => {
 describe("PoolView - saisie simplifiée : correction d'un score enregistré (#1046)", () => {
   beforeEach(() => {
     (window as any).electronAPI = {
-      db: {
-        getPoolSignatures: vi.fn().mockResolvedValue([]),
-      },
+      api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
       onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'true');
@@ -215,7 +212,7 @@ describe('PoolView - couverture saisie, matrice et statuts (#1084)', () => {
 
   beforeEach(() => {
     (window as any).electronAPI = {
-      db: { getPoolSignatures: vi.fn().mockResolvedValue([]) },
+      api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
       onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'true');
@@ -339,10 +336,12 @@ describe('PoolView - couverture saisie, matrice et statuts (#1084)', () => {
   });
 
   it('feuille signée par tous : bandeau de verrouillage et saisie bloquée', async () => {
-    (window as any).electronAPI.db.getPoolSignatures = vi.fn().mockResolvedValue([
-      { fencerId: '1', signature: 'x' },
-      { fencerId: '2', signature: 'x' },
-    ]);
+    (window as any).electronAPI.api = fakeApiBridge({
+      getPoolSignatures: vi.fn().mockResolvedValue([
+        { fencerId: '1', signatureData: 'x' },
+        { fencerId: '2', signatureData: 'x' },
+      ]),
+    });
     const onScoreUpdate = vi.fn();
     render(<PoolView pool={pendingPool} onScoreUpdate={onScoreUpdate} />);
 
@@ -368,7 +367,7 @@ describe('PoolView - couverture saisie, matrice et statuts (#1084)', () => {
 describe('PoolView - poule figée par le tableau (#1996)', () => {
   beforeEach(() => {
     (window as any).electronAPI = {
-      db: { getPoolSignatures: vi.fn().mockResolvedValue([]) },
+      api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
       onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'true');
@@ -433,7 +432,7 @@ describe('PoolView - fenêtre de saisie du score (validatePoolScore, #1979 lot 4
 
   beforeEach(() => {
     (window as any).electronAPI = {
-      db: { getPoolSignatures: vi.fn().mockResolvedValue([]) },
+      api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
       onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'false');
