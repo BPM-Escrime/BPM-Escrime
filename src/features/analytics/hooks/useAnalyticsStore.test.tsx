@@ -6,6 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useAnalyticsStore } from './useAnalyticsStore';
+import { fakeApiBridge } from '../../../renderer/testUtils/apiBridge';
 
 const get = () => useAnalyticsStore.getState();
 
@@ -24,7 +25,7 @@ afterEach(() => {
 describe('loadFencerStats', () => {
   it('charge les stats via le service', async () => {
     (window as any).electronAPI = {
-      db: { getCompetitionFencerStats: vi.fn(async () => [{ fencerId: 'f1' }]) },
+      api: fakeApiBridge({ listFencerStats: vi.fn(async () => [{ fencerId: 'f1' }]) }),
     };
     await get().loadFencerStats('c1');
     expect(get().fencerStats).toHaveLength(1);

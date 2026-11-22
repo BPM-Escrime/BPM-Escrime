@@ -107,6 +107,25 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     return ctx.db.getCompetitionTimeline(competitionId);
   },
   getPoolSignatures: (ctx, { poolId }) => ctx.db.getPoolSignatures(poolId),
+  listFencerStats: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getCompetitionFencerStats(competitionId);
+  },
+  getFencerStats: (ctx, { fencerId }) =>
+    ctx.db.getFencer(fencerId) ? ctx.db.getFencerCompetitionStats(fencerId) : null,
+  getFencerHistory: (ctx, { fencerId }) => ctx.db.getFencerHistory(fencerId),
+  listRefereeStats: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getRefereeStats(competitionId);
+  },
+  listMatchTimings: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getMatchTimings(competitionId);
+  },
+  listRemoteEvents: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getRemoteEvents(competitionId);
+  },
   getMatchCards: (ctx, { matchId }) => ctx.db.getCards(matchId),
   getCardsByMatchIds: (ctx, { matchIds }) => ctx.db.getCardsByMatchIds(matchIds),
   getCompetitionEvents: (ctx, { competitionId, since, limit }) => {
