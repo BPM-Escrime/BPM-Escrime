@@ -218,7 +218,7 @@ function addedMigrations() {
   return migrations;
 }
 
-const ref = c => `${c[0]} (${c[1]}) ${c[2].replace(/\|/g, '\\|')}`;
+const ref = c => `${c[0]} (${c[1]}) ${c[2]}`;
 const code = s => '`' + s.replace(/`/g, "'").slice(0, 140) + '`';
 
 function main() {
