@@ -4323,6 +4323,7 @@
     "snap": "Ajuste (0,5 m)",
     "snap_hint": "Los elementos se ajustan a una cuadrícula de 0,5 m al arrastrarlos.",
     "tools_hint": "Pulsa una herramienta para añadirla al plano y luego arrástrala.",
-    "hint_length": "Dimensión interior de la sala, en metros."
+    "hint_length": "Dimensión interior de la sala, en metros.",
+    "summary_arenas_max": "{{count}} arena(s) colocada(s), máximo posible: {{max}}"
   }
 }

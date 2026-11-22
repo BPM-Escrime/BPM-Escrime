@@ -4323,6 +4323,7 @@
     "snap": "Kempenn (0,5 m)",
     "snap_hint": "Ar pezhioù a glav ouzh ur gwrizienn 0,5 m p’int-tennañ anezhe.",
     "tools_hint": "Klikit un ostilh evit y ouzhpennañ d’ar plan, ha tennit-hi.",
-    "hint_length": "Dimensionenn diabarzh ar sal, e metrioù."
+    "hint_length": "Dimensionenn diabarzh ar sal, e metrioù.",
+    "summary_arenas_max": "{{count}} arenenn lakaet, maksimum posupl: {{max}}"
   }
 }

@@ -4323,6 +4323,7 @@
     "snap": "吸附（0.5 米）",
     "snap_hint": "拖動時元件會吸附到 0.5 米的格線。",
     "tools_hint": "點擊工具即可加入平面圖，然後拖動。",
-    "hint_length": "場館的內部尺寸，以米計。"
+    "hint_length": "場館的內部尺寸，以米計。",
+    "summary_arenas_max": "已放置 {{count}} 個劍場，最多可容納：{{max}}"
   }
 }

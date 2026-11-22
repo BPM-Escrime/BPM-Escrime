@@ -17,7 +17,6 @@ import {
   createRoomItem,
   moveRoomItem,
   optimizeArenaLayout,
-  planArenaGrid,
   resizeRoomItem,
   type OptimizedLayout,
   type Point,
@@ -66,7 +65,6 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const [items, setItems] = useState<RoomItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snap, setSnap] = useState(true);
-  const [optimized, setOptimized] = useState<OptimizedLayout | null>(null);
   const [exportError, setExportError] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
   const idCounter = useRef(0);
@@ -93,17 +91,19 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
 
   const room = useMemo(() => (parsed ? { widthM: parsed.w, lengthM: parsed.l } : null), [parsed]);
 
-  const plan = useMemo(
-    () => (room && parsed ? planArenaGrid(room, parsed.n, parsed.m) : null),
-    [room, parsed]
-  );
-
   const blockedItems = useMemo(() => items.filter(i => i.kind === 'blocked'), [items]);
 
-  /** Arènes affichées : maximum trouvé si « Optimiser » a été lancé, sinon grille automatique. */
+  /** Maximum d'arènes que la zone peut recevoir (marge et zones bloquées prises en compte). */
+  const maxLayout = useMemo<OptimizedLayout | null>(
+    () => (room && parsed ? optimizeArenaLayout(room, parsed.m, blockedItems) : null),
+    [room, parsed, blockedItems]
+  );
+  /** Jamais plus d'arènes que le maximum possible. */
+  const arenaCount = maxLayout && parsed ? Math.min(parsed.n, maxLayout.count) : 0;
+  const clamped = maxLayout !== null && parsed !== null && parsed.n > maxLayout.count;
   const centers: Point[] = useMemo(
-    () => (optimized ? optimized.centers : (plan?.centers ?? [])),
-    [optimized, plan]
+    () => (maxLayout ? maxLayout.centers.slice(0, arenaCount) : []),
+    [maxLayout, arenaCount]
   );
 
   const issues = useMemo(() => {
@@ -116,20 +116,11 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     [items, selectedId]
   );
 
-  /** Toute modification des dimensions annule le maximum affiché (il ne vaut que pour une salle donnée). */
-  const changeField = (setter: (v: string) => void) => (value: string) => {
-    setter(value);
-    setOptimized(null);
-  };
-
+  /** « Optimiser » règle le nombre d'arènes sur le maximum possible. */
   const optimize = () => {
-    if (!room || !parsed) return;
-    const result = optimizeArenaLayout(room, parsed.m, blockedItems);
-    setOptimized(result);
-    setArenas(String(result.count));
+    if (!maxLayout) return;
+    setArenas(String(Math.max(1, maxLayout.count)));
   };
-
-  const resetLayout = () => setOptimized(null);
 
   const addItem = (kind: ItemKind) => {
     if (!room) return;
@@ -166,31 +157,25 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     );
   };
 
-  const statusText = (): string => {
-    if (!plan) return '';
-    if (optimized) {
-      return t('arenaPlanner.optimize_result', {
-        count: optimized.count,
-        lattice: t(
-          optimized.lattice === 'hex' ? 'arenaPlanner.lattice_hex' : 'arenaPlanner.lattice_square'
-        ),
-      });
-    }
-    return plan.fits ? t('arenaPlanner.fits') : t('arenaPlanner.nofit');
+  /** Maximum possible et disposition retenue pour ce maximum. */
+  const maxText = (): string => {
+    if (!maxLayout) return '';
+    return t('arenaPlanner.optimize_result', {
+      count: maxLayout.count,
+      lattice: t(
+        maxLayout.lattice === 'hex' ? 'arenaPlanner.lattice_hex' : 'arenaPlanner.lattice_square'
+      ),
+    });
   };
 
   const exportText = () => {
-    if (!parsed || !plan || !room) return null;
+    if (!parsed || !maxLayout || !room) return null;
     return {
       title: t('arenaPlanner.title'),
       summary: [
         t('arenaPlanner.summary_room', { width: fmt(parsed.w), length: fmt(parsed.l) }),
-        t('arenaPlanner.summary_arenas', {
-          count: centers.length,
-          columns: plan.columns,
-          rows: plan.rows,
-        }),
-        statusText(),
+        t('arenaPlanner.summary_arenas_max', { count: centers.length, max: maxLayout.count }),
+        maxText(),
       ],
       legend: [
         t('arenaPlanner.legend_zone'),
@@ -239,7 +224,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     <Modal title={t('arenaPlanner.title')} onClose={onClose} size="xl" scroll>
       <p className="arena-planner-lead">{t('arenaPlanner.hint')}</p>
 
-      {!parsed || !plan || !room ? <p role="alert">{t('arenaPlanner.invalid')}</p> : null}
+      {!parsed || !maxLayout || !room ? <p role="alert">{t('arenaPlanner.invalid')}</p> : null}
 
       <div className="arena-planner-layout">
         <aside className="arena-planner-sidebar" aria-label={t('arenaPlanner.title')}>
@@ -253,7 +238,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               type="text"
               inputMode="decimal"
               value={width}
-              onChange={e => changeField(setWidth)(e.target.value)}
+              onChange={e => setWidth(e.target.value)}
             />
             <p className="arena-planner-hint">{t('arenaPlanner.hint_width')}</p>
           </div>
@@ -267,7 +252,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               type="text"
               inputMode="decimal"
               value={length}
-              onChange={e => changeField(setLength)(e.target.value)}
+              onChange={e => setLength(e.target.value)}
             />
             <p className="arena-planner-hint">{t('arenaPlanner.hint_length')}</p>
           </div>
@@ -281,7 +266,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               type="text"
               inputMode="numeric"
               value={arenas}
-              onChange={e => changeField(setArenas)(e.target.value)}
+              onChange={e => setArenas(e.target.value)}
             />
             <p className="arena-planner-hint">{t('arenaPlanner.hint_arenas')}</p>
           </div>
@@ -295,7 +280,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               type="text"
               inputMode="decimal"
               value={margin}
-              onChange={e => changeField(setMargin)(e.target.value)}
+              onChange={e => setMargin(e.target.value)}
             />
             <p className="arena-planner-hint">{t('arenaPlanner.hint_margin')}</p>
           </div>
@@ -310,14 +295,6 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
             >
               {t('arenaPlanner.optimize')}
             </Button>
-            <Button
-              type="button"
-              onClick={resetLayout}
-              disabled={!optimized}
-              title={t('arenaPlanner.auto_layout')}
-            >
-              {t('arenaPlanner.auto_layout')}
-            </Button>
           </div>
 
           <label className="arena-planner-check">
@@ -330,16 +307,14 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
         </aside>
 
         <div className="arena-planner-main">
-          {parsed && plan && room ? (
+          {parsed && maxLayout && room ? (
             <>
               <p role="status" className="arena-planner-status">
-                {statusText()}
-                {' — '}
-                {t('arenaPlanner.required', {
-                  width: plan.requiredWidthM,
-                  length: plan.requiredLengthM,
-                })}
+                {maxText()}
               </p>
+              {clamped || maxLayout.count === 0 ? (
+                <p role="alert">{t('arenaPlanner.nofit')}</p>
+              ) : null}
 
               <div
                 className="arena-planner-toolbar"

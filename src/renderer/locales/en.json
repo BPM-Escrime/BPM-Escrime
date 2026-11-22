@@ -4323,6 +4323,7 @@
     "snap": "Snap (0.5 m)",
     "snap_hint": "Items snap to a 0.5 m grid while dragging.",
     "tools_hint": "Click a tool to add it to the plan, then drag it.",
-    "hint_length": "Inside dimension of the room, in metres."
+    "hint_length": "Inside dimension of the room, in metres.",
+    "summary_arenas_max": "{{count}} arena(s) placed, maximum possible: {{max}}"
   }
 }

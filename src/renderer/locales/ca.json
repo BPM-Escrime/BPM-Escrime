@@ -4323,6 +4323,7 @@
     "snap": "Ajust (0,5 m)",
     "snap_hint": "Els elements s’ajusten a una graella de 0,5 m en arrossegar-los.",
     "tools_hint": "Fes clic en una eina per afegir-la al plànol i després arrossega-la.",
-    "hint_length": "Dimensió interior de la sala, en metres."
+    "hint_length": "Dimensió interior de la sala, en metres.",
+    "summary_arenas_max": "{{count}} arena(es) col·locada(es), màxim possible: {{max}}"
   }
 }

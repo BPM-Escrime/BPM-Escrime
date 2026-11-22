@@ -4323,6 +4323,7 @@
     "snap": "Aggancio (0,5 m)",
     "snap_hint": "Gli elementi si agganciano a una griglia da 0,5 m durante il trascinamento.",
     "tools_hint": "Clicca uno strumento per aggiungerlo alla pianta, poi trascinalo.",
-    "hint_length": "Dimensione interna della sala, in metri."
+    "hint_length": "Dimensione interna della sala, in metri.",
+    "summary_arenas_max": "{{count}} arena/e posizionata/e, massimo possibile: {{max}}"
   }
 }
