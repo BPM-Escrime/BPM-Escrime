@@ -15,6 +15,7 @@ import { logger, LogCategory } from '@shared/services/logger';
 import {
   checkRoomItems,
   createRoomItem,
+  moveArenaWithPush,
   moveRoomItem,
   resizeRoomItemAroundCenter,
   rotateRoomItem,
@@ -68,6 +69,11 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snap, setSnap] = useState(true);
   const [showDims, setShowDims] = useState(false);
+  /** Positions des arènes après un glisser à la souris ; null = positions calculées */
+  const [manual, setManual] = useState<{ key: string; centers: Point[] } | null>(null);
+  /** Les positions glissées ne valent que pour les dimensions et le nombre d'arènes qui les ont produites */
+  const dimsKey = [width, length, arenas, margin].join('|');
+  const manualCenters = manual && manual.key === dimsKey ? manual.centers : null;
   const [exportError, setExportError] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
   const idCounter = useRef(0);
@@ -105,8 +111,8 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const arenaCount = maxLayout && parsed ? Math.min(parsed.n, maxLayout.count) : 0;
   const clamped = maxLayout !== null && parsed !== null && parsed.n > maxLayout.count;
   const centers: Point[] = useMemo(
-    () => (maxLayout ? maxLayout.centers.slice(0, arenaCount) : []),
-    [maxLayout, arenaCount]
+    () => manualCenters ?? (maxLayout ? maxLayout.centers.slice(0, arenaCount) : []),
+    [manualCenters, maxLayout, arenaCount]
   );
 
   const issues = useMemo(() => {
@@ -154,6 +160,14 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const removeItem = (id: string) => {
     setItems(prev => prev.filter(i => i.id !== id));
     setSelectedId(current => (current === id ? null : current));
+  };
+
+  /** Glisser une arène : les arènes voisines et les éléments qui touchent son cercle sont repoussés. */
+  const moveArena = (index: number, x: number, y: number) => {
+    if (!room || !parsed) return;
+    const result = moveArenaWithPush(centers, index, { x, y }, room, parsed.m, items);
+    setManual({ key: dimsKey, centers: result.centers });
+    setItems(result.items);
   };
 
   const moveItem = (id: string, x: number, y: number) => {
@@ -376,6 +390,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
                 svgRef={svgRef}
                 onSelect={setSelectedId}
                 onMove={moveItem}
+                onMoveArena={moveArena}
                 onResize={resizeItem}
                 onRotate={rotateItem}
                 onDelete={removeItem}

@@ -4332,6 +4332,7 @@
     "rotate_90": "Tröiñ 90°",
     "too_many": "{{requested}} arenenn goulennet, met ar takad na zal nemet {{max}}. Ne vez lakaet nemet ar maksimum.",
     "dims_option": "Kotennoù teknikel (plan ha ezporzhiadur)",
-    "dims_hint": "Ouzhpenn a ra da blan ha d’an ezporzhiadurioù kotennoù ar sal, an arenenn, an dispakoù, ar bevennoù ha ar pezhioù."
+    "dims_hint": "Ouzhpenn a ra da blan ha d’an ezporzhiadurioù kotennoù ar sal, an arenenn, an dispakoù, ar bevennoù ha ar pezhioù.",
+    "handle_arena": "Arenenn (stardit evit lakaat e-kerzh)"
   }
 }

@@ -4332,6 +4332,7 @@
     "rotate_90": "Girar 90°",
     "too_many": "Se piden {{requested}} arenas, pero la zona solo admite {{max}}. Solo se coloca el máximo.",
     "dims_option": "Cotas técnicas (plano y exportación)",
-    "dims_hint": "Añade al plano y a las exportaciones las cotas de la sala, las arenas, los espacios, los márgenes y los elementos."
+    "dims_hint": "Añade al plano y a las exportaciones las cotas de la sala, las arenas, los espacios, los márgenes y los elementos.",
+    "handle_arena": "Arena (arrastrar para mover)"
   }
 }

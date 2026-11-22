@@ -4332,6 +4332,7 @@
     "rotate_90": "Rotate 90°",
     "too_many": "{{requested}} arenas requested, but the zone only fits {{max}}. Only the maximum is placed.",
     "dims_option": "Technical dimensions (plan and export)",
-    "dims_hint": "Adds room, arena, spacing, margin and item dimensions to the plan and the exports."
+    "dims_hint": "Adds room, arena, spacing, margin and item dimensions to the plan and the exports.",
+    "handle_arena": "Arena (drag to move)"
   }
 }

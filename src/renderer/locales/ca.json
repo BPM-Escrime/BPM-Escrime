@@ -4332,6 +4332,7 @@
     "rotate_90": "Gira 90°",
     "too_many": "Demanades {{requested}} arenes, però la zona només n’admet {{max}}. Només es col·loca el màxim.",
     "dims_option": "Cotes tècniques (plànol i exportació)",
-    "dims_hint": "Afegeix al plànol i a les exportacions les cotes de la sala, les arenes, els espais, els marges i els elements."
+    "dims_hint": "Afegeix al plànol i a les exportacions les cotes de la sala, les arenes, els espais, els marges i els elements.",
+    "handle_arena": "Arena (arrossega per moure)"
   }
 }
