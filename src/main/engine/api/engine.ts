@@ -49,6 +49,7 @@ import {
   updateCompetitionDetails,
   updateCompetitionSettings,
 } from '../commands/competitionSetup';
+import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
 import { readSession } from '../commands/sessionView';
 import { competitionState } from '../commands/competitionState';
@@ -103,6 +104,9 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   updateCompetitionSettings: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     updateCompetitionSettings(ctx, input),
   deleteCompetition: (ctx, { commandId: _c, ...input }) => deleteCompetition(ctx, input),
+  includeInSeason: (ctx, { commandId: _c, ...input }) => includeInSeason(ctx, input),
+  excludeFromSeason: (ctx, { commandId: _c, ...input }) => excludeFromSeason(ctx, input),
+  resetSeason: (ctx, { commandId: _c, ...input }) => resetSeason(ctx, input),
   registerFencers: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     registerFencers(ctx, input),
   updateFencerDetails: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
@@ -136,6 +140,10 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
       .sort((x, y) => x.ref - y.ref)
       .map(fencerDTO);
   },
+  getSeasonRanking: ctx => ({
+    ranking: ctx.db.getSeasonRanking(),
+    competitions: ctx.db.getSeasonCompetitions(),
+  }),
   listReferees: (ctx, { competitionId }) => {
     getCompetitionOrThrow(ctx, competitionId);
     return ctx.db.getRefereesByCompetition(competitionId).map(refereeDTO);

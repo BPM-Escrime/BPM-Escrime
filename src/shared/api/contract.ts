@@ -855,6 +855,33 @@ export const contract = {
     permission: 'competition:write',
   }),
 
+  includeInSeason: command({
+    description:
+      'Verse une épreuve au classement de saison (ou la reverse) : classement Quest calculé par le moteur sur les poules du tour courant. Refus (« no_pools ») sans poules.',
+    input: z.object({ competitionId: CompetitionId, dryRun: DryRun, commandId: CommandId }),
+    output: z.object({
+      dryRun: z.boolean(),
+      competitionId: z.string(),
+      fencers: z.number().int(),
+    }),
+    permission: 'competition:write',
+  }),
+
+  excludeFromSeason: command({
+    description:
+      'Retire une épreuve du classement de saison (même supprimée depuis). Refus (« not_in_season ») si elle n’y est pas.',
+    input: z.object({ competitionId: Id, dryRun: DryRun, commandId: CommandId }),
+    output: z.object({ dryRun: z.boolean(), competitionId: z.string() }),
+    permission: 'competition:write',
+  }),
+
+  resetSeason: command({
+    description: 'Vide le classement de saison (toutes les épreuves versées).',
+    input: z.object({ dryRun: DryRun, commandId: CommandId }),
+    output: z.object({ dryRun: z.boolean(), competitions: z.number().int() }),
+    permission: 'competition:write',
+  }),
+
   registerFencers: command({
     description:
       'Inscrit un ou plusieurs tireurs (docs/adr/0018). Statut initial : non pointé (défaut) ou pointé. ' +
@@ -1155,6 +1182,44 @@ export const contract = {
     description: 'Tireurs inscrits à une épreuve, dans l’ordre des dossards (dates en ISO 8601).',
     input: z.object({ competitionId: CompetitionId }),
     output: z.array(FencerSchema),
+    permission: 'competition:read',
+  }),
+
+  getSeasonRanking: query({
+    description:
+      'Classement de saison : cumul par tireur (victoires, points Quest, touches) et épreuves versées.',
+    input: z.object({}),
+    output: z.object({
+      ranking: z.array(
+        z.object({
+          fencerId: z.string(),
+          fencerLastName: z.string(),
+          fencerFirstName: z.string(),
+          fencerClub: z.string().nullable(),
+          totalVictories: z.number(),
+          totalMatchesPlayed: z.number(),
+          totalQuestPoints: z.number(),
+          totalQuestV4: z.number(),
+          totalQuestV3: z.number(),
+          totalQuestV2: z.number(),
+          totalQuestV1: z.number(),
+          totalTouchesScored: z.number(),
+          totalTouchesReceived: z.number(),
+          totalRedCards: z.number(),
+          competitionCount: z.number(),
+          ratio: z.number(),
+        })
+      ),
+      competitions: z.array(
+        z.object({
+          competitionId: z.string(),
+          competitionTitle: z.string(),
+          competitionDate: z.string(),
+          fencerCount: z.number(),
+          addedAt: z.string(),
+        })
+      ),
+    }),
     permission: 'competition:read',
   }),
 
