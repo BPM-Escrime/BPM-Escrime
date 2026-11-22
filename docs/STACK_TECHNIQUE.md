@@ -54,6 +54,7 @@ reste est intégré par Webpack.
 | Paquet | Version | Rôle |
 |---|---|---|
 | express | 5.3.0 | Serveur HTTP(S) des tablettes (`remoteScoreServer.ts`). |
+| express-rate-limit | 8.7.3 | Débit par IP des routes de la vue DT (`/api/dt/*`, ADR-0020), en plus de `LoginGuard`. |
 | socket.io | 4.8.4 | Temps réel. Client servi en mémoire sur `/bp-sio.js`. |
 | socket.io-client | 4.8.4 | Client du contrat pour la vue DT dans un navigateur (`WsClient`, ADR-0020). Absent du bundle de l'écran Electron. |
 

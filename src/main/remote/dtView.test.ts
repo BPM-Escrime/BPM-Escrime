@@ -122,6 +122,13 @@ d('espace Vue DT (docs/adr/0020)', () => {
     expect(r).toMatchObject({ ok: true, data: { title: 'Salle' } });
   });
 
+  it('débit limité par IP : 429 au-delà de 60 requêtes par minute', async () => {
+    const codes: number[] = [];
+    for (let i = 0; i < 61; i++) codes.push((await fetch(`${base}/api/dt/status`)).status);
+    expect(codes.slice(0, 60).every(c => c === 200)).toBe(true);
+    expect(codes[60]).toBe(429);
+  });
+
   it('session non démarrée : rien n’est servi', async () => {
     dt.setPassword(PASSWORD);
     dt.setEnabled(true);

@@ -6,6 +6,7 @@
  * Licensed under GPL-3.0
  */
 import type express from 'express';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import type { Server as SocketIOServer, Namespace } from 'socket.io';
 import {
   assertPasswordStrength,
@@ -129,11 +130,20 @@ export class DtViewAccess implements DtViewPort {
     app: express.Application,
     deps: { loginGuard: LoginGuard; clientIp: (req: express.Request) => string }
   ): void {
-    app.get('/api/dt/status', (req, res) => {
+    // Débit par IP, en plus de LoginGuard (connexion) : 60 requêtes/min sur l'espace
+    const limiter = rateLimit({
+      windowMs: 60_000,
+      limit: 60,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      keyGenerator: req => ipKeyGenerator(deps.clientIp(req)),
+      message: { success: false, error: 'too_many_requests' },
+    });
+    app.get('/api/dt/status', limiter, (req, res) => {
       res.json({ ...this.status(), authenticated: this.isAuthorized(req.headers.cookie) });
     });
 
-    app.post(DT_LOGIN_PATH, async (req, res) => {
+    app.post(DT_LOGIN_PATH, limiter, async (req, res) => {
       const ip = deps.clientIp(req);
       const limited = deps.loginGuard.check(ip, LOGIN_TARGET);
       if (limited) return sendLoginLimited(res, limited);

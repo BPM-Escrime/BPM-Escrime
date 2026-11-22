@@ -44,7 +44,7 @@ Consultation de l'épreuve dans un navigateur du réseau de la salle : espace de
 du serveur distant (contrat d'API, `docs/API_CONTRACT.md`).
 
 - Fermée par défaut ; ouverte par la commande `configureDtView`, mot de passe obligatoire.
-- Connexion : `POST /api/dt/login` (mêmes limites que l'appel), cookie `bp_dt_token` (`HttpOnly`,
+- Connexion : `POST /api/dt/login` (mêmes limites que l'appel, plus 60 requêtes/min par IP sur `/api/dt/*`), cookie `bp_dt_token` (`HttpOnly`,
   `SameSite=Strict`, 8 h). Poignée de main de `/api` refusée sans jeton valide.
 - Fermeture ou nouveau mot de passe : jetons invalidés, vues ouvertes déconnectées.
 - **Lecture seule** jusqu'aux comptes et rôles (#1982) : aucune commande, épreuve du serveur seulement.
