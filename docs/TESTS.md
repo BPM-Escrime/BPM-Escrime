@@ -106,13 +106,13 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 131 | 1126 |
+| `src/main/` | 132 | 1145 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 123 | 659 |
 | E2E Playwright (`e2e/`) | 14 | 43 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 7 | 30 |
+| `src/renderer/api/` | 8 | 36 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
 | `src/shared/platform/` | 1 | 8 |
-| **Total** | **556** | **4275** |
+| **Total** | **558** | **4300** |
 
-Unitaires : 542 fichiers, 4232 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3536,6 +3536,32 @@ Unitaires : 542 fichiers, 4232 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/training.test.ts</code> — 15 tests</summary>
+
+- **serveur d’entraînement**
+  - démarre, rend l’adresse, puis arrête
+  - refuse un double démarrage (training\_already\_started)
+  - refus du port rendu sous son code, port hors bornes refusé par le schéma
+  - arrêt d’un serveur absent : training\_not\_started
+  - hors du poste Electron (pas de port) : unavailable
+- **session**
+  - démarre la session avec les règles libres, puis l’arrête
+  - refus du serveur (session déjà active) : remote\_refused, message gardé
+  - entrées bornées : pistes, arme et règles inconnues refusées
+  - session, arènes et historique du serveur démarré
+- **serveur arrêté**
+  - historique, arènes et session vides (comme l’ancien canal)
+  - session, thème et démo refusés : training\_not\_started
+- **thème et démo**
+  - applique le thème %s _(each)_
+  - refuse un thème inconnu ou personnalisé (invalid\_theme), avant l’état du serveur
+  - ouvre les écrans de démo et rend leur nombre
+- **onTrainingActivity**
+  - relaie le match fini jusqu’à la désinscription
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/withdrawal.test.ts</code> — 7 tests</summary>
 
 - à l’appel : forfait DNS, journal, puis réintégration
@@ -3668,20 +3694,6 @@ Unitaires : 542 fichiers, 4232 tests. E2E : 14 fichiers, 43 tests (comptage stat
 - **handlers privacy:\* restants**
   - ne déclare plus que les canaux à dialogue natif ou chemin de fichier
   - archive chiffrée : mot de passe trop court, aucun fichier en attente
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/trainingHandlers.test.ts</code> — 6 tests</summary>
-
-- **training:setTheme**
-  - applique un thème intégré au serveur d’entraînement
-  - accepte le thème Mousquetaires (#1500)
-  - refuse un thème inconnu ou personnalisé
-- **registerTrainingHandlers : arrêt du serveur d’entraînement / démo**
-  - stopServer libère le port et arrête le serveur
-  - fenêtre principale fermée (macOS, app dans le Dock) → serveur arrêté
-  - fenêtre principale rechargée (bouton « Arrêter » perdu) → serveur arrêté
 
 </details>
 
@@ -4796,6 +4808,25 @@ Unitaires : 542 fichiers, 4232 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - splash activé par défaut
   - désactivation du splash conserve la langue
   - closeSplash sans fenêtre appelle le rappel immédiatement
+
+</details>
+
+<details>
+<summary><code>src/main/trainingPort.test.ts</code> — 10 tests</summary>
+
+- **createTrainingPort : démarrage**
+  - enregistre le serveur sous l’identifiant d’entraînement et réserve son port
+  - refuse un second démarrage (training\_already\_started)
+  - port indisponible : refus remote\_refused, rien n’est enregistré
+  - config vocale absente : ignorée (optionnelle)
+- **createTrainingPort : thème et démo**
+  - applique le thème au serveur d’entraînement
+  - ouvre les écrans de démo et les ferme avec la fenêtre principale
+- **createTrainingPort : arrêt du serveur d’entraînement / démo**
+  - stop libère le port et arrête le serveur
+  - stop sans serveur : false
+  - fenêtre principale fermée (macOS, app dans le Dock) → serveur arrêté
+  - fenêtre principale rechargée (bouton « Arrêter » perdu) → serveur arrêté
 
 </details>
 
@@ -8297,6 +8328,21 @@ Unitaires : 542 fichiers, 4232 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - couvre toutes les méthodes de l’écran
   - toutes les opérations station:admin du contrat sont appelées par l’écran
   - une entrée hors bornes est refusée par le contrat
+
+</details>
+
+<details>
+<summary><code>src/renderer/api/trainingApi.test.ts</code> — 6 tests</summary>
+
+- **trainingApi : entrées du contrat**
+  - %s _(each)_
+  - chaque opération d’entraînement est atteignable par un appel de l’écran
+- **trainingApi : enveloppe historique**
+  - une réponse est rangée dans son champ
+  - un refus du contrat devient success: false, avec le code traduisible
+  - hors Electron (pas de pont) : success: false, jamais de rejet, historique vide
+- **trainingApi : avis**
+  - onMatchFinished livre la ligne d’historique jusqu’à la désinscription
 
 </details>
 
