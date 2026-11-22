@@ -5,6 +5,7 @@
  */
 
 import { Fencer, FencerCompetitionStats } from '../../../shared/types';
+import { defaultBpmClient } from '../../../renderer/api/IpcClient';
 import { calculateFencerPoolStats } from '../../../shared/utils/poolCalculations';
 
 export interface CompetitionStats {
@@ -105,10 +106,8 @@ export class AnalyticsService {
    * Statistiques détaillées par combattant (touches, cartons, sorties, durée)
    */
   async getCompetitionFencerStats(competitionId: string): Promise<FencerCompetitionStats[]> {
-    if (typeof window === 'undefined' || !window.electronAPI?.db) return [];
-    return window.electronAPI.db.getCompetitionFencerStats(competitionId) as Promise<
-      FencerCompetitionStats[]
-    >;
+    if (typeof window === 'undefined' || !window.electronAPI?.api) return [];
+    return defaultBpmClient.query('listFencerStats', { competitionId });
   }
 
   // Alias utilisé par useAnalyticsStore
@@ -117,10 +116,8 @@ export class AnalyticsService {
   }
 
   async getFencerCompetitionStats(fencerId: string): Promise<FencerCompetitionStats | null> {
-    if (typeof window === 'undefined' || !window.electronAPI?.db) return null;
-    return window.electronAPI.db.getFencerCompetitionStats(
-      fencerId
-    ) as Promise<FencerCompetitionStats>;
+    if (typeof window === 'undefined' || !window.electronAPI?.api) return null;
+    return defaultBpmClient.query('getFencerStats', { fencerId });
   }
 
   // Stub minimal pour getCompetitionMetrics (appelé par le store)

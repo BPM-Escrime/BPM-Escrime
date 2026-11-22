@@ -8,6 +8,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Competition, FencerCompetitionStats, Weapon } from '../../../shared/types';
 import { FencerMatchRecord } from '../../../shared/types/preload';
 import { useTranslation } from '../../../renderer/contexts/TranslationContext';
+import { useBpmClient } from '../../../renderer/api/BpmClientContext';
 import { CardIcon } from '../../../renderer/components/common/CardIcon';
 import { FencerDetailModal } from './FencerDetailModal';
 import {
@@ -33,6 +34,7 @@ function formatDuration(seconds: number): string {
 
 const FencerStatsTableComponent: React.FC<FencerStatsTableProps> = ({ competition }) => {
   const { t } = useTranslation();
+  const client = useBpmClient();
   const [stats, setStats] = useState<FencerCompetitionStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<keyof FencerCompetitionStats>('fencerLastName');
@@ -65,12 +67,14 @@ const FencerStatsTableComponent: React.FC<FencerStatsTableProps> = ({ competitio
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await window.electronAPI?.db.getCompetitionFencerStats(competition.id);
-      setStats((data as FencerCompetitionStats[]) ?? []);
+      const data = await client
+        .query('listFencerStats', { competitionId: competition.id })
+        .catch(() => null);
+      setStats(data ?? []);
     } finally {
       setLoading(false);
     }
-  }, [competition.id]);
+  }, [client, competition.id]);
 
   useEffect(() => {
     load();
@@ -126,7 +130,7 @@ const FencerStatsTableComponent: React.FC<FencerStatsTableProps> = ({ competitio
     try {
       const entries = await Promise.all(
         stats.map(async s => {
-          const hist = await window.electronAPI.db.getFencerHistory(s.fencerId);
+          const hist = await client.query('getFencerHistory', { fencerId: s.fencerId });
           return [s.fencerId, hist.matches] as [string, FencerMatchRecord[]];
         })
       );
@@ -139,10 +143,9 @@ const FencerStatsTableComponent: React.FC<FencerStatsTableProps> = ({ competitio
 
   // Fiche PDF d'un seul combattant, lancée depuis la ligne (sans ouvrir le modal)
   const exportFencerPdf = async (s: FencerCompetitionStats) => {
-    if (!window.electronAPI?.db) return;
     setExportingFencerId(s.fencerId);
     try {
-      const hist = await window.electronAPI.db.getFencerHistory(s.fencerId);
+      const hist = await client.query('getFencerHistory', { fencerId: s.fencerId });
       await exportFencerDetailPDF(s, hist.matches, competition, cardReasonLabels());
     } finally {
       setExportingFencerId(null);
