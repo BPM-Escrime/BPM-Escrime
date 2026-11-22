@@ -109,9 +109,9 @@ npm run e2e:debug                                 # mode debug
 | `src/database/` | 21 | 269 |
 | `src/main/` | 122 | 1016 |
 | `src/renderer/services/` | 11 | 57 |
-| `src/renderer/hooks/` | 40 | 208 |
+| `src/renderer/hooks/` | 40 | 209 |
 | `src/renderer/components/` | 119 | 633 |
-| E2E Playwright (`e2e/`) | 12 | 41 |
+| E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 1 | 3 |
 | `src/renderer/contexts/` | 1 | 7 |
@@ -119,9 +119,9 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/domain/` | 24 | 212 |
-| **Total** | **534** | **4116** |
+| **Total** | **535** | **4118** |
 
-Unitaires : 522 fichiers, 4075 tests. E2E : 12 fichiers, 41 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 522 fichiers, 4076 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5241,7 +5241,7 @@ Unitaires : 522 fichiers, 4075 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionSession.test.tsx</code> — 8 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionSession.test.tsx</code> — 9 tests</summary>
 
 - **restoreState**
   - marque isLoaded même sans electronAPI
@@ -5254,6 +5254,8 @@ Unitaires : 522 fichiers, 4075 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - relit sur journal:appended plus récent, ignore une révision déjà lue
   - rafale de signaux : une relecture en cours, une seule de plus au besoin
   - journal avancé sans réécriture du bloc (pointage) : saisie locale gardée
+- **étape 4c (docs/adr/0017) : l’écran n’écrit plus l’état**
+  - changement local sans exception : aucune sauvegarde ; exception documentée : sauvegarde
 
 </details>
 
@@ -7169,6 +7171,13 @@ Unitaires : 522 fichiers, 4075 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - créer une compétition ouvre son onglet
   - la compétition créée figure sur l’accueil et se rouvre
   - supprimer une compétition la retire de l’accueil
+
+</details>
+
+<details>
+<summary><code>e2e/electron/persistence.spec.ts</code> — 1 test</summary>
+
+- poules lancées et score saisi retrouvés après rechargement de la fenêtre
 
 </details>
 
