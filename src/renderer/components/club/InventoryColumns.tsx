@@ -19,21 +19,22 @@ export const fmtDate = (iso?: string | null) => {
 export const fmtMoney = (n: number) =>
   n.toLocaleString(undefined, { style: 'currency', currency: 'EUR' });
 
+/** Ordre d'affichage des colonnes (retours #1872 du 20/11) ; la marque précède le modèle */
 export const INVENTORY_COLUMNS = [
   'category',
   'weapon',
+  'condition',
+  'quantity',
+  'location',
+  'purchase',
+  'warranty',
+  'invoice',
+  'supplier',
   'brand',
   'model',
   'serial',
   'size',
   'color',
-  'quantity',
-  'condition',
-  'location',
-  'purchase',
-  'supplier',
-  'invoice',
-  'warranty',
   'notes',
 ] as const;
 
@@ -42,8 +43,8 @@ export type InventoryColumn = (typeof INVENTORY_COLUMNS)[number];
 /** Colonnes visibles par défaut (affichage historique) */
 export const DEFAULT_INVENTORY_COLUMNS: readonly InventoryColumn[] = [
   'category',
-  'quantity',
   'condition',
+  'quantity',
   'location',
   'purchase',
   'warranty',

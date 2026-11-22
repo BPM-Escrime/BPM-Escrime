@@ -107,20 +107,21 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 269 |
-| `src/main/` | 122 | 1015 |
+| `src/main/` | 122 | 1016 |
 | `src/renderer/services/` | 11 | 57 |
-| `src/renderer/hooks/` | 39 | 201 |
+| `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 119 | 633 |
 | E2E Playwright (`e2e/`) | 12 | 41 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 1 | 3 |
 | `src/renderer/contexts/` | 1 | 7 |
+| `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/domain/` | 24 | 212 |
-| **Total** | **532** | **4107** |
+| **Total** | **534** | **4116** |
 
-Unitaires : 520 fichiers, 4066 tests. E2E : 12 fichiers, 41 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 522 fichiers, 4075 tests. E2E : 12 fichiers, 41 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3414,7 +3415,7 @@ Unitaires : 520 fichiers, 4066 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/sport.test.ts</code> — 33 tests</summary>
+<summary><code>src/main/engine/commands/sport.test.ts</code> — 34 tests</summary>
 
 - poules → arbitres → scores → tableau → classement final → exports
 - régénérer des poules jouées exige replace
@@ -3447,6 +3448,7 @@ Unitaires : 520 fichiers, 4066 tests. E2E : 12 fichiers, 41 tests (comptage stat
 - poule : piste et arbitres (principal propagé aux matchs) ; match de tableau : piste et arbitre
 - adjustRanking : ordre du DT, classements de poule alignés, RankingAdjusted
 - skipPools puis tableau ; clearTableau retire le tableau
+- composition écrite dans l’état ; journal sans nom ; tireur inconnu refusé
 - **validation des scores de poule (identique à l’écran)**
   - score max, égalité, vainqueur contraire
   - statut spécial au perdant, priorité marquée
@@ -5096,6 +5098,16 @@ Unitaires : 520 fichiers, 4066 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/hooks/posteUiState.test.ts</code> — 3 tests</summary>
+
+- **posteUiState**
+  - écrit et relit par épreuve, fusionne les champs
+  - stockage illisible : rien
+  - onglet du poste borné par la phase de l’épreuve ; onglets latéraux libres
+
+</details>
+
+<details>
 <summary><code>src/renderer/hooks/remoteScoreManager/useRemoteServerState.test.tsx</code> — 7 tests</summary>
 
 - **fetchVenueStripCount**
@@ -5207,11 +5219,12 @@ Unitaires : 520 fichiers, 4066 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionRestore.phase.test.tsx</code> — 2 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionRestore.phase.test.tsx</code> — 3 tests</summary>
 
 - **onglet restauré (docs/adr/0017)**
   - chargement de l’épreuve : onglet de la session
   - relecture après une commande : onglet du poste conservé
+  - chargement : onglet du poste s’il ne devance pas la phase de l’épreuve
 
 </details>
 
@@ -5458,7 +5471,7 @@ Unitaires : 520 fichiers, 4066 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/usePoolsLaunch.test.tsx</code> — 8 tests</summary>
+<summary><code>src/renderer/hooks/usePoolsLaunch.test.tsx</code> — 11 tests</summary>
 
 - **usePoolsLaunch**
   - composition : identifiants, piste, ordre des matchs
@@ -5472,6 +5485,10 @@ Unitaires : 520 fichiers, 4066 tests. E2E : 12 fichiers, 41 tests (comptage stat
 - **tableauAssignmentsDiff**
   - piste ou arbitre changés seuls : affectations
   - autre changement (score, tireur) : null, écriture de l’écran
+- **tableauScoreOps (retour arrière, remplissage automatique)**
+  - remplissage : scores du premier tour vers la finale, vainqueur précisé sur égalité
+  - retour arrière : annulations de la finale vers le premier tour
+  - statut spécial ou matchs différents : null
 
 </details>
 
@@ -8131,6 +8148,16 @@ Unitaires : 520 fichiers, 4066 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - applique la langue et le thème de la base sur settings:changed
   - ignore les autres événements, les valeurs identiques et inconnues
   - se désabonne au démontage
+
+</details>
+
+### `src/renderer/locales/`
+
+<details>
+<summary><code>src/renderer/locales/placeholders.test.ts</code> — 1 test</summary>
+
+- **locales : paramètres {{nom}}**
+  - %s : aucun paramètre à accolade simple _(each)_
 
 </details>
 
