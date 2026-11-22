@@ -150,14 +150,11 @@ Renderer Process (src/renderer/)
 
 Feature Modules (src/features/)
 ├── analytics/           # analyticsService (lecture base) + useAnalyticsStore + FencerDetailModal, FencerStatsTable ; KPI : shared/domain/analytics
-├── bracket/             # BracketGenerator + BracketService + useBracketStore
-├── competition/         # CompetitionService + useCompetitionStore + competition.types + competitionUtils
 ├── doubleelimination/   # useDEBracketStore
 ├── latefencers/         # useLateFencerStore
 ├── matchAuditLog/       # useMatchAuditStore
 ├── pdfTemplates/        # usePdfTemplateStore
 ├── penalties/           # penaltyUtils (libellés, couleurs) + usePenaltyStore ; types → shared/domain/penalties
-├── pools/               # PoolCalculator + PoolService + usePoolStore + pool.types
 ├── rapieres/            # Tournoi des rapières (mode spécial arme CUSTOM) dans CompetitionView : équipe = tireur (club = niveau), composition + vagues dans session_state (clé rapieres) ; interface seulement (règles : shared/domain/rapieres, notifications injectées — lot 5 de #1979)
 └── teams/               # useTeamStore + baril index.ts ; règles → shared/domain/teams (#1979)
 

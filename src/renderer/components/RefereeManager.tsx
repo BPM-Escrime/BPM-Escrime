@@ -64,9 +64,6 @@ const PRESENCE_COLORS: Record<RefereePresence, string> = {
   free: '#166534',
 };
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const isUuid = (id: string) => UUID_RE.test(id);
-
 interface RefereeManagerProps {
   competition: Competition;
   referees: Referee[];
@@ -201,18 +198,6 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
     );
   }, [referees, config]);
 
-  const persistAssignments = async (map: Map<string, Referee>) => {
-    for (const [matchId, referee] of map.entries()) {
-      // Matchs de tableau (ID « 64-0 ») : persistés via l'état du tableau (onAssignmentsChange)
-      if (!isUuid(matchId)) continue;
-      try {
-        await window.electronAPI.db.updateMatch(matchId, { refereeId: referee.id });
-      } catch {
-        /* non bloquant */
-      }
-    }
-  };
-
   const handleAutoAssign = () => {
     // Copies : le service mute les arbitres (assignedMatches, status) — ne pas toucher l'état React
     const fresh = new RefereeManager(
@@ -246,8 +231,8 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
     setShortages(result.shortages);
     setManager(fresh);
     setAssignments(newAssignments);
+    // Écrit par le moteur (assignMatches) via onAssignmentsChange
     onAssignmentsChange(newAssignments);
-    persistAssignments(result.assignments);
   };
 
   const handleManualAssign = (matchId: string, refereeId: string) => {
@@ -258,9 +243,6 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
       setLockedMatchIds(prev => new Set(prev).add(matchId));
       setAssignments(newAssignments);
       onAssignmentsChange(newAssignments);
-      if (isUuid(matchId)) {
-        window.electronAPI.db.updateMatch(matchId, { refereeId: referee.id }).catch(() => {});
-      }
     }
   };
 

@@ -95,7 +95,10 @@ Statistiques : `AnalyticsDashboard`, `FencerStatsTable`, `FencerDetailModal` et 
 (stats des tireurs) lisent `listFencerStats`, `getFencerStats`, `getFencerHistory`,
 `listRefereeStats`, `listMatchTimings` et `listRemoteEvents` ; `getCompetitionStats` et
 `getPoolStats` (lecture brute des tables) restent sur `db.*` en attendant une requête
-métier. Cliquet `electronApiCalls` : 120.
+métier.
+Code mort supprimé (`features/pools`, `features/competition`, `features/bracket` : services et
+stores sans appelant). Arbitres et pistes : plus d'écriture directe en base à côté de
+`assignMatches`. Cliquet `electronApiCalls` : 117.
 
 Lots suivants : suite de la migration de l'écran par domaine (2), `WsClient` + adaptateur WebSocket (3),
 `PlatformServices` (4), pages distantes (5).
