@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { formatCyranoLog } from '../../renderer/components/remote/cyranoSettings';
-import type { CyranoFrameLogDTO } from '../../shared/types/preload';
+import type { CyranoFrameLog } from '../../shared/types/stripDevice';
 // Script Node partagé avec le simulateur, testé ici car Vitest ne couvre que src/
 const {
   parseCyranoLog,
@@ -18,7 +18,7 @@ const HELLO_ACK =
   '|EFP1.1|INFO|1|C1|||||3:00||||N|W|%||||0|U|0|0|0|0|0|N|0|%||||0|U|0|0|0|0|0|N|0|%|';
 const info = (s: string) => `|EFP1.1|INFO|1|C1|||||${s}||||N|F|%|`;
 
-const log: CyranoFrameLogDTO[] = [
+const log: CyranoFrameLog[] = [
   { ts: T0, dir: 'in', ip: '10.0.0.5', port: 50101, piste: '1', raw: HELLO_ACK },
   { ts: T0 + 500, dir: 'out', ip: '10.0.0.5', port: 50101, piste: '1', raw: '|EFP1.1|DISP|1|%|' },
   { ts: T0 + 2000, dir: 'in', ip: '10.0.0.5', port: 50101, piste: '1', raw: info('2:58') },

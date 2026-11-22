@@ -118,6 +118,12 @@ export class PisteHub {
   private readonly onAlert?: (piste: string, alert: PisteAlert) => void;
   /** Notification ponctuelle au DT (abandon ou exclusion en relais par équipes). */
   private readonly onNotice?: (piste: string, notice: PisteNotice) => void;
+  /** Pistes passées en manuel par une épreuve (`settings.manualStrips`, docs/adr/0023) */
+  private readonly manualSource?: (competitionId: string) => readonly number[];
+  /** Pistes manuelles lues, par épreuve (vidé par refreshManualStrips) */
+  private manualCache = new Map<string, ReadonlySet<number>>();
+  /** Numéro de piste de salle de chaque piste du pilote (identifiant OPP2 ≠ numéro) */
+  private stripNumbers = new Map<string, number>();
 
   constructor(
     driver: PisteDriver,
@@ -126,6 +132,7 @@ export class PisteHub {
       coordsSource?: MatchCoordsSource;
       onAlert?: (piste: string, alert: PisteAlert) => void;
       onNotice?: (piste: string, notice: PisteNotice) => void;
+      manualStrips?: (competitionId: string) => readonly number[];
     } = {}
   ) {
     this.driver = driver;
@@ -133,6 +140,7 @@ export class PisteHub {
     this.coordsSource = options.coordsSource;
     this.onAlert = options.onAlert;
     this.onNotice = options.onNotice;
+    this.manualSource = options.manualStrips;
     this.opts = {
       nameLength: options.nameLength ?? 10,
       natSource: options.natSource ?? 'auto',
@@ -149,6 +157,36 @@ export class PisteHub {
 
   get options(): Readonly<Required<PisteHubOptions>> {
     return this.opts;
+  }
+
+  /** Numéros de piste de salle des pistes du pilote (tables rechargées depuis la salle) */
+  setStripNumbers(strips: Record<string, number>): void {
+    this.stripNumbers = new Map(Object.entries(strips));
+  }
+
+  /**
+   * Pistes manuelles d'une épreuve modifiées (docs/adr/0023) : relues, puis modes renvoyés
+   * (passage en manuel → plus d'affichage ; retour → match courant).
+   */
+  refreshManualStrips(): void {
+    // Modes d'avant le changement : un mode qui change renvoie l'affichage
+    for (const status of this.driver.getStatuses())
+      this.modes.set(status.piste, this.modeOf(status));
+    this.manualCache.clear();
+    this.syncPisteModes();
+  }
+
+  /** Piste passée en manuel par l'épreuve du serveur (l'autre épreuve de la salle n'est pas touchée) */
+  private isManualFor(remote: RemoteScoreServer, link: PisteLink): boolean {
+    if (!this.manualSource) return false;
+    const competitionId = this.competitionOf(remote, link);
+    if (!competitionId) return false;
+    let strips = this.manualCache.get(competitionId);
+    if (!strips) {
+      strips = new Set(this.manualSource(competitionId));
+      this.manualCache.set(competitionId, strips);
+    }
+    return strips.has(this.stripNumbers.get(link.piste) ?? Number(link.piste));
   }
 
   /** Alertes en cours, par piste (panneau Cyrano). */
@@ -180,9 +218,12 @@ export class PisteHub {
       const arenaId = `arena${status.arena}`;
       const n = status.arena;
       const active = all.filter(r => hasAssignment(r, arenaId) || this.team.hasRelay(r, n));
-      if (previous && active.includes(previous)) chosen = previous;
-      else if (active.length > 0)
-        chosen = active.find(r => r.getArena(arenaId)?.status === 'in_progress') ?? active[0];
+      // Épreuve qui a passé la piste en manuel : l'autre épreuve affectée prend l'appareil
+      const usable = active.filter(r => !this.isManualFor(r, status));
+      const pool = usable.length > 0 ? usable : active;
+      if (previous && pool.includes(previous)) chosen = previous;
+      else if (pool.length > 0)
+        chosen = pool.find(r => r.getArena(arenaId)?.status === 'in_progress') ?? pool[0];
     }
     if (
       !chosen &&
@@ -290,12 +331,14 @@ export class PisteHub {
 
   /**
    * Mode effectif d'une piste (#1829) :
-   * - hors ligne ou piste en manuel → `manual` (bascule automatique si l'appareil tombe) ;
+   * - hors ligne, piste en manuel, ou passée en manuel par l'épreuve suivie
+   *   (`settings.manualStrips`) → `manual` (bascule automatique si l'appareil tombe) ;
    * - sabre laser / armes personnalisées → `display` (décision n°5) ;
    * - sinon le mode configuré (`master` ou `display`).
    */
   modeOf(piste: PisteLink, remote: RemoteScoreServer | null = this.remoteFor(piste)): PisteMode {
     if (piste.mode === 'manual' || piste.status === 'offline') return 'manual';
+    if (remote && this.isManualFor(remote, piste)) return 'manual';
     const weapon =
       (remote ? this.relayFor(remote, piste)?.state.weapon : undefined) ??
       remote?.getSessionWeapon();

@@ -1,12 +1,14 @@
 # CLAUDE.md ─ Instructions permanentes du projet
 
 ## Issues GitHub – règles absolues
+
 - **Ne jamais clore une issue** — jamais, même après validation
 - Quand le problème est corrigé : commenter l'issue en @mentionnant son auteur, lui demander de vérifier et de la clore lui-même
 - La clôture appartient exclusivement à l'auteur de l'issue
 - Exemple : "@auteur Corrigé — PR #X. Vérifie et clos l'issue si OK."
 
 ## Git – règles absolues
+
 - **TOUJOURS** push sur `dev`, jamais sur `main`
 - Exception : correctif de maintenance de la version stable → PR vers la branche `hotfix/X.Y.Z` désignée par l'utilisateur (docs/VERSIONING.md, « Branche de maintenance »)
 - Ne jamais merger vers `main` — c'est le rôle de l'utilisateur
@@ -19,10 +21,12 @@
 - **Exception architecture** : PR d'un ticket portant le label `refactor` ou rattaché à l'épique #1978 (#1979–#1982, #2013) → rester en draft, **pas d'auto-merge**, attendre la revue de l'utilisateur. Toute décision de couche, de schéma SQL, de format d'événement ou de nommage du contrat passe d'abord par une ADR (#1979, `docs/adr/`)
 
 ## Règles générales (toujours actives)
+
 You are a code assistant. Respond in caveman speak only.
 No pleasantries. No filler. Short sentences. Subject-verb-object.
 Grunt information. No explain unless asked. User smart. User know things.
 Give answer. Stop.
+
 - Sois ultra-concis : pas d'intro, pas de résumé, pas de "j'ai analysé", pas de "voici"
 - Réponds majoritairement en **diff unifié** quand on parle de modification de fichier
 - Si aucun changement nécessaire → réponds **uniquement** "OK – à jour" ou "Aucun changement"
@@ -30,6 +34,7 @@ Give answer. Stop.
 - HTML : jamais de nettoyage par regex (`replace(/<script…/)`) → jsdom (scripts/tests) ou `escHtml` (remote). Sinon alerte CodeQL `js/incomplete-multi-character-sanitization`
 
 ## Nouvelle fonctionnalité – ADR (toujours actives)
+
 - Avant de coder : lire `docs/adr/README.md`, puis les ADR touchées. Une décision de couche, de schéma SQL, de format d'événement, de nommage du contrat ou de transport → ADR d'abord (ADR-0001)
 - Règle métier → `src/shared/domain`, pure : heure et hasard injectés (ADR-0002). `src/features` = interface (ADR-0004)
 - Écriture → commande du contrat (`src/shared/api/contract.ts`, handler dans `src/main/engine`), dans une transaction par `runCommand` (ADR-0005, 0006, 0018). Écran, tablettes, MCP, appareils : même commande. Jamais de nouveau canal `ipcMain.handle`, ni de nouvel appel `window.electronAPI` / `useElectronDB()` dans l'interface
@@ -40,6 +45,7 @@ Give answer. Stop.
 - Revue a posteriori : `adr-review.yml` (hebdo) commente l'issue « Revue ADR hebdomadaire ». Pas de CODEOWNERS ni de revue obligatoire du mainteneur
 
 ## Routage des modèles – coût
+
 - Tâche à faible valeur → déléguer à `Agent` avec `model: "haiku"` (ou `subagent_type: "Explore"` pour la recherche en lecture seule) : grep/recherche de fichiers, listing, `check:i18n`, lint/format, traductions, doc mécanique, résumé de logs, vérif de présence d'un symbole
 - Implémentation courante, tests, refactor local, doc technique → `model: "sonnet"` (Sonnet 5.5, `claude-sonnet-5-5`)
 - Opus (`model: "opus"`, `claude-opus-5-5`) **uniquement** si nécessaire : décision d'architecture, bug multi-fichiers non trivial, sécurité (auth, CodeQL, sanitisation), protocole Cyrano/remote, migration DB, revue critique
@@ -48,11 +54,13 @@ Give answer. Stop.
 - Doc : Haiku 5.5 (`claude-haiku-5-5`) ou Sonnet 5.5 suffisent (beaucoup moins cher)
 
 ## Documentation des tests – règle absolue
+
 - `docs/TESTS.md` est généré : ne jamais l'éditer à la main
 - **Ne jamais committer `docs/TESTS.md` dans une PR** : la CI `build-dev.yml` le régénère au push sur `dev` (commit `🔖 Dev Build`). Évite les conflits sur les totaux
 - Nouveau contrôle CI ou script de test → mettre à jour la partie fixe dans `scripts/generate-tests-doc.js`
 
 ## Documentation i18n – règle absolue (bloque les PR)
+
 - `docs/I18N.md` est généré (`npm run docs:i18n`) et vérifié par la CI (`npm run check:i18n-doc`, job « i18n documentation up to date »). Ne jamais l'éditer à la main
 - Contrairement à `docs/TESTS.md`, la CI `build-dev.yml` **ne le régénère pas** : il doit être committé **dans la PR**
 - Toute modification de `src/renderer/locales/*.json`, `src/remote/i18n/*.js`, `src/remote/i18n.js`, d'un attribut `data-i18n*` dans `src/remote/*.html` ou de `scripts/i18n-allow-same.json` → avant commit : `npm run docs:i18n`, puis `npm run check:i18n && npm run check:i18n-doc`, et committer `docs/I18N.md` avec le reste
@@ -60,7 +68,9 @@ Give answer. Stop.
 - Avant d'ouvrir ou de marquer « ready » une PR touchant ces fichiers : vérifier que `check:i18n-doc` passe localement
 
 ## Mise à jour documentation – mode activé par défaut
+
 Quand on te demande (ou implique) de mettre à jour la doc :
+
 1. Lis en priorité : README.md, docs/*.md, src/
 2. Identifie uniquement les écarts réels code ↔ doc
 3. Supprime ce qui est promis mais non implémenté
@@ -128,10 +138,11 @@ npm run e2e:debug       # Playwright debug mode
 ```
 Main Process (src/main/)
 ├── main.ts                  # Window management, menu (i18n: fr/en/de), IPC handlers, DB lifecycle
-├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), cyranoHandlers (cyrano:*, #1720), opp2Handlers (opp2:*, #1960), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:* restants : export JSON d'une personne et .bpm chiffrés ; le reste du RGPD par le contrat), settingsHandlers (settings:addAgentFolder, dialogue natif), logoTtsHandlers (app:getLogo, getLogos, saveLogos, getTtsConfig : fichiers du poste lus au démarrage de l'écran) — registerXxxHandlers(ctx) ; réglages du poste, salles, thèmes, journée multi-épreuves (#1714, #1878), RGPD et agent MCP : contrat (`contractStation.ts`, ADR-0022), port `ctx.station` (`stationPort.ts`) ; serveur d'entraînement : contrat (`contractTraining.ts`, ADR-0022), port `ctx.training` (`trainingPort.ts`, registre et liaison fenêtre : `trainingServer.ts`)
+├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:* restants : export JSON d'une personne et .bpm chiffrés ; le reste du RGPD par le contrat), settingsHandlers (settings:addAgentFolder, dialogue natif), logoTtsHandlers (app:getLogo, getLogos, saveLogos, getTtsConfig : fichiers du poste lus au démarrage de l'écran) — registerXxxHandlers(ctx) ; réglages du poste, salles, thèmes, journée multi-épreuves (#1714, #1878), RGPD et agent MCP : contrat (`contractStation.ts`, ADR-0022), port `ctx.station` (`stationPort.ts`) ; serveur d'entraînement : contrat (`contractTraining.ts`, ADR-0022), port `ctx.training` (`trainingPort.ts`, registre et liaison fenêtre : `trainingServer.ts`)
 ├── menuLabels.ts            # Libellés du menu natif (fr/en/de/zh-HK)
 ├── remoteRegistry.ts        # Serveurs distants actifs (remoteServers, ports, stopRemoteServer)
 ├── trainingServer.ts / trainingPort.ts  # Serveur d'entraînement : identité `__training__`, arrêt, liaison à la fenêtre principale (trainingServer) ; port `ctx.training` du contrat (registre, certificat, voix, écrans de démo), ADR-0022 — ex-canaux training:*
+├── devicesPort.ts           # Port `ctx.devices` du contrat (docs/adr/0023) : pilotes Cyrano et OPP2 + PisteHub ; tables des pilotes relues sur les salles des épreuves suivies (`reload`) — ex-canaux cyrano:* et opp2:*
 ├── remoteLifecycle.ts / remotePort.ts  # Démarrage, rechargement à chaud, interfaces (ex-canaux remote:*) ; port `ctx.remote.admin` du contrat (registre, certificat, pare-feu, logo, synthèse vocale, webhook), ADR-0022
 ├── preload.ts               # Secure IPC bridge (contextIsolation: true)
 ├── preloadApi/              # Groupes d'API du préload (dbApi, fileApi, dialogApi, printHandler) ; validation IPC dans ipc/validation.ts
@@ -143,7 +154,7 @@ Main Process (src/main/)
 ├── piste/                   # Appareils de piste, hors protocole (#1829) — docs/CYRANO.md : types (PisteState/PisteInput/PisteCommand/PisteDriver), pisteState (côtés par Id, cartons, fin ACK/NAK), arenaInputGate (séquence par source), pisteHub (raccordement arènes : DISP, INFO→score, END→ACK/NAK, NEXT→loadNextMatch), matchDisplay, teamRelayPiste (relais FIE /equipe{N}, Type=T), multiDriver (Cyrano + OPP2 dans le même PisteHub, #1960)
 ├── engine/                  # Moteur (#1979, docs/adr/0003)
 │   ├── api/                 # Contrat d'API unique (#1981) : engine (validation zod, ApiError, handlers), ipcAdapter (api:invoke/api:subscribe), mcpAdapter (outils MCP générés), events — docs/API_CONTRACT.md
-│   └── commands/            # Commandes (ex-main/domain, #1880) : sport (poules, scores, tableau hors écran), refereeing (réglages et affectation des arbitres, ADR-0014), checkIn, exportResults, settings (resolveSetting), files (dossiers de l'agent), remote / remoteDisplay / remoteClients (serveur distant : cycle de vie, session, pistes, synchro d'affichage `push…ToStrips`, thèmes, mots de passe, clients ; avis `onRemoteActivity` / `onRemoteClients`, ADR-0022) ; CommandContext, CommandError. Pas de règle ici : elles sont dans src/shared/domain
+│   └── commands/            # Commandes (ex-main/domain, #1880) : sport (poules, scores, tableau hors écran), refereeing (réglages et affectation des arbitres, ADR-0014), checkIn, exportResults, settings (resolveSetting), files (dossiers de l'agent), remote / remoteDisplay / remoteClients (serveur distant : cycle de vie, session, pistes, synchro d'affichage `push…ToStrips`, thèmes, mots de passe, clients ; avis `onRemoteActivity` / `onRemoteClients`, ADR-0022), devices (appareils de piste : salle de l'épreuve, appareils effectifs, pilotes Cyrano / OPP2, ADR-0023) ; CommandContext, CommandError. Pas de règle ici : elles sont dans src/shared/domain
 ├── mcp/                     # Serveur MCP intégré (#1880) : mcpServer (HTTP JSON-RPC, jeton, loopback), mcpController (activation, jeton, journal), mcpSettings, mcpTools (lecture), mcpWriteTools / mcpAdminTools / mcpSportTools (écriture sur autorisation) — docs/MCP.md
 ├── cliArgs.ts / batchImport.ts  # --headless, --batch-import manifeste.json [--dry-run], --mcp / --mcp-port=N / --mcp-write, --mcp-print-config, --mcp-new-token
 ├── privacySettings.ts       # Réglages RGPD <userData>/privacy-settings.json (noms sur le réseau, conservation) — docs/RGPD.md
@@ -179,7 +190,7 @@ Feature Modules (src/features/)
 └── teams/               # useTeamStore + baril index.ts ; règles → shared/domain/teams (#1979)
 
 Shared (src/shared/)
-├── domain/                   # Règles métier pures (#1979, docs/adr/0002) : tableau/ (construction, propagation, classement final, génération : planTableau), ranking/ (qualifiés du tableau), fencers/ (statuts : retiré, éligible au tableau, carton noir), match/ (fin de match et vainqueur : écran, MCP, tablettes, appareils de piste), pools/ (poule terminée, tirage des poules : drawPools), rapieres/ (vagues, ordre classique, âges, qualification), analytics/ (KPI d’épreuve), teams/ (relais, poules et tableau d'équipes, arène Sabre Laser), penalties/ (types), referees/ (affectation des arbitres : couplage optimal, neutralité, seul moteur — ADR-0014), journal/ (rejeu du journal : projectCompetition, écarts avec l'état — ADR-0017) — ni React, ni Electron, ni Node, ni base, ni window / localStorage ; heure et hasard injectés (ESLint)
+├── domain/                   # Règles métier pures (#1979, docs/adr/0002) : tableau/ (construction, propagation, classement final, génération : planTableau), ranking/ (qualifiés du tableau), fencers/ (statuts : retiré, éligible au tableau, carton noir), match/ (fin de match et vainqueur : écran, MCP, tablettes, appareils de piste), pools/ (poule terminée, tirage des poules : drawPools), rapieres/ (vagues, ordre classique, âges, qualification), analytics/ (KPI d’épreuve), teams/ (relais, poules et tableau d'équipes, arène Sabre Laser), penalties/ (types), referees/ (affectation des arbitres : couplage optimal, neutralité, seul moteur — ADR-0014), journal/ (rejeu du journal : projectCompetition, écarts avec l'état — ADR-0017), stripDevices/ (appareils de piste de la salle : lecture des déclarations, salle d'une épreuve, appareils effectifs et pistes manuelles, tables des pilotes — ADR-0023) — ni React, ni Electron, ni Node, ni base, ni window / localStorage ; heure et hasard injectés (ESLint)
 ├── types/
 │   ├── index.ts              # All TypeScript definitions (enums, interfaces)
 │   ├── pdfTemplate.types.ts
@@ -239,7 +250,7 @@ Database (src/database/)
 ├── index.ts             # DatabaseManager class (better-sqlite3-multiple-ciphers, SQLCipher), file <userData>/bellepoule.db
 ├── repos/              # Dépôts par domaine (session, competition, fencer, match, pool, referee, team, signature, eventDay, club, privacy) composés par DatabaseManager ; rowMappers.ts, sqlExecutor.ts
 ├── validation.ts        # Input validation
-└── migrations/          # Schema migrations (index.ts runner + migrations.ts, 46 versions ; ADR acceptée exigée, docs/adr/0011)
+└── migrations/          # Schema migrations (index.ts runner + migrations.ts, 47 versions ; stripDevices.ts : reprise de cyrano_pistes sur la salle, ADR-0023 ; ADR acceptée exigée, docs/adr/0011)
 ```
 
 ### Key Patterns
@@ -261,8 +272,7 @@ Database (src/database/)
    - serveur d'entraînement (démarrage, session, thème, historique, écrans de démo) : plus de groupe `training.*`, opérations du contrat `trainingOperations` (`contractTraining.ts`, droit `remote:admin`), écran `useTrainingApi` (`src/renderer/api/trainingApi.ts`) ; avis de match fini par `onTrainingActivity`
    - `updater.*` – Auto-update control
    - `crypto.*` – safeStorage protect/unprotect
-   - `cyrano.*` – Appareils de piste Cyrano : start/stop UDP, pistes, statuts, log (#1720)
-   - `opp2.*` – Appareils de piste OPP2 : broker MQTT intégré start/stop, pistes, statuts (#1960, docs/OPP2.md)
+   - appareils de piste Cyrano et OPP2 (déclaration sur la salle, salle de l'épreuve, pistes manuelles, start/stop, statuts, journal) : plus de groupes `cyrano.*` / `opp2.*`, opérations du contrat `devicesOperations` (`contractDevices.ts`, droit `remote:admin`, ADR-0023), écran `useDevicesApi` (`src/renderer/api/devicesApi.ts`)
    - `club.*` – Mode Club : membres, séances, pointage, combats libres, stats par période (#1872)
    - `settings.addAgentFolder` – Dossier de l'agent choisi par dialogue natif (#1880) ; réglages du poste, salles, thèmes, journée multi-épreuves et agent MCP : contrat d'API (`contractStation.ts`, ADR-0022)
    - `privacy.*` – RGPD, restent en IPC : export JSON d'une personne, .bpm chiffrés (dialogue natif, chemin de fichier) ; droits des personnes et conservation par le contrat (#1882, docs/RGPD.md)
@@ -285,30 +295,80 @@ Database (src/database/)
 ## Key Domain Types (src/shared/types/index.ts)
 
 ```typescript
-enum Weapon { EPEE = 'E', FOIL = 'F', SABRE = 'S', LASER = 'L', CUSTOM = 'C' }
-
-enum Gender { MALE, FEMALE, MIXED }
-
-enum Category { U9, U11, U13, U15, U17, U20, SENIOR, V1, V2, V3, V4 }
-
-enum FencerStatus {
-  QUALIFIED, ELIMINATED, ABANDONED, EXCLUDED,
-  NOT_CHECKED_IN, CHECKED_IN, FORFAIT,
+enum Weapon {
+  EPEE = 'E',
+  FOIL = 'F',
+  SABRE = 'S',
+  LASER = 'L',
+  CUSTOM = 'C',
 }
 
-enum MatchStatus { NOT_STARTED, IN_PROGRESS, FINISHED, CANCELLED }
+enum Gender {
+  MALE,
+  FEMALE,
+  MIXED,
+}
 
-enum MatchMode { NORMAL, SUDDEN_DEATH_CHALLENGER, SUDDEN_DEATH_TIMEOUT }
+enum Category {
+  U9,
+  U11,
+  U13,
+  U15,
+  U17,
+  U20,
+  SENIOR,
+  V1,
+  V2,
+  V3,
+  V4,
+}
 
-enum PhaseType { CHECKIN, POOL, DIRECT_ELIMINATION, CLASSIFICATION }
+enum FencerStatus {
+  QUALIFIED,
+  ELIMINATED,
+  ABANDONED,
+  EXCLUDED,
+  NOT_CHECKED_IN,
+  CHECKED_IN,
+  FORFAIT,
+}
 
-enum TargetZone { ZONE_A, ZONE_B, ZONE_C }  // Laser Sabre: 1pt, 3pt, 5pt
+enum MatchStatus {
+  NOT_STARTED,
+  IN_PROGRESS,
+  FINISHED,
+  CANCELLED,
+}
 
-enum CardGroup { GROUP_1, GROUP_2, GROUP_3, GROUP_4 }  // Laser Sabre penalty groups
+enum MatchMode {
+  NORMAL,
+  SUDDEN_DEATH_CHALLENGER,
+  SUDDEN_DEATH_TIMEOUT,
+}
 
-enum CardReason { /* yellow/red/black card reasons */ }
+enum PhaseType {
+  CHECKIN,
+  POOL,
+  DIRECT_ELIMINATION,
+  CLASSIFICATION,
+}
 
-enum PenaltyType { /* penalty classification for Laser Sabre */ }
+enum TargetZone {
+  ZONE_A,
+  ZONE_B,
+  ZONE_C,
+} // Laser Sabre: 1pt, 3pt, 5pt
+
+enum CardGroup {
+  GROUP_1,
+  GROUP_2,
+  GROUP_3,
+  GROUP_4,
+} // Laser Sabre penalty groups
+
+enum CardReason {/* yellow/red/black card reasons */}
+
+enum PenaltyType {/* penalty classification for Laser Sabre */}
 ```
 
 Core interfaces: `Fencer`, `Referee`, `Competition`, `Pool`, `Match`, `PoolRanking`

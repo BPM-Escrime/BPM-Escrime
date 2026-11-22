@@ -732,6 +732,7 @@ export interface CompetitionSettings {
   schedule?: CompetitionSchedule; // Horaires appel / scratch / début (#1938)
   gregLevel?: 'L' | 'Z' | 'CN' | 'A' | 'F' | 'IE' | 'X'; // Niveau GREG (publication, #1328) ; absent = X (Autre)
   poolBoutOrder?: 'fie' | 'free'; // Ordre des matchs de poule : FIE o.69/o.70 (défaut) ou libre, rondes de Berger (#1964)
+  manualStrips?: number[]; // Pistes de la salle dont l'appareil est ignoré pour cette épreuve (docs/adr/0023)
 }
 
 export interface Phase extends BaseEntity {

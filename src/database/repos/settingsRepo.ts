@@ -5,6 +5,8 @@
  */
 import { v4 as uuidv4 } from 'uuid';
 import type { SqlExecutor } from './sqlExecutor';
+import { toStripDevice } from '../../shared/domain/stripDevices/stripDevices';
+import type { StripDevice } from '../../shared/types/stripDevice';
 import {
   APP_SETTINGS_DEFAULTS,
   APP_SETTING_KEYS,
@@ -29,14 +31,14 @@ interface StripRow {
   venue_id: string;
   number: number;
   label: string | null;
-  cyrano_config: string | null;
+  device_config: string | null;
 }
 
-const parseConfig = (raw: string | null): Record<string, unknown> | null => {
+/** Appareil de la piste (docs/adr/0023) ; déclaration illisible : aucun appareil */
+const parseDevice = (raw: string | null): StripDevice | null => {
   if (!raw) return null;
   try {
-    const v = JSON.parse(raw);
-    return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+    return toStripDevice(JSON.parse(raw));
   } catch {
     return null;
   }
@@ -56,11 +58,12 @@ export function normalizeVenueStrips(input: VenueInput): VenueStrip[] {
     if (!Number.isFinite(n) || n < 1 || n > MAX_VENUE_STRIPS || seen.has(n)) continue;
     seen.add(n);
     const label = typeof s.label === 'string' ? s.label.trim().slice(0, 40) : '';
-    const cfg = s.cyranoConfig;
+    // Absent : appareil déjà déclaré gardé à l'enregistrement ; null ou invalide : retiré
+    const device = s.deviceConfig === undefined ? undefined : toStripDevice(s.deviceConfig);
     out.push({
       number: n,
       ...(label ? { label } : {}),
-      ...(cfg && typeof cfg === 'object' && !Array.isArray(cfg) ? { cyranoConfig: cfg } : {}),
+      ...(device !== undefined ? { deviceConfig: device } : {}),
     });
   }
   return out.sort((a, b) => a.number - b.number);
@@ -161,11 +164,11 @@ export class SettingsRepo {
       strips: strips
         .filter(s => s.venue_id === v.id)
         .map(s => {
-          const cfg = parseConfig(s.cyrano_config);
+          const device = parseDevice(s.device_config);
           return {
             number: s.number,
             ...(s.label ? { label: s.label } : {}),
-            ...(cfg ? { cyranoConfig: cfg } : {}),
+            ...(device ? { deviceConfig: device } : {}),
           };
         }),
       createdAt: v.created_at,
@@ -194,6 +197,13 @@ export class SettingsRepo {
         ? this.sql.queryOne<{ id: string }>('SELECT id FROM venues WHERE id = ?', [input.id])
         : null;
       if (input.id && !exists) throw new Error(`Salle introuvable : ${input.id}`);
+      // Appareils déjà déclarés : gardés pour les pistes envoyées sans `deviceConfig`
+      const previous = new Map(
+        (exists
+          ? this.sql.queryAll<StripRow>('SELECT * FROM venue_strips WHERE venue_id = ?', [id])
+          : []
+        ).map(r => [r.number, r.device_config])
+      );
       // Première salle : salle par défaut d'office
       const first = !this.sql.queryOne<{ n: number }>('SELECT 1 AS n FROM venues LIMIT 1');
       if (exists) {
@@ -207,8 +217,17 @@ export class SettingsRepo {
       }
       for (const s of strips) {
         this.sql.run(
-          'INSERT INTO venue_strips (venue_id, number, label, cyrano_config) VALUES (?, ?, ?, ?)',
-          [id, s.number, s.label ?? null, s.cyranoConfig ? JSON.stringify(s.cyranoConfig) : null]
+          'INSERT INTO venue_strips (venue_id, number, label, device_config) VALUES (?, ?, ?, ?)',
+          [
+            id,
+            s.number,
+            s.label ?? null,
+            s.deviceConfig === undefined
+              ? (previous.get(s.number) ?? null)
+              : s.deviceConfig
+                ? JSON.stringify(s.deviceConfig)
+                : null,
+          ]
         );
       }
       if (input.isDefault || first) this.setDefaultVenue(id);
@@ -236,8 +255,53 @@ export class SettingsRepo {
       this.sql.run('DELETE FROM venue_strips WHERE venue_id = ?', [id]);
       this.sql.run('DELETE FROM venues WHERE id = ?', [id]);
       this.sql.run('UPDATE event_days SET venue_id = NULL WHERE venue_id = ?', [id]);
+      this.sql.run('UPDATE competitions SET venue_id = NULL WHERE venue_id = ?', [id]);
       this.sql.run('UPDATE club_sessions SET venue_id = NULL WHERE venue_id = ?', [id]);
     });
+  }
+
+  /**
+   * Appareil d'une piste de salle (docs/adr/0023) : piste créée si elle manque, null retire
+   * l'appareil. Salle inconnue : erreur.
+   */
+  public setStripDevice(venueId: string, strip: number, device: StripDevice | null): Venue {
+    if (!this.sql.db) throw new Error('Database not open');
+    if (!Number.isInteger(strip) || strip < 1 || strip > MAX_VENUE_STRIPS) {
+      throw new Error(`Numéro de piste invalide : ${strip}`);
+    }
+    this.sql.transaction(() => {
+      if (!this.sql.queryOne<{ id: string }>('SELECT id FROM venues WHERE id = ?', [venueId])) {
+        throw new Error(`Salle introuvable : ${venueId}`);
+      }
+      const config = device ? JSON.stringify(device) : null;
+      this.sql.run(
+        `INSERT INTO venue_strips (venue_id, number, label, device_config) VALUES (?, ?, NULL, ?)
+         ON CONFLICT(venue_id, number) DO UPDATE SET device_config = excluded.device_config`,
+        [venueId, strip, config]
+      );
+      this.sql.run('UPDATE venues SET updated_at = ? WHERE id = ?', [
+        new Date().toISOString(),
+        venueId,
+      ]);
+    });
+    return this.getVenue(venueId)!;
+  }
+
+  /** Salle propre d'une épreuve (`competitions.venue_id`, ADR-0019) ; null : aucune */
+  public getCompetitionVenueId(competitionId: string): string | null {
+    if (!this.sql.db) return null;
+    return (
+      this.sql.queryOne<{ venue_id: string | null }>(
+        'SELECT venue_id FROM competitions WHERE id = ?',
+        [competitionId]
+      )?.venue_id ?? null
+    );
+  }
+
+  /** Choisit la salle d'une épreuve ; null : celle de sa journée, sinon la salle par défaut */
+  public setCompetitionVenue(competitionId: string, venueId: string | null): void {
+    if (!this.sql.db) throw new Error('Database not open');
+    this.sql.run('UPDATE competitions SET venue_id = ? WHERE id = ?', [venueId, competitionId]);
   }
 
   /** Nombre de pistes de la salle par défaut (plus grand numéro) ; null si aucune salle déclarée */

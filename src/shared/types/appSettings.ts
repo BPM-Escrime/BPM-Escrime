@@ -118,6 +118,8 @@ export function fromLegacyStorage(key: AppSettingKey, raw: string | null): unkno
   return raw;
 }
 
+import type { StripDevice } from './stripDevice';
+
 // ─── Salles ────────────────────────────────────────────────────────────────
 
 /** Piste d'une salle */
@@ -126,8 +128,11 @@ export interface VenueStrip {
   number: number;
   /** Libellé affiché (« Piste bleue ») ; absent = « Piste n » */
   label?: string;
-  /** Appareil Cyrano associé (configuration de piste opaque, cf. cyrano_pistes) */
-  cyranoConfig?: Record<string, unknown> | null;
+  /**
+   * Appareil de piste déclaré sur la piste (docs/adr/0023) : Cyrano ou OPP2. Absent à
+   * l'enregistrement : appareil déjà déclaré gardé ; null : appareil retiré.
+   */
+  deviceConfig?: StripDevice | null;
 }
 
 /** Salle : déclarée une fois, reprise par la journée, la séance club, le serveur distant et Cyrano */

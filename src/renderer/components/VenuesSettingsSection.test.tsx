@@ -130,8 +130,40 @@ describe('VenuesSettingsSection', () => {
           {
             number: 2,
             label: 'Piste rouge',
-            cyranoConfig: { ip: '192.168.1.20', port: 50100, mode: 'display' },
+            deviceConfig: {
+              protocol: 'cyrano',
+              ip: '192.168.1.20',
+              port: 50100,
+              version: 'auto',
+              mode: 'display',
+            },
           },
+        ],
+      })
+    );
+  });
+
+  it('déclare un appareil OPP2 sur une piste (docs/adr/0023)', async () => {
+    wrap();
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifier Gymnase Nord' }));
+    fireEvent.change(screen.getByLabelText("Protocole de l'appareil de la piste 1"), {
+      target: { value: 'opp2' },
+    });
+    fireEvent.change(screen.getByLabelText("Identifiant OPP2 de l'appareil de la piste 1"), {
+      target: { value: 'bleue' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    await waitFor(() =>
+      expect(settings.upsertVenue).toHaveBeenCalledWith({
+        id: 'v1',
+        name: 'Gymnase Nord',
+        strips: [
+          {
+            number: 1,
+            label: 'Piste bleue',
+            deviceConfig: { protocol: 'opp2', opp2Id: 'bleue', mode: 'master' },
+          },
+          { number: 2 },
         ],
       })
     );

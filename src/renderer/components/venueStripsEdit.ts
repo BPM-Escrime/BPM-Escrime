@@ -1,22 +1,39 @@
 /**
- * BellePoule Modern - Édition des pistes d'une salle (#1880) : libellé et appareil Cyrano
- * (adresse IPv4, port, mode). Fonctions pures, utilisées par VenueStripsEditor.
+ * BellePoule Modern - Édition des pistes d'une salle (#1880, docs/adr/0023) : libellé et
+ * appareil de piste déclaré sur la salle (Cyrano : adresse IPv4, port, version ; OPP2 :
+ * identifiant MQTT ; mode). Fonctions pures, utilisées par VenueStripsEditor.
  * Licensed under GPL-3.0
  */
 import type { VenueStrip } from '../../shared/types/appSettings';
+import {
+  CYRANO_VERSIONS,
+  STRIP_DEVICE_MODES,
+  type CyranoVersion,
+  type StripDevice,
+  type StripDeviceMode,
+} from '../../shared/types/stripDevice';
 
-export type StripMode = 'master' | 'display' | 'manual';
-export const STRIP_MODES: readonly StripMode[] = ['master', 'display', 'manual'];
+export type StripMode = StripDeviceMode;
+export const STRIP_MODES = STRIP_DEVICE_MODES;
+export { CYRANO_VERSIONS };
+
+/** Protocole saisi : `none` = pas d'appareil (saisie sur la tablette) */
+export type StripProtocol = 'none' | 'cyrano' | 'opp2';
+export const STRIP_PROTOCOLS: readonly StripProtocol[] = ['cyrano', 'opp2', 'none'];
 
 /** Même plafond que l'enregistrement côté main (libellé de piste) */
 export const MAX_STRIP_LABEL = 40;
+export const MAX_OPP2_ID = 64;
 
 /** Saisie d'une piste : champs texte tels que tapés */
 export interface StripEdit {
   label: string;
+  protocol: StripProtocol;
   ip: string;
   port: string;
   mode: StripMode;
+  version: CyranoVersion;
+  opp2Id: string;
 }
 
 const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
@@ -31,25 +48,54 @@ export const isValidPort = (value: string): boolean => {
   return /^\d+$/.test(v) && n >= 1 && n <= 65535;
 };
 
-const isMode = (v: unknown): v is StripMode => STRIP_MODES.includes(v as StripMode);
-
-/** Saisie initiale d'une piste existante */
+/** Saisie initiale d'une piste existante ; sans appareil : Cyrano sans adresse */
 export function stripToEdit(strip: VenueStrip): StripEdit {
-  const cfg = strip.cyranoConfig;
-  const ip = typeof cfg?.ip === 'string' ? cfg.ip : '';
-  const port = typeof cfg?.port === 'number' ? String(cfg.port) : '';
-  const mode = isMode(cfg?.mode) ? cfg.mode : 'master';
-  return { label: strip.label ?? '', ip, port, mode };
+  const cfg = strip.deviceConfig ?? null;
+  const cyrano = cfg?.protocol === 'cyrano' ? cfg : null;
+  const opp2 = cfg?.protocol === 'opp2' ? cfg : null;
+  return {
+    label: strip.label ?? '',
+    protocol: cfg?.protocol ?? 'cyrano',
+    ip: cyrano?.ip ?? '',
+    port: cyrano?.port ? String(cyrano.port) : '',
+    mode: cfg?.mode ?? 'master',
+    version: cyrano?.version ?? 'auto',
+    opp2Id: opp2?.opp2Id ?? '',
+  };
 }
 
-/** Une adresse est facultative (pas d'appareil) ; si elle est saisie, IPv4 obligatoire */
+/** Cyrano : une adresse est facultative (pas d'appareil) ; si elle est saisie, IPv4 obligatoire */
 export function stripEditError(edit: StripEdit): boolean {
-  return (edit.ip.trim() !== '' && !isIpv4(edit.ip)) || !isValidPort(edit.port);
+  if (edit.protocol === 'cyrano') {
+    return (edit.ip.trim() !== '' && !isIpv4(edit.ip)) || !isValidPort(edit.port);
+  }
+  return edit.protocol === 'opp2' && edit.opp2Id.trim().length > MAX_OPP2_ID;
+}
+
+/** Appareil saisi ; null : aucun (protocole « aucun », ou Cyrano sans adresse IP) */
+export function editToDevice(edit: StripEdit, previous?: StripDevice | null): StripDevice | null {
+  // Arène reliée : gardée d'une déclaration à l'autre (non éditée ici)
+  const arena = previous?.arena !== undefined ? { arena: previous.arena } : {};
+  if (edit.protocol === 'opp2') {
+    const opp2Id = edit.opp2Id.trim();
+    return { protocol: 'opp2', ...(opp2Id ? { opp2Id } : {}), mode: edit.mode, ...arena };
+  }
+  const ip = edit.ip.trim();
+  if (edit.protocol === 'none' || !ip) return null;
+  const port = edit.port.trim();
+  return {
+    protocol: 'cyrano',
+    ip,
+    ...(port ? { port: Number(port) } : {}),
+    version: edit.version,
+    mode: edit.mode,
+    ...arena,
+  };
 }
 
 /**
- * Applique les saisies aux pistes : seules les pistes modifiées changent, les autres champs
- * de l'appareil (arène, protocole…) sont conservés ; sans adresse IP, l'appareil est retiré.
+ * Applique les saisies aux pistes : seules les pistes modifiées changent (appareil compris,
+ * arène gardée) ; un appareil retiré est envoyé à null (sinon le poste le garderait).
  */
 export function applyStripEdits(
   strips: VenueStrip[],
@@ -58,21 +104,12 @@ export function applyStripEdits(
   return strips.map(strip => {
     const edit = edits[strip.number];
     if (!edit) return strip;
-    const { label: _label, cyranoConfig: previous, ...rest } = strip;
+    const { label: _label, deviceConfig: previous, ...rest } = strip;
     const label = edit.label.trim().slice(0, MAX_STRIP_LABEL);
-    const ip = edit.ip.trim();
-    const next: VenueStrip = { ...rest, ...(label ? { label } : {}) };
-    if (!ip) return next;
-    const port = edit.port.trim();
-    const { port: _port, ...others } = previous ?? {};
     return {
-      ...next,
-      cyranoConfig: {
-        ...others,
-        ip,
-        ...(port ? { port: Number(port) } : {}),
-        mode: edit.mode,
-      },
+      ...rest,
+      ...(label ? { label } : {}),
+      deviceConfig: editToDevice(edit, previous),
     };
   });
 }

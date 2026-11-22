@@ -62,15 +62,19 @@ Pas de dépendance npm ajoutée.
 - Messages sans équivalent dans le modèle commun, ignorés : `blade_contact`, `video_review`,
   `scoresheet/*`.
 
-## IPC (`window.electronAPI.opp2`)
+## Contrat d'API (ex-canaux `opp2:*`, [ADR-0023](adr/0023-appareils-de-piste-salle.md))
 
-| Canal                                        | Rôle                                                                                             |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `opp2:start({ port? })`                      | Démarre le broker (port 1883 par défaut) et le pilote.                                           |
-| `opp2:stop`                                  | Annonce le départ de BellePoule, arrête le broker.                                               |
-| `opp2:isRunning`                             | Broker démarré ?                                                                                 |
-| `opp2:setPistes([{ piste, arena?, mode? }])` | Table des pistes OPP2 (`master` / `display` / `manual`).                                         |
-| `opp2:getStatus`                             | Broker, clients connectés, pistes (liaison, appareil, firmware), pistes vues mais non déclarées. |
+Un appareil OPP2 se déclare sur la piste de la salle (Paramètres → Salles et pistes, ou
+`setStripDevice` avec `{ protocol: 'opp2', opp2Id?, mode?, arena? }` ; `opp2Id` absent : numéro de
+la piste). Le pilote charge les appareils OPP2 des salles des épreuves suivies ; une épreuve peut
+passer une piste en manuel (`manualStrips`). Droit `remote:admin`, jamais sur le réseau.
+
+| Opération                                                                | Rôle                                                                                             |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `startOpp2Broker({ port?, competitionId? })`                             | Démarre le broker (port 1883 par défaut) et le pilote ; appareils de la salle chargés.           |
+| `stopOpp2Broker`                                                         | Annonce le départ de BellePoule, arrête le broker.                                               |
+| `getOpp2Status`                                                          | Broker, clients connectés, pistes (liaison, appareil, firmware), pistes vues mais non déclarées. |
+| `listStripDeviceRoutes`, `setStripDeviceOptions`, `runStripDeviceAction` | Communs avec Cyrano : épreuve suivie par piste, options d'affichage, secours.                    |
 
 Le `PisteHub` reste branché tant que Cyrano ou OPP2 est en service.
 

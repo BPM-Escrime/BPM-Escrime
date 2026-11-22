@@ -77,24 +77,30 @@ test('tablette (piste 1) et appareil Cyrano (piste 2) : scores par le moteur, af
   await win.getByRole('button', { name: /lancer les poules/i }).click();
   await expect(win.getByLabel(/contre .*, saisir le score/)).toHaveCount(40); // 2 poules de 5
 
-  // Réglages : port de la saisie distante, appareil Cyrano maître sur la piste 2, démarrage
-  // automatique avec la séance
+  // Réglages : port de la saisie distante, appareil Cyrano maître déclaré sur la piste 2 de la
+  // salle (salle par défaut, reprise par l'épreuve : docs/adr/0023), démarrage automatique avec
+  // la séance
   const id = await competitionId(win);
   await win.evaluate(
     async ({ cid, remotePort, cyranoPort, devicePort }) => {
       localStorage.setItem(`bellepoule-remote-port-${cid}`, String(remotePort));
       localStorage.setItem('bellepoule-cyrano-port', String(cyranoPort));
       localStorage.setItem('bellepoule-cyrano-autostart', 'true');
-      await window.electronAPI.cyrano.savePistes(cid, [
-        {
-          piste: '2',
+      const api = window.electronAPI.api;
+      const venue = await api.invoke('saveVenue', { name: 'Salle E2E', stripCount: 2 });
+      if (!venue.ok) throw new Error(JSON.stringify(venue));
+      const declared = await api.invoke('setStripDevice', {
+        venueId: (venue.data as { id: string }).id,
+        strip: 2,
+        device: {
+          protocol: 'cyrano',
           ip: '127.0.0.3',
           port: devicePort,
-          arena: 2,
-          protocol: 'EFP1.1',
+          version: 'EFP1.1',
           mode: 'master',
         },
-      ]);
+      });
+      if (!declared.ok) throw new Error(JSON.stringify(declared));
     },
     { cid: id, remotePort, cyranoPort, devicePort }
   );
@@ -180,7 +186,9 @@ test('tablette (piste 1) et appareil Cyrano (piste 2) : scores par le moteur, af
     console.log('DEVICE LOG\n' + deviceLog.slice(-25).join('\n'));
     console.log(
       'HUB LOG\n' +
-        JSON.stringify(await win.evaluate(() => window.electronAPI.cyrano.getLog())).slice(-3000)
+        JSON.stringify(
+          await win.evaluate(() => window.electronAPI.api.invoke('listCyranoLog', {}))
+        ).slice(-3000)
     );
     throw e;
   } finally {

@@ -53,7 +53,10 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
       api.settings.upsertVenue({
         id: 'v1',
         name: 'Gymnase',
-        strips: [{ number: 1, label: 'Bleue', cyranoConfig: { ip: '10.0.0.5' } }, { number: 2 }],
+        strips: [
+          { number: 1, label: 'Bleue', deviceConfig: { protocol: 'cyrano', ip: '10.0.0.5' } },
+          { number: 2 },
+        ],
         isDefault: true,
       }),
   ],

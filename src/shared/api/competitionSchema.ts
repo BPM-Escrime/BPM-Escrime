@@ -117,6 +117,8 @@ export const CompetitionSettingsSchema = z.strictObject({
   schedule: ScheduleSchema.optional(),
   gregLevel: z.enum(['L', 'Z', 'CN', 'A', 'F', 'IE', 'X']).optional(),
   poolBoutOrder: z.enum(['fie', 'free']).optional(),
+  /** Pistes dont l'appareil est ignoré pour cette épreuve (docs/adr/0023) */
+  manualStrips: z.array(z.number().int().min(1).max(100)).max(100).optional(),
 });
 
 /** Fusion de réglages (createCompetition, updateCompetitionSettings) : clés connues, valeurs vérifiées */

@@ -13,6 +13,7 @@
  */
 import { z } from 'zod';
 import { command, CompetitionId, Id, query, subscription } from './contractDef';
+import { StripDeviceSchema } from './contractDevices';
 import { Weapon } from '../types';
 import { MAX_LOGO_CHARS, MAX_VENUE_STRIPS } from '../types/appSettings';
 import type { AppSettings, Venue } from '../types/appSettings';
@@ -75,8 +76,8 @@ const ResolvableKeySchema = z.enum([
 const VenueStripSchema = z.object({
   number: z.number().int().min(1).max(MAX_VENUE_STRIPS),
   label: Short.optional(),
-  /** Configuration d'un appareil Cyrano (opaque) */
-  cyranoConfig: z.record(z.string(), z.unknown()).nullable().optional(),
+  /** Appareil de la piste (docs/adr/0023) ; absent : gardé, null : retiré */
+  deviceConfig: StripDeviceSchema.nullable().optional(),
 });
 
 const VenueInputSchema = z.object({

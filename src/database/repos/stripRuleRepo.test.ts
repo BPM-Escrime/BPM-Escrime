@@ -4,7 +4,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { StripRuleRepo } from './stripRuleRepo';
 import { EventDayRepo } from './eventDayRepo';
-import { CyranoRepo } from './cyranoRepo';
 import { DEFAULT_STRIP_RULE } from '../../shared/utils/stripRules';
 import type { SqlExecutor } from './sqlExecutor';
 import { ALL_MIGRATIONS } from '../migrations/migrations';
@@ -72,12 +71,9 @@ describe.skipIf(!DatabaseSync)('StripRuleRepo (#1878)', () => {
     expect(repo.listAutoAssignDays()).toEqual([]);
   });
 
-  it('suppression de la journée : réservations et table Cyrano de la salle supprimées', () => {
-    const cyrano = new CyranoRepo(sql);
+  it('suppression de la journée : réservations supprimées', () => {
     repo.setStripRule('d1', 4, { ...DEFAULT_STRIP_RULE, pools: false });
-    cyrano.replaceCyranoPistes('day:d1', [{ piste: '4', config: { arena: 4 } }]);
     new EventDayRepo(sql).deleteDay('d1');
     expect(repo.getStripRules('d1')).toEqual({});
-    expect(cyrano.getCyranoPistes('day:d1')).toEqual([]);
   });
 });

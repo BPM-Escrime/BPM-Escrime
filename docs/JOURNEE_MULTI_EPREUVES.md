@@ -11,11 +11,11 @@ Liste des compétitions → bouton **Journées**.
 
 ## Journée
 
-| Champ | Rôle |
-|---|---|
-| Nom, date | Identification |
-| Pistes de la salle | Nombre de pistes ; table des appareils Cyrano partagée par les épreuves (voir CYRANO.md § 2 quinquies) |
-| Épreuves | Cartes activables. Une épreuve appartient à une seule journée |
+| Champ              | Rôle                                                                                                                                                                                                                                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Nom, date          | Identification                                                                                                                                                                                                                                                                                                                |
+| Pistes de la salle | Nombre de pistes ; appareils de piste (Cyrano, OPP2) déclarés sur la salle de la journée, repris par toutes ses épreuves sans nouvelle saisie ; une épreuve peut passer une piste en manuel (`manualStrips`) ou choisir une autre salle (`setCompetitionVenue`) — [ADR-0023](adr/0023-appareils-de-piste-salle.md), CYRANO.md |
+| Épreuves           | Cartes activables. Une épreuve appartient à une seule journée                                                                                                                                                                                                                                                                 |
 
 **Enregistrer** / **Supprimer** (colonne de gauche, sous **Créer**) : actifs seulement si une journée est sélectionnée.
 
@@ -46,11 +46,11 @@ Occupation calculée sur toutes les épreuves de la journée (rafraîchie toutes
 
 Statut : **Libre**, ou **Piste X · Épreuve (Poule/Match N)**.
 
-| Conflit | Condition |
-|---|---|
-| Plusieurs épreuves | Occupé dans au moins deux épreuves |
-| Plusieurs pistes | Occupé sur au moins deux pistes d'une même épreuve |
-| Arme | Affecté à une épreuve d'une arme non cochée |
+| Conflit            | Condition                                          |
+| ------------------ | -------------------------------------------------- |
+| Plusieurs épreuves | Occupé dans au moins deux épreuves                 |
+| Plusieurs pistes   | Occupé sur au moins deux pistes d'une même épreuve |
+| Arme               | Affecté à une épreuve d'une arme non cochée        |
 
 Dans **Arbitres** de l'épreuve, un arbitre occupé dans une autre épreuve de la journée
 porte la mention **Occupé ailleurs : …**.
@@ -112,8 +112,8 @@ l'épreuve qui l'occupe, sinon le titre de l'épreuve.
 
 Une poule déplacée garde sa piste quand le renderer renvoie la répartition des poules
 (surcharge par match, `forcedPoolArena`). Tablettes et écrans restent ceux de l'épreuve (un
-serveur par épreuve) ; les appareils Cyrano suivent l'épreuve de l'affectation (CYRANO.md § 2
-quinquies).
+serveur par épreuve) ; les appareils de la salle suivent l'épreuve de l'affectation, sauf
+pour une épreuve qui a passé la piste en manuel (CYRANO.md § 2 quinquies, ADR-0023).
 
 Données : migration 37, `event_day_strip_rules` (`event_day_id`, `strip`, `rule` JSON) et
 `event_days.auto_assign`. Contrat d'API : `getDayStripBoard`, `assignDayStrip`, `setDayStripRule`,

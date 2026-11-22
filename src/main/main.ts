@@ -53,9 +53,9 @@ import { CyranoPisteDriver } from './cyrano/driver';
 import { MqttBroker } from './opp2/mqttBroker';
 import { Opp2PisteDriver } from './opp2/driver';
 import { MultiPisteDriver } from './piste/multiDriver';
-import { registerOpp2Handlers } from './ipc/opp2Handlers';
 import { PisteHub } from './piste/pisteHub';
-import { registerCyranoHandlers } from './ipc/cyranoHandlers';
+import { createDevicesPort, manualStripsOf } from './devicesPort';
+import { TRAINING_ID } from './trainingServer';
 import { registerApiHandlers } from './engine/api/ipcAdapter';
 import { emitChangeVia } from './mcp/mcpDomain';
 import { createMcpController } from './mcp/mcpController';
@@ -153,6 +153,8 @@ registerApiHandlers({
   remote: {
     stop: id => void stopRemoteServer(id),
     settingsChanged: (id, patch) => {
+      // Pistes passées en manuel par l'épreuve (docs/adr/0023) : modes des appareils renvoyés
+      if (patch.manualStrips !== undefined) pisteHub.refreshManualStrips();
       const server = remoteServers.get(id)?.server;
       if (!server) return;
       if (patch.blackCardEnabled !== undefined) {
@@ -181,6 +183,10 @@ registerApiHandlers({
     getMainWindow: () => mainWindow,
     userDataDir: () => app.getPath('userData'),
   }),
+  // Appareils de piste (Cyrano, OPP2), déclarés sur la salle (docs/adr/0023) : défini plus bas
+  get devices() {
+    return devicesPort;
+  },
 });
 registerClubHandlers({ db });
 privacyHandlers.register();
@@ -219,6 +225,8 @@ const pisteHub = new PisteHub(
   {
     // Numéros de poule / de match du DISP lus en base
     coordsSource: db,
+    // Pistes passées en manuel par chaque épreuve (docs/adr/0023)
+    manualStrips: id => manualStripsOf(db, id),
     // BAD MATCH : notification native au DT (#1829), un clic ramène la fenêtre au premier plan
     onAlert: (piste, alert) => {
       if (!Notification.isSupported()) return;
@@ -258,19 +266,18 @@ const remoteServerContext = {
     server.cyranoHook = (arenaId, update) => pisteHub.onArenaUpdate(arenaId, update, server);
     // Relais par équipes (/equipe{N}) sur l'appareil de piste (#1829)
     server.cyranoTeamHook = arenaId => pisteHub.onTeamArenaUpdate(arenaId, server);
+    // Nouvelle épreuve suivie : appareils de sa salle chargés dans les pilotes (docs/adr/0023)
+    devicesPort.reload();
   },
 };
-registerCyranoHandlers({
-  cyranoServer,
-  pisteHub,
+// Pilotes Cyrano et OPP2 vus par le contrat (ex-canaux cyrano:* et opp2:*, docs/adr/0023)
+const devicesPort = createDevicesPort({
   db,
-  keepHubAttached: () => opp2Broker.running,
-});
-registerOpp2Handlers({
+  cyranoServer,
   broker: opp2Broker,
-  driver: opp2Driver,
+  opp2Driver,
   pisteHub,
-  cyranoRunning: () => cyranoServer.running,
+  activeCompetitions: () => [...remoteServers.keys()].filter(id => id !== TRAINING_ID),
 });
 
 // Dépendances des outils MCP (#1880) : base, écran à rafraîchir, serveur distant, Cyrano, fichiers
