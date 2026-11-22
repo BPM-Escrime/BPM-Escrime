@@ -36,6 +36,22 @@ export function parseCookies(header: string | undefined): Record<string, string>
   return result;
 }
 
+/** Valeur d'un seul cookie, sans construire d'objet indexé par des noms fournis par le client */
+export function readCookie(header: string | undefined, name: string): string | undefined {
+  if (!header) return undefined;
+  for (const part of header.split(';')) {
+    const idx = part.indexOf('=');
+    if (idx < 0) continue;
+    try {
+      if (decodeURIComponent(part.slice(0, idx).trim()) !== name) continue;
+      return decodeURIComponent(part.slice(idx + 1).trim());
+    } catch {
+      // Partie mal formée ignorée
+    }
+  }
+  return undefined;
+}
+
 /** Le mot de passe n'est jamais stocké ni comparé en clair : scrypt salé `scrypt$sel$hash`. */
 export function hashPassword(password: string): string {
   const salt = randomBytes(16);

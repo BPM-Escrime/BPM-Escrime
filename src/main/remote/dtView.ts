@@ -13,7 +13,7 @@ import {
   hashPassword,
   issueToken,
   isTokenValid,
-  parseCookies,
+  readCookie,
   sendLoginLimited,
   verifyPasswordAsync,
   TOKEN_TTL_MS,
@@ -99,7 +99,7 @@ export class DtViewAccess implements DtViewPort {
 
   isAuthorized(cookieHeader: string | undefined): boolean {
     if (!this.enabled || !this.password) return false;
-    return isTokenValid(this.tokens, parseCookies(cookieHeader)[DT_COOKIE]);
+    return isTokenValid(this.tokens, readCookie(cookieHeader, DT_COOKIE));
   }
 
   /** Jetons invalidés et vues DT ouvertes déconnectées */
@@ -137,7 +137,7 @@ export class DtViewAccess implements DtViewPort {
       standardHeaders: 'draft-8',
       legacyHeaders: false,
       keyGenerator: req => ipKeyGenerator(deps.clientIp(req)),
-      message: { success: false, error: 'too_many_requests' },
+      message: { success: false, error: 'too_many_attempts' },
     });
     app.get('/api/dt/status', limiter, (req, res) => {
       res.json({ ...this.status(), authenticated: this.isAuthorized(req.headers.cookie) });
