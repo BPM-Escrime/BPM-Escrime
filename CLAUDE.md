@@ -42,6 +42,13 @@ Give answer. Stop.
 - **Ne jamais committer `docs/TESTS.md` dans une PR** : la CI `build-dev.yml` le régénère au push sur `dev` (commit `🔖 Dev Build`). Évite les conflits sur les totaux
 - Nouveau contrôle CI ou script de test → mettre à jour la partie fixe dans `scripts/generate-tests-doc.js`
 
+## Documentation i18n – règle absolue (bloque les PR)
+- `docs/I18N.md` est généré (`npm run docs:i18n`) et vérifié par la CI (`npm run check:i18n-doc`, job « i18n documentation up to date »). Ne jamais l'éditer à la main
+- Contrairement à `docs/TESTS.md`, la CI `build-dev.yml` **ne le régénère pas** : il doit être committé **dans la PR**
+- Toute modification de `src/renderer/locales/*.json`, `src/remote/i18n/*.js`, `src/remote/i18n.js`, d'un attribut `data-i18n*` dans `src/remote/*.html` ou de `scripts/i18n-allow-same.json` → avant commit : `npm run docs:i18n`, puis `npm run check:i18n && npm run check:i18n-doc`, et committer `docs/I18N.md` avec le reste
+- Clé `data-i18n` d'une page distante absente de `src/remote/i18n/<langue>.js` → échec de `check:i18n-doc` : ajouter la clé dans chaque langue avant de pousser
+- Avant d'ouvrir ou de marquer « ready » une PR touchant ces fichiers : vérifier que `check:i18n-doc` passe localement
+
 ## Mise à jour documentation – mode activé par défaut
 Quand on te demande (ou implique) de mettre à jour la doc :
 1. Lis en priorité : README.md, docs/*.md, src/
