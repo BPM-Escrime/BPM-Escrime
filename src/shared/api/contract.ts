@@ -8,69 +8,35 @@
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';
+import {
+  command,
+  CommandId,
+  CompetitionId,
+  DryRun,
+  Id,
+  query,
+  subscription,
+  type ApiContract,
+  type OperationKind,
+} from './contractDef';
+import { dtViewOperations } from './contractDtView';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
 import type { ConsolationBracket, FinalResult, TableauMatch } from '../domain/tableau/tableauTypes';
 import type { RapieresLegacyState, RapieresSession } from '../domain/rapieres/rapieres.types';
 
-/** Droits (utilisés par le sous-ticket 4, rôles et permissions) */
-export type Permission =
-  | 'competition:read'
-  | 'competition:write'
-  | 'fencers:write'
-  | 'score:write'
-  | 'cards:read'
-  | 'referees:write';
-
-export type OperationKind = 'command' | 'query' | 'subscription';
-
-/** Exposition comme outil MCP : écriture pour une commande, lecture pour une requête */
-export interface McpExposure {
-  name: string;
-  title: string;
-  destructive?: boolean;
-  idempotent?: boolean;
-}
-
-export interface OperationDef<
-  K extends OperationKind = OperationKind,
-  I extends z.ZodType = z.ZodType,
-  O extends z.ZodType = z.ZodType,
-> {
-  kind: K;
-  /** Description (documentation, outil MCP) */
-  description: string;
-  input: I;
-  output: O;
-  permission: Permission;
-  mcp?: McpExposure;
-}
-
-type Def<K extends OperationKind, I extends z.ZodType, O extends z.ZodType> = Omit<
-  OperationDef<K, I, O>,
-  'kind'
->;
-
-export const command = <I extends z.ZodType, O extends z.ZodType>(d: Def<'command', I, O>) => ({
-  kind: 'command' as const,
-  ...d,
-});
-export const query = <I extends z.ZodType, O extends z.ZodType>(d: Def<'query', I, O>) => ({
-  kind: 'query' as const,
-  ...d,
-});
-export const subscription = <I extends z.ZodType, O extends z.ZodType>(
-  d: Omit<Def<'subscription', I, O>, 'mcp'>
-) => ({ kind: 'subscription' as const, ...d });
-
-export type ApiContract = Record<string, OperationDef>;
+export type {
+  ApiContract,
+  McpExposure,
+  OperationDef,
+  OperationKind,
+  Permission,
+} from './contractDef';
+export { command, query, subscription } from './contractDef';
 
 // ─── Schémas communs ─────────────────────────────────────────────────────────
 
-const Id = z.string().trim().min(1).max(200);
-const CompetitionId = Id.describe('Identifiant de la compétition (list_competitions)');
-const DryRun = z.boolean().optional().describe('Décrit le résultat sans rien écrire');
 const Side = z.enum(['A', 'B']);
 const FencerKey = z.union([Id, z.number().int().min(0)]);
 const ExpectedRevision = z
@@ -80,15 +46,6 @@ const ExpectedRevision = z
   .optional()
   .describe(
     'Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées.'
-  );
-const CommandId = z
-  .string()
-  .trim()
-  .min(1)
-  .max(100)
-  .optional()
-  .describe(
-    'Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau)'
   );
 /** Révision du journal après la commande (absente si rien n'a été écrit) */
 const Revision = z.number().int().optional();
@@ -1474,6 +1431,8 @@ export const contract = {
     }),
     permission: 'competition:read',
   }),
+  // Espace « Vue DT » du serveur distant (docs/adr/0020)
+  ...dtViewOperations,
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────

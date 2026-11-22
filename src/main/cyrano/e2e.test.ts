@@ -24,7 +24,12 @@ vi.mock('fs', () => ({
 }));
 vi.mock('socket.io', () => ({
   Server: vi.fn().mockImplementation(function () {
-    return { on: vi.fn(), emit: vi.fn(), to: vi.fn().mockReturnThis() };
+    return {
+      on: vi.fn(),
+      of: vi.fn(() => ({ use: vi.fn(), on: vi.fn(), disconnectSockets: vi.fn() })),
+      emit: vi.fn(),
+      to: vi.fn().mockReturnThis(),
+    };
   }),
 }));
 vi.mock('../ipc/dbHandlers', async importOriginal => ({

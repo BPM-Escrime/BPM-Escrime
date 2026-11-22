@@ -30,6 +30,8 @@ vi.mock('socket.io', () => ({
   Server: vi.fn().mockImplementation(function () {
     return {
       on: vi.fn(),
+      // Espace de noms /api de la vue DT (docs/adr/0020)
+      of: vi.fn(() => ({ use: vi.fn(), on: vi.fn(), disconnectSockets: vi.fn() })),
       emit: vi.fn(),
       to: vi.fn().mockReturnThis(),
     };

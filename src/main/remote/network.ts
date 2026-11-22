@@ -46,6 +46,7 @@ export function isLoginPath(path: string): boolean {
   return (
     path === '/api/checkin/login' ||
     path === '/api/trainer/login' ||
+    path === '/api/dt/login' ||
     path.startsWith('/api/auth/login/')
   );
 }

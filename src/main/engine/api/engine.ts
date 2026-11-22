@@ -50,6 +50,7 @@ import {
   updateCompetitionDetails,
   updateCompetitionSettings,
 } from '../commands/competitionSetup';
+import { configureDtView, getDtViewStatus } from '../commands/dtView';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
 import { readSession } from '../commands/sessionView';
@@ -105,6 +106,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   updateCompetitionSettings: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     updateCompetitionSettings(ctx, input),
   deleteCompetition: (ctx, { commandId: _c, ...input }) => deleteCompetition(ctx, input),
+  configureDtView: (ctx, { commandId: _c, ...input }) => configureDtView(ctx, input),
+  getDtViewStatus: (ctx, input) => getDtViewStatus(ctx, input),
   includeInSeason: (ctx, { commandId: _c, ...input }) => includeInSeason(ctx, input),
   excludeFromSeason: (ctx, { commandId: _c, ...input }) => excludeFromSeason(ctx, input),
   resetSeason: (ctx, { commandId: _c, ...input }) => resetSeason(ctx, input),

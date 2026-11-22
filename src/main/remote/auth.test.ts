@@ -9,6 +9,7 @@ import {
   isTokenValid,
   issueToken,
   parseCookies,
+  readCookie,
   purgeExpiredTokens,
   verifyPassword,
   verifyPasswordAsync,
@@ -23,6 +24,20 @@ describe('parseCookies', () => {
       b: 'hello world',
     });
     expect(parseCookies(undefined)).toEqual({});
+  });
+
+  it('readCookie : un seul cookie, parties malformées ignorées', () => {
+    const h = 'a=1; bad; c=%E0%A4%A; bp_dt_token=t%20k';
+    expect(readCookie(h, 'bp_dt_token')).toBe('t k');
+    expect(readCookie(h, 'c')).toBeUndefined();
+    expect(readCookie(undefined, 'a')).toBeUndefined();
+  });
+
+  it('ignore les noms qui viseraient le prototype', () => {
+    const c = parseCookies('__proto__=x; constructor=y; prototype=z; bp_dt_token=t');
+    expect(Object.keys(c)).toEqual(['bp_dt_token']);
+    expect(Object.getPrototypeOf(c)).toBeNull();
+    expect(({} as Record<string, unknown>).x).toBeUndefined();
   });
 });
 

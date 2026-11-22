@@ -15,21 +15,41 @@ export const MAX_TOKENS_PER_SCOPE = 50;
 // Plafond mémoire des maps de limitation (éviction de la plus ancienne entrée)
 export const LIMITER_MAX_ENTRIES = 1000;
 
+/** Noms refusés : un cookie ne doit jamais écrire sur le prototype de l'objet résultat */
+const FORBIDDEN_COOKIE_NAMES = new Set(['__proto__', 'constructor', 'prototype']);
+
 export function parseCookies(header: string | undefined): Record<string, string> {
   if (!header) return {};
-  const result: Record<string, string> = {};
+  // Objet sans prototype : clés fournies par le client (en-tête Cookie, poignée de main /api)
+  const result: Record<string, string> = Object.create(null);
   for (const part of header.split(';')) {
     const idx = part.indexOf('=');
     if (idx < 0) continue;
     try {
       const key = decodeURIComponent(part.slice(0, idx).trim());
       const val = decodeURIComponent(part.slice(idx + 1).trim());
-      if (key) result[key] = val;
+      if (key && !FORBIDDEN_COOKIE_NAMES.has(key)) result[key] = val;
     } catch {
       // Ignore malformed cookie parts
     }
   }
   return result;
+}
+
+/** Valeur d'un seul cookie, sans construire d'objet indexé par des noms fournis par le client */
+export function readCookie(header: string | undefined, name: string): string | undefined {
+  if (!header) return undefined;
+  for (const part of header.split(';')) {
+    const idx = part.indexOf('=');
+    if (idx < 0) continue;
+    try {
+      if (decodeURIComponent(part.slice(0, idx).trim()) !== name) continue;
+      return decodeURIComponent(part.slice(idx + 1).trim());
+    } catch {
+      // Partie mal formée ignorée
+    }
+  }
+  return undefined;
 }
 
 /** Le mot de passe n'est jamais stocké ni comparé en clair : scrypt salé `scrypt$sel$hash`. */
