@@ -4324,6 +4324,14 @@
     "snap_hint": "Los elementos se ajustan a una cuadrícula de 0,5 m al arrastrarlos.",
     "tools_hint": "Pulsa una herramienta para añadirla al plano y luego arrástrala.",
     "hint_length": "Dimensión interior de la sala, en metros.",
-    "summary_arenas_max": "{{count}} arena(s) colocada(s), máximo posible: {{max}}"
+    "summary_arenas_max": "{{count}} arena(s) colocada(s), máximo posible: {{max}}",
+    "handle_rotate": "Girar (arrastrar)",
+    "handle_resize": "Ampliar (arrastrar)",
+    "handles_hint": "Cuadrado: ampliar con el ratón. Círculo: girar con el ratón (tecla R: 90°).",
+    "rotate_label": "Rotación (°)",
+    "rotate_90": "Girar 90°",
+    "too_many": "Se piden {{requested}} arenas, pero la zona solo admite {{max}}. Solo se coloca el máximo.",
+    "dims_option": "Cotas técnicas (plano y exportación)",
+    "dims_hint": "Añade al plano y a las exportaciones las cotas de la sala, las arenas, los espacios, los márgenes y los elementos."
   }
 }

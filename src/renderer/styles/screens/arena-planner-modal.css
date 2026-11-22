@@ -205,3 +205,33 @@
   padding-left: 1.2rem;
   margin: 0.4rem 0;
 }
+
+.arena-planner-handle {
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 0.06;
+}
+
+.arena-planner-handle-resize {
+  cursor: nwse-resize;
+}
+
+.arena-planner-handle-rotate {
+  cursor: grab;
+}
+
+.arena-planner-handle-stem {
+  stroke: #2563eb;
+  stroke-width: 0.06;
+}
+
+.arena-planner-dimline {
+  stroke: #1d4ed8;
+  stroke-width: 0.05;
+}
+
+.arena-planner-dimtext {
+  fill: #1d4ed8;
+  font-size: 0.45px;
+  font-weight: 600;
+}

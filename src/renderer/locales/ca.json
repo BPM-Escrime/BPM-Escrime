@@ -4324,6 +4324,14 @@
     "snap_hint": "Els elements s’ajusten a una graella de 0,5 m en arrossegar-los.",
     "tools_hint": "Fes clic en una eina per afegir-la al plànol i després arrossega-la.",
     "hint_length": "Dimensió interior de la sala, en metres.",
-    "summary_arenas_max": "{{count}} arena(es) col·locada(es), màxim possible: {{max}}"
+    "summary_arenas_max": "{{count}} arena(es) col·locada(es), màxim possible: {{max}}",
+    "handle_rotate": "Gira (arrossega)",
+    "handle_resize": "Amplia (arrossega)",
+    "handles_hint": "Quadrat: amplia amb el ratolí. Cercle: gira amb el ratolí (tecla R: 90°).",
+    "rotate_label": "Rotació (°)",
+    "rotate_90": "Gira 90°",
+    "too_many": "Demanades {{requested}} arenes, però la zona només n’admet {{max}}. Només es col·loca el màxim.",
+    "dims_option": "Cotes tècniques (plànol i exportació)",
+    "dims_hint": "Afegeix al plànol i a les exportacions les cotes de la sala, les arenes, els espais, els marges i els elements."
   }
 }

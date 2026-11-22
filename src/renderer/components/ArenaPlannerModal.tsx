@@ -16,6 +16,8 @@ import {
   checkRoomItems,
   createRoomItem,
   moveRoomItem,
+  resizeRoomItemAroundCenter,
+  rotateRoomItem,
   optimizeArenaLayout,
   resizeRoomItem,
   type OptimizedLayout,
@@ -65,6 +67,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const [items, setItems] = useState<RoomItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snap, setSnap] = useState(true);
+  const [showDims, setShowDims] = useState(false);
   const [exportError, setExportError] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
   const idCounter = useRef(0);
@@ -130,6 +133,22 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     const label = `${t(KIND_LABEL_KEY[kind])} ${count}`;
     setItems(prev => [...prev, createRoomItem(kind, id, label, room)]);
     setSelectedId(id);
+  };
+
+  const resizeItem = (id: string, w: number, h: number) => {
+    if (!room) return;
+    setItems(prev => prev.map(i => (i.id === id ? resizeRoomItemAroundCenter(i, w, h, room) : i)));
+  };
+
+  const rotateItem = (id: string, deg: number) => {
+    if (!room) return;
+    setItems(prev => prev.map(i => (i.id === id ? rotateRoomItem(i, deg, room) : i)));
+  };
+
+  const rotateSelected = (raw: string) => {
+    const value = parseNumber(raw);
+    if (value === null || !selectedItem) return;
+    rotateItem(selectedItem.id, value);
   };
 
   const removeItem = (id: string) => {
@@ -312,9 +331,12 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               <p role="status" className="arena-planner-status">
                 {maxText()}
               </p>
-              {clamped || maxLayout.count === 0 ? (
-                <p role="alert">{t('arenaPlanner.nofit')}</p>
+              {clamped && maxLayout.count > 0 ? (
+                <p role="alert">
+                  {t('arenaPlanner.too_many', { requested: parsed.n, max: maxLayout.count })}
+                </p>
               ) : null}
+              {maxLayout.count === 0 ? <p role="alert">{t('arenaPlanner.nofit')}</p> : null}
 
               <div
                 className="arena-planner-toolbar"
@@ -344,12 +366,16 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
                 selectedId={selectedId}
                 conflictIds={conflictIds}
                 snap={snap}
+                showDims={showDims}
                 svgRef={svgRef}
                 onSelect={setSelectedId}
                 onMove={moveItem}
+                onResize={resizeItem}
+                onRotate={rotateItem}
                 onDelete={removeItem}
               />
               <p className="arena-planner-hint">{t('arenaPlanner.drag_hint')}</p>
+              <p className="arena-planner-hint">{t('arenaPlanner.handles_hint')}</p>
 
               {conflictIds.size > 0 && <p role="alert">{t('arenaPlanner.conflict')}</p>}
               {selectedAlerts.exit && <p role="alert">{t('arenaPlanner.exit_wall')}</p>}
@@ -394,6 +420,25 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
                       />
                     </label>
                     <label className="form-label">
+                      {t('arenaPlanner.rotate_label')}
+                      <input
+                        className="form-input"
+                        type="text"
+                        inputMode="decimal"
+                        value={fmt(selectedItem.rotationDeg ?? 0)}
+                        onChange={e => rotateSelected(e.target.value)}
+                      />
+                    </label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() =>
+                        rotateItem(selectedItem.id, (selectedItem.rotationDeg ?? 0) + 90)
+                      }
+                    >
+                      {t('arenaPlanner.rotate_90')}
+                    </Button>
+                    <label className="form-label">
                       {t('arenaPlanner.size_h')}
                       <input
                         className="form-input"
@@ -417,6 +462,15 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               </ul>
               <p className="arena-planner-hint">{t('arenaPlanner.note')}</p>
 
+              <label className="arena-planner-check">
+                <input
+                  type="checkbox"
+                  checked={showDims}
+                  onChange={e => setShowDims(e.target.checked)}
+                />
+                {t('arenaPlanner.dims_option')}
+              </label>
+              <p className="arena-planner-hint">{t('arenaPlanner.dims_hint')}</p>
               <div className="arena-planner-actions">
                 <Button type="button" variant="primary" onClick={() => runExport('pdf')}>
                   {t('arenaPlanner.export_pdf')}

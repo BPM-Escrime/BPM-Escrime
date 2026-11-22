@@ -4324,6 +4324,14 @@
     "snap_hint": "Ar pezhioù a glav ouzh ur gwrizienn 0,5 m p’int-tennañ anezhe.",
     "tools_hint": "Klikit un ostilh evit y ouzhpennañ d’ar plan, ha tennit-hi.",
     "hint_length": "Dimensionenn diabarzh ar sal, e metrioù.",
-    "summary_arenas_max": "{{count}} arenenn lakaet, maksimum posupl: {{max}}"
+    "summary_arenas_max": "{{count}} arenenn lakaet, maksimum posupl: {{max}}",
+    "handle_rotate": "Tröiñ (tennañ)",
+    "handle_resize": "Brasaat (tennañ)",
+    "handles_hint": "Karr : brasaat dre al logodenn. Kelc’h : tröiñ dre al logodenn (bouton R : 90°).",
+    "rotate_label": "Tröidigezh (°)",
+    "rotate_90": "Tröiñ 90°",
+    "too_many": "{{requested}} arenenn goulennet, met ar takad na zal nemet {{max}}. Ne vez lakaet nemet ar maksimum.",
+    "dims_option": "Kotennoù teknikel (plan ha ezporzhiadur)",
+    "dims_hint": "Ouzhpenn a ra da blan ha d’an ezporzhiadurioù kotennoù ar sal, an arenenn, an dispakoù, ar bevennoù ha ar pezhioù."
   }
 }

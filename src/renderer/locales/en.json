@@ -4324,6 +4324,14 @@
     "snap_hint": "Items snap to a 0.5 m grid while dragging.",
     "tools_hint": "Click a tool to add it to the plan, then drag it.",
     "hint_length": "Inside dimension of the room, in metres.",
-    "summary_arenas_max": "{{count}} arena(s) placed, maximum possible: {{max}}"
+    "summary_arenas_max": "{{count}} arena(s) placed, maximum possible: {{max}}",
+    "handle_rotate": "Rotate (drag)",
+    "handle_resize": "Resize (drag)",
+    "handles_hint": "Square: resize with the mouse. Round: rotate with the mouse (R key: 90°).",
+    "rotate_label": "Rotation (°)",
+    "rotate_90": "Rotate 90°",
+    "too_many": "{{requested}} arenas requested, but the zone only fits {{max}}. Only the maximum is placed.",
+    "dims_option": "Technical dimensions (plan and export)",
+    "dims_hint": "Adds room, arena, spacing, margin and item dimensions to the plan and the exports."
   }
 }

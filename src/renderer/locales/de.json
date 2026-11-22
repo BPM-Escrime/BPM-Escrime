@@ -4324,6 +4324,14 @@
     "snap_hint": "Elemente rasten beim Ziehen auf einem 0,5-m-Raster ein.",
     "tools_hint": "Ein Werkzeug anklicken, um es dem Plan hinzuzufügen, dann ziehen.",
     "hint_length": "Innenmaß der Halle in Metern.",
-    "summary_arenas_max": "{{count}} Arena(en) platziert, maximal möglich: {{max}}"
+    "summary_arenas_max": "{{count}} Arena(en) platziert, maximal möglich: {{max}}",
+    "handle_rotate": "Drehen (ziehen)",
+    "handle_resize": "Vergrößern (ziehen)",
+    "handles_hint": "Quadrat: mit der Maus vergrößern. Kreis: mit der Maus drehen (Taste R: 90°).",
+    "rotate_label": "Drehung (°)",
+    "rotate_90": "Um 90° drehen",
+    "too_many": "{{requested}} Arenen angefragt, die Fläche fasst aber nur {{max}}. Es wird nur das Maximum platziert.",
+    "dims_option": "Technische Bemaßung (Plan und Export)",
+    "dims_hint": "Fügt dem Plan und den Exporten Maße der Halle, Arenen, Abstände, Ränder und Elemente hinzu."
   }
 }

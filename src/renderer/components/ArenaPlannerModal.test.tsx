@@ -90,8 +90,15 @@ describe('ArenaPlannerModal', () => {
     fireEvent.change(screen.getByLabelText('arenaPlanner.width'), { target: { value: '30' } });
     fireEvent.change(screen.getByLabelText('arenaPlanner.length'), { target: { value: '30' } });
     fireEvent.change(screen.getByLabelText('arenaPlanner.arenas'), { target: { value: '10' } });
-    expect(screen.getByRole('alert')).toHaveTextContent('arenaPlanner.nofit');
+    expect(screen.getByRole('alert')).toHaveTextContent('arenaPlanner.too_many');
     expect(screen.getByRole('status')).toHaveTextContent('arenaPlanner.optimize_result');
     expect(screen.getAllByRole('img')[0].querySelectorAll('.arena-planner-safety')).toHaveLength(4);
+  });
+
+  it('affiche les cotes techniques quand la case est cochée', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    expect(document.querySelectorAll('.arena-planner-dimline')).toHaveLength(0);
+    fireEvent.click(screen.getByLabelText('arenaPlanner.dims_option'));
+    expect(document.querySelectorAll('.arena-planner-dimline').length).toBeGreaterThan(0);
   });
 });

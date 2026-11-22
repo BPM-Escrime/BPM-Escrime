@@ -1,12 +1,14 @@
 /**
  * BellePoule Modern - Plan de salle interactif du planificateur d'arène (#2075)
  * Dessin SVG à l'échelle : grille de 1 m, cotes de la salle, arènes et éléments
- * glissables à la souris (aimantation 0,5 m) ou au clavier.
+ * déplaçables, redimensionnables (poignée de coin) et tournables (poignée
+ * ronde) à la souris, aimantation 0,5 m (15° pour la rotation), ou au clavier.
  * Licensed under GPL-3.0
  */
 
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
+import { technicalDimensions, type DimensionLine } from '@shared/domain/arena/arenaDimensions';
 import {
   ARENA_SAFETY_RADIUS_M,
   ARENA_ZONE_RADIUS_M,
@@ -20,6 +22,9 @@ import {
 const VIEW_PAD_M = 2;
 const NUDGE_M = 0.1;
 const NUDGE_BIG_M = 1;
+const ROTATE_STEP_DEG = 15;
+const HANDLE_M = 0.35;
+const ROTATE_HANDLE_OFFSET_M = 0.9;
 
 export const ITEM_CLASS: Record<RoomItem['kind'], string> = {
   table: 'arena-planner-item-table',
@@ -31,6 +36,11 @@ export const ITEM_CLASS: Record<RoomItem['kind'], string> = {
 
 const fmt = (n: number) => (Math.round(n * 10) / 10).toString();
 
+type DragState =
+  | { mode: 'move'; id: string; dx: number; dy: number }
+  | { mode: 'resize'; id: string; cx: number; cy: number; rot: number }
+  | { mode: 'rotate'; id: string; cx: number; cy: number };
+
 export interface ArenaPlanCanvasProps {
   room: RoomSize;
   centers: Point[];
@@ -38,9 +48,12 @@ export interface ArenaPlanCanvasProps {
   selectedId: string | null;
   conflictIds: Set<string>;
   snap: boolean;
+  showDims: boolean;
   svgRef: React.RefObject<SVGSVGElement | null>;
   onSelect: (id: string | null) => void;
   onMove: (id: string, x: number, y: number) => void;
+  onResize: (id: string, widthM: number, heightM: number) => void;
+  onRotate: (id: string, deg: number) => void;
   onDelete: (id: string) => void;
 }
 
@@ -51,13 +64,16 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   selectedId,
   conflictIds,
   snap,
+  showDims,
   svgRef,
   onSelect,
   onMove,
+  onResize,
+  onRotate,
   onDelete,
 }) => {
   const { t } = useTranslation();
-  const dragRef = useRef<{ id: string; dx: number; dy: number } | null>(null);
+  const dragRef = useRef<DragState | null>(null);
 
   const toMetres = (clientX: number, clientY: number): Point | null => {
     const svg = svgRef.current;
@@ -72,13 +88,36 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
 
   const itemAt = (id: string) => items.find(i => i.id === id);
 
-  const onItemPointerDown = (e: React.PointerEvent<SVGGElement>, item: RoomItem) => {
+  const startDrag = (e: React.PointerEvent<SVGElement>, state: DragState) => {
     e.stopPropagation();
+    dragRef.current = state;
+    onSelect(state.id);
+    svgRef.current?.setPointerCapture(e.pointerId);
+  };
+
+  const onItemPointerDown = (e: React.PointerEvent<SVGGElement>, item: RoomItem) => {
     const p = toMetres(e.clientX, e.clientY);
     if (!p) return;
-    dragRef.current = { id: item.id, dx: p.x - item.x, dy: p.y - item.y };
-    onSelect(item.id);
-    svgRef.current?.setPointerCapture(e.pointerId);
+    startDrag(e, { mode: 'move', id: item.id, dx: p.x - item.x, dy: p.y - item.y });
+  };
+
+  const onResizePointerDown = (e: React.PointerEvent<SVGElement>, item: RoomItem) => {
+    startDrag(e, {
+      mode: 'resize',
+      id: item.id,
+      cx: item.x + item.widthM / 2,
+      cy: item.y + item.heightM / 2,
+      rot: item.rotationDeg ?? 0,
+    });
+  };
+
+  const onRotatePointerDown = (e: React.PointerEvent<SVGElement>, item: RoomItem) => {
+    startDrag(e, {
+      mode: 'rotate',
+      id: item.id,
+      cx: item.x + item.widthM / 2,
+      cy: item.y + item.heightM / 2,
+    });
   };
 
   const onSvgPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
@@ -86,9 +125,28 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
     if (!drag) return;
     const p = toMetres(e.clientX, e.clientY);
     if (!p) return;
-    const rawX = p.x - drag.dx;
-    const rawY = p.y - drag.dy;
-    onMove(drag.id, snap ? snapToStep(rawX) : rawX, snap ? snapToStep(rawY) : rawY);
+    if (drag.mode === 'move') {
+      const rawX = p.x - drag.dx;
+      const rawY = p.y - drag.dy;
+      onMove(drag.id, snap ? snapToStep(rawX) : rawX, snap ? snapToStep(rawY) : rawY);
+      return;
+    }
+    if (drag.mode === 'resize') {
+      // Point du pointeur dans le repère de l'élément (tourné), centre fixe
+      const rad = (-drag.rot * Math.PI) / 180;
+      const vx = p.x - drag.cx;
+      const vy = p.y - drag.cy;
+      const lx = vx * Math.cos(rad) - vy * Math.sin(rad);
+      const ly = vx * Math.sin(rad) + vy * Math.cos(rad);
+      const w = Math.max(0.2, 2 * Math.abs(lx));
+      const h = Math.max(0.2, 2 * Math.abs(ly));
+      onResize(drag.id, snap ? snapToStep(w) : w, snap ? snapToStep(h) : h);
+      return;
+    }
+    // Rotation : 0° vers le haut, sens horaire
+    const deg = (Math.atan2(p.x - drag.cx, -(p.y - drag.cy)) * 180) / Math.PI;
+    const snapped = snap ? Math.round(deg / ROTATE_STEP_DEG) * ROTATE_STEP_DEG : deg;
+    onRotate(drag.id, snapped);
   };
 
   const endDrag = () => {
@@ -99,6 +157,11 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
     if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault();
       onDelete(item.id);
+      return;
+    }
+    if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      onRotate(item.id, (item.rotationDeg ?? 0) + 90);
       return;
     }
     const step = e.shiftKey ? NUDGE_BIG_M : NUDGE_M;
@@ -120,6 +183,10 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   const gridX = Array.from({ length: Math.floor(W) + 1 }, (_, i) => i);
   const gridY = Array.from({ length: Math.floor(L) + 1 }, (_, i) => i);
   const geos = centers.map(c => computeArenaGeometry(c));
+  const dims = useMemo(
+    () => (showDims ? technicalDimensions(room, centers, items) : null),
+    [showDims, room, centers, items]
+  );
 
   return (
     <svg
@@ -140,18 +207,36 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
       {gridY.map(y => (
         <line key={`gy${y}`} x1={0} y1={y} x2={W} y2={y} className="arena-planner-grid" />
       ))}
-      <text x={W / 2} y={-0.7} className="arena-planner-dim" textAnchor="middle">
-        {`${fmt(W)} m`}
-      </text>
-      <text
-        x={-0.7}
-        y={L / 2}
-        className="arena-planner-dim"
-        textAnchor="middle"
-        transform={`rotate(-90 ${-0.7} ${L / 2})`}
-      >
-        {`${fmt(L)} m`}
-      </text>
+      {dims ? null : (
+        <>
+          <text x={W / 2} y={-0.7} className="arena-planner-dim" textAnchor="middle">
+            {`${fmt(W)} m`}
+          </text>
+          <text
+            x={-0.7}
+            y={L / 2}
+            className="arena-planner-dim"
+            textAnchor="middle"
+            transform={`rotate(-90 ${-0.7} ${L / 2})`}
+          >
+            {`${fmt(L)} m`}
+          </text>
+        </>
+      )}
+      {dims ? dims.lines.map((l, i) => <DimensionLineView key={`dl${i}`} line={l} />) : null}
+      {dims
+        ? dims.texts.map((tx, i) => (
+            <text
+              key={`dt${i}`}
+              x={tx.x}
+              y={tx.y}
+              className="arena-planner-dimtext"
+              textAnchor="middle"
+            >
+              {tx.label}
+            </text>
+          ))
+        : null}
 
       {geos.map((g, i) => (
         <g key={`arena${i}`} className="arena-planner-arena">
@@ -200,6 +285,9 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
       {items.map(item => {
         const conflict = conflictIds.has(item.id);
         const selected = item.id === selectedId;
+        const rot = item.rotationDeg ?? 0;
+        const cx = item.x + item.widthM / 2;
+        const cy = item.y + item.heightM / 2;
         const classes = [
           'arena-planner-item',
           ITEM_CLASS[item.kind],
@@ -213,9 +301,10 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
             key={item.id}
             role="button"
             tabIndex={0}
-            aria-label={`${item.label}, x ${fmt(item.x)} m, y ${fmt(item.y)} m`}
+            aria-label={`${item.label}, x ${fmt(item.x)} m, y ${fmt(item.y)} m, ${fmt(rot)}°`}
             aria-pressed={selected}
             className="arena-planner-item-group"
+            transform={rot ? `rotate(${rot} ${cx} ${cy})` : undefined}
             onPointerDown={e => onItemPointerDown(e, item)}
             onKeyDown={e => onItemKeyDown(e, item)}
             onFocus={() => onSelect(item.id)}
@@ -228,18 +317,88 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
               className={classes}
             />
             <text
-              x={item.x + item.widthM / 2}
-              y={item.y + item.heightM / 2 + 0.15}
+              x={cx}
+              y={cy + 0.15}
               className="arena-planner-item-label"
               textAnchor="middle"
               pointerEvents="none"
             >
               {item.label}
             </text>
+            {selected ? (
+              <g>
+                <line
+                  x1={cx}
+                  y1={item.y}
+                  x2={cx}
+                  y2={item.y - ROTATE_HANDLE_OFFSET_M}
+                  className="arena-planner-handle-stem"
+                />
+                <circle
+                  cx={cx}
+                  cy={item.y - ROTATE_HANDLE_OFFSET_M}
+                  r={HANDLE_M / 2}
+                  className="arena-planner-handle arena-planner-handle-rotate"
+                  onPointerDown={e => onRotatePointerDown(e, item)}
+                >
+                  <title>{t('arenaPlanner.handle_rotate')}</title>
+                </circle>
+                <rect
+                  x={item.x + item.widthM - HANDLE_M / 2}
+                  y={item.y + item.heightM - HANDLE_M / 2}
+                  width={HANDLE_M}
+                  height={HANDLE_M}
+                  className="arena-planner-handle arena-planner-handle-resize"
+                  onPointerDown={e => onResizePointerDown(e, item)}
+                >
+                  <title>{t('arenaPlanner.handle_resize')}</title>
+                </rect>
+              </g>
+            ) : null}
           </g>
         );
       })}
     </svg>
+  );
+};
+
+const TICK_M = 0.15;
+
+/** Cote technique : ligne, deux traits obliques aux extrémités, valeur au milieu. */
+const DimensionLineView: React.FC<{ line: DimensionLine }> = ({ line }) => {
+  const { orientation: o, from, to, at, label: text } = line;
+  const [x1, y1, x2, y2] = o === 'h' ? [from, at, to, at] : [at, from, at, to];
+  const mid = (from + to) / 2;
+  const tick = (x: number, y: number) => (
+    <line
+      x1={x - TICK_M}
+      y1={y + TICK_M}
+      x2={x + TICK_M}
+      y2={y - TICK_M}
+      className="arena-planner-dimline"
+    />
+  );
+  return (
+    <g className="arena-planner-dim-group">
+      <line x1={x1} y1={y1} x2={x2} y2={y2} className="arena-planner-dimline" />
+      {tick(x1, y1)}
+      {tick(x2, y2)}
+      {o === 'h' ? (
+        <text x={mid} y={at - 0.25} className="arena-planner-dimtext" textAnchor="middle">
+          {text}
+        </text>
+      ) : (
+        <text
+          x={at - 0.25}
+          y={mid}
+          className="arena-planner-dimtext"
+          textAnchor="middle"
+          transform={`rotate(-90 ${at - 0.25} ${mid})`}
+        >
+          {text}
+        </text>
+      )}
+    </g>
   );
 };
 

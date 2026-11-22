@@ -4324,6 +4324,14 @@
     "snap_hint": "Les éléments se calent sur une grille de 0,5 m pendant le déplacement.",
     "tools_hint": "Cliquez sur un outil pour l’ajouter au plan, puis glissez-le.",
     "hint_length": "Dimension intérieure de la salle, en mètres.",
-    "summary_arenas_max": "{{count}} arène(s) placée(s), maximum possible : {{max}}"
+    "summary_arenas_max": "{{count}} arène(s) placée(s), maximum possible : {{max}}",
+    "handle_rotate": "Tourner (glisser)",
+    "handle_resize": "Agrandir (glisser)",
+    "handles_hint": "Carré : agrandir à la souris. Rond : tourner à la souris (touche R : 90°).",
+    "rotate_label": "Rotation (°)",
+    "rotate_90": "Tourner de 90°",
+    "too_many": "{{requested}} arènes demandées, mais la zone n’en contient que {{max}}. Seul le maximum est placé.",
+    "dims_option": "Cotes techniques (plan et export)",
+    "dims_hint": "Ajoute au plan et aux exports les cotes de la salle, des arènes, des espacements, des marges et des éléments."
   }
 }

@@ -4324,6 +4324,14 @@
     "snap_hint": "拖動時元件會吸附到 0.5 米的格線。",
     "tools_hint": "點擊工具即可加入平面圖，然後拖動。",
     "hint_length": "場館的內部尺寸，以米計。",
-    "summary_arenas_max": "已放置 {{count}} 個劍場，最多可容納：{{max}}"
+    "summary_arenas_max": "已放置 {{count}} 個劍場，最多可容納：{{max}}",
+    "handle_rotate": "旋轉（拖動）",
+    "handle_resize": "放大（拖動）",
+    "handles_hint": "方形：用滑鼠調整大小。圓形：用滑鼠旋轉（R 鍵：90°）。",
+    "rotate_label": "旋轉（°）",
+    "rotate_90": "旋轉 90°",
+    "too_many": "要求 {{requested}} 個劍場，但區域只能容納 {{max}} 個，只會放置最多數目。",
+    "dims_option": "技術標註（平面圖及匯出）",
+    "dims_hint": "在平面圖及匯出檔案中加入場館、劍場、間距、邊距及元件的尺寸。"
   }
 }
