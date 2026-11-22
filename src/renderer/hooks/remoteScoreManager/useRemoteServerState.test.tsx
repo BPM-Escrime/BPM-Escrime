@@ -36,6 +36,7 @@ vi.mock('../useKioskTheme', () => ({
 
 import { useRemoteServerState } from './useRemoteServerState';
 import { fetchVenueStripCount } from './venueStripCount';
+import { stationElectron } from '../../testUtils/stationBridge';
 
 const makeCtx = (over: Record<string, unknown> = {}, poolCount = 3) =>
   ({
@@ -51,7 +52,9 @@ let resolve: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   localStorage.clear();
   resolve = vi.fn(async () => 6);
-  (window as unknown as { electronAPI: unknown }).electronAPI = { settings: { resolve } };
+  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({
+    settings: { resolve },
+  });
 });
 
 describe('fetchVenueStripCount', () => {

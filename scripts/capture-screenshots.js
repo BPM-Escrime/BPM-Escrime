@@ -240,7 +240,12 @@ async function main() {
     // Journées multi-épreuves : 2e épreuve, journée commune, arbitres partagés
     await win.evaluate(async fencers => {
       const db = window.electronAPI.db;
-      const ed = window.electronAPI.eventDay;
+      // Journée : par le contrat d'API (docs/adr/0022)
+      const call = async (name, input) => {
+        const r = await window.electronAPI.api.invoke(name, input);
+        if (!r.ok) throw new Error(`${name} : ${r.error.message}`);
+        return r.data;
+      };
       const [first] = await db.getAllCompetitions();
       const second = await db.createCompetition({
         title: 'Challenge de la Ville — Fleuret U17',
@@ -254,13 +259,13 @@ async function main() {
       for (const [i, [lastName, firstName, club]] of fencers.slice(0, 10).entries()) {
         await db.addFencer(second.id, { lastName, firstName, club, ranking: i + 1, status: 'N' });
       }
-      const day = await ed.create({
+      const day = await call('createEventDay', {
         name: 'Challenge de la Ville',
         date: '2026-11-14',
         stripCount: 12,
       });
-      await ed.setCompetitionDay(first.id, day.id);
-      await ed.setCompetitionDay(second.id, day.id);
+      await call('assignCompetitionToDay', { competitionId: first.id, dayId: day.id });
+      await call('assignCompetitionToDay', { competitionId: second.id, dayId: day.id });
       const refs = [
         ['FONTAINE', 'Claire', 'Paris Escrime', ['E', 'F']],
         ['GIRARD', 'Paul', 'CE Lyon', ['E']],
@@ -268,7 +273,10 @@ async function main() {
         ['BONNET', 'Marc', 'Toulouse EC', ['E', 'F']],
       ];
       for (const [lastName, firstName, club, weapons] of refs) {
-        await ed.createReferee(day.id, { lastName, firstName, club, weapons });
+        await call('registerEventDayReferee', {
+          dayId: day.id,
+          details: { lastName, firstName, club, weapons },
+        });
       }
     }, FENCERS);
     await win.reload();

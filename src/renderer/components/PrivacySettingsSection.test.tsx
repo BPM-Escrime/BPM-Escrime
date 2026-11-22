@@ -11,6 +11,7 @@ vi.mock('../hooks/useTranslation', () => import('../testUtils/i18nMock'));
 import PrivacySettingsSection from './PrivacySettingsSection';
 import { ConfirmProvider } from './ConfirmDialog';
 import { ToastProvider } from './Toast';
+import { stationElectron } from '../testUtils/stationBridge';
 
 const person = {
   key: 'lic:777',
@@ -26,6 +27,7 @@ const person = {
 };
 
 let privacy: Record<string, ReturnType<typeof vi.fn>>;
+let exportEncryptedBpm: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   privacy = {
@@ -38,12 +40,16 @@ beforeEach(() => {
     })),
     findPersons: vi.fn(async () => [person]),
     anonymizePerson: vi.fn(async () => ({ fencers: 1, members: 1, pseudonym: 'Anonyme X' })),
-    exportEncryptedBpm: vi.fn(async () => ({ success: true })),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = {
-    privacy,
-    db: { getAllCompetitions: vi.fn(async () => []) },
-  };
+  // L'archive chiffrée (dialogue natif, chemin de fichier) reste en IPC : window.electronAPI.privacy
+  exportEncryptedBpm = vi.fn(async () => ({ success: true }));
+  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron(
+    { privacy },
+    {
+      privacy: { exportEncryptedBpm },
+      db: { getAllCompetitions: vi.fn(async () => []) },
+    }
+  );
 });
 
 const wrap = (item: React.ComponentProps<typeof PrivacySettingsSection>['item']) =>
@@ -77,11 +83,9 @@ describe('PrivacySettingsSection', () => {
     fireEvent.change(p2, { target: { value: 'motdepasse2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Exporter chiffré' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Les mots de passe diffèrent.');
-    expect(privacy.exportEncryptedBpm).not.toHaveBeenCalled();
+    expect(exportEncryptedBpm).not.toHaveBeenCalled();
     fireEvent.change(p2, { target: { value: 'motdepasse1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Exporter chiffré' }));
-    await waitFor(() =>
-      expect(privacy.exportEncryptedBpm).toHaveBeenCalledWith(null, 'motdepasse1')
-    );
+    await waitFor(() => expect(exportEncryptedBpm).toHaveBeenCalledWith(null, 'motdepasse1'));
   });
 });

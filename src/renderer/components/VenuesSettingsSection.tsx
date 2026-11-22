@@ -16,8 +16,7 @@ import { HINT, BOLD, SMALL_BTN, TOGGLE_LABEL } from './settingsModal.styles';
 import { MAX_VENUE_STRIPS, type Venue, type VenueInput } from '../../shared/types/appSettings';
 import VenueStripsEditor from './VenueStripsEditor';
 import { applyStripEdits, stripEditError, type StripEdit } from './venueStripsEdit';
-
-const api = () => window.electronAPI?.settings;
+import { useStationApi } from '../api/stationApi';
 
 interface Draft {
   id?: string;
@@ -118,22 +117,23 @@ const VenuesSettingsSection: React.FC = () => {
   const { t } = useTranslation();
   const { confirm } = useConfirm();
   const { showToast } = useToast();
+  const api = useStationApi().settings;
   const [venues, setVenues] = useState<Venue[] | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [nameInvalid, setNameInvalid] = useState(false);
 
   const reload = useCallback(async () => {
-    setVenues(await api()!.listVenues());
-  }, []);
+    setVenues(await api.listVenues());
+  }, [api]);
 
   useEffect(() => {
-    api()
-      ?.listVenues?.()
+    api
+      .listVenues()
       .then(setVenues)
       .catch(() => {
         // hors Electron (tests, navigateur)
       });
-  }, []);
+  }, [api]);
 
   /** Action sur les salles : rechargement + toast de succès ou d'erreur */
   const run = async (action: () => Promise<unknown>, successKey?: string): Promise<boolean> => {
@@ -164,7 +164,7 @@ const VenuesSettingsSection: React.FC = () => {
       name,
       strips: applyStripEdits(strips, draft.edits),
     };
-    if (await run(() => api()!.upsertVenue(input), 'venues.saved')) closeForm();
+    if (await run(() => api.upsertVenue(input), 'venues.saved')) closeForm();
   };
 
   const remove = async (venue: Venue) => {
@@ -172,7 +172,7 @@ const VenuesSettingsSection: React.FC = () => {
       message: t('venues.delete_confirm', { name: venue.name }),
       confirmLabel: t('venues.delete'),
     });
-    if (ok) await run(() => api()!.deleteVenue(venue.id), 'venues.deleted');
+    if (ok) await run(() => api.deleteVenue(venue.id), 'venues.deleted');
   };
 
   const openForm = (d: Draft) => {
@@ -215,7 +215,7 @@ const VenuesSettingsSection: React.FC = () => {
                     style={SMALL_BTN}
                     icon={<Icon icon={Star} />}
                     aria-label={`${t('venues.set_default')} ${v.name}`}
-                    onClick={() => void run(() => api()!.setDefaultVenue(v.id))}
+                    onClick={() => void run(() => api.setDefaultVenue(v.id))}
                   >
                     {t('venues.set_default')}
                   </Button>

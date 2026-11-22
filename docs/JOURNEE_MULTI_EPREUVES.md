@@ -63,7 +63,7 @@ Migration 22 :
 - `event_day_referees` (`id`, `event_day_id`, `first_name`, `last_name`, `club`, `license`, `category`, `weapons` = `"F,E"`)
 - `competitions.event_day_id`, `referees.day_referee_id`
 
-IPC : `window.electronAPI.eventDay.*` (`src/main/ipc/eventDayHandlers.ts`), dépôt
+Contrat d'API : `listEventDays`, `createEventDay`, `updateEventDayDetails`, `deleteEventDay`, `assignCompetitionToDay`, `getEventDayOverview`, `listEventDayReferees`, `registerEventDayReferee`, `updateEventDayRefereeDetails`, `removeEventDayReferee`, `syncEventDayReferees`, `listBusyElsewhere` (`src/main/engine/commands/eventDay.ts`, ADR-0022 ; écran : `useStationApi().eventDay`), dépôt
 `src/database/repos/eventDayRepo.ts`, règles pures `src/shared/utils/eventDay.ts`.
 
 ## Pistes de la journée
@@ -116,11 +116,11 @@ serveur par épreuve) ; les appareils Cyrano suivent l'épreuve de l'affectation
 quinquies).
 
 Données : migration 37, `event_day_strip_rules` (`event_day_id`, `strip`, `rule` JSON) et
-`event_days.auto_assign`. IPC : `eventDay.getStripBoard`, `assignStrip`, `setStripRule`,
-`setAutoAssign` (`src/main/ipc/dayStripHandlers.ts`) ; logique `src/main/remote/dayStripBoard.ts`
+`event_days.auto_assign`. Contrat d'API : `getDayStripBoard`, `assignDayStrip`, `setDayStripRule`,
+`setDayAutoAssign` (service `src/main/remote/dayStripService.ts`, branché par le port du poste) ; logique `src/main/remote/dayStripBoard.ts`
 et `stripHandover.ts` ; règles pures `src/shared/utils/stripRules.ts`.
 
-IPC (occupation en base) : `window.electronAPI.eventDay.getStripOccupation(dayId)`.
+Occupation en base : requête `getDayStripOccupation({ dayId })`.
 
 ## Kiosk journée
 

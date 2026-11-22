@@ -9,6 +9,7 @@ import { CustomTheme, ThemeTargetType } from '../../shared/types/remote';
 import { REFEREE_DARK_MATCH_VARS } from '../../shared/utils/trainingThemes';
 import { useTranslation } from '../hooks/useTranslation';
 import { usePlatform } from '../platform/PlatformContext';
+import { useStationApi } from '../api/stationApi';
 import { Copy } from 'lucide-react';
 import { RankMedal } from './common/RankMedal';
 import { getEditorBuiltinThemes, isBuiltinThemeId } from './remote/builtinThemes';
@@ -496,6 +497,7 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({
     ...activeDefaults,
     ...(initialTheme?.variables ?? {}),
   }));
+  const themesApi = useStationApi().themes;
   const [savedThemes, setSavedThemes] = useState<CustomTheme[]>([]);
   const [activeGroup, setActiveGroup] = useState(0);
   // Thème en cours d'édition (null = nouveau) ; un thème prédéfini est en lecture seule
@@ -508,13 +510,13 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({
 
   // Charger les thèmes depuis l'app (filtrés par type)
   useEffect(() => {
-    window.electronAPI.themes
+    themesApi
       .list()
       .then(all => {
         setSavedThemes(all.filter(t => (t.targetType ?? 'arena') === effectiveType));
       })
       .catch(() => {});
-  }, [effectiveType]);
+  }, [themesApi, effectiveType]);
   const [importError, setImportError] = useState('');
   const [overlayMode, setOverlayMode] = useState(initialTheme?.overlayMode ?? false);
 
@@ -612,7 +614,7 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({
       variables: vars,
       overlayMode,
     };
-    window.electronAPI.themes
+    themesApi
       .save(theme)
       .then(() => {
         setEditingId(id);
@@ -625,7 +627,7 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({
   };
 
   const handleDeleteSaved = (id: string) => {
-    window.electronAPI.themes
+    themesApi
       .delete(id)
       .then(() => {
         setSavedThemes(prev => prev.filter(t => t.id !== id));

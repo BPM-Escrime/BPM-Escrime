@@ -131,27 +131,11 @@ const electronApi = {
     },
   },
 
-  // RGPD (#1882) : droits des personnes, conservation, .bpm chiffrés
-  mcp: {
-    getStatus: () => ipcRenderer.invoke('mcp:getStatus'),
-    setSettings: (settings: { enabled?: boolean; port?: number; allowWrite?: boolean }) =>
-      ipcRenderer.invoke('mcp:setSettings', settings),
-    regenerateToken: () => ipcRenderer.invoke('mcp:regenerateToken'),
-    getLog: () => ipcRenderer.invoke('mcp:getLog'),
-  },
-
+  // RGPD (#1882) : le reste (droits des personnes, conservation, réglages) passe par le contrat
+  // d'API (docs/adr/0022) ; ici ce qui ouvre un dialogue natif ou répond à une invite du main
   privacy: {
-    getSettings: () => ipcRenderer.invoke('privacy:getSettings'),
-    setSettings: (settings: unknown) => ipcRenderer.invoke('privacy:setSettings', settings),
-    findPersons: (query: string) => ipcRenderer.invoke('privacy:findPersons', query),
     exportPerson: (ref: unknown, defaultName?: string) =>
       ipcRenderer.invoke('privacy:exportPerson', ref, defaultName),
-    getPersonData: (ref: unknown) => ipcRenderer.invoke('privacy:getPersonData', ref),
-    anonymizePerson: (ref: unknown) => ipcRenderer.invoke('privacy:anonymizePerson', ref),
-    erasePerson: (ref: unknown) => ipcRenderer.invoke('privacy:erasePerson', ref),
-    retentionCandidates: () => ipcRenderer.invoke('privacy:retentionCandidates'),
-    applyRetention: (selection?: unknown) =>
-      ipcRenderer.invoke('privacy:applyRetention', selection),
     exportEncryptedBpm: (competitionId: string | null, password: string) =>
       ipcRenderer.invoke('privacy:exportEncryptedBpm', competitionId, password),
     openEncryptedBpm: (password: string) =>
@@ -208,52 +192,10 @@ const electronApi = {
   // Remote score server functions
   remote: remoteApi,
 
-  // Journée multi-épreuves (#1714)
-  eventDay: {
-    list: () => ipcRenderer.invoke('eventDay:list'),
-    create: (data: { name: string; date: string; stripCount?: number }) =>
-      ipcRenderer.invoke('eventDay:create', data),
-    update: (id: string, updates: { name?: string; date?: string; stripCount?: number }) =>
-      ipcRenderer.invoke('eventDay:update', id, updates),
-    delete: (id: string) => ipcRenderer.invoke('eventDay:delete', id),
-    setCompetitionDay: (competitionId: string, dayId: string | null) =>
-      ipcRenderer.invoke('eventDay:setCompetitionDay', competitionId, dayId),
-    listReferees: (dayId: string) => ipcRenderer.invoke('eventDay:listReferees', dayId),
-    createReferee: (dayId: string, data: Record<string, unknown>) =>
-      ipcRenderer.invoke('eventDay:createReferee', dayId, data),
-    updateReferee: (id: string, data: Record<string, unknown>) =>
-      ipcRenderer.invoke('eventDay:updateReferee', id, data),
-    deleteReferee: (id: string) => ipcRenderer.invoke('eventDay:deleteReferee', id),
-    syncReferees: (dayId: string) => ipcRenderer.invoke('eventDay:syncReferees', dayId),
-    getOverview: (dayId: string) => ipcRenderer.invoke('eventDay:getOverview', dayId),
-    getBusyElsewhere: (competitionId: string) =>
-      ipcRenderer.invoke('eventDay:getBusyElsewhere', competitionId),
-    getStripOccupation: (dayId: string) => ipcRenderer.invoke('eventDay:getStripOccupation', dayId),
-    getStripBoard: (dayId: string) => ipcRenderer.invoke('eventDay:getStripBoard', dayId),
-    assignStrip: (dayId: string, strip: number, key: string) =>
-      ipcRenderer.invoke('eventDay:assignStrip', dayId, strip, key),
-    setStripRule: (dayId: string, strip: number, rule: unknown) =>
-      ipcRenderer.invoke('eventDay:setStripRule', dayId, strip, rule),
-    setAutoAssign: (dayId: string, on: boolean) =>
-      ipcRenderer.invoke('eventDay:setAutoAssign', dayId, on),
-  },
-
-  // Paramétrage global du poste et salles (#1880)
+  // Dossier de l'agent choisi par dialogue natif (#1880) ; les autres réglages du poste, salles,
+  // journée et agent passent par le contrat d'API (docs/adr/0022)
   settings: {
-    get: () => ipcRenderer.invoke('settings:get'),
-    update: (updates: Record<string, unknown>) => ipcRenderer.invoke('settings:update', updates),
-    importLegacy: (values: Record<string, string | null>, mode: 'missing' | 'write') =>
-      ipcRenderer.invoke('settings:importLegacy', values, mode),
-    resolve: (key: string, scope?: { competitionId?: string; eventDayId?: string }) =>
-      ipcRenderer.invoke('settings:resolve', key, scope ?? {}),
-    listVenues: () => ipcRenderer.invoke('settings:listVenues'),
-    upsertVenue: (input: import('../shared/types/appSettings').VenueInput) =>
-      ipcRenderer.invoke('settings:upsertVenue', input),
-    setDefaultVenue: (id: string) => ipcRenderer.invoke('settings:setDefaultVenue', id),
-    deleteVenue: (id: string) => ipcRenderer.invoke('settings:deleteVenue', id),
-    getAgentFolders: () => ipcRenderer.invoke('settings:getAgentFolders'),
     addAgentFolder: () => ipcRenderer.invoke('settings:addAgentFolder'),
-    removeAgentFolder: (folder: string) => ipcRenderer.invoke('settings:removeAgentFolder', folder),
   },
   // Mode Club (#1872) : fichiers seulement (photos ZIP, sauvegardes .bpclub, docs/adr/0021) ;
   // le reste passe par le contrat d'API (docs/adr/0022)
@@ -337,13 +279,6 @@ const electronApi = {
     ipcRenderer.invoke('app:saveLogos', logos),
   getTtsConfig: () => ipcRenderer.invoke('app:getTtsConfig'),
   onLogoLoaded: (callback: (logo: string | null) => void) => subscribe('app:logoLoaded', callback),
-
-  // Bibliothèque de thèmes persistante
-  themes: {
-    list: () => ipcRenderer.invoke('themes:list'),
-    save: (theme: unknown) => ipcRenderer.invoke('themes:save', theme),
-    delete: (id: string) => ipcRenderer.invoke('themes:delete', id),
-  },
 
   // Remove listeners
   removeAllListeners: (channel: string) => ipcRenderer.removeAllListeners(channel),

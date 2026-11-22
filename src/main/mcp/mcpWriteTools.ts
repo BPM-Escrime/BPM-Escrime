@@ -17,7 +17,7 @@ import {
   parseXMLFile,
   parseEngardeRefereeFile,
 } from '../../shared/utils/fileParser';
-import { syncDay } from '../ipc/eventDayHandlers';
+import { syncDay } from '../engine/commands/eventDay';
 import { importIdentityKeys } from '../../shared/utils/personIdentity';
 import { McpToolError, type McpDeps, type McpTool } from './mcpTools';
 import { xlsxToCsv } from '../xlsxToCsv';

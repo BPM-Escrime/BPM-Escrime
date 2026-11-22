@@ -82,29 +82,16 @@ export interface RetentionPurgeResult {
   members: number;
 }
 
+/**
+ * Canaux IPC du RGPD restés hors contrat (dialogue natif ou chemin de fichier, ADR-0021) :
+ * droits des personnes, conservation et réglages passent par le contrat d'API (docs/adr/0022).
+ */
 export interface PrivacyAPI {
-  getSettings: () => Promise<PrivacySettings>;
-  setSettings: (
-    settings: Partial<PrivacySettings>
-  ) => Promise<{ success: boolean; settings?: PrivacySettings; error?: string }>;
-  findPersons: (query: string) => Promise<PrivacyPerson[]>;
   /** Boîte d'enregistrement puis export JSON des données de la personne */
   exportPerson: (
     ref: PrivacyPersonRef,
     defaultName?: string
   ) => Promise<{ success: boolean; canceled?: boolean; path?: string; error?: string }>;
-  /** Données de la personne (export PDF côté renderer) */
-  getPersonData: (ref: PrivacyPersonRef) => Promise<PersonalDataExport>;
-  anonymizePerson: (
-    ref: PrivacyPersonRef
-  ) => Promise<{ fencers: number; members: number; pseudonym: string }>;
-  erasePerson: (ref: PrivacyPersonRef) => Promise<{ fencers: number; members: number }>;
-  retentionCandidates: () => Promise<RetentionCandidates>;
-  /** Applique l'action de conservation aux éléments choisis (tous les candidats si omis) */
-  applyRetention: (selection?: {
-    competitionIds?: string[];
-    memberIds?: string[];
-  }) => Promise<RetentionPurgeResult>;
   /** Exporte une compétition (ou toute la base si null) dans un .bpm chiffré par mot de passe */
   exportEncryptedBpm: (
     competitionId: string | null,

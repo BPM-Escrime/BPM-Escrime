@@ -5,14 +5,15 @@
  */
 import { useEffect, useState } from 'react';
 import type { DayRefereeAssignment } from '../../shared/types/eventDay';
+import { stationAvailable, useStationApi } from '../api/stationApi';
 
 const POLL_MS = 10_000;
 
 export function useBusyElsewhere(competitionId: string): Record<string, DayRefereeAssignment[]> {
   const [busy, setBusy] = useState<Record<string, DayRefereeAssignment[]>>({});
+  const api = useStationApi().eventDay;
   useEffect(() => {
-    const api = window.electronAPI?.eventDay;
-    if (!api) return;
+    if (!stationAvailable()) return;
     let alive = true;
     const load = () =>
       api
@@ -29,6 +30,6 @@ export function useBusyElsewhere(competitionId: string): Record<string, DayRefer
       alive = false;
       clearInterval(timer);
     };
-  }, [competitionId]);
+  }, [api, competitionId]);
   return busy;
 }

@@ -9,10 +9,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from './Toast';
 import { Button } from './common/Button';
+import { stationAvailable, useStationApi } from '../api/stationApi';
 
 const PrivacyPrompts: React.FC = () => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const privacyApi = useStationApi().privacy;
   const [fileName, setFileName] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -35,14 +37,13 @@ const PrivacyPrompts: React.FC = () => {
 
   // Rappel unique au démarrage : purge assistée (sans purge automatique)
   useEffect(() => {
-    const api = window.electronAPI?.privacy;
-    if (!api?.getSettings) return;
+    if (!stationAvailable()) return;
     let cancelled = false;
     void (async () => {
       try {
-        const s = await api.getSettings();
+        const s = await privacyApi.getSettings();
         if (s.autoPurge || (!s.competitionRetentionMonths && !s.memberRetentionMonths)) return;
-        const c = await api.retentionCandidates();
+        const c = await privacyApi.retentionCandidates();
         if (cancelled || (c.competitions.length === 0 && c.members.length === 0)) return;
         showToast(
           t('privacy.retention_reminder', {

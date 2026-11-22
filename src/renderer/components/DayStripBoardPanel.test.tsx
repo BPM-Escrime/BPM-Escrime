@@ -9,6 +9,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 vi.mock('../hooks/useTranslation', () => import('../testUtils/i18nMock'));
 import { DayStripBoardPanel } from './DayStripBoardPanel';
+import { stationElectron } from '../testUtils/stationBridge';
 import { DEFAULT_STRIP_RULE } from '../../shared/utils/stripRules';
 import type { DayStripBoard } from '../../shared/types/eventDay';
 
@@ -58,7 +59,7 @@ beforeEach(() => {
     setStripRule: vi.fn().mockResolvedValue(true),
     setAutoAssign: vi.fn().mockResolvedValue(true),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { eventDay: api };
+  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({ eventDay: api });
 });
 
 describe('DayStripBoardPanel (#1878)', () => {

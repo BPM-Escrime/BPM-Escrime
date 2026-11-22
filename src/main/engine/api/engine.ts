@@ -53,6 +53,7 @@ import {
 import { configureDtView, getDtViewStatus } from '../commands/dtView';
 import { clubHandlers } from '../commands/club';
 import { clubStationHandlers, onClubSynced } from '../commands/clubStation';
+import { onStationSettingsChanged, stationHandlers } from '../commands/station';
 import { competitionStats } from '../commands/competitionStats';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
@@ -227,6 +228,9 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   ...clubHandlers,
   ...clubStationHandlers,
   onClubSynced,
+  // Poste (docs/adr/0022) : réglages, salles, thèmes, journée, RGPD, agent ; sans journal
+  ...stationHandlers,
+  onStationSettingsChanged,
 };
 
 export const isOperation = (name: unknown): name is OperationName =>

@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import ThemeEditor from '../ThemeEditor';
+import { stationElectron } from '../../testUtils/stationBridge';
 
 const t = (k: string, p?: Record<string, unknown>) => (p ? `${k} ${JSON.stringify(p)}` : k);
 vi.mock('../../hooks/useTranslation', () => ({ useTranslation: () => ({ t }) }));
@@ -17,9 +18,9 @@ beforeEach(() => {
     observe() {}
     disconnect() {}
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = {
+  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({
     themes: { list: () => Promise.resolve([]), save, delete: () => Promise.resolve() },
-  };
+  });
 });
 
 const renderEditor = () =>

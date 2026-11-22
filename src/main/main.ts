@@ -25,11 +25,10 @@ import { createMenu } from './menu';
 import { createMainWindow } from './mainWindow';
 import { createSplashWindow, saveLanguageToFile, splashConfirmPromise } from './splash';
 import { registerTrainingHandlers } from './ipc/trainingHandlers';
-import { registerEventDayHandlers } from './ipc/eventDayHandlers';
-import { registerDayStripHandlers } from './ipc/dayStripHandlers';
 import { dayStripServer } from './remote/stripHandover';
 import { registerClubHandlers } from './ipc/clubHandlers';
 import { createClubStation } from './clubPort';
+import { createStationPort } from './stationPort';
 import { applyStoredPrivacySettings, createPrivacyHandlers } from './ipc/privacyHandlers';
 import { registerRemoteClientsHandlers } from './ipc/remoteClientsHandlers';
 import { registerRemoteSettingsHandlers } from './ipc/remoteSettingsHandlers';
@@ -39,7 +38,6 @@ import { registerRemoteMatchHandlers } from './ipc/remoteMatchHandlers';
 import { registerRemoteServerHandlers, startRemoteServer } from './ipc/remoteServerHandlers';
 import type { RemoteScoreServer } from './remoteScoreServer';
 import { registerWebhookHandlers } from './ipc/webhookHandlers';
-import { registerThemesHandlers } from './ipc/themesHandlers';
 import { registerCryptoHandlers } from './ipc/cryptoHandlers';
 import { registerUpdaterHandlers } from './ipc/updaterHandlers';
 import { createDiagnosticDeps, registerDiagnosticHandlers } from './ipc/diagnosticHandlers';
@@ -64,7 +62,7 @@ import { PisteHub } from './piste/pisteHub';
 import { registerCyranoHandlers } from './ipc/cyranoHandlers';
 import { registerApiHandlers } from './engine/api/ipcAdapter';
 import { emitChangeVia } from './mcp/mcpDomain';
-import { createMcpController } from './ipc/mcpHandlers';
+import { createMcpController } from './mcp/mcpController';
 import { parseCliArgs } from './cliArgs';
 import { registerSettingsHandlers } from './ipc/settingsHandlers';
 import { runBatchImport } from './batchImport';
@@ -106,8 +104,6 @@ const createWindow = (initialLang?: string): void =>
 const privacyHandlers = createPrivacyHandlers({
   db,
   getMainWindow: () => mainWindow,
-  // Compétition ouverte ou servie aux tablettes : anonymisation / effacement refusés (#1882)
-  isCompetitionBusy: id => id === menuActions.getCurrentCompetitionId() || remoteServers.has(id),
 });
 const menuActions = createMenuActions({
   db,
@@ -131,6 +127,27 @@ const buildMenu = (language?: string): void =>
 registerDbHandlers({ db, remoteServers, stopRemoteServer });
 // Mode Club : tablettes, synchro, sauvegardes du poste (port du contrat, docs/adr/0022)
 const clubStation = createClubStation({ db, userDataPath: app.getPath('userData') });
+// Dossiers accessibles à l'agent tant que l'opérateur n'en a pas choisi (Paramètres → Agent IA)
+const defaultAgentFolders = (['documents', 'downloads', 'desktop'] as const).flatMap(name => {
+  try {
+    return [app.getPath(name)];
+  } catch {
+    return [];
+  }
+});
+// Poste : thèmes, RGPD, serveur MCP, pistes de la journée (port du contrat, docs/adr/0022)
+const stationServices = createStationPort({
+  db,
+  userDataDir: () => app.getPath('userData'),
+  defaultAgentFolders,
+  mcp: () => mcp,
+  // Compétition ouverte ou servie aux tablettes : anonymisation / effacement refusés (#1882)
+  isCompetitionBusy: id => id === menuActions.getCurrentCompetitionId() || remoteServers.has(id),
+  getServer: id => {
+    const server = remoteServers.get(id)?.server;
+    return server ? dayStripServer(server) : undefined;
+  },
+});
 // Contrat d'API unique (#1981) : api:invoke / api:subscribe
 registerApiHandlers({
   db,
@@ -151,14 +168,7 @@ registerApiHandlers({
     dtView: id => remoteServers.get(id)?.server.dtView,
   },
   club: clubStation.port,
-});
-registerEventDayHandlers({ db });
-registerDayStripHandlers({
-  db,
-  getServer: id => {
-    const server = remoteServers.get(id)?.server;
-    return server ? dayStripServer(server) : undefined;
-  },
+  station: stationServices.port,
 });
 registerClubHandlers({ db });
 privacyHandlers.register();
@@ -253,15 +263,6 @@ registerOpp2Handlers({
   cyranoRunning: () => cyranoServer.running,
 });
 
-// Dossiers accessibles à l'agent tant que l'opérateur n'en a pas choisi (Paramètres → Agent IA)
-const defaultAgentFolders = (['documents', 'downloads', 'desktop'] as const).flatMap(name => {
-  try {
-    return [app.getPath(name)];
-  } catch {
-    return [];
-  }
-});
-
 // Dépendances des outils MCP (#1880) : base, écran à rafraîchir, serveur distant, Cyrano, fichiers
 const mcpDeps: McpWriteDeps = {
   db,
@@ -311,7 +312,6 @@ const mcp = createMcpController({
   // --mcp, --mcp-port, --mcp-write : utilisable sans écran, réglages enregistrés inchangés
   override: { enabled: cli.mcp, port: cli.mcpPort, allowWrite: cli.mcpWrite },
 });
-mcp.register();
 /** Démarrage du MCP à l'ouverture de la base (un seul démarrage, attendu en --headless) */
 let mcpReady: ReturnType<typeof mcp.apply> | null = null;
 registerSettingsHandlers({ db, defaultAgentFolders, getMainWindow: () => mainWindow });
@@ -323,7 +323,6 @@ registerRemoteSessionHandlers();
 registerRemoteDisplayHandlers({ getMainWindow: () => mainWindow });
 
 registerWebhookHandlers();
-registerThemesHandlers();
 registerCryptoHandlers();
 registerUpdaterHandlers({ getAutoUpdater: () => autoUpdater });
 registerProxyHandlers();
@@ -577,6 +576,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   void mcp.stop();
   clubStation.stop();
+  stationServices.stop();
   shutdownDb(db); // no-op si déjà fermé
 });
 

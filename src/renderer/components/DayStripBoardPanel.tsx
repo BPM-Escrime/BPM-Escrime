@@ -19,6 +19,7 @@ import {
 import { useTranslation } from '../hooks/useTranslation';
 import { ToggleChip } from './common/ToggleChip';
 import { Button } from './common/Button';
+import { stationAvailable, useStationApi } from '../api/stationApi';
 
 const POLL_MS = 5000;
 
@@ -131,14 +132,14 @@ const RuleEditor: React.FC<{
 
 export const DayStripBoardPanel: React.FC<Props> = ({ dayId, competitions, occupation }) => {
   const { t } = useTranslation();
-  const api = window.electronAPI?.eventDay;
+  const api = useStationApi().eventDay;
   const [board, setBoard] = useState<DayStripBoard | null>(null);
   const [choice, setChoice] = useState<Record<number, string>>({});
   const [editing, setEditing] = useState<number | null>(null);
   const titles = new Map(competitions.map(c => [c.id, c.title]));
 
   const load = useCallback(async () => {
-    if (!api?.getStripBoard) return;
+    if (!stationAvailable()) return;
     setBoard(await api.getStripBoard(dayId).catch(() => null));
   }, [api, dayId]);
 
@@ -152,7 +153,7 @@ export const DayStripBoardPanel: React.FC<Props> = ({ dayId, competitions, occup
     };
   }, [load]);
 
-  if (!board || !api) return null;
+  if (!board) return null;
 
   const assign = async (strip: number, key: string | undefined) => {
     if (key) await api.assignStrip(dayId, strip, key);

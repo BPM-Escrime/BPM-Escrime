@@ -192,7 +192,8 @@ exports déjà diffusés et les sauvegardes, à leur prochaine rotation.
 | `src/database/encryption.ts` | Chiffrement SQLCipher : ouverture, migration d'une base en clair, écrasement |
 | `src/main/dbKey.ts` | Clé de la base, stockée chiffrée par safeStorage (`db-key.bin`) |
 | `src/database/repos/privacyRepo.ts` | Recherche, export, anonymisation, effacement, conservation, purge d'une compétition |
-| `src/main/ipc/privacyHandlers.ts` | Canaux `privacy:*`, purge automatique au démarrage |
+| `src/main/engine/commands/privacy.ts` | Opérations du contrat (ADR-0022) : `listPrivacyPersons`, `getPersonData`, `anonymizePerson`, `erasePerson`, `getPrivacySettings`, `updatePrivacySettings`, `listRetentionCandidates`, `applyRetention` ; refus `competition_open` |
+| `src/main/ipc/privacyHandlers.ts` | Canaux `privacy:*` restants (dialogue natif, chemin de fichier) : export JSON d'une personne, archives `.bpm` chiffrées ; purge automatique au démarrage |
 | `src/main/privacySettings.ts` | Réglages `<userData>/privacy-settings.json` |
 | `src/main/remote/publicDto.ts` | Filtrage et abréviation des noms sur le réseau |
 | `src/main/bpmCrypto.ts` | Archives `.bpm` chiffrées |
