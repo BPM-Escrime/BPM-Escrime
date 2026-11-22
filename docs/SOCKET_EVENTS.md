@@ -71,15 +71,16 @@ Champ `action` de l'événement `arena_control` (`handleArenaControl`) :
 
 ## Espace de noms `/api` : contrat d'API (ADR-0020)
 
-Vue DT dans un navigateur (`/dt/`, client `WsClient`). Poignée de main refusée sans le cookie
-`bp_dt_token` de l'espace « Vue DT » (`POST /api/dt/login`). Lecture seule jusqu'à #1982 :
-requêtes et abonnements `competition:read` / `cards:read` de l'épreuve du serveur ; le reste
-répond `permission_denied`. Même enveloppe et mêmes codes d'erreur que l'IPC
+Vue DT dans un navigateur (`/dt/`, client `WsClient`), servie par
+`src/main/engine/api/wsAdapter.ts`. Poignée de main refusée sans le cookie `bp_dt_token` de
+l'espace « Vue DT » (`POST /api/dt/login`). Lecture seule jusqu'à #1982 : requêtes et
+abonnements `competition:read` / `cards:read` de l'épreuve du serveur ; le reste répond
+`permission_denied`. Même enveloppe et mêmes codes d'erreur que l'IPC
 ([API_CONTRACT.md](API_CONTRACT.md)).
 
-| Événement         | Sens             | Données                                    |
-| ----------------- | ---------------- | ------------------------------------------ |
-| `api:invoke`      | client → serveur | `(name, input, ack)` → `ApiEnvelope`       |
-| `api:subscribe`   | client → serveur | `(id, name, input, ack)` → `ApiEnvelope`   |
-| `api:unsubscribe` | client → serveur | `(id)`                                     |
-| `api:event`       | serveur → client | `(id, signal)` : relire par une requête    |
+| Événement | Sens | Données |
+|---|---|---|
+| `api:invoke` | client → serveur | `(name, input, ack)` → `ApiEnvelope` |
+| `api:subscribe` | client → serveur | `(id, name, input, ack)` → `ApiEnvelope` |
+| `api:unsubscribe` | client → serveur | `(id)` |
+| `api:event` | serveur → client | `(id, signal)` : relire par une requête |
