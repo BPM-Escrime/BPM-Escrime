@@ -4,7 +4,7 @@
  * sans serveur, écrans de démo, abonnement qui relaie les avis. Sans base : ces opérations
  * n'écrivent aucun fait de l'épreuve (pas de journal).
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ApiError } from '../../../shared/api/client';
 import type {
   TrainingActivity,
