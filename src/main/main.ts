@@ -30,14 +30,10 @@ import { registerClubHandlers } from './ipc/clubHandlers';
 import { createClubStation } from './clubPort';
 import { createStationPort } from './stationPort';
 import { applyStoredPrivacySettings, createPrivacyHandlers } from './ipc/privacyHandlers';
-import { registerRemoteClientsHandlers } from './ipc/remoteClientsHandlers';
-import { registerRemoteSettingsHandlers } from './ipc/remoteSettingsHandlers';
-import { registerRemoteDisplayHandlers } from './ipc/remoteDisplayHandlers';
-import { registerRemoteSessionHandlers } from './ipc/remoteSessionHandlers';
-import { registerRemoteMatchHandlers } from './ipc/remoteMatchHandlers';
-import { registerRemoteServerHandlers, startRemoteServer } from './ipc/remoteServerHandlers';
+import { registerLogoTtsHandlers } from './ipc/logoTtsHandlers';
+import { startRemoteServer } from './remoteLifecycle';
+import { createRemoteAdminPort } from './remotePort';
 import type { RemoteScoreServer } from './remoteScoreServer';
-import { registerWebhookHandlers } from './ipc/webhookHandlers';
 import { registerCryptoHandlers } from './ipc/cryptoHandlers';
 import { registerUpdaterHandlers } from './ipc/updaterHandlers';
 import { createDiagnosticDeps, registerDiagnosticHandlers } from './ipc/diagnosticHandlers';
@@ -166,6 +162,16 @@ registerApiHandlers({
     },
     // Espace Vue DT du serveur de l'épreuve (docs/adr/0020)
     dtView: id => remoteServers.get(id)?.server.dtView,
+    // Pilotage du serveur par l'écran : démarrage, session, réglages (docs/adr/0022)
+    admin: createRemoteAdminPort({
+      lifecycle: {
+        db,
+        getMainWindow: () => mainWindow,
+        // remoteServerContext est défini plus bas (PisteHub) : lu à l'appel
+        onServerCreated: server => remoteServerContext.onServerCreated?.(server),
+      },
+      userDataDir: () => app.getPath('userData'),
+    }),
   },
   club: clubStation.port,
   station: stationServices.port,
@@ -248,8 +254,6 @@ const remoteServerContext = {
     server.cyranoTeamHook = arenaId => pisteHub.onTeamArenaUpdate(arenaId, server);
   },
 };
-registerRemoteServerHandlers(remoteServerContext);
-
 registerCyranoHandlers({
   cyranoServer,
   pisteHub,
@@ -316,13 +320,6 @@ const mcp = createMcpController({
 let mcpReady: ReturnType<typeof mcp.apply> | null = null;
 registerSettingsHandlers({ db, defaultAgentFolders, getMainWindow: () => mainWindow });
 
-registerRemoteMatchHandlers();
-
-registerRemoteSessionHandlers();
-
-registerRemoteDisplayHandlers({ getMainWindow: () => mainWindow });
-
-registerWebhookHandlers();
 registerCryptoHandlers();
 registerUpdaterHandlers({ getAutoUpdater: () => autoUpdater });
 registerProxyHandlers();
@@ -330,9 +327,7 @@ registerBackupHandlers();
 
 registerDiagnosticHandlers(createDiagnosticDeps({ getWindow: () => mainWindow, getVersionInfo }));
 
-registerRemoteSettingsHandlers({ db });
-
-registerRemoteClientsHandlers();
+registerLogoTtsHandlers();
 registerTrainingHandlers({ db, getMainWindow: () => mainWindow });
 
 // App info handlers

@@ -13,15 +13,12 @@ import type {
   UpdateInfo,
   UpdateProgressEvent,
   ProxySettingsDTO,
-  RemoteArenaUpdateEvent,
-  RemoteMatchFinishedEvent,
 } from '../shared/types/preload';
 
 import { setPrintRequestHandler, type PrintRequestHandler } from './preloadApi/printHandler';
 import { dbApi } from './preloadApi/dbApi';
 import { fileApi } from './preloadApi/fileApi';
 import { dialogApi } from './preloadApi/dialogApi';
-import { remoteApi } from './preloadApi/remoteApi';
 import { subscribe } from './preloadApi/subscribe';
 import { apiBridge } from './preloadApi/apiBridge';
 
@@ -190,7 +187,6 @@ const electronApi = {
   },
 
   // Remote score server functions
-  remote: remoteApi,
 
   // Dossier de l'agent choisi par dialogue natif (#1880) ; les autres réglages du poste, salles,
   // journée et agent passent par le contrat d'API (docs/adr/0022)
@@ -230,55 +226,16 @@ const electronApi = {
     subscribe('update:available', callback),
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) =>
     subscribe('update:progress', callback),
-  onRemoteArenaUpdate: (callback: (data: RemoteArenaUpdateEvent) => void) =>
-    subscribe('arena:update', callback),
-  onRemoteMatchFinished: (callback: (data: RemoteMatchFinishedEvent) => void) =>
-    subscribe('match:finished', callback),
   onTrainingMatchFinished: (callback: Parameters<ElectronAPI['onTrainingMatchFinished']>[0]) =>
     subscribe('training:match_finished', callback),
   onCompetitionEvent: (
     callback: (event: { type: CompetitionEventType; competitionId?: string }) => void
   ) => subscribe('competition:event', callback),
-  onRemoteFencerExcluded: (
-    callback: (data: { fencerId: string; matchId: string; reason?: 'black_card' }) => void
-  ) => subscribe('remote:fencer_excluded', callback),
-  onRemoteFencerReinstated: (
-    callback: (data: {
-      fencerId: string;
-      matchId: string;
-      status: string;
-      scoreA: number;
-      scoreB: number;
-    }) => void
-  ) => subscribe('remote:fencer_reinstated', callback),
-  onRemoteCheckinUpdated: (
-    callback: (data: { kind: 'fencer' | 'referee'; id: string; present: boolean }) => void
-  ) => subscribe('remote:checkin_updated', callback),
-  onRemoteRefereeChanged: (callback: (data: { matchId: string; refereeId: string }) => void) =>
-    subscribe('remote:referee_changed', callback),
-  onKioskNoteUpdate: (callback: Parameters<ElectronAPI['onKioskNoteUpdate']>[0]) =>
-    subscribe('kiosk:note', callback),
-  onDTCall: (callback: (data: import('../shared/types/remote').DTCallEvent) => void) =>
-    subscribe('remote:dt_call', callback),
-  onDTCallCancel: (callback: (data: { arenaId: string }) => void) =>
-    subscribe('remote:dt_cancel', callback),
-
-  onScoreIpConflict: (callback: Parameters<ElectronAPI['onScoreIpConflict']>[0]) =>
-    subscribe('score:ip-conflict', callback),
-
-  onPoolSignatureUpdated: (
-    callback: (data: { poolId: string; signedFencerIds: string[]; totalFencers: number }) => void
-  ) => subscribe('pool:signature:updated', callback),
-
-  onTableauSignatureUpdated: (callback: (data: { matchId: string; fencerId: string }) => void) =>
-    subscribe('tableau:signature:updated', callback),
-
   getLogo: () => ipcRenderer.invoke('app:getLogo'),
   getLogos: () => ipcRenderer.invoke('app:getLogos'),
   saveLogos: (logos: { id: string; name: string; data: string }[]) =>
     ipcRenderer.invoke('app:saveLogos', logos),
   getTtsConfig: () => ipcRenderer.invoke('app:getTtsConfig'),
-  onLogoLoaded: (callback: (logo: string | null) => void) => subscribe('app:logoLoaded', callback),
 
   // Remove listeners
   removeAllListeners: (channel: string) => ipcRenderer.removeAllListeners(channel),

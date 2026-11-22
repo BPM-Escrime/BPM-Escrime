@@ -4,8 +4,10 @@
  * Licensed under GPL-3.0
  */
 import { useEffect, useState } from 'react';
+import { useRemoteApi } from '../api/remoteApi';
 
 export function useRemoteNetworkSettings(competitionId: string) {
+  const remote = useRemoteApi();
   const [useHttps, setUseHttps] = useState<boolean>(() => {
     // HTTPS par défaut : HTTP seulement si désactivé explicitement
     return localStorage.getItem('bellepoule-remote-https') !== 'false';
@@ -23,7 +25,7 @@ export function useRemoteNetworkSettings(competitionId: string) {
   });
 
   useEffect(() => {
-    window.electronAPI.remote.getNetworkInterfaces().then(res => {
+    remote.getNetworkInterfaces().then(res => {
       if (res?.success && res.interfaces?.length) {
         setNetworkInterfaces(res.interfaces);
       }

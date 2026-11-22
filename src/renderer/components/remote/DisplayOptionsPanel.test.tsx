@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DisplayOptionsPanel } from './DisplayOptionsPanel';
+import { remoteElectron } from '../../testUtils/remoteBridge';
 
 vi.mock('../../hooks/useTranslation', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
@@ -17,9 +18,11 @@ const updateKioskViews = vi.fn().mockResolvedValue(undefined);
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (window as unknown as { electronAPI: unknown }).electronAPI = {
-    remote: { updateTheme, updateKioskViews, setWallpaper: vi.fn() },
-  };
+  (window as unknown as { electronAPI: unknown }).electronAPI = remoteElectron({
+    updateTheme,
+    updateKioskViews,
+    setWallpaper: vi.fn(),
+  });
 });
 
 const views = { poules: true, classement: false, direct: false, suivants: false };

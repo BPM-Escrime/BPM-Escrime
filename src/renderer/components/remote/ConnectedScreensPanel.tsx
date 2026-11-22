@@ -21,6 +21,7 @@ import {
   type AssignRole,
   type ScreenAssignment,
 } from './screenAssign';
+import { useRemoteApi } from '../../api/remoteApi';
 
 interface ConnectedScreensPanelProps {
   competitionId: string;
@@ -41,6 +42,7 @@ export const ConnectedScreensPanel: React.FC<ConnectedScreensPanelProps> = React
   ({ competitionId, isRemoteActive, arenaCount }) => {
     const { t } = useTranslation();
     const { showToast } = useToast();
+    const remote = useRemoteApi();
     // Écrans connectés
     const [connectedClients, setConnectedClients] = useState<ConnectedClient[]>([]);
     const [renameValues, setRenameValues] = useState<Record<string, string>>({});
@@ -62,27 +64,23 @@ export const ConnectedScreensPanel: React.FC<ConnectedScreensPanelProps> = React
     // Abonnement aux mises à jour de la liste des clients connectés
     useEffect(() => {
       if (!isRemoteActive) return;
-      window.electronAPI.remote.getConnectedClients(competitionId).then(res => {
+      remote.getConnectedClients(competitionId).then(res => {
         if (res.success) setConnectedClients(res.clients ?? []);
       });
-      return window.electronAPI.remote.onClientListUpdate((clients: ConnectedClient[], id) => {
+      return remote.onClientListUpdate((clients: ConnectedClient[], id) => {
         if (id && id !== competitionId) return;
         setConnectedClients(clients);
       });
-    }, [isRemoteActive, competitionId]);
+    }, [isRemoteActive, competitionId, remote]);
 
     // Changement de type à distance : navigation de l'écran vers la vue choisie (même origine)
     const applyAssign = async (client: ConnectedClient, role: AssignRole, arena: number) => {
       const previous = assignments[client.socketId];
       setAssignments(prev => ({ ...prev, [client.socketId]: { role, arena } }));
-      const res = await window.electronAPI.remote.sendClientCommand(
-        competitionId,
-        client.socketId,
-        {
-          type: 'navigate',
-          url: assignUrl('', role, arena),
-        }
-      );
+      const res = await remote.sendClientCommand(competitionId, client.socketId, {
+        type: 'navigate',
+        url: assignUrl('', role, arena),
+      });
       if (!res?.success) {
         setAssignments(prev => {
           const next = { ...prev };
@@ -186,9 +184,7 @@ export const ConnectedScreensPanel: React.FC<ConnectedScreensPanelProps> = React
                     <button
                       className="btn-secondary connected-screens-panel-1"
                       title={t('rsm.identify_title')}
-                      onClick={() =>
-                        window.electronAPI.remote.identifyClient(competitionId, client.socketId)
-                      }
+                      onClick={() => remote.identifyClient(competitionId, client.socketId)}
                     >
                       {t('rsm.identify')}
                     </button>
@@ -202,12 +198,7 @@ export const ConnectedScreensPanel: React.FC<ConnectedScreensPanelProps> = React
                       onKeyDown={async e => {
                         if (e.key === 'Enter') {
                           const lbl = renameValues[client.socketId]?.trim();
-                          if (lbl)
-                            await window.electronAPI.remote.renameClient(
-                              competitionId,
-                              client.socketId,
-                              lbl
-                            );
+                          if (lbl) await remote.renameClient(competitionId, client.socketId, lbl);
                         }
                       }}
                       className="connected-screens-panel-2"
@@ -217,12 +208,7 @@ export const ConnectedScreensPanel: React.FC<ConnectedScreensPanelProps> = React
                       title={t('rsm.rename')}
                       onClick={async () => {
                         const lbl = renameValues[client.socketId]?.trim();
-                        if (lbl)
-                          await window.electronAPI.remote.renameClient(
-                            competitionId,
-                            client.socketId,
-                            lbl
-                          );
+                        if (lbl) await remote.renameClient(competitionId, client.socketId, lbl);
                       }}
                     >
                       ✓
@@ -306,11 +292,7 @@ export const ConnectedScreensPanel: React.FC<ConnectedScreensPanelProps> = React
                     variant="primary"
                     className="flex-1"
                     onClick={async () => {
-                      await window.electronAPI.remote.setClientKioskMode(
-                        competitionId,
-                        kioskModal,
-                        kioskModalConfig
-                      );
+                      await remote.setClientKioskMode(competitionId, kioskModal, kioskModalConfig);
                       setKioskModal(null);
                       showToast(t('rsm.kiosk_sent'), 'success');
                     }}

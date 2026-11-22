@@ -7,6 +7,7 @@
 import type { Competition } from '../../shared/types';
 import type { Language, Theme } from '../contexts/TranslationContext';
 import { SHOW_UPDATE_EVENT } from '../components/UpdateMenuButton';
+import { remoteApi, remoteAvailable } from '../api/remoteApi';
 
 /** Événement fenêtre écouté par RemoteScoreManager (detail : RemoteCommandAction). */
 export const REMOTE_COMMAND_EVENT = 'bp:remote-command';
@@ -228,8 +229,8 @@ async function runUpdate(args: string[], ctx: SlashCommandContext): Promise<Slas
 
 async function runRemote(args: string[], ctx: SlashCommandContext): Promise<SlashCommandResult> {
   const { t, activeCompetitionId: id } = ctx;
-  const remote = window.electronAPI?.remote;
-  if (!remote) return { ok: false, message: t('slashCommands.unavailable') };
+  if (!remoteAvailable()) return { ok: false, message: t('slashCommands.unavailable') };
+  const remote = remoteApi;
   if (!id) return { ok: false, message: t('slashCommands.no_competition') };
   const sub = args[0]?.toLowerCase();
   if (sub === 'start' || sub === 'stop') {

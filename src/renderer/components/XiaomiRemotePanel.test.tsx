@@ -15,15 +15,17 @@ vi.mock('qrcode', () => ({
 }));
 vi.mock('../hooks/useFocusTrap', () => ({ useFocusTrap: () => ({ current: null }) }));
 import { XiaomiRemotePanel } from './XiaomiRemotePanel';
+import { remoteElectron } from '../testUtils/remoteBridge';
 
 let remote: Record<string, ReturnType<typeof vi.fn>>;
+let electron: ReturnType<typeof remoteElectron>;
 
 beforeEach(() => {
   remote = {
     getConnectedClients: vi.fn().mockResolvedValue({ success: true, clients: [] }),
-    onClientListUpdate: vi.fn(() => () => {}),
   };
-  (window as any).electronAPI = { remote };
+  electron = remoteElectron(remote);
+  (window as any).electronAPI = electron;
 });
 
 afterEach(() => {
@@ -36,6 +38,7 @@ describe('XiaomiRemotePanel', () => {
   it('charge la liste une fois puis ne réinterroge pas le processus principal', async () => {
     vi.useFakeTimers();
     const spy = vi.spyOn(globalThis, 'setInterval');
+    const subscribe = vi.spyOn(electron.api, 'subscribe');
     render(
       <XiaomiRemotePanel
         competitionId="c1"
@@ -48,16 +51,14 @@ describe('XiaomiRemotePanel', () => {
       await vi.advanceTimersByTimeAsync(30000);
     });
     expect(remote.getConnectedClients).toHaveBeenCalledTimes(1);
-    expect(remote.onClientListUpdate).toHaveBeenCalledTimes(1);
+    // Liste par avis du contrat (onRemoteClients) : un seul abonnement, pas de polling
+    expect(subscribe.mock.calls.map(c => c[1])).toEqual(['onRemoteClients']);
     expect(spy).not.toHaveBeenCalledWith(expect.any(Function), 5000);
   });
 
   it('ignore la liste poussée par une autre compétition', async () => {
-    let push: (c: any[], id?: string | null) => void = () => {};
-    remote.onClientListUpdate.mockImplementation(((cb: typeof push) => {
-      push = cb;
-      return () => {};
-    }) as any);
+    const push = (clients: any[], competitionId: string | null) =>
+      electron.emit('onRemoteClients', { competitionId, clients });
     const { container } = render(
       <XiaomiRemotePanel
         competitionId="c1"

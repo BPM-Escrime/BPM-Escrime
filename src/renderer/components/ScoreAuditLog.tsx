@@ -18,6 +18,7 @@ import {
   COMPACT_ROW_COUNT,
 } from './common/CollapseToggle';
 import { Button } from './common/Button';
+import { useRemoteApi } from '../api/remoteApi';
 
 interface Props {
   competitionId: string;
@@ -118,6 +119,7 @@ const ScoreAuditLog_: React.FC<Props> = ({ competitionId, matchOptions }) => {
   const { showToast } = useToast();
   const platform = usePlatform();
   const client = useBpmClient();
+  const remote = useRemoteApi();
   const { t } = useTranslation();
   const [entries, setEntries] = useState<ScoreAuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -148,13 +150,17 @@ const ScoreAuditLog_: React.FC<Props> = ({ competitionId, matchOptions }) => {
 
   // Écoute des alertes de conflit IP
   useEffect(() => {
-    const unsub = window.electronAPI.onScoreIpConflict((conflict: ScoreIpConflict) => {
-      const msg = `Conflit IP — Poule ${conflict.poolNumber ?? '?'} Match ${conflict.matchNumber ?? '?'} : ${conflict.attemptReferee} (${conflict.attemptIp}) tente de modifier un score saisi par ${conflict.originalReferee ?? 'inconnu'} (${conflict.originalIp})`;
-      showToast(msg, 'error');
-      load();
-    });
+    const unsub = remote.onActivity(
+      'score_ip_conflict',
+      competitionId,
+      (conflict: ScoreIpConflict) => {
+        const msg = `Conflit IP — Poule ${conflict.poolNumber ?? '?'} Match ${conflict.matchNumber ?? '?'} : ${conflict.attemptReferee} (${conflict.attemptIp}) tente de modifier un score saisi par ${conflict.originalReferee ?? 'inconnu'} (${conflict.originalIp})`;
+        showToast(msg, 'error');
+        load();
+      }
+    );
     return unsub;
-  }, [load, showToast]);
+  }, [load, showToast, remote, competitionId]);
 
   const poolNumbers = Array.from(
     new Set(entries.map(e => e.poolNumber).filter(n => n != null))

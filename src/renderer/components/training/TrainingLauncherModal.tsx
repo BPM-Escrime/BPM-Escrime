@@ -4,6 +4,7 @@ import { Swords, Minus, Plus, Clock, Zap, Network, Shuffle } from 'lucide-react'
 import { Weapon, TargetZone, ZONE_POINTS, ZONE_LABELS } from '../../../shared/types';
 import type { TrainingCustomRules } from '../../../shared/types/preload';
 import { Button } from '../common/Button';
+import { useRemoteApi } from '../../api/remoteApi';
 
 interface Props {
   onClose: () => void;
@@ -45,6 +46,7 @@ function loadSavedInterface(): string {
 
 const TrainingLauncherModal: React.FC<Props> = ({ onClose, onLaunch, isLoading }) => {
   const { t } = useTranslation();
+  const remote = useRemoteApi();
   const [weapon, setWeapon] = useState<string>(Weapon.EPEE);
   const [strips, setStrips] = useState(1);
   const [matchDuration, setMatchDuration] = useState(180);
@@ -57,8 +59,8 @@ const TrainingLauncherModal: React.FC<Props> = ({ onClose, onLaunch, isLoading }
   const [selectedInterface, setSelectedInterface] = useState<string>(loadSavedInterface);
 
   useEffect(() => {
-    window.electronAPI?.remote
-      ?.getNetworkInterfaces?.()
+    remote
+      .getNetworkInterfaces()
       .then(res => {
         const list = res?.success ? res.interfaces : undefined;
         if (list?.length) {

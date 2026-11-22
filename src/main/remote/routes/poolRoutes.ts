@@ -14,6 +14,7 @@ import { baseArenaId } from '../arenaSlots';
 import { getSharedMainWindow } from '../../mainWindowRef';
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
 import { emitCompetitionEvent } from '../../ipc/dbHandlers';
+import { notifyScreen } from '../remoteActivity';
 
 /** Tireur d'une poule tel que transmis par le renderer. */
 export type PoolFencer = Record<string, unknown> & { id: string };
@@ -238,7 +239,9 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
           if (lastEntry.ipAddress && lastEntry.ipAddress !== clientIp) {
             const mainWin = getSharedMainWindow();
             if (mainWin) {
-              mainWin.webContents.send('score:ip-conflict', {
+              notifyScreen({
+                kind: 'score_ip_conflict',
+                competitionId: ctx.session?.competitionId ?? null,
                 matchId,
                 poolId,
                 matchNumber: lastEntry.matchNumber,
@@ -344,10 +347,13 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
       // Notifier le renderer de la mise à jour du score (pour affichage dans le tableau poule)
       const mainWindow = getSharedMainWindow();
       if (mainWindow) {
-        mainWindow.webContents.send('match:finished', {
+        notifyScreen({
+          kind: 'match_finished',
+          competitionId: ctx.session?.competitionId ?? null,
           matchId,
-          scoreA: scoreAObj.value,
-          scoreB: scoreBObj.value,
+          // Scores saisis et validés plus haut : jamais null ici
+          scoreA: scoreAObj.value as number,
+          scoreB: scoreBObj.value as number,
           poolId,
           isTableau: false,
           recorded,
@@ -448,7 +454,9 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
       if (mainWin) {
         const sigs = ctx.poolSignaturesCache.get(poolId)!;
         const poolFencers = ctx.poolFencersCache.get(poolId) ?? ctx.db.getPoolFencers(poolId);
-        mainWin.webContents.send('pool:signature:updated', {
+        notifyScreen({
+          kind: 'pool_signature_updated',
+          competitionId: ctx.session?.competitionId ?? null,
           poolId,
           signedFencerIds: Array.from(sigs.keys()),
           totalFencers: poolFencers.length,
@@ -584,7 +592,12 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
 
       const mainWin = getSharedMainWindow();
       if (mainWin) {
-        mainWin.webContents.send('tableau:signature:updated', { matchId, fencerId });
+        notifyScreen({
+          kind: 'tableau_signature_updated',
+          competitionId: ctx.session?.competitionId ?? null,
+          matchId,
+          fencerId,
+        });
       }
 
       res.json({ success: true });

@@ -16,7 +16,19 @@ export type Permission =
   | 'referees:write'
   | 'club:read'
   | 'club:write'
-  | 'station:admin';
+  | 'station:admin'
+  | 'remote:admin';
+
+/**
+ * Droits des fonctions du poste (docs/adr/0022) : jamais servis sur le réseau, jamais journalisés
+ * (ce ne sont pas des faits de l'épreuve), hors de la transaction du journal (runCommand).
+ */
+export const STATION_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
+  'club:read',
+  'club:write',
+  'station:admin',
+  'remote:admin',
+]);
 
 export type OperationKind = 'command' | 'query' | 'subscription';
 

@@ -44,8 +44,10 @@ const within = <T>(p: Promise<T>, label: string, ms = 15_000) =>
 async function arenaScore(win: Page, cid: string, arenaId: string): Promise<string> {
   return win.evaluate(
     async ({ cid, arenaId }) => {
-      const res = await window.electronAPI.remote.getArenas(cid);
-      const arena = res.arenas?.find(a => a.id === arenaId);
+      // Arènes du serveur distant par le contrat d'API (listRemoteArenas)
+      const env = await window.electronAPI.api.invoke('listRemoteArenas', { competitionId: cid });
+      const arenas = env.ok ? (env.data as Array<Record<string, any>>) : [];
+      const arena = arenas.find(a => a.id === arenaId);
       const m = arena?.currentMatch;
       return m ? `${arena.status} ${m.scoreA}-${m.scoreB}` : '';
     },

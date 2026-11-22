@@ -2,17 +2,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useRemoteNetworkSettings } from './useRemoteNetworkSettings';
+import { remoteElectron } from '../testUtils/remoteBridge';
 
 beforeEach(() => {
   localStorage.clear();
-  (window as any).electronAPI = {
-    remote: {
-      getNetworkInterfaces: vi.fn().mockResolvedValue({
-        success: true,
-        interfaces: [{ name: 'eth0', address: '192.168.1.10' }],
-      }),
-    },
-  };
+  (window as any).electronAPI = remoteElectron({
+    getNetworkInterfaces: vi.fn().mockResolvedValue({
+      success: true,
+      interfaces: [{ name: 'eth0', address: '192.168.1.10' }],
+    }),
+  });
 });
 
 afterEach(() => {

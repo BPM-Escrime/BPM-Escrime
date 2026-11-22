@@ -10,6 +10,7 @@ import { getSharedMainWindow } from '../mainWindowRef';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
 import { emitCompetitionEvent } from '../ipc/dbHandlers';
 import { reinstateByCommand } from './scoreCommand';
+import { notifyScreen } from './remoteActivity';
 
 type S = RemoteScoreServer;
 
@@ -179,7 +180,9 @@ export function cancelBlackCard(
 
   const mainWin = getSharedMainWindow();
   if (mainWin) {
-    mainWin.webContents.send('remote:fencer_reinstated', {
+    notifyScreen({
+      kind: 'fencer_reinstated',
+      competitionId: ctx.session?.competitionId ?? null,
       fencerId,
       matchId,
       status,

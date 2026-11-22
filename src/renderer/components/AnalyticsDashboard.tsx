@@ -38,6 +38,7 @@ import { FileText, Hourglass, Square } from 'lucide-react';
 import { Icon } from './common/Icon';
 import { Button } from './common/Button';
 import { useToast } from './Toast';
+import { useRemoteApi } from '../api/remoteApi';
 const MatchAuditLog = React.lazy(() =>
   import('./MatchAuditLog').then(m => ({ default: m.MatchAuditLog }))
 );
@@ -364,6 +365,7 @@ const AnalyticsDashboard_: React.FC<AnalyticsDashboardProps> = ({
   const [exporting, setExporting] = useState(false);
   const { showToast } = useToast();
   const client = useBpmClient();
+  const remote = useRemoteApi();
 
   const loadFencerStats = useCallback(async () => {
     const data = await client
@@ -385,11 +387,10 @@ const AnalyticsDashboard_: React.FC<AnalyticsDashboardProps> = ({
 
   // Horodatage des matchs, événements distants et pistes en direct (#1817)
   const loadOrganisation = useCallback(async () => {
-    const api = window.electronAPI;
     const [tm, ev, ar] = await Promise.all([
       client.query('listMatchTimings', { competitionId: competition.id }).catch(() => null),
       client.query('listRemoteEvents', { competitionId: competition.id }).catch(() => null),
-      api?.remote?.getArenas?.(competition.id).catch(() => null),
+      remote.getArenas(competition.id),
     ]);
     if (Array.isArray(tm)) setTimings(tm);
     if (Array.isArray(ev)) setRemoteEvents(ev);
@@ -401,7 +402,7 @@ const AnalyticsDashboard_: React.FC<AnalyticsDashboardProps> = ({
       }))
     );
     setNow(Date.now());
-  }, [client, competition.id]);
+  }, [client, remote, competition.id]);
 
   useEffect(() => {
     void loadOrganisation();

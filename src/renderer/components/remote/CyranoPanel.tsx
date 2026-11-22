@@ -42,6 +42,7 @@ import {
 } from './cyranoSettings';
 
 import { CYRANO_PROFILES, buildBatch, exportPistes, parsePistesImport } from './cyranoPisteTools';
+import { useRemoteApi } from '../../api/remoteApi';
 
 const POLL_MS = 5000;
 const LOG_LINES = 200;
@@ -64,6 +65,7 @@ const EMPTY_ROW: CyranoPisteConfigDTO = {
 
 export const CyranoPanel: React.FC<{ competitionId: string | null }> = ({ competitionId }) => {
   const { t } = useTranslation();
+  const remote = useRemoteApi();
   const [running, setRunning] = useState(false);
   const [udpPort, setUdpPort] = useState<number>(readPort);
   // Table des pistes : en base, par compétition (#1829). Identifiant passé par le parent.
@@ -135,8 +137,8 @@ export const CyranoPanel: React.FC<{ competitionId: string | null }> = ({ compet
 
   // Interfaces réseau locales : choix de l'interface d'écoute (#1829)
   useEffect(() => {
-    window.electronAPI?.remote
-      ?.getNetworkInterfaces?.()
+    remote
+      .getNetworkInterfaces()
       .then(res => {
         if (res?.success && res.interfaces) setInterfaces(res.interfaces);
       })

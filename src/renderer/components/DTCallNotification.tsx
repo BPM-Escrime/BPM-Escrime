@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { formatTime } from '../../shared/utils/localeFormat';
 import { requestConfirmAbandon } from '../services/dtCallEvents';
+import { useRemoteApi } from '../api/remoteApi';
 
 interface DTCallEntry {
   id: string;
@@ -24,11 +25,11 @@ interface DTCallEntry {
 
 const DTCallNotification: React.FC = () => {
   const { t } = useTranslation();
+  const remote = useRemoteApi();
   const [calls, setCalls] = useState<DTCallEntry[]>([]);
 
   useEffect(() => {
-    if (!window.electronAPI?.onDTCall) return;
-    const unsub = window.electronAPI.onDTCall(data => {
+    const unsub = remote.onActivity('dt_call', undefined, data => {
       setCalls(prev => {
         // remplacer un appel existant pour la même arène
         const filtered = prev.filter(c => c.arenaId !== data.arenaId);
@@ -67,23 +68,25 @@ const DTCallNotification: React.FC = () => {
       }
     });
     return unsub;
-  }, []);
+  }, [remote]);
 
   useEffect(() => {
-    if (!window.electronAPI?.onDTCallCancel) return;
-    const unsub = window.electronAPI.onDTCallCancel(data => {
+    const unsub = remote.onActivity('dt_call_cancelled', undefined, data => {
       setCalls(prev => prev.filter(c => c.arenaId !== data.arenaId));
     });
     return unsub;
-  }, []);
+  }, [remote]);
 
-  const acknowledge = useCallback(async (call: DTCallEntry) => {
-    setCalls(prev => prev.map(c => (c.id === call.id ? { ...c, acknowledging: true } : c)));
-    if (call.competitionId) {
-      await window.electronAPI.remote.acknowledgeDTCall(call.competitionId, call.arenaId);
-    }
-    setCalls(prev => prev.filter(c => c.id !== call.id));
-  }, []);
+  const acknowledge = useCallback(
+    async (call: DTCallEntry) => {
+      setCalls(prev => prev.map(c => (c.id === call.id ? { ...c, acknowledging: true } : c)));
+      if (call.competitionId) {
+        await remote.acknowledgeDTCall(call.competitionId, call.arenaId);
+      }
+      setCalls(prev => prev.filter(c => c.id !== call.id));
+    },
+    [remote]
+  );
 
   // Abandon signalé par l'appareil : le DT confirme, puis l'appel est soldé (#2000)
   const confirmAbandon = useCallback(

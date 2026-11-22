@@ -138,7 +138,7 @@ bellepoule-modern/
   `./bellepoule.db`). Autosave toutes les **2 min** (événements `autosave:completed` /
   `autosave:failed`), sauvegarde à la fermeture.
 - **Serveur distant** : une instance `RemoteScoreServer` par compétition
-  (`remote:startServer`), port 8066 ou premier port libre, interface réseau choisie,
+  (opération `startRemoteServer` du contrat, `src/shared/api/contractRemote.ts`), port 8066 ou premier port libre, interface réseau choisie,
   HTTPS optionnel (activé par défaut dans l'UI).
 - **Mode entraînement** : serveur dédié (`training:*`), règles personnalisées (durée,
   zones autorisées, mort subite désactivée).
@@ -156,7 +156,7 @@ bellepoule-modern/
 | `updater.*` | `check`, `installPendingUpdate`, `setSilentMode`, ... |
 | `crypto.*` | `protect` / `unprotect` (safeStorage) |
 | `themes.*` | `list`, `save`, `delete` |
-| Événements | `onRemoteMatchFinished`, `onRemoteArenaUpdate`, `onDTCall`, `onRemoteFencerExcluded`, `onRemoteRefereeChanged`, `onPoolSignatureUpdated`, `onTableauSignatureUpdated`, `onAutosaveCompleted`, menus `onMenu*`, ... |
+| Événements | `onAutosaveCompleted`, menus `onMenu*`, ... |
 | Divers | `notifyLanguageChanged`, `getVersionInfo`, `openExternal`, `print`, `setWindowSize`, `getLogo`, `getTtsConfig` |
 
 Toutes les entrées `db.*` passent par `src/database/validation.ts`.
@@ -193,7 +193,7 @@ Détails : [REMOTE_SCORE_GUIDE.md](REMOTE_SCORE_GUIDE.md) et [docs/ARBITRAGE.md]
 - **Rooms Socket.IO** : `arena:{id}`, `pool:{id}`, `team-arena:{id}`, `dashboard`.
 - **Flux d'un score** : tablette → `arena_control/update_score` (temps réel, écrans) +
   `POST /api/matches/:id/score` (persistance) → fin : `POST /api/matches/:id/finish` →
-  DB + IPC `match:finished` → renderer met à jour poule/tableau.
+  DB + avis `match_finished` (abonnement `onRemoteActivity`) → renderer relit poule/tableau.
 - **Charge du process principal (#1154)** : le serveur distant, l'UI et les IPC `db:*` partagent la boucle d'événements du main. `src/main/eventLoopMonitor.ts` mesure son lag (`perf_hooks.monitorEventLoopDelay`, IPC `perf:getEventLoopDelay` / `electronAPI.getEventLoopDelay(reset?)` → moyenne, p50, p99, max en ms). Découpage prévu, à décider après mesure sur un export réel : (1) workers pour les tâches CPU (PDF, ZIP, `scryptSync` des mots de passe — `auth.ts`), (2) à défaut, serveur distant dans un `utilityProcess` derrière une façade `remoteServers` (lecture SQLite dédiée, écritures sérialisées via le main).
 
 ## 7. État côté interface

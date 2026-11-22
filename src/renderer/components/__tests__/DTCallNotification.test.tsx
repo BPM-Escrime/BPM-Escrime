@@ -9,10 +9,12 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import DTCallNotification from '../DTCallNotification';
 import { DT_CONFIRM_ABANDON_EVENT } from '../../services/dtCallEvents';
 import type { DtConfirmAbandonDetail } from '../../services/dtCallEvents';
+import type { DTCallEvent } from '../../../shared/types/remote';
+import { remoteElectron } from '../../testUtils/remoteBridge';
 
 vi.mock('../../hooks/useTranslation', () => import('../../testUtils/i18nMock'));
 
-type Call = Parameters<Parameters<Window['electronAPI']['onDTCall']>[0]>[0];
+type Call = DTCallEvent;
 
 describe('DTCallNotification — abandon (#2000)', () => {
   let emitCall: (d: Call) => void;
@@ -31,14 +33,10 @@ describe('DTCallNotification — abandon (#2000)', () => {
 
   beforeEach(() => {
     acknowledgeDTCall = vi.fn().mockResolvedValue(undefined);
-    (window as unknown as { electronAPI: unknown }).electronAPI = {
-      onDTCall: (cb: typeof emitCall) => {
-        emitCall = cb;
-        return () => {};
-      },
-      onDTCallCancel: () => () => {},
-      remote: { acknowledgeDTCall },
-    };
+    // Avis du serveur distant par le contrat d'API (onRemoteActivity)
+    const bridge = remoteElectron({ acknowledgeDTCall });
+    emitCall = d => bridge.emit('onRemoteActivity', { kind: 'dt_call', ...d });
+    (window as unknown as { electronAPI: unknown }).electronAPI = bridge;
   });
 
   it("affiche « Abandon — NOM Prénom (à confirmer par le DT) » et le bouton d'enregistrement", () => {

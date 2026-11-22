@@ -4,6 +4,8 @@
  * Licensed under GPL-3.0
  */
 import { EventEmitter } from 'events';
+import type { RemoteActivity, RemoteClientsEvent } from '../../../shared/types/remote';
+import type { ConnectedClient } from '../../../shared/types/preload';
 
 export interface CompetitionEventPayload {
   type: string;
@@ -35,5 +37,33 @@ export function onClubSyncedEvent(cb: (clubId: string) => void): () => void {
   bus.on('club:synced', cb);
   return () => {
     bus.off('club:synced', cb);
+  };
+}
+
+/**
+ * Serveur distant : avis des tablettes et des écrans à l'écran du poste (onRemoteActivity,
+ * onRemoteClients ; docs/adr/0010 et 0022). Porte des identifiants et l'état d'affichage.
+ */
+export function publishRemoteActivity(event: RemoteActivity): void {
+  bus.emit('remote:activity', event);
+}
+
+export function onRemoteActivityEvent(cb: (event: RemoteActivity) => void): () => void {
+  bus.on('remote:activity', cb);
+  return () => {
+    bus.off('remote:activity', cb);
+  };
+}
+
+export function publishRemoteClients(event: RemoteClientsEvent<ConnectedClient>): void {
+  bus.emit('remote:clients', event);
+}
+
+export function onRemoteClientsEvent(
+  cb: (event: RemoteClientsEvent<ConnectedClient>) => void
+): () => void {
+  bus.on('remote:clients', cb);
+  return () => {
+    bus.off('remote:clients', cb);
   };
 }

@@ -12,6 +12,7 @@ import type { buildStripQrs } from '../../hooks/useExport';
 import { presetScale } from '../pool/WindowSizePresets';
 import type { PoolTableauFreeze } from '../pool/poolViewTypes';
 import type { usePoolCorrection } from '../../hooks/competitionView/usePoolCorrection';
+import { useRemoteApi } from '../../api/remoteApi';
 
 const PoolView = React.lazy(() => import('../PoolView'));
 
@@ -91,6 +92,7 @@ const CompetitionPoolCard: React.FC<CompetitionPoolCardProps> = ({
   tableauFreeze,
   requestScore,
 }) => {
+  const remote = useRemoteApi();
   // Tableau tiré : ni remise à zéro, ni abandon, ni ajout ou déplacement de tireur (#1996)
   const frozen = !!tableauFreeze;
   // Enregistrement du score (+ notification et tablette), après vérification éventuelle (#1996)
@@ -129,7 +131,7 @@ const CompetitionPoolCard: React.FC<CompetitionPoolCardProps> = ({
     if (isRemoteActive && competitionId) {
       const match = pool.matches[matchIndex];
       if (match) {
-        window.electronAPI.remote
+        remote
           .finishPoolMatch(competitionId, match.id, scoreA, scoreB, winner, specialStatus)
           .catch(() => {});
       }
@@ -183,7 +185,7 @@ const CompetitionPoolCard: React.FC<CompetitionPoolCardProps> = ({
                 if (outcome === 'refused') return;
                 if (outcome === 'local') resetMatch(poolIndex, matchIndex);
                 if (competitionId) {
-                  window.electronAPI.remote.resetPoolMatch(competitionId, match.id).catch(() => {});
+                  remote.resetPoolMatch(competitionId, match.id).catch(() => {});
                 }
               }
         }
@@ -198,7 +200,7 @@ const CompetitionPoolCard: React.FC<CompetitionPoolCardProps> = ({
                 if (outcome === 'refused') return;
                 if (outcome === 'local') cancelMatch(poolIndex, matchIndex);
                 if (competitionId) {
-                  window.electronAPI.remote.resetPoolMatch(competitionId, match.id).catch(() => {});
+                  remote.resetPoolMatch(competitionId, match.id).catch(() => {});
                 }
               }
         }
@@ -223,7 +225,7 @@ const CompetitionPoolCard: React.FC<CompetitionPoolCardProps> = ({
         stripQr={stripQrs?.[pool.id]}
         onMatchArenaChange={(matchId, oldArena, newArena, fencerA, fencerB) => {
           if (!isRemoteActive || !competitionId) return;
-          window.electronAPI.remote
+          remote
             .updateMatchArena(
               competitionId,
               matchId,

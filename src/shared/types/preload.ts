@@ -217,25 +217,6 @@ export interface AbandonSnapshot {
   createdAt: string;
 }
 
-/** Évènement IPC `arena:update` (main → renderer). */
-export interface RemoteArenaUpdateEvent {
-  arenaId: string;
-  update?: Partial<ArenaUpdate>;
-}
-
-/** Évènement IPC `match:finished` (main → renderer). */
-export interface RemoteMatchFinishedEvent {
-  matchId: string;
-  scoreA: number;
-  scoreB: number;
-  winner?: 'A' | 'B';
-  poolId?: string;
-  isTableau?: boolean;
-  /** Motif de fin signalé par l'appareil de piste : le perdant porte l'abandon / l'exclusion (#1829) */
-  deviceReason?: 'priority' | 'abandon' | 'exclusion';
-  recorded?: boolean; // score écrit par recordScore (#1980) : l'écran relit la session
-}
-
 export interface SessionState {
   currentPhase?: number;
   selectedPool?: string;
@@ -422,226 +403,6 @@ export interface TVCommand {
   duration?: number;
   kioskConfig?: Partial<KioskScreenConfig>;
   screenLabel?: string;
-}
-
-export interface RemoteServerAPI {
-  getNetworkInterfaces: () => Promise<{
-    success: boolean;
-    interfaces?: { name: string; address: string }[];
-  }>;
-  startServer: (
-    competitionId: string,
-    port?: number,
-    host?: string,
-    useHttps?: boolean
-  ) => Promise<{ success: boolean; serverInfo?: RemoteServerInfo; error?: string }>;
-  stopServer: (competitionId: string) => Promise<{ success: boolean; error?: string }>;
-  getServerInfo: (
-    competitionId: string
-  ) => Promise<{ success: boolean; serverInfo?: RemoteServerInfo; error?: string }>;
-  reloadServer: (
-    competitionId: string,
-    options?: { port?: number; host?: string; useHttps?: boolean }
-  ) => Promise<{ success: boolean; serverInfo?: RemoteServerInfo; error?: string; port?: number }>;
-  getCertFingerprint: () => Promise<{ success: boolean; fingerprint?: string; error?: string }>;
-  startSession: (
-    competitionId: string,
-    strips: number,
-    matches?: unknown[],
-    showPhotos?: boolean,
-    kioskViews?: Record<string, boolean>,
-    cardAnnounce?: boolean
-  ) => Promise<{ success: boolean; session?: RemoteSession; error?: string }>;
-  stopSession: (competitionId: string) => Promise<{ success: boolean; error?: string }>;
-  launchCompetition: (competitionId: string) => Promise<{ success: boolean; error?: string }>;
-  getSession: (
-    competitionId: string
-  ) => Promise<{ success: boolean; session?: RemoteSession; error?: string }>;
-  getArenas: (
-    competitionId: string
-  ) => Promise<{ success: boolean; arenas?: Arena[]; error?: string }>;
-  updateStripCount: (
-    competitionId: string,
-    count: number
-  ) => Promise<{ success: boolean; session?: RemoteSession; error?: string }>;
-  updateShowPhotos: (
-    competitionId: string,
-    value: boolean
-  ) => Promise<{ success: boolean; error?: string }>;
-  updateCardAnnounce: (
-    competitionId: string,
-    value: boolean
-  ) => Promise<{ success: boolean; error?: string }>;
-  updateMatchArena: (
-    competitionId: string,
-    matchId: string,
-    fromArena: number | null,
-    toArena: number | null,
-    fencerA?: Fencer | null,
-    fencerB?: Fencer | null
-  ) => Promise<{ success: boolean; error?: string }>;
-  updatePoolFencers: (
-    competitionId: string,
-    updates: Array<{ poolId: string; fencers: Fencer[] }>
-  ) => Promise<{ success: boolean; error?: string }>;
-  /**
-   * Tournoi des rapières : matchs de la vague active proposés aux tablettes (`null` : tous) ;
-   * `poolsClosed` : vagues terminées, plus aucun match de poule proposé (#1118)
-   */
-  setActiveWave: (
-    competitionId: string,
-    matchIds: string[] | null,
-    poolsClosed?: boolean
-  ) => Promise<{ success: boolean; error?: string }>;
-  syncPoolMatches: (
-    competitionId: string,
-    poolsData: Array<{ poolId: string; matches: unknown[] }>
-  ) => Promise<{ success: boolean; error?: string }>;
-  /** Réassigne les poules aux pistes pendant une session active (#1037) */
-  assignPools: (
-    competitionId: string,
-    poolsData: Array<{
-      poolId: string;
-      poolNumber?: number;
-      strip?: number | null;
-      fencers?: Fencer[];
-      matches: unknown[];
-    }>
-  ) => Promise<{ success: boolean; error?: string }>;
-  refreshDeMatches: (
-    competitionId: string,
-    matches: unknown[]
-  ) => Promise<{ success: boolean; error?: string }>;
-  setArenaPassword: (
-    competitionId: string,
-    arenaId: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  updateKioskViews: (
-    competitionId: string,
-    views: Record<string, boolean>
-  ) => Promise<{ success: boolean; error?: string }>;
-  setOrgNote: (
-    competitionId: string,
-    note: import('../types/remote').OrgNote
-  ) => Promise<{ success: boolean; error?: string }>;
-  clearOrgNote: (competitionId: string) => Promise<{ success: boolean; error?: string }>;
-  updateTheme: (
-    competitionId: string,
-    theme: import('../types/remote').DisplayTheme
-  ) => Promise<{ success: boolean; error?: string }>;
-  updateArenaTheme: (
-    competitionId: string,
-    arenaId: string,
-    theme: import('../types/remote').DisplayTheme,
-    customTheme?: import('../types/remote').CustomTheme
-  ) => Promise<{ success: boolean; error?: string }>;
-  clearArenaThemeOverride: (
-    competitionId: string,
-    arenaId: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  setStripPlan: (
-    competitionId: string,
-    plan: { start: number; unavailable: number[] }
-  ) => Promise<{ success: boolean; error?: string }>;
-  updateKioskTheme: (
-    competitionId: string,
-    variables: Record<string, string>
-  ) => Promise<{ success: boolean; error?: string }>;
-  updateArenaScreenTheme: (
-    competitionId: string,
-    arenaId: string,
-    targetType: import('../types/remote').ThemeTargetType,
-    customTheme?: import('../types/remote').CustomTheme
-  ) => Promise<{ success: boolean; error?: string }>;
-  setWebhookUrl: (url: string | null) => Promise<{ success: boolean; error?: string }>;
-  testWebhook: (url: string) => Promise<{ success: boolean; status?: number; error?: string }>;
-  updateLogo: (logo: string | null) => Promise<{ success: boolean; error?: string }>;
-  setTtsConfig: (config: TtsConfig) => Promise<{ success: boolean; error?: string }>;
-  setWallpaper: (
-    competitionId: string,
-    wallpaper: string | null
-  ) => Promise<{ success: boolean; error?: string }>;
-  acknowledgeDTCall: (
-    competitionId: string,
-    arenaId: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  requestMatchSignature: (
-    competitionId: string,
-    arenaId: string,
-    request: MatchSignatureRequest
-  ) => Promise<{ success: boolean; error?: string }>;
-  resetPoolMatch: (
-    competitionId: string,
-    matchId: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  finishPoolMatch: (
-    competitionId: string,
-    matchId: string,
-    scoreA: number,
-    scoreB: number,
-    winner?: 'A' | 'B',
-    specialStatus?: 'abandon' | 'forfait' | 'exclusion'
-  ) => Promise<{ success: boolean; error?: string }>;
-  setTeamArenaMatch: (
-    competitionId: string,
-    arenaId: string,
-    matchId: string,
-    isLaserPoints: boolean
-  ) => Promise<{ success: boolean; error?: string }>;
-  clearTeamArenaMatch: (
-    competitionId: string,
-    arenaId: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  setRegistrationEnabled: (
-    competitionId: string,
-    enabled: boolean
-  ) => Promise<{ success: boolean; error?: string }>;
-  setCheckinEnabled: (
-    competitionId: string,
-    enabled: boolean
-  ) => Promise<{ success: boolean; error?: string }>;
-  setCheckinPassword: (
-    competitionId: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  setTrainerEnabled: (
-    competitionId: string,
-    enabled: boolean
-  ) => Promise<{ success: boolean; error?: string }>;
-  setTrainerPassword: (
-    competitionId: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  getConnectedClients: (
-    competitionId: string
-  ) => Promise<{ success: boolean; clients: ConnectedClient[]; error?: string }>;
-  sendClientCommand: (
-    competitionId: string,
-    socketId: string,
-    command: TVCommand
-  ) => Promise<{ success: boolean; error?: string }>;
-  broadcastCommand: (
-    competitionId: string,
-    command: TVCommand
-  ) => Promise<{ success: boolean; error?: string }>;
-  onClientListUpdate: (
-    cb: (clients: ConnectedClient[], competitionId?: string | null) => void
-  ) => () => void;
-  renameClient: (
-    competitionId: string,
-    socketId: string,
-    label: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  identifyClient: (
-    competitionId: string,
-    socketId: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  setClientKioskMode: (
-    competitionId: string,
-    socketId: string,
-    config: KioskScreenConfig
-  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 // ============================================================================
@@ -1381,7 +1142,6 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   greg: GregAPI;
   ftp: FtpAPI;
   crypto: CryptoAPI;
-  remote: RemoteServerAPI & import('./remote').RemoteFirewallAPI;
   training: TrainingAPI;
   settings: SettingsAPI;
   club: ClubAPI;
@@ -1389,52 +1149,12 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   opp2: import('./opp2Preload').Opp2API;
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void;
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) => () => void;
-  onRemoteArenaUpdate: (callback: (data: RemoteArenaUpdateEvent) => void) => () => void;
-  onRemoteMatchFinished: (callback: (data: RemoteMatchFinishedEvent) => void) => () => void;
   onTrainingMatchFinished: (
     callback: (data: { record: TrainingMatchRecord | null }) => void
-  ) => () => void;
-  onRemoteCheckinUpdated?: (
-    callback: (data: { kind: 'fencer' | 'referee'; id: string; present: boolean }) => void
-  ) => () => void;
-  /** Arbitre changé depuis une tablette (#977) */
-  onRemoteRefereeChanged?: (
-    callback: (data: { matchId: string; refereeId: string }) => void
   ) => () => void;
   /** Bus d'événements de données main → renderer (#1298) */
   onCompetitionEvent: (
     callback: (event: { type: CompetitionEventType; competitionId?: string }) => void
-  ) => () => void;
-  onRemoteFencerExcluded: (
-    callback: (data: {
-      fencerId: string;
-      matchId: string;
-      reason?: 'black_card';
-      recorded?: boolean; // écrit par le moteur (docs/adr/0016) : l'écran relit
-    }) => void
-  ) => () => void;
-  /** Carton noir annulé depuis une tablette : combattant réintégré, match rouvert */
-  onRemoteFencerReinstated?: (
-    callback: (data: {
-      fencerId: string;
-      matchId: string;
-      status: string;
-      scoreA: number;
-      scoreB: number;
-      recorded?: boolean; // réintégration écrite par le moteur (docs/adr/0016)
-    }) => void
-  ) => () => void;
-  onKioskNoteUpdate: (
-    callback: (note: import('../types/remote').OrgNote | null) => void
-  ) => () => void;
-  onDTCall: (callback: (data: import('./remote').DTCallEvent) => void) => () => void;
-  onDTCallCancel: (callback: (data: { arenaId: string }) => void) => () => void;
-  onScoreIpConflict: (callback: (data: ScoreIpConflict) => void) => () => void;
-  onPoolSignatureUpdated: (
-    callback: (data: { poolId: string; signedFencerIds: string[]; totalFencers: number }) => void
-  ) => () => void;
-  onTableauSignatureUpdated: (
-    callback: (data: { matchId: string; fencerId: string }) => void
   ) => () => void;
   notifyLanguageChanged: (lang: string) => void;
   /** Écran de démarrage affiché ou non (préférence persistée côté main) */
@@ -1449,5 +1169,4 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
     logos: { id: string; name: string; data: string }[]
   ) => Promise<{ success: boolean; error?: string }>;
   getTtsConfig: () => Promise<TtsConfig | null>;
-  onLogoLoaded: (callback: (logo: string | null) => void) => () => void;
 }

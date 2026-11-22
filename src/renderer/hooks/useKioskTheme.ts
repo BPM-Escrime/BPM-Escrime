@@ -5,11 +5,13 @@
  */
 import { useCallback, useState } from 'react';
 import type { CustomTheme } from '../../shared/types/remote';
+import { useRemoteApi } from '../api/remoteApi';
 
 export type KioskPreset = 'default' | 'neon' | 'light';
 type IpcResult = { success?: boolean; error?: string } | undefined;
 
 export function useKioskTheme(competitionId: string) {
+  const remote = useRemoteApi();
   const presetKey = `bellepoule-kiosk-preset-${competitionId}`;
   const [kioskTheme, setKioskTheme] = useState<CustomTheme | undefined>(undefined);
   const [kioskThemeEditorOpen, setKioskThemeEditorOpen] = useState(false);
@@ -34,21 +36,21 @@ export function useKioskTheme(competitionId: string) {
         /* stockage indisponible */
       }
       if (!sessionActive) return { success: true };
-      return window.electronAPI.remote.updateKioskTheme(competitionId, { '--k-preset': preset });
+      return remote.updateKioskTheme(competitionId, { '--k-preset': preset });
     },
-    [competitionId, presetKey]
+    [competitionId, presetKey, remote]
   );
 
   /** Applique un thème personnalisé (remplace le préréglage) */
   const applyKioskCustomTheme = useCallback(
     async (theme: CustomTheme): Promise<IpcResult> => {
       setKioskTheme(theme);
-      return window.electronAPI.remote.updateKioskTheme(competitionId, {
+      return remote.updateKioskTheme(competitionId, {
         '--k-preset': 'default',
         ...theme.variables,
       });
     },
-    [competitionId]
+    [competitionId, remote]
   );
 
   return {

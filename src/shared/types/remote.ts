@@ -174,7 +174,7 @@ export interface ArenaMatch {
   deviceEnd?: { winner?: 'A' | 'B'; reason?: 'priority' | 'abandon' | 'exclusion' };
   /**
    * Carton noir donné par la tablette à la fin du match : l'exclusion suit le chemin
-   * historique (remote:fencer_excluded), le score n'est pas écrit par recordScore (#1980).
+   * historique (avis fencer_excluded), le score n'est pas écrit par recordScore (#1980).
    */
   blackCardFencer?: 'A' | 'B';
   /**
@@ -273,12 +273,7 @@ export interface FirewallDiagnosis {
   detail?: string;
 }
 
-/** API de diagnostic pare-feu (fusionnée dans window.electronAPI.remote). */
-export interface RemoteFirewallAPI {
-  firewallCheck: (port: number) => Promise<FirewallDiagnosis>;
-}
-
-/** Appel DT remonté au renderer (`remote:dt_call`) : carton noir ou abandon signalé par l'appareil (#2000). */
+/** Appel DT remonté au renderer (avis `dt_call` de onRemoteActivity) : carton noir ou abandon signalé par l'appareil (#2000). */
 export interface DTCallEvent {
   arenaId: string;
   arenaNumber: number | null;
@@ -288,4 +283,81 @@ export interface DTCallEvent {
   reason?: 'black_card' | 'abandon';
   fencerId?: string | null;
   fencerName?: string | null;
+}
+
+/**
+ * Élément de liste poussé par l'écran au serveur distant (match de poule ou de tableau, marqueur
+ * de tireurs d'une poule) : forme libre, filtrée par le serveur (docs/adr/0022).
+ */
+export type RemoteMatchPayload = Record<string, unknown>;
+
+/** Avis du serveur distant à l'écran (abonnement onRemoteActivity, docs/adr/0010 et 0022) */
+interface RemoteActivityBase {
+  /** Épreuve du serveur émetteur ; null : avis du poste (logo) ou serveur d'entraînement */
+  competitionId: string | null;
+}
+
+export type RemoteActivity = RemoteActivityBase &
+  (
+    | { kind: 'arena_updated'; arenaId: string; update?: Partial<ArenaUpdate> }
+    | {
+        kind: 'match_finished';
+        matchId: string;
+        scoreA: number;
+        scoreB: number;
+        winner?: 'A' | 'B' | null;
+        poolId?: string | null;
+        isTableau?: boolean;
+        /** Motif de fin signalé par l'appareil de piste : le perdant porte l'abandon / l'exclusion */
+        deviceReason?: 'priority' | 'abandon' | 'exclusion';
+        /** Score écrit par recordScore : l'écran relit la session */
+        recorded?: boolean;
+      }
+    | {
+        kind: 'fencer_excluded';
+        fencerId: string;
+        matchId: string;
+        reason?: 'black_card';
+        recorded?: boolean;
+      }
+    | {
+        kind: 'fencer_reinstated';
+        fencerId: string;
+        matchId: string;
+        status: string;
+        scoreA: number;
+        scoreB: number;
+        recorded?: boolean;
+      }
+    | { kind: 'checkin_updated'; person: 'fencer' | 'referee'; id: string; present: boolean }
+    | { kind: 'referee_changed'; matchId: string; refereeId: string }
+    | {
+        kind: 'pool_signature_updated';
+        poolId: string;
+        signedFencerIds: string[];
+        totalFencers: number;
+      }
+    | { kind: 'tableau_signature_updated'; matchId: string; fencerId: string }
+    | {
+        kind: 'score_ip_conflict';
+        matchId: string;
+        poolId: string;
+        matchNumber: number | null;
+        poolNumber: number | null;
+        originalIp: string;
+        originalReferee: string | null;
+        attemptIp: string;
+        attemptReferee: string;
+        timestamp: string;
+      }
+    | ({ kind: 'dt_call' } & DTCallEvent)
+    | { kind: 'dt_call_cancelled'; arenaId: string }
+    | { kind: 'org_note_changed'; note: OrgNote | null }
+    | { kind: 'logo_loaded'; logo: string | null }
+  );
+
+/** Clients (écrans, tablettes) connectés au serveur distant d'une épreuve */
+export interface RemoteClientsEvent<C = unknown> {
+  competitionId: string | null;
+  clients: C[];
 }

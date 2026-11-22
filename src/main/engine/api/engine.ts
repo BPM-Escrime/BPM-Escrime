@@ -12,6 +12,7 @@ import {
   type Output,
   type ParsedInput,
 } from '../../../shared/api/contract';
+import { STATION_PERMISSIONS } from '../../../shared/api/contractDef';
 import { ApiError } from '../../../shared/api/client';
 import { CommandError, type CommandContext } from '../commands/context';
 import { buildBracket, generatePools, recordScore, separationFromKeys } from '../commands/sport';
@@ -54,6 +55,13 @@ import { configureDtView, getDtViewStatus } from '../commands/dtView';
 import { clubHandlers } from '../commands/club';
 import { clubStationHandlers, onClubSynced } from '../commands/clubStation';
 import { onStationSettingsChanged, stationHandlers } from '../commands/station';
+import { remoteHandlers } from '../commands/remote';
+import { remoteDisplayHandlers } from '../commands/remoteDisplay';
+import {
+  onRemoteActivity,
+  onRemoteClients,
+  remoteClientsHandlers,
+} from '../commands/remoteClients';
 import { competitionStats } from '../commands/competitionStats';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
@@ -231,6 +239,12 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   // Poste (docs/adr/0022) : réglages, salles, thèmes, journée, RGPD, agent ; sans journal
   ...stationHandlers,
   onStationSettingsChanged,
+  // Serveur distant (docs/adr/0022) : pilotage, thèmes, clients, avis ; sans journal
+  ...remoteHandlers,
+  ...remoteDisplayHandlers,
+  ...remoteClientsHandlers,
+  onRemoteActivity,
+  onRemoteClients,
 };
 
 export const isOperation = (name: unknown): name is OperationName =>
@@ -274,7 +288,11 @@ export async function invoke(ctx: CommandContext, name: unknown, raw: unknown): 
   }
   const input = parseInput(op, raw);
   const handler = handlers[op] as (c: CommandContext, i: unknown) => unknown;
-  const log = contract[op].kind === 'command' ? journalOf(ctx, input) : null;
+  // Fonctions du poste (docs/adr/0022) : pas de journal, ni transaction du journal
+  const log =
+    contract[op].kind === 'command' && !STATION_PERMISSIONS.has(contract[op].permission)
+      ? journalOf(ctx, input)
+      : null;
   if (!log) {
     try {
       return await handler(ctx, input);

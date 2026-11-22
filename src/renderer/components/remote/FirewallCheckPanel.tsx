@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import type { FirewallDiagnosis } from '../../../shared/types/remote';
+import { useRemoteApi } from '../../api/remoteApi';
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 
@@ -17,13 +18,14 @@ export function isWindowsRenderer(): boolean {
 export function FirewallCheckPanel({ t, port }: { t: Translate; port: number }) {
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<FirewallDiagnosis | null>(null);
+  const remote = useRemoteApi();
 
   if (!isWindowsRenderer()) return null;
 
   const runCheck = async () => {
     setChecking(true);
     try {
-      const res = await window.electronAPI.remote.firewallCheck(port);
+      const res = await remote.firewallCheck(port);
       setResult(res);
     } catch {
       setResult({

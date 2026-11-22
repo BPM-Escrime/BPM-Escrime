@@ -2,12 +2,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useStripPlanSync } from './useStripAvailability';
+import { remoteElectron } from '../testUtils/remoteBridge';
 
 describe('useStripPlanSync', () => {
   const setStripPlan = vi.fn().mockResolvedValue({ success: true });
   beforeEach(() => {
     setStripPlan.mockClear();
-    (window as any).electronAPI = { remote: { setStripPlan } };
+    (window as any).electronAPI = remoteElectron({ setStripPlan });
   });
 
   it('envoie le plan quand la session est active', () => {

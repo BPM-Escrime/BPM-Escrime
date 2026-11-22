@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Referee } from '../../shared/types';
 import type { Phase } from './useCompetitionSession';
+import { useRemoteApi } from '../api/remoteApi';
 
 interface UseRemoteCheckinSyncParams {
   competitionId: string;
@@ -26,25 +27,26 @@ export function useRemoteCheckinSync({
   loadFencers,
   setReferees,
 }: UseRemoteCheckinSyncParams) {
+  const remote = useRemoteApi();
   // Synchroniser l'état d'inscription distante avec la phase courante
   useEffect(() => {
-    if (!isRemoteActive || !window.electronAPI?.remote?.setRegistrationEnabled) return;
+    if (!isRemoteActive) return;
     const enabled = currentPhase === 'checkin';
-    window.electronAPI.remote.setRegistrationEnabled(competitionId, enabled).catch(() => {});
+    void remote.setRegistrationEnabled(competitionId, enabled);
     // remoteServerUrl : re-synchronise une fois le serveur réellement démarré (#986)
   }, [currentPhase, isRemoteActive, competitionId, remoteServerUrl]);
 
   // Appel distant (/appel) : actif dès que la saisie distante tourne, quelle que soit
   // la vue affichée (pointage tardif des arbitres pendant les poules, #1016)
   useEffect(() => {
-    if (!isRemoteActive || !window.electronAPI?.remote?.setCheckinEnabled) return;
-    window.electronAPI.remote.setCheckinEnabled(competitionId, true).catch(() => {});
+    if (!isRemoteActive) return;
+    void remote.setCheckinEnabled(competitionId, true);
   }, [isRemoteActive, competitionId, remoteServerUrl]);
 
   // Pointage reçu depuis la page d'appel distante : recharger depuis la DB
   useEffect(() => {
-    const off = window.electronAPI?.onRemoteCheckinUpdated?.(({ kind }) => {
-      if (kind === 'fencer') {
+    const off = remote.onActivity('checkin_updated', competitionId, ({ person }) => {
+      if (person === 'fencer') {
         loadFencers();
       } else {
         window.electronAPI.db

@@ -15,6 +15,7 @@ import { applyFederalImport } from '../services/federalCreation';
 import { translateStatic } from '../contexts/TranslationContext';
 import { useBpmClient } from '../api/BpmClientContext';
 import { loadCompetition } from '../api/competitionMapping';
+import { useRemoteApi } from '../api/remoteApi';
 
 interface CompetitionTabsParams
   extends
@@ -51,6 +52,7 @@ export function useCompetitionTabs({
 }: CompetitionTabsParams) {
   // Création et suppression par les commandes du contrat (docs/adr/0018)
   const client = useBpmClient();
+  const remote = useRemoteApi();
   const handleCreateCompetition = useCallback(
     async (data: Partial<Competition>, imported?: FederalCreationPayload) => {
       try {
@@ -154,6 +156,7 @@ export function useCompetitionTabs({
       setCurrentCompetition,
       setOpenCompetitions,
       setView,
+      remote,
     ]
   );
 
@@ -228,7 +231,7 @@ export function useCompetitionTabs({
       localStorage.removeItem(`bellepoule-remote-launched-${competitionId}`);
       localStorage.removeItem(`bellepoule-remote-port-${competitionId}`);
       // Fermer la saisie distante restée active (#1009) ; erreur ignorée si non démarrée
-      window.electronAPI?.remote?.stopServer(competitionId).catch(() => undefined);
+      void remote.stopServer(competitionId);
 
       const newOpenCompetitions = openCompetitions.filter(
         open => open.competition.id !== competitionId
@@ -255,6 +258,7 @@ export function useCompetitionTabs({
       setCurrentCompetition,
       setOpenCompetitions,
       setView,
+      remote,
     ]
   );
 
@@ -301,6 +305,7 @@ export function useCompetitionTabs({
       setCurrentCompetition,
       setOpenCompetitions,
       setView,
+      remote,
     ]
   );
 

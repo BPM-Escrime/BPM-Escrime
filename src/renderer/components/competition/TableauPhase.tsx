@@ -27,6 +27,7 @@ import type {
 import { SplitGroupTabs } from './SplitGroupTabs';
 import { TableauDriftBanner } from '../tableau/TableauDriftBanner';
 import type { PoolCorrectionImpact } from '../../../shared/utils/poolCorrectionImpact';
+import { useRemoteApi } from '../../api/remoteApi';
 
 const TableauView = React.lazy(() => import('../TableauView'));
 
@@ -108,6 +109,7 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
   onClearScore,
   onAssign,
 }) => {
+  const remote = useRemoteApi();
   // Changement d'organisation seul (pistes, arbitres) : par le moteur ; le reste, à l'écran
   const handleMatchesChange = (next: TableauMatch[]) => {
     const diff = onAssign ? tableauAssignmentsDiff(tableauMatches, next) : null;
@@ -222,7 +224,7 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
         onMatchArenaChange={(matchId, oldArena, newArena, fencerAParam, fencerBParam) => {
           if (isRemoteActive) {
             const match = tableauMatches.find(m => m.id === matchId);
-            window.electronAPI.remote.updateMatchArena(
+            remote.updateMatchArena(
               competitionId,
               matchId,
               oldArena,

@@ -8,6 +8,7 @@ import { getSharedMainWindow } from '../mainWindowRef';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
 import { needsLeftHandedSwap } from '../../shared/utils/handedness';
+import { notifyScreen } from './remoteActivity';
 
 type S = RemoteScoreServer;
 
@@ -126,7 +127,12 @@ export function broadcastArenaUpdate(
   ctx.io.to(`arena:${arenaId}`).emit(`arena:${arenaId}:update`, payload);
   ctx.notifyKioskData();
 
-  getSharedMainWindow()?.webContents.send('arena:update', { arenaId, update: payload });
+  notifyScreen({
+    kind: 'arena_updated',
+    competitionId: ctx.session?.competitionId ?? null,
+    arenaId,
+    update: payload,
+  });
   ctx.cyranoHook?.(arenaId, payload);
 }
 

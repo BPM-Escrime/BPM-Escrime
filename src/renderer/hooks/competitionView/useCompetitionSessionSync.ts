@@ -45,6 +45,7 @@ import { useRapieresTeams } from '../../../features/rapieres/useRapieresTeams';
 import { useRapieresViewProps } from '../../../features/rapieres/useRapieresViewProps';
 import type { CompetitionViewProps } from '../../components/competition/competitionViewTypes';
 import { useCompetitionCore } from './useCompetitionCore';
+import { useRemoteApi } from '../../api/remoteApi';
 
 type Ctx = CompetitionViewProps & ReturnType<typeof useCompetitionCore>;
 
@@ -57,6 +58,7 @@ const REASON_BY_STATUS: Partial<Record<FencerStatus, WithdrawalReason>> = {
 
 /** Session, synchronisation distante, menu natif et rapières de la compétition (extrait de CompetitionView, #1599) */
 export function useCompetitionSessionSync(ctx: Ctx) {
+  const remote = useRemoteApi();
   const {
     competition,
     currentPhase,
@@ -431,9 +433,9 @@ export function useCompetitionSessionSync(ctx: Ctx) {
       }
       await persistPoolsToDB(newPools);
       // Fermer l'inscription distante dès que les poules sont générées
-      if (isRemoteActive && window.electronAPI?.remote?.setRegistrationEnabled) {
-        window.electronAPI.remote.setRegistrationEnabled(competition.id, false).catch(() => {});
-        window.electronAPI.remote.setCheckinEnabled?.(competition.id, false).catch(() => {});
+      if (isRemoteActive) {
+        void remote.setRegistrationEnabled(competition.id, false);
+        void remote.setCheckinEnabled(competition.id, false);
       }
       setCurrentPhase('poolprep');
     }

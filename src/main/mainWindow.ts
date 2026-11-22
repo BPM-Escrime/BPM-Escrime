@@ -18,6 +18,7 @@ import {
   permissionCheckUrl,
 } from './windowSecurity';
 import { logger, LogCategory } from '../shared/services/logger';
+import { publishRemoteActivity } from './engine/api/events';
 
 export interface MainWindowContext {
   initialLang?: string;
@@ -177,7 +178,7 @@ export function createMainWindow({
     fs.promises
       .readFile(logoPath, 'utf-8')
       .then(logo => {
-        if (logo) mainWindow?.webContents.send('app:logoLoaded', logo);
+        if (logo) publishRemoteActivity({ kind: 'logo_loaded', competitionId: null, logo });
       })
       .catch(() => {
         /* logo optionnel */

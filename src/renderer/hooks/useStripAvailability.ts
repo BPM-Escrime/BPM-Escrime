@@ -7,6 +7,7 @@
  */
 import { useEffect } from 'react';
 import { create } from 'zustand';
+import { useRemoteApi } from '../api/remoteApi';
 
 const key = (competitionId: string) => `bellepoule-strips-unavailable-${competitionId}`;
 
@@ -59,11 +60,10 @@ export function useStripPlanSync(
   unavailable: readonly number[]
 ): void {
   const key = unavailable.join(',');
+  const remote = useRemoteApi();
   useEffect(() => {
     if (!active) return;
-    window.electronAPI?.remote
-      ?.setStripPlan?.(competitionId, { start, unavailable: [...unavailable] })
-      ?.catch?.(() => {});
+    void remote.setStripPlan(competitionId, { start, unavailable: [...unavailable] });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [competitionId, active, start, key]);
 }

@@ -19,6 +19,7 @@ import {
 import { ChartColumn, Medal, Pause, Trophy } from 'lucide-react';
 import { RankMedal } from './common/RankMedal';
 import { Icon } from './common/Icon';
+import { useRemoteApi } from '../api/remoteApi';
 
 type KioskView = 'pools' | 'ranking' | 'tableau';
 
@@ -422,6 +423,7 @@ const KioskDisplay: React.FC<KioskDisplayProps> = ({
 }) => {
   const isLaserSabre = weapon === 'L';
   const { t } = useTranslation();
+  const remote = useRemoteApi();
 
   // Déterminer la vue initiale selon les données disponibles
   const initialView = useMemo((): KioskView => {
@@ -643,10 +645,9 @@ const KioskDisplay: React.FC<KioskDisplayProps> = ({
   const [orgNoteCountdown, setOrgNoteCountdown] = useState<string>('');
 
   useEffect(() => {
-    if (!window.electronAPI?.onKioskNoteUpdate) return;
-    const unsub = window.electronAPI.onKioskNoteUpdate(note => setOrgNote(note));
+    const unsub = remote.onActivity('org_note_changed', competition.id, e => setOrgNote(e.note));
     return unsub;
-  }, []);
+  }, [remote, competition.id]);
 
   useEffect(() => {
     if (!orgNote || orgNote.type !== 'target_time' || !orgNote.targetTime) {
@@ -661,7 +662,7 @@ const KioskDisplay: React.FC<KioskDisplayProps> = ({
       if (target <= now) target.setDate(target.getDate() + 1); // lendemain si dépassé
       const diffSec = Math.max(0, Math.floor((target.getTime() - now.getTime()) / 1000));
       if (diffSec === 0) {
-        window.electronAPI.remote.clearOrgNote(competition.id);
+        void remote.clearOrgNote(competition.id);
         return;
       }
       const m = Math.floor(diffSec / 60);

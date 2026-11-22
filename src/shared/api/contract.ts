@@ -24,6 +24,7 @@ import { reportOperations } from './contractReports';
 import { dtViewOperations } from './contractDtView';
 import { clubOperations } from './contractClub';
 import { stationOperations } from './contractStation';
+import { remoteOperations } from './contractRemote';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
@@ -1422,6 +1423,8 @@ export const contract = {
   ...clubOperations,
   // Poste : réglages, salles, thèmes, journée, RGPD, agent ; jamais sur le réseau (docs/adr/0022)
   ...stationOperations,
+  // Serveur distant : pilotage et avis, jamais sur le réseau (docs/adr/0022)
+  ...remoteOperations,
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────

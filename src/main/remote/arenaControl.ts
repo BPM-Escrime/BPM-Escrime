@@ -17,6 +17,7 @@ import {
   isCyranoMasterOnline,
   isDeviceSocket,
 } from './cyranoLock';
+import { notifyScreen } from './remoteActivity';
 
 type S = RemoteScoreServer;
 
@@ -265,7 +266,8 @@ export function handleArenaControl(
       });
       const mainWin = getSharedMainWindow();
       if (mainWin) {
-        mainWin.webContents.send('remote:dt_call', {
+        notifyScreen({
+          kind: 'dt_call',
           arenaId: data.arenaId,
           arenaNumber: arena.number,
           matchNumber: null,
@@ -278,7 +280,11 @@ export function handleArenaControl(
     case 'dt_cancel': {
       const mainWin = getSharedMainWindow();
       if (mainWin) {
-        mainWin.webContents.send('remote:dt_cancel', { arenaId: data.arenaId });
+        notifyScreen({
+          kind: 'dt_call_cancelled',
+          competitionId: ctx.session?.competitionId ?? null,
+          arenaId: data.arenaId,
+        });
       }
       break;
     }
@@ -548,7 +554,9 @@ export function handleArenaControl(
       // Application organisateur : sinon son état en mémoire réécrit l'ancien arbitre (#977)
       const mainWin = getSharedMainWindow();
       if (mainWin && !mainWin.isDestroyed?.()) {
-        mainWin.webContents.send('remote:referee_changed', {
+        notifyScreen({
+          kind: 'referee_changed',
+          competitionId: ctx.session?.competitionId ?? null,
           matchId: data.matchId,
           refereeId: data.refereeId,
         });

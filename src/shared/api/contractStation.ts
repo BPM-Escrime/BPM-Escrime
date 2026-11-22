@@ -108,7 +108,7 @@ const isTheme = (v: unknown): v is CustomTheme => {
     JSON.stringify(v).length <= 10_000_000
   );
 };
-const ThemeSchema = z.custom<CustomTheme>(isTheme, 'Thème d’écran invalide');
+export const ThemeSchema = z.custom<CustomTheme>(isTheme, 'Thème d’écran invalide');
 
 // ─── Journée multi-épreuves ──────────────────────────────────────────────────
 
