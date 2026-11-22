@@ -36,6 +36,13 @@ import {
   unregisterFencers,
   updateFencerDetails,
 } from '../commands/fencers';
+import {
+  refereeDTO,
+  registerReferees,
+  setRefereeAvailability,
+  unregisterReferee,
+  updateRefereeDetails,
+} from '../commands/referees';
 import { getCompetitionOrThrow } from '../commands/competitions';
 import { readSession } from '../commands/sessionView';
 import { competitionState } from '../commands/competitionState';
@@ -92,6 +99,14 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     setFencerRankings(ctx, input),
   unregisterFencers: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     unregisterFencers(ctx, input),
+  registerReferees: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    registerReferees(ctx, input),
+  updateRefereeDetails: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    updateRefereeDetails(ctx, input),
+  setRefereeAvailability: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    setRefereeAvailability(ctx, input),
+  unregisterReferee: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    unregisterReferee(ctx, input),
   withdrawFencer: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     withdrawFencer(ctx, input),
   reinstateFencer: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
@@ -111,17 +126,11 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   },
   listReferees: (ctx, { competitionId }) => {
     getCompetitionOrThrow(ctx, competitionId);
-    return ctx.db.getRefereesByCompetition(competitionId).map(r => ({
-      id: r.id,
-      ref: r.ref,
-      firstName: r.firstName,
-      lastName: r.lastName,
-      club: r.club ?? null,
-      nationality: r.nationality ?? null,
-      region: r.region ?? null,
-      category: r.category ?? null,
-      status: r.status,
-    }));
+    return ctx.db.getRefereesByCompetition(competitionId).map(refereeDTO);
+  },
+  listRefereeMatches: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getMatchesWithReferees(competitionId);
   },
   getMatchTimeline: (ctx, { matchId }) => ctx.db.getMatchTimeline(matchId),
   getCompetitionTimeline: (ctx, { competitionId }) => {
