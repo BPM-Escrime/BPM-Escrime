@@ -24,6 +24,13 @@ describe('parseCookies', () => {
     });
     expect(parseCookies(undefined)).toEqual({});
   });
+
+  it('ignore les noms qui viseraient le prototype', () => {
+    const c = parseCookies('__proto__=x; constructor=y; prototype=z; bp_dt_token=t');
+    expect(Object.keys(c)).toEqual(['bp_dt_token']);
+    expect(Object.getPrototypeOf(c)).toBeNull();
+    expect(({} as Record<string, unknown>).x).toBeUndefined();
+  });
 });
 
 describe('mots de passe scrypt', () => {
