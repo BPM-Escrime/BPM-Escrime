@@ -16,6 +16,8 @@ import {
   checkRoomItems,
   createRoomItem,
   moveRoomItem,
+  resizeRoomItemAroundCenter,
+  rotateRoomItem,
   optimizeArenaLayout,
   resizeRoomItem,
   type OptimizedLayout,
@@ -130,6 +132,22 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     const label = `${t(KIND_LABEL_KEY[kind])} ${count}`;
     setItems(prev => [...prev, createRoomItem(kind, id, label, room)]);
     setSelectedId(id);
+  };
+
+  const resizeItem = (id: string, w: number, h: number) => {
+    if (!room) return;
+    setItems(prev => prev.map(i => (i.id === id ? resizeRoomItemAroundCenter(i, w, h, room) : i)));
+  };
+
+  const rotateItem = (id: string, deg: number) => {
+    if (!room) return;
+    setItems(prev => prev.map(i => (i.id === id ? rotateRoomItem(i, deg, room) : i)));
+  };
+
+  const rotateSelected = (raw: string) => {
+    const value = parseNumber(raw);
+    if (value === null || !selectedItem) return;
+    rotateItem(selectedItem.id, value);
   };
 
   const removeItem = (id: string) => {
@@ -312,9 +330,12 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               <p role="status" className="arena-planner-status">
                 {maxText()}
               </p>
-              {clamped || maxLayout.count === 0 ? (
-                <p role="alert">{t('arenaPlanner.nofit')}</p>
+              {clamped && maxLayout.count > 0 ? (
+                <p role="alert">
+                  {t('arenaPlanner.too_many', { requested: parsed.n, max: maxLayout.count })}
+                </p>
               ) : null}
+              {maxLayout.count === 0 ? <p role="alert">{t('arenaPlanner.nofit')}</p> : null}
 
               <div
                 className="arena-planner-toolbar"
@@ -347,9 +368,12 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
                 svgRef={svgRef}
                 onSelect={setSelectedId}
                 onMove={moveItem}
+                onResize={resizeItem}
+                onRotate={rotateItem}
                 onDelete={removeItem}
               />
               <p className="arena-planner-hint">{t('arenaPlanner.drag_hint')}</p>
+              <p className="arena-planner-hint">{t('arenaPlanner.handles_hint')}</p>
 
               {conflictIds.size > 0 && <p role="alert">{t('arenaPlanner.conflict')}</p>}
               {selectedAlerts.exit && <p role="alert">{t('arenaPlanner.exit_wall')}</p>}
@@ -393,6 +417,25 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
                         onChange={e => editSelected('w', e.target.value)}
                       />
                     </label>
+                    <label className="form-label">
+                      {t('arenaPlanner.rotate_label')}
+                      <input
+                        className="form-input"
+                        type="text"
+                        inputMode="decimal"
+                        value={fmt(selectedItem.rotationDeg ?? 0)}
+                        onChange={e => rotateSelected(e.target.value)}
+                      />
+                    </label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() =>
+                        rotateItem(selectedItem.id, (selectedItem.rotationDeg ?? 0) + 90)
+                      }
+                    >
+                      {t('arenaPlanner.rotate_90')}
+                    </Button>
                     <label className="form-label">
                       {t('arenaPlanner.size_h')}
                       <input

@@ -4324,6 +4324,12 @@
     "snap_hint": "Gli elementi si agganciano a una griglia da 0,5 m durante il trascinamento.",
     "tools_hint": "Clicca uno strumento per aggiungerlo alla pianta, poi trascinalo.",
     "hint_length": "Dimensione interna della sala, in metri.",
-    "summary_arenas_max": "{{count}} arena/e posizionata/e, massimo possibile: {{max}}"
+    "summary_arenas_max": "{{count}} arena/e posizionata/e, massimo possibile: {{max}}",
+    "handle_rotate": "Ruota (trascina)",
+    "handle_resize": "Ingrandisci (trascina)",
+    "handles_hint": "Quadrato: ingrandisci con il mouse. Cerchio: ruota con il mouse (tasto R: 90°).",
+    "rotate_label": "Rotazione (°)",
+    "rotate_90": "Ruota di 90°",
+    "too_many": "Richieste {{requested}} arene, ma la zona ne contiene solo {{max}}. Viene posizionato solo il massimo."
   }
 }

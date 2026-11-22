@@ -144,6 +144,8 @@ export interface RoomItem {
   y: number;
   widthM: number;
   heightM: number;
+  /** Rotation autour du centre, en degrés (0 = non tourné) */
+  rotationDeg?: number;
 }
 
 export interface LayoutIssue {
@@ -162,46 +164,133 @@ export function checkRoomItems(
   const issues: LayoutIssue[] = [];
   const blocked = items.filter(i => i.kind === 'blocked');
   for (const item of items) {
-    const right = item.x + item.widthM;
-    const bottom = item.y + item.heightM;
-    if (item.x < 0 || item.y < 0 || right > room.widthM || bottom > room.lengthM) {
+    const b = itemBounds(item);
+    // Tolérance EPS : un élément posé exactement contre un mur peut déborder de 1e-17 après rotation
+    if (
+      b.minX < -EPS ||
+      b.minY < -EPS ||
+      b.maxX > room.widthM + EPS ||
+      b.maxY > room.lengthM + EPS
+    ) {
       issues.push({ itemId: item.id, type: 'outOfRoom' });
     }
     if (item.kind === 'exit' && !touchesWall(item, room)) {
       issues.push({ itemId: item.id, type: 'exitNotOnWall' });
     }
-    if (item.kind !== 'blocked' && blocked.some(b => rectsOverlap(item, b))) {
+    const poly = itemCorners(item);
+    if (item.kind !== 'blocked' && blocked.some(bl => polygonsOverlap(poly, itemCorners(bl)))) {
       issues.push({ itemId: item.id, type: 'overlapsBlocked' });
     }
     arenaCenters.forEach((c, arenaIndex) => {
-      if (item.kind === 'blocked') {
-        if (rectIntersectsCircle(item, c, safetyRadiusM)) {
-          issues.push({ itemId: item.id, type: 'arenaBlocked', arenaIndex });
-        }
-      } else if (rectIntersectsCircle(item, c, safetyRadiusM)) {
-        issues.push({ itemId: item.id, type: 'inSafetyZone', arenaIndex });
+      if (polygonIntersectsCircle(poly, c, safetyRadiusM)) {
+        issues.push({
+          itemId: item.id,
+          type: item.kind === 'blocked' ? 'arenaBlocked' : 'inSafetyZone',
+          arenaIndex,
+        });
       }
     });
   }
   return issues;
 }
 
-function touchesWall(rect: RoomItem, room: RoomSize): boolean {
+/** Angle normalisé dans [0, 360). */
+export function normalizeRotation(deg: number): number {
+  const r = deg % 360;
+  return r < 0 ? r + 360 : r;
+}
+
+const EPS = 1e-6;
+const round6 = (v: number) => Math.round(v / EPS) * EPS;
+
+/** Les 4 coins de l'élément, après rotation autour de son centre. */
+export function itemCorners(item: RoomItem): Point[] {
+  const cx = item.x + item.widthM / 2;
+  const cy = item.y + item.heightM / 2;
+  const hw = item.widthM / 2;
+  const hh = item.heightM / 2;
+  const rad = ((item.rotationDeg ?? 0) * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return [
+    [-hw, -hh],
+    [hw, -hh],
+    [hw, hh],
+    [-hw, hh],
+  ].map(([dx, dy]) => ({ x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos }));
+}
+
+/** Boîte englobante de l'élément tourné. */
+export function itemBounds(item: RoomItem): {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+} {
+  const pts = itemCorners(item);
+  return {
+    minX: Math.min(...pts.map(p => p.x)),
+    minY: Math.min(...pts.map(p => p.y)),
+    maxX: Math.max(...pts.map(p => p.x)),
+    maxY: Math.max(...pts.map(p => p.y)),
+  };
+}
+
+function touchesWall(item: RoomItem, room: RoomSize): boolean {
   const tol = EXIT_WALL_TOLERANCE_M;
+  const b = itemBounds(item);
   return (
-    rect.x <= tol ||
-    rect.y <= tol ||
-    rect.x + rect.widthM >= room.widthM - tol ||
-    rect.y + rect.heightM >= room.lengthM - tol
+    b.minX <= tol || b.minY <= tol || b.maxX >= room.widthM - tol || b.maxY >= room.lengthM - tol
   );
 }
 
-function rectIntersectsCircle(rect: RoomItem, c: Point, r: number): boolean {
-  const nearestX = Math.max(rect.x, Math.min(c.x, rect.x + rect.widthM));
-  const nearestY = Math.max(rect.y, Math.min(c.y, rect.y + rect.heightM));
-  const dx = c.x - nearestX;
-  const dy = c.y - nearestY;
-  return dx * dx + dy * dy < r * r;
+function distanceToSegment(p: Point, a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+function pointInPolygon(p: Point, poly: Point[]): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i];
+    const b = poly[j];
+    if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+/** Vrai si le cercle (centre c, rayon r) touche le polygone. */
+function polygonIntersectsCircle(poly: Point[], c: Point, r: number): boolean {
+  if (pointInPolygon(c, poly)) return true;
+  for (let i = 0; i < poly.length; i++) {
+    if (distanceToSegment(c, poly[i], poly[(i + 1) % poly.length]) < r) return true;
+  }
+  return false;
+}
+
+/** Séparation par les axes (SAT) : vrai si les deux polygones se recouvrent strictement. */
+function polygonsOverlap(a: Point[], b: Point[]): boolean {
+  for (const poly of [a, b]) {
+    for (let i = 0; i < poly.length; i++) {
+      const p1 = poly[i];
+      const p2 = poly[(i + 1) % poly.length];
+      const ax = -(p2.y - p1.y);
+      const ay = p2.x - p1.x;
+      const proj = (pts: Point[]) => {
+        const values = pts.map(p => p.x * ax + p.y * ay);
+        return [Math.min(...values), Math.max(...values)];
+      };
+      const [minA, maxA] = proj(a);
+      const [minB, maxB] = proj(b);
+      if (maxA <= minB + EPS || maxB <= minA + EPS) return false;
+    }
+  }
+  return true;
 }
 
 /** Dimensions par défaut (m) d'un élément posé à la main sur le plan. */
@@ -228,17 +317,23 @@ export function createRoomItem(
   const size = ROOM_ITEM_SIZES[kind];
   const x = Math.min(0.5, Math.max(0, room.widthM - size.widthM));
   const y = Math.min(0.5, Math.max(0, room.lengthM - size.heightM));
-  return { id, kind, label, x, y, ...size };
+  return { id, kind, label, x, y, rotationDeg: 0, ...size };
 }
 
-/** Déplace un élément en le gardant entièrement dans la salle. */
+/** Déplace un élément en le gardant entièrement dans la salle (élément tourné compris). */
 export function moveRoomItem(item: RoomItem, x: number, y: number, room: RoomSize): RoomItem {
-  const maxX = Math.max(0, room.widthM - item.widthM);
-  const maxY = Math.max(0, room.lengthM - item.heightM);
+  const b = itemBounds(item);
+  const offMinX = round6(b.minX - item.x);
+  const offMaxX = round6(b.maxX - item.x);
+  const offMinY = round6(b.minY - item.y);
+  const offMaxY = round6(b.maxY - item.y);
+  const clamp = (v: number, lo: number, hi: number) =>
+    lo > hi ? lo : Math.min(hi, Math.max(lo, v));
   return {
     ...item,
-    x: Math.min(maxX, Math.max(0, x)),
-    y: Math.min(maxY, Math.max(0, y)),
+    // « + 0 » évite un -0 (égalité stricte dans les tests)
+    x: clamp(x, -offMinX + 0, room.widthM - offMaxX) + 0,
+    y: clamp(y, -offMinY + 0, room.lengthM - offMaxY) + 0,
   };
 }
 
@@ -254,10 +349,23 @@ export function resizeRoomItem(
   return moveRoomItem({ ...item, widthM: w, heightM: h }, item.x, item.y, room);
 }
 
-function rectsOverlap(a: RoomItem, b: RoomItem): boolean {
-  return (
-    a.x < b.x + b.widthM && b.x < a.x + a.widthM && a.y < b.y + b.heightM && b.y < a.y + a.heightM
-  );
+/** Redimensionne en gardant le centre de l'élément (poignée de coin à la souris). */
+export function resizeRoomItemAroundCenter(
+  item: RoomItem,
+  widthM: number,
+  heightM: number,
+  room: RoomSize
+): RoomItem {
+  const cx = item.x + item.widthM / 2;
+  const cy = item.y + item.heightM / 2;
+  const w = Math.min(room.widthM, Math.max(MIN_ITEM_SIZE_M, widthM));
+  const h = Math.min(room.lengthM, Math.max(MIN_ITEM_SIZE_M, heightM));
+  return moveRoomItem({ ...item, widthM: w, heightM: h }, cx - w / 2, cy - h / 2, room);
+}
+
+/** Tourne l'élément autour de son centre, en le gardant dans la salle. */
+export function rotateRoomItem(item: RoomItem, deg: number, room: RoomSize): RoomItem {
+  return moveRoomItem({ ...item, rotationDeg: normalizeRotation(deg) }, item.x, item.y, room);
 }
 
 /** Pas d'un quinconce : deux rangées voisines sont décalées de 6 m, espacées de 12·√3/2. */
@@ -278,7 +386,7 @@ function isValidCenter(c: Point, room: RoomSize, marginM: number, blocked: RoomI
   const r = ARENA_SAFETY_RADIUS_M;
   if (c.x - r < marginM || c.y - r < marginM) return false;
   if (c.x + r > room.widthM - marginM || c.y + r > room.lengthM - marginM) return false;
-  return !blocked.some(b => rectIntersectsCircle(b, c, r));
+  return !blocked.some(b => polygonIntersectsCircle(itemCorners(b), c, r));
 }
 
 /** Toutes les arènes possibles pour un quinconce ou une grille carrée, décalée de (ox, oy). */

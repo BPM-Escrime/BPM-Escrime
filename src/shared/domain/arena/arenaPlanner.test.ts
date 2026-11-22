@@ -11,6 +11,10 @@ import {
   createRoomItem,
   moveRoomItem,
   resizeRoomItem,
+  resizeRoomItemAroundCenter,
+  rotateRoomItem,
+  itemBounds,
+  normalizeRotation,
   optimizeArenaLayout,
   snapToStep,
   computeArenaGeometry,
@@ -222,5 +226,41 @@ describe('createRoomItem / moveRoomItem', () => {
   it('snapToStep arrondit au demi-mètre', () => {
     expect(snapToStep(3.2)).toBe(3);
     expect(snapToStep(3.3)).toBe(3.5);
+  });
+
+  it('tourne un élément de 90° : la boîte englobante échange largeur et longueur', () => {
+    const base = { ...createRoomItem('table', 'r', 'Table', room), x: 4, y: 3 };
+    const turned = { ...base, rotationDeg: 90 };
+    const b = itemBounds(turned);
+    expect(b.maxX - b.minX).toBeCloseTo(base.heightM, 6);
+    expect(b.maxY - b.minY).toBeCloseTo(base.widthM, 6);
+  });
+
+  it("rotateRoomItem garde l'élément tourné dans la salle", () => {
+    const edge = { ...createRoomItem('table', 'r', 'Table', room), x: 0, y: 0 };
+    const r = rotateRoomItem(edge, 90, room);
+    expect(checkRoomItems(room, [], [r])).toEqual([]);
+  });
+
+  it('détecte le chevauchement de deux éléments tournés', () => {
+    const a = { ...createRoomItem('table', 'a', 'A', room), x: 4, y: 4, rotationDeg: 0 };
+    const b = { ...createRoomItem('blocked', 'b', 'B', room), x: 4, y: 4, rotationDeg: 45 };
+    expect(checkRoomItems(room, [], [a, b])).toContainEqual({
+      itemId: 'a',
+      type: 'overlapsBlocked',
+    });
+  });
+
+  it('normalise les angles', () => {
+    expect(normalizeRotation(-90)).toBe(270);
+    expect(normalizeRotation(450)).toBe(90);
+  });
+
+  it('redimensionne en gardant le centre', () => {
+    const base = { ...createRoomItem('blocked', 'z', 'Zone', room), x: 4, y: 3 };
+    const r = resizeRoomItemAroundCenter(base, 4, 2, room);
+    expect(r.x + r.widthM / 2).toBeCloseTo(base.x + base.widthM / 2, 6);
+    expect(r.y + r.heightM / 2).toBeCloseTo(base.y + base.heightM / 2, 6);
+    expect(r.widthM).toBe(4);
   });
 });
