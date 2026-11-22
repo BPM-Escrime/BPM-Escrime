@@ -7,7 +7,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 import type {
-  TrainingCustomRules,
   ElectronAPI,
   CompetitionEventType,
   UpdateInfo,
@@ -206,28 +205,11 @@ const electronApi = {
       ipcRenderer.invoke('club:importBackup', filePath, replace),
   },
 
-  training: {
-    startServer: (port?: number, host?: string, useHttps?: boolean) =>
-      ipcRenderer.invoke('training:startServer', port, host, useHttps),
-    stopServer: () => ipcRenderer.invoke('training:stopServer'),
-    startSession: (strips: number, weapon: string, customRules?: TrainingCustomRules) =>
-      ipcRenderer.invoke('training:startSession', strips, weapon, customRules),
-    stopSession: () => ipcRenderer.invoke('training:stopSession'),
-    setTheme: (theme: string) => ipcRenderer.invoke('training:setTheme', theme),
-    getHistory: () => ipcRenderer.invoke('training:getHistory'),
-    getSession: () => ipcRenderer.invoke('training:getSession'),
-    getArenas: () => ipcRenderer.invoke('training:getArenas'),
-    getServerInfo: () => ipcRenderer.invoke('training:getServerInfo'),
-    openDemoScreens: (strips: number) => ipcRenderer.invoke('training:openDemoScreens', strips),
-  },
-
   // Remote event listeners (for real-time updates)
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) =>
     subscribe('update:available', callback),
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) =>
     subscribe('update:progress', callback),
-  onTrainingMatchFinished: (callback: Parameters<ElectronAPI['onTrainingMatchFinished']>[0]) =>
-    subscribe('training:match_finished', callback),
   onCompetitionEvent: (
     callback: (event: { type: CompetitionEventType; competitionId?: string }) => void
   ) => subscribe('competition:event', callback),

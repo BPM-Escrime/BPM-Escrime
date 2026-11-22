@@ -8,6 +8,7 @@ import { useCallback, useState } from 'react';
 import type { Weapon } from '../../shared/types';
 import type { TrainingCustomRules } from '../../shared/types/training';
 import type { ToastType } from '../components/Toast';
+import { trainingAvailable, useTrainingApi } from '../api/trainingApi';
 import { ipcErrorText } from '../services/ipcError';
 import { useTranslation } from './useTranslation';
 
@@ -16,6 +17,7 @@ export const DEMO_STRIPS = 2;
 
 export function useTrainingSession(showToast: (message: string, type?: ToastType) => void) {
   const { t } = useTranslation();
+  const training = useTrainingApi();
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [trainingActive, setTrainingActive] = useState(false);
@@ -32,21 +34,17 @@ export function useTrainingSession(showToast: (message: string, type?: ToastType
       customRules?: TrainingCustomRules,
       host?: string
     ): Promise<boolean> => {
-      if (!window.electronAPI?.training) return false;
+      if (!trainingAvailable()) return false;
       setTrainingLaunching(true);
       try {
-        const startRes = await window.electronAPI.training.startServer(undefined, host);
+        const startRes = await training.startServer(undefined, host);
         if (!startRes.success || !startRes.serverInfo) {
           showToast(ipcErrorText(t, startRes, 'Impossible de démarrer le serveur'), 'error');
           return false;
         }
-        const sessionRes = await window.electronAPI.training.startSession(
-          strips,
-          weapon,
-          customRules
-        );
+        const sessionRes = await training.startSession(strips, weapon, customRules);
         if (!sessionRes.success) {
-          await window.electronAPI.training.stopServer();
+          await training.stopServer();
           showToast(ipcErrorText(t, sessionRes, 'Impossible de démarrer la session'), 'error');
           return false;
         }
@@ -64,19 +62,18 @@ export function useTrainingSession(showToast: (message: string, type?: ToastType
         setTrainingLaunching(false);
       }
     },
-    [showToast, t]
+    [showToast, t, training]
   );
 
   const handleStartDemo = useCallback(() => {
-    if (window.electronAPI?.training) setShowDemoModal(true);
+    if (trainingAvailable()) setShowDemoModal(true);
   }, []);
 
   // Démo autonome : entraînement en mode démo (arbitre virtuel) + écrans distants ouverts.
   // Toujours proposer l'arme, même si un entraînement / une démo tourne déjà (relancé au choix)
   const handleLaunchDemo = useCallback(
     async (weapon: Weapon) => {
-      const training = window.electronAPI?.training;
-      if (!training) return;
+      if (!trainingAvailable()) return;
       if (trainingActive) {
         // Session en cours : arrêtée (écrans de démo fermés) puis relancée avec l'arme choisie
         await training.stopSession().catch(() => undefined);
@@ -89,21 +86,18 @@ export function useTrainingSession(showToast: (message: string, type?: ToastType
         demo: true,
       });
       if (!ok) return;
-      const res = await training.openDemoScreens?.(DEMO_STRIPS);
+      const res = await training.openDemoScreens(DEMO_STRIPS);
       setShowDemoModal(false);
       if (res?.success) showToast(t('demo.started'), 'success');
     },
-    [handleLaunchTraining, trainingActive, showToast, t]
+    [handleLaunchTraining, trainingActive, showToast, t, training]
   );
 
   const handleStopTraining = useCallback(async () => {
-    if (!window.electronAPI?.training) return;
-    try {
-      await window.electronAPI.training.stopSession();
-      await window.electronAPI.training.stopServer();
-    } catch {
-      /* ignore */
-    }
+    if (!trainingAvailable()) return;
+    // Les refus (serveur déjà arrêté) reviennent en enveloppe : rien à rattraper
+    await training.stopSession();
+    await training.stopServer();
     setTrainingActive(false);
     setShowTrainingPanel(false);
     setTrainingServerUrl('');
@@ -111,7 +105,7 @@ export function useTrainingSession(showToast: (message: string, type?: ToastType
     setTrainingWeapon('');
     // Retour à la fenêtre de paramétrage du mode (au lieu de fermer)
     setShowTrainingModal(true);
-  }, []);
+  }, [training]);
 
   return {
     showTrainingModal,

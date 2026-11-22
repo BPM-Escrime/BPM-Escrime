@@ -24,7 +24,7 @@ import { createMenuActions } from './menuActions';
 import { createMenu } from './menu';
 import { createMainWindow } from './mainWindow';
 import { createSplashWindow, saveLanguageToFile, splashConfirmPromise } from './splash';
-import { registerTrainingHandlers } from './ipc/trainingHandlers';
+import { createTrainingPort } from './trainingPort';
 import { dayStripServer } from './remote/stripHandover';
 import { registerClubHandlers } from './ipc/clubHandlers';
 import { createClubStation } from './clubPort';
@@ -175,6 +175,12 @@ registerApiHandlers({
   },
   club: clubStation.port,
   station: stationServices.port,
+  // Serveur d'entraînement : démo autonome, tablettes du Mode Club (docs/adr/0022)
+  training: createTrainingPort({
+    db,
+    getMainWindow: () => mainWindow,
+    userDataDir: () => app.getPath('userData'),
+  }),
 });
 registerClubHandlers({ db });
 privacyHandlers.register();
@@ -328,7 +334,6 @@ registerBackupHandlers();
 registerDiagnosticHandlers(createDiagnosticDeps({ getWindow: () => mainWindow, getVersionInfo }));
 
 registerLogoTtsHandlers();
-registerTrainingHandlers({ db, getMainWindow: () => mainWindow });
 
 // App info handlers
 ipcMain.handle('app:getVersionInfo', async () => {

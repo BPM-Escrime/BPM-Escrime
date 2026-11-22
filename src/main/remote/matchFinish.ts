@@ -20,7 +20,7 @@ import {
 } from './prevMatch';
 import type { ArenaMatch } from '../../shared/types/remote';
 import { winnerByScore } from '../../shared/domain/match/matchEndValidation';
-import { notifyScreen } from './remoteActivity';
+import { notifyScreen, notifyTraining } from './remoteActivity';
 
 type S = RemoteScoreServer;
 
@@ -603,7 +603,8 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): void
     );
   }
   if (mainWindow && ctx.isTrainingMode) {
-    mainWindow.webContents.send('training:match_finished', {
+    notifyTraining({
+      kind: 'match_finished',
       record: ctx.trainingHistory[ctx.trainingHistory.length - 1] ?? null,
     });
   }

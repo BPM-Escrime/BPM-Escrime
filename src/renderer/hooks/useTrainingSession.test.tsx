@@ -7,6 +7,7 @@ import { renderHook, act } from '@testing-library/react';
 
 vi.mock('./useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 import { useTrainingSession } from './useTrainingSession';
+import { trainingElectron } from '../testUtils/trainingBridge';
 
 const training = {
   startServer: vi.fn(),
@@ -18,7 +19,7 @@ const training = {
 describe('useTrainingSession', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (window as unknown as { electronAPI: unknown }).electronAPI = { training };
+    (window as unknown as { electronAPI: unknown }).electronAPI = trainingElectron(training);
   });
 
   it('lance puis arrête une session', async () => {
@@ -42,7 +43,9 @@ describe('useTrainingSession', () => {
     await act(async () => {
       await result.current.handleStopTraining();
     });
+    expect(training.startServer).toHaveBeenCalledWith();
     expect(training.stopSession).toHaveBeenCalled();
+    expect(training.stopServer).toHaveBeenCalled();
     expect(result.current.trainingActive).toBe(false);
     expect(result.current.showTrainingModal).toBe(true);
   });

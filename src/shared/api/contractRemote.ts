@@ -135,7 +135,7 @@ const TtsConfigSchema = z.strictObject({
 });
 
 /** Réglage réseau du serveur : absent = valeur courante (rechargement) ou par défaut (démarrage) */
-const NetworkOptions = {
+export const NetworkOptions = {
   port: Port.optional(),
   host: Host.optional(),
   useHttps: z.boolean().optional(),

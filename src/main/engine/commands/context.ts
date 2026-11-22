@@ -18,6 +18,8 @@ import type { McpLogEntry, McpStatus } from '../../../shared/types/mcp';
 import type { PrivacySettings } from '../../../shared/types/privacy';
 import type { CustomTheme, FirewallDiagnosis } from '../../../shared/types/remote';
 import type { RemoteServerInfo, TtsConfig } from '../../../shared/types/preload';
+import type { TrainingServerInfo } from '../../../shared/types/training';
+import type { TrainingTheme } from '../../../shared/utils/trainingThemes';
 import type { RemoteScoreServer } from '../../remoteScoreServer';
 
 /** Écriture faite hors de l'écran : l'écran ouvert recharge les données concernées */
@@ -69,6 +71,11 @@ export interface CommandContext {
    * tests, MCP ; les opérations qui en ont besoin refusent par « unavailable ».
    */
   station?: StationPort;
+  /**
+   * Serveur d'entraînement (démo autonome, tablettes du Mode Club) : registre, certificat,
+   * fenêtre principale, écrans de démo ; branché par main.ts (docs/adr/0022). Absent : tests, MCP.
+   */
+  training?: TrainingPort;
 }
 
 /** Ce que les opérations du serveur distant appellent sur un RemoteScoreServer */
@@ -158,6 +165,36 @@ export interface RemoteAdminPort {
   setActiveWave(competitionId: string, matchIds: string[] | null, poolsClosed: boolean): void;
   /** Message de test au webhook, envoyé depuis le main (la CSP de l'écran bloque l'hôte) */
   testWebhook(url: string): Promise<{ success: boolean; status?: number; error?: string }>;
+}
+
+/** Ce que les opérations de l'entraînement appellent sur le RemoteScoreServer d'entraînement */
+export type TrainingServerHandle = Pick<
+  RemoteScoreServer,
+  | 'startTrainingSession'
+  | 'stopTrainingSession'
+  | 'getTrainingHistory'
+  | 'getSession'
+  | 'getAllArenas'
+>;
+
+/**
+ * Serveur d'entraînement vu par les opérations du contrat (docs/adr/0022). Il vit dans le
+ * registre des serveurs distants sous `__training__` ; il s'arrête quand la fenêtre principale
+ * se ferme ou se recharge. Branché par main.ts (trainingPort.ts).
+ */
+export interface TrainingPort {
+  /** Serveur d'entraînement ; undefined : non démarré */
+  server(): TrainingServerHandle | undefined;
+  /** Adresse du serveur ; undefined : non démarré */
+  info(): TrainingServerInfo | undefined;
+  /** Démarre le serveur ; refuse par CommandError (déjà démarré, TLS, port indisponible) */
+  start(options: { port?: number; host?: string; useHttps?: boolean }): Promise<TrainingServerInfo>;
+  /** Arrête le serveur (démo et écrans de démo compris) ; false s'il ne tournait pas */
+  stop(): boolean;
+  /** Applique le thème (déjà contrôlé) à tous les écrans du serveur démarré */
+  applyTheme(theme: TrainingTheme): void;
+  /** Ouvre les fenêtres de la démo sur le serveur démarré ; renvoie leur nombre */
+  openDemoScreens(strips: number): number;
 }
 
 /** Services du poste (réglages, thèmes, RGPD, agent, journée) : ce qui dépasse la base */

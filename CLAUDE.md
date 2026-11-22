@@ -128,9 +128,10 @@ npm run e2e:debug       # Playwright debug mode
 ```
 Main Process (src/main/)
 ├── main.ts                  # Window management, menu (i18n: fr/en/de), IPC handlers, DB lifecycle
-├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), trainingHandlers (training:*), cyranoHandlers (cyrano:*, #1720), opp2Handlers (opp2:*, #1960), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:* restants : export JSON d'une personne et .bpm chiffrés ; le reste du RGPD par le contrat), settingsHandlers (settings:addAgentFolder, dialogue natif), logoTtsHandlers (app:getLogo, getLogos, saveLogos, getTtsConfig : fichiers du poste lus au démarrage de l'écran) — registerXxxHandlers(ctx) ; réglages du poste, salles, thèmes, journée multi-épreuves (#1714, #1878), RGPD et agent MCP : contrat (`contractStation.ts`, ADR-0022), port `ctx.station` (`stationPort.ts`)
+├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), cyranoHandlers (cyrano:*, #1720), opp2Handlers (opp2:*, #1960), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:* restants : export JSON d'une personne et .bpm chiffrés ; le reste du RGPD par le contrat), settingsHandlers (settings:addAgentFolder, dialogue natif), logoTtsHandlers (app:getLogo, getLogos, saveLogos, getTtsConfig : fichiers du poste lus au démarrage de l'écran) — registerXxxHandlers(ctx) ; réglages du poste, salles, thèmes, journée multi-épreuves (#1714, #1878), RGPD et agent MCP : contrat (`contractStation.ts`, ADR-0022), port `ctx.station` (`stationPort.ts`) ; serveur d'entraînement : contrat (`contractTraining.ts`, ADR-0022), port `ctx.training` (`trainingPort.ts`, registre et liaison fenêtre : `trainingServer.ts`)
 ├── menuLabels.ts            # Libellés du menu natif (fr/en/de/zh-HK)
 ├── remoteRegistry.ts        # Serveurs distants actifs (remoteServers, ports, stopRemoteServer)
+├── trainingServer.ts / trainingPort.ts  # Serveur d'entraînement : identité `__training__`, arrêt, liaison à la fenêtre principale (trainingServer) ; port `ctx.training` du contrat (registre, certificat, voix, écrans de démo), ADR-0022 — ex-canaux training:*
 ├── remoteLifecycle.ts / remotePort.ts  # Démarrage, rechargement à chaud, interfaces (ex-canaux remote:*) ; port `ctx.remote.admin` du contrat (registre, certificat, pare-feu, logo, synthèse vocale, webhook), ADR-0022
 ├── preload.ts               # Secure IPC bridge (contextIsolation: true)
 ├── preloadApi/              # Groupes d'API du préload (dbApi, fileApi, dialogApi, printHandler) ; validation IPC dans ipc/validation.ts
@@ -257,7 +258,7 @@ Database (src/database/)
    - `file.*` – Export, import, write file content
    - `dialog.*` – Open/save file dialogs
    - serveur distant (start/stop, session, pistes, thèmes, mots de passe, clients) : plus de groupe `remote.*`, opérations du contrat `remoteOperations` (`contractRemote.ts`, droit `remote:admin`), écran `useRemoteApi` (`src/renderer/api/remoteApi.ts`) ; avis des tablettes par `onRemoteActivity` / `onRemoteClients`
-   - `training.*` – Training-mode server
+   - serveur d'entraînement (démarrage, session, thème, historique, écrans de démo) : plus de groupe `training.*`, opérations du contrat `trainingOperations` (`contractTraining.ts`, droit `remote:admin`), écran `useTrainingApi` (`src/renderer/api/trainingApi.ts`) ; avis de match fini par `onTrainingActivity`
    - `updater.*` – Auto-update control
    - `crypto.*` – safeStorage protect/unprotect
    - `cyrano.*` – Appareils de piste Cyrano : start/stop UDP, pistes, statuts, log (#1720)

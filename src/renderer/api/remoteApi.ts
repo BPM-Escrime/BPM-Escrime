@@ -53,6 +53,10 @@ const LEGACY_CODES: Partial<Record<string, string>> = {
   strip_not_found: 'strip_not_found',
   match_not_found: 'match_not_found',
   invalid_url: 'invalid_url',
+  // Serveur d'entraînement (trainingApi.ts)
+  training_not_started: 'training_not_started',
+  training_already_started: 'training_already_started',
+  invalid_theme: 'invalid_theme',
 };
 
 /** Refus du contrat → `{ success: false, error }` */
@@ -69,7 +73,7 @@ function failure(e: unknown): RemoteResult {
 }
 
 /** Exécute l'appel ; `pick` range la réponse dans l'enveloppe (`{ serverInfo: … }`) */
-async function settle<T, R extends object = object>(
+export async function settle<T, R extends object = object>(
   call: () => Promise<T>,
   pick?: (value: T) => R
 ): Promise<RemoteResult<R>> {

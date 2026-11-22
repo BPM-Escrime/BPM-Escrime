@@ -18,6 +18,7 @@ import type { TrainingMatchRecord } from '../../../shared/types/preload';
 import TrainingPrintModal from './TrainingPrintModal';
 import { getActiveLocale } from '../../../shared/utils/localeFormat';
 import { Button } from '../common/Button';
+import { useTrainingApi } from '../../api/trainingApi';
 import type { TrainingTheme } from '../../../shared/utils/trainingThemes';
 
 // Thèmes intégrés (pas de thème personnalisé en entraînement) : piste, kiosk, arbitre et lobby
@@ -243,29 +244,30 @@ const TrainingPanel: React.FC<Props> = ({
   const [history, setHistory] = useState<TrainingMatchRecord[]>([]);
   const [printOpen, setPrintOpen] = useState(false);
   const [theme, setTheme] = useState<TrainingTheme>('dark');
+  const training = useTrainingApi();
 
   const handleThemeChange = async (next: TrainingTheme) => {
     const previous = theme;
     setTheme(next);
-    const res = await window.electronAPI?.training?.setTheme(next);
-    if (res && !res.success) setTheme(previous);
+    const res = await training.setTheme(next);
+    if (!res.success) setTheme(previous);
   };
 
   const refreshHistory = useCallback(async () => {
-    const result = await window.electronAPI?.training?.getHistory();
-    if (result?.success) setHistory(result.history ?? []);
-  }, []);
+    const result = await training.getHistory();
+    if (result.success) setHistory(result.history ?? []);
+  }, [training]);
 
   useEffect(() => {
     refreshHistory();
-    const unsub = window.electronAPI?.onTrainingMatchFinished?.(data => {
+    const unsub = training.onMatchFinished(data => {
       const record = data?.record;
       if (record) setHistory(prev => [...prev, record]);
     });
     return () => {
       if (typeof unsub === 'function') unsub();
     };
-  }, [refreshHistory]);
+  }, [refreshHistory, training]);
 
   const arenas = Array.from({ length: strips }, (_, i) => ({
     number: i + 1,

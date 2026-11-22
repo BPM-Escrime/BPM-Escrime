@@ -21,7 +21,7 @@ import {
   RemoteEvent,
   MatchTiming,
 } from '../types';
-import type { MatchSignatureRequest, RemoteSession, Arena, ArenaUpdate } from './remote';
+import type { MatchSignatureRequest, ArenaUpdate } from './remote';
 import type { ClubAPI } from './club';
 import type { PrivacyAPI } from './privacy';
 import type { McpScreenEvent } from './mcp';
@@ -30,7 +30,6 @@ export type { ClubAPI, ClubMemberReport } from './club';
 // Re-export Pool for preload
 export type { Pool, PoolSnapshot } from '../types';
 export type { TrainingCustomRules, TrainingMatchRecord, TrainingServerInfo } from './training';
-import type { TrainingCustomRules, TrainingMatchRecord, TrainingServerInfo } from './training';
 
 // Config TTS (minuteur vocal) des tablettes d'arbitrage, réglée dans les paramètres globaux
 export interface TtsConfig {
@@ -970,34 +969,6 @@ export interface CryptoAPI {
   unprotect: (ciphertext: string) => Promise<string | null>;
 }
 
-export interface TrainingAPI {
-  startServer: (
-    port?: number,
-    host?: string,
-    useHttps?: boolean
-  ) => Promise<{ success: boolean; serverInfo?: TrainingServerInfo; error?: string }>;
-  stopServer: () => Promise<{ success: boolean; error?: string }>;
-  startSession: (
-    strips: number,
-    weapon: string,
-    customRules?: TrainingCustomRules
-  ) => Promise<{ success: boolean; session?: RemoteSession; error?: string }>;
-  stopSession: () => Promise<{ success: boolean; error?: string }>;
-  setTheme: (theme: string) => Promise<{ success: boolean; error?: string }>;
-  getHistory: () => Promise<{ success: boolean; history: TrainingMatchRecord[]; error?: string }>;
-  getSession: () => Promise<{ success: boolean; session: RemoteSession | null; error?: string }>;
-  getArenas: () => Promise<{ success: boolean; arenas: Arena[]; error?: string }>;
-  getServerInfo: () => Promise<{
-    success: boolean;
-    serverInfo?: TrainingServerInfo;
-    error?: string;
-  }>;
-  /** Démo autonome : ouvre les écrans arène / tablette arbitre / kiosque du serveur d'entraînement */
-  openDemoScreens: (
-    strips: number
-  ) => Promise<{ success: boolean; count?: number; error?: string }>;
-}
-
 /** Boîte d'impression intégrée (#1214) */
 export interface PrintDialogSettings {
   printer: string;
@@ -1142,16 +1113,12 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   greg: GregAPI;
   ftp: FtpAPI;
   crypto: CryptoAPI;
-  training: TrainingAPI;
   settings: SettingsAPI;
   club: ClubAPI;
   cyrano: CyranoAPI;
   opp2: import('./opp2Preload').Opp2API;
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void;
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) => () => void;
-  onTrainingMatchFinished: (
-    callback: (data: { record: TrainingMatchRecord | null }) => void
-  ) => () => void;
   /** Bus d'événements de données main → renderer (#1298) */
   onCompetitionEvent: (
     callback: (event: { type: CompetitionEventType; competitionId?: string }) => void
