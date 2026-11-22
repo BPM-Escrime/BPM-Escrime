@@ -235,3 +235,8 @@
   font-size: 0.45px;
   font-weight: 600;
 }
+
+.arena-planner-centre-mark line {
+  stroke: #1d4ed8;
+  stroke-width: 0.04;
+}
