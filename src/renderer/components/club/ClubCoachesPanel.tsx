@@ -8,6 +8,7 @@ import { Archive, ArchiveRestore, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { ClubCoach, ClubCoachInput } from '../../../shared/types/club';
 import type { ClubWeaponCode } from '../../../shared/utils/clubWeapon';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
 import { Modal } from '../common/Modal';
@@ -105,14 +106,13 @@ export const ClubCoachesPanel: React.FC<{ clubId: string }> = ({ clubId }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
   const { confirm } = useConfirm();
-  const api = window.electronAPI?.club;
+  const api = useClubApi();
   const [coaches, setCoaches] = useState<ClubCoach[]>([]);
   const [showArchived, setShowArchived] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<ClubCoach | null>(null);
 
   const load = useCallback(async () => {
-    if (!api) return;
     setCoaches(await api.listCoaches(clubId, true));
   }, [api, clubId]);
 
@@ -128,8 +128,6 @@ export const ClubCoachesPanel: React.FC<{ clubId: string }> = ({ clubId }) => {
     }
     await load();
   };
-
-  if (!api) return null;
 
   const remove = async (c: ClubCoach) => {
     const ok = await confirm({

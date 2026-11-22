@@ -51,6 +51,8 @@ import {
   updateCompetitionSettings,
 } from '../commands/competitionSetup';
 import { configureDtView, getDtViewStatus } from '../commands/dtView';
+import { clubHandlers } from '../commands/club';
+import { clubStationHandlers, onClubSynced } from '../commands/clubStation';
 import { competitionStats } from '../commands/competitionStats';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
@@ -221,6 +223,10 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     onCompetitionEvent(e => {
       if (!competitionId || !e.competitionId || e.competitionId === competitionId) emit(e);
     }),
+  // Mode Club (docs/adr/0022) : données du poste, sans journal
+  ...clubHandlers,
+  ...clubStationHandlers,
+  onClubSynced,
 };
 
 export const isOperation = (name: unknown): name is OperationName =>

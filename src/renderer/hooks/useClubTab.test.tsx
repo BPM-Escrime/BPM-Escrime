@@ -5,13 +5,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useClubTab, CLUB_TAB_KEY, CLUB_ACTIVE_KEY } from './useClubTab';
+import { clubElectron } from '../testUtils/clubBridge';
 
 describe('useClubTab', () => {
   beforeEach(() => {
     localStorage.clear();
-    (window as unknown as { electronAPI: unknown }).electronAPI = {
-      club: { getClub: vi.fn(async (id: string) => ({ name: `Club ${id}`, logo: undefined })) },
-    };
+    (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron({
+      getClub: vi.fn(async (id: string) => ({ name: `Club ${id}`, logo: undefined })),
+    });
   });
 
   it('mémorise l’onglet et le club, relit le club affiché', async () => {

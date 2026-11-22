@@ -8,6 +8,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 vi.mock('../../hooks/useTranslation', () => import('../../testUtils/i18nMock'));
 import { ClubPicker, ClubsHomeSection } from './ClubPicker';
+import { clubElectron } from '../../testUtils/clubBridge';
 
 const club = (id: string, name: string, extra = {}) => ({
   id,
@@ -33,7 +34,7 @@ beforeEach(() => {
       ]),
     createClub: vi.fn().mockResolvedValue({ id: 'c3', name: 'Nouveau' }),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { club: api };
+  (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron(api);
 });
 
 describe('ClubsHomeSection (Général)', () => {

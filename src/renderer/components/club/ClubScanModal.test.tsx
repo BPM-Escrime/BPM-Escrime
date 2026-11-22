@@ -17,6 +17,7 @@ vi.mock('./QrScanner', () => ({
   },
 }));
 import { ClubScanModal } from './ClubScanModal';
+import { clubElectron } from '../../testUtils/clubBridge';
 
 const member = (id: string, code: string, lastName: string) => ({
   id,
@@ -56,7 +57,7 @@ beforeEach(() => {
     createBout: vi.fn().mockResolvedValue({ id: 'bt1' }),
     startBout: vi.fn(),
   };
-  (window as unknown as { electronAPI: unknown }).electronAPI = { club: api };
+  (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron(api);
 });
 
 const scan = async (text: string) => {

@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { FolderOpen, Plus, Shield } from 'lucide-react';
 import type { ClubSummary } from '../../../shared/types/club';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { useToast } from '../Toast';
 import { useConfirm } from '../ConfirmDialog';
@@ -16,10 +17,15 @@ import { importClubBackup } from './clubBackup';
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 function useClubs(): [ClubSummary[] | null, () => Promise<void>] {
+  const api = useClubApi();
   const [clubs, setClubs] = useState<ClubSummary[] | null>(null);
   const reload = async () => {
-    const api = window.electronAPI?.club;
-    setClubs(api ? await api.listClubs() : []);
+    try {
+      setClubs(await api.listClubs());
+    } catch {
+      /* hors Electron : aucun club */
+      setClubs([]);
+    }
   };
   useEffect(() => {
     void reload();
@@ -58,11 +64,11 @@ const ClubCard: React.FC<{ club: ClubSummary; onOpen: () => void }> = ({ club, o
 const NewClubForm: React.FC<{ onCreated: (id: string) => void }> = ({ onCreated }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const api = useClubApi();
   const [name, setName] = useState('');
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    const api = window.electronAPI?.club;
-    if (!api || !name.trim()) return;
+    if (!name.trim()) return;
     try {
       const club = await api.createClub({ name });
       setName('');

@@ -255,125 +255,17 @@ const electronApi = {
     addAgentFolder: () => ipcRenderer.invoke('settings:addAgentFolder'),
     removeAgentFolder: (folder: string) => ipcRenderer.invoke('settings:removeAgentFolder', folder),
   },
-  // Mode Club (#1872)
+  // Mode Club (#1872) : fichiers seulement (photos ZIP, sauvegardes .bpclub, docs/adr/0021) ;
+  // le reste passe par le contrat d'API (docs/adr/0022)
   club: {
-    listClubs: () => ipcRenderer.invoke('club:listClubs'),
-    getClub: (id: string) => ipcRenderer.invoke('club:getClub', id),
-    createClub: (data: unknown) => ipcRenderer.invoke('club:createClub', data),
-    updateClub: (id: string, data: unknown) => ipcRenderer.invoke('club:updateClub', id, data),
-    deleteClub: (id: string) => ipcRenderer.invoke('club:deleteClub', id),
-    remoteStatus: () => ipcRenderer.invoke('club:remoteStatus'),
-    pushBout: (boutId: string) => ipcRenderer.invoke('club:pushBout', boutId),
-    linkRemote: (sessionId: string | null) => ipcRenderer.invoke('club:linkRemote', sessionId),
-    releaseBout: (boutId: string) => ipcRenderer.invoke('club:releaseBout', boutId),
     importPhotos: (clubId: string, filepath: string) => {
       if (!filepath || typeof filepath !== 'string') throw new Error('Filepath is required');
       return ipcRenderer.invoke('club:importPhotos', clubId, filepath);
     },
-    findMemberByCardCode: (code: string, clubId?: string) =>
-      ipcRenderer.invoke('club:findMemberByCardCode', code, clubId),
-    regenerateCardCode: (id: string) => ipcRenderer.invoke('club:regenerateCardCode', id),
-    listMembers: (clubId: string, includeInactive?: boolean) =>
-      ipcRenderer.invoke('club:listMembers', clubId, includeInactive),
-    createMember: (clubId: string, data: unknown) =>
-      ipcRenderer.invoke('club:createMember', clubId, data),
-    updateMember: (id: string, data: unknown) => ipcRenderer.invoke('club:updateMember', id, data),
-    deleteMember: (id: string) => ipcRenderer.invoke('club:deleteMember', id),
-    listCoaches: (clubId: string, includeInactive?: boolean) =>
-      ipcRenderer.invoke('club:listCoaches', clubId, includeInactive),
-    createCoach: (clubId: string, data: unknown) =>
-      ipcRenderer.invoke('club:createCoach', clubId, data),
-    updateCoach: (id: string, data: unknown) => ipcRenderer.invoke('club:updateCoach', id, data),
-    deleteCoach: (id: string) => ipcRenderer.invoke('club:deleteCoach', id),
-    importMembers: (clubId: string, inputs: unknown[]) =>
-      ipcRenderer.invoke('club:importMembers', clubId, inputs),
-    listSessions: (clubId: string, range?: unknown) =>
-      ipcRenderer.invoke('club:listSessions', clubId, range),
-    getSession: (id: string) => ipcRenderer.invoke('club:getSession', id),
-    createSession: (clubId: string, data: unknown) =>
-      ipcRenderer.invoke('club:createSession', clubId, data),
-    generateSessions: (clubId: string, data: unknown, options: unknown) =>
-      ipcRenderer.invoke('club:generateSessions', clubId, data, options),
-    deletePlannedInPeriods: (clubId: string, periods: unknown) =>
-      ipcRenderer.invoke('club:deletePlannedInPeriods', clubId, periods),
-    createSeries: (clubId: string, data: unknown, recurrence: unknown) =>
-      ipcRenderer.invoke('club:createSeries', clubId, data, recurrence),
-    updateSession: (id: string, data: unknown) =>
-      ipcRenderer.invoke('club:updateSession', id, data),
-    closeSession: (id: string) => ipcRenderer.invoke('club:closeSession', id),
-    reopenSession: (id: string) => ipcRenderer.invoke('club:reopenSession', id),
-    startSession: (id: string) => ipcRenderer.invoke('club:startSession', id),
-    setMemberFeedback: (sessionId: string, memberId: string, text: string) =>
-      ipcRenderer.invoke('club:setMemberFeedback', sessionId, memberId, text),
-    listExercises: () => ipcRenderer.invoke('club:listExercises'),
-    createExercise: (data: unknown) => ipcRenderer.invoke('club:createExercise', data),
-    updateExercise: (id: string, data: unknown) =>
-      ipcRenderer.invoke('club:updateExercise', id, data),
-    deleteExercise: (id: string) => ipcRenderer.invoke('club:deleteExercise', id),
-    importExercises: (list: unknown[]) => ipcRenderer.invoke('club:importExercises', list),
-    listItems: (clubId: string, includeRetired?: boolean) =>
-      ipcRenderer.invoke('club:listItems', clubId, includeRetired),
-    createItem: (clubId: string, data: unknown) =>
-      ipcRenderer.invoke('club:createItem', clubId, data),
-    createItemSeries: (clubId: string, data: unknown, count: number) =>
-      ipcRenderer.invoke('club:createItemSeries', clubId, data, count),
-    updateItem: (id: string, data: unknown) => ipcRenderer.invoke('club:updateItem', id, data),
-    deleteItem: (id: string) => ipcRenderer.invoke('club:deleteItem', id),
-    listLoans: (clubId: string, filter?: unknown) =>
-      ipcRenderer.invoke('club:listLoans', clubId, filter),
-    lendItem: (data: unknown) => ipcRenderer.invoke('club:lendItem', data),
-    returnLoan: (id: string, data?: unknown) => ipcRenderer.invoke('club:returnLoan', id, data),
-    deleteLoan: (id: string) => ipcRenderer.invoke('club:deleteLoan', id),
-    listCategories: (clubId: string) => ipcRenderer.invoke('club:listCategories', clubId),
-    createCategory: (clubId: string, name: string) =>
-      ipcRenderer.invoke('club:createCategory', clubId, name),
-    renameCategory: (id: string, name: string) =>
-      ipcRenderer.invoke('club:renameCategory', id, name),
-    deleteCategory: (id: string) => ipcRenderer.invoke('club:deleteCategory', id),
-    listBrands: (clubId: string) => ipcRenderer.invoke('club:listBrands', clubId),
-    createBrand: (clubId: string, name: string) =>
-      ipcRenderer.invoke('club:createBrand', clubId, name),
-    renameBrand: (id: string, name: string) => ipcRenderer.invoke('club:renameBrand', id, name),
-    deleteBrand: (id: string) => ipcRenderer.invoke('club:deleteBrand', id),
-    getInventoryLock: (clubId: string) => ipcRenderer.invoke('club:getInventoryLock', clubId),
-    setInventoryLock: (clubId: string, locked: boolean) =>
-      ipcRenderer.invoke('club:setInventoryLock', clubId, locked),
-    importItems: (clubId: string, list: unknown[]) =>
-      ipcRenderer.invoke('club:importItems', clubId, list),
     exportBackup: (clubId: string, filePath: string) =>
       ipcRenderer.invoke('club:exportBackup', clubId, filePath),
     importBackup: (filePath: string, replace?: boolean) =>
       ipcRenderer.invoke('club:importBackup', filePath, replace),
-    syncStatus: (clubId: string) => ipcRenderer.invoke('club:syncStatus', clubId),
-    syncEnable: (clubId: string) => ipcRenderer.invoke('club:syncEnable', clubId),
-    syncDisable: (clubId: string) => ipcRenderer.invoke('club:syncDisable', clubId),
-    syncNow: (clubId: string) => ipcRenderer.invoke('club:syncNow', clubId),
-    syncResolve: (clubId: string, keep: 'file' | 'app') =>
-      ipcRenderer.invoke('club:syncResolve', clubId, keep),
-    backupList: (clubId: string) => ipcRenderer.invoke('club:backupList', clubId),
-    backupCreate: (clubId: string) => ipcRenderer.invoke('club:backupCreate', clubId),
-    backupRestore: (clubId: string, id: string) =>
-      ipcRenderer.invoke('club:backupRestore', clubId, id),
-    onSynced: (callback: (clubId: string) => void) => {
-      const handler = (_: IpcRendererEvent, clubId: string) => callback(clubId);
-      ipcRenderer.on('club:synced', handler);
-      return () => ipcRenderer.removeListener('club:synced', handler);
-    },
-    getMemberFeedback: (memberId: string) => ipcRenderer.invoke('club:getMemberFeedback', memberId),
-    deleteSession: (id: string) => ipcRenderer.invoke('club:deleteSession', id),
-    setAttendance: (sessionId: string, memberId: string, present: boolean) =>
-      ipcRenderer.invoke('club:setAttendance', sessionId, memberId, present),
-    listBouts: (filter?: unknown) => ipcRenderer.invoke('club:listBouts', filter),
-    createBout: (data: unknown) => ipcRenderer.invoke('club:createBout', data),
-    startBout: (id: string) => ipcRenderer.invoke('club:startBout', id),
-    updateBoutScore: (id: string, scoreA: number, scoreB: number) =>
-      ipcRenderer.invoke('club:updateBoutScore', id, scoreA, scoreB),
-    finishBout: (id: string, result: unknown) => ipcRenderer.invoke('club:finishBout', id, result),
-    cancelBout: (id: string) => ipcRenderer.invoke('club:cancelBout', id),
-    deleteBout: (id: string) => ipcRenderer.invoke('club:deleteBout', id),
-    getLeaderboard: (filter?: unknown) => ipcRenderer.invoke('club:getLeaderboard', filter),
-    getMemberReport: (memberId: string, filter?: unknown, groupBy?: string) =>
-      ipcRenderer.invoke('club:getMemberReport', memberId, filter, groupBy),
   },
 
   training: {

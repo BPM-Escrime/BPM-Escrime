@@ -9,6 +9,7 @@ import type { ClubExercise, ClubExerciseCategory } from '../../../shared/types/c
 import { EXERCISE_CATEGORIES, formatMinutes } from '../../../shared/utils/clubPlan';
 import { exerciseMatchesRange, hasAgeRange, type AgeRange } from '../../../shared/utils/clubAge';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { ToggleChip } from '../common/ToggleChip';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
@@ -29,6 +30,7 @@ export const ClubExercisePicker: React.FC<ClubExercisePickerProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const api = useClubApi();
   const [all, setAll] = useState<ClubExercise[] | null>(null);
   const [category, setCategory] = useState<ClubExerciseCategory | 'all'>(initialCategory);
   const [search, setSearch] = useState('');
@@ -37,8 +39,11 @@ export const ClubExercisePicker: React.FC<ClubExercisePickerProps> = ({
   const [weapon, setWeapon] = useState('');
 
   useEffect(() => {
-    void window.electronAPI?.club?.listExercises().then(setAll);
-  }, []);
+    api
+      .listExercises()
+      .then(setAll)
+      .catch(() => undefined);
+  }, [api]);
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();

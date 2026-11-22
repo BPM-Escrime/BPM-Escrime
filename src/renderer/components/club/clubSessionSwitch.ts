@@ -5,9 +5,10 @@
  * Licensed under GPL-3.0
  */
 
-import type { ClubAPI, ClubSession } from '../../../shared/types/club';
+import type { ClubSession } from '../../../shared/types/club';
+import type { ClubApi } from '../../api/clubApi';
 
-type OpenApi = Pick<ClubAPI, 'startSession' | 'reopenSession'>;
+type OpenApi = Pick<ClubApi, 'startSession' | 'reopenSession'>;
 
 /** Séances ouvertes, la plus récente d'abord (date, puis heure d'ouverture) */
 export function openSessions(sessions: ClubSession[]): ClubSession[] {

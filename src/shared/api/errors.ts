@@ -95,6 +95,7 @@ export const ERRORS = {
   unavailable: e('rule', 'Fonction indisponible dans ce mode'),
   remote_not_running: e('rule', 'Saisie distante de l’épreuve non démarrée'),
   weak_password: e('rule', 'Mot de passe trop court'),
+  club_refused: e('rule', 'Mode Club : demande refusée (message pour l’opérateur)'),
 
   // ── permission ──
   permission_denied: e('permission', 'Droit manquant pour cette opération'),

@@ -11,6 +11,7 @@ import { exportArenaQrToPDF, printArenaQr } from '../../../shared/utils/pdfExpor
 import { EXERCISE_WEAPONS } from '../../../shared/utils/clubWeapon';
 import { weaponLabel } from '../../../shared/utils/categoryLabel';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { ToggleChip, ToggleChipGroup } from '../common/ToggleChip';
 import { useToast } from '../Toast';
@@ -31,12 +32,10 @@ export const ClubIdentityCard: React.FC<ClubIdentityCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
-  const api = window.electronAPI?.club;
+  const api = useClubApi();
   // null = nom enregistré (pas d'édition en cours)
   const [nameEdit, setNameEdit] = useState<string | null>(null);
   const clubName = nameEdit ?? settings.name;
-
-  if (!api) return null;
 
   const run = async (fn: () => Promise<unknown>) => {
     try {

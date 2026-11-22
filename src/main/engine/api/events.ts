@@ -25,3 +25,15 @@ export function onCompetitionEvent(cb: (event: CompetitionEventPayload) => void)
     bus.off('event', cb);
   };
 }
+
+/** Mode Club : reprise du fichier de synchronisation ou sauvegarde restaurée (onClubSynced) */
+export function publishClubSynced(clubId: string): void {
+  bus.emit('club:synced', clubId);
+}
+
+export function onClubSyncedEvent(cb: (clubId: string) => void): () => void {
+  bus.on('club:synced', cb);
+  return () => {
+    bus.off('club:synced', cb);
+  };
+}

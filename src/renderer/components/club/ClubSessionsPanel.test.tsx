@@ -12,6 +12,7 @@ vi.mock('../ConfirmDialog', () => ({
 }));
 import { ClubSessionsPanel } from './ClubSessionsPanel';
 import { Weapon } from '../../../shared/types';
+import { clubElectron } from '../../testUtils/clubBridge';
 
 const m = (id: string, lastName: string) => ({
   id,
@@ -92,11 +93,10 @@ beforeEach(() => {
   };
   remoteApi = { setArenaPassword: vi.fn().mockResolvedValue({ success: true }) };
   localStorage.clear();
-  (window as unknown as { electronAPI: unknown }).electronAPI = {
-    club: api,
+  (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron(api, {
     training,
     remote: remoteApi,
-  };
+  });
 });
 
 describe('ClubSessionsPanel', () => {

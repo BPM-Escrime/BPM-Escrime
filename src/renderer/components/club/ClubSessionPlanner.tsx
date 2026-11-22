@@ -33,6 +33,7 @@ import { AgeRangeSelect } from './ClubAgeRange';
 import { ClubCoachPicker } from './ClubCoachPicker';
 import { formatMinutes, planDuration } from '../../../shared/utils/clubPlan';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { ToggleChip } from '../common/ToggleChip';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
@@ -119,6 +120,7 @@ export const ClubSessionPlanner: React.FC<ClubSessionPlannerProps> = ({
     .filter(x => x.id !== session?.id)
     .sort((a, b) => b.date.localeCompare(a.date));
   const { showToast } = useToast();
+  const api = useClubApi();
 
   /** Exercices de la bibliothèque ajoutés au plan (ligne vide initiale remplacée) */
   const addFromLibrary = (list: ClubExercise[]) => {
@@ -136,7 +138,7 @@ export const ClubSessionPlanner: React.FC<ClubSessionPlannerProps> = ({
 
   const saveToLibrary = async (it: ClubPlanItem) => {
     try {
-      await window.electronAPI?.club?.createExercise({
+      await api.createExercise({
         title: it.title,
         category: it.category ?? 'other',
         minutes: it.minutes,

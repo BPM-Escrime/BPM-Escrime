@@ -28,6 +28,7 @@ import { ClubPicker } from './ClubPicker';
 import { ClubIdentityCard } from './ClubIdentityCard';
 import type { ClubSettings, ClubSyncState } from '../../../shared/types/club';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
 import { ClubMembersPanel } from './ClubMembersPanel';
 import { ClubSessionsPanel } from './ClubSessionsPanel';
@@ -87,6 +88,7 @@ const ClubSpace: React.FC<{
   const { t } = useTranslation();
   const { confirm } = useConfirm();
   const { showToast } = useToast();
+  const api = useClubApi();
   const [tab, setTab] = useState<ClubTab>('members');
   const [settings, setSettings] = useState<ClubSettings>({ name: '', stripCount: 1 });
   const [settingsLoaded, setSettingsLoaded] = useState(false);
@@ -113,8 +115,6 @@ const ClubSpace: React.FC<{
   }, []);
 
   const loadSettings = useCallback(async () => {
-    const api = window.electronAPI?.club;
-    if (!api) return;
     const club = await api.getClub(clubId);
     // Club supprimé ou inconnu : retour au choix du club
     if (!club) {
@@ -123,11 +123,9 @@ const ClubSpace: React.FC<{
     }
     setSettings(club);
     setSettingsLoaded(true);
-  }, [clubId, onSelectClub]);
+  }, [api, clubId, onSelectClub]);
 
   const deleteClub = async () => {
-    const api = window.electronAPI?.club;
-    if (!api) return;
     const ok = await confirm({
       message: t('clubs.delete_confirm', { name: settings.name }),
       confirmLabel: t('actions.delete'),
@@ -148,14 +146,12 @@ const ClubSpace: React.FC<{
   };
 
   const loadSyncState = useCallback(async () => {
-    const api = window.electronAPI?.club;
-    if (!api) return;
     try {
       setSyncState((await api.syncStatus(clubId)).state);
     } catch {
       /* état indisponible : le bouton garde son dernier état */
     }
-  }, [clubId]);
+  }, [api, clubId]);
 
   const onCardsPrinted = useCallback(() => {
     markCardsPrinted();
@@ -168,14 +164,19 @@ const ClubSpace: React.FC<{
 
   // Reprise d'un fichier modifié sur un autre poste : recharger le club et ses panneaux
   useEffect(() => {
-    const off = window.electronAPI?.club?.onSynced?.(id => {
-      if (id !== clubId) return;
-      void loadSettings();
-      bumpPanel();
-      void loadSyncState();
-    });
+    let off: (() => void) | undefined;
+    try {
+      off = api.onSynced(id => {
+        if (id !== clubId) return;
+        void loadSettings();
+        bumpPanel();
+        void loadSyncState();
+      });
+    } catch {
+      /* hors Electron : pas d'avis de synchro */
+    }
     return () => off?.();
-  }, [clubId, loadSettings, bumpPanel, loadSyncState]);
+  }, [api, clubId, loadSettings, bumpPanel, loadSyncState]);
 
   // Couleur du bouton Synchronisation : relue à l'ouverture et toutes les 30 s (cycle de synchro)
   useEffect(() => {
