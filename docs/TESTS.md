@@ -20,7 +20,7 @@ Nix de `flake.nix`. Ce n'est pas une dépendance des builds par plateforme.
 | Doc i18n | `npm run check:i18n-doc` | `docs/I18N.md` pas à jour, ou clé `data-i18n` d'une page distante absente de `src/remote/i18n.js` |
 | Doc Socket.IO | `npm run check:socket-doc` | `docs/SOCKET_EVENTS.md` pas à jour, ou événement émis par une page sans écouteur serveur |
 | Doc MCP | dans `npm run test:run` (`src/main/mcp/mcpDoc.test.ts`) ; seul : `npm run check:mcp-doc` | référence des outils de `docs/MCP.md` pas à jour vs leurs schémas (`npm run docs:mcp` pour régénérer, #1880) |
-| Cliquet qualité | `npm run check:quality` | hausse du nombre de textes JSX en dur, `any`, `console.*`, `style={{…}}` (#1157), `fontSize` en px (#1156), locale `'fr'` en dur (#1160), messages d'erreur serveur en clair (#1159), emoji en tête de texte d’interface ou de libellé de locale, ou emoji dans les pages distantes `src/remote` (#1532), ou couleur hexadécimale en dur dans les pages distantes `src/remote` (hors `tokens.css`, #1538), sonde de débogage `DIAGNOSTIC` / `remote:diag` restée dans `src` (#1773), fichiers de `src/main`, `src/shared` ou `src/database` qui importent `src/renderer` (`rendererImports`) ou `src/features` (`featuresImports`), fichiers de l'interface qui appellent `window.electronAPI` directement (`electronApiCalls`, #1979), ou fichier source > 1500 lignes (exceptions plafonnées, #1155) vs `scripts/quality-baseline.json` ; en CI, une baisse non verrouillée échoue aussi (`--update` pour verrouiller, #1895) |
+| Cliquet qualité | `npm run check:quality` | hausse du nombre de textes JSX en dur, `any`, `console.*`, `style={{…}}` (#1157), `fontSize` en px (#1156), locale `'fr'` en dur (#1160), messages d'erreur serveur en clair (#1159), emoji en tête de texte d’interface ou de libellé de locale, ou emoji dans les pages distantes `src/remote` (#1532), ou couleur hexadécimale en dur dans les pages distantes `src/remote` (hors `tokens.css`, #1538), sonde de débogage `DIAGNOSTIC` / `remote:diag` restée dans `src` (#1773), fichiers de `src/main`, `src/shared` ou `src/database` qui importent `src/renderer` (`rendererImports`) ou `src/features` (`featuresImports`), fichiers de l'interface qui appellent `window.electronAPI` directement (`electronApiCalls`, #1979), chaque appel de `window.electronAPI` ou de `useElectronDB()` dans l'interface (`electronApiUses`), canaux `ipcMain.handle` / `ipcMain.on` de `src/main` (`ipcChannels`, ADR-0005 et 0018), ou fichier source > 1500 lignes (exceptions plafonnées, #1155) vs `scripts/quality-baseline.json` ; en CI, une baisse non verrouillée échoue aussi (`--update` pour verrouiller, #1895) |
 | Lint (erreurs) | `npm run lint:errors` (`eslint . --quiet`) | erreur ESLint : import d'une couche interdite (`src/main`, `src/shared`, `src/database` → `src/renderer` ou `src/features` ; `src/shared/domain` → React, Electron, Node, base ; dans le domaine, `Date.now`, `new Date()`, `Math.random`, `window`, `document`, `localStorage` interdits ; #1979, `docs/adr/0002`), `alert`/`confirm`, E/S fs synchrone dans le serveur distant (#1776). Les avertissements n'échouent pas |
 | E2E (PR) | job `e2e` : `npx playwright install --with-deps chromium` puis `xvfb-run -a npm run test:e2e` (build compris) | un test Playwright échoue : interface dans le navigateur (`chromium`) ou application Electron réelle (`electron`) ; rapport `playwright-report` en artefact (#2045) |
 | Build Nix | `nix build .#default` (job `nix-build`) | le paquet `flake.nix` ne build pas : `npmDepsHash` périmé vs `package-lock.json`, dépendance native cassée, etc. |
@@ -103,11 +103,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 21 | 269 |
+| `src/database/` | 22 | 271 |
 | `src/main/` | 127 | 1038 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 121 | 645 |
+| `src/renderer/components/` | 122 | 652 |
 | E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 2 | 6 |
@@ -115,10 +115,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
-| `src/shared/domain/` | 25 | 218 |
-| **Total** | **536** | **4084** |
+| `src/shared/api/` | 2 | 10 |
+| `src/shared/domain/` | 26 | 238 |
+| **Total** | **541** | **4123** |
 
-Unitaires : 523 fichiers, 4042 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 528 fichiers, 4081 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2410,6 +2411,15 @@ Unitaires : 523 fichiers, 4042 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - sans clé, une base en clair reste ouverte en clair (fichiers importés)
   - une migration interrompue laisse un ancien fichier en clair qui est écrasé au démarrage suivant
   - migration : la base d’origine est intacte si la vérification échoue
+
+</details>
+
+<details>
+<summary><code>src/database/migrations/migrationsAdr.test.ts</code> — 2 tests</summary>
+
+- **migrations et ADR (ADR-0011)**
+  - les versions se suivent sans trou ni doublon
+  - la migration %i cite une ADR acceptée _(each)_
 
 </details>
 
@@ -5543,6 +5553,20 @@ Unitaires : 523 fichiers, 4042 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 7 tests</summary>
+
+- **ArenaPlannerModal**
+  - affiche que la salle tient pour une arène dans 20 × 20 m
+  - signale une salle trop petite et met à jour l'aperçu
+  - refuse des dimensions non positives
+  - ajoute un élément et le déplace au clavier (flèches), retenu dans la salle
+  - supprime l'élément sélectionné avec la touche Suppr
+  - ajoute une issue de secours collée au mur, sans alerte
+  - ajoute une zone bloquée et permet de changer sa largeur
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/BookSectionsModal.test.tsx</code> — 2 tests</summary>
 
 - **moveItem**
@@ -8163,6 +8187,32 @@ Unitaires : 523 fichiers, 4042 tests. E2E : 13 fichiers, 42 tests (comptage stat
 
 </details>
 
+### `src/shared/api/`
+
+<details>
+<summary><code>src/shared/api/contractNaming.test.ts</code> — 6 tests</summary>
+
+- **nommage du contrat (ADR-0008)**
+  - %s est en camelCase _(each)_
+  - une commande est un verbe + objet, sans préfixe de lecture ou d’abonnement
+  - une requête commence par get (un objet) ou list (une collection)
+  - un abonnement commence par on
+  - un outil MCP porte le nom de l’opération en snake\_case
+  - les noms MCP hérités restent en snake\_case et désignent une opération existante
+
+</details>
+
+<details>
+<summary><code>src/shared/api/errors.test.ts</code> — 4 tests</summary>
+
+- **catalogue des codes d’erreur (ADR-0009)**
+  - codes en snake\_case
+  - isApiErrorCode reconnaît le catalogue seulement
+  - les levées de src/main et src/shared citent un code du catalogue
+  - docs/API\_CONTRACT.md liste le catalogue
+
+</details>
+
 ### `src/shared/domain/`
 
 <details>
@@ -8202,6 +8252,37 @@ Unitaires : 523 fichiers, 4042 tests. E2E : 13 fichiers, 42 tests (comptage stat
 - **organisationKpis : durées de référence (#1965)**
   - tableau d’épée sans mesure : 12 min + changement de piste
   - sans clé : anciennes valeurs par défaut
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 20 tests</summary>
+
+- **computeArenaGeometry**
+  - place les lignes de mise en garde à 2 m du centre, soit 4 m entre elles
+  - a une zone de Ø 8 m et une limite de sécurité de Ø 12 m
+  - place combattants, arbitres et e-arbitre selon le schéma
+- **polarPoint**
+  - 0° pointe vers le nord (y décroissant)
+- **planArenaGrid**
+  - une arène tient dans une salle de 12 m + marges
+  - refuse une salle trop petite
+  - espace les centres de 12 m (cercles de sécurité jointifs, pas de chevauchement)
+  - choisit une disposition qui minimise la surface requise
+  - gère zéro arène
+- **checkRoomItems**
+  - accepte un élément loin de l'arène et dans la salle
+  - signale un élément hors de la salle
+  - signale un élément dans la zone de sécurité d'une arène
+  - ne signale rien pour une prise juste hors du cercle de 6 m
+- **createRoomItem / moveRoomItem**
+  - crée un élément à la taille par défaut, dans la salle
+  - déplace un élément et le retient dans la salle
+  - signale une issue de secours qui ne touche aucun mur
+  - accepte une issue de secours collée à un mur
+  - signale un élément posé sur une zone bloquée
+  - signale une zone bloquée qui recouvre une arène
+  - redimensionne une zone bloquée sans sortir de la salle
 
 </details>
 
