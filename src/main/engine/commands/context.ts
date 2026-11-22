@@ -6,6 +6,7 @@
 import type { DatabaseManager } from '../../../database';
 import type { EventAuthor } from '../../../database/repos/eventLogRepo';
 import type { CompetitionSettings } from '../../../shared/types';
+import type { ApiErrorCode } from '../../../shared/api/errors';
 
 /** Écriture faite hors de l'écran : l'écran ouvert recharge les données concernées */
 export interface DomainChange {
@@ -46,7 +47,7 @@ export interface CommandContext {
 /** Erreur métier : message destiné à l'opérateur (ou à l'agent), code stable */
 export class CommandError extends Error {
   constructor(
-    public readonly code: string,
+    public readonly code: ApiErrorCode,
     message: string
   ) {
     super(message);

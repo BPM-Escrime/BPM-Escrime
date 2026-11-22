@@ -29,6 +29,15 @@ Give answer. Stop.
 - Jamais plus de 450 lignes de diff par réponse
 - HTML : jamais de nettoyage par regex (`replace(/<script…/)`) → jsdom (scripts/tests) ou `escHtml` (remote). Sinon alerte CodeQL `js/incomplete-multi-character-sanitization`
 
+## Nouvelle fonctionnalité – ADR (toujours actives)
+- Avant de coder : lire `docs/adr/README.md`, puis les ADR touchées. Une décision de couche, de schéma SQL, de format d'événement, de nommage du contrat ou de transport → ADR d'abord (ADR-0001)
+- Règle métier → `src/shared/domain`, pure : heure et hasard injectés (ADR-0002). `src/features` = interface (ADR-0004)
+- Écriture → commande du contrat (`src/shared/api/contract.ts`, handler dans `src/main/engine`), dans une transaction par `runCommand` (ADR-0005, 0006, 0018). Écran, tablettes, MCP, appareils : même commande. Jamais de nouveau canal `ipcMain.handle`, ni de nouvel appel `window.electronAPI` / `useElectronDB()` dans l'interface
+- Nommage (ADR-0008) : commande = verbe + objet, requête `get…`/`list…`, abonnement `on…`, outil MCP = même nom en snake_case. Événement du journal au passé, PascalCase, identifiants seulement (ADR-0007)
+- Erreur → code du catalogue `src/shared/api/errors.ts` (ADR-0009) : snake_case, anglais, message en français ; réutiliser un code existant, sinon l'ajouter avec sa catégorie puis `npm run docs:mcp` (docs/API_CONTRACT.md)
+- Migration → ADR acceptée citée dans `description` (`docs/adr/00NN`, ADR-0011) ; une migration mergée ne se modifie plus
+- Garde-fous CI : `lint:errors`, `check:quality` (`electronApiUses`, `ipcChannels`…), `contractNaming.test.ts`, `migrationsAdr.test.ts`. Ne jamais relever une référence pour passer
+
 ## Routage des modèles – coût
 - Tâche à faible valeur → déléguer à `Agent` avec `model: "haiku"` (ou `subagent_type: "Explore"` pour la recherche en lecture seule) : grep/recherche de fichiers, listing, `check:i18n`, lint/format, traductions, doc mécanique, résumé de logs, vérif de présence d'un symbole
 - Implémentation courante, tests, refactor local, doc technique → `model: "sonnet"` (Sonnet 5.5, `claude-sonnet-5-5`)
@@ -226,7 +235,7 @@ Database (src/database/)
 ├── index.ts             # DatabaseManager class (better-sqlite3-multiple-ciphers, SQLCipher), file <userData>/bellepoule.db
 ├── repos/              # Dépôts par domaine (session, competition, fencer, match, pool, referee, team, signature, eventDay, club, privacy) composés par DatabaseManager ; rowMappers.ts, sqlExecutor.ts
 ├── validation.ts        # Input validation
-└── migrations/          # Schema migrations (index.ts runner + migrations.ts, 39 versions)
+└── migrations/          # Schema migrations (index.ts runner + migrations.ts, 46 versions ; ADR acceptée exigée, docs/adr/0011)
 ```
 
 ### Key Patterns
