@@ -5211,13 +5211,13 @@ Unitaires : 524 fichiers, 4091 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionEvent.test.ts</code> — 4 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionEvent.test.tsx</code> — 4 tests</summary>
 
 - **useCompetitionEvent**
-  - appelle le callback pour la compétition concernée uniquement
+  - s’abonne par le contrat et appelle le callback pour la compétition concernée
   - filtre par type : matches:changed n'active pas fencers:changed
   - se désabonne au démontage
-  - ne plante pas sans electronAPI
+  - ne plante pas hors Electron (client sans transport)
 
 </details>
 
