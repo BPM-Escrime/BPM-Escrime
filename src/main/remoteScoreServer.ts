@@ -412,7 +412,7 @@ export class RemoteScoreServer {
     ((arenaId: string, update: import('../shared/types/remote').ArenaUpdate) => void) | undefined;
   public cyranoTeamHook: ((arenaId: string) => void) | undefined; // arène équipe → appareil de piste (#1829)
   // Registre des écrans / tablettes connectés (télécommande, #1896)
-  /** Écrans connectés : liste, commandes, renommage, mode kiosque (ipc/remoteClientsHandlers) */
+  /** Écrans connectés : liste, commandes, renommage, mode kiosque (engine/commands/remoteClients) */
   readonly clients = new ClientRegistry(
     () => this.io,
     () => this.broadcastClientList()

@@ -15,6 +15,7 @@ import { Smartphone } from 'lucide-react';
 import { Icon } from './common/Icon';
 import { buildQrSheetsHTML } from './ArenaQrCodesModal';
 import { ipcErrorText } from '../services/ipcError';
+import { useRemoteApi } from '../api/remoteApi';
 
 type QRMode = 'results' | 'checkin';
 
@@ -30,6 +31,7 @@ const QRCodeShare_: React.FC<QRCodeShareProps> = ({
   mode: initialMode = 'results',
 }) => {
   const { t } = useTranslation();
+  const remote = useRemoteApi();
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
   const { showToast } = useToast();
   const [activeMode, setActiveMode] = useState<QRMode>(initialMode);
@@ -49,7 +51,7 @@ const QRCodeShare_: React.FC<QRCodeShareProps> = ({
     setQrCodeUrl('');
 
     try {
-      const info = await window.electronAPI.remote.getServerInfo(competition.id);
+      const info = await remote.getServerInfo(competition.id);
       if (!info.success || !info.serverInfo) {
         setError(t('qrShare.server_required'));
         setIsGenerating(false);

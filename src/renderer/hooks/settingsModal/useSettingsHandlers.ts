@@ -42,11 +42,13 @@ import {
   type SettingsModalProps,
 } from '../../components/settingsModal.helpers';
 import { useSettingsPreferences } from './useSettingsPreferences';
+import { useRemoteApi } from '../../api/remoteApi';
 
 type Ctx = SettingsModalProps & ReturnType<typeof useSettingsPreferences>;
 
 /** Gestionnaires de la fenêtre de paramètres : logos, webhook, préférences, sauvegarde et import (extrait de SettingsModal, #1599) */
 export function useSettingsHandlers(ctx: Ctx) {
+  const remote = useRemoteApi();
   const {
     setLogo,
     setLogos,
@@ -83,20 +85,19 @@ export function useSettingsHandlers(ctx: Ctx) {
   } = ctx;
 
   // Logo actif : localStorage (PDF/kiosque) + logo.dat + serveurs distants
-  const setActiveLogo = useCallback((data: string | null) => {
-    setLogo(data);
-    if (data) localStorage.setItem(LOGO_STORAGE_KEY, data);
-    else localStorage.removeItem(LOGO_STORAGE_KEY);
-    const api = window.electronAPI;
-    if (api?.remote?.updateLogo)
-      api.remote.updateLogo(data).catch((err: unknown) => {
-        logger.warn(
-          LogCategory.NETWORK,
-          'Échec mise à jour logo remote',
-          err instanceof Error ? err : undefined
-        );
+  const setActiveLogo = useCallback(
+    (data: string | null) => {
+      setLogo(data);
+      if (data) localStorage.setItem(LOGO_STORAGE_KEY, data);
+      else localStorage.removeItem(LOGO_STORAGE_KEY);
+      void remote.updateLogo(data).then(res => {
+        if (!res.success) {
+          logger.warn(LogCategory.NETWORK, `Échec mise à jour logo remote : ${res.error ?? ''}`);
+        }
       });
-  }, []);
+    },
+    [remote]
+  );
 
   const persistLogos = useCallback((next: LogoEntry[]) => {
     setLogos(next);
@@ -165,9 +166,7 @@ export function useSettingsHandlers(ctx: Ctx) {
     setWebhookTestStatus('idle');
     localStorage.setItem(WEBHOOK_STORAGE_KEY, url);
     // Synchronise l'URL vers tous les serveurs distants actifs
-    window.electronAPI?.remote?.setWebhookUrl?.(url || null).catch(() => {
-      /* serveur inactif */
-    });
+    void remote.setWebhookUrl(url || null);
   };
 
   const handleTestWebhook = async () => {
@@ -181,7 +180,7 @@ export function useSettingsHandlers(ctx: Ctx) {
     setWebhookTestMessage('');
     try {
       // Envoi côté main : la CSP du renderer bloque les hôtes externes (#1269)
-      const res = await window.electronAPI?.remote?.testWebhook?.(webhookUrl.trim());
+      const res = await remote.testWebhook(webhookUrl.trim());
       if (!res?.success) throw new Error(res?.error ?? 'failed');
       setWebhookTestStatus('success');
       setWebhookTestMessage(t('settings.webhook_success'));

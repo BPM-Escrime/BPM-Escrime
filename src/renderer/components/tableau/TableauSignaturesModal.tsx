@@ -13,6 +13,7 @@ import { ipcErrorText } from '../../services/ipcError';
 import { useBpmClient } from '../../api/BpmClientContext';
 import { TableauMatch } from '../../../shared/domain/tableau/tableauTypes';
 import { Button } from '../common/Button';
+import { useRemoteApi } from '../../api/remoteApi';
 
 interface TableauSignaturesModalProps {
   match: TableauMatch;
@@ -43,6 +44,7 @@ const TableauSignaturesModal: React.FC<TableauSignaturesModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const client = useBpmClient();
+  const remote = useRemoteApi();
   const [loading, setLoading] = useState(true);
   const [sigs, setSigs] = useState<{ A?: string; B?: string }>({});
   const [arenas, setArenas] = useState<ArenaOption[]>([]);
@@ -73,14 +75,14 @@ const TableauSignaturesModal: React.FC<TableauSignaturesModalProps> = ({
     let cancelled = false;
     loadSigs(() => cancelled);
     // Rafraîchissement temps réel quand la tablette renvoie les signatures
-    const unsub = window.electronAPI?.onTableauSignatureUpdated?.(data => {
+    const unsub = remote.onActivity('tableau_signature_updated', competitionId, data => {
       if (data.matchId === match.id) loadSigs(() => cancelled);
     });
     return () => {
       cancelled = true;
-      unsub?.();
+      unsub();
     };
-  }, [loadSigs, match.id]);
+  }, [loadSigs, match.id, remote, competitionId]);
 
   const fullySigned = !!sigs.A && !!sigs.B;
   const canSend = !loading && !fullySigned && !!competitionId && !!match.fencerA && !!match.fencerB;
@@ -89,8 +91,8 @@ const TableauSignaturesModal: React.FC<TableauSignaturesModalProps> = ({
   useEffect(() => {
     if (!canSend) return;
     let cancelled = false;
-    window.electronAPI?.remote
-      ?.getArenas?.(competitionId!)
+    remote
+      .getArenas(competitionId!)
       .then(res => {
         if (cancelled || !res?.success || !res.arenas) return;
         const list: ArenaOption[] = res.arenas
@@ -107,7 +109,7 @@ const TableauSignaturesModal: React.FC<TableauSignaturesModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [canSend, competitionId]);
+  }, [canSend, competitionId, remote]);
 
   const handleSend = async () => {
     if (!competitionId || !arenaId || !match.fencerA || !match.fencerB) return;
@@ -119,7 +121,7 @@ const TableauSignaturesModal: React.FC<TableauSignaturesModalProps> = ({
         firstName: f.firstName,
         lastName: f.lastName,
       });
-      const res = await window.electronAPI.remote.requestMatchSignature(competitionId, arenaId, {
+      const res = await remote.requestMatchSignature(competitionId, arenaId, {
         match: { id: match.id, fencerA: pick(match.fencerA), fencerB: pick(match.fencerB) },
         scoreA: match.scoreA ?? 0,
         scoreB: match.scoreB ?? 0,

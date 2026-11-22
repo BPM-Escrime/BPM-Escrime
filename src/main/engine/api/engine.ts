@@ -54,6 +54,13 @@ import { configureDtView, getDtViewStatus } from '../commands/dtView';
 import { clubHandlers } from '../commands/club';
 import { clubStationHandlers, onClubSynced } from '../commands/clubStation';
 import { onStationSettingsChanged, stationHandlers } from '../commands/station';
+import { remoteHandlers } from '../commands/remote';
+import { remoteDisplayHandlers } from '../commands/remoteDisplay';
+import {
+  onRemoteActivity,
+  onRemoteClients,
+  remoteClientsHandlers,
+} from '../commands/remoteClients';
 import { competitionStats } from '../commands/competitionStats';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
@@ -231,6 +238,12 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   // Poste (docs/adr/0022) : réglages, salles, thèmes, journée, RGPD, agent ; sans journal
   ...stationHandlers,
   onStationSettingsChanged,
+  // Serveur distant (docs/adr/0022) : pilotage, thèmes, clients, avis ; sans journal
+  ...remoteHandlers,
+  ...remoteDisplayHandlers,
+  ...remoteClientsHandlers,
+  onRemoteActivity,
+  onRemoteClients,
 };
 
 export const isOperation = (name: unknown): name is OperationName =>
@@ -274,7 +287,11 @@ export async function invoke(ctx: CommandContext, name: unknown, raw: unknown): 
   }
   const input = parseInput(op, raw);
   const handler = handlers[op] as (c: CommandContext, i: unknown) => unknown;
-  const log = contract[op].kind === 'command' ? journalOf(ctx, input) : null;
+  // Commandes du serveur distant : pas de journal (docs/adr/0022), ni transaction, ni synchrone
+  const log =
+    contract[op].kind === 'command' && !contract[op].permission.startsWith('remote:')
+      ? journalOf(ctx, input)
+      : null;
   if (!log) {
     try {
       return await handler(ctx, input);

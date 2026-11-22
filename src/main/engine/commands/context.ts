@@ -16,7 +16,9 @@ import type {
 import type { DayStripBoard } from '../../../shared/types/eventDay';
 import type { McpLogEntry, McpStatus } from '../../../shared/types/mcp';
 import type { PrivacySettings } from '../../../shared/types/privacy';
-import type { CustomTheme } from '../../../shared/types/remote';
+import type { CustomTheme, FirewallDiagnosis } from '../../../shared/types/remote';
+import type { RemoteServerInfo, TtsConfig } from '../../../shared/types/preload';
+import type { RemoteScoreServer } from '../../remoteScoreServer';
 
 /** Écriture faite hors de l'écran : l'écran ouvert recharge les données concernées */
 export interface DomainChange {
@@ -53,6 +55,8 @@ export interface CommandContext {
     settingsChanged(competitionId: string, patch: Partial<CompetitionSettings>): void;
     /** Espace Vue DT du serveur de l'épreuve (docs/adr/0020) ; undefined : serveur arrêté */
     dtView?(competitionId: string): DtViewPort | undefined;
+    /** Pilotage du serveur distant par l'écran : démarrage, session, réglages (docs/adr/0022) */
+    admin?: RemoteAdminPort;
   };
   /**
    * Services du poste du Mode Club (tablettes du serveur d'entraînement, synchronisation,
@@ -65,6 +69,95 @@ export interface CommandContext {
    * tests, MCP ; les opérations qui en ont besoin refusent par « unavailable ».
    */
   station?: StationPort;
+}
+
+/** Ce que les opérations du serveur distant appellent sur un RemoteScoreServer */
+export type RemoteServerHandle = Pick<
+  RemoteScoreServer,
+  | 'startSession'
+  | 'stopSession'
+  | 'launchCompetition'
+  | 'getSession'
+  | 'getAllArenas'
+  | 'updateStripCount'
+  | 'updateShowPhotos'
+  | 'updateCardAnnounce'
+  | 'updateTheme'
+  | 'updateArenaTheme'
+  | 'clearArenaThemeOverride'
+  | 'updateKioskViews'
+  | 'updateKioskTheme'
+  | 'setStripPlan'
+  | 'updateArenaScreenTheme'
+  | 'setArenaPassword'
+  | 'setOrgNote'
+  | 'clearOrgNote'
+  | 'acknowledgeDTCall'
+  | 'requestMatchSignature'
+  | 'updateMatchArena'
+  | 'updatePoolFencers'
+  | 'syncPoolMatches'
+  | 'assignPools'
+  | 'refreshDeMatches'
+  | 'resetPoolMatch'
+  | 'finishPoolMatch'
+  | 'setTeamArenaMatch'
+  | 'clearTeamArenaMatch'
+  | 'setWallpaper'
+  | 'setRegistrationEnabled'
+  | 'setCheckinEnabled'
+  | 'setCheckinPassword'
+  | 'setTrainerEnabled'
+  | 'setTrainerPassword'
+> & {
+  clients: Pick<
+    RemoteScoreServer['clients'],
+    'list' | 'send' | 'broadcast' | 'rename' | 'identify' | 'setKioskMode'
+  >;
+};
+
+/** Réglages valables pour tous les serveurs actifs (webhook, logo, synthèse vocale) */
+export type RemoteSharedHandle = Pick<
+  RemoteScoreServer,
+  'setLogo' | 'setTtsConfig' | 'setWebhookUrl'
+>;
+
+/**
+ * Serveur distant de l'épreuve, vu par les opérations de l'écran (docs/adr/0022) : cycle de vie
+ * (registre, ports, certificat), serveur de l'épreuve, réglages du poste enregistrés sur disque.
+ * Branché par main.ts (remotePort.ts) ; absent : tests, MCP, `--headless` sans écran.
+ */
+export interface RemoteAdminPort {
+  /** Interfaces d'écoute : toutes (0.0.0.0), puis les IPv4 non locales */
+  networkInterfaces(): Array<{ name: string; address: string }>;
+  /** Démarre le serveur de l'épreuve ; refuse par CommandError / ApiError (déjà démarré, TLS, port) */
+  start(
+    competitionId: string,
+    options: { port?: number; host?: string; useHttps?: boolean }
+  ): Promise<RemoteServerInfo>;
+  /** Recharge à chaud (port, interface, HTTPS) sans perdre session ni pistes */
+  reload(
+    competitionId: string,
+    options: { port?: number; host?: string; useHttps?: boolean }
+  ): Promise<RemoteServerInfo>;
+  /** Adresse du serveur de l'épreuve ; undefined : non démarré */
+  info(competitionId: string): RemoteServerInfo | undefined;
+  /** Empreinte du certificat TLS auto-signé du poste (généré au besoin) */
+  certFingerprint(): Promise<string>;
+  /** Diagnostic du pare-feu Windows (lecture seule) */
+  firewallCheck(port: number): Promise<FirewallDiagnosis>;
+  /** Serveur de l'épreuve ; undefined : non démarré */
+  server(competitionId: string): RemoteServerHandle | undefined;
+  /** Tous les serveurs actifs (épreuves et entraînement) */
+  servers(): RemoteSharedHandle[];
+  /** Logo des écrans : fichier du poste puis serveurs actifs */
+  setLogo(logo: string | null): Promise<void>;
+  /** Synthèse vocale : fichier du poste puis serveurs actifs */
+  setTtsConfig(config: TtsConfig): Promise<void>;
+  /** Vague active des rapières : mémorisée même serveur arrêté, appliquée au serveur s'il tourne */
+  setActiveWave(competitionId: string, matchIds: string[] | null, poolsClosed: boolean): void;
+  /** Message de test au webhook, envoyé depuis le main (la CSP de l'écran bloque l'hôte) */
+  testWebhook(url: string): Promise<{ success: boolean; status?: number; error?: string }>;
 }
 
 /** Services du poste (réglages, thèmes, RGPD, agent, journée) : ce qui dépasse la base */

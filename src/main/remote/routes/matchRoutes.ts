@@ -23,6 +23,7 @@ import {
   isAcceptableScore,
 } from '../../../shared/domain/match/matchEndValidation';
 import { isCyranoMasterOnline } from '../cyranoLock';
+import { notifyScreen } from '../remoteActivity';
 
 /** État et opérations utilisés par les routes de matchs des arènes. */
 export interface MatchRouteContext extends PoolRouteContext {
@@ -433,7 +434,9 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
           const mainWin = getSharedMainWindow();
           if (mainWin) {
             const isTableauMatch = !dbMatch.poolId;
-            mainWin.webContents.send('match:finished', {
+            notifyScreen({
+              kind: 'match_finished',
+              competitionId: ctx.session?.competitionId ?? null,
               matchId,
               scoreA,
               scoreB,
@@ -482,7 +485,9 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
               source: 'tablet',
               ...(blackCarded ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
             });
-            mainWin.webContents.send('match:finished', {
+            notifyScreen({
+              kind: 'match_finished',
+              competitionId: ctx.session?.competitionId ?? null,
               matchId,
               scoreA,
               scoreB,
@@ -539,7 +544,9 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
             // Notifier le renderer pour mettre à jour le statut dans son store
             const mainWin = getSharedMainWindow();
             if (mainWin) {
-              mainWin.webContents.send('remote:fencer_excluded', {
+              notifyScreen({
+                kind: 'fencer_excluded',
+                competitionId: ctx.session?.competitionId ?? null,
                 fencerId: culpritId,
                 matchId,
                 reason: 'black_card',
@@ -558,7 +565,8 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
                 refereeId: arena?.currentMatch?.referee?.id ?? matchObj?.referee?.id ?? null,
                 detail: 'black_card',
               });
-              mainWin.webContents.send('remote:dt_call', {
+              notifyScreen({
+                kind: 'dt_call',
                 arenaId: arena?.id ?? `match-${matchId}`,
                 arenaNumber: arena?.number ?? null,
                 matchNumber: matchObj?.number ?? null,

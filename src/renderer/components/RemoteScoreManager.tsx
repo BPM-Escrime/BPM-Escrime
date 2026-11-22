@@ -29,6 +29,7 @@ import { RemoteArenaGrid } from './remote/RemoteArenaGrid';
 import { RemoteHeaderSection } from './remote/RemoteHeaderSection';
 import { CyranoPanel } from './remote/CyranoPanel';
 import { useRemoteFolds, RemoteFoldAllButton, type RemoteSectionId } from './remote/RemoteFold';
+import { useRemoteApi } from '../api/remoteApi';
 
 /** Volets affichés selon le mode (même conditions que le rendu ci-dessous) */
 function visibleSections(isExpert: boolean, trainerEnabled: boolean): RemoteSectionId[] {
@@ -43,6 +44,7 @@ function visibleSections(isExpert: boolean, trainerEnabled: boolean): RemoteSect
 }
 
 const RemoteScoreManager: React.FC<RemoteScoreManagerProps> = (props: RemoteScoreManagerProps) => {
+  const remote = useRemoteApi();
   const remoteServerState = useRemoteServerState({ ...props });
   const remoteServerActions = useRemoteServerActions({ ...props, ...remoteServerState });
   const {
@@ -261,10 +263,7 @@ const RemoteScoreManager: React.FC<RemoteScoreManagerProps> = (props: RemoteScor
                     checked={showPhotos}
                     onChange={async e => {
                       setShowPhotos(e.target.checked);
-                      await window.electronAPI.remote.updateShowPhotos(
-                        competition.id,
-                        e.target.checked
-                      );
+                      await remote.updateShowPhotos(competition.id, e.target.checked);
                     }}
                   />
                   {t('rsm.show_photos_long')}
@@ -275,10 +274,7 @@ const RemoteScoreManager: React.FC<RemoteScoreManagerProps> = (props: RemoteScor
                     checked={cardAnnounce}
                     onChange={async e => {
                       setCardAnnounce(e.target.checked);
-                      await window.electronAPI.remote.updateCardAnnounce(
-                        competition.id,
-                        e.target.checked
-                      );
+                      await remote.updateCardAnnounce(competition.id, e.target.checked);
                     }}
                   />
                   {t('rsm.card_announce_long')}

@@ -128,11 +128,12 @@ npm run e2e:debug       # Playwright debug mode
 ```
 Main Process (src/main/)
 ├── main.ts                  # Window management, menu (i18n: fr/en/de), IPC handlers, DB lifecycle
-├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), trainingHandlers (training:*), cyranoHandlers (cyrano:*, #1720), opp2Handlers (opp2:*, #1960), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:* restants : export JSON d'une personne et .bpm chiffrés ; le reste du RGPD par le contrat), settingsHandlers (settings:addAgentFolder, dialogue natif) — registerXxxHandlers(ctx) ; réglages du poste, salles, thèmes, journée multi-épreuves (#1714, #1878), RGPD et agent MCP : contrat (`contractStation.ts`, ADR-0022), port `ctx.station` (`stationPort.ts`)
+├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), trainingHandlers (training:*), cyranoHandlers (cyrano:*, #1720), opp2Handlers (opp2:*, #1960), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:* restants : export JSON d'une personne et .bpm chiffrés ; le reste du RGPD par le contrat), settingsHandlers (settings:addAgentFolder, dialogue natif), logoTtsHandlers (app:getLogo, getLogos, saveLogos, getTtsConfig : fichiers du poste lus au démarrage de l'écran) — registerXxxHandlers(ctx) ; réglages du poste, salles, thèmes, journée multi-épreuves (#1714, #1878), RGPD et agent MCP : contrat (`contractStation.ts`, ADR-0022), port `ctx.station` (`stationPort.ts`)
 ├── menuLabels.ts            # Libellés du menu natif (fr/en/de/zh-HK)
 ├── remoteRegistry.ts        # Serveurs distants actifs (remoteServers, ports, stopRemoteServer)
+├── remoteLifecycle.ts / remotePort.ts  # Démarrage, rechargement à chaud, interfaces (ex-canaux remote:*) ; port `ctx.remote.admin` du contrat (registre, certificat, pare-feu, logo, synthèse vocale, webhook), ADR-0022
 ├── preload.ts               # Secure IPC bridge (contextIsolation: true)
-├── preloadApi/              # Groupes d'API du préload (dbApi, fileApi, dialogApi, remoteApi, printHandler) ; validation IPC dans ipc/validation.ts
+├── preloadApi/              # Groupes d'API du préload (dbApi, fileApi, dialogApi, printHandler) ; validation IPC dans ipc/validation.ts
 ├── splash-preload.ts / splash.html  # Splash screen
 ├── remoteScoreServer.ts     # Express 5 + Socket.IO for tablets/screens (port 8066, HTTP or HTTPS)
 ├── remote/                  # Extraits du serveur distant : network, types, fencerSchedule, auth (mots de passe, jetons, limites), socketHandlers, arenaControl (arena_control), middleware, sessionStart, matchFinish, arenaQueue, sessionSettings, blackCards, clubArena (combats du Mode Club sur les tablettes, cartes scannées : routes/clubRoutes, #1872 — docs/MODE_CLUB.md), dashboard (contexte typé S['membre']), teamArena + teamRelayDevice (arène équipe, relais FIE piloté par l'appareil de piste, #1829), scoreCommand (fins de match des tablettes et appareils par recordScore, #1980), routes/ (api, pages, inscription, poules, matchs, résultats + contextes typés)
@@ -141,7 +142,7 @@ Main Process (src/main/)
 ├── piste/                   # Appareils de piste, hors protocole (#1829) — docs/CYRANO.md : types (PisteState/PisteInput/PisteCommand/PisteDriver), pisteState (côtés par Id, cartons, fin ACK/NAK), arenaInputGate (séquence par source), pisteHub (raccordement arènes : DISP, INFO→score, END→ACK/NAK, NEXT→loadNextMatch), matchDisplay, teamRelayPiste (relais FIE /equipe{N}, Type=T), multiDriver (Cyrano + OPP2 dans le même PisteHub, #1960)
 ├── engine/                  # Moteur (#1979, docs/adr/0003)
 │   ├── api/                 # Contrat d'API unique (#1981) : engine (validation zod, ApiError, handlers), ipcAdapter (api:invoke/api:subscribe), mcpAdapter (outils MCP générés), events — docs/API_CONTRACT.md
-│   └── commands/            # Commandes (ex-main/domain, #1880) : sport (poules, scores, tableau hors écran), refereeing (réglages et affectation des arbitres, ADR-0014), checkIn, exportResults, settings (resolveSetting), files (dossiers de l'agent) ; CommandContext, CommandError. Pas de règle ici : elles sont dans src/shared/domain
+│   └── commands/            # Commandes (ex-main/domain, #1880) : sport (poules, scores, tableau hors écran), refereeing (réglages et affectation des arbitres, ADR-0014), checkIn, exportResults, settings (resolveSetting), files (dossiers de l'agent), remote / remoteDisplay / remoteClients (serveur distant : cycle de vie, session, pistes, synchro d'affichage `push…ToStrips`, thèmes, mots de passe, clients ; avis `onRemoteActivity` / `onRemoteClients`, ADR-0022) ; CommandContext, CommandError. Pas de règle ici : elles sont dans src/shared/domain
 ├── mcp/                     # Serveur MCP intégré (#1880) : mcpServer (HTTP JSON-RPC, jeton, loopback), mcpController (activation, jeton, journal), mcpSettings, mcpTools (lecture), mcpWriteTools / mcpAdminTools / mcpSportTools (écriture sur autorisation) — docs/MCP.md
 ├── cliArgs.ts / batchImport.ts  # --headless, --batch-import manifeste.json [--dry-run], --mcp / --mcp-port=N / --mcp-write, --mcp-print-config, --mcp-new-token
 ├── privacySettings.ts       # Réglages RGPD <userData>/privacy-settings.json (noms sur le réseau, conservation) — docs/RGPD.md
@@ -255,7 +256,7 @@ Database (src/database/)
    - `db.*` – Competition, Fencer, Match, Pool, Session operations
    - `file.*` – Export, import, write file content
    - `dialog.*` – Open/save file dialogs
-   - `remote.*` – Start/stop server, manage arenas/sessions/themes/passwords
+   - serveur distant (start/stop, session, pistes, thèmes, mots de passe, clients) : plus de groupe `remote.*`, opérations du contrat `remoteOperations` (`contractRemote.ts`, droit `remote:admin`), écran `useRemoteApi` (`src/renderer/api/remoteApi.ts`) ; avis des tablettes par `onRemoteActivity` / `onRemoteClients`
    - `training.*` – Training-mode server
    - `updater.*` – Auto-update control
    - `crypto.*` – safeStorage protect/unprotect

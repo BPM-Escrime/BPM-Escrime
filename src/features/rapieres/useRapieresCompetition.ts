@@ -20,6 +20,7 @@ import { waveMatchIds, waveSheetMatches } from '../../shared/domain/rapieres/rap
 import type { RapieresTeamStats } from './RapieresRankingPanel';
 import type { useRapieresSessionState } from './useRapieresSessionState';
 import type { useRapieresTeams } from './useRapieresTeams';
+import { useRemoteApi } from '../../renderer/api/remoteApi';
 
 type SessionState = ReturnType<typeof useRapieresSessionState>;
 
@@ -60,6 +61,7 @@ export function useRapieresCompetition({
   rapieresFencerFields,
   notify,
 }: UseRapieresCompetitionParams) {
+  const remote = useRemoteApi();
   const { t } = useTranslation();
 
   // Migration de la première version (vue dédiée) : équipes recréées comme tireurs
@@ -138,9 +140,8 @@ export function useRapieresCompetition({
   useEffect(() => {
     if (!isRapieres || !competitionId) return;
     const ids = currentWaveMatchIds ? [...currentWaveMatchIds] : null;
-    const api = window.electronAPI?.remote;
-    api?.setActiveWave?.(competitionId, ids, !!rapieres.wavesEnded)?.catch?.(() => undefined);
-  }, [isRapieres, isRemoteActive, competitionId, currentWaveMatchIds, rapieres.wavesEnded]);
+    void remote.setActiveWave(competitionId, ids, !!rapieres.wavesEnded);
+  }, [isRapieres, isRemoteActive, competitionId, currentWaveMatchIds, rapieres.wavesEnded, remote]);
 
   // Impression des feuilles de match d'un intervalle de vagues (#1118, plage #1441).
   // Flux continu : une feuille qui ne tient pas sur la page bascule sur la suivante.

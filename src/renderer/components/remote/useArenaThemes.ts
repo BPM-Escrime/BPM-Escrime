@@ -9,6 +9,7 @@ import { useStateGroup } from '../../hooks/useStateGroup';
 import type { CustomTheme, DisplayTheme } from '../../../shared/types/remote';
 import type { GlobalThemeSection } from './builtinThemes';
 import { useStationApi } from '../../api/stationApi';
+import { useRemoteApi } from '../../api/remoteApi';
 
 interface UseArenaThemesOptions {
   competitionId: string;
@@ -18,6 +19,7 @@ interface UseArenaThemesOptions {
 
 export function useArenaThemes({ competitionId, hasSession }: UseArenaThemesOptions) {
   const themesApi = useStationApi().themes;
+  const remote = useRemoteApi();
   // Thèmes, kiosque et éditeur de thème regroupés (#1241)
   const themeState = useStateGroup({
     displayTheme: 'dark' as 'dark' | 'light' | 'neon' | 'unicorn',
@@ -55,15 +57,10 @@ export function useArenaThemes({ competitionId, hasSession }: UseArenaThemesOpti
         [arenaId]: { ...(prev[arenaId] ?? { screenThemes: {} }), theme, customTheme },
       }));
       if (hasSession) {
-        await window.electronAPI.remote.updateArenaTheme(
-          competitionId,
-          arenaId,
-          theme,
-          customTheme
-        );
+        await remote.updateArenaTheme(competitionId, arenaId, theme, customTheme);
       }
     },
-    [hasSession]
+    [hasSession, remote]
   );
 
   // Appliquer un thème custom à un type d'écran spécifique d'une arène
@@ -84,15 +81,10 @@ export function useArenaThemes({ competitionId, hasSession }: UseArenaThemesOpti
         };
       });
       if (hasSession) {
-        await window.electronAPI.remote.updateArenaScreenTheme(
-          competitionId,
-          arenaId,
-          screenType,
-          customTheme
-        );
+        await remote.updateArenaScreenTheme(competitionId, arenaId, screenType, customTheme);
       }
     },
-    [hasSession]
+    [hasSession, remote]
   );
 
   // Supprimer le verrou de thème d'une arène (retour au thème global)
@@ -104,10 +96,10 @@ export function useArenaThemes({ competitionId, hasSession }: UseArenaThemesOpti
         return next;
       });
       if (hasSession) {
-        await window.electronAPI.remote.clearArenaThemeOverride(competitionId, arenaId);
+        await remote.clearArenaThemeOverride(competitionId, arenaId);
       }
     },
-    [hasSession, competitionId]
+    [hasSession, competitionId, remote]
   );
 
   // Supprimer le verrou de thème d'écran d'une arène

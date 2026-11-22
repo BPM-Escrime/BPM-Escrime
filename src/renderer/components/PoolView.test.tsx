@@ -60,7 +60,6 @@ describe('PoolView - saisie simplifiée : suppression au survol', () => {
   beforeEach(() => {
     (window as any).electronAPI = {
       api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
-      onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'true');
   });
@@ -108,7 +107,6 @@ describe("PoolView - saisie simplifiée : correction d'un score enregistré (#10
   beforeEach(() => {
     (window as any).electronAPI = {
       api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
-      onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'true');
   });
@@ -213,7 +211,6 @@ describe('PoolView - couverture saisie, matrice et statuts (#1084)', () => {
   beforeEach(() => {
     (window as any).electronAPI = {
       api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
-      onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'true');
   });
@@ -368,7 +365,6 @@ describe('PoolView - poule figée par le tableau (#1996)', () => {
   beforeEach(() => {
     (window as any).electronAPI = {
       api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
-      onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'true');
   });
@@ -433,7 +429,6 @@ describe('PoolView - fenêtre de saisie du score (validatePoolScore, #1979 lot 4
   beforeEach(() => {
     (window as any).electronAPI = {
       api: fakeApiBridge({ getPoolSignatures: vi.fn().mockResolvedValue([]) }),
-      onPoolSignatureUpdated: vi.fn().mockReturnValue(() => {}),
     };
     localStorage.setItem('bellepoule-simplified-input-mode', 'false');
   });

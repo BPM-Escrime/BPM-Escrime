@@ -10,6 +10,7 @@ import type { Match, Pool, Referee } from '../../shared/types';
 import { poolMatchesWithReferee, propagatePoolReferee } from '../../shared/utils/refereeStats';
 import type { ConsolationBracket, TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import type { AssignmentsInput } from './usePoolsLaunch';
+import { useRemoteApi } from '../api/remoteApi';
 
 interface UseCompetitionRefereesParams {
   competitionId: string;
@@ -40,6 +41,7 @@ export function useCompetitionReferees({
   tableMaxScore,
   assign,
 }: UseCompetitionRefereesParams) {
+  const remote = useRemoteApi();
   // Applique des assignations d'arbitres (matchId → arbitre) aux matchs de poule
   const applyPoolRefereeAssignments = useCallback(
     (assignments: Map<string, Referee>) => {
@@ -100,35 +102,43 @@ export function useCompetitionReferees({
   const refereesRef = useRef(referees);
   refereesRef.current = referees;
   useEffect(() => {
-    const off = window.electronAPI?.onRemoteRefereeChanged?.(async ({ matchId, refereeId }) => {
-      let ref = refereesRef.current.find(r => r.id === refereeId);
-      if (!ref) {
-        const rows: Referee[] = await window.electronAPI.db
-          .getRefereesByCompetition(competitionId)
-          .catch(() => []);
-        setReferees(rows);
-        ref = rows.find(r => r.id === refereeId);
+    const off = remote.onActivity(
+      'referee_changed',
+      competitionId,
+      async ({ matchId, refereeId }) => {
+        let ref = refereesRef.current.find(r => r.id === refereeId);
+        if (!ref) {
+          const rows: Referee[] = await window.electronAPI.db
+            .getRefereesByCompetition(competitionId)
+            .catch(() => []);
+          setReferees(rows);
+          ref = rows.find(r => r.id === refereeId);
+        }
+        if (!ref) return;
+        const principal = ref;
+        const withReferee = <T extends { id: string; referees?: Array<{ id: string }> }>(
+          m: T
+        ): T =>
+          m.id !== matchId
+            ? m
+            : {
+                ...m,
+                referee: principal,
+                ...(m.referees?.length ? { referees: [principal, ...m.referees.slice(1)] } : {}),
+              };
+        applyPoolRefereeAssignments(new Map([[matchId, principal]]));
+        setTableauMatches(prev => prev.map(withReferee));
+        setConsolationBrackets(prev =>
+          prev.map(b =>
+            b.matches.some(m => m.id === matchId)
+              ? { ...b, matches: b.matches.map(withReferee) }
+              : b
+          )
+        );
       }
-      if (!ref) return;
-      const principal = ref;
-      const withReferee = <T extends { id: string; referees?: Array<{ id: string }> }>(m: T): T =>
-        m.id !== matchId
-          ? m
-          : {
-              ...m,
-              referee: principal,
-              ...(m.referees?.length ? { referees: [principal, ...m.referees.slice(1)] } : {}),
-            };
-      applyPoolRefereeAssignments(new Map([[matchId, principal]]));
-      setTableauMatches(prev => prev.map(withReferee));
-      setConsolationBrackets(prev =>
-        prev.map(b =>
-          b.matches.some(m => m.id === matchId) ? { ...b, matches: b.matches.map(withReferee) } : b
-        )
-      );
-    });
-    return () => off?.();
-  }, [competitionId, applyPoolRefereeAssignments]);
+    );
+    return () => off();
+  }, [competitionId, applyPoolRefereeAssignments, remote]);
 
   // Matchs proposés à l'assignation d'arbitres : poules + tableau + consolation
   const refereeAssignableMatches = useMemo<Match[]>(() => {

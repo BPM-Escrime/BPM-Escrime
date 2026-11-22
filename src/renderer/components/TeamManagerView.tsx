@@ -49,6 +49,7 @@ import { Button } from './common/Button';
 import { TriangleAlert, Users } from 'lucide-react';
 import EmptyState from './common/EmptyState';
 import { Icon } from './common/Icon';
+import { useRemoteApi } from '../api/remoteApi';
 
 const LASER_ARENA_POOL_NUMBER_BY_LETTER: Record<string, number> = { A: 1, B: 2, C: 3 };
 
@@ -85,6 +86,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   const { confirm } = useConfirm();
   const { showToast, showUndoToast } = useToast();
   const { t } = useTranslation();
+  const remote = useRemoteApi();
   const [teams, setTeams] = useState<TeamRow[]>([]);
   const [matches, setMatches] = useState<TeamMatchRow[]>([]);
   const [tableauMatches, setTableauMatches] = useState<TeamMatchRow[]>([]);
@@ -453,12 +455,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
 
   // ── Envoyer une rencontre sur une arène pour saisie tablette temps réel ──────
   const handleAssignArena = async (matchId: string, arenaId: string) => {
-    const result = await window.electronAPI.remote.setTeamArenaMatch(
-      competition.id,
-      arenaId,
-      matchId,
-      isLaserPoints
-    );
+    const result = await remote.setTeamArenaMatch(competition.id, arenaId, matchId, isLaserPoints);
     if (!result.success) {
       showToast(
         ipcErrorText(

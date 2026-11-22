@@ -135,7 +135,7 @@ Options de session (panneau Saisie distante) : **annonce des cartons** (motifs +
 - **Appels DT** : notification à chaque 📣 d'une tablette (et à chaque carton noir) ;
   acquittement depuis l'application.
 - **Résultats** : chaque match terminé sur tablette met à jour la poule ou le tableau
-  dans l'application (IPC `match:finished`). Les signatures apparaissent dans
+  dans l'application (avis `match_finished` de l'abonnement `onRemoteActivity`, [ADR-0022](docs/adr/0022-fonctions-du-poste-contrat.md)). Les signatures apparaissent dans
   Poule → Signatures / Tableau → Signatures.
 - **Saisie manuelle** possible en parallèle depuis l'application : l'arène est libérée.
 - **Réinitialiser un match** de poule depuis l'application si erreur.

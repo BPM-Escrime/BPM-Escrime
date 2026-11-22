@@ -13,6 +13,7 @@ vi.mock('../ConfirmDialog', () => ({
 import { ClubSessionsPanel } from './ClubSessionsPanel';
 import { Weapon } from '../../../shared/types';
 import { clubElectron } from '../../testUtils/clubBridge';
+import { remoteHandlers } from '../../testUtils/remoteBridge';
 
 const m = (id: string, lastName: string) => ({
   id,
@@ -95,7 +96,11 @@ beforeEach(() => {
   localStorage.clear();
   (window as unknown as { electronAPI: unknown }).electronAPI = clubElectron(api, {
     training,
-    remote: remoteApi,
+    // Serveur distant par le contrat : mot de passe des pistes et interfaces réseau
+    api: remoteHandlers({
+      ...remoteApi,
+      getNetworkInterfaces: vi.fn().mockResolvedValue({ success: false }),
+    }),
   });
 });
 

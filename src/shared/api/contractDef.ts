@@ -16,7 +16,8 @@ export type Permission =
   | 'referees:write'
   | 'club:read'
   | 'club:write'
-  | 'station:admin';
+  | 'station:admin'
+  | 'remote:admin';
 
 export type OperationKind = 'command' | 'query' | 'subscription';
 

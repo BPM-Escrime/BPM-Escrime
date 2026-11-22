@@ -5,6 +5,8 @@
  */
 import type { RemoteScoreServer } from './remoteScoreServer';
 import { getSharedMainWindow } from './mainWindowRef';
+import { publishRemoteClients } from './engine/api/events';
+import type { ConnectedClient } from '../shared/types/preload';
 
 // Remote score servers — one per competition (key = competitionId)
 export const remoteServers = new Map<
@@ -37,10 +39,15 @@ export function stopRemoteServer(competitionId: string): boolean {
   return true;
 }
 
-/** Pousse la liste des clients à la fenêtre, avec l'id de compétition du serveur émetteur (#1292) */
-export function sendClientListToWindow(server: RemoteScoreServer, clients: unknown[]): void {
-  const mainWin = getSharedMainWindow();
-  if (!mainWin) return;
+/**
+ * Publie la liste des clients (abonnement onRemoteClients), avec l'id de compétition du serveur
+ * émetteur (#1292). Sans fenêtre principale, rien n'est émis, comme l'ancien envoi IPC.
+ */
+export function sendClientListToWindow(
+  server: RemoteScoreServer,
+  clients: ConnectedClient[]
+): void {
+  if (!getSharedMainWindow()) return;
   const owner = [...remoteServers].find(([, e]) => e.server === server)?.[0] ?? null;
-  mainWin.webContents.send('remote:clientListUpdate', clients, owner);
+  publishRemoteClients({ competitionId: owner, clients });
 }

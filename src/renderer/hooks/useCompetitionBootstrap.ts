@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Fencer, Referee } from '../../shared/types';
 import type { usePoolManagement } from './usePoolManagement';
+import { useRemoteApi } from '../api/remoteApi';
 
 interface UseCompetitionBootstrapParams {
   competitionId: string;
@@ -32,9 +33,10 @@ export function useCompetitionBootstrap({
   setIsRemoteActive,
   setRemoteServerUrl,
 }: UseCompetitionBootstrapParams) {
+  const remote = useRemoteApi();
   // Rétablir isRemoteActive si une session est déjà en cours (ex: rechargement après phase poules)
   useEffect(() => {
-    window.electronAPI.remote
+    remote
       .getSession(competitionId)
       .then(result => {
         if (result?.success && result?.session) setIsRemoteActive(true);
@@ -65,8 +67,7 @@ export function useCompetitionBootstrap({
 
   // Restaurer l'état actif de la saisie distante si le serveur tourne déjà (ex : retour sur l'onglet)
   useEffect(() => {
-    if (!window.electronAPI?.remote) return;
-    window.electronAPI.remote.getServerInfo(competitionId).then(res => {
+    remote.getServerInfo(competitionId).then(res => {
       if (res?.success && res.serverInfo) {
         setIsRemoteActive(true);
         setRemoteServerUrl(res.serverInfo.url);
@@ -76,10 +77,10 @@ export function useCompetitionBootstrap({
 
   // Mettre à jour l'URL du serveur distant quand il devient actif
   useEffect(() => {
-    if (!isRemoteActive || !window.electronAPI?.remote) return;
+    if (!isRemoteActive) return;
     // Petit délai pour laisser le serveur démarrer si besoin
     const timer = setTimeout(() => {
-      window.electronAPI.remote.getServerInfo(competitionId).then(res => {
+      remote.getServerInfo(competitionId).then(res => {
         if (res?.success && res.serverInfo) setRemoteServerUrl(res.serverInfo.url);
       });
     }, 500);

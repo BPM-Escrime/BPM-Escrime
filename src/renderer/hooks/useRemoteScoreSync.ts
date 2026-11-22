@@ -17,6 +17,7 @@ import { DT_CONFIRM_ABANDON_EVENT } from '../services/dtCallEvents';
 import type { DtConfirmAbandonDetail } from '../services/dtCallEvents';
 import type { usePoolManagement } from './usePoolManagement';
 import { winnerByScore } from '../../shared/domain/match/matchEndValidation';
+import { useRemoteApi } from '../api/remoteApi';
 
 interface UseRemoteScoreSyncParams {
   competitionId: string;
@@ -59,6 +60,7 @@ export function useRemoteScoreSync({
   updateFencer,
   withdraw,
 }: UseRemoteScoreSyncParams) {
+  const remote = useRemoteApi();
   // Appliquer un score distant au bon conteneur : tableau DE, consolante, ou poule.
   // Évite le warning "Match non trouvé" côté poule pour les matchs du tableau.
   const applyRemoteScore = useCallback(
@@ -191,35 +193,32 @@ export function useRemoteScoreSync({
 
   // Charger les arènes quand le serveur distant devient actif et s'abonner aux updates
   useEffect(() => {
-    if (!isRemoteActive || !competitionId || !window.electronAPI?.remote) return;
-    window.electronAPI.remote
+    if (!isRemoteActive || !competitionId) return;
+    remote
       .getArenas(competitionId)
       .then(res => {
         if (res?.success && res.arenas) setArenaStates(res.arenas);
       })
       .catch(() => {});
-    let unlisten: (() => void) | undefined;
-    if (window.electronAPI.onRemoteArenaUpdate) {
-      unlisten = window.electronAPI.onRemoteArenaUpdate(data => {
-        setArenaStates(prev => {
-          const idx = prev.findIndex((a: Arena) => a.id === data.arenaId);
-          if (idx === -1) return prev;
-          const updated = [...prev];
-          updated[idx] = {
-            ...updated[idx],
-            currentMatch: data.update?.match ?? updated[idx].currentMatch,
-            status: data.update?.status ?? updated[idx].status,
-          };
-          return updated;
-        });
-
-        // NB : on ne propage PAS le score touche-par-touche vers les données du
-        // match (poule/tableau). Le score n'est appliqué que lorsque l'arbitre
-        // valide « match terminé » (event match:finished). Ici on ne met à jour
-        // que l'affichage live de la piste (arenaStates, ci-dessus).
+    const unlisten = remote.onActivity('arena_updated', competitionId, data => {
+      setArenaStates(prev => {
+        const idx = prev.findIndex((a: Arena) => a.id === data.arenaId);
+        if (idx === -1) return prev;
+        const updated = [...prev];
+        updated[idx] = {
+          ...updated[idx],
+          currentMatch: data.update?.match ?? updated[idx].currentMatch,
+          status: data.update?.status ?? updated[idx].status,
+        };
+        return updated;
       });
-    }
-    return () => unlisten?.();
+
+      // NB : on ne propage PAS le score touche-par-touche vers les données du
+      // match (poule/tableau). Le score n'est appliqué que lorsque l'arbitre
+      // valide « match terminé » (avis match_finished). Ici on ne met à jour
+      // que l'affichage live de la piste (arenaStates, ci-dessus).
+    });
+    return () => unlisten();
   }, [isRemoteActive, competitionId]);
 
   const fireWebhookNotif = useCallback((title: string, body: string) => {
@@ -247,18 +246,17 @@ export function useRemoteScoreSync({
   // Note: pas de garde sur currentPhase car la phase 'remote' affiche le panel de saisie distante
   // mais les mises à jour doivent quand même être appliquées aux pools
   useEffect(() => {
-    if (!window.electronAPI?.onRemoteMatchFinished) return;
-
     const handleMatchFinished = (data: {
       matchId: string;
       scoreA: number;
       scoreB: number;
-      winner?: 'A' | 'B';
+      winner?: 'A' | 'B' | null;
       isTableau?: boolean;
       deviceReason?: 'priority' | 'abandon' | 'exclusion';
       recorded?: boolean;
     }) => {
-      const { matchId, scoreA, scoreB, winner: winnerOverride, isTableau, deviceReason } = data;
+      const { matchId, scoreA, scoreB, isTableau, deviceReason } = data;
+      const winnerOverride = data.winner ?? undefined;
       logger.warn(
         LogCategory.UI,
         `[CompetitionView] match:finished REÇU matchId=${matchId} score=${scoreA}-${scoreB} tableau=${!!isTableau}`
@@ -276,10 +274,16 @@ export function useRemoteScoreSync({
       );
     };
 
-    const offMatchFinished = window.electronAPI.onRemoteMatchFinished(handleMatchFinished);
+    const offMatchFinished = remote.onActivity(
+      'match_finished',
+      competitionId,
+      handleMatchFinished
+    );
 
     // Carton noir distant : exclure le combattant fautif dans le store
-    const offExcluded = window.electronAPI.onRemoteFencerExcluded?.(
+    const offExcluded = remote.onActivity(
+      'fencer_excluded',
+      competitionId,
       ({ fencerId, reason, recorded }) => {
         logger.debug(
           LogCategory.UI,
@@ -300,7 +304,9 @@ export function useRemoteScoreSync({
     );
 
     // Carton noir annulé depuis la tablette : réintégrer le combattant et rouvrir le match
-    const offReinstated = window.electronAPI.onRemoteFencerReinstated?.(
+    const offReinstated = remote.onActivity(
+      'fencer_reinstated',
+      competitionId,
       ({ fencerId, matchId, status, scoreA, scoreB, recorded }) => {
         logger.debug(LogCategory.UI, `[CompetitionView] Carton noir annulé: ${fencerId}`);
         // Réintégration écrite par le moteur : tireurs et session relus
@@ -312,11 +318,12 @@ export function useRemoteScoreSync({
     );
 
     return () => {
-      offMatchFinished?.();
-      offExcluded?.();
-      offReinstated?.();
+      offMatchFinished();
+      offExcluded();
+      offReinstated();
     };
   }, [
+    competitionId,
     applyRemoteScore,
     updateFencer,
     handleBlackCardCancelled,

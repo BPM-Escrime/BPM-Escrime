@@ -7,6 +7,7 @@ import React from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Moon, Sparkles, Sun, Zap } from 'lucide-react';
 import { Icon } from '../common/Icon';
+import { useRemoteApi } from '../../api/remoteApi';
 
 type DisplayTheme = 'dark' | 'light' | 'neon' | 'unicorn';
 type KioskViews = { poules: boolean; classement: boolean; direct: boolean; suivants: boolean };
@@ -85,6 +86,7 @@ export const DisplayOptionsPanel: React.FC<Props> = ({
   setKioskViews,
 }) => {
   const { t } = useTranslation();
+  const remote = useRemoteApi();
   return (
     <>
       <div style={S.themeSection}>
@@ -102,7 +104,7 @@ export const DisplayOptionsPanel: React.FC<Props> = ({
               key={value}
               onClick={async () => {
                 setDisplayTheme(value);
-                await window.electronAPI.remote.updateTheme(competitionId, value);
+                await remote.updateTheme(competitionId, value);
               }}
               style={{
                 flex: 1,
@@ -142,7 +144,7 @@ export const DisplayOptionsPanel: React.FC<Props> = ({
                 reader.onload = async ev => {
                   const base64 = ev.target?.result as string;
                   setArenaWallpaper(base64);
-                  await window.electronAPI.remote.setWallpaper(competitionId, base64);
+                  await remote.setWallpaper(competitionId, base64);
                 };
                 reader.readAsDataURL(file);
                 e.target.value = '';
@@ -153,7 +155,7 @@ export const DisplayOptionsPanel: React.FC<Props> = ({
             <button
               onClick={async () => {
                 setArenaWallpaper(null);
-                await window.electronAPI.remote.setWallpaper(competitionId, null);
+                await remote.setWallpaper(competitionId, null);
               }}
               style={S.wallpaperDeleteBtn}
             >
@@ -180,7 +182,7 @@ export const DisplayOptionsPanel: React.FC<Props> = ({
               onClick={async () => {
                 const next = { ...kioskViews, [key]: !kioskViews[key] };
                 setKioskViews(next);
-                await window.electronAPI.remote.updateKioskViews(competitionId, next);
+                await remote.updateKioskViews(competitionId, next);
               }}
             >
               {kioskViews[key] ? '✓ ' : ''}

@@ -26,6 +26,7 @@ import {
 } from '../../components/remote/remoteScoreManagerShared';
 import { autoStartCyrano } from '../../components/remote/cyranoSettings';
 import { fetchVenueStripCount } from './venueStripCount';
+import { useRemoteApi } from '../../api/remoteApi';
 
 type Ctx = RemoteScoreManagerProps;
 
@@ -69,6 +70,7 @@ export function useRemoteServerState(ctx: Ctx) {
   const [mode, setMode] = useRemoteViewMode(competition.id);
   const isExpert = mode === 'expert';
   const { showToast } = useToast();
+  const remote = useRemoteApi();
   const { t } = useTranslation();
   const unavailableStrips = useStripAvailability(s => s.unavailable);
   const [session, setSession] = useState<RemoteSession | null>(null);
@@ -252,7 +254,7 @@ export function useRemoteServerState(ctx: Ctx) {
       fencers: pool.fencers ?? [],
       matches: pool.matches ?? [],
     }));
-    window.electronAPI.remote.assignPools?.(competition.id, poolsData).catch((err: unknown) => {
+    remote.assignPools(competition.id, poolsData).catch((err: unknown) => {
       logger.warn(LogCategory.NETWORK, 'Échec assignPools', err instanceof Error ? err : undefined);
     });
   }, [pools, isRemoteActive, session]);
@@ -270,7 +272,7 @@ export function useRemoteServerState(ctx: Ctx) {
     if (fingerprint === sessionPoolsFingerprintRef.current) return;
     sessionPoolsFingerprintRef.current = fingerprint;
     const updates = pools.map(pool => ({ poolId: pool.id, fencers: pool.fencers ?? [] }));
-    window.electronAPI.remote.updatePoolFencers(competition.id, updates).catch((err: unknown) => {
+    remote.updatePoolFencers(competition.id, updates).catch((err: unknown) => {
       logger.warn(
         LogCategory.NETWORK,
         'Échec updatePoolFencers',
@@ -298,7 +300,7 @@ export function useRemoteServerState(ctx: Ctx) {
       poolId: pool.id,
       matches: (pool.matches ?? []).map(m => ({ ...m, poolNumber: pool.number })),
     }));
-    window.electronAPI.remote.syncPoolMatches(competition.id, poolsData).catch((err: unknown) => {
+    remote.syncPoolMatches(competition.id, poolsData).catch((err: unknown) => {
       logger.warn(
         LogCategory.NETWORK,
         'Échec syncPoolMatches',
@@ -328,15 +330,13 @@ export function useRemoteServerState(ctx: Ctx) {
     const key = deMatchesKey(pendingDeMatches);
     if (key === prevDeMatchesKeyRef.current) return;
     prevDeMatchesKeyRef.current = key;
-    window.electronAPI.remote
-      .refreshDeMatches(competition.id, pendingDeMatches)
-      .catch((err: unknown) => {
-        logger.warn(
-          LogCategory.NETWORK,
-          'Échec refreshDeMatches',
-          err instanceof Error ? err : undefined
-        );
-      });
+    remote.refreshDeMatches(competition.id, pendingDeMatches).catch((err: unknown) => {
+      logger.warn(
+        LogCategory.NETWORK,
+        'Échec refreshDeMatches',
+        err instanceof Error ? err : undefined
+      );
+    });
   }, [pendingDeMatches, isRemoteActive, session]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -344,10 +344,10 @@ export function useRemoteServerState(ctx: Ctx) {
     if (!isRemoteActive) return;
     // Si une session est déjà active (retour sur l'onglet après navigation), on reconnecte
     // sans redémarrer le serveur pour ne pas perdre l'état des pistes configurées.
-    window.electronAPI.remote.getSession(competition.id).then(async result => {
+    remote.getSession(competition.id).then(async result => {
       if (result.success && result.session) {
         // Récupérer l'IP réseau réelle (éviter localhost)
-        const info = await window.electronAPI.remote.getServerInfo(competition.id);
+        const info = await remote.getServerInfo(competition.id);
         if (info.success && info.serverInfo) {
           setServerUrl(info.serverInfo.url);
           setCertFingerprint(info.serverInfo.certFingerprint ?? null);
@@ -365,7 +365,7 @@ export function useRemoteServerState(ctx: Ctx) {
   const startRemoteServer = async () => {
     try {
       setIsLoading(true);
-      const result = await window.electronAPI.remote.startServer(
+      const result = await remote.startServer(
         competition.id,
         remotePort,
         selectedInterface,
@@ -408,13 +408,11 @@ export function useRemoteServerState(ctx: Ctx) {
       });
       // Plan des pistes connu du serveur avant la répartition : une poule sans piste attend
       // dans l'intervalle de l'épreuve, jamais sur une piste masquée (#1878)
-      await window.electronAPI.remote
-        .setStripPlan?.(competition.id, {
-          start: effectiveCommittedStart,
-          unavailable: [...unavailableStrips],
-        })
-        ?.catch?.(() => {});
-      const result = await window.electronAPI.remote.startSession(
+      await remote.setStripPlan(competition.id, {
+        start: effectiveCommittedStart,
+        unavailable: [...unavailableStrips],
+      });
+      const result = await remote.startSession(
         competition.id,
         count,
         allMatches,
@@ -427,9 +425,7 @@ export function useRemoteServerState(ctx: Ctx) {
         // Appareils de piste Cyrano : démarrage automatique avec la séance (#1829)
         void autoStartCyrano(competition.id);
         if (kioskPreset !== 'default') {
-          window.electronAPI.remote
-            .updateKioskTheme(competition.id, { '--k-preset': kioskPreset })
-            .catch(() => {});
+          remote.updateKioskTheme(competition.id, { '--k-preset': kioskPreset }).catch(() => {});
         }
         // Le serveur peut étendre le nombre de pistes (poule assignée au-delà du nombre configuré)
         const effectiveCount = result.session.strips?.length || count;
@@ -440,12 +436,12 @@ export function useRemoteServerState(ctx: Ctx) {
         // Synchroniser le webhook URL configuré vers le serveur qui vient de démarrer
         const savedWebhook = localStorage.getItem('bellepoule-webhook-url');
         if (savedWebhook) {
-          window.electronAPI.remote.setWebhookUrl?.(savedWebhook).catch(() => {});
+          void remote.setWebhookUrl(savedWebhook);
         }
         // Envoyer les matchs DE avec leurs pistes au serveur (la clé ref est déjà stockée
         // avant que session/isRemoteActive soient prêts, donc l'effet ne se déclenche pas).
         if (deMatches.length > 0) {
-          await window.electronAPI.remote.refreshDeMatches(competition.id, deMatches);
+          await remote.refreshDeMatches(competition.id, deMatches);
           prevDeMatchesKeyRef.current = deMatchesKey(deMatches);
         }
       } else {

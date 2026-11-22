@@ -17,8 +17,10 @@ vi.mock('../../hooks/useTranslation', () => ({
 vi.mock('../Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import { OrgNotePanel } from './OrgNotePanel';
 import { ConnectedScreensPanel } from './ConnectedScreensPanel';
+import { remoteElectron } from '../../testUtils/remoteBridge';
 
 let remote: Record<string, ReturnType<typeof vi.fn>>;
+let emit: (name: string, event: unknown) => void;
 
 beforeEach(() => {
   remote = {
@@ -28,13 +30,14 @@ beforeEach(() => {
       success: true,
       clients: [{ socketId: 'abcdefgh123', clientType: 'kiosk', label: 'Hall', ip: '10.0.0.2' }],
     }),
-    onClientListUpdate: vi.fn(() => () => {}),
     renameClient: vi.fn().mockResolvedValue({ success: true }),
     identifyClient: vi.fn(),
     setClientKioskMode: vi.fn().mockResolvedValue({ success: true }),
     sendClientCommand: vi.fn().mockResolvedValue({ success: true }),
   };
-  (window as any).electronAPI = { remote };
+  const electron = remoteElectron(remote);
+  emit = electron.emit;
+  (window as any).electronAPI = electron;
 });
 
 afterEach(() => {
@@ -67,11 +70,8 @@ describe('ConnectedScreensPanel', () => {
   });
 
   it("ignore la liste poussée par le serveur d'une autre compétition (#1292)", async () => {
-    let push: (c: any[], id?: string | null) => void = () => {};
-    remote.onClientListUpdate.mockImplementation(((cb: typeof push) => {
-      push = cb;
-      return () => {};
-    }) as any);
+    const push = (clients: any[], competitionId: string | null) =>
+      emit('onRemoteClients', { competitionId, clients });
     render(<ConnectedScreensPanel competitionId="c1" isRemoteActive arenaCount={3} />);
     expect(await screen.findByText('Hall')).toBeInTheDocument();
     act(() => push([{ socketId: 'zzzzzzzz1', clientType: 'kiosk', label: 'Autre' }], 'c2'));

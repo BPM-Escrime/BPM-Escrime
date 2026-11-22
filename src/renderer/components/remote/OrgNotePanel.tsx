@@ -6,6 +6,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useRemoteApi } from '../../api/remoteApi';
 
 const ORG_NOTE_PREFIXES = ['resume', 'start', 'end', 'break', 'lunch', 'ceremony'] as const;
 
@@ -95,6 +96,7 @@ interface OrgNotePanelProps {
 
 export const OrgNotePanel: React.FC<OrgNotePanelProps> = React.memo(({ competitionId }) => {
   const { t } = useTranslation();
+  const remote = useRemoteApi();
   const [orgNoteType, setOrgNoteType] = useState<'free' | 'target_time'>('free');
   const [orgNoteMessage, setOrgNoteMessage] = useState('');
   const [orgNoteTime, setOrgNoteTime] = useState('');
@@ -103,9 +105,11 @@ export const OrgNotePanel: React.FC<OrgNotePanelProps> = React.memo(({ competiti
 
   // Synchronise l'état avec le serveur (note posée/masquée ailleurs, ex. fin de compte à rebours)
   useEffect(() => {
-    const unsub = window.electronAPI.onKioskNoteUpdate?.(note => setOrgNoteActive(!!note));
-    return () => unsub?.();
-  }, []);
+    const unsub = remote.onActivity('org_note_changed', competitionId, e =>
+      setOrgNoteActive(!!e.note)
+    );
+    return () => unsub();
+  }, [remote, competitionId]);
 
   return (
     <div style={STYLES.orgNoteBox}>
@@ -170,7 +174,7 @@ export const OrgNotePanel: React.FC<OrgNotePanelProps> = React.memo(({ competiti
                 : {}),
               createdAt: new Date().toISOString(),
             };
-            await window.electronAPI.remote.setOrgNote(competitionId, note);
+            await remote.setOrgNote(competitionId, note);
             setOrgNoteActive(true);
           }}
           style={{
@@ -189,7 +193,7 @@ export const OrgNotePanel: React.FC<OrgNotePanelProps> = React.memo(({ competiti
         {/* Toujours visible : l'état local est perdu au remontage du panneau */}
         <button
           onClick={async () => {
-            await window.electronAPI.remote.clearOrgNote(competitionId);
+            await remote.clearOrgNote(competitionId);
             setOrgNoteActive(false);
           }}
           style={STYLES.orgNoteHideBtn}

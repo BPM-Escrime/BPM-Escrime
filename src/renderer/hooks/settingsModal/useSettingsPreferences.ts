@@ -28,11 +28,13 @@ import {
   TtsConfig,
   type SettingsModalProps,
 } from '../../components/settingsModal.helpers';
+import { useRemoteApi } from '../../api/remoteApi';
 
 type Ctx = SettingsModalProps;
 
 /** Préférences de l'application : affichage, voix, mises à jour, webhook (état et effets) (extrait de SettingsModal, #1599) */
 export function useSettingsPreferences(ctx: Ctx) {
+  const remote = useRemoteApi();
   const { onClose, onSave } = ctx;
 
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
@@ -151,15 +153,13 @@ export function useSettingsPreferences(ctx: Ctx) {
       .catch(() => {
         /* bibliothèque optionnelle */
       });
-    const unsub = api?.onLogoLoaded?.((persisted: string | null) => {
+    const unsub = remote.onActivity('logo_loaded', undefined, ({ logo: persisted }) => {
       if (persisted && !localStorage.getItem(LOGO_STORAGE_KEY)) {
         setLogo(persisted);
         localStorage.setItem(LOGO_STORAGE_KEY, persisted);
       }
     });
-    return () => {
-      if (typeof unsub === 'function') unsub();
-    };
+    return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -175,13 +175,14 @@ export function useSettingsPreferences(ctx: Ctx) {
   }, []);
 
   // Pousse la config TTS : persistance locale + serveurs distants actifs
-  const persistTtsConfig = useCallback((next: TtsConfig) => {
-    setTtsConfig(next);
-    localStorage.setItem(TTS_CONFIG_KEY, JSON.stringify(next));
-    window.electronAPI?.remote?.setTtsConfig?.(next)?.catch?.(() => {
-      /* serveur inactif */
-    });
-  }, []);
+  const persistTtsConfig = useCallback(
+    (next: TtsConfig) => {
+      setTtsConfig(next);
+      localStorage.setItem(TTS_CONFIG_KEY, JSON.stringify(next));
+      void remote.setTtsConfig(next);
+    },
+    [remote]
+  );
 
   const handleTtsVoiceChange = (voiceName: string) => {
     persistTtsConfig({ ...ttsConfig, voiceName: voiceName || null });

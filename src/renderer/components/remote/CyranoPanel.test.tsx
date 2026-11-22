@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CyranoPanel } from './CyranoPanel';
+import { remoteElectron } from '../../testUtils/remoteBridge';
 
 vi.mock('../../hooks/useTranslation', () => import('../../testUtils/i18nMock'));
 
@@ -52,49 +53,56 @@ describe('CyranoPanel — alerte BAD MATCH (#1720)', () => {
 describe('CyranoPanel — secours et journal (#1829)', () => {
   beforeEach(() => {
     localStorage.clear();
-    (window as unknown as { electronAPI: unknown }).electronAPI = {
-      cyrano: {
-        loadPistes: vi
-          .fn()
-          .mockResolvedValue([
-            { piste: '1', ip: '127.0.0.1', port: 50101, arena: 1, protocol: 'auto' },
-          ]),
-        savePistes: vi.fn().mockResolvedValue(true),
-        getStatus: vi.fn().mockResolvedValue({
-          running: true,
-          port: 50100,
-          pistes: [
-            {
-              piste: '1',
-              ip: '127.0.0.1',
-              port: 50101,
-              arena: 1,
-              protocol: 'auto',
-              status: 'online',
-              lastSeen: Date.now(),
-              detectedProtocol: 'EFP1.1',
-              alert: null,
-            },
-          ],
-        }),
-        getLog: vi
-          .fn()
-          .mockResolvedValue([
-            { ts: 0, dir: 'in', ip: '127.0.0.1', port: 50101, piste: '1', raw: '|EFP1.1|INFO|1|' },
-          ]),
-        pisteAction: vi.fn().mockResolvedValue(true),
-      },
-      remote: {
+    (window as unknown as { electronAPI: unknown }).electronAPI = remoteElectron(
+      {
+        // Format de listNetworkInterfaces : le nom porte déjà l'adresse
         getNetworkInterfaces: vi.fn().mockResolvedValue({
           success: true,
-          // Format de remote:getNetworkInterfaces : le nom porte déjà l'adresse
           interfaces: [
             { name: 'Toutes les interfaces', address: '0.0.0.0' },
             { name: 'eth0 (10.1.1.1)', address: '10.1.1.1' },
           ],
         }),
       },
-    };
+      {
+        cyrano: {
+          loadPistes: vi
+            .fn()
+            .mockResolvedValue([
+              { piste: '1', ip: '127.0.0.1', port: 50101, arena: 1, protocol: 'auto' },
+            ]),
+          savePistes: vi.fn().mockResolvedValue(true),
+          getStatus: vi.fn().mockResolvedValue({
+            running: true,
+            port: 50100,
+            pistes: [
+              {
+                piste: '1',
+                ip: '127.0.0.1',
+                port: 50101,
+                arena: 1,
+                protocol: 'auto',
+                status: 'online',
+                lastSeen: Date.now(),
+                detectedProtocol: 'EFP1.1',
+                alert: null,
+              },
+            ],
+          }),
+          getLog: vi.fn().mockResolvedValue([
+            {
+              ts: 0,
+              dir: 'in',
+              ip: '127.0.0.1',
+              port: 50101,
+              piste: '1',
+              raw: '|EFP1.1|INFO|1|',
+            },
+          ]),
+          pisteAction: vi.fn().mockResolvedValue(true),
+        },
+      }
+    );
   });
 
   it('actions de secours envoyées pour la piste', async () => {

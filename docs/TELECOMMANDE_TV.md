@@ -94,7 +94,7 @@ Quand un navigateur ouvre `/arene1`, `/lobby`, `/kiosk` ou `/public`, il émet a
 ```js
 socket.emit('client:register', { clientType, arenaId, userAgent });
 ```
-Le serveur stocke le client dans `connectedClients: Map<socketId, ConnectedClient>` et notifie le renderer Electron via IPC (`remote:clientListUpdate`).
+Le serveur stocke le client dans `connectedClients: Map<socketId, ConnectedClient>` et notifie le renderer Electron par l'abonnement `onRemoteClients` du contrat d'API.
 
 ### Commandes serveur → client
 
@@ -108,14 +108,17 @@ type TVCommand =
 
 Chaque client écoute `socket.on('server:command', cmd => { ... })` et réagit immédiatement.
 
-### IPC (renderer → main → serveur)
+### Contrat d'API (renderer → main → serveur)
 
-| Canal IPC | Description |
+| Opération | Description |
 |-----------|-------------|
-| `remote:getConnectedClients` | Liste tous les écrans enregistrés |
-| `remote:sendClientCommand` | Commande vers un seul écran (socketId) |
-| `remote:broadcastCommand` | Commande vers tous les écrans |
-| `remote:clientListUpdate` (event) | Push temps réel quand la liste change |
+| `listRemoteClients` | Liste tous les écrans enregistrés |
+| `sendClientCommand` | Commande vers un seul écran (socketId) |
+| `broadcastClientCommand` | Commande vers tous les écrans |
+| `renameRemoteClient` / `identifyRemoteClient` / `setClientKioskMode` | Nom, identification, mode kiosque d'un écran |
+| `onRemoteClients` (abonnement) | Push temps réel quand la liste change |
+
+Droit `remote:admin`, jamais servi sur le réseau ([ADR-0022](adr/0022-fonctions-du-poste-contrat.md)).
 
 ---
 

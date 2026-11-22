@@ -12,6 +12,7 @@ import { installAppSettingsMirror } from '../services/appSettingsMirror';
 import type { OpenCompetition } from './useAppState';
 import { defaultBpmClient } from '../api/IpcClient';
 import { loadCompetition } from '../api/competitionMapping';
+import { remoteApi } from '../api/remoteApi';
 
 interface AppGlobalEffectsParams {
   loadCompetitions: () => unknown;
@@ -116,12 +117,10 @@ export function useAppGlobalEffects(params: AppGlobalEffectsParams): void {
           err instanceof Error ? err : undefined
         );
       });
-    const unsub = window.electronAPI.onLogoLoaded?.((logo: string | null) => {
+    const unsub = remoteApi.onActivity('logo_loaded', undefined, ({ logo }) => {
       if (logo) localStorage.setItem('bellepoule-logo', logo);
       else localStorage.removeItem('bellepoule-logo');
     });
-    return () => {
-      if (typeof unsub === 'function') unsub();
-    };
+    return () => unsub();
   }, []);
 }

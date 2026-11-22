@@ -98,6 +98,12 @@ export const ERRORS = {
   pdf_unavailable: e('rule', 'Export PDF indisponible dans ce mode'),
   unavailable: e('rule', 'Fonction indisponible dans ce mode'),
   remote_not_running: e('rule', 'Saisie distante de l’épreuve non démarrée'),
+  remote_already_running: e('rule', 'Saisie distante de l’épreuve déjà démarrée'),
+  port_in_use: e('rule', 'Port d’écoute déjà utilisé'),
+  tls_cert_failed: e('rule', 'Certificat TLS impossible à générer'),
+  strip_not_found: e('not_found', 'Piste introuvable sur le serveur distant'),
+  invalid_url: e('rule', 'URL refusée (https vers un hôte public requis)'),
+  remote_refused: e('rule', 'Serveur distant : demande refusée (message pour l’opérateur)'),
   weak_password: e('rule', 'Mot de passe trop court'),
   club_refused: e('rule', 'Mode Club : demande refusée (message pour l’opérateur)'),
   station_refused: e(
@@ -119,6 +125,7 @@ export type ApiErrorCode = keyof typeof ERRORS;
 export interface ApiErrorDataByCode {
   revision_conflict: { revision: number; missing: unknown[] };
   command_already_applied: { revision: number; commandId: string };
+  port_in_use: { port: number };
 }
 
 export const isApiErrorCode = (code: unknown): code is ApiErrorCode =>

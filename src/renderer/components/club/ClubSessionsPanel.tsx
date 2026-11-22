@@ -89,6 +89,7 @@ import { useConfirm } from '../ConfirmDialog';
 import { useToast } from '../Toast';
 import { ClubScanModal } from './ClubScanModal';
 import ArenaQrCodesModal from '../ArenaQrCodesModal';
+import { useRemoteApi } from '../../api/remoteApi';
 
 interface RemoteState {
   active: boolean;
@@ -232,6 +233,7 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
   const { showToast } = useToast();
   const { confirm } = useConfirm();
   const api = useClubApi();
+  const remoteServer = useRemoteApi();
 
   const [sessions, setSessions] = useState<ClubSession[]>([]);
   const [members, setMembers] = useState<ClubMember[]>([]);
@@ -290,8 +292,8 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
 
   // Interfaces réseau proposées pour la saisie distante (comme le mode entraînement)
   useEffect(() => {
-    window.electronAPI?.remote
-      ?.getNetworkInterfaces?.()
+    remoteServer
+      .getNetworkInterfaces()
       .then(res => {
         const list = res?.success ? res.interfaces : undefined;
         if (list?.length) {
@@ -302,7 +304,7 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
         }
       })
       .catch(() => undefined);
-  }, []);
+  }, [remoteServer]);
 
   const currentId = current?.id ?? null;
   // Saisie distante active : séance reliée (cartes scannées sur les tablettes) et
@@ -791,10 +793,8 @@ export const ClubSessionsPanel: React.FC<ClubSessionsPanelProps> = ({
   const applyScreens = async (theme: ClubRemoteSettings['theme'], pwd: string, strips: number) => {
     const res = await window.electronAPI?.training?.setTheme?.(theme);
     if (res && !res.success) throw new Error(res.error ?? t('clubSession.remote_error'));
-    const remoteApi = window.electronAPI?.remote;
-    if (!remoteApi) return;
     for (let n = 1; n <= strips; n++) {
-      const r = await remoteApi.setArenaPassword(TRAINING_SERVER_ID, `arena${n}`, pwd);
+      const r = await remoteServer.setArenaPassword(TRAINING_SERVER_ID, `arena${n}`, pwd);
       if (!r.success) throw new Error(r.error ?? t('clubSession.remote_error'));
     }
   };

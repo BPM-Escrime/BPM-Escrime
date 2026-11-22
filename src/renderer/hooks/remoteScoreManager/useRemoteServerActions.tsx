@@ -24,12 +24,14 @@ import { useRemoteServerState } from './useRemoteServerState';
 import { useBpmClient } from '../../api/BpmClientContext';
 import { refereeFromDTO } from '../../api/refereeMapping';
 import { isWithdrawn } from '../../../shared/domain/fencers/fencerStatus';
+import { useRemoteApi } from '../../api/remoteApi';
 
 type Ctx = RemoteScoreManagerProps & ReturnType<typeof useRemoteServerState>;
 
 /** Actions du serveur de saisie distante : arrêt, mots de passe, formateur, thèmes, URLs d'écrans (extrait de RemoteScoreManager, #1599) */
 export function useRemoteServerActions(ctx: Ctx) {
   const client = useBpmClient();
+  const remote = useRemoteApi();
   const {
     setCommittedStart,
     onStripStartChange,
@@ -89,7 +91,7 @@ export function useRemoteServerActions(ctx: Ctx) {
     if (session) {
       // Serveur actif : appliquer via IPC
       try {
-        const result = await window.electronAPI.remote.updateStripCount(competition.id, newCount);
+        const result = await remote.updateStripCount(competition.id, newCount);
         if (result.success && result.session) {
           setSession(result.session);
           setCommittedCount(newCount);
@@ -129,7 +131,7 @@ export function useRemoteServerActions(ctx: Ctx) {
     setIsLoading(true);
     try {
       if (hasPendingChanges) await handleSaveStripCount();
-      const result = await window.electronAPI.remote.reloadServer(competition.id, {
+      const result = await remote.reloadServer(competition.id, {
         port: remotePort,
         host: selectedInterface,
         useHttps,
@@ -153,7 +155,7 @@ export function useRemoteServerActions(ctx: Ctx) {
   const handleStopRemote = async () => {
     setIsLoading(true);
     try {
-      const result = await window.electronAPI.remote.stopServer(competition.id);
+      const result = await remote.stopServer(competition.id);
       if (result.success) {
         setSession(null);
         showToast('Saisie distante arrêtée', 'success');
@@ -186,11 +188,7 @@ export function useRemoteServerActions(ctx: Ctx) {
 
   const applyCommonArenaPassword = async (pwd: string, numbers: number[]): Promise<boolean> => {
     for (const n of numbers) {
-      const result = await window.electronAPI.remote.setArenaPassword(
-        competition.id,
-        `arena${n}`,
-        pwd
-      );
+      const result = await remote.setArenaPassword(competition.id, `arena${n}`, pwd);
       if (!result.success) {
         showToast(ipcErrorText(t, result, t('rsm.error')), 'error');
         return false;
@@ -206,11 +204,7 @@ export function useRemoteServerActions(ctx: Ctx) {
 
   const applyArenaPassword = async (n: number) => {
     const pwd = arenaPasswords[`arena${n}`] ?? '';
-    const result = await window.electronAPI.remote.setArenaPassword(
-      competition.id,
-      `arena${n}`,
-      pwd
-    );
+    const result = await remote.setArenaPassword(competition.id, `arena${n}`, pwd);
     if (result.success) {
       showToast(t(pwd ? 'rsm.pwd_set' : 'rsm.pwd_removed', { number: n }), 'success');
     } else {
@@ -235,14 +229,11 @@ export function useRemoteServerActions(ctx: Ctx) {
   const trainerEnabled = competition.settings?.trainerCommentsEnabled === true;
   useEffect(() => {
     if (!session) return;
-    window.electronAPI.remote.setTrainerEnabled?.(competition.id, trainerEnabled).catch(() => {});
-  }, [session, trainerEnabled, competition.id]);
+    void remote.setTrainerEnabled(competition.id, trainerEnabled);
+  }, [session, trainerEnabled, competition.id, remote]);
 
   const applyTrainerPassword = async () => {
-    const result = await window.electronAPI.remote.setTrainerPassword(
-      competition.id,
-      trainerPassword
-    );
+    const result = await remote.setTrainerPassword(competition.id, trainerPassword);
     if (result.success) {
       showToast(
         trainerPassword ? 'Mot de passe formateurs défini' : 'Mot de passe formateurs supprimé',
@@ -274,10 +265,7 @@ export function useRemoteServerActions(ctx: Ctx) {
   };
 
   const applyCheckinPassword = async () => {
-    const result = await window.electronAPI.remote.setCheckinPassword(
-      competition.id,
-      checkinPassword
-    );
+    const result = await remote.setCheckinPassword(competition.id, checkinPassword);
     if (result.success) {
       showToast(
         checkinPassword
@@ -326,12 +314,7 @@ export function useRemoteServerActions(ctx: Ctx) {
         // public / referee / pool → appliquer à toutes les arènes pour ce type d'écran
         const count = session ? session.strips.length : effectiveCommitted;
         for (const i of stripNumbers(effectiveCommittedStart, count)) {
-          await window.electronAPI.remote.updateArenaScreenTheme(
-            competition.id,
-            `arena${i}`,
-            section,
-            theme
-          );
+          await remote.updateArenaScreenTheme(competition.id, `arena${i}`, section, theme);
         }
         if (!quiet) {
           showToast(`Thème "${theme.name}" appliqué (${section}) à toutes les pistes`, 'success');
@@ -347,6 +330,7 @@ export function useRemoteServerActions(ctx: Ctx) {
       session,
       effectiveCommitted,
       effectiveCommittedStart,
+      remote,
     ]
   );
 

@@ -15,6 +15,7 @@ import {
   type SlashCommandContext,
 } from './slashCommands';
 import type { Competition } from '../../shared/types';
+import { remoteElectron } from '../testUtils/remoteBridge';
 
 const t = (k: string, p?: Record<string, string | number>) => (p ? `${k} ${JSON.stringify(p)}` : k);
 
@@ -89,7 +90,9 @@ describe('slashCommands – exécution', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (window as unknown as { electronAPI: unknown }).electronAPI = { updater, remote };
+    (window as unknown as { electronAPI: unknown }).electronAPI = remoteElectron(remote, {
+      updater,
+    });
   });
   afterEach(() => {
     delete (window as unknown as { electronAPI?: unknown }).electronAPI;

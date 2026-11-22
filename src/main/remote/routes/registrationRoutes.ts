@@ -9,6 +9,7 @@ import { FencerStatus, type Fencer } from '../../../shared/types';
 import type { RouteContext } from './context';
 import { getSharedMainWindow } from '../../mainWindowRef';
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
+import { notifyScreen } from '../remoteActivity';
 
 type Guard = (cookieHeader: string | undefined) => {
   status: number;
@@ -118,8 +119,10 @@ function registerSelfCheckinRoutes(ctx: RegistrationRouteContext): void {
     }
     const mainWin = getSharedMainWindow();
     if (mainWin && !mainWin.isDestroyed?.()) {
-      mainWin.webContents.send('remote:checkin_updated', {
-        kind: 'fencer',
+      notifyScreen({
+        kind: 'checkin_updated',
+        competitionId: ctx.session?.competitionId ?? null,
+        person: 'fencer',
         id: fencer.id,
         present: true,
       });
@@ -219,8 +222,10 @@ export function registerRegistrationRoutes(ctx: RegistrationRouteContext): void 
       // Liste d'appel de l'organisateur rafraîchie en direct (#986)
       const mainWin = getSharedMainWindow();
       if (mainWin && !mainWin.isDestroyed?.()) {
-        mainWin.webContents.send('remote:checkin_updated', {
-          kind: 'fencer',
+        notifyScreen({
+          kind: 'checkin_updated',
+          competitionId: ctx.session?.competitionId ?? null,
+          person: 'fencer',
           id: newFencer.id,
           present: false,
         });
@@ -439,8 +444,10 @@ export function registerRegistrationRoutes(ctx: RegistrationRouteContext): void 
 
     const mainWin = getSharedMainWindow();
     if (mainWin && !mainWin.isDestroyed?.()) {
-      mainWin.webContents.send('remote:checkin_updated', {
-        kind: kind === 'fencers' ? 'fencer' : 'referee',
+      notifyScreen({
+        kind: 'checkin_updated',
+        competitionId: ctx.session?.competitionId ?? null,
+        person: kind === 'fencers' ? 'fencer' : 'referee',
         id,
         present,
       });

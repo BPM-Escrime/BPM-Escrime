@@ -3,13 +3,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useKioskTheme } from './useKioskTheme';
 import type { CustomTheme } from '../../shared/types/remote';
+import { remoteElectron } from '../testUtils/remoteBridge';
 
 let updateKioskTheme: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   localStorage.clear();
   updateKioskTheme = vi.fn().mockResolvedValue({ success: true });
-  (window as any).electronAPI = { remote: { updateKioskTheme } };
+  (window as any).electronAPI = remoteElectron({ updateKioskTheme });
 });
 
 afterEach(() => {

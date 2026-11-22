@@ -46,7 +46,6 @@ describe('ScoreAuditLog — colonne Arbitre (#1031)', () => {
             entry('e5', 'm2', { changedBy: 'device' }),
           ]),
       }),
-      onScoreIpConflict: () => () => {},
     };
   });
 
@@ -83,7 +82,6 @@ describe('ScoreAuditLog — compacter / déplier (#1123)', () => {
             )
           ),
       }),
-      onScoreIpConflict: () => () => {},
     };
   });
 
@@ -113,7 +111,6 @@ describe('ScoreAuditLog — motif de correction après tirage du tableau (#1996)
           entry('e2', 'm2', { changedBy: 'mcp', reason: 'mcp_entry' }),
         ]),
       }),
-      onScoreIpConflict: () => () => {},
     };
   });
 

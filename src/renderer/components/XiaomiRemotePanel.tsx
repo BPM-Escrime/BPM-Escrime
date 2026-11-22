@@ -18,6 +18,7 @@ import {
   isAssignable,
   type AssignRole,
 } from './remote/screenAssign';
+import { useRemoteApi } from '../api/remoteApi';
 
 interface XiaomiRemotePanelProps {
   competitionId: string;
@@ -128,6 +129,7 @@ const XiaomiRemotePanelComponent: React.FC<XiaomiRemotePanelProps> = ({
 }) => {
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
   const { t } = useTranslation();
+  const remote = useRemoteApi();
   const [clients, setClients] = useState<ConnectedClient[]>([]);
   const [message, setMessage] = useState('');
   const [msgDuration, setMsgDuration] = useState(5);
@@ -160,18 +162,18 @@ const XiaomiRemotePanelComponent: React.FC<XiaomiRemotePanelProps> = ({
   const lobbyUrl = `${base}/lobby`;
 
   const fetchClients = useCallback(async () => {
-    const res = await window.electronAPI.remote.getConnectedClients(competitionId);
+    const res = await remote.getConnectedClients(competitionId);
     if (res.success) setClients(res.clients);
-  }, [competitionId]);
+  }, [competitionId, remote]);
 
   useEffect(() => {
     fetchClients();
-    const unsub = window.electronAPI.remote.onClientListUpdate((updated, id) => {
+    const unsub = remote.onClientListUpdate((updated, id) => {
       if (id && id !== competitionId) return;
       setClients(updated);
     });
     return unsub;
-  }, [fetchClients, competitionId]);
+  }, [fetchClients, competitionId, remote]);
 
   useEffect(() => {
     if (!openNav) return;
@@ -184,16 +186,16 @@ const XiaomiRemotePanelComponent: React.FC<XiaomiRemotePanelProps> = ({
 
   const sendCmd = useCallback(
     (socketId: string, cmd: TVCommand) => {
-      window.electronAPI.remote.sendClientCommand(competitionId, socketId, cmd);
+      void remote.sendClientCommand(competitionId, socketId, cmd);
     },
-    [competitionId]
+    [competitionId, remote]
   );
 
   const broadcastCmd = useCallback(
     (cmd: TVCommand) => {
-      window.electronAPI.remote.broadcastCommand(competitionId, cmd);
+      void remote.broadcastCommand(competitionId, cmd);
     },
-    [competitionId]
+    [competitionId, remote]
   );
 
   const toggleSwap = (socketId: string) => {
@@ -223,7 +225,7 @@ const XiaomiRemotePanelComponent: React.FC<XiaomiRemotePanelProps> = ({
   const commitRename = () => {
     if (renameTarget) {
       const lbl = renameValue.trim();
-      window.electronAPI.remote.renameClient(competitionId, renameTarget, lbl);
+      void remote.renameClient(competitionId, renameTarget, lbl);
     }
     setRenameTarget(null);
     setRenameValue('');
@@ -236,7 +238,7 @@ const XiaomiRemotePanelComponent: React.FC<XiaomiRemotePanelProps> = ({
     } catch {
       /* ignore */
     }
-    window.electronAPI.remote.setClientKioskMode(competitionId, kioskTarget, kioskConfig);
+    void remote.setClientKioskMode(competitionId, kioskTarget, kioskConfig);
     setKioskTarget(null);
   };
 
@@ -445,9 +447,7 @@ const XiaomiRemotePanelComponent: React.FC<XiaomiRemotePanelProps> = ({
                   {/* Identifier */}
                   <Button
                     className="is-8078b9"
-                    onClick={() =>
-                      window.electronAPI.remote.identifyClient(competitionId, client.socketId)
-                    }
+                    onClick={() => void remote.identifyClient(competitionId, client.socketId)}
                     title={t('xiaomi.blink')}
                   >
                     {t('remote_score.identify_button')}

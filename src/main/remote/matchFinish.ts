@@ -20,6 +20,7 @@ import {
 } from './prevMatch';
 import type { ArenaMatch } from '../../shared/types/remote';
 import { winnerByScore } from '../../shared/domain/match/matchEndValidation';
+import { notifyScreen } from './remoteActivity';
 
 type S = RemoteScoreServer;
 
@@ -163,13 +164,17 @@ function applyDeviceExclusion(
     return;
   }
   const mainWin = getSharedMainWindow();
-  mainWin?.webContents.send('remote:fencer_excluded', {
-    fencerId: culprit.id,
-    matchId: match.id,
-    reason: 'black_card',
-    // Retrait écrit par le moteur : l'écran relit tireurs et session, sans rien appliquer
-    recorded,
-  });
+  if (mainWin) {
+    notifyScreen({
+      kind: 'fencer_excluded',
+      competitionId: ctx.session?.competitionId ?? null,
+      fencerId: culprit.id,
+      matchId: match.id,
+      reason: 'black_card',
+      // Retrait écrit par le moteur : l'écran relit tireurs et session, sans rien appliquer
+      recorded,
+    });
+  }
   recordRemoteEvent(ctx, {
     type: 'dt_call',
     arenaId,
@@ -177,7 +182,8 @@ function applyDeviceExclusion(
     refereeId: match.referee?.id ?? null,
     detail: 'black_card',
   });
-  mainWin?.webContents.send('remote:dt_call', {
+  notifyScreen({
+    kind: 'dt_call',
     arenaId,
     arenaNumber: ctx.arenas.get(arenaId)?.number ?? null,
     matchNumber: (match as { number?: number }).number ?? null,
@@ -206,7 +212,8 @@ function proposeAbandonToDT(
     refereeId: match.referee?.id ?? null,
     detail: 'abandon',
   });
-  getSharedMainWindow()?.webContents.send('remote:dt_call', {
+  notifyScreen({
+    kind: 'dt_call',
     arenaId,
     arenaNumber: ctx.arenas.get(arenaId)?.number ?? null,
     matchNumber: (match as { number?: number }).number ?? null,
@@ -266,7 +273,7 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): void
   // Persistance secondaire (timing / cartons / touches / sorties) : ces écritures
   // utilisent arena.currentMatch.id qui, pour un match de tableau, n'est PAS l'id DB
   // (stocké en composite). Une éventuelle exception (ex: contrainte FK) NE DOIT PAS
-  // empêcher l'émission de match:finished vers le renderer (sinon : vainqueur jamais
+  // empêcher l'avis match_finished vers le renderer (sinon : vainqueur jamais
   // remonté, pas de passage au tour suivant). On isole donc tout ce bloc.
   if (!ctx.isTrainingMode)
     try {
@@ -453,7 +460,7 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): void
   // Score par la commande recordScore (#1980, ADR-0005) : session, base, journal et audit
   // en une transaction. Abandon / exclusion signalés par l'appareil, carton noir de la
   // tablette : chemin historique (statuts posés par applyDeviceExclusion, confirmation du
-  // DT ou remote:fencer_excluded, appliqués par l'écran).
+  // DT ou avis fencer_excluded, appliqués par l'écran).
   const deviceReason = finishedMatch.deviceEnd?.reason;
   const finishWinner = resolveFinishWinner(ctx, finishedMatch);
   // Exclu : carton noir de la tablette, ou statut E de l'appareil (le perdant)
@@ -577,7 +584,9 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): void
       if (isVictory(memScore?.scoreA)) winnerForRenderer = 'A';
       else if (isVictory(memScore?.scoreB)) winnerForRenderer = 'B';
     }
-    mainWindow.webContents.send('match:finished', {
+    notifyScreen({
+      kind: 'match_finished',
+      competitionId: ctx.session?.competitionId ?? null,
       matchId: finishedMatch.id,
       scoreA: finishedMatch.scoreA,
       scoreB: finishedMatch.scoreB,

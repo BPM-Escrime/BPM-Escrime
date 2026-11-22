@@ -127,7 +127,6 @@ function mockElectronAPI(fencers: Fencer[], session: unknown = null) {
         'onMenuExport',
         'onFileOpened',
         'onMenuAddFencer',
-        'onRemoteCheckinUpdated',
       ].map(k => [k, () => () => {}])
     ),
   };
