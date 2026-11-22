@@ -10,6 +10,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 vi.mock('../hooks/useTranslation', () => import('../testUtils/i18nMock'));
 import AddFencerToPoolModal from './AddFencerToPoolModal';
+import { fakeApiBridge } from '../testUtils/apiBridge';
 import { Fencer, Pool, Gender, FencerStatus } from '../../shared/types';
 
 const fencer = (id: string, last: string): Fencer => ({
@@ -40,10 +41,34 @@ const pool: Pool = {
   updatedAt: new Date(),
 };
 
+/** Tireur tel que le contrat l'expose (listFencers) */
+const dto = (f: Fencer) => ({
+  id: f.id,
+  ref: f.ref ?? 1,
+  lastName: f.lastName,
+  firstName: f.firstName,
+  birthDate: null,
+  gender: 'M',
+  nationality: 'FRA',
+  region: null,
+  department: null,
+  club: f.club ?? null,
+  license: null,
+  ranking: null,
+  handedness: null,
+  status: f.status ?? 'P',
+  exclusionReason: null,
+  seedNumber: null,
+  initialRanking: null,
+  finalRanking: null,
+  photo: null,
+});
+
 beforeEach(() => {
   (window as any).electronAPI = {
+    // Tireurs lus par le contrat (listFencers) ; synchro des tables : chemin des exceptions
+    api: fakeApiBridge({ listFencers: async () => [inPool, free].map(dto) }),
     db: {
-      getFencersByCompetition: vi.fn(async () => [inPool, free]),
       syncPoolSnapshot: vi.fn(async () => undefined),
     },
   };

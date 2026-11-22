@@ -51,6 +51,7 @@ import {
   updateCompetitionSettings,
 } from '../commands/competitionSetup';
 import { configureDtView, getDtViewStatus } from '../commands/dtView';
+import { competitionStats } from '../commands/competitionStats';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
 import { readSession } from '../commands/sessionView';
@@ -165,6 +166,16 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     return ctx.db.getCompetitionTimeline(competitionId);
   },
   getPoolSignatures: (ctx, { poolId }) => ctx.db.getPoolSignatures(poolId),
+  getTableauSignatures: (ctx, { matchIds }) => ctx.db.getDEMatchSignaturesByMatchIds(matchIds),
+  listScoreAudit: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getScoreAuditLogByCompetition(competitionId);
+  },
+  listRefereeComments: (ctx, { competitionId, refereeId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getRefereeComments(competitionId, refereeId);
+  },
+  getCompetitionStats: (ctx, input) => competitionStats(ctx, input),
   listFencerStats: (ctx, { competitionId }) => {
     getCompetitionOrThrow(ctx, competitionId);
     return ctx.db.getCompetitionFencerStats(competitionId);

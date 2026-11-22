@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { ScoreAuditEntry, ScoreIpConflict } from '../../shared/types/preload';
 import { useToast } from './Toast';
 import { usePlatform } from '../platform/PlatformContext';
+import { useBpmClient } from '../api/BpmClientContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { getRoundName } from '../../shared/domain/tableau/tableauCalculations';
 import type { MatchAuditOption } from './MatchAuditLog';
@@ -116,6 +117,7 @@ function buildSorters(refereeOf: RefereeLookup): Record<SortMode, Sorter> {
 const ScoreAuditLog_: React.FC<Props> = ({ competitionId, matchOptions }) => {
   const { showToast } = useToast();
   const platform = usePlatform();
+  const client = useBpmClient();
   const { t } = useTranslation();
   const [entries, setEntries] = useState<ScoreAuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -131,14 +133,14 @@ const ScoreAuditLog_: React.FC<Props> = ({ competitionId, matchOptions }) => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await window.electronAPI.db.getScoreAuditLogByCompetition(competitionId);
-      setEntries(data);
+      // Historique des scores par le contrat (listScoreAudit)
+      setEntries((await client.query('listScoreAudit', { competitionId })) as ScoreAuditEntry[]);
     } catch {
       showToast('Erreur chargement historique', 'error');
     } finally {
       setLoading(false);
     }
-  }, [competitionId, showToast]);
+  }, [competitionId, showToast, client]);
 
   useEffect(() => {
     load();

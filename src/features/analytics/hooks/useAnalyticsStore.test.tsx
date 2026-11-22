@@ -41,13 +41,17 @@ describe('loadFencerStats', () => {
 
 describe('loadCompetitionMetrics', () => {
   it('charge les métriques agrégées', async () => {
+    // Chiffres calculés par le moteur (getCompetitionStats)
     (window as any).electronAPI = {
-      db: {
-        getFencersByCompetition: vi.fn(async () => [{ id: 'a' }, { id: 'b' }]),
-        getPhasesByCompetition: vi.fn(async () => [{ id: 'ph' }]),
-        getPoolsByPhase: vi.fn(async () => [{ id: 'po' }]),
-        getMatchesByPool: vi.fn(async () => [{ status: 'finished' }, { status: 'not_started' }]),
-      },
+      api: fakeApiBridge({
+        getCompetitionStats: async () => ({
+          totalFencers: 2,
+          totalMatches: 2,
+          completedMatches: 1,
+          averageMatchDuration: 0,
+          topFencers: [],
+        }),
+      }),
     };
     await get().loadCompetitionMetrics('c1');
     expect(get().competitionMetrics).toEqual({ totalFencers: 2, completedMatches: 1 });

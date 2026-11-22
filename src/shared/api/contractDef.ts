@@ -72,3 +72,26 @@ export const CommandId = z
   .describe(
     'Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau)'
   );
+
+/** Tireur exposé par le contrat (listFencers, dates en ISO 8601) */
+export const FencerSchema = z.object({
+  id: z.string(),
+  ref: z.number(),
+  lastName: z.string(),
+  firstName: z.string(),
+  birthDate: z.string().nullable(),
+  gender: z.string(),
+  nationality: z.string(),
+  region: z.string().nullable(),
+  department: z.string().nullable(),
+  club: z.string().nullable(),
+  license: z.string().nullable(),
+  ranking: z.number().nullable(),
+  handedness: z.enum(['R', 'L']).nullable(),
+  status: z.string(),
+  exclusionReason: z.string().nullable(),
+  seedNumber: z.number().nullable(),
+  initialRanking: z.number().nullable(),
+  finalRanking: z.number().nullable(),
+  photo: z.string().nullable(),
+});

@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { ScoreAuditEntry } from '../../../shared/types/preload';
+import { fakeApiBridge } from '../../testUtils/apiBridge';
 import { ScoreAuditLog } from '../ScoreAuditLog';
 
 vi.mock('../Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
@@ -34,8 +35,8 @@ function entry(id: string, matchId: string, extra: Partial<ScoreAuditEntry> = {}
 describe('ScoreAuditLog — colonne Arbitre (#1031)', () => {
   beforeEach(() => {
     (window as any).electronAPI = {
-      db: {
-        getScoreAuditLogByCompetition: vi
+      api: fakeApiBridge({
+        listScoreAudit: vi
           .fn()
           .mockResolvedValue([
             entry('e1', 'm1', { refereeName: 'Durand' }),
@@ -44,7 +45,7 @@ describe('ScoreAuditLog — colonne Arbitre (#1031)', () => {
             entry('e4', 'm4'),
             entry('e5', 'm2', { changedBy: 'device' }),
           ]),
-      },
+      }),
       onScoreIpConflict: () => () => {},
     };
   });
@@ -73,15 +74,15 @@ describe('ScoreAuditLog — compacter / déplier (#1123)', () => {
   beforeEach(() => {
     localStorage.clear();
     (window as any).electronAPI = {
-      db: {
-        getScoreAuditLogByCompetition: vi
+      api: fakeApiBridge({
+        listScoreAudit: vi
           .fn()
           .mockResolvedValue(
             Array.from({ length: 12 }, (_, i) =>
               entry(`e${i}`, `m${i}`, { refereeName: `Arbitre${i}` })
             )
           ),
-      },
+      }),
       onScoreIpConflict: () => () => {},
     };
   });
@@ -103,15 +104,15 @@ describe('ScoreAuditLog — compacter / déplier (#1123)', () => {
 describe('ScoreAuditLog — motif de correction après tirage du tableau (#1996)', () => {
   beforeEach(() => {
     (window as any).electronAPI = {
-      db: {
-        getScoreAuditLogByCompetition: vi.fn().mockResolvedValue([
+      api: fakeApiBridge({
+        listScoreAudit: vi.fn().mockResolvedValue([
           entry('e1', 'm1', {
             changedBy: 'correction',
             reason: 'Correction après tirage du tableau, tableau conservé',
           }),
           entry('e2', 'm2', { changedBy: 'mcp', reason: 'mcp_entry' }),
         ]),
-      },
+      }),
       onScoreIpConflict: () => () => {},
     };
   });

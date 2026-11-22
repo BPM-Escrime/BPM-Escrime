@@ -6,7 +6,7 @@
 
 import { Fencer, FencerCompetitionStats } from '../../../shared/types';
 import { defaultBpmClient } from '../../../renderer/api/IpcClient';
-import { calculateFencerPoolStats } from '../../../shared/utils/poolCalculations';
+import { fencerFromDTO } from '../../../renderer/api/fencerMapping';
 
 export interface CompetitionStats {
   totalFencers: number;
@@ -23,10 +23,10 @@ export interface CompetitionStats {
 
 export class AnalyticsService {
   /**
-   * Get comprehensive competition statistics from DB
+   * Chiffres de l'épreuve, calculés par le moteur (requête getCompetitionStats, #1981)
    */
   async getCompetitionStats(competitionId: string): Promise<CompetitionStats> {
-    if (typeof window === 'undefined' || !window.electronAPI?.db) {
+    if (typeof window === 'undefined' || !window.electronAPI?.api) {
       return {
         totalFencers: 0,
         totalMatches: 0,
@@ -35,70 +35,10 @@ export class AnalyticsService {
         topFencers: [],
       };
     }
-
-    const fencers = await window.electronAPI.db.getFencersByCompetition(competitionId);
-    const phases = await window.electronAPI.db.getPhasesByCompetition(competitionId);
-
-    let allMatches: Awaited<ReturnType<typeof window.electronAPI.db.getMatchesByPool>>[] = [];
-    for (const phase of phases) {
-      const pools = await window.electronAPI.db.getPoolsByPhase(phase.id);
-      for (const pool of pools) {
-        const matches = await window.electronAPI.db.getMatchesByPool(pool.id);
-        allMatches = allMatches.concat(matches);
-      }
-    }
-
-    const flatMatches = allMatches.flat();
-    const completedMatches = flatMatches.filter(m => m.status === 'finished');
-
-    const totalDuration = completedMatches.reduce((sum: number, m) => sum + (m.duration ?? 0), 0);
-    const averageMatchDuration =
-      completedMatches.length > 0 ? totalDuration / completedMatches.length : 0;
-
-    // Build fencer stats using match data
-    const topFencers = fencers
-      .map(fencer => {
-        const stats = calculateFencerPoolStats(fencer, flatMatches);
-        return {
-          fencer,
-          victories: stats.victories,
-          touchesScored: stats.touchesScored,
-          touchesReceived: stats.touchesReceived,
-        };
-      })
-      .filter(f => f.victories > 0 || f.touchesScored > 0)
-      .sort((a, b) => b.victories - a.victories || b.touchesScored - a.touchesScored)
-      .slice(0, 10);
-
+    const stats = await defaultBpmClient.query('getCompetitionStats', { competitionId });
     return {
-      totalFencers: fencers.length,
-      totalMatches: flatMatches.length,
-      completedMatches: completedMatches.length,
-      averageMatchDuration,
-      topFencers,
-    };
-  }
-
-  /**
-   * Get pool statistics from DB
-   */
-  async getPoolStats(poolId: string): Promise<{
-    totalMatches: number;
-    completedMatches: number;
-    averageDuration: number;
-  }> {
-    if (typeof window === 'undefined' || !window.electronAPI?.db) {
-      return { totalMatches: 0, completedMatches: 0, averageDuration: 0 };
-    }
-
-    const matches = await window.electronAPI.db.getMatchesByPool(poolId);
-    const completed = matches.filter(m => m.status === 'finished');
-    const totalDuration = completed.reduce((sum, m) => sum + (m.duration ?? 0), 0);
-
-    return {
-      totalMatches: matches.length,
-      completedMatches: completed.length,
-      averageDuration: completed.length > 0 ? totalDuration / completed.length : 0,
+      ...stats,
+      topFencers: stats.topFencers.map(f => ({ ...f, fencer: fencerFromDTO(f.fencer) })),
     };
   }
 
