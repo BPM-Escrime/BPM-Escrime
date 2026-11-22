@@ -148,6 +148,16 @@ export function applyScoreToPool(
   return updated;
 }
 
+/** Refus de validatePoolScore : codes du catalogue (shared/api/errors, ADR-0009) */
+export type PoolScoreErrorCode =
+  | 'score_invalid'
+  | 'priority_not_allowed'
+  | 'score_above_max'
+  | 'tie_at_max'
+  | 'draw_not_allowed'
+  | 'draw_needs_winner'
+  | 'winner_contradicts_score';
+
 /**
  * Validation d'un score de poule, identique à la saisie de l'écran :
  * entiers ≥ 0, pas au-delà du score max, égalité tranchée (vainqueur ou priorité),
@@ -163,7 +173,7 @@ export function validatePoolScore(input: {
   isLaserSabre: boolean;
   /** Départage par V / priorité autorisé (allowsVictoryTieBreak) */
   tieByVictory: boolean;
-}): string | null {
+}): PoolScoreErrorCode | null {
   const { scoreA, scoreB, maxScore } = input;
   if (![scoreA, scoreB].every(s => Number.isInteger(s) && s >= 0)) return 'score_invalid';
   if (input.priority && !input.tieByVictory) return 'priority_not_allowed';

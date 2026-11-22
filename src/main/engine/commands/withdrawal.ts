@@ -56,7 +56,14 @@ export interface ReinstateFencerInput {
   dryRun?: boolean;
 }
 
-const REFUSAL_MESSAGES: Record<string, string> = {
+type RefusalCode =
+  | 'already_withdrawn'
+  | 'tableau_complete'
+  | 'match_not_ready'
+  | 'withdrawal_not_found'
+  | 'next_match_played';
+
+const REFUSAL_MESSAGES: Record<RefusalCode, string> = {
   already_withdrawn: 'Tireur déjà retiré : le réintégrer d’abord (reinstateFencer)',
   tableau_complete: 'Tableau terminé : plus de retrait possible',
   match_not_ready:
@@ -65,8 +72,8 @@ const REFUSAL_MESSAGES: Record<string, string> = {
   next_match_played: 'Un match qui suit a déjà été joué : réintégration impossible',
 };
 
-function refuse(code: string): never {
-  throw new CommandError(code, REFUSAL_MESSAGES[code] ?? code);
+function refuse(code: RefusalCode): never {
+  throw new CommandError(code, REFUSAL_MESSAGES[code]);
 }
 
 function assertSupportedFormat(comp: Competition): void {

@@ -34,7 +34,7 @@ Give answer. Stop.
 - Règle métier → `src/shared/domain`, pure : heure et hasard injectés (ADR-0002). `src/features` = interface (ADR-0004)
 - Écriture → commande du contrat (`src/shared/api/contract.ts`, handler dans `src/main/engine`), dans une transaction par `runCommand` (ADR-0005, 0006, 0018). Écran, tablettes, MCP, appareils : même commande. Jamais de nouveau canal `ipcMain.handle`, ni de nouvel appel `window.electronAPI` / `useElectronDB()` dans l'interface
 - Nommage (ADR-0008) : commande = verbe + objet, requête `get…`/`list…`, abonnement `on…`, outil MCP = même nom en snake_case. Événement du journal au passé, PascalCase, identifiants seulement (ADR-0007)
-- Erreur → code snake_case stable en anglais, message en français (ADR-0009). Catalogue `src/shared/api/errors.ts` pas encore livré : réutiliser un code existant avant d'en créer un
+- Erreur → code du catalogue `src/shared/api/errors.ts` (ADR-0009) : snake_case, anglais, message en français ; réutiliser un code existant, sinon l'ajouter avec sa catégorie puis `npm run docs:mcp` (docs/API_CONTRACT.md)
 - Migration → ADR acceptée citée dans `description` (`docs/adr/00NN`, ADR-0011) ; une migration mergée ne se modifie plus
 - Garde-fous CI : `lint:errors`, `check:quality` (`electronApiUses`, `ipcChannels`…), `contractNaming.test.ts`, `migrationsAdr.test.ts`. Ne jamais relever une référence pour passer
 
