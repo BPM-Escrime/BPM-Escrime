@@ -89,7 +89,8 @@ npm run build:ci        # Same as build (used by CI)
 npm run version:show    # Show version.json
 npm run version:bump -- <major|minor|patch|X.Y.Z>  # SemVer bump (docs/VERSIONING.md)
 npm run build:main      # Webpack main + preload only
-npm run build:renderer  # Webpack renderer only (also copies src/remote → dist/remote)
+npm run build:renderer  # Webpack renderer (also copies src/remote → dist/remote) + vue DT
+npm run build:dt        # Vue DT dans un navigateur seule (webpack.dt.config.js → dist/remote/dt, servie sous /dt/, ADR-0020)
 npm start               # Build and run with Electron
 npm run package         # Create distributable packages for all platforms
 npm run package:win     # Windows (NSIS installer + portable)

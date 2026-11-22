@@ -53,7 +53,11 @@ beforeEach(async () => {
   app.use(express.json());
   const guard = new LoginGuard();
   guard.failureDelayMs = 0;
-  dt.registerRoutes(app, { loginGuard: guard, clientIp: () => '192.168.1.20' });
+  dt.registerRoutes(app, {
+    loginGuard: guard,
+    clientIp: () => '192.168.1.20',
+    competitionId: () => sessionId,
+  });
   http = createServer(app);
   server = new Server(http);
   dt.attach(server, { db, emitChange: () => undefined }, () => sessionId, {
@@ -127,6 +131,23 @@ d('espace Vue DT (docs/adr/0020)', () => {
     for (let i = 0; i < 61; i++) codes.push((await fetch(`${base}/api/dt/status`)).status);
     expect(codes.slice(0, 60).every(c => c === 200)).toBe(true);
     expect(codes[60]).toBe(429);
+  });
+
+  it('page /dt/ : coquille en mémoire avec CSP ; épreuve donnée une fois connecté', async () => {
+    const page = await fetch(`${base}/dt/`);
+    expect(page.status).toBe(200);
+    expect(page.headers.get('content-security-policy')).toContain("script-src 'nonce-");
+    const html = await page.text();
+    expect(html).toContain('src="/dt/dt.js"');
+    expect(html).toMatch(/<script nonce="[^"]+" src="\/dt\/dt\.js">/);
+
+    dt.setPassword(PASSWORD);
+    dt.setEnabled(true);
+    const anon = await (await fetch(`${base}/api/dt/status`)).json();
+    expect(anon).not.toHaveProperty('competitionId');
+    const cookie = await cookieOf();
+    const logged = await (await fetch(`${base}/api/dt/status`, { headers: { cookie } })).json();
+    expect(logged).toMatchObject({ authenticated: true, competitionId });
   });
 
   it('session non démarrée : rien n’est servi', async () => {

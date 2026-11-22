@@ -166,7 +166,7 @@ Nix de \`flake.nix\`. Ce n'est pas une dépendance des builds par plateforme.
 | E2E (PR) | job \`e2e\` : \`npx playwright install --with-deps chromium\` puis \`xvfb-run -a npm run test:e2e\` (build compris) | un test Playwright échoue : interface dans le navigateur (\`chromium\`) ou application Electron réelle (\`electron\`) ; rapport \`playwright-report\` en artefact (#2045) |
 | Build Nix | \`nix build .#default\` (job \`nix-build\`) | le paquet \`flake.nix\` ne build pas : \`npmDepsHash\` périmé vs \`package-lock.json\`, dépendance native cassée, etc. |
 | Tests unitaires | \`npm run test:run\` | un test Vitest échoue |
-| Budget bundle | \`npm run build:renderer\` + \`node scripts/check-bundle-size.js\` | JS renderer : initial > 2.75 MiB, un chunk à la demande > 1.25 MiB, total > 6.5 MiB, ou aucun chunk à la demande (\`scripts/check-bundle-size.js\`) |
+| Budget bundle | \`npm run build:renderer\` + \`node scripts/check-bundle-size.js\` | JS renderer : initial > 2.75 MiB, un chunk à la demande > 1.25 MiB, total > 8.5 MiB, aucun chunk à la demande, ou vue DT (\`dist/remote/dt/dt.js\`, ADR-0020) > 2.25 MiB (\`scripts/check-bundle-size.js\`) |
 
 Hors CI (manuel) : \`npm run lint\` (avertissements compris), \`npm run format:check\`, \`npm run test:coverage\`. Débordements de libellés dans les dix langues à 1024×768 (#1543) :
 \`npm run check:i18n-visual\` (\`scripts/capture-i18n.js\`, Electron, après \`npm run build\` ;

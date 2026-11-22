@@ -15,7 +15,10 @@ const path = require('path');
 const DIST_DIR = path.join(__dirname, '..', 'dist', 'renderer');
 const MiB = 1024 * 1024;
 const INITIAL_CHUNKS = new Set(['runtime.js', 'react.js', 'vendors.js', 'main.js']);
+const DT_DIR = path.join(__dirname, '..', 'dist', 'remote', 'dt');
 const BUDGETS = {
+  // Vue DT dans un navigateur (ADR-0020, webpack.dt.config.js) : dt.js ≈ 1.65 MiB en build dev (nov. 2026)
+  dt: 2.25 * MiB,
   initial: 2.75 * MiB,
   chunk: 1.25 * MiB, // CompetitionView ≈ 1.0 MiB en build dev (nov. 2026)
   total: 8.5 * MiB, // ≈ 8.07 MiB en build dev (nov. 2026, #1996 correction de poule après tableau ; 8.01 MiB avant)
@@ -62,6 +65,13 @@ const results = [
   { name: 'chunk', value: lazy.length ? lazy[0].bytes : 0, label: `plus gros chunk (${lazy[0]?.file ?? '—'})` },
   { name: 'total', value: sum(sizes), label: 'total JS' },
 ];
+// Bundle de la vue DT (sans les chunks de langue, chargés à la demande)
+const dtMain = path.join(DT_DIR, 'dt.js');
+if (fs.existsSync(dtMain)) {
+  results.push({ name: 'dt', value: fs.statSync(dtMain).size, label: 'vue DT (dt.js)' });
+} else {
+  console.warn(`\n(vue DT absente : ${path.relative(process.cwd(), dtMain)}, lancer npm run build:dt)`);
+}
 
 console.log('');
 let failed = false;

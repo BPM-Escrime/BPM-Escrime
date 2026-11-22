@@ -20,12 +20,30 @@ import {
   type LoginGuard,
 } from './auth';
 import { isLoopbackAddress, normalizeIp } from './network';
+import { sendHtmlPage } from './csp';
 import type { DatabaseManager } from '../../database';
 import { registerWsApi, WS_API_NAMESPACE } from '../engine/api/wsAdapter';
 import type { CommandContext, DtViewPort } from '../engine/commands/context';
 import { logger, LogCategory } from '../../shared/services/logger';
 
 export const DT_COOKIE = 'bp_dt_token';
+
+/** Coquille de la page (entrée Webpack `dt`, webpack.dt.config.js) ; langue et titre posés par la page */
+export const DT_PAGE_HTML = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BellePoule</title>
+<link rel="stylesheet" href="/dt/dt.css">
+</head>
+<body>
+<div id="root"></div>
+<script src="/dt/dt.js"></script>
+</body>
+</html>
+`;
 export const DT_LOGIN_PATH = '/api/dt/login';
 const LOGIN_TARGET = 'dt';
 
@@ -110,15 +128,16 @@ export class DtViewAccess implements DtViewPort {
 
   /** Routes de connexion et espace de noms /api sur le serveur distant de l'épreuve */
   mount(host: DtViewHost): void {
-    this.registerRoutes(host.app, {
-      loginGuard: host.loginGuard,
-      clientIp: req => host.getClientIp(req),
-    });
     // Épreuve de la session en cours (pas l'entraînement)
     const served = () => {
       const id = host.session?.competitionId;
       return id && id !== '__training__' ? id : undefined;
     };
+    this.registerRoutes(host.app, {
+      loginGuard: host.loginGuard,
+      clientIp: req => host.getClientIp(req),
+      competitionId: served,
+    });
     this.attach(host.io, { db: host.db, emitChange: () => undefined }, served, {
       maxSocketsPerIp: host.MAX_SOCKETS_PER_IP,
       eventBurst: host.SOCKET_EVENT_BURST,
@@ -128,7 +147,12 @@ export class DtViewAccess implements DtViewPort {
 
   registerRoutes(
     app: express.Application,
-    deps: { loginGuard: LoginGuard; clientIp: (req: express.Request) => string }
+    deps: {
+      loginGuard: LoginGuard;
+      clientIp: (req: express.Request) => string;
+      /** Épreuve servie : donnée à la page une fois connectée */
+      competitionId?: () => string | undefined;
+    }
   ): void {
     // Débit par IP, en plus de LoginGuard (connexion) : 60 requêtes/min sur l'espace
     const limiter = rateLimit({
@@ -140,8 +164,13 @@ export class DtViewAccess implements DtViewPort {
       message: { success: false, error: 'too_many_attempts' },
     });
     app.get('/api/dt/status', limiter, (req, res) => {
-      res.json({ ...this.status(), authenticated: this.isAuthorized(req.headers.cookie) });
+      const authenticated = this.isAuthorized(req.headers.cookie);
+      const competitionId = authenticated ? deps.competitionId?.() : undefined;
+      res.json({ ...this.status(), authenticated, ...(competitionId ? { competitionId } : {}) });
     });
+
+    // Page de la vue DT : coquille HTML en mémoire (CSP avec nonce), bundle dist/remote/dt
+    app.get(['/dt', '/dt/'], limiter, (_req, res) => sendHtmlPage(res, DT_PAGE_HTML));
 
     app.post(DT_LOGIN_PATH, limiter, async (req, res) => {
       const ip = deps.clientIp(req);

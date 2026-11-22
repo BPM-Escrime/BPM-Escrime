@@ -16,6 +16,7 @@ import { ConnectedScreensPanel } from './remote/ConnectedScreensPanel';
 import { ipcErrorText } from '../services/ipcError';
 import { DisplayOptionsPanel } from './remote/DisplayOptionsPanel';
 import { UrlCopyRow } from './remote/UrlCopyRow';
+import { DtViewPanel } from './remote/DtViewPanel';
 import RemoteViewModeTabs from './remote/RemoteViewModeTabs';
 import { RSM_STYLES } from './remote/rsmStyles';
 import { StripPlanCard } from './remote/StripPlanCard';
@@ -34,7 +35,7 @@ function visibleSections(isExpert: boolean, trainerEnabled: boolean): RemoteSect
   const ids: RemoteSectionId[] = ['strips', 'kiosk'];
   if (isExpert) ids.push('orgNote');
   ids.push('globalTheme');
-  if (isExpert) ids.push('displayOptions', 'overlay', 'checkin');
+  if (isExpert) ids.push('displayOptions', 'overlay', 'checkin', 'dtView');
   if (trainerEnabled) ids.push('trainer');
   if (isExpert) ids.push('lobby', 'cyrano');
   ids.push('screens');
@@ -493,6 +494,18 @@ const RemoteScoreManager: React.FC<RemoteScoreManagerProps> = (props: RemoteScor
                 </div>
               </div>
             </>
+          )}
+
+        {isExpert &&
+          fold('dtView')(
+            <DtViewPanel
+              competitionId={competition.id}
+              serverUrl={serverUrl}
+              isRemoteActive={isRemoteActive}
+              copiedIndex={copiedIndex}
+              onCopy={copyToClipboard}
+              onQr={(url, label) => setActiveQR({ url, label })}
+            />
           )}
 
         {trainerEnabled &&
