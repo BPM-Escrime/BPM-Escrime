@@ -149,4 +149,31 @@ d('épreuves (docs/adr/0018)', () => {
       invoke(ctx, 'getCompetition' as never, { competitionId: 'inconnue' } as never)
     ).rejects.toMatchObject({ code: 'competition_not_found' });
   });
+
+  it('formule validée à chaque écriture (docs/adr/0012) ; réglage ancien hors bornes toléré', async () => {
+    await expect(
+      invoke(
+        ctx,
+        'createCompetition' as never,
+        {
+          title: 'X',
+          date: '2026-12-13',
+          weapon: 'E',
+          gender: 'M',
+          category: 'SEN',
+          settings: { poolRounds: 9 },
+        } as never
+      )
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    await expect(
+      call('updateCompetitionSettings', { settings: { poolSizeMin: 7, poolSizeMax: 5 } })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    // Épreuve 2.0 : score de poule enregistré hors bornes, autre réglage modifiable
+    const comp = db.getCompetition(competitionId)!;
+    db.updateCompetition(competitionId, {
+      settings: { ...comp.settings, defaultPoolMaxScore: 21 } as never,
+    });
+    await call('updateCompetitionSettings', { settings: { thirdPlaceMatch: true } });
+    expect(db.getCompetition(competitionId)!.settings.thirdPlaceMatch).toBe(true);
+  });
 });

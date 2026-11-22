@@ -86,6 +86,7 @@ export const ERRORS = {
   invalid_name: e('rule', 'Nom invalide'),
   not_in_season: e('rule', 'Épreuve hors saison'),
   unknown_setting: e('rule', 'Réglage inconnu'),
+  invalid_settings: e('rule', 'Réglages de formule hors bornes ou incohérents'),
   unsupported_format: e('rule', 'Format d’épreuve non pris en charge'),
   invalid_path: e('rule', 'Chemin invalide'),
   invalid_extension: e('rule', 'Extension de fichier refusée'),

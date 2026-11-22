@@ -92,6 +92,7 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `invalid_name` | rule | Nom invalide |
 | `not_in_season` | rule | Épreuve hors saison |
 | `unknown_setting` | rule | Réglage inconnu |
+| `invalid_settings` | rule | Réglages de formule hors bornes ou incohérents |
 | `unsupported_format` | rule | Format d’épreuve non pris en charge |
 | `invalid_path` | rule | Chemin invalide |
 | `invalid_extension` | rule | Extension de fichier refusée |
@@ -182,7 +183,10 @@ activation des arbitres passent par les commandes (`persistCompetitionUpdate`) ;
 d'une épreuve passe par `getCompetition` / `listCompetitions` : les réglages ont un schéma zod
 strict, vérifié à la compilation contre `CompetitionSettings` ; il valide aussi les réglages en
 entrée (valeur invalide refusée). Seule la formule à la carte garde son type sans validation de
-valeur, en attendant `validateFormulaSettings` (ADR-0012).
+valeur au niveau du schéma. `validateFormulaSettings` (`src/shared/domain/formula`, ADR-0012)
+juge ensuite bornes et cohérence (tours, qualifiés, tailles de poule, formule à la carte) à
+chaque création et modification : refus `invalid_settings` avec le détail ; à la modification,
+seuls les réglages modifiés sont jugés (épreuves 2.0 aux réglages anciens hors bornes).
 Saison (ADR-0018) : `SeasonRankingView` lit `getSeasonRanking` et verse, retire ou vide par les
 commandes ; le moteur calcule le classement Quest de l'épreuve versée.
 Cliquet `electronApiCalls` : 112.
