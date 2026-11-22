@@ -7,7 +7,6 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { MatchStatus } from '../../shared/types';
 import type { Match, Pool, Referee } from '../../shared/types';
-import { logger, LogCategory } from '@shared/services/logger';
 import { poolMatchesWithReferee, propagatePoolReferee } from '../../shared/utils/refereeStats';
 import type { ConsolationBracket, TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import type { AssignmentsInput } from './usePoolsLaunch';
@@ -67,19 +66,8 @@ export function useCompetitionReferees({
           })
         : 'local';
       if (outcome !== 'local') return;
+      // Hors moteur (hors Electron) : état local seulement, pas de base
       applyPoolRefereeAssignments(assignments);
-      for (const [matchId, ref] of assignments) {
-        // updateMatch lève une erreur synchrone si l'ID n'est pas un UUID
-        Promise.resolve()
-          .then(() => window.electronAPI.db.updateMatch(matchId, { refereeId: ref.id }))
-          .catch((e: unknown) =>
-            logger.warn(
-              LogCategory.DATABASE,
-              'updateMatch (arbitre auto) failed',
-              e instanceof Error ? e : undefined
-            )
-          );
-      }
     },
     [applyPoolRefereeAssignments, assign]
   );
@@ -95,25 +83,15 @@ export function useCompetitionReferees({
         ? await assign({ pools: [{ poolId, refereeIds: poolReferees.map(r => r.id) }] })
         : 'local';
       if (outcome !== 'local') return;
-      const { matches, changes } = propagatePoolReferee(
+      const { matches } = propagatePoolReferee(
         pool.matches ?? [],
         pool.referees?.[0]?.id,
         poolReferees[0]
       );
+      // Hors moteur (hors Electron) : état local seulement, pas de base
       setPools(prev =>
         prev.map(p => (p.id === poolId ? { ...p, referees: poolReferees, matches } : p))
       );
-      for (const { matchId, refereeId } of changes) {
-        Promise.resolve()
-          .then(() => window.electronAPI.db.updateMatch(matchId, { refereeId }))
-          .catch((e: unknown) =>
-            logger.warn(
-              LogCategory.DATABASE,
-              'updateMatch (arbitre de poule) failed',
-              e instanceof Error ? e : undefined
-            )
-          );
-      }
     },
     [pools, setPools, assign]
   );

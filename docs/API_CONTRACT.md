@@ -77,6 +77,10 @@ Ne plus ajouter d'appel direct à `window.electronAPI` pour une opération du co
 | `listReferees`                                                                        | requête — arbitres d'une épreuve (identité, club, nationalité, niveau, disponibilité) pour l'écran                                                                                         | —                                                 |
 | `getMatchTimeline` / `getCompetitionTimeline`                                         | requêtes — journal d'un match ou de tous les matchs d'une épreuve (scores, touches, cartons, sorties d'arène)                                                                              | —                                                 |
 | `getPoolSignatures`                                                                   | requête — signatures de la feuille d'une poule                                                                                                                                             | —                                                 |
+| `listFencerStats` / `getFencerStats`                                                  | requêtes — statistiques des tireurs d'une épreuve, ou d'un tireur (null si absent) : touches, cartons, sorties d'arène, durées                                                             | —                                                 |
+| `getFencerHistory`                                                                    | requête — matchs d'un tireur avec touches et cartons                                                                                                                                       | —                                                 |
+| `listRefereeStats`                                                                    | requête — statistiques des arbitres (matchs, durée, cartons, appels au DT, repos)                                                                                                          | —                                                 |
+| `listMatchTimings` / `listRemoteEvents`                                               | requêtes — horodatage des matchs et événements des saisies distantes (indicateurs d'organisation)                                                                                          | —                                                 |
 | `getMatchCards`                                                                       | requête                                                                                                                                                                                    | —                                                 |
 | `getCardsByMatchIds`                                                                  | requête                                                                                                                                                                                    | —                                                 |
 | `getCompetitionEvents`                                                                | requête                                                                                                                                                                                    | `get_competition_events`                          |
@@ -89,9 +93,16 @@ du tableau lit `listReferees`. `useMatchDbSync` n'écrit plus les matchs que pou
 moteur (tableaux séparés, équipes) : ailleurs le moteur les écrit dans la transaction de la
 commande. Journal des matchs (`useMatchAuditStore`) et signatures de poule passent par le
 contrat ; tests : `fakeApiBridge` (`src/renderer/testUtils/apiBridge.ts`) simule le pont.
-Tireurs (ADR-0018) : `useFencerManagement` lit `listFencers` et inscrit, modifie, classe et
+Statistiques : `AnalyticsDashboard`, `FencerStatsTable`, `FencerDetailModal` et `analyticsService`
+(stats des tireurs) lisent `listFencerStats`, `getFencerStats`, `getFencerHistory`,
+`listRefereeStats`, `listMatchTimings` et `listRemoteEvents` ; `getCompetitionStats` et
+`getPoolStats` (lecture brute des tables) restent sur `db.*` en attendant une requête
+métier.
+Code mort supprimé (`features/pools`, `features/competition`, `features/bracket` : services et
+stores sans appelant). Arbitres et pistes : plus d'écriture directe en base à côté de
+`assignMatches`. Tireurs (ADR-0018) : `useFencerManagement` lit `listFencers` et inscrit, modifie, classe et
 désinscrit par les commandes ; le statut reste écrit directement pour les formats hors moteur.
-Cliquet `electronApiCalls` : 121.
+Cliquet `electronApiCalls` : 117.
 
 Lots suivants : suite de la migration de l'écran par domaine (2), `WsClient` + adaptateur WebSocket (3),
 `PlatformServices` (4), pages distantes (5).

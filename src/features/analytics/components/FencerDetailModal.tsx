@@ -7,6 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Competition, FencerCompetitionStats } from '../../../shared/types';
 import { FencerMatchRecord } from '../../../shared/types/preload';
 import { useTranslation } from '../../../renderer/contexts/TranslationContext';
+import { useBpmClient } from '../../../renderer/api/BpmClientContext';
 import { exportFencerDetailPDF } from '../../../shared/utils/fencerDetailPdfExport';
 import { CardIcon } from '../../../renderer/components/common/CardIcon';
 import { TouchZoneHeatmap } from '../../../renderer/components/analytics/TouchZoneHeatmap';
@@ -81,6 +82,7 @@ const CARD_COLOR: Record<string, string> = {
 
 export const FencerDetailModal: React.FC<Props> = ({ fencer, competition, onClose }) => {
   const { t } = useTranslation();
+  const client = useBpmClient();
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
   const [matches, setMatches] = useState<FencerMatchRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,8 +119,8 @@ export const FencerDetailModal: React.FC<Props> = ({ fencer, competition, onClos
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    window.electronAPI?.db
-      .getFencerHistory(fencer.fencerId)
+    client
+      .query('getFencerHistory', { fencerId: fencer.fencerId })
       .then(hist => {
         if (!cancelled) setMatches(hist.matches);
       })
@@ -128,7 +130,7 @@ export const FencerDetailModal: React.FC<Props> = ({ fencer, competition, onClos
     return () => {
       cancelled = true;
     };
-  }, [fencer.fencerId]);
+  }, [client, fencer.fencerId]);
 
   const handleExportFencer = async () => {
     setExporting(true);

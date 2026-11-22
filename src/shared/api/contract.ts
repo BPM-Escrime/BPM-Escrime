@@ -116,6 +116,33 @@ const DivergenceSchema = z.object({
 /** Valeur de score d'une ligne du journal des matchs */
 const ScoreValue = z.object({ value: z.number().nullable() }).nullable();
 
+/** Statistiques d'un tireur dans son épreuve (touches, cartons, sorties d'arène, durées) */
+const FencerStatsSchema = z.object({
+  fencerId: z.string(),
+  fencerLastName: z.string(),
+  fencerFirstName: z.string(),
+  fencerClub: z.string().optional(),
+  competitionId: z.string(),
+  touchesZoneA: z.number(),
+  touchesZoneB: z.number(),
+  touchesZoneC: z.number(),
+  totalTouchPoints: z.number(),
+  receivedZoneA: z.number(),
+  receivedZoneB: z.number(),
+  receivedZoneC: z.number(),
+  receivedTouchPoints: z.number(),
+  whiteCards: z.number(),
+  yellowCards: z.number(),
+  redCards: z.number(),
+  blackCards: z.number().optional(),
+  cardsByReason: z.record(z.string(), z.number()),
+  arenaExits: z.number(),
+  matchesPlayed: z.number(),
+  totalDurationSeconds: z.number(),
+  averageDurationSeconds: z.number(),
+  matchesFinishedEarly: z.number(),
+});
+
 /** Ligne du journal d'un match (scores, touches, cartons, sorties d'arène) */
 const MatchEventEntrySchema = z.object({
   id: z.string(),
@@ -981,6 +1008,131 @@ export const contract = {
     description: 'Signatures de la feuille d’une poule (tablette) : une image par tireur.',
     input: z.object({ poolId: Id }),
     output: z.array(z.object({ fencerId: z.string(), signatureData: z.string() })),
+    permission: 'competition:read',
+  }),
+
+  listFencerStats: query({
+    description:
+      'Statistiques de chaque tireur d’une épreuve : touches par zone, touches reçues, cartons, sorties d’arène, durée des matchs. Écran : onglet Statistiques, rapport de fin de tournoi.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(FencerStatsSchema),
+    permission: 'competition:read',
+  }),
+
+  getFencerStats: query({
+    description: 'Statistiques d’un tireur (null si le tireur n’existe pas).',
+    input: z.object({ fencerId: Id }),
+    output: FencerStatsSchema.nullable(),
+    permission: 'competition:read',
+  }),
+
+  getFencerHistory: query({
+    description:
+      'Historique d’un tireur : ses matchs (adversaire, scores, durée), avec touches et cartons de chacun.',
+    input: z.object({ fencerId: Id }),
+    output: z.object({
+      matches: z.array(
+        z.object({
+          matchId: z.string(),
+          number: z.number(),
+          opponentId: z.string().nullable(),
+          opponentLastName: z.string().nullable(),
+          opponentFirstName: z.string().nullable(),
+          scoreA: z.string().nullable(),
+          scoreB: z.string().nullable(),
+          side: z.enum(['A', 'B']),
+          status: z.string(),
+          startTime: z.string().nullable(),
+          endTime: z.string().nullable(),
+          duration: z.number().nullable(),
+          poolId: z.string().nullable(),
+          tableId: z.string().nullable(),
+          round: z.number().nullable(),
+          touches: z.array(
+            z.object({
+              id: z.string(),
+              zone: z.string(),
+              points: z.number(),
+              timestamp: z.string(),
+              isValidInSuddenDeath: z.boolean(),
+              isReversed: z.boolean(),
+            })
+          ),
+          cards: z.array(
+            z.object({
+              id: z.string(),
+              cardType: z.string(),
+              reason: z.string(),
+              cardGroup: z.number(),
+              timestamp: z.string(),
+              pointsAwarded: z.number(),
+              resultingExclusion: z.boolean(),
+            })
+          ),
+        })
+      ),
+    }),
+    permission: 'competition:read',
+  }),
+
+  listRefereeStats: query({
+    description:
+      'Statistiques des arbitres d’une épreuve : matchs arbitrés, durée moyenne, cartons, appels au DT, repos moyen entre deux matchs.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(
+      z.object({
+        refereeId: z.string(),
+        refereeName: z.string(),
+        matchesCount: z.number(),
+        averageDuration: z.number(),
+        cardsYellow: z.number(),
+        cardsRed: z.number(),
+        cardsBlack: z.number(),
+        dtCalls: z.number(),
+        averageRestSeconds: z.number(),
+      })
+    ),
+    permission: 'competition:read',
+  }),
+
+  listMatchTimings: query({
+    description:
+      'Horodatage des matchs d’une épreuve (début, fin, durée, piste, arbitre) pour les indicateurs d’organisation.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(
+      z.object({
+        matchId: z.string(),
+        poolId: z.string().nullable(),
+        tableId: z.string().nullable(),
+        fencerAId: z.string().nullable(),
+        fencerBId: z.string().nullable(),
+        status: z.string(),
+        strip: z.number().nullable(),
+        refereeId: z.string().nullable(),
+        startTime: z.string().nullable(),
+        endTime: z.string().nullable(),
+        duration: z.number().nullable(),
+      })
+    ),
+    permission: 'competition:read',
+  }),
+
+  listRemoteEvents: query({
+    description:
+      'Événements des saisies distantes d’une épreuve : appels au DT, déconnexions, synchronisations hors ligne, erreurs de synchronisation.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(
+      z.object({
+        id: z.string(),
+        competitionId: z.string(),
+        type: z.enum(['dt_call', 'disconnect', 'offline_sync', 'sync_error']),
+        arenaId: z.string().nullable(),
+        matchId: z.string().nullable(),
+        refereeId: z.string().nullable(),
+        detail: z.string().nullable(),
+        createdAt: z.string(),
+      })
+    ),
     permission: 'competition:read',
   }),
 

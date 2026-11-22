@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 /**
- * Tests unitaires - AnalyticsService (agrégation via electronAPI.db mocké)
+ * Tests unitaires - AnalyticsService (agrégation via electronAPI mocké)
  * BellePoule Modern
  */
 
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { AnalyticsService } from './analyticsService';
+import { fakeApiBridge } from '../../../renderer/testUtils/apiBridge';
 
 const svc = new AnalyticsService();
 
@@ -101,12 +102,13 @@ describe('getCompetitionFencerStats / getFencerCompetitionStats', () => {
     expect(await svc.getFencerCompetitionStats('f1')).toBeNull();
   });
 
-  it('délèguent à electronAPI.db', async () => {
-    mockDb({
-      getCompetitionFencerStats: async () => [{ fencerId: 'f1' }],
-      getFencerCompetitionStats: async () => ({ fencerId: 'f1' }),
-    });
+  it('passent par le contrat d’API', async () => {
+    const listFencerStats = vi.fn(async () => [{ fencerId: 'f1' }]);
+    const getFencerStats = vi.fn(async () => ({ fencerId: 'f1' }));
+    (window as any).electronAPI = { api: fakeApiBridge({ listFencerStats, getFencerStats }) };
     expect(await svc.getCompetitionFencerStats('c1')).toHaveLength(1);
     expect(await svc.getFencerCompetitionStats('f1')).toEqual({ fencerId: 'f1' });
+    expect(listFencerStats).toHaveBeenCalledWith({ competitionId: 'c1' });
+    expect(getFencerStats).toHaveBeenCalledWith({ fencerId: 'f1' });
   });
 });

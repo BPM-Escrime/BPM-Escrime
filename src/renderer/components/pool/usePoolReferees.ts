@@ -69,10 +69,7 @@ export function usePoolReferees({
 
   const applyReferees = useCallback(
     (referees: Referee[]) => {
-      window.electronAPI.db.updatePoolReferees(
-        poolId,
-        referees.map(r => r.id)
-      );
+      // Écrit par le moteur (assignMatches) via onRefereeAssigned
       setAssignedReferees(referees);
       setShowRefereeModal(false);
       onRefereeAssigned?.(poolId, referees);

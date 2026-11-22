@@ -2055,7 +2055,7 @@ Unitaires : 524 fichiers, 4091 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - dérive totalFencers et completedMatches de getCompetitionStats
 - **getCompetitionFencerStats / getFencerCompetitionStats**
   - retournent des valeurs vides sans electronAPI
-  - délèguent à electronAPI.db
+  - passent par le contrat d’API
 
 </details>
 
