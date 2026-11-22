@@ -27,6 +27,13 @@ recordScore: command({
 | --------- | ----------------------------------- | ------------------------------------------------------------------------- |
 | IPC       | `src/main/engine/api/ipcAdapter.ts` | `api:invoke`, `api:subscribe` / `api:unsubscribe`, événements `api:event` |
 | MCP       | `src/main/engine/api/mcpAdapter.ts` | `tools/call`                                                              |
+| WebSocket | `src/main/engine/api/wsAdapter.ts`  | espace de noms Socket.IO `/api`, mêmes messages que l'IPC ; client `WsClient` |
+
+WebSocket ([ADR-0020](adr/0020-transport-websocket-contrat.md)) : servi par le serveur distant de
+l'épreuve, derrière l'espace « Vue DT » (cookie `bp_dt_token`). Lecture seule jusqu'à #1982 :
+requêtes et abonnements `competition:read` / `cards:read` de l'épreuve du serveur ; le reste →
+`permission_denied`. Données filtrées par `publicDto` (noms selon le réglage RGPD, licence et
+date de naissance retirées).
 
 Même validation partout. Erreur : `ApiError { code, message, data? }`. Les codes viennent d'un
 catalogue unique, `src/shared/api/errors.ts` ([ADR-0009](adr/0009-codes-erreur.md)) : un code
@@ -99,6 +106,8 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `path_not_allowed` | rule | Chemin hors des dossiers autorisés |
 | `pdf_unavailable` | rule | Export PDF indisponible dans ce mode |
 | `unavailable` | rule | Fonction indisponible dans ce mode |
+| `remote_not_running` | rule | Saisie distante de l’épreuve non démarrée |
+| `weak_password` | rule | Mot de passe trop court |
 | `permission_denied` | permission | Droit manquant pour cette opération |
 | `internal` | internal | Panne interne, journalisée |
 | `write_failed` | internal | Écriture impossible |
@@ -135,6 +144,7 @@ Ne plus ajouter d'appel direct à `window.electronAPI` pour une opération du co
 | `adjustRanking` / `skipPools` / `clearTableau`                                                       | commandes — classement ajusté (ou recalculé), épreuve sans poules, tableau retiré                                                                                                                                                                                                              | `adjust_ranking` / `skip_pools` / `clear_tableau` |
 | `setRapieresTeams`                                                                                   | commande — composition des équipes des rapières (journal : identifiants seulement)                                                                                                                                                                                                             | `set_rapieres_teams`                              |
 | `createCompetition` / `updateCompetitionDetails` / `updateCompetitionSettings` / `deleteCompetition` | commandes (`competition:write`) — création sur les défauts du moteur, données sans règle, arme et réglages (clés vérifiées, arme et mode spécial figés au tirage, tablettes prévenues), suppression (saisie distante arrêtée) ; pas de journal ([ADR-0018](adr/0018-commandes-inscription.md)) | —                                                 |
+| `configureDtView` / `getDtViewStatus` | commande (`competition:write`) et requête — espace « Vue DT » du serveur distant : ouvert, fermé, mot de passe (jamais renvoyé) ; codes `remote_not_running`, `weak_password` ([ADR-0020](adr/0020-transport-websocket-contrat.md)) | — |
 | `includeInSeason` / `excludeFromSeason` / `resetSeason`                                              | commandes (`competition:write`) — épreuve versée au classement de saison (classement Quest calculé par le moteur), retirée, saison vidée ([ADR-0018](adr/0018-commandes-inscription.md))                                                                                                       | —                                                 |
 | `registerFencers` / `updateFencerDetails` / `setFencerRankings` / `unregisterFencers`                | commandes (`fencers:write`) — inscription, identité, classement d'entrée (figé au tirage), désinscription avant le tirage ; pas de journal ([ADR-0018](adr/0018-commandes-inscription.md))                                                                                                     | —                                                 |
 | `registerReferees` / `updateRefereeDetails` / `setRefereeAvailability` / `unregisterReferee`         | commandes (`referees:write`) — inscription, identité, pointage, désinscription (refusée pendant un match arbitré) ; pas de journal ([ADR-0018](adr/0018-commandes-inscription.md))                                                                                                             | —                                                 |

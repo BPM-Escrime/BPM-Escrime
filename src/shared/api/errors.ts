@@ -93,6 +93,8 @@ export const ERRORS = {
   path_not_allowed: e('rule', 'Chemin hors des dossiers autorisés'),
   pdf_unavailable: e('rule', 'Export PDF indisponible dans ce mode'),
   unavailable: e('rule', 'Fonction indisponible dans ce mode'),
+  remote_not_running: e('rule', 'Saisie distante de l’épreuve non démarrée'),
+  weak_password: e('rule', 'Mot de passe trop court'),
 
   // ── permission ──
   permission_denied: e('permission', 'Droit manquant pour cette opération'),

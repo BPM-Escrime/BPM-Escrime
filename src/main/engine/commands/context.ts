@@ -41,7 +41,17 @@ export interface CommandContext {
   remote?: {
     stop(competitionId: string): void;
     settingsChanged(competitionId: string, patch: Partial<CompetitionSettings>): void;
+    /** Espace Vue DT du serveur de l'épreuve (docs/adr/0020) ; undefined : serveur arrêté */
+    dtView?(competitionId: string): DtViewPort | undefined;
   };
+}
+
+/** Espace Vue DT : réglé par configureDtView, lu par getDtViewStatus (docs/adr/0020) */
+export interface DtViewPort {
+  status(): { enabled: boolean; configured: boolean };
+  setEnabled(enabled: boolean): void;
+  /** Vide : mot de passe retiré. Lève une erreur si trop court. */
+  setPassword(password: string): void;
 }
 
 /** Erreur métier : message destiné à l'opérateur (ou à l'agent), code stable */

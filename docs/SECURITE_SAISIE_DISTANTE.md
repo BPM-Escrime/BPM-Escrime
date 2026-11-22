@@ -23,7 +23,7 @@ Le sélecteur d'interface (section **Réseau**) limite l'écoute à une carte r�
 
 ## Mots de passe
 
-- Mot de passe par arène (optionnel) et mot de passe d'appel (obligatoire pour ouvrir l'appel) : **8 caractères minimum**.
+- Mot de passe par arène (optionnel), mot de passe d'appel (obligatoire pour ouvrir l'appel) et mot de passe de la vue DT (obligatoire pour l'ouvrir) : **8 caractères minimum**.
 - Stockés en mémoire uniquement, hachés avec scrypt salé.
 - Sessions valables 8 h, invalidées à chaque changement de mot de passe.
 
@@ -37,6 +37,18 @@ Le sélecteur d'interface (section **Réseau**) limite l'écoute à une carte r�
 | Saturation                                   | 30 connexions Socket.IO max par IP ; 20 événements/s par connexion (rafale 40) ; corps JSON 4 Ko sur les routes de connexion              |
 
 L'IP client est celle de la connexion TCP. `X-Forwarded-For` est ignoré, sauf derrière un reverse proxy de confiance (`setTrustProxy(true)`).
+
+## Vue DT (ADR-0020)
+
+Consultation de l'épreuve dans un navigateur du réseau de la salle : espace de noms Socket.IO `/api`
+du serveur distant (contrat d'API, `docs/API_CONTRACT.md`).
+
+- Fermée par défaut ; ouverte par la commande `configureDtView`, mot de passe obligatoire.
+- Connexion : `POST /api/dt/login` (mêmes limites que l'appel), cookie `bp_dt_token` (`HttpOnly`,
+  `SameSite=Strict`, 8 h). Poignée de main de `/api` refusée sans jeton valide.
+- Fermeture ou nouveau mot de passe : jetons invalidés, vues ouvertes déconnectées.
+- **Lecture seule** jusqu'aux comptes et rôles (#1982) : aucune commande, épreuve du serveur seulement.
+- Mêmes plafonds que les autres sockets (30 connexions par IP, 20 événements/s, rafale 40).
 
 ## Données personnelles (#1194)
 

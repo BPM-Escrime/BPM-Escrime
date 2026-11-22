@@ -853,6 +853,21 @@ export const contract = {
     permission: 'competition:write',
   }),
 
+  configureDtView: command({
+    description:
+      'Ouvre ou ferme l’espace « Vue DT » du serveur distant de l’épreuve : consultation de l’épreuve dans un navigateur du réseau de la salle, en lecture seule (docs/adr/0020). Mot de passe requis pour ouvrir ; tout changement ferme les vues ouvertes.',
+    input: z.object({
+      competitionId: CompetitionId,
+      enabled: z.boolean().optional(),
+      /** Vide : mot de passe retiré (l'espace doit alors être fermé) */
+      password: z.string().max(200).optional(),
+      dryRun: DryRun,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), enabled: z.boolean(), configured: z.boolean() }),
+    permission: 'competition:write',
+  }),
+
   includeInSeason: command({
     description:
       'Verse une épreuve au classement de saison (ou la reverse) : classement Quest calculé par le moteur sur les poules du tour courant. Refus (« no_pools ») sans poules.',
@@ -1180,6 +1195,14 @@ export const contract = {
     description: 'Tireurs inscrits à une épreuve, dans l’ordre des dossards (dates en ISO 8601).',
     input: z.object({ competitionId: CompetitionId }),
     output: z.array(FencerSchema),
+    permission: 'competition:read',
+  }),
+
+  getDtViewStatus: query({
+    description:
+      'État de l’espace « Vue DT » de l’épreuve : saisie distante démarrée, espace ouvert, mot de passe défini (docs/adr/0020).',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.object({ running: z.boolean(), enabled: z.boolean(), configured: z.boolean() }),
     permission: 'competition:read',
   }),
 

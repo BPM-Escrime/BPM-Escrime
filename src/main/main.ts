@@ -145,6 +145,8 @@ registerApiHandlers({
       }
       server.refreshCompetitionSettings();
     },
+    // Espace Vue DT du serveur de l'épreuve (docs/adr/0020)
+    dtView: id => remoteServers.get(id)?.server.dtView,
   },
 });
 registerEventDayHandlers({ db });

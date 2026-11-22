@@ -30,8 +30,8 @@ export const WS_READ_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>(
 export const WS_MAX_SUBSCRIPTIONS = 20;
 
 export interface WsApiOptions {
-  /** Épreuve du serveur distant : seule épreuve servie */
-  competitionId: string;
+  /** Épreuve du serveur distant (lue à chaque appel : session démarrée ou non) */
+  competitionId: string | (() => string | undefined);
   /** Poignée de main acceptée (jeton de l'espace Vue DT, docs/adr/0020) */
   authorize: (handshake: Socket['handshake']) => boolean;
 }
@@ -40,7 +40,11 @@ export interface WsApiOptions {
  * Refus avant toute validation de l'entrée : commande, droit non servi, autre épreuve.
  * Une opération absente du contrat est laissée au moteur (unknown_operation, comme l'IPC).
  */
-export function wsRefusal(name: unknown, input: unknown, competitionId: string): ApiError | null {
+export function wsRefusal(
+  name: unknown,
+  input: unknown,
+  competitionId: string | undefined
+): ApiError | null {
   if (!isOperation(name)) return null;
   const def = contract[name];
   if (def.kind === 'command' || !WS_READ_PERMISSIONS.has(def.permission)) {
@@ -51,7 +55,7 @@ export function wsRefusal(name: unknown, input: unknown, competitionId: string):
   const shape = (def.input as { shape?: Record<string, unknown> }).shape;
   const target =
     input && typeof input === 'object' ? (input as { competitionId?: unknown }).competitionId : '';
-  if (!shape || !('competitionId' in shape) || target !== competitionId) {
+  if (!competitionId || !shape || !('competitionId' in shape) || target !== competitionId) {
     return new ApiError('permission_denied', 'Épreuve non servie par ce serveur');
   }
   return null;
@@ -64,6 +68,8 @@ type Ack = (envelope: ApiEnvelope) => void;
 const ackOf = (v: unknown): Ack => (typeof v === 'function' ? (v as Ack) : () => undefined);
 
 export function registerWsApi(nsp: Namespace, ctx: CommandContext, opts: WsApiOptions): void {
+  const served = () =>
+    typeof opts.competitionId === 'function' ? opts.competitionId() : opts.competitionId;
   nsp.use((socket, next) => {
     if (opts.authorize(socket.handshake)) next();
     else next(new Error('auth_required'));
@@ -82,7 +88,7 @@ export function registerWsApi(nsp: Namespace, ctx: CommandContext, opts: WsApiOp
 
     socket.on(WS_API_EVENTS.invoke, async (name: unknown, input: unknown, ack: unknown) => {
       const reply = ackOf(ack);
-      const refusal = wsRefusal(name, input, opts.competitionId);
+      const refusal = wsRefusal(name, input, served());
       if (refusal) return reply(fail(refusal));
       try {
         reply(await invokeEnvelope(ctx, name, input));
@@ -99,7 +105,7 @@ export function registerWsApi(nsp: Namespace, ctx: CommandContext, opts: WsApiOp
           if (typeof id !== 'string' || !id || id.length > 100) {
             throw new ApiError('invalid_input', 'Identifiant d’abonnement invalide');
           }
-          const refusal = wsRefusal(name, input, opts.competitionId);
+          const refusal = wsRefusal(name, input, served());
           if (refusal) throw refusal;
           if (!subs.has(id) && subs.size >= WS_MAX_SUBSCRIPTIONS) {
             throw new ApiError('invalid_input', 'Trop d’abonnements sur cette connexion');
