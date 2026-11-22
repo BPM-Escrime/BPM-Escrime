@@ -1,0 +1,56 @@
+name: Revue ADR hebdomadaire
+
+# Revue a posteriori, non bloquante, du respect des ADR (docs/adr) : garde-fous relâchés,
+# migrations sans ADR, lignes à vérifier (scripts/adr-review-report.js). Le rapport est
+# ajouté en commentaire de l'issue « Revue ADR hebdomadaire » (label revue-adr), créée au
+# premier passage. Aucune issue n'est jamais close par ce workflow.
+on:
+  schedule:
+    - cron: '0 6 * * 1' # lundi 6 h UTC
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'Depuis (date git, ex. 2026-11-01 ou "14 days ago")'
+        required: false
+        default: '7 days ago'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+
+      - name: Rapport
+        env:
+          SINCE: ${{ inputs.since || '7 days ago' }}
+        run: node scripts/adr-review-report.js --since="$SINCE" > report.md
+
+      - name: Publication sur l'issue de revue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh label create revue-adr --repo "$REPO" --color 5319e7 \
+            --description "Revue hebdomadaire du respect des ADR" 2>/dev/null || true
+          ISSUE=$(gh issue list --repo "$REPO" --label revue-adr --state open \
+            --json number -q '.[0].number')
+          if [ -z "$ISSUE" ]; then
+            ISSUE=$(gh issue create --repo "$REPO" --label revue-adr \
+              --title "Revue ADR hebdomadaire" \
+              --body "Rapport hebdomadaire du respect des ADR (docs/adr), en commentaires. Non bloquant : chaque ligne est à vérifier, pas une faute. Généré par .github/workflows/adr-review.yml." \
+              | grep -oE '[0-9]+$')
+          fi
+          # Limite d'un commentaire GitHub : 65 536 caractères
+          head -c 60000 report.md > body.md
+          gh issue comment "$ISSUE" --repo "$REPO" --body-file body.md
