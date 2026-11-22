@@ -4323,6 +4323,7 @@
     "snap": "Aimantation (0,5 m)",
     "snap_hint": "Les éléments se calent sur une grille de 0,5 m pendant le déplacement.",
     "tools_hint": "Cliquez sur un outil pour l’ajouter au plan, puis glissez-le.",
-    "hint_length": "Dimension intérieure de la salle, en mètres."
+    "hint_length": "Dimension intérieure de la salle, en mètres.",
+    "summary_arenas_max": "{{count}} arène(s) placée(s), maximum possible : {{max}}"
   }
 }

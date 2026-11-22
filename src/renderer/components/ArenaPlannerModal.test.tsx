@@ -25,7 +25,7 @@ import { ArenaPlannerModal } from './ArenaPlannerModal';
 describe('ArenaPlannerModal', () => {
   it('affiche que la salle tient pour une arène dans 20 × 20 m', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
-    expect(screen.getByRole('status')).toHaveTextContent('arenaPlanner.fits');
+    expect(screen.getByRole('status')).toHaveTextContent('arenaPlanner.optimize_result');
     expect(screen.getByRole('img')).toBeInTheDocument();
   });
 
@@ -33,7 +33,7 @@ describe('ArenaPlannerModal', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
     fireEvent.change(screen.getByLabelText('arenaPlanner.width'), { target: { value: '10' } });
     fireEvent.change(screen.getByLabelText('arenaPlanner.length'), { target: { value: '10' } });
-    expect(screen.getByRole('status')).toHaveTextContent('arenaPlanner.nofit');
+    expect(screen.getByRole('alert')).toHaveTextContent('arenaPlanner.nofit');
   });
 
   it('refuse des dimensions non positives', () => {
@@ -85,10 +85,13 @@ describe('ArenaPlannerModal', () => {
     expect((screen.getByLabelText('arenaPlanner.arenas') as HTMLInputElement).value).toBe('4');
   });
 
-  it('modifier une dimension annule le maximum affiché', () => {
+  it("ne permet jamais plus d'arènes que le maximum de la zone", () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
-    fireEvent.click(screen.getByText('arenaPlanner.optimize'));
-    fireEvent.change(screen.getByLabelText('arenaPlanner.width'), { target: { value: '25' } });
-    expect(screen.getByRole('status')).not.toHaveTextContent('arenaPlanner.optimize_result');
+    fireEvent.change(screen.getByLabelText('arenaPlanner.width'), { target: { value: '30' } });
+    fireEvent.change(screen.getByLabelText('arenaPlanner.length'), { target: { value: '30' } });
+    fireEvent.change(screen.getByLabelText('arenaPlanner.arenas'), { target: { value: '10' } });
+    expect(screen.getByRole('alert')).toHaveTextContent('arenaPlanner.nofit');
+    expect(screen.getByRole('status')).toHaveTextContent('arenaPlanner.optimize_result');
+    expect(screen.getAllByRole('img')[0].querySelectorAll('.arena-planner-safety')).toHaveLength(4);
   });
 });

@@ -4323,6 +4323,7 @@
     "snap": "Einrasten (0,5 m)",
     "snap_hint": "Elemente rasten beim Ziehen auf einem 0,5-m-Raster ein.",
     "tools_hint": "Ein Werkzeug anklicken, um es dem Plan hinzuzufügen, dann ziehen.",
-    "hint_length": "Innenmaß der Halle in Metern."
+    "hint_length": "Innenmaß der Halle in Metern.",
+    "summary_arenas_max": "{{count}} Arena(en) platziert, maximal möglich: {{max}}"
   }
 }
