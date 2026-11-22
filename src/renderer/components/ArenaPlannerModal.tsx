@@ -240,7 +240,13 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   };
 
   return (
-    <Modal title={t('arenaPlanner.title')} onClose={onClose} size="xl" scroll>
+    <Modal
+      title={t('arenaPlanner.title')}
+      onClose={onClose}
+      size="xl"
+      scroll
+      closeOnOverlay={false}
+    >
       <p className="arena-planner-lead">{t('arenaPlanner.hint')}</p>
 
       {!parsed || !maxLayout || !room ? <p role="alert">{t('arenaPlanner.invalid')}</p> : null}
