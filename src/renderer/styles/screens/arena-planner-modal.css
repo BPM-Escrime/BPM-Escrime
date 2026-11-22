@@ -1,0 +1,23 @@
+/* BellePoule Modern - Planificateur de placement d'arène (#2075) — Licensed under GPL-3.0 */
+
+.arena-planner-svg {
+  width: 100%;
+  max-height: 60vh;
+  background: #ffffff;
+  touch-action: none;
+}
+
+.arena-planner-item {
+  cursor: grab;
+}
+
+.arena-planner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.arena-planner-fields {
+  display: flex;
+  gap: 0.5rem;
+}
