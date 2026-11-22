@@ -19,7 +19,8 @@
     "guided_tour": "Parcours guidé",
     "club": "Club",
     "club_open": "Ouvrir l'espace Club",
-    "club_close": "Fermer l'onglet Club"
+    "club_close": "Fermer l'onglet Club",
+    "arena_planner": "Plan de salle (arènes)"
   },
   "menu": {
     "new_competition": "Nouvelle compétition",
@@ -4248,5 +4249,23 @@
     "rebuilt": "Tableau refait sur le classement corrigé",
     "drift_title": "Tableau non conforme au classement corrigé",
     "drift_hint": "Corrections gardées après le tirage. Refaites le tableau une fois les corrections validées par le DT."
+  },
+  "arenaPlanner": {
+    "title": "Planificateur de placement d’arène",
+    "hint": "Sabre laser : zone de combat Ø 8 m, limite de sécurité Ø 12 m, lignes de mise en garde à 2 m du centre.",
+    "width": "Largeur de la salle (m)",
+    "length": "Longueur de la salle (m)",
+    "arenas": "Nombre d’arènes",
+    "margin": "Marge au mur (m)",
+    "fits": "La salle permet ce placement.",
+    "nofit": "La salle est trop petite pour ce nombre d’arènes.",
+    "grid": "{{columns}} × {{rows}} (colonnes × rangées)",
+    "required": "Surface requise : {{width}} m × {{length}} m",
+    "legend_zone": "Zone de combat (Ø 8 m)",
+    "legend_safety": "Limite de sécurité (Ø 12 m)",
+    "legend_guard": "Lignes de mise en garde",
+    "legend_roles": "Combattants et arbitres (1 à 6)",
+    "invalid": "Saisissez des dimensions positives.",
+    "note": "Positions des arbitres estimées sur le schéma du livret : à valider."
   }
 }

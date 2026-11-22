@@ -50,6 +50,7 @@ interface AppHeaderProps {
   onWiki: () => void;
   onWifiQR: () => void;
   onTVRemote: () => void;
+  onArenaPlanner: () => void;
   onStartDemo: () => void;
   onSettings: () => void;
 }
@@ -70,6 +71,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onWiki,
   onWifiQR,
   onTVRemote,
+  onArenaPlanner,
   onStartDemo,
   onSettings,
 }) => {
@@ -165,7 +167,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <BookOpen size={16} />
         </Button>
         {showTools && (
-          <ToolsMenu onWifiQR={onWifiQR} onTVRemote={onTVRemote} onStartDemo={onStartDemo} />
+          <ToolsMenu
+            onWifiQR={onWifiQR}
+            onTVRemote={onTVRemote}
+            onArenaPlanner={onArenaPlanner}
+            onStartDemo={onStartDemo}
+          />
         )}
         <Button className="btn-icon-label" onClick={onSettings} title={t('settings.title')}>
           <Settings size={15} />

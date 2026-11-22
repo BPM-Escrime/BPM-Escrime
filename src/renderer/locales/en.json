@@ -19,7 +19,8 @@
     "guided_tour": "Guided tour",
     "club": "Club",
     "club_open": "Open the club space",
-    "club_close": "Close the Club tab"
+    "club_close": "Close the Club tab",
+    "arena_planner": "Arena layout (room plan)"
   },
   "menu": {
     "new_competition": "New Competition",
@@ -4248,5 +4249,23 @@
     "rebuilt": "Tableau redrawn from the corrected ranking",
     "drift_title": "Tableau does not match the corrected ranking",
     "drift_hint": "Corrections kept after the draw. Redo the tableau once the technical directorate approves the corrections."
+  },
+  "arenaPlanner": {
+    "title": "Arena placement planner",
+    "hint": "Sabre laser: fighting zone Ø 8 m, safety limit Ø 12 m, guard lines 2 m from centre.",
+    "width": "Room width (m)",
+    "length": "Room length (m)",
+    "arenas": "Number of arenas",
+    "margin": "Wall margin (m)",
+    "fits": "The room fits this layout.",
+    "nofit": "The room is too small for this number of arenas.",
+    "grid": "{{columns}} × {{rows}} (columns × rows)",
+    "required": "Required area: {{width}} m × {{length}} m",
+    "legend_zone": "Fighting zone (Ø 8 m)",
+    "legend_safety": "Safety limit (Ø 12 m)",
+    "legend_guard": "Guard lines",
+    "legend_roles": "Fighters and referees (1 to 6)",
+    "invalid": "Enter positive dimensions.",
+    "note": "Referee positions are estimated from the rulebook diagram: to be checked."
   }
 }

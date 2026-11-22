@@ -23,6 +23,9 @@ const PrivacyPrompts = React.lazy(() => import('./components/PrivacyPrompts'));
 const UpdateNotification = React.lazy(() => import('./components/UpdateNotification'));
 const KeyboardShortcutsHelp = React.lazy(() => import('./components/KeyboardShortcutsHelp'));
 const WikiModal = React.lazy(() => import('./components/WikiModal'));
+const ArenaPlannerModal = React.lazy(() =>
+  import('./components/ArenaPlannerModal').then(m => ({ default: m.ArenaPlannerModal }))
+);
 const WifiQRModal = React.lazy(() =>
   import('./components/WifiQRModal').then(m => ({ default: m.WifiQRModal }))
 );
@@ -61,6 +64,7 @@ const AppContent: React.FC = () => {
   const [showWikiModal, setShowWikiModal] = useState(false);
   const [showWifiQR, setShowWifiQR] = useState(false);
   const [showTVRemote, setShowTVRemote] = useState(false);
+  const [showArenaPlanner, setShowArenaPlanner] = useState(false);
   const [remoteServerUrl, setRemoteServerUrl] = useState<string | null>(null);
   const [remoteArenaCount, setRemoteArenaCount] = useState<number>(1);
   // Entraînement / démo autonome : état et lancement (#1897)
@@ -250,6 +254,7 @@ const AppContent: React.FC = () => {
           onWiki={() => setShowWikiModal(true)}
           onWifiQR={() => setShowWifiQR(true)}
           onTVRemote={() => setShowTVRemote(true)}
+          onArenaPlanner={() => setShowArenaPlanner(true)}
           onStartDemo={handleStartDemo}
           onSettings={() => setShowSettingsModal(true)}
         />
@@ -386,6 +391,12 @@ const AppContent: React.FC = () => {
         {showWifiQR && (
           <Suspense fallback={null}>
             <WifiQRModal onClose={() => setShowWifiQR(false)} />
+          </Suspense>
+        )}
+
+        {showArenaPlanner && (
+          <Suspense fallback={null}>
+            <ArenaPlannerModal onClose={() => setShowArenaPlanner(false)} />
           </Suspense>
         )}
 

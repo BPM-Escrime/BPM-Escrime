@@ -19,7 +19,8 @@
     "guided_tour": "Percorso guidato",
     "club": "Club",
     "club_open": "Apri lo spazio club",
-    "club_close": "Chiudi la scheda Club"
+    "club_close": "Chiudi la scheda Club",
+    "arena_planner": "Pianta arena (sala)"
   },
   "menu": {
     "new_competition": "Nuova competizione",
@@ -4248,5 +4249,23 @@
     "rebuilt": "Tabellone rifatto sulla classifica corretta",
     "drift_title": "Il tabellone non corrisponde alla classifica corretta",
     "drift_hint": "Correzioni mantenute dopo il sorteggio. Rifate il tabellone quando il DT ha convalidato le correzioni."
+  },
+  "arenaPlanner": {
+    "title": "Pianificatore di posizionamento arene",
+    "hint": "Sciabola laser: zona di combattimento Ø 8 m, limite di sicurezza Ø 12 m, linee di guardia a 2 m dal centro.",
+    "width": "Larghezza della sala (m)",
+    "length": "Lunghezza della sala (m)",
+    "arenas": "Numero di arene",
+    "margin": "Margine dal muro (m)",
+    "fits": "La sala contiene questa disposizione.",
+    "nofit": "La sala è troppo piccola per questo numero di arene.",
+    "grid": "{{columns}} × {{rows}} (colonne × file)",
+    "required": "Superficie richiesta: {{width}} m × {{length}} m",
+    "legend_zone": "Zona di combattimento (Ø 8 m)",
+    "legend_safety": "Limite di sicurezza (Ø 12 m)",
+    "legend_guard": "Linee di guardia",
+    "legend_roles": "Combattenti e arbitri (da 1 a 6)",
+    "invalid": "Inserisci dimensioni positive.",
+    "note": "Posizioni degli arbitri stimate dallo schema del regolamento: da verificare."
   }
 }

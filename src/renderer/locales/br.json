@@ -19,7 +19,8 @@
     "guided_tour": "Hentad heñchet",
     "club": "Klub",
     "club_open": "Digeriñ al lec'h klub",
-    "club_close": "Serriñ an ivinell Klub"
+    "club_close": "Serriñ an ivinell Klub",
+    "arena_planner": "Plan an arena (sal)"
   },
   "menu": {
     "new_competition": "Nevezompetañ",
@@ -4248,5 +4249,23 @@
     "rebuilt": "Taolenn adober diwar ar renkadur reizhet",
     "drift_title": "An daolenn ne glot ket gant ar renkadur reizhet",
     "drift_hint": "Reizhadurioù miret goude an tennadeg. Adobit an daolenn pa vo bet kadarnaet ar reizhadurioù gant an DT."
+  },
+  "arenaPlanner": {
+    "title": "Lodennour lec’hiañ an arenaoù",
+    "hint": "Sabr laser: takad an emgann Ø 8 m, bevenn surentez Ø 12 m, linennoù gwarez 2 m diouzh ar greizenn.",
+    "width": "Ledander ar sal (m)",
+    "length": "Hirder ar sal (m)",
+    "arenas": "Niver a arenaoù",
+    "margin": "Digor e-kichen ar voger (m)",
+    "fits": "Ar sal a reiz ar gefluniadur-mañ.",
+    "nofit": "Bihan-tre eo ar sal evit an niver arenaoù-mañ.",
+    "grid": "{{columns}} × {{rows}} (bannoù × rummoù)",
+    "required": "Gorread ret: {{width}} m × {{length}} m",
+    "legend_zone": "Takad an emgann (Ø 8 m)",
+    "legend_safety": "Bevenn surentez (Ø 12 m)",
+    "legend_guard": "Linennoù gwarez",
+    "legend_roles": "Emgannerien ha barnerien (1 da 6)",
+    "invalid": "Merkit dimensionoù positivel.",
+    "note": "Lec’hiennoù ar barnerien a zo estimet diwar ar skeudenn: gwiriit."
   }
 }

@@ -19,7 +19,8 @@
     "guided_tour": "Recorregut guiat",
     "club": "Club",
     "club_open": "Obrir l'espai del club",
-    "club_close": "Tancar la pestanya Club"
+    "club_close": "Tancar la pestanya Club",
+    "arena_planner": "Plànol de l’arena (sala)"
   },
   "menu": {
     "new_competition": "Nova Competició",
@@ -4248,5 +4249,23 @@
     "rebuilt": "Quadre refet amb la classificació corregida",
     "drift_title": "El quadre no coincideix amb la classificació corregida",
     "drift_hint": "Correccions mantingudes després del sorteig. Refeu el quadre quan el DT hagi validat les correccions."
+  },
+  "arenaPlanner": {
+    "title": "Planificador de col·locació d’arenes",
+    "hint": "Sabre làser: zona de combat Ø 8 m, límit de seguretat Ø 12 m, línies de guarda a 2 m del centre.",
+    "width": "Amplada de la sala (m)",
+    "length": "Llargada de la sala (m)",
+    "arenas": "Nombre d’arenes",
+    "margin": "Marge a la paret (m)",
+    "fits": "La sala permet aquesta disposició.",
+    "nofit": "La sala és massa petita per a aquest nombre d’arenes.",
+    "grid": "{{columns}} × {{rows}} (columnes × files)",
+    "required": "Superfície necessària: {{width}} m × {{length}} m",
+    "legend_zone": "Zona de combat (Ø 8 m)",
+    "legend_safety": "Límit de seguretat (Ø 12 m)",
+    "legend_guard": "Línies de guarda",
+    "legend_roles": "Combatents i àrbitres (1 a 6)",
+    "invalid": "Introdueix dimensions positives.",
+    "note": "Posicions dels àrbitres estimades de l’esquema del reglament: a validar."
   }
 }
