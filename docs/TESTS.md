@@ -106,13 +106,13 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 130 | 1061 |
+| `src/main/` | 132 | 1078 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
 | `src/renderer/components/` | 123 | 659 |
 | E2E Playwright (`e2e/`) | 14 | 43 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 4 | 14 |
+| `src/renderer/api/` | 5 | 18 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
 | `src/shared/platform/` | 1 | 8 |
-| **Total** | **552** | **4194** |
+| **Total** | **555** | **4215** |
 
-Unitaires : 538 fichiers, 4151 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 541 fichiers, 4172 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2881,6 +2881,15 @@ Unitaires : 538 fichiers, 4151 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/clubPort.test.ts</code> — 2 tests</summary>
+
+- **clubPort (#1872, docs/adr/0022)**
+  - score de la tablette → combat club terminé (saisie arbitre), autres matchs ignorés
+  - combat annulé : score ignoré
+
+</details>
+
+<details>
 <summary><code>src/main/clubSync.test.ts</code> — 19 tests</summary>
 
 - **decideSync**
@@ -3250,6 +3259,45 @@ Unitaires : 538 fichiers, 4151 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/api/wsClubRefusal.test.ts</code> — 3 tests</summary>
+
+- **wsRefusal : opérations club:\***
+  - le contrat compte des opérations club:\*
+  - aucun droit club:\* n’est servi sur le réseau
+  - %s est refusé (permission\_denied) _(each)_
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/club.test.ts</code> — 21 tests</summary>
+
+- crée, relit, modifie et supprime un club
+- inscrit, modifie, archive et efface un membre
+- carte : retrouve le membre par son code, le code régénéré invalide l’ancien
+- import en lot : créés puis doublons ignorés
+- entrée hors bornes : invalid\_input ; refus du dépôt : club\_refused avec son message
+- maîtres d’armes : ajout, archivage, suppression
+- séance : préparée, ouverte, pointage, remarque, fermée
+- séries, jours d’ouverture et fermeture du club
+- séance fermée : un combat y est refusé (club\_refused)
+- combat : création, score, fin, classement et fiche du membre
+- exercices : création, import sans doublon, suppression
+- matériel : fiche, série, prêt, retour, suppression
+- catégories, marques, verrou et import
+- sans port : état inactif, autres opérations « unavailable »
+- tablettes : état, envoi du combat, liaison de la séance, libération
+- synchro et sauvegardes passent par le port
+- une erreur du port est rendue en club\_refused avec son message
+- onClubSynced : relaie la reprise du fichier ou la sauvegarde restaurée
+- **Mode Club : jamais sur le réseau (docs/adr/0022)**
+  - le contrat déclare les opérations du club
+  - aucune opération club:\* n’a d’outil MCP
+- **erreurs du Mode Club**
+  - refus du dépôt : club\_refused avec son message ; panne SQLite : erreur interne
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 6 tests</summary>
 
 - createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue et valeur invalide refusées
@@ -3411,22 +3459,6 @@ Unitaires : 538 fichiers, 4151 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - décode chaque fichier du .zip avec son propre encodage
   - accepte des fichiers isolés et ignore les extensions inconnues
   - refuse un fichier texte trop volumineux
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/clubHandlers.test.ts</code> — 9 tests</summary>
-
-- **handlers club:\* (#1872)**
-  - enregistre tous les canaux club:\*
-  - jours d’ouverture et fermetures : délèguent au dépôt
-  - inventaire : délègue au dépôt, filtres et booléens par défaut
-  - booléens stricts et filtres par défaut
-  - club : objets vides par défaut
-  - classement : force les combats terminés
-  - fiche membre : stats, face-à-face, progression par trimestre
-  - période inconnue → mois
-  - score de la tablette → combat club terminé (saisie arbitre), autres matchs ignorés
 
 </details>
 
@@ -8156,6 +8188,17 @@ Unitaires : 538 fichiers, 4151 tests. E2E : 14 fichiers, 43 tests (comptage stat
 - **WsClient : coupures**
   - non connecté : envoi à la connexion ; sinon unavailable au délai, sans rien envoyer
   - coupure pendant l’appel, ou délai dépassé : unavailable
+
+</details>
+
+<details>
+<summary><code>src/renderer/api/clubApi.test.ts</code> — 4 tests</summary>
+
+- **createClubApi : entrées du contrat**
+  - %s _(each)_
+  - couvre toutes les méthodes de l’écran
+  - toutes les opérations club:\* du contrat sont appelées par l’écran
+  - un nombre de séries hors bornes est refusé par le contrat
 
 </details>
 
