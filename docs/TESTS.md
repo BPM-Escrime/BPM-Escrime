@@ -35,6 +35,8 @@ ou sort de la fenêtre ; captures + `report.json` dans `test-results/i18n-captur
 
 Sécurité : `.github/workflows/codeql.yml` (CodeQL JS/TS, PR vers `dev` + hebdo) et `security.yml` (`npm audit --omit=dev` non bloquant + SBOM CycloneDX), Dependabot (`.github/dependabot.yml`).
 
+Revue ADR : `.github/workflows/adr-review.yml` (lundi 6 h UTC, non bloquant) publie `scripts/adr-review-report.js` en commentaire de l'issue « Revue ADR hebdomadaire » (label `revue-adr`) : références du cliquet relevées, fichiers garde-fous modifiés, migrations et ADR citée, lignes apparues à vérifier (`eslint-disable`, `any`, écritures directes en base dans `src/main/remote` et `src/main/mcp`, canaux IPC, `window.electronAPI`).
+
 Revue de code automatique : `.github/workflows/claude-code-review.yml` sur les PR.
 
 ## Tests unitaires — Vitest
@@ -107,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 127 | 1039 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 122 | 654 |
+| `src/renderer/components/` | 122 | 655 |
 | E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 3 | 9 |
@@ -116,10 +118,10 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 26 | 243 |
-| **Total** | **542** | **4134** |
+| `src/shared/domain/` | 26 | 250 |
+| **Total** | **542** | **4142** |
 
-Unitaires : 529 fichiers, 4092 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 529 fichiers, 4100 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5554,7 +5556,7 @@ Unitaires : 529 fichiers, 4092 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 9 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 10 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5566,6 +5568,7 @@ Unitaires : 529 fichiers, 4092 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - ajoute une zone bloquée et permet de changer sa largeur
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
   - ne permet jamais plus d'arènes que le maximum de la zone
+  - affiche les cotes techniques quand la case est cochée
 
 </details>
 
@@ -8269,7 +8272,7 @@ Unitaires : 529 fichiers, 4092 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 25 tests</summary>
+<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 32 tests</summary>
 
 - **computeArenaGeometry**
   - place les lignes de mise en garde à 2 m du centre, soit 4 m entre elles
@@ -8301,6 +8304,14 @@ Unitaires : 529 fichiers, 4092 tests. E2E : 13 fichiers, 42 tests (comptage stat
   - optimise : les arènes trouvées ne se chevauchent pas et restent dans la salle
   - optimise : une zone bloquée réduit le nombre d'arènes possibles
   - snapToStep arrondit au demi-mètre
+  - tourne un élément de 90° : la boîte englobante échange largeur et longueur
+  - rotateRoomItem garde l'élément tourné dans la salle
+  - détecte le chevauchement de deux éléments tournés
+  - normalise les angles
+  - redimensionne en gardant le centre
+- **technicalDimensions**
+  - donne la salle, le diamètre des arènes et les espacements alignés
+  - donne les dimensions des éléments
 
 </details>
 
