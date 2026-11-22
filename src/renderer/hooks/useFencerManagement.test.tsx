@@ -4,9 +4,12 @@
  * BellePoule Modern
  */
 
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useFencerManagement } from './useFencerManagement';
+import { BpmClientProvider } from '../api/BpmClientContext';
+import type { BpmClient } from '../../shared/api/client';
 import { Competition, Fencer, Gender, FencerStatus } from '../../shared/types';
 
 const showToast = vi.fn();
@@ -172,18 +175,27 @@ describe('bus fencers:changed (#1298)', () => {
     let handler: (e: any) => void = () => {};
     const unsubscribe = vi.fn();
     db.getFencersByCompetition = vi.fn(async () => [fencer('1'), fencer('2')]);
-    (window as any).electronAPI = {
-      db,
-      onCompetitionEvent: vi.fn((cb: (e: any) => void) => {
+    (window as any).electronAPI = { db };
+    // Bus par le contrat (onCompetitionEvents, #1981)
+    const client = {
+      call: vi.fn(),
+      query: vi.fn(),
+      subscribe: vi.fn((_name: string, _input: unknown, cb: (e: any) => void) => {
         handler = cb;
         return unsubscribe;
       }),
-    };
-    const { result, unmount } = renderHook(() =>
-      useFencerManagement({
-        competition,
-        onUpdate: onUpdate as unknown as (c: Competition) => void,
-      })
+    } as unknown as BpmClient;
+    const { result, unmount } = renderHook(
+      () =>
+        useFencerManagement({
+          competition,
+          onUpdate: onUpdate as unknown as (c: Competition) => void,
+        }),
+      {
+        wrapper: ({ children }: { children: React.ReactNode }) => (
+          <BpmClientProvider client={client}>{children}</BpmClientProvider>
+        ),
+      }
     );
     act(() => {
       handler({ type: 'fencers:changed', competitionId: 'c1' });

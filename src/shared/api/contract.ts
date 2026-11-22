@@ -774,6 +774,26 @@ export const contract = {
     mcp: { name: 'assign_referee', title: 'Arbitre d’une poule (à la main)', idempotent: true },
   }),
 
+  listReferees: query({
+    description:
+      'Arbitres d’une épreuve : identité, club, nationalité, niveau et disponibilité (« unavailable » : non pointé). Écran : choix de l’arbitre d’une poule ou d’un match.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(
+      z.object({
+        id: z.string(),
+        ref: z.number(),
+        firstName: z.string(),
+        lastName: z.string(),
+        club: z.string().nullable(),
+        nationality: z.string().nullable(),
+        region: z.string().nullable(),
+        category: z.string().nullable(),
+        status: z.enum(['available', 'assigned', 'unavailable']),
+      })
+    ),
+    permission: 'competition:read',
+  }),
+
   getMatchCards: query({
     description: 'Cartons d’un match, en ordre chronologique.',
     input: z.object({ matchId: Id }),
