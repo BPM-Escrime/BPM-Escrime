@@ -23,19 +23,19 @@ recordScore: command({
 
 ## Transports
 
-| Transport | Fichier | Entrée |
-|---|---|---|
-| IPC | `src/main/engine/api/ipcAdapter.ts` | `api:invoke`, `api:subscribe` / `api:unsubscribe`, événements `api:event` |
-| MCP | `src/main/engine/api/mcpAdapter.ts` | `tools/call` |
+| Transport | Fichier                             | Entrée                                                                    |
+| --------- | ----------------------------------- | ------------------------------------------------------------------------- |
+| IPC       | `src/main/engine/api/ipcAdapter.ts` | `api:invoke`, `api:subscribe` / `api:unsubscribe`, événements `api:event` |
+| MCP       | `src/main/engine/api/mcpAdapter.ts` | `tools/call`                                                              |
 
 Même validation partout. Erreur : `ApiError { code, message }`.
 
-| Code | Cas |
-|---|---|
-| `invalid_input` | entrée refusée par le schéma (`Entrée invalide pour « op » — champ : …`) |
-| `unknown_operation` | opération absente du contrat, ou abonnement appelé en commande |
-| code métier | `DomainError` du domaine (`competition_not_found`, `score_above_max`…) |
-| `internal` | autre erreur (journalisée) |
+| Code                | Cas                                                                      |
+| ------------------- | ------------------------------------------------------------------------ |
+| `invalid_input`     | entrée refusée par le schéma (`Entrée invalide pour « op » — champ : …`) |
+| `unknown_operation` | opération absente du contrat, ou abonnement appelé en commande           |
+| code métier         | `DomainError` du domaine (`competition_not_found`, `score_above_max`…)   |
+| `internal`          | autre erreur (journalisée)                                               |
 
 En MCP, le message devient `message (code)` dans un résultat `isError`.
 
@@ -53,30 +53,70 @@ Ne plus ajouter d'appel direct à `window.electronAPI` pour une opération du co
 
 ## Opérations
 
-| Opération | Nature | MCP |
-|---|---|---|
-| `checkIn` | commande | `check_in` |
-| `recordScore` | commande | `record_score` |
-| `generatePools` | commande — tirage par le moteur, ou composition préparée par le DT (`composition`), tour courant ; `PoolsGenerated` ([ADR-0017](adr/0017-projections-etat-epreuve.md)) | `generate_pools` |
-| `addPoolFencer` | commande — tireur ajouté à une poule lancée, un match contre chacun ; `PoolFencerAdded` | `add_pool_fencer` |
-| `closePoolRound` | commande — clôture du tour : qualifiés, éliminés, tour archivé avec son appel ; `PoolRoundClosed` | `close_pool_round` |
-| `generateTableau` | commande — tableau planifié par le moteur, ou placement calculé par l'écran (`composition`) ; `TableauGenerated` | `build_bracket` (nom 2.0 conservé) |
-| `launchRapieresWave` / `endRapieresWaves` | commandes — vagues des rapières lancées, arrêtées ou reprises | `launch_rapieres_wave` / `end_rapieres_waves` |
-| `clearScore` | commande — score annulé : match de poule remis à jouer, match de tableau rouvert ; `ScoreCleared` | `clear_score` |
-| `assignMatches` | commande — arbitres et pistes des poules et des matchs (hors journal tant que les tablettes ont leur chemin) | `assign_matches` |
-| `withdrawFencer` | commande — abandon, forfait, exclusion (carton noir) selon la phase ([ADR-0016](adr/0016-retrait-reintegration-tireur.md)) | `withdraw_fencer` |
-| `reinstateFencer` | commande — annule un retrait depuis l'instantané | `reinstate_fencer` |
-| `setRefereeingSettings` | commande (`referees:write`) — réglages d'affectation, fusion côté moteur ([ADR-0014](adr/0014-affectation-arbitres-moteur-unique.md)) | `set_refereeing_settings` |
-| `assignReferees` | commande (`referees:write`) — arbitres des poules par le moteur unique | `assign_referees` |
-| `assignReferee` | commande (`referees:write`) — arbitre d'une poule à la main, neutralité signalée | `assign_referee` |
-| `getMatchCards` | requête | — |
-| `getCardsByMatchIds` | requête | — |
-| `getCompetitionEvents` | requête | `get_competition_events` |
-| `getCompetitionState` | requête — état de l'épreuve tenu par le moteur, révision du journal ([ADR-0017](adr/0017-projections-etat-epreuve.md)) | — |
-| `getMatchHistory` | requête | — |
-| `onCompetitionEvents` | abonnement | — |
+| Opération                                                                                            | Nature                                                                                                                                                                                                                                                                                         | MCP                                               |
+| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `checkIn`                                                                                            | commande                                                                                                                                                                                                                                                                                       | `check_in`                                        |
+| `recordScore`                                                                                        | commande                                                                                                                                                                                                                                                                                       | `record_score`                                    |
+| `generatePools`                                                                                      | commande — tirage par le moteur, ou composition préparée par le DT (`composition`), tour courant ; `PoolsGenerated` ([ADR-0017](adr/0017-projections-etat-epreuve.md))                                                                                                                         | `generate_pools`                                  |
+| `addPoolFencer`                                                                                      | commande — tireur ajouté à une poule lancée, un match contre chacun ; `PoolFencerAdded`                                                                                                                                                                                                        | `add_pool_fencer`                                 |
+| `closePoolRound`                                                                                     | commande — clôture du tour : qualifiés, éliminés, tour archivé avec son appel ; `PoolRoundClosed`                                                                                                                                                                                              | `close_pool_round`                                |
+| `generateTableau`                                                                                    | commande — tableau planifié par le moteur, ou placement calculé par l'écran (`composition`) ; `TableauGenerated`                                                                                                                                                                               | `build_bracket` (nom 2.0 conservé)                |
+| `launchRapieresWave` / `endRapieresWaves`                                                            | commandes — vagues des rapières lancées, arrêtées ou reprises                                                                                                                                                                                                                                  | `launch_rapieres_wave` / `end_rapieres_waves`     |
+| `clearScore`                                                                                         | commande — score annulé : match de poule remis à jouer, match de tableau rouvert ; `ScoreCleared`                                                                                                                                                                                              | `clear_score`                                     |
+| `assignMatches`                                                                                      | commande — arbitres et pistes des poules et des matchs (hors journal tant que les tablettes ont leur chemin)                                                                                                                                                                                   | `assign_matches`                                  |
+| `adjustRanking` / `skipPools` / `clearTableau`                                                       | commandes — classement ajusté (ou recalculé), épreuve sans poules, tableau retiré                                                                                                                                                                                                              | `adjust_ranking` / `skip_pools` / `clear_tableau` |
+| `setRapieresTeams`                                                                                   | commande — composition des équipes des rapières (journal : identifiants seulement)                                                                                                                                                                                                             | `set_rapieres_teams`                              |
+| `createCompetition` / `updateCompetitionDetails` / `updateCompetitionSettings` / `deleteCompetition` | commandes (`competition:write`) — création sur les défauts du moteur, données sans règle, arme et réglages (clés vérifiées, arme et mode spécial figés au tirage, tablettes prévenues), suppression (saisie distante arrêtée) ; pas de journal ([ADR-0018](adr/0018-commandes-inscription.md)) | —                                                 |
+| `includeInSeason` / `excludeFromSeason` / `resetSeason`                                              | commandes (`competition:write`) — épreuve versée au classement de saison (classement Quest calculé par le moteur), retirée, saison vidée ([ADR-0018](adr/0018-commandes-inscription.md))                                                                                                       | —                                                 |
+| `registerFencers` / `updateFencerDetails` / `setFencerRankings` / `unregisterFencers`                | commandes (`fencers:write`) — inscription, identité, classement d'entrée (figé au tirage), désinscription avant le tirage ; pas de journal ([ADR-0018](adr/0018-commandes-inscription.md))                                                                                                     | —                                                 |
+| `registerReferees` / `updateRefereeDetails` / `setRefereeAvailability` / `unregisterReferee`         | commandes (`referees:write`) — inscription, identité, pointage, désinscription (refusée pendant un match arbitré) ; pas de journal ([ADR-0018](adr/0018-commandes-inscription.md))                                                                                                             | —                                                 |
+| `withdrawFencer`                                                                                     | commande — abandon, forfait, exclusion (carton noir) selon la phase ([ADR-0016](adr/0016-retrait-reintegration-tireur.md))                                                                                                                                                                     | `withdraw_fencer`                                 |
+| `reinstateFencer`                                                                                    | commande — annule un retrait depuis l'instantané                                                                                                                                                                                                                                               | `reinstate_fencer`                                |
+| `rebuildCompetitionState`                                                                            | commande de maintenance — journal rejoué, comparé à l'état, état aligné sur le journal (`dryRun` : écarts seuls) ; pas d'événement                                                                                                                                                             | `rebuild_competition_state`                       |
+| `setRefereeingSettings`                                                                              | commande (`referees:write`) — réglages d'affectation, fusion côté moteur ([ADR-0014](adr/0014-affectation-arbitres-moteur-unique.md))                                                                                                                                                          | `set_refereeing_settings`                         |
+| `assignReferees`                                                                                     | commande (`referees:write`) — arbitres des poules par le moteur unique                                                                                                                                                                                                                         | `assign_referees`                                 |
+| `assignReferee`                                                                                      | commande (`referees:write`) — arbitre d'une poule à la main, neutralité signalée                                                                                                                                                                                                               | `assign_referee`                                  |
+| `listFencers`                                                                                        | requête — tireurs d'une épreuve, ordre des dossards, dates ISO 8601                                                                                                                                                                                                                            | —                                                 |
+| `getSeasonRanking`                                                                                   | requête — classement de saison (cumul par tireur) et épreuves versées                                                                                                                                                                                                                          | —                                                 |
+| `listReferees`                                                                                       | requête — arbitres d'une épreuve (identité, club, nationalité, niveau, disponibilité) pour l'écran                                                                                                                                                                                             | —                                                 |
+| `listRefereeMatches`                                                                                 | requête — matchs de poule avec leur arbitre (historique des arbitrages)                                                                                                                                                                                                                        | —                                                 |
+| `getMatchTimeline` / `getCompetitionTimeline`                                                        | requêtes — journal d'un match ou de tous les matchs d'une épreuve (scores, touches, cartons, sorties d'arène)                                                                                                                                                                                  | —                                                 |
+| `getPoolSignatures`                                                                                  | requête — signatures de la feuille d'une poule                                                                                                                                                                                                                                                 | —                                                 |
+| `listFencerStats` / `getFencerStats`                                                                 | requêtes — statistiques des tireurs d'une épreuve, ou d'un tireur (null si absent) : touches, cartons, sorties d'arène, durées                                                                                                                                                                 | —                                                 |
+| `getFencerHistory`                                                                                   | requête — matchs d'un tireur avec touches et cartons                                                                                                                                                                                                                                           | —                                                 |
+| `listRefereeStats`                                                                                   | requête — statistiques des arbitres (matchs, durée, cartons, appels au DT, repos)                                                                                                                                                                                                              | —                                                 |
+| `listMatchTimings` / `listRemoteEvents`                                                              | requêtes — horodatage des matchs et événements des saisies distantes (indicateurs d'organisation)                                                                                                                                                                                              | —                                                 |
+| `getMatchCards`                                                                                      | requête                                                                                                                                                                                                                                                                                        | —                                                 |
+| `getCardsByMatchIds`                                                                                 | requête                                                                                                                                                                                                                                                                                        | —                                                 |
+| `getCompetitionEvents`                                                                               | requête                                                                                                                                                                                                                                                                                        | `get_competition_events`                          |
+| `getCompetitionState`                                                                                | requête — état de l'épreuve tenu par le moteur, révision du journal ([ADR-0017](adr/0017-projections-etat-epreuve.md))                                                                                                                                                                         | —                                                 |
+| `getMatchHistory`                                                                                    | requête                                                                                                                                                                                                                                                                                        | —                                                 |
+| `onCompetitionEvents`                                                                                | abonnement                                                                                                                                                                                                                                                                                     | —                                                 |
 
-Lots suivants : migration de l'écran par domaine (2), `WsClient` + adaptateur WebSocket (3),
+Lot 2 commencé : `useCompetitionEvent` s'abonne par `onCompetitionEvents`, le choix d'arbitre
+du tableau lit `listReferees`. `useMatchDbSync` n'écrit plus les matchs que pour les formats hors
+moteur (tableaux séparés, équipes) : ailleurs le moteur les écrit dans la transaction de la
+commande. Journal des matchs (`useMatchAuditStore`) et signatures de poule passent par le
+contrat ; tests : `fakeApiBridge` (`src/renderer/testUtils/apiBridge.ts`) simule le pont.
+Statistiques : `AnalyticsDashboard`, `FencerStatsTable`, `FencerDetailModal` et `analyticsService`
+(stats des tireurs) lisent `listFencerStats`, `getFencerStats`, `getFencerHistory`,
+`listRefereeStats`, `listMatchTimings` et `listRemoteEvents` ; `getCompetitionStats` et
+`getPoolStats` (lecture brute des tables) restent sur `db.*` en attendant une requête
+métier.
+Code mort supprimé (`features/pools`, `features/competition`, `features/bracket` : services et
+stores sans appelant). Arbitres et pistes : plus d'écriture directe en base à côté de
+`assignMatches`. Tireurs (ADR-0018) : `useFencerManagement` lit `listFencers` et inscrit, modifie, classe et
+désinscrit par les commandes ; le statut reste écrit directement pour les formats hors moteur.
+Arbitres (ADR-0018) : `RefereeManager`, l'import d'arbitres et le choix d'arbitre d'une poule
+passent par les commandes et `listReferees` / `listRefereeMatches`.
+Épreuves (ADR-0018) : création, suppression, propriétés, petite finale, configuration Quest et
+activation des arbitres passent par les commandes (`persistCompetitionUpdate`) ; la lecture
+d'une épreuve reste sur `db.getCompetition` en attendant le schéma des réglages (ADR-0012).
+Saison (ADR-0018) : `SeasonRankingView` lit `getSeasonRanking` et verse, retire ou vide par les
+commandes ; le moteur calcule le classement Quest de l'épreuve versée.
+Cliquet `electronApiCalls` : 113.
+
+Lots suivants : suite de la migration de l'écran par domaine (2), `WsClient` + adaptateur WebSocket (3),
 `PlatformServices` (4), pages distantes (5).
 
 ## Journal des événements par épreuve (#1980)
@@ -100,20 +140,21 @@ même identifiant (renvoi après une coupure), elle n'écrit rien et est refusé
 `command_already_applied`, `data: { revision, commandId }` — à traiter comme un succès. Sans
 `commandId`, le moteur en génère un par commande.
 
-| Commande | Événements |
-|---|---|
-| `checkIn` | `FencerCheckedIn` / `FencerCheckedOut` (un par tireur modifié) |
-| `recordScore` (poule) | `ScoreRecorded`, puis `PoolCompleted` si la poule se termine |
-| `recordScore` (tableau) | `ScoreRecorded`, `TableauMatchDecided`, `TableauCompleted` en fin de tableau |
-| `recordScore` avec `specialStatus` | en plus `FencerWithdrawn` (même `commandId`) |
-| `generatePools` | `PoolsGenerated` (tour, poules, tireurs, pistes, ordre des matchs : rejouable sans graine) |
-| `addPoolFencer` | `PoolFencerAdded` (poule, tireur, matchs ajoutés dans l'ordre) |
-| `closePoolRound` | `PoolRoundClosed` (tour, qualifiés dans l'ordre, éliminés, nombre de qualifiés) |
-| `generateTableau` | `TableauGenerated` (taille, petite finale, « toutes les places », placement complet) |
-| `launchRapieresWave` / `endRapieresWaves` | `RapieresWaveLaunched` (vague, matchs) / `RapieresWavesEnded` |
-| `clearScore` | `ScoreCleared` (match, poule) |
-| `withdrawFencer` | `FencerWithdrawn` ; au tableau, `TableauMatchDecided` (et `TableauCompleted`) |
-| `reinstateFencer` | `FencerReinstated` |
+| Commande                                       | Événements                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `checkIn`                                      | `FencerCheckedIn` / `FencerCheckedOut` (un par tireur modifié)                             |
+| `recordScore` (poule)                          | `ScoreRecorded`, puis `PoolCompleted` si la poule se termine                               |
+| `recordScore` (tableau)                        | `ScoreRecorded`, `TableauMatchDecided`, `TableauCompleted` en fin de tableau               |
+| `recordScore` avec `specialStatus`             | en plus `FencerWithdrawn` (même `commandId`)                                               |
+| `generatePools`                                | `PoolsGenerated` (tour, poules, tireurs, pistes, ordre des matchs : rejouable sans graine) |
+| `addPoolFencer`                                | `PoolFencerAdded` (poule, tireur, matchs ajoutés dans l'ordre)                             |
+| `closePoolRound`                               | `PoolRoundClosed` (tour, qualifiés dans l'ordre, éliminés, nombre de qualifiés)            |
+| `generateTableau`                              | `TableauGenerated` (taille, petite finale, « toutes les places », placement complet)       |
+| `launchRapieresWave` / `endRapieresWaves`      | `RapieresWaveLaunched` (vague, matchs) / `RapieresWavesEnded`                              |
+| `clearScore`                                   | `ScoreCleared` (match, poule)                                                              |
+| `adjustRanking` / `skipPools` / `clearTableau` | `RankingAdjusted` / `PoolsSkipped` / `TableauCleared`                                      |
+| `withdrawFencer`                               | `FencerWithdrawn` ; au tableau, `TableauMatchDecided` (et `TableauCompleted`)              |
+| `reinstateFencer`                              | `FencerReinstated`                                                                         |
 
 - Source : `CommandContext.actor` (IPC : `screen` ; MCP : `mcp`, auteur `agent` ; défaut `engine`).
 - Une commande qui écrit rend `revision` et diffuse `{ type: 'journal:appended', competitionId, revision }`
@@ -193,6 +234,56 @@ lancées, arrêtées ou reprises par `launchRapieresWave` / `endRapieresWaves` ;
 et tableau) par `clearScore` (`ScoreCleared`). Arbitres et pistes par `assignMatches`
 (arbitres d'une poule, affectations de l'onglet Arbitres, piste d'une poule, pistes et arbitres
 des matchs de tableau dont l'affectation automatique des pistes) ; pas encore d'événement : le
-changement d'arbitre depuis une tablette a son propre chemin. Restent avant 4c : remplissage
-automatique (épreuves de test), retour arrière du tableau, poules passées, classement ajusté,
-petite finale, résultats déverrouillés, tableaux séparés, Quest ; état d'interface ; puis 4c ; 5.
+changement d'arbitre depuis une tablette a son propre chemin. Classement ajusté ou recalculé
+(`adjustRanking`), poules passées (`skipPools`), tableau retiré quand le classement ou la petite
+finale change et pour « Refaire le tableau » sans correction (`clearTableau`) ; résultats
+déverrouillés : état d'interface du poste (le classement final reste celui du moteur). Retour arrière
+et remplissage automatique du tableau traduits en commandes (`clearScore`, `recordScore`,
+`assignMatches`, dans l'ordre des tours) ; arbitres du remplissage des poules par
+`assignMatches` ; classement final de la Quest par `adjustRanking`. État d'interface du poste
+(onglet affiché, bornes de taille de la préparation des poules, pistes de la saisie distante) :
+gardé dans le navigateur par épreuve (`posteUiState`), plus dans l'état partagé ; au chargement,
+l'onglet du poste est rouvert s'il ne devance pas la phase de l'épreuve. **Exception documentée**
+(décision du mainteneur, 2026-11-21, révisable) : les tableaux séparés après les poules restent
+écrits par l'écran, comme les épreuves par équipes ; l'étape 4c ne les couvre pas. Composition des
+équipes des rapières par `setRapieresTeams` (`RapieresTeamsUpdated`, identifiants seulement :
+la composition, personnelle, n'est pas rejouable). Tableaux de classement du
+remplissage « toutes les places » : scores des matchs connus du moteur par commandes.
+
+**Étape 4c faite** : l'écran n'écrit plus l'état de l'épreuve (`useCompetitionSession` ne
+sauvegarde plus, ni en différé ni à la fermeture) ; seul le moteur l'écrit, l'écran le relit
+(`getCompetitionState`). Exceptions documentées, où l'écran l'écrit encore : tableaux séparés
+après les poules, épreuves par équipes (`persistLocally`). La préparation des poules (avant
+« Lancer ») reste un brouillon de l'écran, non conservé au redémarrage.
+
+**Étape 5 commencée** : `projectCompetition(events)` (`src/shared/domain/journal`) rejoue le
+journal et rend les faits rejouables : statuts des tireurs nommés par le journal, tours de poules
+(composition, ordre des matchs, résultats, clôture), tableau tiré et décisions du tableau principal
+et des tableaux de classement, vague des rapières. Les dérivés (classements, tableaux de
+classement, classement final) n'y sont pas. `compareWithState` liste les écarts entre ces faits et
+l'état tenu par le moteur (identifiants et nombres seulement). Un journal est **complet** s'il
+commence, après l'appel, par `PoolsGenerated`, `PoolsSkipped` ou `TableauGenerated` ; sinon seuls
+les faits qu'il contient sont comparés. Ignorés au rejeu : `PoolCompleted`, `TableauCompleted`
+(signaux), `RankingAdjusted` (dérivé), `RapieresTeamsUpdated` (composition personnelle). Les
+tableaux de classement ont un identifiant déterministe, tiré de leur parent et de leur tour
+(`cons-16`, `cons-16-8`) : plus d'heure dans l'identifiant. Test de rejeu
+(`src/main/engine/commands/replay.test.ts`) : épreuve complète jouée par les commandes (appel,
+poules, abandon, annulation, retrait et réintégration, tableau, « toutes les places », tours
+multiples), journal rejoué, aucun écart.
+
+`rebuildCompetitionState` (commande de maintenance, `src/main/engine/commands/rebuild.ts`) lit
+tout le journal, le rejoue et liste les écarts. Avec `dryRun`, rien n'est écrit. Sinon l'état est
+aligné sur le journal pour les faits rejouables, et seulement eux :
+
+- statuts des tireurs (tables) ;
+- scores de poule du tour courant, classements de poule et classement général recalculés ;
+- décisions du tableau principal et des tableaux de classement, propagation et classement final
+  recalculés ;
+- vague et arrêt des rapières.
+
+Restent dans `remaining`, sans correction : les écarts de structure (poules, tours, placement du
+tableau, épreuve sans poules), les tours archivés, les abandons, forfaits et exclusions de poule
+(le journal ne garde que le perdant, pas les touches), les décisions de l'état absentes du
+journal. La commande n'ajoute aucun événement : elle ne crée aucun fait. L'écran relit l'état sur
+le signal `session:changed`. Classement ajusté par le DT (`RankingAdjusted`) : recalculé seulement
+si un score de poule est corrigé.

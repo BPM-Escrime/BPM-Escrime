@@ -21,6 +21,7 @@ import {
   type ResolvedRefereeing,
 } from '../../shared/domain/referees/refereeingSettings';
 import { useBpmClient } from '../api/BpmClientContext';
+import { refereeFromDTO, registerRefereeInput, splitRefereeName } from '../api/refereeMapping';
 import { useToast } from './Toast';
 import { RefereeManager, RefereeRotationConfig } from '../../shared/services/refereeManager';
 import {
@@ -63,9 +64,6 @@ const PRESENCE_COLORS: Record<RefereePresence, string> = {
   busy: '#b45309',
   free: '#166534',
 };
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const isUuid = (id: string) => UUID_RE.test(id);
 
 interface RefereeManagerProps {
   competition: Competition;
@@ -164,12 +162,12 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
 
   const loadHistory = useCallback(async () => {
     try {
-      const rows = await window.electronAPI.db.getMatchesWithReferees(competition.id);
+      const rows = await client.query('listRefereeMatches', { competitionId: competition.id });
       setHistoryRows(rows);
     } catch {
       /* silencieux */
     }
-  }, [competition.id]);
+  }, [client, competition.id]);
 
   useEffect(() => {
     const initial = new Map<string, Referee>();
@@ -200,18 +198,6 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
       )
     );
   }, [referees, config]);
-
-  const persistAssignments = async (map: Map<string, Referee>) => {
-    for (const [matchId, referee] of map.entries()) {
-      // Matchs de tableau (ID « 64-0 ») : persistés via l'état du tableau (onAssignmentsChange)
-      if (!isUuid(matchId)) continue;
-      try {
-        await window.electronAPI.db.updateMatch(matchId, { refereeId: referee.id });
-      } catch {
-        /* non bloquant */
-      }
-    }
-  };
 
   const handleAutoAssign = () => {
     // Copies : le service mute les arbitres (assignedMatches, status) — ne pas toucher l'état React
@@ -246,8 +232,8 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
     setShortages(result.shortages);
     setManager(fresh);
     setAssignments(newAssignments);
+    // Écrit par le moteur (assignMatches) via onAssignmentsChange
     onAssignmentsChange(newAssignments);
-    persistAssignments(result.assignments);
   };
 
   const handleManualAssign = (matchId: string, refereeId: string) => {
@@ -258,9 +244,6 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
       setLockedMatchIds(prev => new Set(prev).add(matchId));
       setAssignments(newAssignments);
       onAssignmentsChange(newAssignments);
-      if (isUuid(matchId)) {
-        window.electronAPI.db.updateMatch(matchId, { refereeId: referee.id }).catch(() => {});
-      }
     }
   };
 
@@ -328,18 +311,13 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
       const parsed = parseEngardeRefereeFile(content);
       const errors: string[] = [...parsed.errors];
       const created: typeof referees = [];
-      for (const ref of parsed.referees) {
+      if (parsed.referees.length > 0) {
         try {
-          const name = `${ref.firstName} ${ref.lastName}`.trim();
-          const newRef = await window.electronAPI.db.createReferee(competition.id, {
-            name,
-            club: ref.club,
-            license: ref.license,
-            category: ref.category,
-            nationality: ref.nationality,
-            gender: ref.gender,
+          const r = await client.call('registerReferees', {
+            competitionId: competition.id,
+            referees: parsed.referees.map(registerRefereeInput),
           });
-          created.push(newRef);
+          created.push(...r.referees.map(refereeFromDTO));
         } catch (err) {
           errors.push((err as { message?: string } | null)?.message ?? 'Erreur import');
         }
@@ -348,7 +326,7 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
       setImportStatus({ count: created.length, errors });
       if (fileInputRef.current) fileInputRef.current.value = '';
     },
-    [competition.id, referees, onRefereesChange]
+    [client, competition.id, referees, onRefereesChange]
   );
 
   const matchStats = useMemo(
@@ -362,7 +340,11 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
     const status: Referee['status'] =
       referee.status === 'unavailable' ? 'available' : 'unavailable';
     try {
-      await window.electronAPI.db.updateReferee(referee.id, { status });
+      await client.call('setRefereeAvailability', {
+        competitionId: competition.id,
+        refereeIds: [referee.id],
+        available: status === 'available',
+      });
       onRefereesChange(referees.map(r => (r.id === referee.id ? { ...r, status } : r)));
     } catch {
       /* silencieux */
@@ -384,10 +366,19 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
           category: newReferee.category,
           nationality: newReferee.nationality || 'FRA',
         };
-        await window.electronAPI.db.updateReferee(editingId, updates);
-        const parts = updates.name.split(/\s+/);
-        const firstName = parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
-        const lastName = parts[parts.length - 1];
+        const { firstName, lastName } = splitRefereeName(updates.name);
+        await client.call('updateRefereeDetails', {
+          competitionId: competition.id,
+          refereeId: editingId,
+          details: {
+            firstName,
+            lastName,
+            club: updates.club || null,
+            license: updates.license || null,
+            category: updates.category || null,
+            nationality: updates.nationality,
+          },
+        });
         onRefereesChange(
           referees.map(r =>
             r.id === editingId
@@ -405,14 +396,19 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
         );
         setEditingId(null);
       } else {
-        const created = await window.electronAPI.db.createReferee(competition.id, {
-          name: newReferee.name.trim(),
-          club: newReferee.club || undefined,
-          license: newReferee.license || undefined,
-          category: newReferee.category || undefined,
-          nationality: newReferee.nationality || 'FRA',
+        const r = await client.call('registerReferees', {
+          competitionId: competition.id,
+          referees: [
+            registerRefereeInput({
+              ...splitRefereeName(newReferee.name),
+              club: newReferee.club,
+              license: newReferee.license,
+              category: newReferee.category,
+              nationality: newReferee.nationality || 'FRA',
+            }),
+          ],
         });
-        onRefereesChange([...referees, created]);
+        onRefereesChange([...referees, ...r.referees.map(refereeFromDTO)]);
       }
       setNewReferee({
         name: '',
@@ -430,16 +426,18 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
   // Tout pointer : même comportement que l'onglet Appel (#1826)
   const uncheckedReferees = referees.filter(r => r.status === 'unavailable');
   const checkInAllReferees = async () => {
-    const ids = new Set<string>();
-    for (const r of uncheckedReferees) {
-      try {
-        await window.electronAPI.db.updateReferee(r.id, { status: 'available' });
-        ids.add(r.id);
-      } catch {
-        /* silencieux */
-      }
+    if (uncheckedReferees.length === 0) return;
+    const ids = new Set(uncheckedReferees.map(r => r.id));
+    try {
+      await client.call('setRefereeAvailability', {
+        competitionId: competition.id,
+        refereeIds: [...ids],
+        available: true,
+      });
+    } catch {
+      return;
     }
-    if (ids.size > 0) {
+    {
       onRefereesChange(
         referees.map(r => (ids.has(r.id) ? { ...r, status: 'available' as const } : r))
       );
@@ -708,10 +706,14 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
                           style={SMALL_BTN}
                           onClick={async () => {
                             try {
-                              await window.electronAPI.db.deleteReferee(ref.id);
+                              await client.call('unregisterReferee', {
+                                competitionId: competition.id,
+                                refereeId: ref.id,
+                              });
                               onRefereesChange(referees.filter(r => r.id !== ref.id));
-                            } catch {
-                              /* silencieux */
+                            } catch (err) {
+                              // Refus du moteur (arbitre d'un match en cours) : message affiché
+                              showToast((err as Error).message, 'error');
                             }
                           }}
                         >

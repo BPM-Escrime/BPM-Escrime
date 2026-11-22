@@ -124,18 +124,24 @@ export const generateBracketMatches = (
   return newMatches;
 };
 
+/**
+ * Identifiant d'un tableau de classement : découle de son parent et du tour d'où viennent ses
+ * tireurs, sans heure ni hasard, pour que le rejeu du journal le retrouve (docs/adr/0017).
+ * Ex. : perdants du tableau de 16 → « cons-16 » ; perdants de son tour de 8 → « cons-16-8 ».
+ */
+export const consolationBracketId = (parentBracketId: string, sourceRound: number): string =>
+  `${parentBracketId === 'main' ? 'cons' : parentBracketId}-${sourceRound}`;
+
 // Crée un bracket de consolation pour les perdants donnés
 export const buildConsolationBracket = (
   losers: PoolRanking[],
   firstPlace: number,
   sourceRound: number,
-  parentBracketId: string,
-  /** Horodatage (ms) qui rend l'identifiant unique, fourni par l'appelant */
-  now: number
+  parentBracketId: string
 ): ConsolationBracket => {
   const sorted = [...losers].sort((a, b) => a.rank - b.rank);
   const bracketSize = getTableauSize(sorted.length);
-  const idPrefix = `cons-${firstPlace}-${now}`;
+  const idPrefix = consolationBracketId(parentBracketId, sourceRound);
   const lastPlace = firstPlace + sorted.length - 1;
   const bracketMatches = generateBracketMatches(sorted, bracketSize, true, idPrefix);
   return {
@@ -447,9 +453,7 @@ export const syncConsolationBrackets = (
   matchList: TableauMatch[],
   brackets: ConsolationBracket[],
   tableauSize: number,
-  ranking: PoolRanking[],
-  /** Horodatage (ms) des brackets créés (identifiants) */
-  now: number
+  ranking: PoolRanking[]
 ): { brackets: ConsolationBracket[]; changed: boolean } => {
   const updated = [...brackets];
   let changed = false;
@@ -465,7 +469,7 @@ export const syncConsolationBrackets = (
       const losers = getRoundLosers(matchList, barrageRound, ranking);
       if (losers.length > 0) {
         // bracket pour les dernières places
-        updated.push(buildConsolationBracket(losers, tableauSize + 1, barrageRound, 'main', now));
+        updated.push(buildConsolationBracket(losers, tableauSize + 1, barrageRound, 'main'));
         changed = true;
       }
     }
@@ -487,9 +491,7 @@ export const syncConsolationBrackets = (
     if (alreadyExists) continue;
     const losers = getRoundLosers(matchList, round, ranking);
     if (losers.length === 0) continue;
-    updated.push(
-      buildConsolationBracket(losers, consolationFirstPlace(1, round), round, 'main', now)
-    );
+    updated.push(buildConsolationBracket(losers, consolationFirstPlace(1, round), round, 'main'));
     changed = true;
   }
 
@@ -511,7 +513,7 @@ export const syncConsolationBrackets = (
       const losers = getRoundLosers(bracket.matches, round, ranking);
       if (losers.length === 0) continue;
       const fp = consolationFirstPlace(bracket.firstPlace, round);
-      updated.push(buildConsolationBracket(losers, fp, round, bracket.id, now));
+      updated.push(buildConsolationBracket(losers, fp, round, bracket.id));
       changed = true;
     }
 
@@ -532,7 +534,7 @@ export const autoFillAllPositions = (
   effectiveMax: number,
   tableauSize: number,
   ranking: PoolRanking[],
-  env: { random: RandomSource; now: number }
+  env: { random: RandomSource }
 ): {
   updatedMatches: TableauMatch[];
   updatedBrackets: ConsolationBracket[];
@@ -553,13 +555,7 @@ export const autoFillAllPositions = (
   // Brackets de consolation : création → remplissage, jusqu'à stabilité
   let updatedBrackets = brackets;
   for (;;) {
-    const sync = syncConsolationBrackets(
-      updatedMatches,
-      updatedBrackets,
-      tableauSize,
-      ranking,
-      env.now
-    );
+    const sync = syncConsolationBrackets(updatedMatches, updatedBrackets, tableauSize, ranking);
     updatedBrackets = sync.brackets;
     let filledHere = 0;
     updatedBrackets = updatedBrackets.map(bracket => {

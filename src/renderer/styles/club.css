@@ -1034,3 +1034,28 @@
   max-height: 180px;
   overflow: auto;
 }
+
+/* #1872 (retours du 20/11) : inventaire — lignes continues, barre d'outils alignée */
+.club-inventory-table td {
+  vertical-align: middle;
+}
+/* Boutons d'action dans un conteneur : la cellule reste une cellule de tableau
+   (display: flex sur le <td> cassait la ligne séparatrice au retour à la ligne) */
+.club-row-buttons {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+.club-inventory-toolbar .form-input,
+.club-inventory-toolbar .toggle-chip,
+.club-inventory-toolbar .club-columns > .btn {
+  box-sizing: border-box;
+  height: 2.5rem;
+}
+.club-list-toggle {
+  font-size: var(--fs-md, 1rem);
+  font-weight: 600;
+}
+.theme-dark .club-list-toggle {
+  color: #fff;
+}

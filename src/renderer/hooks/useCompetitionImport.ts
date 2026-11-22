@@ -4,12 +4,15 @@
  */
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import type { Competition, Fencer, Referee } from '../../shared/types';
-import { logger, LogCategory } from '@shared/services/logger';
+import { logger, LogCategory, toError } from '@shared/services/logger';
 import type { ImportedReferee, RankingImportResult } from '../../shared/utils/fileParser';
 import { importIdentityKeys } from '../../shared/utils/personIdentity';
 import { useToast } from '../components/Toast';
 import { useTranslation } from './useTranslation';
 import type { useFencerManagement } from './useFencerManagement';
+import { useBpmClient } from '../api/BpmClientContext';
+import { refereeFromDTO, registerRefereeInput } from '../api/refereeMapping';
+import { persistCompetitionUpdate } from '../api/competitionUpdate';
 
 export interface ImportData {
   format: string;
@@ -34,6 +37,7 @@ export function useCompetitionImport({
   setReferees,
 }: UseCompetitionImportParams) {
   const { showToast } = useToast();
+  const client = useBpmClient();
   const { t } = useTranslation();
   const [importData, setImportData] = useState<ImportData | null>(null);
   // Compétition à jour pour les traitements asynchrones (import tireurs puis arbitres)
@@ -49,27 +53,26 @@ export function useCompetitionImport({
 
   /** Arbitres du bloc <Arbitres> d'un XML (#1504) ; doublons nom + prénom ignorés */
   const handleImportReferees = async (imported: ImportedReferee[]) => {
-    if (!window.electronAPI?.db?.createReferee) return;
     // Doublon : même licence, ou même nom + prénom (clés partagées avec le MCP, #1880)
     const known = new Set(referees.flatMap(r => importIdentityKeys(r)));
-    const created: Referee[] = [];
+    const fresh: ImportedReferee[] = [];
     for (const ref of imported) {
       const keys = importIdentityKeys(ref);
       if (keys.some(k => known.has(k))) continue;
       keys.forEach(k => known.add(k));
+      fresh.push(ref);
+    }
+    const created: Referee[] = [];
+    if (fresh.length > 0) {
       try {
-        created.push(
-          await window.electronAPI.db.createReferee(competition.id, {
-            name: `${ref.firstName} ${ref.lastName}`.trim(),
-            club: ref.club,
-            license: ref.license,
-            category: ref.category,
-            nationality: ref.nationality,
-            gender: ref.gender,
-          })
-        );
+        // Inscription par le moteur (registerReferees, docs/adr/0018)
+        const r = await client.call('registerReferees', {
+          competitionId: competition.id,
+          referees: fresh.map(registerRefereeInput),
+        });
+        created.push(...r.referees.map(refereeFromDTO));
       } catch (err) {
-        logger.error(LogCategory.UI, 'Failed to import referee', err as Error);
+        logger.error(LogCategory.UI, 'Failed to import referees', err as Error);
       }
     }
     if (created.length > 0) setReferees?.(prev => [...prev, ...created]);
@@ -82,7 +85,7 @@ export function useCompetitionImport({
       };
       onUpdate(updated);
       try {
-        await window.electronAPI.db.updateCompetition?.(current.id, updated);
+        await persistCompetitionUpdate(client, current, updated);
       } catch (err) {
         logger.error(LogCategory.UI, 'Failed to enable referee feature', err as Error);
       }
@@ -131,24 +134,17 @@ export function useCompetitionImport({
   };
 
   const handleImportRanking = async (result: RankingImportResult) => {
-    if (!window.electronAPI?.db?.updateFencer) {
-      showToast('Erreur: API non disponible', 'error');
-      return;
-    }
-
     try {
-      const updatePromises = result.details
+      // Classement d'entrée par le moteur (setFencerRankings, docs/adr/0018)
+      const rankings = result.details
         .filter(d => d.matched && d.fencerId)
-        .map(d =>
-          window.electronAPI!.db!.updateFencer!(d.fencerId!, { ranking: d.ranking }).catch(err =>
-            logger.error(
-              LogCategory.UI,
-              `Failed to update ranking for fencer ${d.fencerId}`,
-              err as Error
-            )
-          )
-        );
-      await Promise.allSettled(updatePromises);
+        .map(d => ({
+          fencerId: d.fencerId!,
+          ranking: typeof d.ranking === 'number' && d.ranking >= 1 ? d.ranking : null,
+        }));
+      if (rankings.length > 0) {
+        await client.call('setFencerRankings', { competitionId: competition.id, rankings });
+      }
 
       onUpdate({
         ...competition,
@@ -165,7 +161,10 @@ export function useCompetitionImport({
       setImportData(null);
     } catch (error) {
       logger.error(LogCategory.UI, 'Failed to import ranking', error as Error);
-      showToast("Erreur lors de l'import du classement", 'error');
+      showToast(
+        t('fencerList.ranking_import_failed', { message: toError(error).message }),
+        'error'
+      );
     }
   };
 

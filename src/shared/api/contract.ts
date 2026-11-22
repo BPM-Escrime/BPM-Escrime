@@ -9,13 +9,18 @@
  */
 import { z } from 'zod';
 import { JournalEventSchema } from './events';
-import type { Fencer, Pool, PoolRanking } from '../types';
+import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
 import type { ConsolationBracket, FinalResult, TableauMatch } from '../domain/tableau/tableauTypes';
 import type { RapieresLegacyState, RapieresSession } from '../domain/rapieres/rapieres.types';
 
 /** Droits (utilisés par le sous-ticket 4, rôles et permissions) */
 export type Permission =
-  'competition:read' | 'fencers:write' | 'score:write' | 'cards:read' | 'referees:write';
+  | 'competition:read'
+  | 'competition:write'
+  | 'fencers:write'
+  | 'score:write'
+  | 'cards:read'
+  | 'referees:write';
 
 export type OperationKind = 'command' | 'query' | 'subscription';
 
@@ -105,6 +110,142 @@ const ResolvedRefereeing = z.object({
  * matchs de tableau…) sont typés par leurs interfaces : z.custom, sans contrôle à l'exécution.
  * Les champs d'interface (phase affichée, paramètres de préparation, pistes) sortent à l'étape 4b.
  */
+/** Écart entre le journal rejoué et l'état (compareWithState) : identifiants et nombres seulement */
+const DivergenceSchema = z.object({
+  kind: z.string(),
+  id: z.string(),
+  expected: z.unknown().optional(),
+  actual: z.unknown().optional(),
+});
+
+/** Valeur de score d'une ligne du journal des matchs */
+const ScoreValue = z.object({ value: z.number().nullable() }).nullable();
+
+/** Statistiques d'un tireur dans son épreuve (touches, cartons, sorties d'arène, durées) */
+const FencerStatsSchema = z.object({
+  fencerId: z.string(),
+  fencerLastName: z.string(),
+  fencerFirstName: z.string(),
+  fencerClub: z.string().optional(),
+  competitionId: z.string(),
+  touchesZoneA: z.number(),
+  touchesZoneB: z.number(),
+  touchesZoneC: z.number(),
+  totalTouchPoints: z.number(),
+  receivedZoneA: z.number(),
+  receivedZoneB: z.number(),
+  receivedZoneC: z.number(),
+  receivedTouchPoints: z.number(),
+  whiteCards: z.number(),
+  yellowCards: z.number(),
+  redCards: z.number(),
+  blackCards: z.number().optional(),
+  cardsByReason: z.record(z.string(), z.number()),
+  arenaExits: z.number(),
+  matchesPlayed: z.number(),
+  totalDurationSeconds: z.number(),
+  averageDurationSeconds: z.number(),
+  matchesFinishedEarly: z.number(),
+});
+
+/** Ligne du journal d'un match (scores, touches, cartons, sorties d'arène) */
+const MatchEventEntrySchema = z.object({
+  id: z.string(),
+  matchId: z.string(),
+  eventType: z.enum(['score_change', 'touch', 'card', 'arena_exit']),
+  timestamp: z.string(),
+  fencerId: z.string().nullable(),
+  fencerLastName: z.string().nullable(),
+  fencerFirstName: z.string().nullable(),
+  fencerSide: z.enum(['A', 'B']).nullable(),
+  previousScoreA: ScoreValue,
+  previousScoreB: ScoreValue,
+  newScoreA: ScoreValue,
+  newScoreB: ScoreValue,
+  changedBy: z.string().nullable(),
+  refereeName: z.string().nullable(),
+  ipAddress: z.string().nullable(),
+  changeReason: z.string().nullable(),
+  zone: z.string().nullable(),
+  points: z.number().nullable(),
+  cardType: z.string().nullable(),
+  cardReason: z.string().nullable(),
+  cardGroup: z.number().nullable(),
+  resultingExclusion: z.boolean().nullable(),
+  exitType: z.string().nullable(),
+});
+
+/** Tireur exposé par le contrat (docs/adr/0018) : dates en ISO 8601 */
+const FencerSchema = z.object({
+  id: z.string(),
+  ref: z.number(),
+  lastName: z.string(),
+  firstName: z.string(),
+  birthDate: z.string().nullable(),
+  gender: z.string(),
+  nationality: z.string(),
+  region: z.string().nullable(),
+  department: z.string().nullable(),
+  club: z.string().nullable(),
+  license: z.string().nullable(),
+  ranking: z.number().nullable(),
+  handedness: z.enum(['R', 'L']).nullable(),
+  status: z.string(),
+  exclusionReason: z.string().nullable(),
+  seedNumber: z.number().nullable(),
+  initialRanking: z.number().nullable(),
+  finalRanking: z.number().nullable(),
+  photo: z.string().nullable(),
+});
+
+const Text = z.string().trim().max(200);
+/** Identité d'un tireur, sans règle (updateFencerDetails, registerFencers) */
+const FencerDetailsShape = {
+  birthDate: z.string().date().nullable().optional().describe('AAAA-MM-JJ ; null : effacée'),
+  gender: z.enum(['M', 'F', 'X']).optional(),
+  nationality: z.string().trim().min(2).max(3).optional().describe('Code ISO (FRA)'),
+  region: Text.nullable().optional(),
+  department: z.string().trim().max(3).nullable().optional(),
+  club: Text.nullable().optional(),
+  license: z.string().trim().max(40).nullable().optional(),
+  handedness: z.enum(['R', 'L']).optional(),
+  photo: z.string().max(2_000_000).nullable().optional().describe('Image en base64'),
+};
+
+/** Arbitre exposé par le contrat (listReferees, commandes d'inscription, docs/adr/0018) */
+const RefereeSchema = z.object({
+  id: z.string(),
+  ref: z.number(),
+  firstName: z.string(),
+  lastName: z.string(),
+  gender: z.string(),
+  club: z.string().nullable(),
+  license: z.string().nullable(),
+  nationality: z.string().nullable(),
+  region: z.string().nullable(),
+  category: z.string().nullable(),
+  status: z.enum(['available', 'assigned', 'unavailable']),
+});
+
+/** Identité d'un arbitre, sans règle */
+const RefereeDetailsShape = {
+  firstName: Text.optional(),
+  gender: z.enum(['M', 'F', 'X']).optional(),
+  nationality: z.string().trim().min(2).max(3).optional().describe('Code ISO (FRA)'),
+  club: Text.nullable().optional(),
+  license: z.string().trim().max(40).nullable().optional(),
+  category: Text.nullable().optional().describe('Niveau : régional, national, international…'),
+};
+
+const WeaponEnum = z.enum(Weapon);
+const GenderEnum = z.enum(Gender);
+const CategoryEnum = z.enum(Category);
+/**
+ * Réglages d'une épreuve (fusion de premier niveau) : clés de CompetitionSettings vérifiées par le
+ * moteur (« unknown_setting »), valeurs libres tant que la formule n'a pas son schéma (ADR-0012)
+ */
+const SettingsPatch = z.record(z.string(), z.unknown());
+
 const CompetitionStateSchema = z.object({
   currentPhase: z.number().int(),
   pools: z.array(z.custom<Pool>()),
@@ -129,6 +270,14 @@ const CompetitionStateSchema = z.object({
     .optional(),
 });
 export type CompetitionStateDTO = z.infer<typeof CompetitionStateSchema>;
+
+const RapieresFencerSchema = z.object({
+  firstName: z.string().max(200),
+  lastName: z.string().max(200),
+  category: z.enum(['M20', 'SENIOR', 'V1', 'V2', 'V3', 'V4', 'HANDI']),
+  gender: z.enum(['M', 'F']).optional(),
+  birthDate: z.string().max(10).optional(),
+});
 
 const FencerRefSchema = z.object({
   id: z.string(),
@@ -435,6 +584,38 @@ export const contract = {
     mcp: { name: 'launch_rapieres_wave', title: 'Lancer une vague (rapières)' },
   }),
 
+  setRapieresTeams: command({
+    description:
+      'Tournoi des rapières : composition des équipes (binômes ; l’équipe est un tireur de l’épreuve) : niveau, deux tireurs, club, région.',
+    input: z.object({
+      competitionId: CompetitionId,
+      teams: z
+        .array(
+          z.object({
+            fencerId: Id.describe('Tireur de l’épreuve portant l’équipe'),
+            info: z.object({
+              level: z.enum(['beginner', 'intermediate', 'expert']),
+              fencers: z.tuple([RapieresFencerSchema, RapieresFencerSchema]),
+              club: z.string().max(200).optional(),
+              region: z.string().max(200).optional(),
+            }),
+          })
+        )
+        .min(1)
+        .max(1000),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), teams: z.number().int(), revision: Revision }),
+    permission: 'fencers:write',
+    mcp: {
+      name: 'set_rapieres_teams',
+      title: 'Composition des équipes (rapières)',
+      idempotent: true,
+    },
+  }),
+
   endRapieresWaves: command({
     description:
       'Tournoi des rapières : arrête les vagues avant leur terme (« ended: true », passage au classement sur les matchs joués) ou les reprend (« ended: false »).',
@@ -511,6 +692,359 @@ export const contract = {
       title: 'Arbitres et pistes des poules et des matchs',
       idempotent: true,
     },
+  }),
+
+  adjustRanking: command({
+    description:
+      'Classement après poules ajusté par le DT : rang (et points Quest) de chaque tireur, répercutés dans les classements de poule. Le classement complet est fourni, dans l’ordre.',
+    input: z.object({
+      competitionId: CompetitionId,
+      ranking: z
+        .array(
+          z.object({
+            fencerId: Id,
+            rank: z.number().int().min(1),
+            questPoints: z.number().optional(),
+          })
+        )
+        .min(1)
+        .max(2000),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), fencers: z.number().int(), revision: Revision }),
+    permission: 'score:write',
+    mcp: { name: 'adjust_ranking', title: 'Ajuster le classement après poules', destructive: true },
+  }),
+
+  skipPools: command({
+    description:
+      'Épreuve sans poules : classement initial sur les tireurs pointés (ordre fourni, sinon classement d’entrée), puis tableau.',
+    input: z.object({
+      competitionId: CompetitionId,
+      fencerIds: z.array(Id).min(2).max(2000).optional().describe('Ordre du classement initial'),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), fencers: z.number().int(), revision: Revision }),
+    permission: 'score:write',
+    mcp: { name: 'skip_pools', title: 'Passer les poules', destructive: true },
+  }),
+
+  clearTableau: command({
+    description:
+      'Retire le tableau (et les tableaux de classement) : il est refait sur le classement courant à l’ouverture de l’onglet Tableau. Accord du DT indispensable si des matchs sont joués.',
+    input: z.object({
+      competitionId: CompetitionId,
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), cleared: z.number().int(), revision: Revision }),
+    permission: 'score:write',
+    mcp: { name: 'clear_tableau', title: 'Retirer le tableau', destructive: true },
+  }),
+
+  rebuildCompetitionState: command({
+    description:
+      'Maintenance (docs/adr/0017) : rejoue le journal de l’épreuve et le compare à son état. ' +
+      '« dryRun: true » (conseillé d’abord) rend les écarts sans rien écrire. Sinon l’état est aligné sur le journal pour les faits rejouables : ' +
+      'statuts des tireurs, scores de poule du tour courant, décisions du tableau et des tableaux de classement, vagues des rapières ; classements et classement final recalculés. ' +
+      'Les écarts de structure (poules, tours, placement du tableau) et les abandons sans touches restent dans « remaining ». Journal incomplet (épreuve antérieure) : statuts seuls.',
+    input: z.object({
+      competitionId: CompetitionId,
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      /** Journal complet : il commence par un tirage (sinon les tables font foi) */
+      complete: z.boolean(),
+      revision: Revision,
+      divergences: z.array(DivergenceSchema),
+      repaired: z.array(z.object({ kind: z.string(), id: z.string() })),
+      remaining: z.array(DivergenceSchema),
+    }),
+    permission: 'score:write',
+    mcp: {
+      name: 'rebuild_competition_state',
+      title: 'Vérifier et réparer l’état d’une épreuve',
+      destructive: true,
+    },
+  }),
+
+  createCompetition: command({
+    description:
+      'Crée une épreuve (docs/adr/0018) : réglages par défaut calculés par le moteur pour l’arme et la catégorie, puis réglages choisis fusionnés (« settings »).',
+    input: z.object({
+      title: Text.min(1),
+      date: z.string().describe('AAAA-MM-JJ ou ISO 8601'),
+      weapon: WeaponEnum,
+      gender: GenderEnum,
+      category: CategoryEnum,
+      location: Text.optional(),
+      color: z.string().max(20).optional(),
+      isTeamEvent: z.boolean().optional(),
+      settings: SettingsPatch.optional(),
+      dryRun: DryRun,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), competitionId: z.string().nullable() }),
+    permission: 'competition:write',
+  }),
+
+  updateCompetitionDetails: command({
+    description: 'Titre, date, lieu et organisateur d’une épreuve : données sans règle.',
+    input: z.object({
+      competitionId: CompetitionId,
+      details: z.strictObject({
+        title: Text.min(1).optional(),
+        date: z.string().optional(),
+        location: Text.nullable().optional(),
+        organizer: Text.nullable().optional(),
+      }),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      competitionId: z.string(),
+      changed: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'competition:write',
+  }),
+
+  updateCompetitionSettings: command({
+    description:
+      'Arme, sexe, catégorie, format par équipes et réglages (fusion de premier niveau, clé inconnue refusée). ' +
+      'Arme, format par équipes, mode spécial et formule à la carte figés (« draw_done ») après le tirage. Tablettes prévenues.',
+    input: z.object({
+      competitionId: CompetitionId,
+      weapon: WeaponEnum.optional(),
+      gender: GenderEnum.optional(),
+      category: CategoryEnum.optional(),
+      isTeamEvent: z.boolean().optional(),
+      settings: SettingsPatch.optional(),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      competitionId: z.string(),
+      changed: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'competition:write',
+  }),
+
+  deleteCompetition: command({
+    description:
+      'Supprime une épreuve et toutes ses données (RGPD) ; sa saisie distante est arrêtée. Résultats déjà versés au classement de saison conservés.',
+    input: z.object({
+      competitionId: CompetitionId,
+      dryRun: DryRun,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), competitionId: z.string() }),
+    permission: 'competition:write',
+  }),
+
+  includeInSeason: command({
+    description:
+      'Verse une épreuve au classement de saison (ou la reverse) : classement Quest calculé par le moteur sur les poules du tour courant. Refus (« no_pools ») sans poules.',
+    input: z.object({ competitionId: CompetitionId, dryRun: DryRun, commandId: CommandId }),
+    output: z.object({
+      dryRun: z.boolean(),
+      competitionId: z.string(),
+      fencers: z.number().int(),
+    }),
+    permission: 'competition:write',
+  }),
+
+  excludeFromSeason: command({
+    description:
+      'Retire une épreuve du classement de saison (même supprimée depuis). Refus (« not_in_season ») si elle n’y est pas.',
+    input: z.object({ competitionId: Id, dryRun: DryRun, commandId: CommandId }),
+    output: z.object({ dryRun: z.boolean(), competitionId: z.string() }),
+    permission: 'competition:write',
+  }),
+
+  resetSeason: command({
+    description: 'Vide le classement de saison (toutes les épreuves versées).',
+    input: z.object({ dryRun: DryRun, commandId: CommandId }),
+    output: z.object({ dryRun: z.boolean(), competitions: z.number().int() }),
+    permission: 'competition:write',
+  }),
+
+  registerFencers: command({
+    description:
+      'Inscrit un ou plusieurs tireurs (docs/adr/0018). Statut initial : non pointé (défaut) ou pointé. ' +
+      'Doublons (même licence, sinon mêmes nom et prénom) signalés dans « duplicates », pas refusés.',
+    input: z.object({
+      competitionId: CompetitionId,
+      fencers: z
+        .array(
+          z.object({
+            lastName: Text.min(1),
+            firstName: Text.min(1),
+            ...FencerDetailsShape,
+            ranking: z.number().int().min(1).nullable().optional(),
+            status: z.enum(['N', 'P']).optional(),
+          })
+        )
+        .min(1)
+        .max(2000),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      fencers: z.array(FencerSchema),
+      duplicates: z.array(z.object({ index: z.number().int(), fencerId: z.string() })),
+      revision: Revision,
+    }),
+    permission: 'fencers:write',
+  }),
+
+  updateFencerDetails: command({
+    description:
+      'Identité d’un tireur : nom, prénom, naissance, sexe, nation, ligue, club, licence, latéralité, photo. ' +
+      'Jamais le statut, le classement ni un score (docs/adr/0018).',
+    input: z.object({
+      competitionId: CompetitionId,
+      fencerId: Id,
+      // Strict : statut, classement ou score refusés à l'entrée (docs/adr/0018)
+      details: z.strictObject({
+        lastName: Text.min(1).optional(),
+        firstName: Text.min(1).optional(),
+        ...FencerDetailsShape,
+      }),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), fencer: FencerSchema, revision: Revision }),
+    permission: 'fencers:write',
+  }),
+
+  setFencerRankings: command({
+    description:
+      'Classement d’entrée des tireurs (null : sans classement). Refusé (« draw_done ») une fois les poules tirées ou le tableau généré.',
+    input: z.object({
+      competitionId: CompetitionId,
+      rankings: z
+        .array(z.object({ fencerId: Id, ranking: z.number().int().min(1).nullable() }))
+        .min(1)
+        .max(5000),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      updated: z.number().int(),
+      unknown: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'fencers:write',
+  }),
+
+  unregisterFencers: command({
+    description:
+      'Désinscrit des tireurs (« fencerIds ») ou tous (« all »). Avant le tirage seulement ; après, retirer le tireur (withdrawFencer).',
+    input: z.object({
+      competitionId: CompetitionId,
+      fencerIds: z.array(Id).max(5000).optional(),
+      all: z.boolean().optional(),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      removed: z.array(z.string()),
+      unknown: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'fencers:write',
+  }),
+
+  registerReferees: command({
+    description:
+      'Inscrit un ou plusieurs arbitres, non pointés (docs/adr/0018). Doublons (licence, ou nom et prénom) signalés dans « duplicates », pas refusés.',
+    input: z.object({
+      competitionId: CompetitionId,
+      referees: z
+        .array(z.object({ lastName: Text.min(1), ...RefereeDetailsShape }))
+        .min(1)
+        .max(1000),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      referees: z.array(RefereeSchema),
+      duplicates: z.array(z.object({ index: z.number().int(), refereeId: z.string() })),
+      revision: Revision,
+    }),
+    permission: 'referees:write',
+  }),
+
+  updateRefereeDetails: command({
+    description:
+      'Identité d’un arbitre : nom, prénom, sexe, nation, club, licence, niveau. Jamais sa disponibilité (setRefereeAvailability).',
+    input: z.object({
+      competitionId: CompetitionId,
+      refereeId: Id,
+      details: z.strictObject({ lastName: Text.min(1).optional(), ...RefereeDetailsShape }),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), referee: RefereeSchema, revision: Revision }),
+    permission: 'referees:write',
+  }),
+
+  setRefereeAvailability: command({
+    description:
+      'Pointage des arbitres : disponibles (« available: true ») ou non pointés. Même effet que l’appel distant.',
+    input: z.object({
+      competitionId: CompetitionId,
+      refereeIds: z.array(Id).min(1).max(1000),
+      available: z.boolean(),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      status: z.enum(['available', 'unavailable']),
+      updated: z.number().int(),
+      unknown: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'referees:write',
+  }),
+
+  unregisterReferee: command({
+    description: 'Désinscrit un arbitre. Refusé (« referee_busy ») s’il arbitre un match en cours.',
+    input: z.object({
+      competitionId: CompetitionId,
+      refereeId: Id,
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), refereeId: z.string(), revision: Revision }),
+    permission: 'referees:write',
   }),
 
   withdrawFencer: command({
@@ -642,6 +1176,227 @@ export const contract = {
     }),
     permission: 'referees:write',
     mcp: { name: 'assign_referee', title: 'Arbitre d’une poule (à la main)', idempotent: true },
+  }),
+
+  listFencers: query({
+    description: 'Tireurs inscrits à une épreuve, dans l’ordre des dossards (dates en ISO 8601).',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(FencerSchema),
+    permission: 'competition:read',
+  }),
+
+  getSeasonRanking: query({
+    description:
+      'Classement de saison : cumul par tireur (victoires, points Quest, touches) et épreuves versées.',
+    input: z.object({}),
+    output: z.object({
+      ranking: z.array(
+        z.object({
+          fencerId: z.string(),
+          fencerLastName: z.string(),
+          fencerFirstName: z.string(),
+          fencerClub: z.string().nullable(),
+          totalVictories: z.number(),
+          totalMatchesPlayed: z.number(),
+          totalQuestPoints: z.number(),
+          totalQuestV4: z.number(),
+          totalQuestV3: z.number(),
+          totalQuestV2: z.number(),
+          totalQuestV1: z.number(),
+          totalTouchesScored: z.number(),
+          totalTouchesReceived: z.number(),
+          totalRedCards: z.number(),
+          competitionCount: z.number(),
+          ratio: z.number(),
+        })
+      ),
+      competitions: z.array(
+        z.object({
+          competitionId: z.string(),
+          competitionTitle: z.string(),
+          competitionDate: z.string(),
+          fencerCount: z.number(),
+          addedAt: z.string(),
+        })
+      ),
+    }),
+    permission: 'competition:read',
+  }),
+
+  listReferees: query({
+    description:
+      'Arbitres d’une épreuve : identité, club, nationalité, niveau et disponibilité (« unavailable » : non pointé). Écran : choix de l’arbitre d’une poule ou d’un match.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(RefereeSchema),
+    permission: 'competition:read',
+  }),
+
+  listRefereeMatches: query({
+    description:
+      'Matchs de poule d’une épreuve avec leur arbitre : historique des arbitrages (numéro, poule, tireurs, score, statut).',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(
+      z.object({
+        matchId: z.string(),
+        matchNumber: z.number(),
+        poolName: z.string().nullable(),
+        fencerAName: z.string(),
+        fencerBName: z.string(),
+        scoreA: z.number().nullable(),
+        scoreB: z.number().nullable(),
+        status: z.string(),
+        refereeId: z.string().nullable(),
+        refereeName: z.string().nullable(),
+      })
+    ),
+    permission: 'competition:read',
+  }),
+
+  getMatchTimeline: query({
+    description:
+      'Journal d’un match en ordre chronologique : changements de score (auteur, motif), touches, cartons, sorties d’arène.',
+    input: z.object({ matchId: Id }),
+    output: z.array(MatchEventEntrySchema),
+    permission: 'competition:read',
+  }),
+
+  getCompetitionTimeline: query({
+    description: 'Journal de tous les matchs d’une épreuve, en ordre chronologique.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(MatchEventEntrySchema),
+    permission: 'competition:read',
+  }),
+
+  getPoolSignatures: query({
+    description: 'Signatures de la feuille d’une poule (tablette) : une image par tireur.',
+    input: z.object({ poolId: Id }),
+    output: z.array(z.object({ fencerId: z.string(), signatureData: z.string() })),
+    permission: 'competition:read',
+  }),
+
+  listFencerStats: query({
+    description:
+      'Statistiques de chaque tireur d’une épreuve : touches par zone, touches reçues, cartons, sorties d’arène, durée des matchs. Écran : onglet Statistiques, rapport de fin de tournoi.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(FencerStatsSchema),
+    permission: 'competition:read',
+  }),
+
+  getFencerStats: query({
+    description: 'Statistiques d’un tireur (null si le tireur n’existe pas).',
+    input: z.object({ fencerId: Id }),
+    output: FencerStatsSchema.nullable(),
+    permission: 'competition:read',
+  }),
+
+  getFencerHistory: query({
+    description:
+      'Historique d’un tireur : ses matchs (adversaire, scores, durée), avec touches et cartons de chacun.',
+    input: z.object({ fencerId: Id }),
+    output: z.object({
+      matches: z.array(
+        z.object({
+          matchId: z.string(),
+          number: z.number(),
+          opponentId: z.string().nullable(),
+          opponentLastName: z.string().nullable(),
+          opponentFirstName: z.string().nullable(),
+          scoreA: z.string().nullable(),
+          scoreB: z.string().nullable(),
+          side: z.enum(['A', 'B']),
+          status: z.string(),
+          startTime: z.string().nullable(),
+          endTime: z.string().nullable(),
+          duration: z.number().nullable(),
+          poolId: z.string().nullable(),
+          tableId: z.string().nullable(),
+          round: z.number().nullable(),
+          touches: z.array(
+            z.object({
+              id: z.string(),
+              zone: z.string(),
+              points: z.number(),
+              timestamp: z.string(),
+              isValidInSuddenDeath: z.boolean(),
+              isReversed: z.boolean(),
+            })
+          ),
+          cards: z.array(
+            z.object({
+              id: z.string(),
+              cardType: z.string(),
+              reason: z.string(),
+              cardGroup: z.number(),
+              timestamp: z.string(),
+              pointsAwarded: z.number(),
+              resultingExclusion: z.boolean(),
+            })
+          ),
+        })
+      ),
+    }),
+    permission: 'competition:read',
+  }),
+
+  listRefereeStats: query({
+    description:
+      'Statistiques des arbitres d’une épreuve : matchs arbitrés, durée moyenne, cartons, appels au DT, repos moyen entre deux matchs.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(
+      z.object({
+        refereeId: z.string(),
+        refereeName: z.string(),
+        matchesCount: z.number(),
+        averageDuration: z.number(),
+        cardsYellow: z.number(),
+        cardsRed: z.number(),
+        cardsBlack: z.number(),
+        dtCalls: z.number(),
+        averageRestSeconds: z.number(),
+      })
+    ),
+    permission: 'competition:read',
+  }),
+
+  listMatchTimings: query({
+    description:
+      'Horodatage des matchs d’une épreuve (début, fin, durée, piste, arbitre) pour les indicateurs d’organisation.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(
+      z.object({
+        matchId: z.string(),
+        poolId: z.string().nullable(),
+        tableId: z.string().nullable(),
+        fencerAId: z.string().nullable(),
+        fencerBId: z.string().nullable(),
+        status: z.string(),
+        strip: z.number().nullable(),
+        refereeId: z.string().nullable(),
+        startTime: z.string().nullable(),
+        endTime: z.string().nullable(),
+        duration: z.number().nullable(),
+      })
+    ),
+    permission: 'competition:read',
+  }),
+
+  listRemoteEvents: query({
+    description:
+      'Événements des saisies distantes d’une épreuve : appels au DT, déconnexions, synchronisations hors ligne, erreurs de synchronisation.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(
+      z.object({
+        id: z.string(),
+        competitionId: z.string(),
+        type: z.enum(['dt_call', 'disconnect', 'offline_sync', 'sync_error']),
+        arenaId: z.string().nullable(),
+        matchId: z.string().nullable(),
+        refereeId: z.string().nullable(),
+        detail: z.string().nullable(),
+        createdAt: z.string(),
+      })
+    ),
+    permission: 'competition:read',
   }),
 
   getMatchCards: query({

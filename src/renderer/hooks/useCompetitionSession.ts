@@ -62,6 +62,9 @@ const PHASES_BY_NUMBER: Record<number, Phase> = Object.fromEntries(
 );
 
 /** Phase correspondant au numéro sauvegardé (undefined si inconnu) */
+/** Numéro d'ordre d'une phase (onglet) */
+export const phaseNumber = (phase: Phase): number => PHASE_NUMBERS[phase];
+
 export const phaseFromNumber = (n: number | undefined): Phase | undefined =>
   PHASES_BY_NUMBER[n ?? 0];
 
@@ -104,6 +107,12 @@ export interface SessionState {
 
 interface UseCompetitionSessionProps {
   competitionId: string;
+  /**
+   * L'écran écrit encore l'état de l'épreuve (étape 4c de l'ADR-0017 : non, sauf exceptions
+   * documentées — tableaux séparés après les poules, épreuves par équipes). Ailleurs, seul le
+   * moteur écrit l'état ; l'écran le relit.
+   */
+  persistLocally?: boolean;
   currentPhase: Phase;
   currentPoolRound: number;
   pools: Pool[];
@@ -299,6 +308,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
       }
       if (!window.electronAPI?.db?.saveSessionStateSync || !isLoadedRef.current) return;
       const p = propsRef.current;
+      if (!p.persistLocally) return;
       window.electronAPI.db.saveSessionStateSync(p.competitionId, {
         revision: revisionRef.current,
         currentPhase: PHASE_NUMBERS[p.currentPhase],
@@ -381,7 +391,8 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
 
   // Sauvegarder à chaque changement - debounced 500ms pour éviter les écritures en rafale
   useEffect(() => {
-    if (!isLoaded) return;
+    // Étape 4c (docs/adr/0017) : l'écran n'écrit plus l'état, sauf exceptions documentées
+    if (!isLoaded || !props.persistLocally) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       saveTimerRef.current = null;
@@ -411,6 +422,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
     props.remoteStripStart,
     props.rapieres,
     props.poolPrepParams,
+    props.persistLocally,
     saveState,
   ]);
 

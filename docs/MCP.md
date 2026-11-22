@@ -183,7 +183,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (49)
+## Référence des outils (54)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -321,7 +321,7 @@ Aucun argument.
 | `since` | integer |  | Dernière révision connue (0 : tout) |
 | `limit` | integer |  | Nombre maximum (1000) |
 
-### En écriture, sur autorisation (32)
+### En écriture, sur autorisation (37)
 
 ### `create_competition` — Créer une épreuve
 
@@ -617,6 +617,18 @@ Aucun argument.
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
 
+### `set_rapieres_teams` — Composition des équipes (rapières)
+
+*écriture, idempotent.* Tournoi des rapières : composition des équipes (binômes ; l’équipe est un tireur de l’épreuve) : niveau, deux tireurs, club, région.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `teams` | object[] | oui |  |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
 ### `end_rapieres_waves` — Arrêter ou reprendre les vagues (rapières)
 
 *écriture.* Tournoi des rapières : arrête les vagues avant leur terme (« ended: true », passage au classement sur les matchs joués) ou les reprend (« ended: false »).
@@ -650,6 +662,52 @@ Aucun argument.
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `pools` | object[] |  |  |
 | `matches` | object[] |  |  |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `adjust_ranking` — Ajuster le classement après poules
+
+*⚠️ écriture, destructif.* Classement après poules ajusté par le DT : rang (et points Quest) de chaque tireur, répercutés dans les classements de poule. Le classement complet est fourni, dans l’ordre.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `ranking` | object[] | oui |  |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `skip_pools` — Passer les poules
+
+*⚠️ écriture, destructif.* Épreuve sans poules : classement initial sur les tireurs pointés (ordre fourni, sinon classement d’entrée), puis tableau.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `fencerIds` | string[] |  | Ordre du classement initial |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `clear_tableau` — Retirer le tableau
+
+*⚠️ écriture, destructif.* Retire le tableau (et les tableaux de classement) : il est refait sur le classement courant à l’ouverture de l’onglet Tableau. Accord du DT indispensable si des matchs sont joués.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `rebuild_competition_state` — Vérifier et réparer l’état d’une épreuve
+
+*⚠️ écriture, destructif.* Maintenance (docs/adr/0017) : rejoue le journal de l’épreuve et le compare à son état. « dryRun: true » (conseillé d’abord) rend les écarts sans rien écrire. Sinon l’état est aligné sur le journal pour les faits rejouables : statuts des tireurs, scores de poule du tour courant, décisions du tableau et des tableaux de classement, vagues des rapières ; classements et classement final recalculés. Les écarts de structure (poules, tours, placement du tableau) et les abandons sans touches restent dans « remaining ». Journal incomplet (épreuve antérieure) : statuts seuls.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |

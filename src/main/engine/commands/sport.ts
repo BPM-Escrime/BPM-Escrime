@@ -962,7 +962,7 @@ export function settleBracket(
   }
   if (playAll) {
     // Perdants des tours terminés versés dans les tableaux de classement (useTableauViewScoring)
-    brackets = syncConsolationBrackets(matches, brackets, size, ranking, Date.now()).brackets;
+    brackets = syncConsolationBrackets(matches, brackets, size, ranking).brackets;
   }
   const mainDone = isTableauDone(matches);
   const hasBarrages = matches.some(x => x.round === size * 2);

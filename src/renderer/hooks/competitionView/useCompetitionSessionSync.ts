@@ -28,6 +28,7 @@ import {
   usePoolsLaunch,
   useRapieresWaves,
   useAssignMatches,
+  useCompetitionCommand,
   useScoreClear,
   useTableauGenerate,
 } from '../usePoolsLaunch';
@@ -156,8 +157,11 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   // Modifications de préparation gardées au retour vers l'appel (#1649)
   const [poolPrepDraft, setPoolPrepDraft] = useState<PoolPrepDraft | null>(null);
 
+  // Étape 4c (docs/adr/0017) : seul le moteur écrit l'état, sauf exceptions documentées
+  const persistLocally = !!competition.settings?.postPoolSplitCriteria || !!competition.isTeamEvent;
   const { isLoaded, flushPendingSave } = useCompetitionRestore({
     competitionId: competition.id,
+    persistLocally,
     currentPhase,
     setCurrentPhase,
     currentPoolRound,
@@ -220,6 +224,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   const rapieresWaves = useRapieresWaves(competition.id, flushPendingSave);
   const clearScore = useScoreClear(competition.id, flushPendingSave);
   const assignMatches = useAssignMatches(competition.id, flushPendingSave);
+  const runCompetitionCommand = useCompetitionCommand(competition.id, flushPendingSave);
   const localUpdateScore = ctx.updateScore;
   const updateScore = useCallback(
     (...args: Parameters<typeof localUpdateScore>): Promise<RecordScoreOutcome> => {
@@ -302,6 +307,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     tableauMatches,
     isLoaded,
     tableMaxScore: effectiveSettings?.defaultTableMaxScore,
+    persistLocally,
   });
 
   // Menu natif
@@ -440,7 +446,14 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     addFencer,
     bulkAddFencers,
     updateFencer,
-    setRapieresTeam,
+    // Composition par le moteur (setRapieresTeams, docs/adr/0017) ; repli local hors moteur
+    setRapieresTeam: (id, info) => {
+      void runCompetitionCommand('setRapieresTeams', { teams: [{ fencerId: id, info }] }).then(
+        outcome => {
+          if (outcome === 'local') setRapieresTeam(id, info);
+        }
+      );
+    },
     notify: ctx.showToast,
   });
   const { rapieresFencerFields, handleSaveRapieresTeam } = rapieresTeams;
@@ -593,6 +606,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     rapieresWaves,
     clearScore,
     assignMatches,
+    runCompetitionCommand,
     handleReinstateFencer,
     handleSetFencerStatus,
     handleEditFencer,

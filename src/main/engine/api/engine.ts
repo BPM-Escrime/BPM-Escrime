@@ -24,9 +24,32 @@ import { checkInFencers } from '../commands/checkIn';
 import { reinstateFencer, withdrawFencer } from '../commands/withdrawal';
 import { addPoolFencer } from '../commands/poolComposition';
 import { closePoolRound } from '../commands/poolRound';
-import { endRapieresWaves, launchRapieresWave } from '../commands/rapieres';
+import { endRapieresWaves, launchRapieresWave, setRapieresTeams } from '../commands/rapieres';
 import { clearScore } from '../commands/scoreClear';
 import { assignMatches } from '../commands/assignments';
+import { adjustRanking, clearTableau, skipPools } from '../commands/ranking';
+import { rebuildCompetitionState } from '../commands/rebuild';
+import {
+  fencerDTO,
+  registerFencers,
+  setFencerRankings,
+  unregisterFencers,
+  updateFencerDetails,
+} from '../commands/fencers';
+import {
+  refereeDTO,
+  registerReferees,
+  setRefereeAvailability,
+  unregisterReferee,
+  updateRefereeDetails,
+} from '../commands/referees';
+import {
+  createCompetition,
+  deleteCompetition,
+  updateCompetitionDetails,
+  updateCompetitionSettings,
+} from '../commands/competitionSetup';
+import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
 import { readSession } from '../commands/sessionView';
 import { competitionState } from '../commands/competitionState';
@@ -61,11 +84,45 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     buildBracket(ctx, competitionId, options),
   launchRapieresWave: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     launchRapieresWave(ctx, input),
+  setRapieresTeams: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    setRapieresTeams(ctx, input),
   endRapieresWaves: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     endRapieresWaves(ctx, input),
   clearScore: (ctx, { expectedRevision: _r, commandId: _c, ...input }) => clearScore(ctx, input),
   assignMatches: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     assignMatches(ctx, input),
+  adjustRanking: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    adjustRanking(ctx, input),
+  skipPools: (ctx, { expectedRevision: _r, commandId: _c, ...input }) => skipPools(ctx, input),
+  clearTableau: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    clearTableau(ctx, input),
+  rebuildCompetitionState: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    rebuildCompetitionState(ctx, input),
+  createCompetition: (ctx, { commandId: _c, ...input }) => createCompetition(ctx, input),
+  updateCompetitionDetails: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    updateCompetitionDetails(ctx, input),
+  updateCompetitionSettings: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    updateCompetitionSettings(ctx, input),
+  deleteCompetition: (ctx, { commandId: _c, ...input }) => deleteCompetition(ctx, input),
+  includeInSeason: (ctx, { commandId: _c, ...input }) => includeInSeason(ctx, input),
+  excludeFromSeason: (ctx, { commandId: _c, ...input }) => excludeFromSeason(ctx, input),
+  resetSeason: (ctx, { commandId: _c, ...input }) => resetSeason(ctx, input),
+  registerFencers: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    registerFencers(ctx, input),
+  updateFencerDetails: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    updateFencerDetails(ctx, input),
+  setFencerRankings: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    setFencerRankings(ctx, input),
+  unregisterFencers: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    unregisterFencers(ctx, input),
+  registerReferees: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    registerReferees(ctx, input),
+  updateRefereeDetails: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    updateRefereeDetails(ctx, input),
+  setRefereeAvailability: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    setRefereeAvailability(ctx, input),
+  unregisterReferee: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    unregisterReferee(ctx, input),
   withdrawFencer: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     withdrawFencer(ctx, input),
   reinstateFencer: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
@@ -76,6 +133,50 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     assignPoolReferees(ctx, competitionId, options),
   assignReferee: (ctx, { competitionId, expectedRevision: _r, ...input }) =>
     assignPoolReferee(ctx, competitionId, input),
+  listFencers: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db
+      .getFencersByCompetition(competitionId)
+      .sort((x, y) => x.ref - y.ref)
+      .map(fencerDTO);
+  },
+  getSeasonRanking: ctx => ({
+    ranking: ctx.db.getSeasonRanking(),
+    competitions: ctx.db.getSeasonCompetitions(),
+  }),
+  listReferees: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getRefereesByCompetition(competitionId).map(refereeDTO);
+  },
+  listRefereeMatches: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getMatchesWithReferees(competitionId);
+  },
+  getMatchTimeline: (ctx, { matchId }) => ctx.db.getMatchTimeline(matchId),
+  getCompetitionTimeline: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getCompetitionTimeline(competitionId);
+  },
+  getPoolSignatures: (ctx, { poolId }) => ctx.db.getPoolSignatures(poolId),
+  listFencerStats: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getCompetitionFencerStats(competitionId);
+  },
+  getFencerStats: (ctx, { fencerId }) =>
+    ctx.db.getFencer(fencerId) ? ctx.db.getFencerCompetitionStats(fencerId) : null,
+  getFencerHistory: (ctx, { fencerId }) => ctx.db.getFencerHistory(fencerId),
+  listRefereeStats: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getRefereeStats(competitionId);
+  },
+  listMatchTimings: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getMatchTimings(competitionId);
+  },
+  listRemoteEvents: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db.getRemoteEvents(competitionId);
+  },
   getMatchCards: (ctx, { matchId }) => ctx.db.getCards(matchId),
   getCardsByMatchIds: (ctx, { matchIds }) => ctx.db.getCardsByMatchIds(matchIds),
   getCompetitionEvents: (ctx, { competitionId, since, limit }) => {

@@ -4,8 +4,8 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Competition, PoolRanking } from '../../shared/types';
-import { calculateOverallRankingQuest } from '../../shared/utils/poolCalculations';
+import { Competition } from '../../shared/types';
+import { useBpmClient } from '../api/BpmClientContext';
 import { useToast } from './Toast';
 import { useTranslation } from '../hooks/useTranslation';
 import { formatDate } from '../../shared/utils/localeFormat';
@@ -108,6 +108,8 @@ export const SeasonRankingView: React.FC<SeasonRankingViewProps> = ({
 }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  // Classement de saison par le contrat (docs/adr/0018)
+  const client = useBpmClient();
   const [ranking, setRanking] = useState<SeasonEntry[]>([]);
   const [competitions, setCompetitions] = useState<SeasonCompetition[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,16 +122,15 @@ export const SeasonRankingView: React.FC<SeasonRankingViewProps> = ({
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      const [r, c] = await Promise.all([
-        window.electronAPI.db.getSeasonRanking(),
-        window.electronAPI.db.getSeasonCompetitions(),
-      ]);
-      setRanking(r as SeasonEntry[]);
-      setCompetitions(c as SeasonCompetition[]);
+      const season = await client.query('getSeasonRanking', {});
+      setRanking(season.ranking as SeasonEntry[]);
+      setCompetitions(season.competitions as SeasonCompetition[]);
+    } catch {
+      // API indisponible (hors Electron) : classement vide
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [client]);
 
   useEffect(() => {
     reload();
@@ -143,34 +144,8 @@ export const SeasonRankingView: React.FC<SeasonRankingViewProps> = ({
     }
     setAdding(true);
     try {
-      const questRanking: PoolRanking[] = calculateOverallRankingQuest(pools);
-      const compDate =
-        comp.date instanceof Date
-          ? comp.date.toISOString()
-          : String(comp.date ?? new Date().toISOString());
-
-      await window.electronAPI.db.addCompetitionToSeason({
-        competitionId: comp.id,
-        competitionTitle: comp.title,
-        competitionDate: compDate,
-        entries: questRanking.map((r, i) => ({
-          fencerId: r.fencer.id,
-          fencerLastName: r.fencer.lastName,
-          fencerFirstName: r.fencer.firstName ?? '',
-          fencerClub: r.fencer.club ?? undefined,
-          victories: r.victories,
-          matchesPlayed: r.matchesPlayed,
-          questPoints: r.questPoints ?? 0,
-          questV4: r.questVictories4 ?? 0,
-          questV3: r.questVictories3 ?? 0,
-          questV2: r.questVictories2 ?? 0,
-          questV1: r.questVictories1 ?? 0,
-          touchesScored: r.touchesScored,
-          touchesReceived: r.touchesReceived,
-          redCards: 0,
-          compRank: i + 1,
-        })),
-      });
+      // Classement Quest calculé par le moteur sur les poules de l'épreuve
+      await client.call('includeInSeason', { competitionId: comp.id });
       await reload();
     } finally {
       setAdding(false);
@@ -178,12 +153,12 @@ export const SeasonRankingView: React.FC<SeasonRankingViewProps> = ({
   };
 
   const handleRemove = async (competitionId: string) => {
-    await window.electronAPI.db.removeCompetitionFromSeason(competitionId);
+    await client.call('excludeFromSeason', { competitionId });
     await reload();
   };
 
   const handleReset = async () => {
-    await window.electronAPI.db.resetSeason();
+    await client.call('resetSeason', {});
     setConfirmReset(false);
     await reload();
   };

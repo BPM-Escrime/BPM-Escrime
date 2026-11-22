@@ -185,6 +185,10 @@ export class FencerRepo {
         );
       }
     }
+    if ('birthDate' in updates) {
+      setClauses.push('birth_date = ?');
+      values.push(updates.birthDate ? new Date(updates.birthDate).toISOString() : null);
+    }
     if (updates.poolStats !== undefined) {
       setClauses.push('pool_stats = ?');
       values.push(updates.poolStats ? JSON.stringify(updates.poolStats) : null);

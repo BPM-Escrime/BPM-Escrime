@@ -5,6 +5,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { MatchEventEntry } from '../../../shared/types';
 import { MatchAuditLog } from '../MatchAuditLog';
+import { fakeApiBridge } from '../../testUtils/apiBridge';
 
 vi.mock('../Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../contexts/TranslationContext', () => ({
@@ -61,10 +62,10 @@ const options = [
 describe('MatchAuditLog — vue compétition', () => {
   beforeEach(() => {
     (window as any).electronAPI = {
-      db: {
+      api: fakeApiBridge({
         getCompetitionTimeline: vi.fn().mockResolvedValue(entries),
         getMatchTimeline: vi.fn().mockResolvedValue([]),
-      },
+      }),
     };
   });
 
@@ -94,10 +95,10 @@ describe('MatchAuditLog — vue compétition', () => {
 describe('MatchAuditLog — replay (#1074)', () => {
   beforeEach(() => {
     (window as any).electronAPI = {
-      db: {
+      api: fakeApiBridge({
         getCompetitionTimeline: vi.fn().mockResolvedValue(entries),
         getMatchTimeline: vi.fn().mockResolvedValue([]),
-      },
+      }),
     };
   });
 

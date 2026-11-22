@@ -96,31 +96,29 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/utils/` | 85 | 954 |
 | `src/shared/services/` | 8 | 87 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 16 |
-| Feature `bracket` (`src/features/bracket/`) | 2 | 26 |
-| Feature `competition` (`src/features/competition/`) | 3 | 20 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
 | Feature `latefencers` (`src/features/latefencers/`) | 1 | 14 |
 | Feature `matchAuditLog` (`src/features/matchAuditLog/`) | 1 | 9 |
 | Feature `pdfTemplates` (`src/features/pdfTemplates/`) | 1 | 6 |
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
-| Feature `pools` (`src/features/pools/`) | 3 | 32 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 269 |
-| `src/main/` | 122 | 1013 |
+| `src/main/` | 127 | 1038 |
 | `src/renderer/services/` | 11 | 57 |
-| `src/renderer/hooks/` | 39 | 201 |
-| `src/renderer/components/` | 119 | 633 |
-| E2E Playwright (`e2e/`) | 12 | 41 |
+| `src/renderer/hooks/` | 40 | 210 |
+| `src/renderer/components/` | 121 | 645 |
+| E2E Playwright (`e2e/`) | 13 | 42 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 1 | 3 |
+| `src/renderer/api/` | 2 | 6 |
 | `src/renderer/contexts/` | 1 | 7 |
+| `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
-| `src/shared/domain/` | 24 | 212 |
-| **Total** | **532** | **4105** |
+| `src/shared/domain/` | 25 | 218 |
+| **Total** | **536** | **4084** |
 
-Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 523 fichiers, 4042 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2054,7 +2052,7 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - dérive totalFencers et completedMatches de getCompetitionStats
 - **getCompetitionFencerStats / getFencerCompetitionStats**
   - retournent des valeurs vides sans electronAPI
-  - délèguent à electronAPI.db
+  - passent par le contrat d’API
 
 </details>
 
@@ -2066,102 +2064,6 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - écart final mémorisé puis effacé
   - JSON corrompu : valeurs vides
   - fin de compétition projetée conservée après génération du tableau (#1817)
-
-</details>
-
-### Feature `bracket` (`src/features/bracket/`)
-
-<details>
-<summary><code>src/features/bracket/services/bracketGenerator.test.ts</code> — 16 tests</summary>
-
-- **BracketGenerator.generate**
-  - generates correct node count for table of 8
-  - generates correct node count for table of 16
-  - generates correct node count for table of 4
-  - generates correct node count for table of 2
-  - assigns unique node IDs
-  - final match is at round=1 (lowest round)
-  - first competition round (highest round number) has tableSize/2 nodes
-  - all rounds except the first competition round have parent links
-  - parent links point to valid node IDs
-  - isBye is false on generated nodes by default
-  - accepts empty seededFencers without error
-- **BracketGenerator.generateByes**
-  - returns empty array when fencerCount equals tableSize
-  - returns correct bye count
-  - returns tableSize byes when fencerCount is 0
-  - bye positions are within bracket bounds
-  - returns 1 bye for 15 fencers in table of 16
-
-</details>
-
-<details>
-<summary><code>src/features/bracket/services/bracketService.test.ts</code> — 10 tests</summary>
-
-- **generateBracket - emptyTable**
-  - retourne un tableau vide sans electronAPI, taille = puissance de 2 ≥ count
-  - arrondit la taille (12 → 16, 64 → 64)
-  - vide aussi si la liste de tireurs est vide
-- **generateBracket - avec tireurs**
-  - construit un tableau et y injecte le competitionId
-- **updateMatchResult**
-  - ne fait rien si le match est introuvable
-  - marque la victoire du bon tireur (A) et termine le match
-  - gère les scores absents (value null)
-- **getProgression**
-  - valeurs par défaut sans electronAPI
-  - agrège complétés/total et déduit le tour courant
-  - currentRound = totalRounds quand tout est terminé
-
-</details>
-
-### Feature `competition` (`src/features/competition/`)
-
-<details>
-<summary><code>src/features/competition/hooks/useCompetitionStore.test.tsx</code> — 8 tests</summary>
-
-- **loadCompetitions**
-  - charge les compétitions via le service
-  - positionne une erreur si la DB est indisponible
-- **createCompetition**
-  - ajoute en tête et définit la compétition courante
-  - propage l’erreur et la stocke
-- **selectCompetition / deleteCompetition**
-  - selectCompetition met à jour la compétition courante
-  - deleteCompetition retire de la liste
-- **setCurrentCompetition / clearError**
-  - définit la compétition courante
-  - efface l’erreur
-
-</details>
-
-<details>
-<summary><code>src/features/competition/services/competitionService.test.ts</code> — 6 tests</summary>
-
-- **garde "Database not available"**
-  - chaque méthode rejette sans electronAPI
-- **délégation à la DB**
-  - getAll / getById relaient les appels DB
-  - create transmet les champs et settings par défaut {}
-  - create conserve les settings fournis
-  - update appelle updateCompetition et retourne le patch
-  - delete appelle deleteCompetition
-
-</details>
-
-<details>
-<summary><code>src/features/competition/utils/competitionUtils.test.ts</code> — 6 tests</summary>
-
-- **validateCompetition**
-  - retourne null pour des données valides
-  - exige un titre non vide
-  - exige date, arme, genre, catégorie
-- **generateCompetitionId**
-  - génère des UUID distincts
-- **formatCompetitionDate**
-  - formate en français lisible
-- **generateCompetitionTitle**
-  - assemble arme/genre/catégorie/date
 
 </details>
 
@@ -2331,68 +2233,6 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 - **getImpactDescription**
   - jaune = avertissement, noir = exclusion
   - rouge = retrait de touches avec accord pluriel
-
-</details>
-
-### Feature `pools` (`src/features/pools/`)
-
-<details>
-<summary><code>src/features/pools/hooks/usePoolStore.test.tsx</code> — 5 tests</summary>
-
-- **loadPools**
-  - charge les poules via le service
-  - retourne une liste vide sans API (pas d’erreur)
-- **computeRanking**
-  - stocke le classement calculé
-- **setCurrentPool / clearError**
-  - définit la poule courante
-  - efface l’erreur
-
-</details>
-
-<details>
-<summary><code>src/features/pools/services/poolCalculator.test.ts</code> — 19 tests</summary>
-
-- **PoolCalculator.calculatePoolDistribution**
-  - returns 1 pool when fencer count fits single pool
-  - returns correct distribution for 35 fencers (5-7)
-  - fencersPerPool sums to fencerCount
-  - falls back to single pool when no valid distribution exists
-  - uses default min=5 max=7 when not provided
-  - returns pool count of 1 for small number of fencers within range
-- **PoolCalculator.isPoolComplete**
-  - returns false for empty matches
-  - returns true when all matches are finished
-  - returns false when any match is not finished
-  - returns false when matches array is undefined
-- **PoolCalculator.calculateRankings**
-  - returns rankings for all fencers
-  - returns isComplete=true when all matches finished
-  - returns isComplete=false with pending match
-  - returns correct completedMatches count
-  - returns 0 averageTouchesPerMatch when no completed matches
-  - calculates correct average touches per match
-- **PoolCalculator.calculateVictoryRatio**
-  - returns 1.0 for fencer who won all matches
-  - returns 0.0 for fencer who lost all matches
-  - returns 0.5 for fencer with equal wins and losses
-
-</details>
-
-<details>
-<summary><code>src/features/pools/services/poolService.test.ts</code> — 8 tests</summary>
-
-- **getByCompetition**
-  - retourne \[\] sans electronAPI
-  - agrège les poules de toutes les phases
-- **updateScore**
-  - ne fait rien sans electronAPI.db.updateMatch
-  - construit les scores avec victoire du gagnant A
-  - positionne le flag abandon sur le perdant
-  - laisse un score à undefined s’il n’est pas fourni
-- **computeOverallRanking**
-  - retourne \[\] s’il n’y a pas de poule
-  - trie par ratio puis index et réassigne les rangs
 
 </details>
 
@@ -3387,6 +3227,26 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 4 tests</summary>
+
+- createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue refusée
+- updateCompetitionDetails : titre, date, lieu ; entrée stricte
+- updateCompetitionSettings : fusion, serveur distant prévenu, arme figée après le tirage
+- deleteCompetition : saisie distante arrêtée, épreuve supprimée
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/fencers.test.ts</code> — 4 tests</summary>
+
+- registerFencers : inscrit, statut pointé admis, doublons signalés
+- updateFencerDetails : identité seulement, champ effacé par null
+- setFencerRankings et unregisterFencers : avant le tirage seulement
+- listFencers : ordre des dossards, dates ISO
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/refereeing.test.ts</code> — 6 tests</summary>
 
 - fusionne côté moteur sans toucher aux autres réglages de l’épreuve
@@ -3395,6 +3255,38 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 - par le contrat : sortie validée, outil MCP « assign\_referees »
 - arbitre non neutre accepté et signalé ; null retire l’arbitre
 - poule ou arbitre inconnus : erreurs codées
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/referees.test.ts</code> — 3 tests</summary>
+
+- registerReferees : non pointés, doublons signalés ; listReferees
+- updateRefereeDetails, setRefereeAvailability, unregisterReferee
+- unregisterReferee : refusé pour l’arbitre d’un match en cours
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/replay.test.ts</code> — 9 tests</summary>
+
+- épreuve complète : appel, poules, abandon, annulation, retrait et réintégration, tableau
+- « toutes les places » : tableaux de classement à identifiants déterministes
+- tours multiples : tour clos archivé, éliminés, tour 2
+- écart détecté : score modifié hors commande, tableau retiré hors journal
+- journal sans tirage : incomplet, seuls les statuts sont comparés
+- état conforme : rien à faire
+- score de poule et statut modifiés hors commande : dryRun puis réparation
+- décision du tableau effacée hors commande : vainqueur rendu, tableau propagé
+- écart de structure : rendu, non corrigé
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/season.test.ts</code> — 2 tests</summary>
+
+- includeInSeason : classement calculé par le moteur, reversement sans doublon
+- excludeFromSeason et resetSeason
 
 </details>
 
@@ -3414,7 +3306,7 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/sport.test.ts</code> — 31 tests</summary>
+<summary><code>src/main/engine/commands/sport.test.ts</code> — 34 tests</summary>
 
 - poules → arbitres → scores → tableau → classement final → exports
 - régénérer des poules jouées exige replace
@@ -3445,6 +3337,9 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 - poule : match remis à jouer, classement recalculé, ScoreCleared
 - tableau : match rouvert tant que le tour suivant n’est pas joué ; poules figées
 - poule : piste et arbitres (principal propagé aux matchs) ; match de tableau : piste et arbitre
+- adjustRanking : ordre du DT, classements de poule alignés, RankingAdjusted
+- skipPools puis tableau ; clearTableau retire le tableau
+- composition écrite dans l’état ; journal sans nom ; tireur inconnu refusé
 - **validation des scores de poule (identique à l’écran)**
   - score max, égalité, vainqueur contraire
   - statut spécial au perdant, priorité marquée
@@ -5094,6 +4989,16 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/hooks/posteUiState.test.ts</code> — 3 tests</summary>
+
+- **posteUiState**
+  - écrit et relit par épreuve, fusionne les champs
+  - stockage illisible : rien
+  - onglet du poste borné par la phase de l’épreuve ; onglets latéraux libres
+
+</details>
+
+<details>
 <summary><code>src/renderer/hooks/remoteScoreManager/useRemoteServerState.test.tsx</code> — 7 tests</summary>
 
 - **fetchVenueStripCount**
@@ -5182,13 +5087,13 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionEvent.test.ts</code> — 4 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionEvent.test.tsx</code> — 4 tests</summary>
 
 - **useCompetitionEvent**
-  - appelle le callback pour la compétition concernée uniquement
+  - s’abonne par le contrat et appelle le callback pour la compétition concernée
   - filtre par type : matches:changed n'active pas fencers:changed
   - se désabonne au démontage
-  - ne plante pas sans electronAPI
+  - ne plante pas hors Electron (client sans transport)
 
 </details>
 
@@ -5205,11 +5110,12 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionRestore.phase.test.tsx</code> — 2 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionRestore.phase.test.tsx</code> — 3 tests</summary>
 
 - **onglet restauré (docs/adr/0017)**
   - chargement de l’épreuve : onglet de la session
   - relecture après une commande : onglet du poste conservé
+  - chargement : onglet du poste s’il ne devance pas la phase de l’épreuve
 
 </details>
 
@@ -5226,7 +5132,7 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionSession.test.tsx</code> — 8 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionSession.test.tsx</code> — 9 tests</summary>
 
 - **restoreState**
   - marque isLoaded même sans electronAPI
@@ -5239,6 +5145,8 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - relit sur journal:appended plus récent, ignore une révision déjà lue
   - rafale de signaux : une relecture en cours, une seule de plus au besoin
   - journal avancé sans réécriture du bloc (pointage) : saisie locale gardée
+- **étape 4c (docs/adr/0017) : l’écran n’écrit plus l’état**
+  - changement local sans exception : aucune sauvegarde ; exception documentée : sauvegarde
 
 </details>
 
@@ -5295,13 +5203,14 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useFencerManagement.test.tsx</code> — 13 tests</summary>
+<summary><code>src/renderer/hooks/useFencerManagement.test.tsx</code> — 14 tests</summary>
 
 - **addFencer**
   - ajoute le tireur et notifie le parent
   - lève une erreur si l’API est absente
 - **updateFencer**
   - met à jour le tireur et notifie
+  - classement par setFencerRankings, statut écrit directement (formats hors moteur)
 - **setFencersStatus**
   - met à jour plusieurs tireurs en un seul état (#1051)
 - **updateFencers**
@@ -5456,7 +5365,7 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/usePoolsLaunch.test.tsx</code> — 8 tests</summary>
+<summary><code>src/renderer/hooks/usePoolsLaunch.test.tsx</code> — 11 tests</summary>
 
 - **usePoolsLaunch**
   - composition : identifiants, piste, ordre des matchs
@@ -5470,6 +5379,10 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 - **tableauAssignmentsDiff**
   - piste ou arbitre changés seuls : affectations
   - autre changement (score, tireur) : null, écriture de l’écran
+- **tableauScoreOps (retour arrière, remplissage automatique)**
+  - remplissage : scores du premier tour vers la finale, vainqueur précisé sur égalité
+  - retour arrière : annulations de la finale vers le premier tour
+  - statut spécial ou matchs différents : null
 
 </details>
 
@@ -6168,6 +6081,21 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/__tests__/RefereeManager.test.tsx</code> — 8 tests</summary>
+
+- **Gestion des arbitres par les commandes du contrat (docs/adr/0018)**
+  - ajout par la touche Entrée : prénom et nom séparés, arbitre ajouté à la liste
+  - nom vide : message, aucune commande
+  - modification : identité envoyée à updateRefereeDetails
+  - pointage d’un arbitre : setRefereeAvailability
+  - « Tout pointer » : une seule commande pour tous les non pointés
+  - suppression : unregisterReferee, arbitre retiré de la liste
+  - suppression refusée par le moteur (match en cours) : message, liste inchangée
+  - historique : lu par listRefereeMatches
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/__tests__/ScoreAuditLog.test.tsx</code> — 3 tests</summary>
 
 - **ScoreAuditLog — colonne Arbitre (#1031)**
@@ -6176,6 +6104,17 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - masque les entrées au-delà des premières en mode compact, puis les réaffiche
 - **ScoreAuditLog — motif de correction après tirage du tableau (#1996)**
   - motif affiché pour une correction, motif technique masqué, auteur générique non affiché
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/__tests__/SeasonRankingView.test.tsx</code> — 4 tests</summary>
+
+- **Classement de saison par le contrat (docs/adr/0018)**
+  - lit le classement et les épreuves versées par getSeasonRanking
+  - verse une épreuve : includeInSeason, puis relecture
+  - retire une épreuve : excludeFromSeason
+  - remise à zéro après confirmation : resetSeason
 
 </details>
 
@@ -6722,7 +6661,7 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 
 - **usePoolReferees**
   - bascule la sélection sans dépasser maxRefereesPerPool
-  - enregistre l’affectation et notifie le parent
+  - notifie le parent, qui l’écrit par le moteur, sans écriture directe en base
 
 </details>
 
@@ -7150,6 +7089,13 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - créer une compétition ouvre son onglet
   - la compétition créée figure sur l’accueil et se rouvre
   - supprimer une compétition la retire de l’accueil
+
+</details>
+
+<details>
+<summary><code>e2e/electron/persistence.spec.ts</code> — 1 test</summary>
+
+- poules lancées et score saisi retrouvés après rechargement de la fenêtre
 
 </details>
 
@@ -8115,6 +8061,16 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
 
 </details>
 
+<details>
+<summary><code>src/renderer/api/competitionUpdate.test.ts</code> — 3 tests</summary>
+
+- **persistCompetitionUpdate**
+  - rien de changé : aucune commande
+  - titre et lieu → updateCompetitionDetails ; réglage modifié seul → updateCompetitionSettings
+  - arme changée : updateCompetitionSettings sans réglages
+
+</details>
+
 ### `src/renderer/contexts/`
 
 <details>
@@ -8129,6 +8085,16 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - applique la langue et le thème de la base sur settings:changed
   - ignore les autres événements, les valeurs identiques et inconnues
   - se désabonne au démontage
+
+</details>
+
+### `src/renderer/locales/`
+
+<details>
+<summary><code>src/renderer/locales/placeholders.test.ts</code> — 1 test</summary>
+
+- **locales : paramètres {{nom}}**
+  - %s : aucun paramètre à accolade simple _(each)_
 
 </details>
 
@@ -8264,6 +8230,19 @@ Unitaires : 520 fichiers, 4064 tests. E2E : 12 fichiers, 41 tests (comptage stat
   - dernier tour non retirable
   - laser : Tour Quest sans poules → 0 tour, poules ajoutées → 1 tour
   - scission vide : clé retirée
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 6 tests</summary>
+
+- **projectCompetition**
+  - journal complet seulement s’il commence (après l’appel) par un tirage
+  - tirage refait sur le même tour : il remplace le précédent
+  - score, annulation ; statut spécial : perdant seulement
+  - correction avec tableau à refaire : tableau retiré
+  - tableau : décision, retrait puis réintégration (match rouvert)
+  - rapières : vague, arrêt, remise à zéro au tirage suivant
 
 </details>
 

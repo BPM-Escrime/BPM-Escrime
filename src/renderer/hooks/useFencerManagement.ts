@@ -13,6 +13,12 @@ import { useTranslation } from './useTranslation';
 import { useCompetitionEvent } from './useCompetitionEvent';
 import { useBpmClient } from '../api/BpmClientContext';
 import { canToggleCheckIn } from '../../shared/domain/fencers/fencerStatus';
+import {
+  FENCER_DETAIL_KEYS,
+  detailsInput,
+  fencerFromDTO,
+  registerInput,
+} from '../api/fencerMapping';
 
 interface UseFencerManagementProps {
   competition: Competition;
@@ -27,6 +33,8 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
   const onUpdateRef = useRef(onUpdate);
   competitionRef.current = competition;
   onUpdateRef.current = onUpdate;
+  // Inscription par les commandes du contrat (docs/adr/0018)
+  const client = useBpmClient();
 
   // Synchroniser avec la compétition parente
   useEffect(() => {
@@ -35,18 +43,21 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
 
   // Charger les tireurs depuis la base de données
   const loadFencers = useCallback(async () => {
-    if (!window.electronAPI?.db?.getFencersByCompetition) return;
-
+    const comp = competitionRef.current;
+    let data: Fencer[];
     try {
-      const comp = competitionRef.current;
-      const data = await window.electronAPI.db.getFencersByCompetition(comp.id);
+      data = (await client.query('listFencers', { competitionId: comp.id })).map(fencerFromDTO);
+    } catch {
+      return; // API indisponible (hors Electron)
+    }
+    try {
       setFencers(data);
       onUpdateRef.current({ ...comp, fencers: data });
     } catch (error) {
       logger.error(LogCategory.UI, 'Failed to load fencers', error as Error);
       showToast('Erreur lors du chargement des tireurs', 'error');
     }
-  }, [showToast]);
+  }, [client, showToast]);
 
   // Rechargement push (inscription distante, import…) : remplace tout poll (#1298).
   // Regroupe les rafales d'événements (import en masse) en un seul rechargement.
@@ -67,14 +78,12 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
     async (fencerData: Omit<Fencer, 'id' | 'createdAt' | 'updatedAt'>) => {
       logger.debug(LogCategory.UI, 'addFencer called', { fencerData });
 
-      if (!window.electronAPI?.db?.addFencer) {
-        logger.error(LogCategory.UI, 'electronAPI.db.addFencer is not available');
-        showToast('Erreur: API non disponible', 'error');
-        throw new Error('API non disponible');
-      }
-
       try {
-        const newFencer = await window.electronAPI.db.addFencer(competition.id, fencerData as any);
+        const r = await client.call('registerFencers', {
+          competitionId: competition.id,
+          fencers: [registerInput(fencerData)],
+        });
+        const newFencer = fencerFromDTO(r.fencers[0]);
 
         const updatedFencers = [...fencers, newFencer];
         setFencers(updatedFencers);
@@ -91,16 +100,44 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
         throw error;
       }
     },
-    [fencers, competition, onUpdate, showToast]
+    [client, fencers, competition, onUpdate, showToast]
+  );
+
+  /**
+   * Écriture d'une mise à jour : identité par updateFencerDetails, classement d'entrée par
+   * setFencerRankings (docs/adr/0018). Statut et motif restent écrits directement : ils
+   * viennent des chemins locaux des formats que le moteur ne pilote pas (exceptions de #1980).
+   */
+  const persistFencerUpdate = useCallback(
+    async (fencerId: string, updates: Partial<Fencer>) => {
+      const competitionId = competition.id;
+      const details = detailsInput(updates);
+      if (Object.keys(details).length > 0) {
+        await client.call('updateFencerDetails', { competitionId, fencerId, details });
+      }
+      if ('ranking' in updates) {
+        const ranking =
+          typeof updates.ranking === 'number' && updates.ranking >= 1 ? updates.ranking : null;
+        await client.call('setFencerRankings', {
+          competitionId,
+          rankings: [{ fencerId, ranking }],
+        });
+      }
+      const rest = Object.fromEntries(
+        Object.entries(updates).filter(
+          ([k]) => k !== 'ranking' && !(FENCER_DETAIL_KEYS as readonly string[]).includes(k)
+        )
+      ) as Partial<Fencer>;
+      if (Object.keys(rest).length > 0) await window.electronAPI?.db?.updateFencer(fencerId, rest);
+    },
+    [client, competition.id]
   );
 
   // Mettre à jour un tireur
   const updateFencer = useCallback(
     async (fencerId: string, updates: Partial<Fencer>) => {
-      if (!window.electronAPI?.db?.updateFencer) return;
-
       try {
-        await window.electronAPI.db.updateFencer(fencerId, updates);
+        await persistFencerUpdate(fencerId, updates);
         const updatedFencers = fencers.map(f =>
           f.id === fencerId ? { ...f, ...updates, updatedAt: new Date() } : f
         );
@@ -109,11 +146,11 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
         showToast('Tireur mis à jour', 'success');
       } catch (error) {
         logger.error(LogCategory.UI, 'Failed to update fencer', error as Error);
-        showToast('Erreur lors de la mise à jour', 'error');
+        showToast(t('fencerList.update_failed', { message: toError(error).message }), 'error');
         throw error;
       }
     },
-    [fencers, competition, onUpdate, showToast]
+    [fencers, competition, onUpdate, showToast, persistFencerUpdate, t]
   );
 
   // Mettre à jour plusieurs tireurs en une seule mise à jour d'état
@@ -157,11 +194,12 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
   // Supprimer un tireur (annulable 5 s, sans confirmation modale : #1535)
   const deleteFencer = useCallback(
     async (fencerId: string) => {
-      if (!window.electronAPI?.db?.deleteFencer) return;
-
       try {
         const removed = fencers.find(f => f.id === fencerId);
-        await window.electronAPI.db.deleteFencer(fencerId);
+        await client.call('unregisterFencers', {
+          competitionId: competition.id,
+          fencerIds: [fencerId],
+        });
         const updatedFencers = fencers.filter(f => f.id !== fencerId);
         setFencers(updatedFencers);
         onUpdate({ ...competition, fencers: updatedFencers });
@@ -181,32 +219,29 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
         );
       } catch (error) {
         logger.error(LogCategory.UI, 'Failed to delete fencer', error as Error);
-        showToast('Erreur lors de la suppression', 'error');
+        showToast(t('fencerList.delete_failed', { message: toError(error).message }), 'error');
         throw error;
       }
     },
-    [fencers, competition, onUpdate, showToast, t]
+    [client, fencers, competition, onUpdate, showToast, t]
   );
 
   // Supprimer tous les tireurs
   const deleteAllFencers = useCallback(async () => {
-    if (!window.electronAPI?.db?.deleteAllFencers) return;
-
     try {
-      await window.electronAPI.db.deleteAllFencers(competition.id);
+      await client.call('unregisterFencers', { competitionId: competition.id, all: true });
       setFencers([]);
       onUpdate({ ...competition, fencers: [] });
       showToast('Tous les tireurs ont été supprimés', 'success');
     } catch (error) {
       logger.error(LogCategory.UI, 'Failed to delete all fencers', error as Error);
-      showToast('Erreur lors de la suppression', 'error');
+      showToast(t('fencerList.delete_failed', { message: toError(error).message }), 'error');
       throw error;
     }
-  }, [competition, onUpdate, showToast]);
+  }, [client, competition, onUpdate, showToast, t]);
 
   // Pointage : un seul chemin, la commande checkIn du contrat (#1980, docs/adr/0005).
   // Lots de 1000 (limite du contrat) ; une erreur remonte : pas de succès affiché.
-  const client = useBpmClient();
   const setPresence = useCallback(
     async (ids: string[], present: boolean): Promise<number> => {
       let updated = 0;
@@ -308,15 +343,13 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
   // Importer plusieurs tireurs en une seule opération (évite N re-renders)
   const bulkAddFencers = useCallback(
     async (fencersData: Omit<Fencer, 'id' | 'createdAt' | 'updatedAt'>[]) => {
-      if (!window.electronAPI?.db?.addFencer) {
-        showToast('Erreur: API non disponible', 'error');
-        throw new Error('API non disponible');
-      }
-
       const added: Fencer[] = [];
-      for (const fencerData of fencersData) {
-        const newFencer = await window.electronAPI.db.addFencer(competition.id, fencerData as any);
-        added.push(newFencer);
+      for (let i = 0; i < fencersData.length; i += 2000) {
+        const r = await client.call('registerFencers', {
+          competitionId: competition.id,
+          fencers: fencersData.slice(i, i + 2000).map(registerInput),
+        });
+        added.push(...r.fencers.map(fencerFromDTO));
       }
 
       const updatedFencers = [...fencers, ...added];
@@ -328,17 +361,12 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
       );
       return added;
     },
-    [fencers, competition, onUpdate, showToast]
+    [client, fencers, competition, onUpdate, showToast]
   );
 
   // Importer un classement depuis un fichier FFF
   const importRanking = useCallback(
     async (fileContent: string): Promise<RankingImportResult> => {
-      if (!window.electronAPI?.db?.updateFencer) {
-        showToast('Erreur: API non disponible', 'error');
-        throw new Error('API non disponible');
-      }
-
       try {
         // Importer le classement uniquement pour les tireurs existants
         const result = importRankingFromFFF(fileContent, fencers);
@@ -351,20 +379,16 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
           return result;
         }
 
-        // Mettre à jour les tireurs en base de données
-        const updatePromises = result.details
+        // Classement d'entrée par le moteur (setFencerRankings) ; refusé après le tirage
+        const rankings = result.details
           .filter(d => d.matched && d.fencerId)
-          .map(d =>
-            window.electronAPI!.db!.updateFencer!(d.fencerId!, { ranking: d.ranking }).catch(err =>
-              logger.error(
-                LogCategory.UI,
-                `Failed to update ranking for fencer ${d.fencerId}`,
-                err as Error
-              )
-            )
-          );
-
-        await Promise.allSettled(updatePromises);
+          .map(d => ({
+            fencerId: d.fencerId!,
+            ranking: typeof d.ranking === 'number' && d.ranking >= 1 ? d.ranking : null,
+          }));
+        if (rankings.length > 0) {
+          await client.call('setFencerRankings', { competitionId: competition.id, rankings });
+        }
 
         // Mettre à jour l'état local
         const updatedFencers = fencers.map(f => {
@@ -400,11 +424,14 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
         return result;
       } catch (error) {
         logger.error(LogCategory.UI, 'Failed to import ranking', error as Error);
-        showToast("Erreur lors de l'import du classement", 'error');
+        showToast(
+          t('fencerList.ranking_import_failed', { message: toError(error).message }),
+          'error'
+        );
         throw error;
       }
     },
-    [fencers, competition, onUpdate, showToast]
+    [client, fencers, competition, onUpdate, showToast, t]
   );
 
   return {

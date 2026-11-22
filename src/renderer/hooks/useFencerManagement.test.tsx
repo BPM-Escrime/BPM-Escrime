@@ -4,9 +4,13 @@
  * BellePoule Modern
  */
 
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useFencerManagement } from './useFencerManagement';
+import { BpmClientProvider } from '../api/BpmClientContext';
+import type { BpmClient } from '../../shared/api/client';
+import { fakeApiBridge } from '../testUtils/apiBridge';
 import { Competition, Fencer, Gender, FencerStatus } from '../../shared/types';
 
 const showToast = vi.fn();
@@ -29,6 +33,7 @@ const competition = { id: 'c1', title: 'Open', fencers: [fencer('1')] } as unkno
 
 let onUpdate: ReturnType<typeof vi.fn>;
 let db: Record<string, any>;
+let api: Record<string, any>;
 
 beforeEach(() => {
   onUpdate = vi.fn();
@@ -38,7 +43,19 @@ beforeEach(() => {
     deleteFencer: vi.fn(async () => {}),
     deleteAllFencers: vi.fn(async () => {}),
   };
-  (window as any).electronAPI = { db };
+  // Inscription par les commandes du contrat (docs/adr/0018)
+  api = {
+    registerFencers: vi.fn(async (input: any) => ({
+      dryRun: false,
+      fencers: input.fencers.map((f: any) => ({ ...fencer('2'), ...f, birthDate: null })),
+      duplicates: [],
+    })),
+    updateFencerDetails: vi.fn(async () => ({ dryRun: false, fencer: fencer('1') })),
+    setFencerRankings: vi.fn(async () => ({ dryRun: false, updated: 1, unknown: [] })),
+    unregisterFencers: vi.fn(async () => ({ dryRun: false, removed: [], unknown: [] })),
+    listFencers: vi.fn(async () => [fencer('1'), fencer('2')]),
+  };
+  (window as any).electronAPI = { db, api: fakeApiBridge(api) };
 });
 
 afterEach(() => {
@@ -57,7 +74,10 @@ describe('addFencer', () => {
     await act(async () => {
       created = await r.current.addFencer({ lastName: 'X' } as any);
     });
-    expect(db.addFencer).toHaveBeenCalledWith('c1', expect.objectContaining({ lastName: 'X' }));
+    expect(api.registerFencers).toHaveBeenCalledWith({
+      competitionId: 'c1',
+      fencers: [expect.objectContaining({ lastName: 'X', status: 'N' })],
+    });
     expect(created.id).toBe('2');
     expect(onUpdate).toHaveBeenCalledTimes(1);
     expect(onUpdate.mock.calls[0][0].fencers).toHaveLength(2);
@@ -66,9 +86,7 @@ describe('addFencer', () => {
   it('lève une erreur si l’API est absente', async () => {
     delete (window as any).electronAPI;
     const r = setup();
-    await expect(r.current.addFencer({ lastName: 'X' } as any)).rejects.toThrow(
-      'API non disponible'
-    );
+    await expect(r.current.addFencer({ lastName: 'X' } as any)).rejects.toThrow('API indisponible');
   });
 });
 
@@ -78,8 +96,25 @@ describe('updateFencer', () => {
     await act(async () => {
       await r.current.updateFencer('1', { lastName: 'Neuf' });
     });
-    expect(db.updateFencer).toHaveBeenCalledWith('1', { lastName: 'Neuf' });
+    expect(api.updateFencerDetails).toHaveBeenCalledWith({
+      competitionId: 'c1',
+      fencerId: '1',
+      details: { lastName: 'Neuf' },
+    });
+    expect(db.updateFencer).not.toHaveBeenCalled();
     expect(onUpdate.mock.calls[0][0].fencers[0].lastName).toBe('Neuf');
+  });
+
+  it('classement par setFencerRankings, statut écrit directement (formats hors moteur)', async () => {
+    const r = setup();
+    await act(async () => {
+      await r.current.updateFencer('1', { ranking: 4, status: FencerStatus.ELIMINATED });
+    });
+    expect(api.setFencerRankings).toHaveBeenCalledWith({
+      competitionId: 'c1',
+      rankings: [{ fencerId: '1', ranking: 4 }],
+    });
+    expect(db.updateFencer).toHaveBeenCalledWith('1', { status: FencerStatus.ELIMINATED });
   });
 });
 
@@ -134,7 +169,7 @@ describe('deleteFencer', () => {
     await act(async () => {
       await r.current.deleteFencer('1');
     });
-    expect(db.deleteFencer).toHaveBeenCalledWith('1');
+    expect(api.unregisterFencers).toHaveBeenCalledWith({ competitionId: 'c1', fencerIds: ['1'] });
     expect(onUpdate.mock.calls[0][0].fencers).toHaveLength(0);
   });
 
@@ -149,7 +184,7 @@ describe('deleteFencer', () => {
     await act(async () => {
       options.action.onClick();
     });
-    const data = db.addFencer.mock.calls[0][1];
+    const data = api.registerFencers.mock.calls[0][0].fencers[0];
     expect(data.lastName).toBe('L1');
     expect(data.id).toBeUndefined();
   });
@@ -161,7 +196,7 @@ describe('deleteAllFencers', () => {
     await act(async () => {
       await r.current.deleteAllFencers();
     });
-    expect(db.deleteAllFencers).toHaveBeenCalledWith('c1');
+    expect(api.unregisterFencers).toHaveBeenCalledWith({ competitionId: 'c1', all: true });
     expect(onUpdate.mock.calls[0][0].fencers).toHaveLength(0);
   });
 });
@@ -171,19 +206,28 @@ describe('bus fencers:changed (#1298)', () => {
     vi.useFakeTimers();
     let handler: (e: any) => void = () => {};
     const unsubscribe = vi.fn();
-    db.getFencersByCompetition = vi.fn(async () => [fencer('1'), fencer('2')]);
-    (window as any).electronAPI = {
-      db,
-      onCompetitionEvent: vi.fn((cb: (e: any) => void) => {
+    (window as any).electronAPI = { db };
+    // Bus et lecture par le contrat (onCompetitionEvents, listFencers, #1981)
+    const query = vi.fn(async () => [fencer('1'), fencer('2')]);
+    const client = {
+      call: vi.fn(),
+      query,
+      subscribe: vi.fn((_name: string, _input: unknown, cb: (e: any) => void) => {
         handler = cb;
         return unsubscribe;
       }),
-    };
-    const { result, unmount } = renderHook(() =>
-      useFencerManagement({
-        competition,
-        onUpdate: onUpdate as unknown as (c: Competition) => void,
-      })
+    } as unknown as BpmClient;
+    const { result, unmount } = renderHook(
+      () =>
+        useFencerManagement({
+          competition,
+          onUpdate: onUpdate as unknown as (c: Competition) => void,
+        }),
+      {
+        wrapper: ({ children }: { children: React.ReactNode }) => (
+          <BpmClientProvider client={client}>{children}</BpmClientProvider>
+        ),
+      }
     );
     act(() => {
       handler({ type: 'fencers:changed', competitionId: 'c1' });
@@ -193,7 +237,8 @@ describe('bus fencers:changed (#1298)', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(300);
     });
-    expect(db.getFencersByCompetition).toHaveBeenCalledTimes(1);
+    expect(query).toHaveBeenCalledWith('listFencers', { competitionId: 'c1' });
+    expect(query).toHaveBeenCalledTimes(1);
     expect(result.current.fencers).toHaveLength(2);
     unmount();
     expect(unsubscribe).toHaveBeenCalled();

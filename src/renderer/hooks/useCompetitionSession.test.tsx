@@ -184,3 +184,24 @@ describe('projection du moteur (docs/adr/0017, étape 4a)', () => {
     expect(result.current.restoredState!.pools).toHaveLength(1);
   });
 });
+
+describe('étape 4c (docs/adr/0017) : l’écran n’écrit plus l’état', () => {
+  it('changement local sans exception : aucune sauvegarde ; exception documentée : sauvegarde', async () => {
+    const saveSessionState = vi.fn(async () => ({}));
+    const getSessionState = vi.fn(async () => null);
+    (window as any).electronAPI = { db: { saveSessionState, getSessionState } };
+    const props = baseProps();
+    const view = renderHook(p => useCompetitionSession(p), { initialProps: props });
+    await waitFor(() => expect(view.result.current.isLoaded).toBe(true));
+    view.rerender({ ...props, currentPhase: 'ranking' as never });
+    await new Promise(r => setTimeout(r, 650));
+    expect(saveSessionState).not.toHaveBeenCalled();
+
+    const kept = renderHook(p => useCompetitionSession(p), {
+      initialProps: { ...props, persistLocally: true },
+    });
+    await waitFor(() => expect(kept.result.current.isLoaded).toBe(true));
+    kept.rerender({ ...props, persistLocally: true, currentPhase: 'ranking' as never });
+    await waitFor(() => expect(saveSessionState).toHaveBeenCalled(), { timeout: 2000 });
+  });
+});

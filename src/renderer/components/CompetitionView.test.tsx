@@ -88,7 +88,17 @@ function mockElectronAPI(fencers: Fencer[], session: unknown = null) {
       invoke: (name: string, input: unknown) => {
         (calls[`api:${name}`] ??= []).push([input]);
         // Pas de moteur derrière le bouchon : poules et tableau retombent sur l'écran
-        if (['generatePools', 'generateTableau', 'clearScore', 'assignMatches'].includes(name)) {
+        if (
+          [
+            'generatePools',
+            'generateTableau',
+            'clearScore',
+            'assignMatches',
+            'adjustRanking',
+            'skipPools',
+            'clearTableau',
+          ].includes(name)
+        ) {
           return Promise.resolve({
             ok: false,
             error: { code: 'unavailable', message: 'moteur absent (test)' },
@@ -99,7 +109,9 @@ function mockElectronAPI(fencers: Fencer[], session: unknown = null) {
           data:
             name === 'checkIn'
               ? { dryRun: false, status: 'x', matched: 1, updated: 1, skipped: 0, unknown: [] }
-              : null,
+              : name === 'listFencers'
+                ? fencers
+                : null,
         });
       },
       subscribe: () => Promise.resolve({ ok: true, data: null }),

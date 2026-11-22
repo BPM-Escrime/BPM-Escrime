@@ -6,6 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useMatchAuditStore } from './useMatchAuditStore';
+import { fakeApiBridge } from '../../../renderer/testUtils/apiBridge';
 
 const get = () => useMatchAuditStore.getState();
 
@@ -18,7 +19,9 @@ afterEach(() => {
 
 describe('loadMatchTimeline', () => {
   it('charge les entrées et positionne activeMatchId', async () => {
-    (window as any).electronAPI = { db: { getMatchTimeline: vi.fn(async () => [{ id: 'e1' }]) } };
+    (window as any).electronAPI = {
+      api: fakeApiBridge({ getMatchTimeline: vi.fn(async () => [{ id: 'e1' }]) }),
+    };
     await get().loadMatchTimeline('m1');
     expect(get().entries).toEqual([{ id: 'e1' }]);
     expect(get().isLoading).toBe(false);
@@ -28,11 +31,11 @@ describe('loadMatchTimeline', () => {
 
   it('positionne une erreur en cas d’échec', async () => {
     (window as any).electronAPI = {
-      db: {
+      api: fakeApiBridge({
         getMatchTimeline: vi.fn(async () => {
           throw new Error('boom');
         }),
-      },
+      }),
     };
     await get().loadMatchTimeline('m1');
     expect(get().error).toBe('boom');
@@ -43,7 +46,7 @@ describe('loadMatchTimeline', () => {
 describe('loadCompetitionTimeline', () => {
   it('charge les entrées et positionne activeCompetitionId', async () => {
     (window as any).electronAPI = {
-      db: { getCompetitionTimeline: vi.fn(async () => [{ id: 'c-e' }]) },
+      api: fakeApiBridge({ getCompetitionTimeline: vi.fn(async () => [{ id: 'c-e' }]) }),
     };
     await get().loadCompetitionTimeline('c1');
     expect(get().entries).toEqual([{ id: 'c-e' }]);
@@ -55,11 +58,11 @@ describe('loadCompetitionTimeline', () => {
 describe('loadCompetitionTimeline - erreur', () => {
   it('positionne une erreur en cas d’échec', async () => {
     (window as any).electronAPI = {
-      db: {
+      api: fakeApiBridge({
         getCompetitionTimeline: vi.fn(async () => {
           throw new Error('boom-c');
         }),
-      },
+      }),
     };
     await get().loadCompetitionTimeline('c1');
     expect(get().error).toBe('boom-c');
@@ -68,11 +71,11 @@ describe('loadCompetitionTimeline - erreur', () => {
 
   it('positionne un message générique si l’erreur n’est pas une Error', async () => {
     (window as any).electronAPI = {
-      db: {
+      api: fakeApiBridge({
         getCompetitionTimeline: vi.fn(async () => {
           throw 'oops';
         }),
-      },
+      }),
     };
     await get().loadCompetitionTimeline('c1');
     expect(get().error).toBe('Erreur chargement');

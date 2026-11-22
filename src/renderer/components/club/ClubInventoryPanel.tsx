@@ -7,6 +7,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Archive,
   BookOpen,
+  ChevronDown,
+  ChevronUp,
   Columns3,
   Download,
   HandCoins,
@@ -379,35 +381,37 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
           {l.conditionIn && ` · ${t(`clubInventory.cond_${l.conditionIn}`)}`}
         </td>
       )}
-      <td className="club-row club-row--end">
-        <Button
-          size="sm"
-          variant="ghost"
-          aria-label={t('clubInventory.print_contract')}
-          title={t('clubInventory.print_contract')}
-          icon={<Printer size={14} aria-hidden="true" />}
-          onClick={() => printContract(l)}
-        />
-        {open ? (
-          <Button
-            size="sm"
-            variant="primary"
-            disabled={locked}
-            icon={<Undo2 size={14} aria-hidden="true" />}
-            onClick={() => setReturning({ loan: l })}
-          >
-            {t('clubInventory.return_action')}
-          </Button>
-        ) : (
+      <td className="club-actions">
+        <div className="club-row club-row--end club-row-buttons">
           <Button
             size="sm"
             variant="ghost"
-            aria-label={t('actions.delete')}
-            disabled={locked}
-            icon={<Trash2 size={14} aria-hidden="true" />}
-            onClick={() => void removeLoan(l)}
+            aria-label={t('clubInventory.print_contract')}
+            title={t('clubInventory.print_contract')}
+            icon={<Printer size={14} aria-hidden="true" />}
+            onClick={() => printContract(l)}
           />
-        )}
+          {open ? (
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={locked}
+              icon={<Undo2 size={14} aria-hidden="true" />}
+              onClick={() => setReturning({ loan: l })}
+            >
+              {t('clubInventory.return_action')}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="ghost"
+              aria-label={t('actions.delete')}
+              disabled={locked}
+              icon={<Trash2 size={14} aria-hidden="true" />}
+              onClick={() => void removeLoan(l)}
+            />
+          )}
+        </div>
       </td>
     </tr>
   );
@@ -518,7 +522,7 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
           </div>
         </div>
 
-        <div className="club-row">
+        <div className="club-row club-row--align-end club-inventory-toolbar">
           <label className="form-label club-grow">
             {t('clubInventory.search')}
             <input
@@ -583,11 +587,17 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
           </div>
         </div>
 
-        <div className="club-row club-row--end">
+        <div className="club-row">
           <Button
-            size="sm"
-            variant="ghost"
+            className="club-list-toggle"
             aria-expanded={listOpen}
+            icon={
+              listOpen ? (
+                <ChevronUp size={16} aria-hidden="true" />
+              ) : (
+                <ChevronDown size={16} aria-hidden="true" />
+              )
+            }
             onClick={() => setListOpen(o => !o)}
           >
             {t(listOpen ? 'clubInventory.list_fold' : 'clubInventory.list_unfold')}
@@ -629,7 +639,7 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
           />
         ) : (
           <div className="table-scroll">
-            <table className="table">
+            <table className="table club-inventory-table">
               <thead>
                 <tr>
                   <th scope="col">{t('clubInventory.name')}</th>
@@ -678,47 +688,51 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
                     {INVENTORY_COLUMNS.filter(c => cols.has(c)).map(c => (
                       <td key={c}>{inventoryCell(i, c, cellCtx)}</td>
                     ))}
-                    <td className="club-row club-row--end">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        aria-label={t('clubInventory.lend_action')}
-                        title={t('clubInventory.lend_action')}
-                        disabled={locked || i.retired || i.availableQuantity === 0}
-                        icon={<HandCoins size={14} aria-hidden="true" />}
-                        onClick={() => setLending({ item: i })}
-                      />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        aria-label={t('actions.edit')}
-                        icon={<Pencil size={14} aria-hidden="true" />}
-                        disabled={locked}
-                        onClick={() => setEditing({ item: i })}
-                      />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        aria-label={t(i.retired ? 'clubInventory.restore' : 'clubInventory.retire')}
-                        title={t(i.retired ? 'clubInventory.restore' : 'clubInventory.retire')}
-                        icon={
-                          i.retired ? (
-                            <Undo2 size={14} aria-hidden="true" />
-                          ) : (
-                            <Archive size={14} aria-hidden="true" />
-                          )
-                        }
-                        disabled={locked}
-                        onClick={() => void toggleRetired(i)}
-                      />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        aria-label={t('actions.delete')}
-                        disabled={locked || i.lentQuantity > 0}
-                        icon={<Trash2 size={14} aria-hidden="true" />}
-                        onClick={() => void removeItem(i)}
-                      />
+                    <td className="club-actions">
+                      <div className="club-row club-row--end club-row-buttons">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-label={t('clubInventory.lend_action')}
+                          title={t('clubInventory.lend_action')}
+                          disabled={locked || i.retired || i.availableQuantity === 0}
+                          icon={<HandCoins size={14} aria-hidden="true" />}
+                          onClick={() => setLending({ item: i })}
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-label={t('actions.edit')}
+                          icon={<Pencil size={14} aria-hidden="true" />}
+                          disabled={locked}
+                          onClick={() => setEditing({ item: i })}
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-label={t(
+                            i.retired ? 'clubInventory.restore' : 'clubInventory.retire'
+                          )}
+                          title={t(i.retired ? 'clubInventory.restore' : 'clubInventory.retire')}
+                          icon={
+                            i.retired ? (
+                              <Undo2 size={14} aria-hidden="true" />
+                            ) : (
+                              <Archive size={14} aria-hidden="true" />
+                            )
+                          }
+                          disabled={locked}
+                          onClick={() => void toggleRetired(i)}
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-label={t('actions.delete')}
+                          disabled={locked || i.lentQuantity > 0}
+                          icon={<Trash2 size={14} aria-hidden="true" />}
+                          onClick={() => void removeItem(i)}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -736,7 +750,7 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
           <p className="club-muted">{t('clubInventory.no_loans')}</p>
         ) : (
           <div className="table-scroll">
-            <table className="table">
+            <table className="table club-inventory-table">
               <thead>
                 <tr>
                   <th scope="col">{t('clubInventory.name')}</th>
@@ -768,7 +782,7 @@ export const ClubInventoryPanel: React.FC<{ clubId: string }> = ({ clubId }) => 
             <p className="club-muted">{t('clubInventory.no_history')}</p>
           ) : (
             <div className="table-scroll">
-              <table className="table">
+              <table className="table club-inventory-table">
                 <thead>
                   <tr>
                     <th scope="col">{t('clubInventory.name')}</th>

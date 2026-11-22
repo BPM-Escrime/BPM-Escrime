@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useMemo, useCallback, memo, Suspense } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useTranslation } from '../hooks/useTranslation';
+import { useBpmClient } from '../api/BpmClientContext';
 import {
   Competition,
   Fencer,
@@ -362,16 +363,21 @@ const AnalyticsDashboard_: React.FC<AnalyticsDashboardProps> = ({
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [exporting, setExporting] = useState(false);
   const { showToast } = useToast();
+  const client = useBpmClient();
 
   const loadFencerStats = useCallback(async () => {
-    const data = await window.electronAPI?.db?.getCompetitionFencerStats?.(competition.id);
-    if (data) setFencerStats(data as FencerCompetitionStats[]);
-  }, [competition.id]);
+    const data = await client
+      .query('listFencerStats', { competitionId: competition.id })
+      .catch(() => null);
+    if (data) setFencerStats(data);
+  }, [client, competition.id]);
 
   const loadRefereeStats = useCallback(async () => {
-    const data = await window.electronAPI?.db?.getRefereeStats?.(competition.id);
+    const data = await client
+      .query('listRefereeStats', { competitionId: competition.id })
+      .catch(() => null);
     if (data) setRefereeStats(data);
-  }, [competition.id]);
+  }, [client, competition.id]);
 
   useEffect(() => {
     loadFencerStats();
@@ -381,8 +387,8 @@ const AnalyticsDashboard_: React.FC<AnalyticsDashboardProps> = ({
   const loadOrganisation = useCallback(async () => {
     const api = window.electronAPI;
     const [tm, ev, ar] = await Promise.all([
-      api?.db?.getMatchTimings?.(competition.id).catch(() => null),
-      api?.db?.getRemoteEvents?.(competition.id).catch(() => null),
+      client.query('listMatchTimings', { competitionId: competition.id }).catch(() => null),
+      client.query('listRemoteEvents', { competitionId: competition.id }).catch(() => null),
       api?.remote?.getArenas?.(competition.id).catch(() => null),
     ]);
     if (Array.isArray(tm)) setTimings(tm);
@@ -395,7 +401,7 @@ const AnalyticsDashboard_: React.FC<AnalyticsDashboardProps> = ({
       }))
     );
     setNow(Date.now());
-  }, [competition.id]);
+  }, [client, competition.id]);
 
   useEffect(() => {
     void loadOrganisation();
