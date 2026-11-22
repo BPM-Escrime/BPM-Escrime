@@ -118,10 +118,10 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 26 | 250 |
-| **Total** | **542** | **4142** |
+| `src/shared/domain/` | 26 | 253 |
+| **Total** | **542** | **4145** |
 
-Unitaires : 529 fichiers, 4100 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 529 fichiers, 4103 tests. E2E : 13 fichiers, 42 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8272,7 +8272,7 @@ Unitaires : 529 fichiers, 4100 tests. E2E : 13 fichiers, 42 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 32 tests</summary>
+<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 35 tests</summary>
 
 - **computeArenaGeometry**
   - place les lignes de mise en garde à 2 m du centre, soit 4 m entre elles
@@ -8312,6 +8312,10 @@ Unitaires : 529 fichiers, 4100 tests. E2E : 13 fichiers, 42 tests (comptage stat
 - **technicalDimensions**
   - donne la salle, le diamètre des arènes et les espacements alignés
   - donne les dimensions des éléments
+- **moveArenaWithPush**
+  - repousse une arène voisine qui chevauche l'arène déplacée
+  - repousse un élément posé dans le cercle de sécurité hors du cercle
+  - borne l'arène déplacée à la marge de la salle
 
 </details>
 
