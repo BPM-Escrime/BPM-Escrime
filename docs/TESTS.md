@@ -116,13 +116,14 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
+| `src/renderer/platform/` | 1 | 4 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 27 | 258 |
-| **Total** | **550** | **4185** |
+| **Total** | **551** | **4189** |
 
-Unitaires : 536 fichiers, 4142 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 537 fichiers, 4146 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8220,6 +8221,21 @@ Unitaires : 536 fichiers, 4142 tests. E2E : 14 fichiers, 43 tests (comptage stat
 
 - **locales : paramètres {{nom}}**
   - %s : aucun paramètre à accolade simple _(each)_
+
+</details>
+
+### `src/renderer/platform/`
+
+<details>
+<summary><code>src/renderer/platform/platforms.test.ts</code> — 4 tests</summary>
+
+- **ElectronPlatform**
+  - dialogue natif puis écriture du contenu au chemin choisi
+  - annulation : false, rien n’est écrit
+- **BrowserPlatform**
+  - téléchargement : lien Blob au nom proposé, URL libérée
+- **détection**
+  - Electron si le préload est là, navigateur sinon ; défaut résolu à chaque appel
 
 </details>
 
