@@ -87,7 +87,9 @@ du tableau lit `listReferees`. `useMatchDbSync` n'écrit plus les matchs que pou
 moteur (tableaux séparés, équipes) : ailleurs le moteur les écrit dans la transaction de la
 commande. Journal des matchs (`useMatchAuditStore`) et signatures de poule passent par le
 contrat ; tests : `fakeApiBridge` (`src/renderer/testUtils/apiBridge.ts`) simule le pont.
-Cliquet `electronApiCalls` : 121.
+Code mort supprimé (`features/pools`, `features/competition`, `features/bracket` : services et
+stores sans appelant). Arbitres et pistes : plus d'écriture directe en base à côté de
+`assignMatches`. Cliquet `electronApiCalls` : 118.
 
 Lots suivants : suite de la migration de l'écran par domaine (2), `WsClient` + adaptateur WebSocket (3),
 `PlatformServices` (4), pages distantes (5).

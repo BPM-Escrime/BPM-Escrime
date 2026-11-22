@@ -30,7 +30,7 @@ describe('usePoolReferees', () => {
     expect(result.current.pendingRefereeIds).toEqual(['b']);
   });
 
-  it('enregistre l’affectation et notifie le parent', () => {
+  it('notifie le parent, qui l’écrit par le moteur, sans écriture directe en base', () => {
     const onRefereeAssigned = vi.fn();
     const { result } = renderHook(() =>
       usePoolReferees({
@@ -41,7 +41,7 @@ describe('usePoolReferees', () => {
       })
     );
     act(() => result.current.handleAssignReferee(ref('x')));
-    expect(window.electronAPI.db.updatePoolReferees).toHaveBeenCalledWith('p1', ['x']);
+    expect(window.electronAPI.db.updatePoolReferees).not.toHaveBeenCalled();
     expect(onRefereeAssigned).toHaveBeenCalledWith('p1', [ref('x')]);
     expect(result.current.assignedReferees).toEqual([ref('x')]);
     expect(result.current.showRefereeModal).toBe(false);

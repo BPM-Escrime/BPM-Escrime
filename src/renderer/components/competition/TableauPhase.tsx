@@ -12,7 +12,6 @@ import type { TableauViewProps } from '../tableau/tableauViewShared';
 import React, { Suspense } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Referee } from '../../../shared/types';
-import { logger, LogCategory } from '@shared/services/logger';
 import { specialStatusPatch } from '../../../shared/utils/forfeit';
 import type { PoolRanking, Weapon } from '../../../shared/types';
 import type { Phase } from '../../hooks/useCompetitionSession';
@@ -232,22 +231,6 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
               fencerBParam ?? match?.fencerB ?? null
             );
           }
-        }}
-        onMatchRefereeChange={(matchId, refereeId) => {
-          // updateMatch lève une erreur synchrone si l'ID n'est pas un UUID (ex. « 64-0 »)
-          Promise.resolve()
-            .then(() =>
-              window.electronAPI.db.updateMatch(matchId, {
-                refereeId: refereeId ?? undefined,
-              })
-            )
-            .catch((e: unknown) =>
-              logger.warn(
-                LogCategory.DATABASE,
-                'updateMatch (arbitre tableau) failed',
-                e instanceof Error ? e : undefined
-              )
-            );
         }}
       />
     </Suspense>
