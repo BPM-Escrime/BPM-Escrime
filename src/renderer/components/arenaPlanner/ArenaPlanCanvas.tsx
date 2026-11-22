@@ -6,7 +6,8 @@
  * Licensed under GPL-3.0
  */
 
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Button } from '../common/Button';
 import { useTranslation } from '../../hooks/useTranslation';
 import { technicalDimensions, type DimensionLine } from '@shared/domain/arena/arenaDimensions';
 import {
@@ -20,6 +21,10 @@ import {
 } from '@shared/domain/arena/arenaPlanner';
 
 const VIEW_PAD_M = 2;
+const ZOOM_MIN = 1;
+const ZOOM_MAX = 8;
+const ZOOM_STEP = 1.25;
+const PAN_CLICK_PX = 4;
 const NUDGE_M = 0.1;
 const NUDGE_BIG_M = 1;
 const ROTATE_STEP_DEG = 15;
@@ -39,6 +44,7 @@ const fmt = (n: number) => (Math.round(n * 10) / 10).toString();
 type DragState =
   | { mode: 'move'; id: string; dx: number; dy: number }
   | { mode: 'arena'; index: number; dx: number; dy: number }
+  | { mode: 'pan'; startX: number; startY: number; c0: Point; moved: boolean }
   | { mode: 'resize'; id: string; cx: number; cy: number; rot: number }
   | { mode: 'rotate'; id: string; cx: number; cy: number };
 
@@ -77,6 +83,11 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
 }) => {
   const { t } = useTranslation();
   const dragRef = useRef<DragState | null>(null);
+  /** Zoom (1 = plan entier) et centre de la vue, en mètres */
+  const [zoom, setZoom] = useState(ZOOM_MIN);
+  const [viewCenter, setViewCenter] = useState<Point>({ x: room.widthM / 2, y: room.lengthM / 2 });
+  const defaultCenter = { x: room.widthM / 2, y: room.lengthM / 2 };
+  const center = zoom === ZOOM_MIN ? defaultCenter : viewCenter;
 
   const toMetres = (clientX: number, clientY: number): Point | null => {
     const svg = svgRef.current;
@@ -126,6 +137,17 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   const onSvgPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const drag = dragRef.current;
     if (!drag) return;
+    if (drag.mode === 'pan') {
+      const ctm = svgRef.current?.getScreenCTM();
+      if (!ctm) return;
+      const dpx = e.clientX - drag.startX;
+      const dpy = e.clientY - drag.startY;
+      if (Math.abs(dpx) + Math.abs(dpy) > PAN_CLICK_PX) drag.moved = true;
+      if (drag.moved && zoom > ZOOM_MIN) {
+        setViewCenter({ x: drag.c0.x - dpx / ctm.a, y: drag.c0.y - dpy / ctm.d });
+      }
+      return;
+    }
     const p = toMetres(e.clientX, e.clientY);
     if (!p) return;
     if (drag.mode === 'arena') {
@@ -158,8 +180,55 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
     onRotate(drag.id, snapped);
   };
 
+  /** Zoom autour d'un point (le point reste sous le curseur) */
+  const applyZoom = (factor: number, anchor: Point | null) => {
+    const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom * factor));
+    if (next === ZOOM_MIN) {
+      setZoom(ZOOM_MIN);
+      return;
+    }
+    const ratio = zoom / next;
+    const a = anchor ?? center;
+    setZoom(next);
+    setViewCenter({
+      x: a.x + (center.x - a.x) * ratio,
+      y: a.y + (center.y - a.y) * ratio,
+    });
+  };
+
+  // Gestionnaires lus par le listener de molette (attaché une seule fois, non passif)
+  const handlersRef = useRef({ applyZoom, toMetres });
+  useEffect(() => {
+    handlersRef.current = { applyZoom, toMetres };
+  });
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (ev: WheelEvent) => {
+      ev.preventDefault();
+      const anchor = handlersRef.current.toMetres(ev.clientX, ev.clientY);
+      handlersRef.current.applyZoom(ev.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP, anchor);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [svgRef]);
+
+  const onSvgPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.button !== 0) return;
+    dragRef.current = {
+      mode: 'pan',
+      startX: e.clientX,
+      startY: e.clientY,
+      c0: center,
+      moved: false,
+    };
+    svgRef.current?.setPointerCapture(e.pointerId);
+  };
+
   const endDrag = () => {
+    const drag = dragRef.current;
     dragRef.current = null;
+    if (drag && drag.mode === 'pan' && !drag.moved) onSelect(null);
   };
 
   const onItemKeyDown = (e: React.KeyboardEvent<SVGGElement>, item: RoomItem) => {
@@ -197,192 +266,248 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
     [showDims, room, centers, items]
   );
 
-  return (
-    <svg
-      ref={svgRef}
-      className="arena-planner-svg"
-      viewBox={`${-VIEW_PAD_M} ${-VIEW_PAD_M} ${W + 2 * VIEW_PAD_M} ${L + 2 * VIEW_PAD_M}`}
-      role="img"
-      aria-label={t('arenaPlanner.title')}
-      onPointerMove={onSvgPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-      onPointerDown={() => onSelect(null)}
-    >
-      <rect x={0} y={0} width={W} height={L} className="arena-planner-room" />
-      {gridX.map(x => (
-        <line key={`gx${x}`} x1={x} y1={0} x2={x} y2={L} className="arena-planner-grid" />
-      ))}
-      {gridY.map(y => (
-        <line key={`gy${y}`} x1={0} y1={y} x2={W} y2={y} className="arena-planner-grid" />
-      ))}
-      {dims ? null : (
-        <>
-          <text x={W / 2} y={-0.7} className="arena-planner-dim" textAnchor="middle">
-            {`${fmt(W)} m`}
-          </text>
-          <text
-            x={-0.7}
-            y={L / 2}
-            className="arena-planner-dim"
-            textAnchor="middle"
-            transform={`rotate(-90 ${-0.7} ${L / 2})`}
-          >
-            {`${fmt(L)} m`}
-          </text>
-        </>
-      )}
-      {dims ? dims.lines.map((l, i) => <DimensionLineView key={`dl${i}`} line={l} />) : null}
-      {dims
-        ? dims.centers.map((c, i) => (
-            <g key={`cc${i}`} className="arena-planner-centre-mark">
-              <line x1={c.x - 0.4} y1={c.y} x2={c.x + 0.4} y2={c.y} />
-              <line x1={c.x} y1={c.y - 0.4} x2={c.x} y2={c.y + 0.4} />
-            </g>
-          ))
-        : null}
-      {dims
-        ? dims.texts.map((tx, i) => (
-            <text
-              key={`dt${i}`}
-              x={tx.x}
-              y={tx.y}
-              className="arena-planner-dimtext"
-              textAnchor="middle"
-            >
-              {tx.label}
-            </text>
-          ))
-        : null}
+  const fullW = W + 2 * VIEW_PAD_M;
+  const fullH = L + 2 * VIEW_PAD_M;
+  const viewW = fullW / zoom;
+  const viewH = fullH / zoom;
+  const viewBox = `${center.x - viewW / 2} ${center.y - viewH / 2} ${viewW} ${viewH}`;
+  const fullViewBox = `${-VIEW_PAD_M} ${-VIEW_PAD_M} ${fullW} ${fullH}`;
 
-      {geos.map((g, i) => (
-        <g key={`arena${i}`} className="arena-planner-arena">
-          <circle
-            cx={g.center.x}
-            cy={g.center.y}
-            r={ARENA_SAFETY_RADIUS_M}
-            className="arena-planner-safety"
-          />
-          <circle
-            cx={g.center.x}
-            cy={g.center.y}
-            r={ARENA_ZONE_RADIUS_M}
-            className="arena-planner-zone arena-planner-arena-grab"
-            onPointerDown={e => {
-              const p = toMetres(e.clientX, e.clientY);
-              if (!p) return;
-              startDrag(e, { mode: 'arena', index: i, dx: p.x - g.center.x, dy: p.y - g.center.y });
-            }}
-          >
-            <title>{t('arenaPlanner.handle_arena')}</title>
-          </circle>
-          <line
-            x1={g.center.x + g.guardLines.red}
-            y1={g.center.y - 0.6}
-            x2={g.center.x + g.guardLines.red}
-            y2={g.center.y + 0.6}
-            className="arena-planner-guard-red"
-          />
-          <line
-            x1={g.center.x + g.guardLines.green}
-            y1={g.center.y - 0.6}
-            x2={g.center.x + g.guardLines.green}
-            y2={g.center.y + 0.6}
-            className="arena-planner-guard-green"
-          />
-          {g.roles.map(r => (
-            <g key={r.label}>
-              <circle cx={r.position.x} cy={r.position.y} r={0.35} className="arena-planner-role" />
+  return (
+    <div className="arena-planner-canvas-wrap">
+      <div
+        className="arena-planner-zoombar"
+        role="toolbar"
+        aria-label={t('arenaPlanner.view_hint')}
+      >
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => applyZoom(ZOOM_STEP, null)}
+          disabled={zoom >= ZOOM_MAX}
+          title={t('arenaPlanner.zoom_in')}
+          aria-label={t('arenaPlanner.zoom_in')}
+        >
+          +
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => applyZoom(1 / ZOOM_STEP, null)}
+          disabled={zoom <= ZOOM_MIN}
+          title={t('arenaPlanner.zoom_out')}
+          aria-label={t('arenaPlanner.zoom_out')}
+        >
+          −
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => setZoom(ZOOM_MIN)}
+          disabled={zoom === ZOOM_MIN}
+          title={t('arenaPlanner.zoom_fit')}
+        >
+          {t('arenaPlanner.zoom_fit')}
+        </Button>
+        <span className="arena-planner-hint">{t('arenaPlanner.view_hint')}</span>
+      </div>
+      <svg
+        ref={svgRef}
+        className="arena-planner-svg"
+        viewBox={viewBox}
+        data-full-viewbox={fullViewBox}
+        role="img"
+        aria-label={t('arenaPlanner.title')}
+        onPointerMove={onSvgPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onPointerDown={onSvgPointerDown}
+      >
+        <rect x={0} y={0} width={W} height={L} className="arena-planner-room" />
+        {gridX.map(x => (
+          <line key={`gx${x}`} x1={x} y1={0} x2={x} y2={L} className="arena-planner-grid" />
+        ))}
+        {gridY.map(y => (
+          <line key={`gy${y}`} x1={0} y1={y} x2={W} y2={y} className="arena-planner-grid" />
+        ))}
+        {dims ? null : (
+          <>
+            <text x={W / 2} y={-0.7} className="arena-planner-dim" textAnchor="middle">
+              {`${fmt(W)} m`}
+            </text>
+            <text
+              x={-0.7}
+              y={L / 2}
+              className="arena-planner-dim"
+              textAnchor="middle"
+              transform={`rotate(-90 ${-0.7} ${L / 2})`}
+            >
+              {`${fmt(L)} m`}
+            </text>
+          </>
+        )}
+        {dims ? dims.lines.map((l, i) => <DimensionLineView key={`dl${i}`} line={l} />) : null}
+        {dims
+          ? dims.centers.map((c, i) => (
+              <g key={`cc${i}`} className="arena-planner-centre-mark">
+                <line x1={c.x - 0.4} y1={c.y} x2={c.x + 0.4} y2={c.y} />
+                <line x1={c.x} y1={c.y - 0.4} x2={c.x} y2={c.y + 0.4} />
+              </g>
+            ))
+          : null}
+        {dims
+          ? dims.texts.map((tx, i) => (
               <text
-                x={r.position.x}
-                y={r.position.y + 0.15}
-                className="arena-planner-role-label"
+                key={`dt${i}`}
+                x={tx.x}
+                y={tx.y}
+                className="arena-planner-dimtext"
                 textAnchor="middle"
               >
-                {r.label}
+                {tx.label}
               </text>
-            </g>
-          ))}
-        </g>
-      ))}
+            ))
+          : null}
 
-      {items.map(item => {
-        const conflict = conflictIds.has(item.id);
-        const selected = item.id === selectedId;
-        const rot = item.rotationDeg ?? 0;
-        const cx = item.x + item.widthM / 2;
-        const cy = item.y + item.heightM / 2;
-        const classes = [
-          'arena-planner-item',
-          ITEM_CLASS[item.kind],
-          selected ? 'arena-planner-item-selected' : '',
-          conflict ? 'arena-planner-item-conflict' : '',
-        ]
-          .filter(Boolean)
-          .join(' ');
-        return (
-          <g
-            key={item.id}
-            role="button"
-            tabIndex={0}
-            aria-label={`${item.label}, x ${fmt(item.x)} m, y ${fmt(item.y)} m, ${fmt(rot)}°`}
-            aria-pressed={selected}
-            className="arena-planner-item-group"
-            transform={rot ? `rotate(${rot} ${cx} ${cy})` : undefined}
-            onPointerDown={e => onItemPointerDown(e, item)}
-            onKeyDown={e => onItemKeyDown(e, item)}
-            onFocus={() => onSelect(item.id)}
-          >
-            <rect
-              x={item.x}
-              y={item.y}
-              width={item.widthM}
-              height={item.heightM}
-              className={classes}
+        {geos.map((g, i) => (
+          <g key={`arena${i}`} className="arena-planner-arena">
+            <circle
+              cx={g.center.x}
+              cy={g.center.y}
+              r={ARENA_SAFETY_RADIUS_M}
+              className="arena-planner-safety"
             />
-            <text
-              x={cx}
-              y={cy + 0.15}
-              className="arena-planner-item-label"
-              textAnchor="middle"
-              pointerEvents="none"
+            <circle
+              cx={g.center.x}
+              cy={g.center.y}
+              r={ARENA_ZONE_RADIUS_M}
+              className="arena-planner-zone arena-planner-arena-grab"
+              onPointerDown={e => {
+                const p = toMetres(e.clientX, e.clientY);
+                if (!p) return;
+                startDrag(e, {
+                  mode: 'arena',
+                  index: i,
+                  dx: p.x - g.center.x,
+                  dy: p.y - g.center.y,
+                });
+              }}
             >
-              {item.label}
-            </text>
-            {selected ? (
-              <g>
-                <line
-                  x1={cx}
-                  y1={item.y}
-                  x2={cx}
-                  y2={item.y - ROTATE_HANDLE_OFFSET_M}
-                  className="arena-planner-handle-stem"
-                />
+              <title>{t('arenaPlanner.handle_arena')}</title>
+            </circle>
+            <line
+              x1={g.center.x + g.guardLines.red}
+              y1={g.center.y - 0.6}
+              x2={g.center.x + g.guardLines.red}
+              y2={g.center.y + 0.6}
+              className="arena-planner-guard-red"
+            />
+            <line
+              x1={g.center.x + g.guardLines.green}
+              y1={g.center.y - 0.6}
+              x2={g.center.x + g.guardLines.green}
+              y2={g.center.y + 0.6}
+              className="arena-planner-guard-green"
+            />
+            {g.roles.map(r => (
+              <g key={r.label}>
                 <circle
-                  cx={cx}
-                  cy={item.y - ROTATE_HANDLE_OFFSET_M}
-                  r={HANDLE_M / 2}
-                  className="arena-planner-handle arena-planner-handle-rotate"
-                  onPointerDown={e => onRotatePointerDown(e, item)}
+                  cx={r.position.x}
+                  cy={r.position.y}
+                  r={0.35}
+                  className="arena-planner-role"
+                />
+                <text
+                  x={r.position.x}
+                  y={r.position.y + 0.15}
+                  className="arena-planner-role-label"
+                  textAnchor="middle"
                 >
-                  <title>{t('arenaPlanner.handle_rotate')}</title>
-                </circle>
-                <rect
-                  x={item.x + item.widthM - HANDLE_M / 2}
-                  y={item.y + item.heightM - HANDLE_M / 2}
-                  width={HANDLE_M}
-                  height={HANDLE_M}
-                  className="arena-planner-handle arena-planner-handle-resize"
-                  onPointerDown={e => onResizePointerDown(e, item)}
-                >
-                  <title>{t('arenaPlanner.handle_resize')}</title>
-                </rect>
+                  {r.label}
+                </text>
               </g>
-            ) : null}
+            ))}
           </g>
-        );
-      })}
-    </svg>
+        ))}
+
+        {items.map(item => {
+          const conflict = conflictIds.has(item.id);
+          const selected = item.id === selectedId;
+          const rot = item.rotationDeg ?? 0;
+          const cx = item.x + item.widthM / 2;
+          const cy = item.y + item.heightM / 2;
+          const classes = [
+            'arena-planner-item',
+            ITEM_CLASS[item.kind],
+            selected ? 'arena-planner-item-selected' : '',
+            conflict ? 'arena-planner-item-conflict' : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
+          return (
+            <g
+              key={item.id}
+              role="button"
+              tabIndex={0}
+              aria-label={`${item.label}, x ${fmt(item.x)} m, y ${fmt(item.y)} m, ${fmt(rot)}°`}
+              aria-pressed={selected}
+              className="arena-planner-item-group"
+              transform={rot ? `rotate(${rot} ${cx} ${cy})` : undefined}
+              onPointerDown={e => onItemPointerDown(e, item)}
+              onKeyDown={e => onItemKeyDown(e, item)}
+              onFocus={() => onSelect(item.id)}
+            >
+              <rect
+                x={item.x}
+                y={item.y}
+                width={item.widthM}
+                height={item.heightM}
+                className={classes}
+              />
+              <text
+                x={cx}
+                y={cy + 0.15}
+                className="arena-planner-item-label"
+                textAnchor="middle"
+                pointerEvents="none"
+              >
+                {item.label}
+              </text>
+              {selected ? (
+                <g>
+                  <line
+                    x1={cx}
+                    y1={item.y}
+                    x2={cx}
+                    y2={item.y - ROTATE_HANDLE_OFFSET_M}
+                    className="arena-planner-handle-stem"
+                  />
+                  <circle
+                    cx={cx}
+                    cy={item.y - ROTATE_HANDLE_OFFSET_M}
+                    r={HANDLE_M / 2}
+                    className="arena-planner-handle arena-planner-handle-rotate"
+                    onPointerDown={e => onRotatePointerDown(e, item)}
+                  >
+                    <title>{t('arenaPlanner.handle_rotate')}</title>
+                  </circle>
+                  <rect
+                    x={item.x + item.widthM - HANDLE_M / 2}
+                    y={item.y + item.heightM - HANDLE_M / 2}
+                    width={HANDLE_M}
+                    height={HANDLE_M}
+                    className="arena-planner-handle arena-planner-handle-resize"
+                    onPointerDown={e => onResizePointerDown(e, item)}
+                  >
+                    <title>{t('arenaPlanner.handle_resize')}</title>
+                  </rect>
+                </g>
+              ) : null}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
   );
 };
 

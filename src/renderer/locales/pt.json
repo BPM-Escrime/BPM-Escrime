@@ -4333,6 +4333,10 @@
     "too_many": "Pedidas {{requested}} arenas, mas a zona só comporta {{max}}. Só o máximo é colocado.",
     "dims_option": "Cotas técnicas (planta e exportação)",
     "dims_hint": "Acrescenta à planta e às exportações as cotas da sala, das arenas, dos espaçamentos, das margens e dos elementos.",
-    "handle_arena": "Arena (arrastar para mover)"
+    "handle_arena": "Arena (arrastar para mover)",
+    "zoom_in": "Aproximar",
+    "zoom_out": "Afastar",
+    "zoom_fit": "Ajustar",
+    "view_hint": "Roda: zoom. Com zoom, arraste o fundo para mover a vista. Clique num elemento para o editar."
   }
 }

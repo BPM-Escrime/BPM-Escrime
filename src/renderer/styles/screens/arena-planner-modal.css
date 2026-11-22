@@ -244,3 +244,15 @@
 .arena-planner-arena-grab {
   cursor: move;
 }
+
+.arena-planner-canvas-wrap {
+  position: relative;
+}
+
+.arena-planner-zoombar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}

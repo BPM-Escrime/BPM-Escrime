@@ -4333,6 +4333,10 @@
     "too_many": "{{requested}} arènes demandées, mais la zone n’en contient que {{max}}. Seul le maximum est placé.",
     "dims_option": "Cotes techniques (plan et export)",
     "dims_hint": "Ajoute au plan et aux exports les cotes de la salle, des arènes, des espacements, des marges et des éléments.",
-    "handle_arena": "Arène (glisser pour déplacer)"
+    "handle_arena": "Arène (glisser pour déplacer)",
+    "zoom_in": "Zoom avant",
+    "zoom_out": "Zoom arrière",
+    "zoom_fit": "Ajuster",
+    "view_hint": "Molette : zoomer. Une fois zoomé, glisser le fond pour déplacer la vue. Cliquer sur un élément pour le modifier."
   }
 }

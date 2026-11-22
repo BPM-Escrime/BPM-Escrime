@@ -101,4 +101,15 @@ describe('ArenaPlannerModal', () => {
     fireEvent.click(screen.getByLabelText('arenaPlanner.dims_option'));
     expect(document.querySelectorAll('.arena-planner-dimline').length).toBeGreaterThan(0);
   });
+
+  it('zoome sur le plan puis revient au plan entier', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    const svg = screen.getByRole('img', { name: 'arenaPlanner.title' });
+    const full = svg.getAttribute('viewBox');
+    fireEvent.click(screen.getByLabelText('arenaPlanner.zoom_in'));
+    expect(svg.getAttribute('viewBox')).not.toBe(full);
+    expect(svg.getAttribute('data-full-viewbox')).toBe(full);
+    fireEvent.click(screen.getByText('arenaPlanner.zoom_fit'));
+    expect(svg.getAttribute('viewBox')).toBe(full);
+  });
 });

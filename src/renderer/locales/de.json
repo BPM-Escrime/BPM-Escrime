@@ -4333,6 +4333,10 @@
     "too_many": "{{requested}} Arenen angefragt, die Fläche fasst aber nur {{max}}. Es wird nur das Maximum platziert.",
     "dims_option": "Technische Bemaßung (Plan und Export)",
     "dims_hint": "Fügt dem Plan und den Exporten Maße der Halle, Arenen, Abstände, Ränder und Elemente hinzu.",
-    "handle_arena": "Arena (ziehen zum Verschieben)"
+    "handle_arena": "Arena (ziehen zum Verschieben)",
+    "zoom_in": "Vergrößern",
+    "zoom_out": "Verkleinern",
+    "zoom_fit": "Anpassen",
+    "view_hint": "Mausrad: zoomen. Gezoomt: Hintergrund ziehen, um die Ansicht zu verschieben. Element anklicken zum Bearbeiten."
   }
 }

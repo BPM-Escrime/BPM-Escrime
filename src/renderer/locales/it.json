@@ -4333,6 +4333,10 @@
     "too_many": "Richieste {{requested}} arene, ma la zona ne contiene solo {{max}}. Viene posizionato solo il massimo.",
     "dims_option": "Quote tecniche (pianta ed esportazione)",
     "dims_hint": "Aggiunge alla pianta e alle esportazioni le quote di sala, arene, distanze, margini ed elementi.",
-    "handle_arena": "Arena (trascina per spostare)"
+    "handle_arena": "Arena (trascina per spostare)",
+    "zoom_in": "Zoom avanti",
+    "zoom_out": "Zoom indietro",
+    "zoom_fit": "Adatta",
+    "view_hint": "Rotella: zoom. Con lo zoom, trascina lo sfondo per spostare la vista. Clicca un elemento per modificarlo."
   }
 }

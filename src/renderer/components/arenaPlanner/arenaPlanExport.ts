@@ -56,12 +56,15 @@ const svgToImage = (
   svg: SVGSVGElement,
   width: number
 ): Promise<{ img: HTMLImageElement; height: number }> => {
-  const vb = svg.viewBox.baseVal;
-  const height = Math.round(width * (vb.height / vb.width));
+  // Export toujours le plan entier, même si la vue est zoomée
+  const full = svg.getAttribute('data-full-viewbox') ?? '-2 -2 1 1';
+  const [, , fullW, fullH] = full.split(/\s+/).map(Number);
+  const height = Math.round(width * (fullH / fullW));
   const clone = svg.cloneNode(true) as SVGSVGElement;
   inlineSvgStyles(svg, clone);
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   clone.setAttribute('width', String(width));
+  clone.setAttribute('viewBox', full);
   clone.setAttribute('height', String(height));
   clone.removeAttribute('class');
   const source = new XMLSerializer().serializeToString(clone);

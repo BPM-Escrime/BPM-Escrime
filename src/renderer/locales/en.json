@@ -4333,6 +4333,10 @@
     "too_many": "{{requested}} arenas requested, but the zone only fits {{max}}. Only the maximum is placed.",
     "dims_option": "Technical dimensions (plan and export)",
     "dims_hint": "Adds room, arena, spacing, margin and item dimensions to the plan and the exports.",
-    "handle_arena": "Arena (drag to move)"
+    "handle_arena": "Arena (drag to move)",
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out",
+    "zoom_fit": "Fit",
+    "view_hint": "Wheel: zoom. When zoomed, drag the background to pan. Click an item to edit it."
   }
 }
