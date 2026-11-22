@@ -29,6 +29,13 @@ import { clearScore } from '../commands/scoreClear';
 import { assignMatches } from '../commands/assignments';
 import { adjustRanking, clearTableau, skipPools } from '../commands/ranking';
 import { rebuildCompetitionState } from '../commands/rebuild';
+import {
+  fencerDTO,
+  registerFencers,
+  setFencerRankings,
+  unregisterFencers,
+  updateFencerDetails,
+} from '../commands/fencers';
 import { getCompetitionOrThrow } from '../commands/competitions';
 import { readSession } from '../commands/sessionView';
 import { competitionState } from '../commands/competitionState';
@@ -77,6 +84,14 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     clearTableau(ctx, input),
   rebuildCompetitionState: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     rebuildCompetitionState(ctx, input),
+  registerFencers: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    registerFencers(ctx, input),
+  updateFencerDetails: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    updateFencerDetails(ctx, input),
+  setFencerRankings: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    setFencerRankings(ctx, input),
+  unregisterFencers: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    unregisterFencers(ctx, input),
   withdrawFencer: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     withdrawFencer(ctx, input),
   reinstateFencer: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
@@ -87,6 +102,13 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     assignPoolReferees(ctx, competitionId, options),
   assignReferee: (ctx, { competitionId, expectedRevision: _r, ...input }) =>
     assignPoolReferee(ctx, competitionId, input),
+  listFencers: (ctx, { competitionId }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    return ctx.db
+      .getFencersByCompetition(competitionId)
+      .sort((x, y) => x.ref - y.ref)
+      .map(fencerDTO);
+  },
   listReferees: (ctx, { competitionId }) => {
     getCompetitionOrThrow(ctx, competitionId);
     return ctx.db.getRefereesByCompetition(competitionId).map(r => ({

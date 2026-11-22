@@ -170,6 +170,43 @@ const MatchEventEntrySchema = z.object({
   exitType: z.string().nullable(),
 });
 
+/** Tireur exposé par le contrat (docs/adr/0018) : dates en ISO 8601 */
+const FencerSchema = z.object({
+  id: z.string(),
+  ref: z.number(),
+  lastName: z.string(),
+  firstName: z.string(),
+  birthDate: z.string().nullable(),
+  gender: z.string(),
+  nationality: z.string(),
+  region: z.string().nullable(),
+  department: z.string().nullable(),
+  club: z.string().nullable(),
+  license: z.string().nullable(),
+  ranking: z.number().nullable(),
+  handedness: z.enum(['R', 'L']).nullable(),
+  status: z.string(),
+  exclusionReason: z.string().nullable(),
+  seedNumber: z.number().nullable(),
+  initialRanking: z.number().nullable(),
+  finalRanking: z.number().nullable(),
+  photo: z.string().nullable(),
+});
+
+const Text = z.string().trim().max(200);
+/** Identité d'un tireur, sans règle (updateFencerDetails, registerFencers) */
+const FencerDetailsShape = {
+  birthDate: z.string().date().nullable().optional().describe('AAAA-MM-JJ ; null : effacée'),
+  gender: z.enum(['M', 'F', 'X']).optional(),
+  nationality: z.string().trim().min(2).max(3).optional().describe('Code ISO (FRA)'),
+  region: Text.nullable().optional(),
+  department: z.string().trim().max(3).nullable().optional(),
+  club: Text.nullable().optional(),
+  license: z.string().trim().max(40).nullable().optional(),
+  handedness: z.enum(['R', 'L']).optional(),
+  photo: z.string().max(2_000_000).nullable().optional().describe('Image en base64'),
+};
+
 const CompetitionStateSchema = z.object({
   currentPhase: z.number().int(),
   pools: z.array(z.custom<Pool>()),
@@ -700,6 +737,100 @@ export const contract = {
     },
   }),
 
+  registerFencers: command({
+    description:
+      'Inscrit un ou plusieurs tireurs (docs/adr/0018). Statut initial : non pointé (défaut) ou pointé. ' +
+      'Doublons (même licence, sinon mêmes nom et prénom) signalés dans « duplicates », pas refusés.',
+    input: z.object({
+      competitionId: CompetitionId,
+      fencers: z
+        .array(
+          z.object({
+            lastName: Text.min(1),
+            firstName: Text.min(1),
+            ...FencerDetailsShape,
+            ranking: z.number().int().min(1).nullable().optional(),
+            status: z.enum(['N', 'P']).optional(),
+          })
+        )
+        .min(1)
+        .max(2000),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      fencers: z.array(FencerSchema),
+      duplicates: z.array(z.object({ index: z.number().int(), fencerId: z.string() })),
+      revision: Revision,
+    }),
+    permission: 'fencers:write',
+  }),
+
+  updateFencerDetails: command({
+    description:
+      'Identité d’un tireur : nom, prénom, naissance, sexe, nation, ligue, club, licence, latéralité, photo. ' +
+      'Jamais le statut, le classement ni un score (docs/adr/0018).',
+    input: z.object({
+      competitionId: CompetitionId,
+      fencerId: Id,
+      // Strict : statut, classement ou score refusés à l'entrée (docs/adr/0018)
+      details: z.strictObject({
+        lastName: Text.min(1).optional(),
+        firstName: Text.min(1).optional(),
+        ...FencerDetailsShape,
+      }),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), fencer: FencerSchema, revision: Revision }),
+    permission: 'fencers:write',
+  }),
+
+  setFencerRankings: command({
+    description:
+      'Classement d’entrée des tireurs (null : sans classement). Refusé (« draw_done ») une fois les poules tirées ou le tableau généré.',
+    input: z.object({
+      competitionId: CompetitionId,
+      rankings: z
+        .array(z.object({ fencerId: Id, ranking: z.number().int().min(1).nullable() }))
+        .min(1)
+        .max(5000),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      updated: z.number().int(),
+      unknown: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'fencers:write',
+  }),
+
+  unregisterFencers: command({
+    description:
+      'Désinscrit des tireurs (« fencerIds ») ou tous (« all »). Avant le tirage seulement ; après, retirer le tireur (withdrawFencer).',
+    input: z.object({
+      competitionId: CompetitionId,
+      fencerIds: z.array(Id).max(5000).optional(),
+      all: z.boolean().optional(),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      removed: z.array(z.string()),
+      unknown: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'fencers:write',
+  }),
+
   withdrawFencer: command({
     description:
       'Retire un tireur de l’épreuve : abandon (médical), forfait ou exclusion (« blackCard » : carton noir). ' +
@@ -829,6 +960,13 @@ export const contract = {
     }),
     permission: 'referees:write',
     mcp: { name: 'assign_referee', title: 'Arbitre d’une poule (à la main)', idempotent: true },
+  }),
+
+  listFencers: query({
+    description: 'Tireurs inscrits à une épreuve, dans l’ordre des dossards (dates en ISO 8601).',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.array(FencerSchema),
+    permission: 'competition:read',
   }),
 
   listReferees: query({
