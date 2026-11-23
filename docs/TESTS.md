@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 272 |
-| `src/main/` | 136 | 1179 |
-| `src/renderer/services/` | 11 | 57 |
-| `src/renderer/hooks/` | 41 | 214 |
-| `src/renderer/components/` | 123 | 667 |
+| `src/main/` | 137 | 1181 |
+| `src/renderer/services/` | 13 | 62 |
+| `src/renderer/hooks/` | 40 | 208 |
+| `src/renderer/components/` | 124 | 673 |
 | E2E Playwright (`e2e/`) | 16 | 46 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 30 | 297 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **571** | **4402** |
+| **Total** | **574** | **4409** |
 
-Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 558 fichiers, 4363 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3524,6 +3524,14 @@ Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/simulation.test.ts</code> — 2 tests</summary>
+
+- remplace touches, cartons et durée ; null efface ; rien au journal
+- match absent : found faux ; épreuve inconnue ou entrée invalide refusées
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/sport.test.ts</code> — 34 tests</summary>
 
 - poules → arbitres → scores → tableau → classement final → exports
@@ -4847,7 +4855,7 @@ Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage stat
 <summary><code>src/main/repoLocation.test.ts</code> — 1 test</summary>
 
 - **emplacement du dépôt GitHub (#1940)**
-  - aucune référence à l'ancien dépôt dans le code et le plugin
+  - aucune référence aux anciens dépôts dans le code et le plugin
 
 </details>
 
@@ -5070,6 +5078,15 @@ Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/services/federalCreation.test.ts</code> — 2 tests</summary>
+
+- **applyFederalImport**
+  - inscrit tireurs et arbitres d’un bloc, équipes avec leurs membres
+  - bloc refusé : un par un, l’entrée invalide seule écartée
+
+</details>
+
+<details>
 <summary><code>src/renderer/services/ipcError.test.ts</code> — 3 tests</summary>
 
 - **ipcErrorText (#1159)**
@@ -5147,6 +5164,16 @@ Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - rejette un JSON invalide ou un autre format
   - ignore les clés inconnues et les valeurs invalides
   - nom de fichier daté
+
+</details>
+
+<details>
+<summary><code>src/renderer/services/simulatedEventsPersistence.test.ts</code> — 3 tests</summary>
+
+- **persistSimulatedEvents**
+  - écrit chaque match par la commande, avec l’épreuve
+  - match pas encore en base : réessayé jusqu’à ce qu’il existe
+  - moteur absent (unavailable) ou sans épreuve : rien de plus
 
 </details>
 
@@ -5394,21 +5421,6 @@ Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - retourne la valeur initiale immédiatement
   - ne met à jour la valeur qu’après le délai
   - réinitialise le minuteur à chaque changement rapide
-
-</details>
-
-<details>
-<summary><code>src/renderer/hooks/useElectronDB.test.tsx</code> — 6 tests</summary>
-
-- **useElectronDB - délégation**
-  - getAllCompetitions relaie l’appel DB
-  - getCompetition transmet l’identifiant
-  - createCompetition transmet les données
-- **useElectronDB - API indisponible**
-  - lève ElectronAPIUnavailableError si la méthode manque
-  - lève aussi si db existe mais pas la méthode
-- **useElectronDB - propagation d’erreur**
-  - relaie l’erreur du backend
 
 </details>
 
@@ -5883,13 +5895,14 @@ Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/CompetitionView.test.tsx</code> — 12 tests</summary>
+<summary><code>src/renderer/components/CompetitionView.test.tsx</code> — 13 tests</summary>
 
 - **CompetitionView**
   - affiche la navigation des phases, appel actif et poules verrouillées
   - sans élimination directe, la phase tableau est absente
   - « Préparer les poules » désactivé sous 4 tireurs pointés
   - génère les poules, les persiste en base et passe en préparation
+  - préparation non lancée : le tirage est relu en base au rechargement, pas de nouveau tirage
   - restaure la phase sauvegardée (session) et permet de revenir en arrière
   - cliquer une phase désactivée ne change pas de phase
   - plusieurs tours de poules : libellé « tour 1/2 »
@@ -7161,6 +7174,17 @@ Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/results/resultsExportData.test.ts</code> — 4 tests</summary>
+
+- **resultsExportData**
+  - tireurs : listFencers converti au format de l’écran ; échec : liste vide
+  - poules et tableau : état de l’épreuve ; sans état ou échec : vides
+  - signatures des poules par poule et tireur ; échec : objet vide
+  - signatures du tableau rangées par côté ; échec : objet vide
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/settingsModal.helpers.test.ts</code> — 4 tests</summary>
 
 - **readInputModes (saisie simplifiée / enchaînée exclusives)**
@@ -7239,11 +7263,12 @@ Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/tableau/tableauDialogState.test.ts</code> — 6 tests</summary>
+<summary><code>src/renderer/components/tableau/tableauDialogState.test.ts</code> — 7 tests</summary>
 
 - **tableauDialogState**
   - états initiaux
-  - loadDESignatures associe signature au bon côté
+  - loadDESignatures associe signature au bon côté (getTableauSignatures)
+  - loadDESignatures : identifiants envoyés par lots de 512 (borne du contrat)
   - loadDECards : id composite (saisie distante) ou id simple, rangés par côté (#1829)
   - loadDECards : match saisi à distance, lignes sous l’id simple ignorées (pas de doublon)
   - loadDECards : undefined sans carton ou en cas d erreur
