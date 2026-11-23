@@ -453,7 +453,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: dev
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Clé de déploiement : seule exception du ruleset de dev (build-dev.yml)
+          ssh-key: ${{ secrets.CI_PUSH_DEPLOY_KEY }}
 
       - name: Bump patch on dev
         env:
@@ -469,7 +470,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add version.json package.json package-lock.json
-          git commit -m "🔖 Version $NEXT (après release v$RELEASED)"
+          git commit -m "🔖 Version $NEXT (après release v$RELEASED)" -m "[skip ci]"
           for i in 1 2 3; do
             git push origin HEAD:dev && exit 0
             git pull --rebase origin dev
