@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 272 |
-| `src/main/` | 140 | 1197 |
+| `src/main/` | 141 | 1201 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 126 | 680 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 32 | 338 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **581** | **4469** |
+| **Total** | **582** | **4473** |
 
-Unitaires : 564 fichiers, 4421 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3231,6 +3231,16 @@ Unitaires : 564 fichiers, 4421 tests. E2E : 17 fichiers, 48 tests (comptage stat
   - dryRun ou rien à faire : ni événement ni révision
   - révision attendue périmée : refus revision\_conflict avec les événements manquants
   - getCompetitionEvents / getMatchHistory : lecture du journal
+
+</details>
+
+<details>
+<summary><code>src/main/engine/api/invokeSync.test.ts</code> — 4 tests</summary>
+
+- commande d’épreuve : réglages par défaut du moteur, puis inscription journalisée
+- fonction du poste (journée) : exécutée sans journal
+- entrée invalide ou requête : refus du contrat, rien d’écrit
+- transaction englobante : un échec annule les commandes déjà passées
 
 </details>
 
