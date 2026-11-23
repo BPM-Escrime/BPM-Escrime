@@ -6,6 +6,7 @@
  */
 
 import { Category, Weapon } from '../types';
+import { LASER_DEFAULT_MAX_SCORE } from '../domain/formula/laserMaxScores';
 
 export interface DefaultMaxScores {
   pool: number;
@@ -20,13 +21,14 @@ export function isOlympicWeapon(weapon: Weapon | string | undefined): boolean {
 }
 
 /**
- * Scores max par défaut. Hors armes olympiques : ancien comportement
- * (21 en poule, tableau sans limite = 0).
+ * Scores max par défaut. Sabre Laser : 25 / 25 (#2208). À la carte : 21 / sans limite (0).
  */
 export function getDefaultMaxScores(
   weapon: Weapon | string | undefined,
   category: Category | string | undefined
 ): DefaultMaxScores {
+  if (weapon === Weapon.LASER)
+    return { pool: LASER_DEFAULT_MAX_SCORE, table: LASER_DEFAULT_MAX_SCORE };
   if (!isOlympicWeapon(weapon)) return { pool: 21, table: 0 };
   switch (category) {
     case Category.U9:

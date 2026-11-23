@@ -106,12 +106,12 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 271 |
-| `src/main/` | 149 | 1260 |
+| `src/main/` | 149 | 1262 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 132 | 707 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
-| `src/remote/` | 60 | 416 |
+| `src/remote/` | 60 | 417 |
 | `src/renderer/api/` | 10 | 45 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 37 | 465 |
+| `src/shared/domain/` | 38 | 470 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **600** | **4649** |
+| **Total** | **601** | **4657** |
 
-Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -537,7 +537,7 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - M9 : 3 touches en poule, 6 au tableau
   - équipe : taille et remplaçants repris
   - Sabre Laser équipe : mode et format
-  - Sabre Laser individuel : aucun réglage imposé
+  - Sabre Laser individuel : score max 25 / 25 (provisoire, #2208)
   - arme personnalisée : formule et réglages dérivés
 
 </details>
@@ -550,7 +550,7 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - M9 : 3 / 6
   - M11 et M13 : 4 / 8
   - vétérans : 5 / 10
-  - hors olympique : comportement historique
+  - Sabre Laser : 25 / 25 (#2208) ; arme à la carte : comportement historique
 
 </details>
 
@@ -821,7 +821,7 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - pas de référentiel pour le laser et « À la carte »
 - **getFallbackCompetitionSettings (défauts unifiés)**
   - arme olympique : touches de la catégorie, pas de petite finale
-  - autres armes : 5 / 21 (comportement existant)
+  - Sabre Laser : 25 / 25 (#2208) ; arme à la carte : 5 / 21 (comportement existant)
 
 </details>
 
@@ -3257,10 +3257,12 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 7 tests</summary>
+<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 9 tests</summary>
 
 - createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue et valeur invalide refusées
-- createCompetition : Sabre Laser individuel et par équipes créés (réglages de repli)
+- createCompetition : Sabre Laser individuel et par équipes créés (score max 25)
+- Sabre Laser créé avec l’ancien repli 5 / 21 (#2174 → #2205) : lu 25 / 25 (#2208)
+- escrime olympique inchangée : poule à 5, 6-2 refusé, formule au-delà de 15 refusée
 - updateCompetitionDetails : titre, date, lieu ; entrée stricte
 - updateCompetitionSettings : fusion, serveur distant prévenu, arme figée après le tirage
 - deleteCompetition : saisie distante arrêtée, épreuve supprimée
@@ -3530,7 +3532,7 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - formats non pris en charge : erreur explicite
 - pas assez de tireurs pointés
 - abandon en poule : statut du tireur, ses autres matchs perdus, écarté du tableau
-- Sabre Laser : scores max effectifs de l’écran (21 en poule)
+- Sabre Laser : score max 25 par défaut en poule et au tableau, réglable (#2208)
 - tableau terminé : phase Résultats
 - journal de l’épreuve (#1980) : scores, poule terminée, tableau, auteur et source
 - révision : une sauvegarde de l’écran sur un état périmé est refusée
@@ -8123,7 +8125,7 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeCards.test.ts</code> — 11 tests</summary>
+<summary><code>src/remote/js/refereeCards.test.ts</code> — 12 tests</summary>
 
 - **refereeCards.js cartons**
   - modernYellowOrRed : rouge si déjà jaune ou rouge
@@ -8136,6 +8138,7 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - passivityWinner : score, puis classement initial, puis tirage
   - passivityWinner : parité avec le module partagé (matchEndValidation.ts, #1829)
   - cardFromGroup olympique : parité avec determineCardType (domain/penalties/cards.ts, #2207)
+  - Sabre Laser : points des cartons, parité tablette / domaine (provisoire, #2208)
   - motifs olympiques de la tablette = motifs FIE du domaine, mêmes groupes (t.163, #2207)
   - referee.html charge le module et délègue
 
@@ -8971,11 +8974,23 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/validateFormulaSettings.test.ts</code> — 5 tests</summary>
+<summary><code>src/shared/domain/formula/laserMaxScores.test.ts</code> — 4 tests</summary>
+
+- **readLaserMaxScores**
+  - ancien repli 5 / 21 : lu 25 / 25
+  - poule ou tableau sous 15 : lu 25 ; tableau 21 seul conservé
+  - réglage valide, sans limite (0) ou absent : tel quel
+  - épreuve par équipes et autres armes : tel quel
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/formula/validateFormulaSettings.test.ts</code> — 6 tests</summary>
 
 - **validateFormulaSettings**
   - réglages par défaut et de repli : conformes pour toutes les armes et catégories
   - bornes : score de poule, tours, tailles de poule
+  - score max du Sabre Laser individuel : 15 à 50 (#2208) ; équipes et olympique : 1-15
   - qualifiés : pas plus de valeurs que de tours suivants
   - formule à la carte : version, phases, règles de passage, taille de tableau
   - champs jugés : un réglage ancien hors bornes ne bloque pas une autre modification
@@ -9103,7 +9118,7 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **Escrime olympique : motifs propres à une arme (t.170 1.10 et 1.12)**
   - pointe sur la piste : fleuret et épée ; coquille et croisement : sabre
   - motif hors liste (ancien motif du Sabre Laser) : groupe d'origine, escalade FIE, jamais de blanc
-- **Sabre Laser et arme à la carte inchangés**
+- **Sabre Laser et arme à la carte**
   - %s : motifs, groupes, barème _(each)_
   - %s : escalade blanc → jaune, jaune → rouge, rouge → noir _(each)_
 
@@ -9597,7 +9612,7 @@ Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - tireur du côté dans le relais, carton rattaché au relais, id et heure injectés
   - cumul sur toute la rencontre, tous relais confondus (t.159), tireur par tireur
   - remplaçant : le tireur est celui porté par le relais
-  - Sabre Laser : escalade et barème inchangés
+  - Sabre Laser : escalade inchangée, jaune +3 (provisoire, #2208)
   - noir de l’escalade : exclusion portée par le carton
   - motif hors du règlement de l’arme refusé
 - **relayCardFor : type imposé par l’appareil**

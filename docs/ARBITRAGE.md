@@ -143,6 +143,13 @@ Premier écran affiché à l'ouverture.
 | **N** (noir) | Exclusion (si option activée). | Exclusion (si option activée). |
 | **P** (passivité) | — | 1ᵉʳ : P-rouge aux deux tireurs, +1 chacun. 2ᵉ : P-noir, fin du combat. |
 
+- **Barème du Sabre Laser** (+3 / +5) : **provisoire**, en attendant l'arbitrage de #2208 (les
+  livrets ASL-FFE 2026-2027 ne le donnent pas). Le domaine applique le même barème
+  (`WEAPON_CARD_CONFIGS[LASER]`, `src/shared/domain/penalties/cards.ts`), parité testée
+  (`refereeCards.test.ts`) ; l'escalade par groupe relève de #2209.
+- **Score saisi au Sabre Laser** : le combat s'arrête à 15, mais touche finale en cible C,
+  sortie et cartons peuvent porter le score au-delà. Score maximum de poule et de tableau :
+  25 par défaut, réglable dans la formule (15 à 50).
 - **Appui long** sur un bouton carton : retire le dernier carton du tireur et restitue
   les points accordés. Appui long sur **P** : retire le dernier carton de passivité.
 - **Vainqueur du P-noir** : meilleur score ; à égalité, le mieux classé au départ ; sinon
