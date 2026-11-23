@@ -891,9 +891,12 @@ export function buildBracket(
     throw new CommandError('no_direct_elimination', 'Épreuve sans élimination directe');
   }
   const pools = sessionPools(session);
+  // Épreuve séparée (docs/adr/0024, lot A3) : classement après poules importé, sans poules
+  const imported = !!comp.settings?.splitFromCompetitionId && pools.length === 0;
   if (
     !options.composition &&
     !session.skipPoolPhase &&
+    !imported &&
     (pools.length === 0 || !areAllPoolsComplete(pools))
   ) {
     throw new CommandError('pools_not_complete', 'Toutes les poules doivent être terminées');

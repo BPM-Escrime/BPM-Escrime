@@ -4,7 +4,7 @@
  * et aux statuts des tables. Écarts en identifiants et nombres seulement (RGPD).
  * Licensed under GPL-3.0
  */
-import { MatchStatus, type Match, type Pool } from '../../types';
+import { MatchStatus, type Match, type Pool, type PoolRanking } from '../../types';
 import type { ConsolationBracket, TableauMatch } from '../tableau/tableauTypes';
 import type { CompetitionFacts, MatchFact, PoolFact, TableauFact } from './projectCompetition';
 import { sessionGroupTableaux } from '../ranking/splitGroups';
@@ -22,7 +22,9 @@ export type DivergenceKind =
   | 'tableau_slot'
   | 'bracket_result'
   | 'bracket_result_unknown'
-  | 'rapieres';
+  | 'rapieres'
+  | 'split_off'
+  | 'imported_ranking';
 
 export interface Divergence {
   kind: DivergenceKind;
@@ -46,6 +48,12 @@ export interface CompetitionStateView {
     { tableauMatches: TableauMatch[]; consolationBrackets: ConsolationBracket[] }
   >;
   rapieres?: { launchedWave?: number; wavesEnded?: boolean };
+  /** Classement après poules (épreuve séparée : classement importé) */
+  overallRanking?: PoolRanking[];
+  /**
+   * Groupes extraits (réglage splitOffCompetitionIds de l'épreuve) ; undefined : non comparés
+   */
+  splitOffCompetitionIds?: Partial<Record<string, string>>;
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -202,6 +210,24 @@ export function compareWithState(
     }
   }
 
+  // Tableaux séparés (docs/adr/0024, lot A3) : groupe extrait noté sur l'épreuve d'origine
+  if (state.splitOffCompetitionIds) {
+    for (const [group, fact] of Object.entries(facts.splitOffGroups)) {
+      const actual = state.splitOffCompetitionIds[group] ?? null;
+      if (actual !== fact.targetCompetitionId) {
+        out.push({ kind: 'split_off', id: group, expected: fact.targetCompetitionId, actual });
+      }
+    }
+  }
+  // Épreuve séparée : tireurs du classement importé (les rangs peuvent être ajustés ensuite)
+  if (facts.importedRanking) {
+    const expected = facts.importedRanking.ranking.map(r => r.fencerId).sort();
+    const actual = (state.overallRanking ?? []).map(r => r.fencer.id).sort();
+    if (!same(expected, actual)) {
+      out.push({ kind: 'imported_ranking', id: facts.importedRanking.group, expected, actual });
+    }
+  }
+
   if (facts.rapieres) {
     const actual = {
       wave: state.rapieres?.launchedWave ?? 0,
@@ -260,10 +286,18 @@ function compareTableau(
   }
 }
 
-/** Vue de comparaison lue dans l'état de session du moteur */
-export function stateView(session: Record<string, unknown>): CompetitionStateView {
+/**
+ * Vue de comparaison lue dans l'état de session du moteur ; réglages de l'épreuve fournis :
+ * groupes extraits comparés au journal (docs/adr/0024)
+ */
+export function stateView(
+  session: Record<string, unknown>,
+  settings?: { splitOffCompetitionIds?: Partial<Record<string, string>> } | null
+): CompetitionStateView {
   const list = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
   return {
+    overallRanking: list<PoolRanking>(session.overallRanking),
+    ...(settings ? { splitOffCompetitionIds: settings.splitOffCompetitionIds ?? {} } : {}),
     pools: list<Pool>(session.pools),
     poolHistory: list<Pool[]>(session.poolHistory),
     currentPoolRound: Number(session.currentPoolRound ?? 1),

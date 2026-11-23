@@ -4,7 +4,8 @@
  * tableau par groupe dans la même épreuve (session_state.groupTableaux, identifiants de match
  * préfixés par le groupe : « F:32-0 »), lecture de tous les tableaux, et données de
  * l'épreuve séparée quand un groupe est extrait. Le partage n'est pas un fait du journal :
- * c'est un dérivé du classement et du groupe de chaque tireur.
+ * c'est un dérivé du classement et du groupe de chaque tireur. Extraction d'un groupe dans une
+ * épreuve séparée (lot A3) : refus, projection de départ, classement importé rejoué.
  * Licensed under GPL-3.0
  */
 
@@ -281,4 +282,105 @@ export function remapRankingFencers(
       ...r,
       fencer: { ...newFencerByOldId.get(r.fencer.id)!, poolStats: r.fencer.poolStats },
     }));
+}
+
+// ─── Extraction d'un groupe (splitOffGroup, docs/adr/0024, lot A3) ──────────
+
+/** Refus d'une extraction : code du catalogue (docs/adr/0009) et message */
+export interface SplitOffRefusal {
+  code: 'invalid_input' | 'split_group_not_found' | 'bracket_exists';
+  message: string;
+}
+
+/**
+ * Groupe extractible : épreuve à tableaux séparés, groupe présent au classement après poules,
+ * pas encore extrait, sans tableau tiré. null : extraction admise.
+ */
+export function splitOffRefusal(
+  source: Pick<Competition, 'settings'>,
+  ranking: PoolRanking[],
+  group: string,
+  groupTableauMatches: number
+): SplitOffRefusal | null {
+  const criteria = source.settings?.postPoolSplitCriteria;
+  if (!criteria) {
+    return { code: 'invalid_input', message: 'Épreuve sans tableaux séparés après les poules' };
+  }
+  const splitOffIds = source.settings?.splitOffCompetitionIds;
+  if (splitOffIds?.[group]) {
+    return {
+      code: 'split_group_not_found',
+      message: `Groupe déjà extrait dans une épreuve séparée : ${group}`,
+    };
+  }
+  if (groupTableauMatches > 0) {
+    return { code: 'bracket_exists', message: `Tableau du groupe ${group} déjà tiré` };
+  }
+  const groups = planSplitGroups(ranking, criteria, splitOffIds).map(p => p.group);
+  if (!groups.includes(group)) {
+    return {
+      code: 'split_group_not_found',
+      message: `Groupe absent du classement après poules : ${group} (groupes : ${groups.join(', ') || 'aucun'})`,
+    };
+  }
+  return null;
+}
+
+/**
+ * Projection de départ de l'épreuve séparée : classement après poules du groupe (tireurs
+ * copiés, statistiques de poule de l'épreuve d'origine), phase Classement, sans poules.
+ */
+export function splitOffSessionState(ranking: PoolRanking[]): Record<string, unknown> {
+  return {
+    currentPhase: 3,
+    overallRanking: ranking,
+    pools: [],
+    poolHistory: [],
+    tableauMatches: [],
+    finalResults: [],
+    consolationBrackets: [],
+    currentPoolRound: 1,
+    skipPoolPhase: false,
+  };
+}
+
+/** Ligne du classement importé (événement SplitRankingImported) */
+export interface ImportedRankEntry {
+  fencerId: string;
+  sourceFencerId: string;
+  rank: number;
+}
+
+/**
+ * Classement importé rendu à partir du journal (SplitRankingImported) : tireurs de l'épreuve
+ * séparée dans l'ordre des rangs ; statistiques de poule relues dans le classement de l'épreuve
+ * d'origine (sourceRanking), rangs seuls si elle a été supprimée (docs/adr/0024).
+ */
+export function importedRanking(
+  entries: readonly ImportedRankEntry[],
+  fencers: ReadonlyMap<string, Fencer>,
+  sourceRanking: PoolRanking[] | null
+): PoolRanking[] {
+  const source = new Map((sourceRanking ?? []).map(r => [r.fencer.id, r]));
+  return [...entries]
+    .sort((a, b) => a.rank - b.rank)
+    .filter(e => fencers.has(e.fencerId))
+    .map(e => {
+      const fencer = fencers.get(e.fencerId)!;
+      const from = source.get(e.sourceFencerId);
+      if (from) {
+        return { ...from, rank: e.rank, fencer: { ...fencer, poolStats: from.fencer.poolStats } };
+      }
+      return {
+        fencer,
+        rank: e.rank,
+        victories: 0,
+        defeats: 0,
+        matchesPlayed: 0,
+        touchesScored: 0,
+        touchesReceived: 0,
+        index: 0,
+        ratio: 0,
+      };
+    });
 }
