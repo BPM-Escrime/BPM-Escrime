@@ -22,6 +22,7 @@ import {
   MIN_BPM_PASSWORD,
 } from '../../bpmCrypto';
 import { decodeClubBackup, encodeClubBackup } from '../../clubBackupFile';
+import { unpackFederalFiles } from '../../federalFiles';
 import { CLUB_EXISTS_ERROR } from '../../../database/repos/clubBackupRepo';
 import {
   fencersFromArchive,
@@ -270,8 +271,23 @@ const importClubBackup: FileHandler<'importClubBackup'> = async (ctx, { content,
   }
 };
 
+/** Fichiers de l'extranet fédéral décodés (#1938, #2134) : refus explicite si illisibles */
+async function listFederalFiles(
+  _ctx: CommandContext,
+  { files }: { files: Array<{ name: string; content: string }> }
+) {
+  try {
+    return await unpackFederalFiles(
+      files.map(f => ({ name: f.name, bytes: new Uint8Array(fromBase64(f.content)) }))
+    );
+  } catch (e) {
+    throw new CommandError('invalid_file', e instanceof Error ? e.message : 'Fichier illisible');
+  }
+}
+
 /** Opérations sans écriture dans une épreuve ; les deux imports d'épreuve sont dans engine.ts */
 export const dataFileHandlers = {
+  listFederalFiles,
   getCompetitionFile,
   getEncryptedCompetitionFile,
   openCompetitionFile,

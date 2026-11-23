@@ -11,6 +11,7 @@ import {
   computeDayStatuses,
   detectDayConflicts,
 } from '../../../shared/utils/eventDay';
+import { normalizeStripRule } from '../../../shared/utils/stripRules';
 import { portOf, refuse, type StationHandler } from './stationSupport';
 
 /** Synchronise les arbitres de la journée dans toutes ses épreuves */
@@ -100,8 +101,19 @@ export const eventDayHandlers: { [N in EventDayOps]: StationHandler<N> } = {
     refuse(() => ctx.db.eventDays.getStripOccupation(dayId)),
   assignDayStrip: (ctx, { dayId, strip, key }) =>
     refuse(() => portOf(ctx).dayStrips.assign(dayId, strip, key)),
+  // Réservation et affectation automatique : écrites ici, le port ne fait que lire et
+  // déplacer le travail des serveurs distants (ADR-0005, #2134)
   setDayStripRule: (ctx, { dayId, strip, rule }) =>
-    refuse(() => portOf(ctx).dayStrips.setRule(dayId, strip, rule)),
+    refuse(() => {
+      const day = ctx.db.eventDays.getDay(dayId);
+      if (!day || strip > (day.stripCount ?? 0)) return false;
+      ctx.db.stripRules.setStripRule(dayId, strip, rule === null ? null : normalizeStripRule(rule));
+      return true;
+    }),
   setDayAutoAssign: (ctx, { dayId, on }) =>
-    refuse(() => portOf(ctx).dayStrips.setAutoAssign(dayId, on)),
+    refuse(() => {
+      if (!ctx.db.eventDays.getDay(dayId)) return false;
+      ctx.db.stripRules.setAutoAssign(dayId, on);
+      return true;
+    }),
 };

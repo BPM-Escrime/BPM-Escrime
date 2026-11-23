@@ -99,7 +99,6 @@ export const dbApi = {
   // Referees
 
   // Touch / Card read
-  getCardsByMatchIds: (matchIds: string[]) => ipcRenderer.invoke('db:getCardsByMatchIds', matchIds),
 
   // Session State
   saveSessionState: (competitionId: string, state: SessionState) => {

@@ -19,10 +19,8 @@ export interface BackupDirDTO {
 }
 
 export interface BackupAPI {
-  get: () => Promise<BackupDirDTO>;
   /** Ouvre le sélecteur de dossier natif ; annulation = dossier inchangé */
   chooseDir: () => Promise<BackupDirDTO>;
-  resetDir: () => Promise<BackupDirDTO>;
   /** Dossier dédié à une compétition (sélecteur natif, sans enregistrer) ; null si annulé */
   pickCompetitionDir: () => Promise<string | null>;
 }

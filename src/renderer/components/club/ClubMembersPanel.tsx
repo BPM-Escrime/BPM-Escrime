@@ -179,7 +179,7 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
     try {
       const picked = await openMemberFile(t('club.import_menu'));
       if (!picked) return;
-      const fileName = picked.filePath.split(/[\\/]/).pop() ?? '';
+      const fileName = picked.name;
       const ext = fileName.toLowerCase().split('.').pop() ?? '';
       // CSV / Excel à colonnes « Nom » (format du club) ; sinon fichier FFE, comme avant
       const grid = ext === 'csv' || ext === 'xlsx' ? parseDelimited(picked.content) : [];

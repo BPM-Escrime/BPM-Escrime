@@ -18,10 +18,13 @@ import {
 import { setNameMasking } from './remote/publicDto';
 import { createDayStripService, type DayStripServiceContext } from './remote/dayStripService';
 import type { createMcpController } from './mcp/mcpController';
+import { resolveBackupDir, writeBackupSettings } from './backupSettings';
 
 export interface StationPortOptions {
   db: DatabaseManager;
   userDataDir: () => string;
+  /** Documents de l'utilisateur : dossier de sauvegarde par défaut */
+  documentsDir: () => string;
   defaultAgentFolders: string[];
   /** Contrôleur du serveur MCP, créé après le port : lu à l'appel */
   mcp: () => ReturnType<typeof createMcpController>;
@@ -56,6 +59,13 @@ export function createStationPort(opts: StationPortOptions): StationServices {
       update: input => opts.mcp().update(input),
       regenerateToken: () => opts.mcp().regenerateAndApply(),
       log: () => opts.mcp().log(),
+    },
+    backup: {
+      info: () => resolveBackupDir(opts.userDataDir(), opts.documentsDir()),
+      reset: () => {
+        writeBackupSettings(opts.userDataDir(), {});
+        return resolveBackupDir(opts.userDataDir(), opts.documentsDir());
+      },
     },
     dayStrips,
   };

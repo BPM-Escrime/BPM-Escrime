@@ -1,12 +1,12 @@
 /**
  * BPM - Escrime - Pistes d'une journée en temps réel (#1878) : tableau des pistes,
- * affectation, réservation, affectation automatique (port `dayStrips` du poste, docs/adr/0022).
+ * affectation, affectation automatique (port `dayStrips` du poste, docs/adr/0022). Réservations
+ * et activation de l'affectation automatique : écrites par les commandes (eventDay.ts, #2134).
  * Affectation automatique : vérifiée toutes les 5 s pour les journées qui l'ont activée.
  * Licensed under GPL-3.0
  */
 import type { DatabaseManager } from '../../database';
 import type { DayStripBoard } from '../../shared/types/eventDay';
-import { normalizeStripRule } from '../../shared/utils/stripRules';
 import {
   assignStrip,
   autoAssignStrips,
@@ -31,8 +31,6 @@ const AUTO_ASSIGN_MS = 5000;
 export interface DayStripService {
   board(dayId: unknown): DayStripBoard | null;
   assign(dayId: unknown, strip: unknown, key: unknown): boolean;
-  setRule(dayId: unknown, strip: unknown, rule: unknown): boolean;
-  setAutoAssign(dayId: unknown, on: unknown): boolean;
   /** Arrête l'affectation automatique périodique */
   dispose(): void;
 }
@@ -76,20 +74,6 @@ export function createDayStripService(ctx: DayStripServiceContext): DayStripServ
     return ok;
   };
 
-  const setRule = (dayId: unknown, strip: unknown, rule: unknown): boolean => {
-    const n = Number(strip);
-    if (typeof dayId !== 'string' || !Number.isInteger(n) || n < 1) return false;
-    if (n > stripCountOf(dayId)) return false;
-    db.stripRules.setStripRule(dayId, n, rule === null ? null : normalizeStripRule(rule));
-    return true;
-  };
-
-  const setAutoAssign = (dayId: unknown, on: unknown): boolean => {
-    if (typeof dayId !== 'string' || !db.eventDays.getDay(dayId)) return false;
-    db.stripRules.setAutoAssign(dayId, on === true);
-    return true;
-  };
-
   const timer = setInterval(() => {
     for (const dayId of db.stripRules.listAutoAssignDays()) {
       try {
@@ -107,5 +91,5 @@ export function createDayStripService(ctx: DayStripServiceContext): DayStripServ
     }
   }, ctx.autoAssignIntervalMs ?? AUTO_ASSIGN_MS);
   timer.unref?.();
-  return { board, assign, setRule, setAutoAssign, dispose: () => clearInterval(timer) };
+  return { board, assign, dispose: () => clearInterval(timer) };
 }

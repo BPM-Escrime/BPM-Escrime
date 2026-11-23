@@ -8,29 +8,32 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import type { BackupDirDTO } from '../../shared/types/preload';
+import { useStationApi } from '../api/stationApi';
 import { HINT, BOLD, SMALL_BTN } from './settingsModal.styles';
 import { Button } from './common/Button';
 
 const BackupDirSettingsSection: React.FC = () => {
   const { t } = useTranslation();
+  const station = useStationApi();
   const [info, setInfo] = useState<BackupDirDTO | null>(null);
 
   useEffect(() => {
-    window.electronAPI?.backup
-      ?.get?.()
+    // Contrat (#2134) ; hors Electron (tests, navigateur) : section masquée
+    station.backup
+      .getDir()
       .then(setInfo)
-      .catch(() => {
-        // hors Electron (tests, navigateur) : section masquée
-      });
-  }, []);
+      .catch(() => undefined);
+  }, [station]);
 
   if (!info) return null;
 
+  // Sélecteur natif de dossier : reste un canal du préload (chemin du poste, comme
+  // settings.addAgentFolder)
   const choose = () => {
     void window.electronAPI.backup.chooseDir().then(setInfo);
   };
   const reset = () => {
-    void window.electronAPI.backup.resetDir().then(setInfo);
+    void station.backup.resetDir().then(setInfo);
   };
 
   return (

@@ -15,6 +15,7 @@ import type {
 } from '../../../shared/types/club';
 import type { DayStripBoard } from '../../../shared/types/eventDay';
 import type { McpLogEntry, McpStatus } from '../../../shared/types/mcp';
+import type { BackupDirDTO } from '../../../shared/types/systemSettings';
 import type { PrivacySettings } from '../../../shared/types/privacy';
 import type { CustomTheme, FirewallDiagnosis } from '../../../shared/types/remote';
 import type { RemoteServerInfo, TtsConfig } from '../../../shared/types/preload';
@@ -283,12 +284,16 @@ export interface StationPort {
     regenerateToken(): Promise<McpStatus>;
     log(): McpLogEntry[];
   };
+  /** Dossier de sauvegarde du poste (<userData>/backup-settings.json) */
+  backup: {
+    info(): BackupDirDTO;
+    /** Revient au dossier par défaut */
+    reset(): BackupDirDTO;
+  };
   /** Pistes de la journée en temps réel (serveurs distants des épreuves) */
   dayStrips: {
     board(dayId: string): DayStripBoard | null;
     assign(dayId: string, strip: number, key: string): boolean;
-    setRule(dayId: string, strip: number, rule: unknown): boolean;
-    setAutoAssign(dayId: string, on: boolean): boolean;
   };
 }
 

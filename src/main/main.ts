@@ -133,6 +133,7 @@ const defaultAgentFolders = (['documents', 'downloads', 'desktop'] as const).fla
 const stationServices = createStationPort({
   db,
   userDataDir: () => app.getPath('userData'),
+  documentsDir: () => app.getPath('documents'),
   defaultAgentFolders,
   mcp: () => mcp,
   // Compétition ouverte ou servie aux tablettes : anonymisation / effacement refusés (#1882)

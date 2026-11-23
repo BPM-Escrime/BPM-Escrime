@@ -204,6 +204,8 @@ export interface FileOpenResult {
   content?: string;
   /** Octets du fichier, quand le dialogue a été ouvert avec `binary` (ADR-0021) */
   bytes?: Uint8Array;
+  /** Tous les fichiers choisis, avec `binary` et `multiSelections` (#2134) */
+  files?: Array<{ filePath: string; bytes: Uint8Array }>;
 }
 
 export interface FileSaveResult {
@@ -408,7 +410,6 @@ export interface DatabaseAPI {
 
   // Touch / Card read
 
-  getCardsByMatchIds: (ids: string[]) => Promise<CardRef[]>; // feuilles imprimées (#1829)
   // Session State
   /** conflict : état réécrit par le MCP depuis le chargement (#1880), rien n'est écrit */
   saveSessionState: (id: string, state: SessionState) => Promise<void | { conflict: true }>;
@@ -562,10 +563,6 @@ export interface DatabaseAPI {
 export interface FileAPI {
   export: (filepath: string) => Promise<FileSaveResult>;
   import: (filepath: string) => Promise<FileOpenResult>;
-  /** Décode des fichiers glissés-déposés (.zip de l'extranet, .xml, .fff, .txt) (#1938) */
-  unpackFederalFiles: (
-    inputs: Array<{ name: string; bytes: Uint8Array }>
-  ) => Promise<FederalTextFile[]>;
   /** Écrit un texte (UTF-8) ou des octets au chemin choisi par le dialogue natif */
   writeContent: (filepath: string, content: string | Uint8Array) => Promise<void>;
   /** Classeur .xlsx écrit par le main (une feuille) */
@@ -596,7 +593,6 @@ export interface FederalTextFile {
 export interface DialogAPI {
   openFile: (options: DialogOpenOptions) => Promise<FileOpenResult | null>;
   /** Choisit le .zip de l'extranet (ou .xml / .fff / .txt) ; fichiers décodés un par un */
-  openFederalFiles: () => Promise<{ names: string[]; files: FederalTextFile[] } | null>;
   saveFile: (options: DialogSaveOptions) => Promise<FileSaveResult | null>;
 }
 

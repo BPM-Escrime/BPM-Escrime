@@ -32,6 +32,9 @@ export function createFilesApi(client: BpmClient) {
     photosArchive: (competitionId: string) => q('getFencerPhotosArchive', { competitionId }),
     importPhotos: (competitionId: string, content: string) =>
       c('importFencerPhotos', { competitionId, content }),
+    /** Fichiers de l'extranet fédéral (contenus base64) décodés en texte (#1938, #2134) */
+    federalFiles: (files: Array<{ name: string; content: string }>) =>
+      q('listFederalFiles', { files }),
     club: {
       importPhotos: (clubId: string, content: string) => c('importClubPhotos', { clubId, content }),
       backupFile: (clubId: string) => q('getClubBackupFile', { clubId }),

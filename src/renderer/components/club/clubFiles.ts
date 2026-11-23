@@ -68,27 +68,25 @@ export async function imageFileToDataUrl(file: File, maxSide = 1280): Promise<st
 
 /**
  * Ouvre un fichier de membres : FFE (.fff / TXT / XML), CSV ou Excel (.xlsx lu en CSV par le
- * main) ; null si annulé
+ * main) ; null si annulé. Par la plateforme (ADR-0021, #2134) : nom du fichier, jamais de chemin
  */
 export async function openMemberFile(
   title: string
-): Promise<{ filePath: string; content: string } | null> {
-  const r = await window.electronAPI?.dialog?.openFile({
+): Promise<{ name: string; content: string } | null> {
+  return defaultPlatform.openFile({
     title,
     filters: [{ name: 'Membres', extensions: ['fff', 'csv', 'txt', 'xml', 'xlsx'] }],
   });
-  return r?.filePath ? { filePath: r.filePath, content: r.content ?? '' } : null;
 }
 
 /** Ouvre un fichier CSV ou Excel (.xlsx lu en CSV par le main) ; null si annulé */
 export async function openInventoryFile(
   title: string
-): Promise<{ filePath: string; content: string } | null> {
-  const r = await window.electronAPI?.dialog?.openFile({
+): Promise<{ name: string; content: string } | null> {
+  return defaultPlatform.openFile({
     title,
     filters: [{ name: 'CSV, Excel', extensions: ['csv', 'xlsx'] }],
   });
-  return r?.filePath ? { filePath: r.filePath, content: r.content ?? '' } : null;
 }
 
 /** Enregistre une grille en classeur Excel ; false si annulé */
