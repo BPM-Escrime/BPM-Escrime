@@ -19,6 +19,7 @@ import {
   checkTeamBout,
   reloadTeamArenaMatch,
   type TeamArenaContext,
+  type TeamTieWinner,
 } from './teamArena';
 import { runTeamCommand, type TeamCommandOutcome, type TeamSource } from './teamCommand';
 import type { TeamArenaBout, TeamArenaState } from './types';
@@ -168,9 +169,10 @@ export function setTeamArenaDeviceLink(
 export function checkRelayFinish(
   ctx: TeamArenaContext,
   arenaId: string,
-  source: TeamSource
+  source: TeamSource,
+  winner?: TeamTieWinner
 ): TeamCommandOutcome<'recordRelayScore'> {
-  return checkTeamBout(ctx, arenaId, source);
+  return checkTeamBout(ctx, arenaId, source, winner);
 }
 
 /**
@@ -181,7 +183,7 @@ export function finishRelay(
   ctx: TeamArenaContext,
   arenaId: string,
   source: TeamSource,
-  options: { broadcast?: boolean } = {}
+  options: { broadcast?: boolean; winner?: TeamTieWinner } = {}
 ): TeamCommandOutcome<'recordRelayScore'> {
   return advanceTeamBout(ctx, arenaId, source, options);
 }

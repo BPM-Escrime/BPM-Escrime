@@ -8,12 +8,19 @@ import { test, expect } from './app';
  * relais envoyée au moteur), tableau tiré par le bouton (rien à l'ouverture), finale jouée,
  * rechargement : tout est retrouvé, le journal rejoué ne diverge pas des tables. Lot E4 : la
  * tablette `/equipe1/arbitre` (Chromium) joue les relais par recordRelayScore ; une égalité au
- * tableau est refusée par le moteur et le motif s'affiche sur la tablette.
+ * dernier relais du tableau demande la priorité (t.41.5, #2191), choisie par l'arbitre sur la
+ * tablette : la rencontre est décidée pour l'équipe prioritaire.
  */
 const TITLE = 'E2E Équipes';
 
 type Envelope = { ok: boolean; data?: unknown; error?: { message: string } };
-type TeamMatch = { status: string; scoreBoutsA: number; scoreBoutsB: number };
+type TeamMatch = {
+  status: string;
+  scoreBoutsA: number;
+  scoreBoutsB: number;
+  teamBId?: string;
+  winnerId?: string | null;
+};
 type TeamsRead = { state: { teams: { poolMatches: TeamMatch[]; tableauMatches: TeamMatch[] } } };
 
 /** Appel du contrat depuis la fenêtre ; refus → message */
@@ -248,7 +255,7 @@ test('équipes : relais FIE joués sur la tablette /equipe1/arbitre par le moteu
       scoreBoutsB: 0,
     });
 
-    // Finale : égalité au dernier relais → refus du moteur affiché sur la tablette
+    // Finale : égalité au dernier relais → priorité demandée sur la tablette (t.41.5)
     const { matchIds } = await api<{ matchIds: string[] }>(win, 'generateTeamTableau', {
       competitionId: id,
     });
@@ -259,13 +266,23 @@ test('équipes : relais FIE joués sur la tablette /equipe1/arbitre par le moteu
       await expect.poll(() => relaysRecorded(win, id)).toBe(9 + n);
     }
     await relay(1, 1);
-    await expect(tablet.locator('#team-toast')).toContainText(/refusé/i);
+    await expect(tablet.locator('#team-toast')).toContainText(/Égalité/);
+    await expect(tablet.locator('#tie-priority')).toBeVisible();
     expect(await relaysRecorded(win, id)).toBe(17);
     expect((await read()).state.teams.tableauMatches[0]).toMatchObject({
       status: 'in_progress',
       scoreBoutsA: 8,
       scoreBoutsB: 8,
     });
+    // Priorité à l'équipe B, puis fin du relais : rencontre décidée pour B
+    await tablet.locator('#prio-b').click();
+    await expect(tablet.locator('#prio-b')).toHaveClass(/chosen/);
+    await tablet.locator('#advance-bout').click();
+    await expect.poll(() => relaysRecorded(win, id)).toBe(18);
+    await expect(tablet.locator('#match-complete')).toBeVisible();
+    const final = (await read()).state.teams.tableauMatches[0];
+    expect(final).toMatchObject({ status: 'finished', scoreBoutsA: 9, scoreBoutsB: 9 });
+    expect(final.winnerId).toBe(final.teamBId);
 
     // Journal rejoué sans écart
     const rebuild = await api<{ divergences: unknown[] }>(win, 'rebuildCompetitionState', {

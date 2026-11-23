@@ -130,6 +130,12 @@
         border: 1px solid var(--slate-700);
         font-size: 0.8rem;
       }
+      /* Égalité au dernier relais : priorité tirée avant la minute supplémentaire (t.41.5, #2191) */
+      .tie-priority { border: 1px solid var(--tw-amber-400); border-radius: 0.6rem; padding: 0.5rem; text-align: center; }
+      .tie-priority-label { font-size: 0.8rem; color: var(--tw-amber-400); margin-bottom: 0.4rem; }
+      .tie-priority-buttons { display: flex; gap: 0.4rem; justify-content: center; }
+      .tie-priority-buttons button { flex: 1; }
+      .tie-priority-buttons button.chosen { background: var(--tw-amber-400); color: var(--slate-900); font-weight: 700; }
       .relay-live { text-align: center; font-size: 0.85rem; color: var(--tw-slate-300); }
       .match-complete {
         text-align: center;
@@ -164,6 +170,14 @@
         <div class="score" id="score-b">0</div>
       </div>
       <div class="relay-live" id="relay-live" style="display: none"></div>
+      <div class="tie-priority" id="tie-priority" hidden>
+        <div class="tie-priority-label" data-i18n="referee.priority_applies">Minute prioritaire : le tireur tiré gagne si aucune touche</div>
+        <div class="tie-priority-buttons">
+          <button id="prio-a">A</button>
+          <button id="prio-coin" data-i18n="referee.coin_btn">Tirage au sort</button>
+          <button id="prio-b">B</button>
+        </div>
+      </div>
       <div class="device-lock" id="device-lock" role="status" style="display: none" data-i18n="referee.cyrano_master_lock"></div>
       <div class="cap" id="cap-label">/ 5 touches · 3:00</div>
 
@@ -218,6 +232,11 @@
         if (window.initRemoteI18n) window.initRemoteI18n();
         const socket = io({ reconnection: true, reconnectionDelay: 300, reconnectionDelayMax: 5000 });
         let lastState = null;
+        // Priorité à égalité au dernier relais (t.41.5, #2191) : côté choisi, propre au relais
+        let tiePriority = null;
+        let tieKey = null;
+        // Choix montré à la fin du temps ou à la demande de fin du relais (pas dès 0-0)
+        let tieAsked = false;
 
         socket.on('connect', () => {
           socket.emit('join_team_arena', { arenaId, role: 'referee' });
@@ -407,6 +426,8 @@
             renderCardButtons(document.getElementById('card-buttons-b'), lastState.teamBId);
           }
 
+          renderTiePriority();
+
           const advanceBtn = document.getElementById('advance-bout');
           advanceBtn.disabled = !lastState.currentBout;
           advanceBtn.classList.toggle('ready', !!lastState.boutComplete);
@@ -431,6 +452,38 @@
             .join(' ');
         }
 
+        // Égalité au dernier relais d'une rencontre de tableau : l'arbitre désigne la priorité
+        function renderTiePriority() {
+          const box = document.getElementById('tie-priority');
+          const bout = lastState.currentBout;
+          const key = bout ? `${lastState.matchId}#${bout.boutOrder}` : null;
+          if (key !== tieKey) {
+            tieKey = key;
+            tiePriority = null;
+            tieAsked = false;
+          }
+          box.hidden = !(lastState.tieNeedsWinner && (tieAsked || tiePriority || lastState.boutComplete));
+          const a = document.getElementById('prio-a');
+          const b = document.getElementById('prio-b');
+          a.textContent = lastState.teamAName;
+          b.textContent = lastState.teamBName;
+          a.classList.toggle('chosen', tiePriority === 'A');
+          b.classList.toggle('chosen', tiePriority === 'B');
+        }
+        function choosePriority(side) {
+          if (locked('team.cyrano_master_relay_lock')) return;
+          tiePriority = side;
+          render();
+        }
+        document.getElementById('prio-a').onclick = () => choosePriority('A');
+        document.getElementById('prio-b').onclick = () => choosePriority('B');
+        document.getElementById('prio-coin').onclick = () => {
+          if (locked('team.cyrano_master_relay_lock')) return;
+          tiePriority = Math.random() < 0.5 ? 'A' : 'B';
+          render();
+          showToast(`${tk('referee.coin_flip_winner')} ${tiePriority === 'A' ? lastState.teamAName : lastState.teamBName}`);
+        };
+
         socket.on('team_arena_state', state => {
           lastState = state;
           render();
@@ -453,7 +506,17 @@
           if (confirm(tk('team.reset_confirm'))) socket.emit('team_reset_bout', { arenaId });
         };
         document.getElementById('advance-bout').onclick = () => {
-          if (!locked('team.cyrano_master_relay_lock')) socket.emit('team_advance_bout', { arenaId });
+          if (locked('team.cyrano_master_relay_lock')) return;
+          if (lastState && lastState.tieNeedsWinner) {
+            if (!tiePriority) {
+              tieAsked = true;
+              render();
+              return notify('referee.tie_coin');
+            }
+            socket.emit('team_advance_bout', { arenaId, winner: tiePriority });
+            return;
+          }
+          socket.emit('team_advance_bout', { arenaId });
         };
       })();
     </script>

@@ -113,7 +113,10 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
    son score part au moteur (`recordRelayScore`). Le dernier relais terminé se rouvre
    pour correction (`reopenRelay`, score repris). « Faire entrer le remplaçant » remplace
    un tireur dans les relais à tirer (`substituteTeamFencer`). Égalité au dernier relais du
-   tableau : l'écran demande le vainqueur (minute avec priorité).
+   tableau : l'écran demande le vainqueur (minute avec priorité, t.41.5). La tablette
+   `/equipe{N}/arbitre` propose alors la priorité (équipe choisie ou tirage au sort), envoyée
+   avec la fin du relais (`winner`) ; l'appareil de piste transmet sa priorité (`Prio`
+   Cyrano, `priority` OPP2) : ACK et rencontre décidée, sans priorité NAK (#2191).
 3. **Tableau** : rien n'est créé à l'ouverture. Les poules terminées, « Générer le
    tableau » le tire (`generateTeamTableau`, têtes de série = classement de poule). Les
    tours suivants se créent dans le moteur au fur et à mesure des résultats ; « Tirer de

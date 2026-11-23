@@ -52,8 +52,14 @@ export function reloadTeamArenaMatch(ctx: TeamArenaContext, state: TeamArenaStat
   return true;
 }
 
-/** Relais en cours et score à enregistrer ; null : pas de relais à terminer */
-function currentRelayInput(state: TeamArenaState) {
+/** Côté prioritaire désigné à égalité au dernier relais (minute supplémentaire, t.41.5) */
+export type TeamTieWinner = 'A' | 'B';
+
+/**
+ * Relais en cours et score à enregistrer ; null : pas de relais à terminer. `winner` : côté
+ * prioritaire, transmis au moteur qui le retient seulement à égalité en fin de rencontre.
+ */
+function currentRelayInput(state: TeamArenaState, winner?: TeamTieWinner) {
   const bout = state.bouts[state.currentBoutIndex];
   if (!bout || bout.status === 'finished') return null;
   return {
@@ -62,6 +68,7 @@ function currentRelayInput(state: TeamArenaState) {
     relay: bout.boutOrder,
     scoreA: state.liveScoreA,
     scoreB: state.liveScoreB,
+    ...(winner ? { winner } : {}),
   };
 }
 
@@ -74,10 +81,11 @@ const NO_RELAY = { ok: false, code: 'match_not_ready', message: 'Aucun relais en
 export function checkTeamBout(
   ctx: TeamArenaContext,
   arenaId: string,
-  source: TeamSource
+  source: TeamSource,
+  winner?: TeamTieWinner
 ): TeamCommandOutcome<'recordRelayScore'> {
   const state = ctx.teamArenaState.get(arenaId);
-  const input = state && currentRelayInput(state);
+  const input = state && currentRelayInput(state, winner);
   if (!input) return NO_RELAY;
   return runTeamCommand(ctx.db, 'recordRelayScore', input, source, true);
 }
@@ -88,15 +96,16 @@ export function checkTeamBout(
  * du tableau calculés par lui), puis rencontre relue et passage au relais suivant. Refus :
  * rien d'écrit, l'arène garde le relais et son score en direct.
  * `broadcast: false` : l'appelant diffuse lui-même (remplaçant enregistré entre-temps).
+ * `winner` : côté prioritaire à égalité au dernier relais (#2191).
  */
 export function advanceTeamBout(
   ctx: TeamArenaContext,
   arenaId: string,
   source: TeamSource = 'tablet',
-  { broadcast = true }: { broadcast?: boolean } = {}
+  { broadcast = true, winner }: { broadcast?: boolean; winner?: TeamTieWinner } = {}
 ): TeamCommandOutcome<'recordRelayScore'> {
   const state = ctx.teamArenaState.get(arenaId);
-  const input = state && currentRelayInput(state);
+  const input = state && currentRelayInput(state, winner);
   if (!state || !input) return NO_RELAY;
   const outcome = runTeamCommand(ctx.db, 'recordRelayScore', input, source);
   if (!outcome.ok) return outcome;
@@ -203,10 +212,17 @@ export function getPublicTeamArenaState(ctx: TeamArenaContext, arenaId: string):
     : relay
       ? isRelayComplete(cumulA, cumulB, relayCap, elapsedSec)
       : isLaserArenaBoutComplete(state.liveScoreA, state.liveScoreB, elapsedSec, cap);
+  // Dernier relais à égalité d'une rencontre de tableau : vainqueur exigé par le moteur,
+  // désigné par la priorité tirée avant la minute supplémentaire (t.41.5, #2191)
+  const tableau = !!state.coords && state.coords.round !== null && state.coords.position !== null;
+  const lastRelay =
+    !!currentBout && state.bouts.every(b => b === currentBout || b.status === 'finished');
+  const tieNeedsWinner = relay && tableau && lastRelay && cumulA === cumulB;
   return {
     format: state.format,
     cumulA,
     cumulB,
+    tieNeedsWinner,
     target: state.relayRule.target,
     fencerCards: state.fencerCards,
     cardReasons: relay ? getAvailableReasons(state.weapon) : [],
