@@ -106,24 +106,24 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 132 | 1145 |
+| `src/main/` | 133 | 1155 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 123 | 659 |
+| `src/renderer/components/` | 122 | 654 |
 | E2E Playwright (`e2e/`) | 14 | 43 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 8 | 36 |
+| `src/renderer/api/` | 9 | 38 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 27 | 258 |
+| `src/shared/domain/` | 28 | 267 |
 | `src/shared/platform/` | 1 | 8 |
-| **Total** | **558** | **4300** |
+| **Total** | **560** | **4316** |
 
-Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2424,6 +2424,16 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/database/migrations/stripDevices.test.ts</code> — 3 tests</summary>
+
+- **migration 47 : appareils de piste sur la salle**
+  - sans salle : salle par défaut créée, pistes reprises et normalisées
+  - journée → salle de la journée, épreuve sans journée → salle par défaut, rien d’écrasé
+  - cyrano\_pistes vide : aucune salle créée
+
+</details>
+
+<details>
 <summary><code>src/database/repos/clubBackupRepo.test.ts</code> — 3 tests</summary>
 
 - **ClubBackupRepo (sauvegarde / chargement d’un club)**
@@ -2540,16 +2550,6 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/database/repos/cyranoRepo.test.ts</code> — 3 tests</summary>
-
-- **CyranoRepo (#1829)**
-  - enregistre et relit les pistes dans l’ordre
-  - remplace la liste entière sans toucher aux autres compétitions
-  - compétition absente ou identifiant vide : liste vide, pas d’écriture
-
-</details>
-
-<details>
 <summary><code>src/database/repos/eventDayRepo.test.ts</code> — 8 tests</summary>
 
 - **EventDayRepo (#1714)**
@@ -2645,7 +2645,7 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
 - **StripRuleRepo (#1878)**
   - réservation enregistrée, relue, retirée par la règle par défaut
   - affectation automatique par journée
-  - suppression de la journée : réservations et table Cyrano de la salle supprimées
+  - suppression de la journée : réservations supprimées
 
 </details>
 
@@ -3109,7 +3109,7 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/cyrano/pisteHubRouting.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/cyrano/pisteHubRouting.test.ts</code> — 9 tests</summary>
 
 - **PisteHub — pistes partagées entre épreuves (#1878)**
   - la piste suit l’épreuve de son affectation : DISP avec l’arme et l’épreuve du match
@@ -3118,6 +3118,10 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - liaison appareil (bandeau, verrou tablette) : publiée sur l’arène de l’épreuve suivie
   - aucune affectation : la piste reste sur sa dernière épreuve, rien n’est envoyé
   - une seule épreuve ouverte : comportement inchangé (serveur unique)
+  - **piste passée en manuel par une épreuve (docs/adr/0023)**
+    - l’épreuve en manuel ne reçoit ni DISP ni scores ; l’autre épreuve garde l’appareil
+    - seule épreuve sur la piste : mode manuel, scores ignorés, fin refusée
+    - retour en appareil : le match courant est renvoyé
 
 </details>
 
@@ -3194,6 +3198,16 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - vide si aucun écran
   - une fenêtre occupe toute la zone
   - mosaïque 2 colonnes
+
+</details>
+
+<details>
+<summary><code>src/main/devicesPort.test.ts</code> — 4 tests</summary>
+
+- sans épreuve suivie : appareils de la salle par défaut, tables par protocole
+- épreuves suivies : salles de l’épreuve du panneau puis des épreuves en saisie distante
+- démarrage et arrêt : PisteHub branché tant qu’un pilote tourne ; interface invalide refusée
+- manualStripsOf : réglage de l’épreuve normalisé
 
 </details>
 
@@ -3310,6 +3324,21 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
 - deleteCompetition : saisie distante arrêtée, épreuve supprimée
 - getCompetition et listCompetitions : dates ISO, réglages, nombre de tireurs
 - formule validée à chaque écriture (docs/adr/0012) ; réglage ancien hors bornes toléré
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/devices.test.ts</code> — 9 tests</summary>
+
+- setStripDevice : piste créée au besoin, appareil relu, retiré par null ; pilotes rechargés
+- salle inconnue : venue\_not\_found ; Cyrano sans adresse refusé par le schéma
+- saveVenue garde les appareils des pistes envoyées sans deviceConfig
+- salle propre → salle de la journée → salle par défaut
+- manualStrips par updateCompetitionSettings : pistes marquées pour cette épreuve seulement
+- démarrage : port renvoyé, appareils rechargés pour l’épreuve ; déjà démarré : même port
+- refus du pilote : device\_refused (message pour l’opérateur)
+- état, routes, options, secours
+- sans pilote (tests, MCP) : unavailable ; la déclaration reste possible
 
 </details>
 
@@ -3602,19 +3631,6 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - protect / unprotect font l’aller-retour en base64
   - renvoie null sans chiffrement disponible
   - refuse les entrées non-chaîne
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/cyranoHandlers.test.ts</code> — 6 tests</summary>
-
-- **cyranoHandlers — table des pistes**
-  - épreuve hors journée : table propre à l’épreuve
-  - épreuves d’une même journée : une seule table, partagée
-  - journée encore vide : la table existante de l’épreuve est reprise
-  - épreuve suivie par piste
-  - table modifiée serveur démarré : HELLO envoyé aussitôt
-  - entrées invalides refusées
 
 </details>
 
@@ -6191,7 +6207,7 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/VenuesSettingsSection.test.tsx</code> — 10 tests</summary>
+<summary><code>src/renderer/components/VenuesSettingsSection.test.tsx</code> — 11 tests</summary>
 
 - **resizeStrips**
   - conserve les libellés, tronque ou complète
@@ -6200,7 +6216,8 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - crée une salle
   - refuse un nom vide
   - modifie une salle en gardant les libellés de pistes
-  - enregistre libellé et appareil Cyrano d’une piste
+  - enregistre libellé et appareil d’une piste
+  - déclare un appareil OPP2 sur une piste (docs/adr/0023)
   - refuse une adresse IPv4 invalide sans enregistrer
   - définit la salle par défaut
   - supprime après confirmation seulement
@@ -6916,15 +6933,18 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/remote/CyranoPanel.test.tsx</code> — 5 tests</summary>
+<summary><code>src/renderer/components/remote/CyranoPanel.test.tsx</code> — 8 tests</summary>
 
-- **CyranoPanel — alerte BAD MATCH (#1720)**
+- **CyranoPanel — appareils de la salle (docs/adr/0023)**
+  - affiche les appareils de la salle sans édition d’adresse
+  - case « manuel » : écrit manualStrips de l’épreuve
+  - salle de l’épreuve choisie par setCompetitionVenue
+  - démarre le broker OPP2 pour l’épreuve
+- **CyranoPanel — alerte, secours et journal (#1720, #1829)**
   - signale la piste dont l’appareil affiche un autre match
-- **CyranoPanel — secours et journal (#1829)**
   - actions de secours envoyées pour la piste
   - journal affiché à la demande ; interfaces proposées
   - journal : défile jusqu’aux dernières trames, dans son cadre (#2001)
-  - ajout de pistes : contrôles compacts sur une rangée, sans style en ligne
 
 </details>
 
@@ -7024,30 +7044,12 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/remote/cyranoPisteTools.test.ts</code> — 9 tests</summary>
-
-- **profils constructeur (#1829)**
-  - port 50100 en standard, 50101 en EFP1.1
-- **ajout en lot**
-  - profil Saint-George : port 50101, IP 192.168.1.(100 + piste)
-  - numéros consécutifs, piste n ↔ arène n, port du profil
-  - ignore les numéros déjà présents
-  - ne dépasse jamais le maximum de pistes
-- **export / import**
-  - aller-retour sans perte
-  - accepte aussi un tableau nu
-  - écarte les lignes invalides et les doublons, et le compte est rendu
-  - refuse le JSON cassé, le mauvais format et la liste vide
-
-</details>
-
-<details>
 <summary><code>src/renderer/components/remote/cyranoSettings.test.ts</code> — 4 tests</summary>
 
-- **réglages Cyrano (#1829)**
+- **réglages des pilotes (#1829, docs/adr/0023)**
   - démarrage automatique désactivé par défaut
-  - démarrage automatique : port, interface, pistes complètes et options
-  - démarrage automatique sans piste : rien
+  - démarrage automatique : port, interface, épreuve et options ; OPP2 si la salle en déclare
+  - démarrage automatique sans appareil dans la salle : rien
   - journal exportable : une trame par ligne
 
 </details>
@@ -7216,12 +7218,12 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - port facultatif entre 1 et 65535
   - erreur : IP saisie invalide ou port invalide ; IP vide acceptée
 - **stripToEdit**
-  - relit libellé et appareil, mode maître par défaut
+  - relit libellé et appareil, Cyrano maître par défaut
 - **applyStripEdits**
   - ne touche pas aux pistes non modifiées
-  - pose libellé et appareil, garde arène et protocole
-  - retire l’appareil sans adresse IP, garde le libellé
-  - écrit le port numérique
+  - pose libellé et appareil, garde l’arène
+  - retire l’appareil sans adresse IP ou sans protocole (null), garde le libellé
+  - écrit le port numérique ; OPP2 avec ou sans identifiant
 
 </details>
 
@@ -8304,6 +8306,15 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/api/devicesApi.test.ts</code> — 2 tests</summary>
+
+- **devicesApi : entrées du contrat**
+  - %s _(each)_
+  - chaque opération des appareils est atteignable par un appel de l’écran
+
+</details>
+
+<details>
 <summary><code>src/renderer/api/remoteApi.test.ts</code> — 8 tests</summary>
 
 - **remoteApi : entrées du contrat**
@@ -8825,6 +8836,26 @@ Unitaires : 544 fichiers, 4257 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - sans réglage : neutralité de club seule, charge équilibrée
   - réglage partiel : complété par les défauts
   - fusion : la neutralité se modifie champ par champ, le reste est conservé
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/stripDevices/stripDevices.test.ts</code> — 9 tests</summary>
+
+- **toStripDevice**
+  - ancienne configuration Cyrano : protocol devient version
+  - déclaration Cyrano et OPP2 ; champs invalides écartés
+  - Cyrano sans adresse, valeur non objet : null
+- **normalizeManualStrips**
+  - entiers 1…100, sans doublon, triés
+- **resolveVenue**
+  - salle de l’épreuve, puis de la journée, puis par défaut
+  - salle disparue sautée ; aucune salle : null
+- **effectiveStripDevices**
+  - pistes déclarant un appareil valide, arène par défaut = numéro de piste
+  - pistes manuelles de l’épreuve marquées
+- **driverTables**
+  - sépare Cyrano et OPP2, première déclaration d’une piste gardée
 
 </details>
 
