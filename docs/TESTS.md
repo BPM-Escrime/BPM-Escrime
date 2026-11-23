@@ -892,7 +892,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
 <summary><code>src/shared/utils/gregLevel.test.ts</code> — 10 tests</summary>
 
 - **niveau GREG (#1328)**
-  - garde les 7 codes de l’ancien BellePoule, « Autre » par défaut
+  - garde les 7 codes de l’ancien BPM - Escrime, « Autre » par défaut
   - envoie le niveau choisi dans le champ niveau du formulaire
   - envoie « Autre » tant qu’aucun niveau n’est choisi
 - **levelFromFederalDomain (#1328)**
@@ -900,7 +900,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - retombe sur « Autre » pour I, C, \* et les valeurs inconnues
   - ne propose rien sans Domaine
 - **niveau à l’import (#1328)**
-  - lit l’attribut Niveau d’un fichier BellePoule
+  - lit l’attribut Niveau d’un fichier BPM - Escrime
   - propose le niveau d’après Domaine quand Niveau est absent
   - n’invente rien sans Niveau ni Domaine
 - **export XML : attribut Niveau (#1328)**
@@ -914,7 +914,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
 - **buildGregFields (#1328)**
   - traduit une compétition individuelle en champs GREG
   - bascule sur les équipes, le sexe féminin et le statut terminé
-  - mixte = H comme dans l'ancien BellePoule
+  - mixte = H comme dans l'ancien BPM - Escrime
   - refuse une compétition sans lieu (le serveur l'exige)
   - refuse les armes et catégories sans code GREG
   - mappe les catégories jeunes sur leur code M\<âge\>
@@ -924,7 +924,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - passe au pluriel pour les équipes
   - laisse le XML individuel intact
 - **isGregUrl (#1331)**
-  - reconnaît les adresses escrime-info.com comme l'ancien BellePoule
+  - reconnaît les adresses escrime-info.com comme l'ancien BPM - Escrime
   - laisse passer les autres serveurs
 
 </details>
@@ -1459,7 +1459,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - séparation club : clubs alternés à niveau égal
 - **distributeFencersToPoolsSerpentine — classement déplaçable**
   - club avant classement : descente hors du chapeau pour éviter le conflit
-  - quota BellePoule : club plus nombreux que les poules → ⌈N/poules⌉ par poule toléré
+  - quota BPM - Escrime : club plus nombreux que les poules → ⌈N/poules⌉ par poule toléré
   - classement en rang 1 : échanges au plus proche classement → quotas club respectés
   - têtes de poule jamais déplacées (premier chapeau)
   - nation vide : pas de conflit entre tireurs sans nationalité
@@ -2817,7 +2817,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - accepte un chemin absolu et le normalise
   - refuse vide, relatif, octet nul ou non-texte
 - **dossier par défaut**
-  - vaut \<Documents\>/BellePoule sans réglage
+  - vaut \<Documents\>/BPM - Escrime sans réglage
   - un réglage invalide dans le fichier retombe sur le défaut
   - fichier corrompu : pas d’exception, défaut
 - **réglage utilisateur**
@@ -2853,7 +2853,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
 - **parseCliArgs**
   - sans option : mode fenêtré
   - --headless
-  - BELLEPOULE\_HEADLESS=1
+  - BPM\_ESCRIME\_HEADLESS=1
   - arguments inconnus ignorés
   - --batch-import \<manifeste\> implique --headless
   - --batch-import=\<manifeste\>
@@ -3881,7 +3881,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
 <details>
 <summary><code>src/main/mcp/plugin.test.ts</code> — 4 tests</summary>
 
-- **plugin bellepoule**
+- **plugin bpm-escrime**
   - manifestes : plugin, marketplace, serveur MCP local à jeton
   - userConfig : jeton sensible, repli sur les variables d'environnement (#1947)
   - commandes : description en en-tête
@@ -3914,7 +3914,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
 <summary><code>src/main/opp2/driver.test.ts</code> — 8 tests</summary>
 
 - **pilote OPP2 (#1960)**
-  - démarrage : BellePoule annoncé (retenu), appareil en ligne via apparatus/connection
+  - démarrage : BPM - Escrime annoncé (retenu), appareil en ligne via apparatus/connection
   - état, score, chrono, lampes, cartons P, médical → état complet
   - doublon QoS 1 écarté ; redémarrage (seq plus petit, ts plus récent) accepté
   - END + état E : une seule fin proposée ; NEXT / PREV ; piste inconnue relevée
@@ -6113,7 +6113,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - modification manuelle → brouillon transmis
 - **PoolPrepView — pastille du critère prioritaire (#1440)**
   - club en priorité 1 : pastille club, orange si doublon dans la poule
-  - doublon inévitable (quota BellePoule) : pas d’alerte
+  - doublon inévitable (quota BPM - Escrime) : pas d’alerte
 - **PoolPrepView — ordre officiel des matchs (#1964)**
   - trio du même club : n° 1, 2, 3 et table « trio de 7 »
   - ordre libre : pas de placement, pastille « Ordre libre »
