@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 84 | 948 |
+| `src/shared/utils/` | 84 | 965 |
 | `src/shared/services/` | 8 | 87 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -111,7 +111,7 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 132 | 707 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
-| `src/remote/` | 60 | 414 |
+| `src/remote/` | 60 | 416 |
 | `src/renderer/api/` | 10 | 45 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 36 | 388 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **600** | **4610** |
+| **Total** | **600** | **4629** |
 
-Unitaires : 582 fichiers, 4560 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 582 fichiers, 4579 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -204,7 +204,7 @@ Unitaires : 582 fichiers, 4560 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/cardSystem.test.ts</code> — 40 tests</summary>
+<summary><code>src/shared/utils/cardSystem.test.ts</code> — 57 tests</summary>
 
 - **determineCardType - Système d'escalade FFE**
   - **Groupe 1: Blanc → Jaune → Jaune**
@@ -263,6 +263,26 @@ Unitaires : 582 fichiers, 4560 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - **createCard avec weapon param**
     - crée un carton avec l'arme courante
     - reste compatible sans weapon param
+- **Escrime olympique (%s) : cartons FIE** _(each)_
+  - jaune = avertissement, 0 point (t.162.1)
+  - 1er groupe : jaune, puis rouge (+1) à chaque nouvelle faute du groupe (t.165)
+  - 1er groupe : rouge d'emblée après un rouge du 2e groupe (t.165)
+  - 1er groupe : rouge d'emblée après un rouge du 3e groupe (t.165)
+  - 2e groupe : rouge dès la 1re faute, puis rouge (t.166)
+  - 2e groupe : rouge même après un jaune du 1er groupe
+  - 3e groupe : rouge, puis noir à la récidive (t.167)
+  - 3e groupe : rouge à la 1re faute même après des rouges du 1er ou du 2e groupe (t.167.1)
+  - 4e groupe : noir dès la 1re faute (t.169)
+  - aucun carton blanc, quel que soit le motif ou l’historique
+  - motifs du tableau t.170 seulement, ni motif du Sabre Laser
+  - chaque motif olympique a un libellé français
+- **Escrime olympique : motifs propres à une arme (t.170 1.10 et 1.12)**
+  - pointe sur la piste : fleuret et épée ; coquille et croisement : sabre
+  - motif hors liste (ancien motif du Sabre Laser) : groupe d'origine, escalade FIE, jamais de blanc
+- **Sabre Laser et arme à la carte inchangés**
+  - %s : motifs, groupes, barème _(each)_
+  - %s : escalade blanc → jaune, jaune → rouge, rouge → noir _(each)_
+  - getReasonsByGroup (sans arme) = groupes du Sabre Laser
 
 </details>
 
@@ -8186,7 +8206,7 @@ Unitaires : 582 fichiers, 4560 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeCards.test.ts</code> — 9 tests</summary>
+<summary><code>src/remote/js/refereeCards.test.ts</code> — 11 tests</summary>
 
 - **refereeCards.js cartons**
   - modernYellowOrRed : rouge si déjà jaune ou rouge
@@ -8198,6 +8218,8 @@ Unitaires : 582 fichiers, 4560 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - nextPassivityCard : rouge, noir, puis plus rien
   - passivityWinner : score, puis classement initial, puis tirage
   - passivityWinner : parité avec le module partagé (matchEndValidation.ts, #1829)
+  - cardFromGroup olympique : parité avec determineCardType (cardSystem.ts, #2207)
+  - motifs olympiques de la tablette = motifs FIE du domaine, mêmes groupes (t.163, #2207)
   - referee.html charge le module et délègue
 
 </details>
@@ -8252,7 +8274,7 @@ Unitaires : 582 fichiers, 4560 tests. E2E : 18 fichiers, 50 tests (comptage stat
 
 - **refereeFaults.js**
   - chaque groupe a une clé de libellé et des fautes avec key + fr
-  - clés de faute uniques et groupes olympiques 2-3
+  - clés de faute uniques et groupes olympiques 1-3 (numérotation FIE, #2207)
   - cartons de passivité vs standard
   - lastIndexWhere
   - referee.html charge le module et ne redéfinit plus les constantes
