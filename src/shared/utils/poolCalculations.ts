@@ -1433,25 +1433,3 @@ export function filterPoolWinners(pools: Pool[], overallRanking: PoolRanking[]):
     .filter(r => winnerIds.has(r.fencer.id))
     .map((r, i) => ({ ...r, rank: i + 1 }));
 }
-
-// ============================================================================
-// Mode compétition couplée (séparation par genre)
-// ============================================================================
-
-/** Répartit le classement général en sous-classements par genre */
-export function splitRankingByGender(overallRanking: PoolRanking[]): Map<string, PoolRanking[]> {
-  const groups = new Map<string, PoolRanking[]>();
-  for (const r of overallRanking) {
-    const key = r.fencer.gender as string;
-    const arr = groups.get(key) ?? [];
-    arr.push(r);
-    groups.set(key, arr);
-  }
-  for (const [key, rankings] of groups) {
-    groups.set(
-      key,
-      rankings.map((r, i) => ({ ...r, rank: i + 1 }))
-    );
-  }
-  return groups;
-}

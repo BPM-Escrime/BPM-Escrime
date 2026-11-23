@@ -19,6 +19,7 @@ import {
   type ApiContract,
   type OperationKind,
   FencerSchema,
+  SplitGroup,
 } from './contractDef';
 import { reportOperations } from './contractReports';
 import { dtViewOperations } from './contractDtView';
@@ -34,6 +35,7 @@ import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competition
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
 import type { ConsolationBracket, FinalResult, TableauMatch } from '../domain/tableau/tableauTypes';
 import type { RapieresLegacyState, RapieresSession } from '../domain/rapieres/rapieres.types';
+import type { GroupTableau } from '../domain/ranking/splitGroups';
 
 export type {
   ApiContract,
@@ -204,6 +206,8 @@ const CompetitionStateSchema = z.object({
   remoteArenaCount: z.number().int().optional(),
   remoteStripStart: z.number().int().optional(),
   rapieres: z.custom<RapieresSession | RapieresLegacyState>().optional(),
+  /** Tableaux séparés après les poules : un tableau par groupe (docs/adr/0024) */
+  groupTableaux: z.record(z.string(), z.custom<GroupTableau>()).optional(),
   poolPrepParams: z
     .object({
       poolCount: z.number(),
@@ -450,7 +454,8 @@ export const contract = {
   generateTableau: command({
     description:
       'Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, un tour, tableau simple). ' +
-      'Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable.',
+      'Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. ' +
+      'Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »).',
     input: z.object({
       competitionId: CompetitionId,
       thirdPlaceMatch: z.boolean().optional().describe('Match pour la 3e place'),
@@ -475,6 +480,7 @@ export const contract = {
         .enum(['normal', 'third', 'all', 'semis'])
         .optional()
         .describe('Tournoi des rapières : mode de tableau choisi'),
+      group: SplitGroup,
       replace: z.boolean().optional().describe('Remplacer un tableau existant'),
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
@@ -678,9 +684,10 @@ export const contract = {
 
   clearTableau: command({
     description:
-      'Retire le tableau (et les tableaux de classement) : il est refait sur le classement courant à l’ouverture de l’onglet Tableau. Accord du DT indispensable si des matchs sont joués.',
+      'Retire le tableau (et les tableaux de classement) : il est refait sur le classement courant à l’ouverture de l’onglet Tableau. Accord du DT indispensable si des matchs sont joués. Tableaux séparés : tableau du groupe « group ».',
     input: z.object({
       competitionId: CompetitionId,
+      group: SplitGroup,
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
       commandId: CommandId,

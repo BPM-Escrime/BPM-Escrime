@@ -13,6 +13,13 @@ import {
   type TableauMatchView,
 } from '../sessionStateView';
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
+import { allTableauMatches } from '../../../shared/domain/ranking/splitGroups';
+
+/** Matchs de tous les tableaux de l'épreuve (tableau unique ou tableaux des groupes) */
+const sessionTableauMatches = (state: SessionStateView | null): TableauMatchView[] =>
+  state
+    ? (allTableauMatches(state as Record<string, unknown>) as unknown as TableauMatchView[])
+    : [];
 
 /** Case du tableau renvoyée au kiosque (/api/bracket) */
 interface BracketCell {
@@ -292,7 +299,8 @@ export function registerResultsRoutes(ctx: RouteContext): void {
       }
 
       // Matchs du tableau d'élimination directe (toutes phases confondues)
-      const tableauMatches = sessionState?.tableauMatches || [];
+      // Tableau unique ou tableaux des groupes (docs/adr/0024)
+      const tableauMatches = sessionTableauMatches(sessionState);
       if (tableauMatches.length > 0) {
         const roundLabels: Record<number, string> = {
           2: 'Finale',
@@ -393,7 +401,7 @@ export function registerResultsRoutes(ctx: RouteContext): void {
       const sessionState = ctx.db.getSessionState(
         ctx.session.competitionId
       ) as SessionStateView | null;
-      const dbTableauMatches = sessionState?.tableauMatches || [];
+      const dbTableauMatches = sessionTableauMatches(sessionState);
       const deMatches: TableauMatchView[] =
         dbTableauMatches.length > 0
           ? dbTableauMatches

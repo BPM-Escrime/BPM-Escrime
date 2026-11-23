@@ -142,3 +142,59 @@ describe('projectCompetition', () => {
 function score(matchId: string, scoreA: number, scoreB: number) {
   return { matchId, poolId: 'p1', scoreA, scoreB, winnerId: scoreA > scoreB ? 'a' : 'b' };
 }
+
+describe('tableaux séparés après les poules (docs/adr/0024)', () => {
+  const groupTableau = (group: string) =>
+    ev('TableauGenerated', {
+      group,
+      size: 2,
+      thirdPlaceMatch: false,
+      playAllPositions: false,
+      matches: [
+        {
+          matchId: `${group}:2-0`,
+          round: 2,
+          position: 0,
+          fencerAId: `${group}a`,
+          fencerBId: `${group}b`,
+          isBye: false,
+          seedA: 1,
+          seedB: 2,
+        },
+      ],
+    });
+  const decided = (group: string) =>
+    ev('TableauMatchDecided', { matchId: `${group}:2-0`, winnerId: `${group}a` });
+
+  it('un tableau par groupe ; décisions rangées dans leur tableau', () => {
+    const facts = projectCompetition([
+      drawn(1),
+      groupTableau('F'),
+      groupTableau('M'),
+      decided('F'),
+      decided('M'),
+      ev('TableauCleared', { group: 'M' }),
+    ]);
+    expect(facts.tableau).toBeNull();
+    expect(Object.keys(facts.groupTableaux)).toEqual(['F']);
+    expect(Object.keys(facts.bracketResults)).toEqual(['F:2-0']);
+  });
+
+  it('nouveau tirage d’un groupe : ses décisions seules sont retirées', () => {
+    const facts = projectCompetition([
+      drawn(1),
+      groupTableau('F'),
+      groupTableau('M'),
+      decided('F'),
+      decided('M'),
+      groupTableau('F'),
+    ]);
+    expect(Object.keys(facts.bracketResults)).toEqual(['M:2-0']);
+  });
+
+  it('nouveau tirage des poules : tous les tableaux retirés', () => {
+    const facts = projectCompetition([drawn(1), groupTableau('F'), decided('F'), drawn(1)]);
+    expect(facts.groupTableaux).toEqual({});
+    expect(facts.bracketResults).toEqual({});
+  });
+});

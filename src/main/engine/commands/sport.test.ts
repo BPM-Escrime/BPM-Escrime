@@ -664,7 +664,7 @@ d('generateTableau avec placement de l’écran (docs/adr/0017, palier tableau)'
     expect((db.getSessionState(comp.id) as any).finalResults).toHaveLength(10);
   });
 
-  it('placement invalide ou tableaux séparés : refus', async () => {
+  it('placement invalide ou tableaux séparés sans groupe : refus', async () => {
     const comp = await setup(4);
     generatePools(ctx, comp.id, { poolCount: 1 });
     playAll(comp.id, 'pool');
@@ -679,9 +679,10 @@ d('generateTableau avec placement de l’écran (docs/adr/0017, palier tableau)'
       settings: { ...comp.settings, postPoolSplitCriteria: 'gender' },
     } as never);
     bad[0].fencerBId = ids[1];
+    // Tableaux séparés (docs/adr/0024) : groupe exigé
     await expect(
       invoke(ctx, 'generateTableau', { competitionId: comp.id, composition: bad })
-    ).rejects.toMatchObject({ code: 'unsupported_format' });
+    ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 });
 

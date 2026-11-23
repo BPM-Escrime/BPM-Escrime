@@ -1,0 +1,179 @@
+/**
+ * BPM - Escrime - Tableaux de l'épreuve vus par les commandes (docs/adr/0024, lot A1)
+ * Une épreuve a un tableau unique (racine de session_state), ou, avec des tableaux séparés
+ * après les poules (postPoolSplitCriteria), un tableau par groupe dans
+ * session_state.groupTableaux. Les commandes du tableau (score, annulation, retrait,
+ * affectation, reconstruction) travaillent sur « le tableau qui contient le match » et
+ * réécrivent ce tableau seul.
+ *
+ * Reprise des épreuves en cours : un tableau tiré à la racine d'une épreuve à tableaux séparés
+ * (avant ce lot, par l'écran) est le tableau du groupe de ses tireurs, identifiants inchangés.
+ * Il reste rangé à la racine tant que l'écran l'y écrit (persistLocally, jusqu'au lot A2) ;
+ * un tirage du même groupe par generateTableau le remplace dans groupTableaux.
+ * Licensed under GPL-3.0
+ */
+import type { Competition } from '../../../shared/types';
+import type {
+  ConsolationBracket,
+  FinalResult,
+  TableauMatch,
+} from '../../../shared/domain/tableau/tableauTypes';
+import {
+  legacyTableauGroup,
+  planSplitGroups,
+  sessionGroupTableaux,
+  type GroupTableau,
+} from '../../../shared/domain/ranking/splitGroups';
+import type { PoolRanking } from '../../../shared/types';
+
+export interface TableauSlot {
+  /** Groupe du tableau ; null : tableau unique */
+  group: string | null;
+  /** Rangé à la racine de l'état : tableau unique, ou tableau repris d'avant les groupes */
+  atRoot: boolean;
+  matches: TableauMatch[];
+  brackets: ConsolationBracket[];
+  finalResults: FinalResult[];
+}
+
+const list = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+
+export const splitCriteria = (comp: Competition): string | undefined =>
+  comp.settings?.postPoolSplitCriteria;
+
+const rootSlot = (session: Record<string, unknown>, group: string | null): TableauSlot => ({
+  group,
+  atRoot: true,
+  matches: list<TableauMatch>(session.tableauMatches),
+  brackets: list<ConsolationBracket>(session.consolationBrackets),
+  finalResults: list<FinalResult>(session.finalResults),
+});
+
+/** Tableaux de l'épreuve : le tableau unique, ou ceux des groupes (tableau repris compris) */
+export function tableauSlots(comp: Competition, session: Record<string, unknown>): TableauSlot[] {
+  const criteria = splitCriteria(comp);
+  if (!criteria) return [rootSlot(session, null)];
+  const groups = sessionGroupTableaux(session);
+  const slots: TableauSlot[] = Object.entries(groups).map(([group, t]) => ({
+    group,
+    atRoot: false,
+    matches: t.tableauMatches,
+    brackets: t.consolationBrackets,
+    finalResults: t.finalResults,
+  }));
+  const root = rootSlot(session, null);
+  if (root.matches.length > 0) {
+    const group = legacyTableauGroup(root.matches, criteria);
+    if (!group || !groups[group]) slots.push({ ...root, group });
+  }
+  return slots;
+}
+
+/** Tableau d'un groupe (vide s'il n'est pas tiré) ; null : tableau unique */
+export function slotOfGroup(
+  comp: Competition,
+  session: Record<string, unknown>,
+  group: string | null
+): TableauSlot {
+  const found = tableauSlots(comp, session).find(s => s.group === group);
+  if (found) return found;
+  return group === null
+    ? rootSlot({}, null)
+    : { group, atRoot: false, matches: [], brackets: [], finalResults: [] };
+}
+
+const hasMatch = (s: TableauSlot, matchId: string) =>
+  s.matches.some(m => m.id === matchId) ||
+  s.brackets.some(b => b.matches.some(m => m.id === matchId));
+
+/** Tableau qui contient le match (tableau principal ou tableau de classement) */
+export function slotOfMatch(
+  comp: Competition,
+  session: Record<string, unknown>,
+  matchId: string
+): TableauSlot | null {
+  return tableauSlots(comp, session).find(s => hasMatch(s, matchId)) ?? null;
+}
+
+const touches = (m: TableauMatch, fencerId: string) =>
+  m.fencerA?.id === fencerId || m.fencerB?.id === fencerId;
+
+/**
+ * Tableau du tireur (ADR-0024 §3 : le retrait s'applique au tableau du groupe du tireur).
+ * Tireur absent des tableaux : le premier tableau tiré, sinon un tableau vide.
+ */
+export function slotOfFencer(
+  comp: Competition,
+  session: Record<string, unknown>,
+  fencerId: string
+): TableauSlot {
+  const slots = tableauSlots(comp, session).filter(s => s.matches.length > 0);
+  return (
+    slots.find(
+      s =>
+        s.matches.some(m => touches(m, fencerId)) ||
+        s.brackets.some(b => b.matches.some(m => touches(m, fencerId)))
+    ) ??
+    slots[0] ??
+    rootSlot({}, null)
+  );
+}
+
+/** Copie modifiable d'un tableau (matchs et tableaux de classement) */
+export function cloneSlot(slot: TableauSlot): TableauSlot {
+  return {
+    ...slot,
+    matches: slot.matches.map(m => ({ ...m })),
+    brackets: slot.brackets.map(b => ({ ...b, matches: b.matches.map(m => ({ ...m })) })),
+  };
+}
+
+/**
+ * Fusion à écrire dans l'état de session pour un tableau réécrit (writeSession). Un tableau
+ * de groupe réécrit ne touche pas les autres groupes.
+ */
+export function slotPatch(
+  session: Record<string, unknown>,
+  slot: Pick<TableauSlot, 'group' | 'atRoot'>,
+  next: Partial<GroupTableau>
+): Record<string, unknown> {
+  const root: Record<string, unknown> = {};
+  if (next.tableauMatches) root.tableauMatches = next.tableauMatches;
+  if (next.consolationBrackets) root.consolationBrackets = next.consolationBrackets;
+  if (next.finalResults) root.finalResults = next.finalResults;
+  if (slot.atRoot || slot.group === null) return root;
+  const groups = sessionGroupTableaux(session);
+  const current = groups[slot.group] ?? {
+    tableauMatches: [],
+    consolationBrackets: [],
+    finalResults: [],
+  };
+  return { groupTableaux: { ...groups, [slot.group]: { ...current, ...next } } };
+}
+
+/** Groupes à tirer après les poules (tireurs du classement, groupes extraits écartés) */
+export function splitGroups(comp: Competition, session: Record<string, unknown>): string[] {
+  return planSplitGroups(
+    list<PoolRanking>(session.overallRanking),
+    splitCriteria(comp),
+    comp.settings?.splitOffCompetitionIds
+  ).map(p => p.group);
+}
+
+/**
+ * Épreuve terminée après l'écriture du tableau : tableau unique terminé, ou, avec des
+ * tableaux séparés, chaque groupe restant tiré et terminé.
+ */
+export function allTableauxDone(
+  comp: Competition,
+  session: Record<string, unknown>,
+  patch: Record<string, unknown>,
+  done: boolean
+): boolean {
+  if (!splitCriteria(comp)) return done;
+  const next = { ...session, ...patch };
+  const slots = tableauSlots(comp, next);
+  return splitGroups(comp, next).every(g =>
+    slots.some(s => s.group === g && s.finalResults.length > 0)
+  );
+}

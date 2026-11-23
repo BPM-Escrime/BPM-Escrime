@@ -73,7 +73,15 @@ export interface CompetitionFacts {
   /** Tireurs de l'épreuve sans poules, dans l'ordre */
   skippedPoolsFencerIds: string[] | null;
   tableau: TableauFact | null;
-  /** Décisions du tableau principal et des tableaux de classement, par match */
+  /**
+   * Tableaux séparés après les poules (docs/adr/0024) : tableau tiré de chaque groupe. Les
+   * identifiants de leurs matchs sont préfixés par le groupe (« F:32-0 »)
+   */
+  groupTableaux: Record<string, TableauFact>;
+  /**
+   * Décisions du tableau principal, des tableaux des groupes et des tableaux de classement,
+   * par match (identifiants uniques dans l'épreuve)
+   */
   bracketResults: Record<string, MatchFact>;
   /** Tournoi des rapières : vague lancée, vagues arrêtées (undefined : jamais lancées) */
   rapieres?: { wave: number; ended: boolean };
@@ -101,6 +109,7 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
     rounds: [],
     skippedPoolsFencerIds: null,
     tableau: null,
+    groupTableaux: {},
     bracketResults: {},
     revision: 0,
   };
@@ -120,10 +129,26 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
     }
     return undefined;
   };
-  const isTableauMatch = (matchId: string) => !poolMatch(matchId) && !!facts.tableau;
+  const isTableauMatch = (matchId: string) =>
+    !poolMatch(matchId) && (!!facts.tableau || Object.keys(facts.groupTableaux).length > 0);
+  /** Tous les tableaux retirés (nouveau tirage des poules, correction avec tableau à refaire) */
   const clearTableau = () => {
     facts.tableau = null;
+    facts.groupTableaux = {};
     facts.bracketResults = {};
+  };
+  /** Décisions du tableau d'un groupe retirées : ses matchs, préfixés par le groupe */
+  const clearGroupResults = (group: string) => {
+    for (const id of Object.keys(facts.bracketResults)) {
+      if (id.startsWith(`${group}:`)) delete facts.bracketResults[id];
+    }
+  };
+  /** Décisions du tableau unique retirées (celles des groupes restent) */
+  const clearMainResults = () => {
+    const groups = Object.keys(facts.groupTableaux);
+    for (const id of Object.keys(facts.bracketResults)) {
+      if (!groups.some(g => id.startsWith(`${g}:`))) delete facts.bracketResults[id];
+    }
   };
 
   for (const event of events) {
@@ -253,7 +278,7 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
       }
       case JOURNAL_EVENT.tableauGenerated: {
         const p = event.payload;
-        facts.tableau = {
+        const tableau: TableauFact = {
           size: p.size,
           thirdPlaceMatch: p.thirdPlaceMatch,
           playAllPositions: p.playAllPositions,
@@ -266,11 +291,24 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
             isBye: m.isBye,
           })),
         };
-        facts.bracketResults = {};
+        // Tableau d'un groupe : les autres groupes gardent leur tableau (docs/adr/0024)
+        if (p.group) {
+          clearGroupResults(p.group);
+          facts.groupTableaux[p.group] = tableau;
+        } else {
+          clearMainResults();
+          facts.tableau = tableau;
+        }
         break;
       }
       case JOURNAL_EVENT.tableauCleared:
-        clearTableau();
+        if (event.payload.group) {
+          clearGroupResults(event.payload.group);
+          delete facts.groupTableaux[event.payload.group];
+        } else {
+          clearMainResults();
+          facts.tableau = null;
+        }
         break;
       case JOURNAL_EVENT.rapieresWaveLaunched:
         facts.rapieres = { ended: false, ...facts.rapieres, wave: event.payload.wave };

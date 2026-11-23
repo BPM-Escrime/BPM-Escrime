@@ -8,8 +8,8 @@
  * (avec ou sans petite finale). Équipes, rapières, tours multiples et « toutes les
  * places » restent pilotés à l'écran (erreur explicite), sauf pour la saisie des scores
  * (recordScore, #1980) : tours multiples, rapières et « toutes les places » y sont admis ;
- * seules les épreuves par équipes (modèle de relais distinct) et les tableaux séparés
- * après les poules restent refusés.
+ * seules les épreuves par équipes (modèle de relais distinct) restent refusées. Tableaux
+ * séparés après les poules : un tableau par groupe (docs/adr/0024, groupTableaux.ts).
  * Licensed under GPL-3.0
  */
 import { v4 as uuidv4 } from 'uuid';
@@ -58,8 +58,25 @@ import {
 } from '../../../shared/domain/tableau/tableauTypes';
 import type { RapieresSession } from '../../../shared/domain/rapieres/rapieres.types';
 import { computeEffectiveTableauRanking } from '../../../shared/domain/ranking/tableauRanking';
+import {
+  allTableauMatches,
+  filterSplitGroup,
+  prefixBrackets,
+  prefixTableau,
+} from '../../../shared/domain/ranking/splitGroups';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
+import {
+  allTableauxDone,
+  cloneSlot,
+  slotOfGroup,
+  slotOfMatch,
+  slotPatch,
+  splitCriteria,
+  splitGroups,
+  tableauSlots,
+  type TableauSlot,
+} from './groupTableaux';
 import { EVENT, recordEvents } from './eventLog';
 import { resolveSetting } from './settings';
 import { bracketMatchView, fencerRef, readSession, summarizePool } from './sessionView';
@@ -234,7 +251,7 @@ export function generatePools(
       'Des matchs de poule sont déjà joués : relancer avec replace=true pour les effacer'
     );
   }
-  if (sessionTableau(session).length > 0 && !options.replace) {
+  if (allTableauMatches(session).length > 0 && !options.replace) {
     throw new CommandError('bracket_exists', 'Le tableau est déjà construit : replace=true requis');
   }
   const round = Math.max(1, Number(session.currentPoolRound ?? 1) || 1);
@@ -337,6 +354,7 @@ export function generatePools(
       tableauMatches: [],
       finalResults: [],
       consolationBrackets: [],
+      groupTableaux: {},
       skipPoolPhase: false,
       poolsLaunched: true,
       // Composition de l'écran : bornes de taille choisies à la préparation conservées
@@ -399,7 +417,7 @@ export function listMatches(
   competitionId: string,
   filter: { poolNumber?: number; state?: 'pending' | 'ready' | 'done' } = {}
 ): MatchListItem[] {
-  getCompetitionOrThrow(ctx, competitionId);
+  const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
   const out: MatchListItem[] = [];
   for (const pool of sessionPools(session)) {
@@ -420,7 +438,9 @@ export function listMatches(
     }
   }
   if (filter.poolNumber === undefined) {
-    for (const m of sessionTableau(session)) {
+    // Tableau unique ou tableaux des groupes (docs/adr/0024)
+    const slots = tableauSlots(comp, session);
+    for (const m of slots.flatMap(s => s.matches)) {
       if (m.isBye) continue;
       const v = bracketMatchView(m);
       out.push({
@@ -437,7 +457,7 @@ export function listMatches(
         bracket: null,
       });
     }
-    for (const b of sessionConsolation(session)) {
+    for (const b of slots.flatMap(s => s.brackets)) {
       for (const m of b.matches) {
         if (m.isBye) continue;
         const v = bracketMatchView(m);
@@ -490,12 +510,9 @@ export function recordScore(ctx: CommandContext, competitionId: string, input: R
   const pools = sessionPools(session);
   const poolIndex = pools.findIndex(p => p.matches?.some(m => m.id === input.matchId));
   if (poolIndex >= 0) return recordPoolScore(ctx, comp, session, pools, poolIndex, input);
-  if (
-    sessionTableau(session).some(m => m.id === input.matchId) ||
-    sessionConsolation(session).some(b => b.matches.some(m => m.id === input.matchId))
-  ) {
-    return recordBracketScore(ctx, comp, session, input);
-  }
+  // Le match désigne son tableau : unique, ou celui de son groupe (docs/adr/0024)
+  const slot = slotOfMatch(comp, session, input.matchId);
+  if (slot) return recordBracketScore(ctx, comp, session, slot, input);
   if (
     sessionPoolHistory(session).some(r => r.some(p => p.matches?.some(m => m.id === input.matchId)))
   ) {
@@ -512,7 +529,7 @@ function recordPoolScore(
   poolIndex: number,
   input: RecordScoreInput
 ) {
-  const tableauDrawn = sessionTableau(session).length > 0;
+  const tableauDrawn = allTableauMatches(session).length > 0;
   if (tableauDrawn && !input.correction) {
     throw new CommandError('bracket_exists', 'Tableau déjà construit : score de poule figé');
   }
@@ -654,7 +671,7 @@ function recordPoolScore(
         overallRanking,
         // Tableau retiré : refait sur le classement corrigé à l'ouverture de l'onglet Tableau
         ...(correction?.rebuildTableau
-          ? { tableauMatches: [], consolationBrackets: [], finalResults: [] }
+          ? { tableauMatches: [], consolationBrackets: [], finalResults: [], groupTableaux: {} }
           : {}),
       });
       recordEvents(ctx, comp.id, [
@@ -750,13 +767,20 @@ function scoreAuditBase(ctx: CommandContext): { changedBy: string; reason?: stri
   }
 }
 
-/** Classement d'entrée du tableau, comme l'écran (vainqueurs de poule, formule) */
-export function tableauRanking(comp: Competition, session: Record<string, unknown>): PoolRanking[] {
+/**
+ * Classement d'entrée du tableau, comme l'écran (vainqueurs de poule, formule) ; tableaux
+ * séparés : tireurs du groupe, rangs renumérotés (docs/adr/0024)
+ */
+export function tableauRanking(
+  comp: Competition,
+  session: Record<string, unknown>,
+  group: string | null = null
+): PoolRanking[] {
   const overall = Array.isArray(session.overallRanking)
     ? (session.overallRanking as PoolRanking[])
     : [];
   const rapieres = session.rapieres as Partial<RapieresSession> | undefined;
-  return computeEffectiveTableauRanking(overall, sessionPools(session), {
+  const ranking = computeEffectiveTableauRanking(overall, sessionPools(session), {
     isRapieres: isRapieres(comp),
     rapieresTableauMode: isRapieres(comp) ? rapieres?.tableauMode : undefined,
     poolWinnersOnly: effectiveSettings(comp).poolWinnersOnly,
@@ -765,6 +789,7 @@ export function tableauRanking(comp: Competition, session: Record<string, unknow
     activeSplitGroup: null,
     splitOffCompetitionIds: undefined,
   });
+  return group ? filterSplitGroup(ranking, splitCriteria(comp), group, undefined) : ranking;
 }
 
 export function persistTableau(
@@ -796,8 +821,40 @@ export function persistTableau(
 }
 
 /**
+ * Tableaux séparés après les poules (docs/adr/0024) : groupe exigé avec le réglage, refusé
+ * sans ; groupe inconnu ou extrait dans une épreuve séparée : split_group_not_found.
+ */
+export function assertTableauGroup(
+  comp: Competition,
+  session: Record<string, unknown>,
+  group: string | undefined
+): string | null {
+  if (!splitCriteria(comp)) {
+    if (group !== undefined) {
+      throw new CommandError('invalid_input', 'group : épreuve sans tableaux séparés');
+    }
+    return null;
+  }
+  if (group === undefined) {
+    throw new CommandError('invalid_input', 'group exigé : épreuve à tableaux séparés');
+  }
+  const known = splitGroups(comp, session);
+  if (
+    !known.includes(group) &&
+    !tableauSlots(comp, session).some(s => s.group === group && s.matches.length > 0)
+  ) {
+    throw new CommandError(
+      'split_group_not_found',
+      `Groupe inconnu ou extrait : ${group} (groupes : ${known.join(', ') || 'aucun'})`
+    );
+  }
+  return group;
+}
+
+/**
  * Tableau d'élimination directe depuis le classement après poules (tireurs éliminés,
- * abandons, forfaits et exclus écartés), avec ou sans petite finale.
+ * abandons, forfaits et exclus écartés), avec ou sans petite finale. Tableaux séparés :
+ * tableau du groupe « group », identifiants de match préfixés (docs/adr/0024).
  */
 export function buildBracket(
   ctx: CommandContext,
@@ -814,16 +871,15 @@ export function buildBracket(
     composition?: TableauMatchInput[];
     /** Tournoi des rapières : mode de tableau choisi au passage au tableau (#1441) */
     rapieresTableauMode?: 'normal' | 'third' | 'all' | 'semis';
+    /** Tableaux séparés après les poules : groupe du tableau (docs/adr/0024) */
+    group?: string;
   } = {}
 ) {
   const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
-  if (options.composition) {
-    assertScoreSupported(comp);
-    if (comp.settings?.postPoolSplitCriteria) {
-      throw new CommandError('unsupported_format', 'Tableaux séparés après les poules : à l’écran');
-    }
-  } else assertSupported(comp, session);
+  if (options.composition) assertScoreSupported(comp);
+  else assertSupported(comp, session);
+  const group = assertTableauGroup(comp, session, options.group);
   if (!options.composition && comp.settings?.playAllPositions) {
     throw new CommandError(
       'unsupported_format',
@@ -842,8 +898,8 @@ export function buildBracket(
   ) {
     throw new CommandError('pools_not_complete', 'Toutes les poules doivent être terminées');
   }
-  const existing = sessionTableau(session);
-  if (existing.some(m => m.winner && !m.isBye) && !options.replace) {
+  const previous = slotOfGroup(comp, session, group);
+  if (previous.matches.some(m => m.winner && !m.isBye) && !options.replace) {
     throw new CommandError(
       'bracket_has_scores',
       'Des matchs du tableau sont joués : replace=true requis'
@@ -865,7 +921,7 @@ export function buildBracket(
         `Tableau refusé : ${composed.code} (${composed.detail})`
       );
     }
-    matches = composed.matches;
+    matches = group ? prefixTableau(composed.matches, group) : composed.matches;
     size = deriveFirstRound(matches);
     const placed = new Set(
       matches
@@ -875,10 +931,11 @@ export function buildBracket(
     );
     qualified = { length: placed.size };
   } else {
-    ({ qualified, size, matches } = planTableau(tableauRanking(comp, session), {
+    ({ qualified, size, matches } = planTableau(tableauRanking(comp, session, group), {
       playAllPositions: false,
       thirdPlaceMatch: thirdPlace,
     }));
+    if (group) matches = prefixTableau(matches, group);
   }
   if (qualified.length < 2) {
     throw new CommandError('not_enough_fencers', 'Moins de 2 tireurs qualifiés pour le tableau');
@@ -902,11 +959,18 @@ export function buildBracket(
     }
     persistTableau(ctx, comp, matches);
     const rapieres = session.rapieres as Record<string, unknown> | undefined;
+    const fresh = { tableauMatches: matches, finalResults: [], consolationBrackets: [] };
     writeSession(ctx, competitionId, {
       currentPhase: PHASE.tableau,
-      tableauMatches: matches,
-      finalResults: [],
-      consolationBrackets: [],
+      // Groupe : rangé dans groupTableaux ; un tableau repris du même groupe quitte la racine
+      ...(group
+        ? {
+            ...slotPatch(session, { group, atRoot: false }, fresh),
+            ...(previous.atRoot
+              ? { tableauMatches: [], consolationBrackets: [], finalResults: [] }
+              : {}),
+          }
+        : fresh),
       ...(options.rapieresTableauMode && isRapieres(comp)
         ? { rapieres: { ...(rapieres ?? {}), tableauMode: options.rapieresTableauMode } }
         : {}),
@@ -915,6 +979,7 @@ export function buildBracket(
       {
         type: EVENT.tableauGenerated,
         payload: {
+          ...(group ? { group } : {}),
           size,
           thirdPlaceMatch: thirdPlace,
           playAllPositions: !!comp.settings?.playAllPositions,
@@ -947,7 +1012,9 @@ export function settleBracket(
   session: Record<string, unknown>,
   matches: TableauMatch[],
   brackets: ConsolationBracket[],
-  mainChanged: boolean
+  mainChanged: boolean,
+  /** Tableau d'un groupe (docs/adr/0024) : classement du groupe, identifiants préfixés */
+  slot: Pick<TableauSlot, 'group' | 'atRoot'> = { group: null, atRoot: true }
 ): {
   brackets: ConsolationBracket[];
   done: boolean;
@@ -955,7 +1022,7 @@ export function settleBracket(
 } {
   const playAll = !!comp.settings?.playAllPositions;
   const size = deriveFirstRound(matches);
-  const ranking = tableauRanking(comp, session);
+  const ranking = tableauRanking(comp, session, slot.group);
   if (mainChanged) {
     propagateWinners(matches, size);
     if (playAll) placeBarrageWinners(matches, size);
@@ -963,6 +1030,8 @@ export function settleBracket(
   if (playAll) {
     // Perdants des tours terminés versés dans les tableaux de classement (useTableauViewScoring)
     brackets = syncConsolationBrackets(matches, brackets, size, ranking).brackets;
+    // Tableau de groupe : tableaux de classement préfixés, uniques dans l'épreuve
+    if (slot.group && !slot.atRoot) brackets = prefixBrackets(brackets, slot.group);
   }
   const mainDone = isTableauDone(matches);
   const hasBarrages = matches.some(x => x.round === size * 2);
@@ -994,20 +1063,13 @@ function recordBracketScore(
   ctx: CommandContext,
   comp: Competition,
   session: Record<string, unknown>,
+  slot: TableauSlot,
   input: RecordScoreInput
 ) {
-  if (comp.settings?.postPoolSplitCriteria) {
-    throw new CommandError(
-      'unsupported_format',
-      'Tableaux séparés après les poules : à piloter à l’écran'
-    );
-  }
   const playAll = !!comp.settings?.playAllPositions;
-  let matches = sessionTableau(session).map(m => ({ ...m }));
-  let brackets = sessionConsolation(session).map(b => ({
-    ...b,
-    matches: b.matches.map(m => ({ ...m })),
-  }));
+  const copy = cloneSlot(slot);
+  let matches = copy.matches;
+  let brackets = copy.brackets;
   const size = deriveFirstRound(matches);
   let { list, bracket } = locateBracketMatch(matches, brackets, input.matchId);
   const target = list.find(m => m.id === input.matchId)!;
@@ -1086,9 +1148,15 @@ function recordBracketScore(
     propagateWinners(bracket.matches, bracket.size);
     bracket.isComplete = isBracketComplete(bracket.matches);
   }
-  const settled = settleBracket(comp, session, matches, brackets, !bracket);
+  const settled = settleBracket(comp, session, matches, brackets, !bracket, slot);
   brackets = settled.brackets;
   const { done, finalResults } = settled;
+  const patch = slotPatch(session, slot, {
+    tableauMatches: matches,
+    ...(playAll ? { consolationBrackets: brackets } : {}),
+    finalResults,
+  });
+  const allDone = allTableauxDone(comp, session, patch, done);
   if (!input.dryRun)
     ctx.db.transaction(() => {
       // Journal des scores : écrit par l'upsert (auteur « mcp ») ; les tableaux de
@@ -1110,13 +1178,8 @@ function recordBracketScore(
             input.specialStatus === 'exclusion' && input.blackCard ? 'black_card' : null,
         });
       }
-      // Tableau terminé : phase Résultats, comme onComplete à l'écran
-      writeSession(ctx, comp.id, {
-        tableauMatches: matches,
-        ...(playAll ? { consolationBrackets: brackets } : {}),
-        finalResults,
-        ...(done ? { currentPhase: PHASE.results } : {}),
-      });
+      // Tableau terminé : phase Résultats, comme onComplete à l'écran (tous les groupes)
+      writeSession(ctx, comp.id, { ...patch, ...(allDone ? { currentPhase: PHASE.results } : {}) });
       recordEvents(ctx, comp.id, [
         {
           type: EVENT.scoreRecorded,
@@ -1145,7 +1208,7 @@ function recordBracketScore(
               },
             ]
           : []),
-        ...(done ? [{ type: EVENT.tableauCompleted, payload: {} }] : []),
+        ...(done ? [tableauCompletedEvent(slot.group)] : []),
       ]);
     });
   if (!input.dryRun) {
@@ -1161,6 +1224,12 @@ function recordBracketScore(
     podium: finalResults.slice(0, 4).map(r => ({ rank: r.rank, fencer: fencerRef(r.fencer) })),
   };
 }
+
+/** Tableau terminé ; group : tableau d'un groupe (docs/adr/0024) */
+export const tableauCompletedEvent = (group: string | null) => ({
+  type: EVENT.tableauCompleted,
+  payload: group ? { group } : {},
+});
 
 // ─── Résultats ──────────────────────────────────────────────────────────────
 
