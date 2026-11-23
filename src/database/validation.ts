@@ -16,6 +16,7 @@ import {
   Category,
   MatchStatus,
 } from '../shared/types';
+import { maxScoreLimits } from '../shared/domain/formula/validateFormulaSettings';
 
 // ============================================================================
 // Validation Error Class
@@ -172,11 +173,15 @@ export const validateCompetitionData = (data: Partial<Competition>): void => {
 
   // Validate settings if provided
   if (data.settings) {
-    validateCompetitionSettings(data.settings);
+    validateCompetitionSettings(data.settings, data.weapon, !!data.isTeamEvent);
   }
 };
 
-export const validateCompetitionSettings = (settings: CompetitionSettings): void => {
+export const validateCompetitionSettings = (
+  settings: CompetitionSettings,
+  weapon?: Weapon | string,
+  isTeamEvent = false
+): void => {
   validateNumber(settings.defaultPoolMaxScore, 'defaultPoolMaxScore', 1, 50);
   validateNumber(settings.defaultTableMaxScore, 'defaultTableMaxScore', 1, 50);
   validateNumber(settings.poolRounds, 'poolRounds', 1, 5);
@@ -208,9 +213,11 @@ export const validateCompetitionSettings = (settings: CompetitionSettings): void
     throw new ValidationError("laserTeamMode must be 'touches' or 'points'", 'laserTeamMode');
   }
 
-  if (settings.defaultPoolMaxScore > 15) {
+  // Borne haute de l'arme (Sabre Laser : 50, provisoire #2208 ; autres armes : 15)
+  const poolMax = maxScoreLimits({ weapon, isTeamEvent }).pool.max;
+  if (settings.defaultPoolMaxScore > poolMax) {
     throw new ValidationError(
-      'defaultPoolMaxScore should not exceed 15 for practical fencing',
+      `defaultPoolMaxScore should not exceed ${poolMax} for practical fencing`,
       'defaultPoolMaxScore'
     );
   }

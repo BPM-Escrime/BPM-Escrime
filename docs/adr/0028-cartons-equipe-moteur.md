@@ -66,8 +66,8 @@ de `socketHandlers.ts` comptent dans le cliquet `directDbWrites`.
 | --------------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Règlement                         | FIE, règlement technique et règles d'organisation (déc. 2025) ; FFE, règlement de l'arbitrage | ASL-FFE, Livrets 0, 1, 2 (2026-2027)                                                                                  |
 | Format par équipes                | Relais FIE (o.99, t.41)                                                                       | Relais ou arène : **aucune règle fédérale** (Livret 2 XII « A venir ») ; conventions du logiciel                      |
-| Jaune                             | Avertissement, 0 touche (t.162.1)                                                             | Points à l'adversaire : **barème à arbitrer** (#2208)                                                                 |
-| Rouge                             | Une touche à l'adversaire (t.162.2)                                                           | Points à l'adversaire : **barème à arbitrer** (#2208)                                                                 |
+| Jaune                             | Avertissement, 0 touche (t.162.1)                                                             | Provisoire : **+3 points** à l'adversaire, repris de docs/ARBITRAGE.md, en attente de #2208                           |
+| Rouge                             | Une touche à l'adversaire (t.162.2)                                                           | Provisoire : **+5 points** à l'adversaire, repris de docs/ARBITRAGE.md, en attente de #2208                           |
 | Blanc                             | N'existe pas                                                                                  | Existe (ex. matériel non conforme, Livret 2 V.3.2)                                                                    |
 | Escalade par groupe               | t.165 à t.169                                                                                 | Non précisée en 2026-2027, sauf fautes particulières (V.3.2) ; à arbitrer (#2208, #2209)                              |
 | Noir                              | Exclusion ; en équipe, rencontre perdue et équipe exclue (o.99.7.b)                           | Exclusion, points des adversaires conservés (VIII.7) ; en équipe : aucune règle                                       |
@@ -78,7 +78,24 @@ Le domaine (lot D) porte **une configuration par règlement** ; aucune valeur, a
 ni aucun article ne passe d'une colonne à l'autre. Les règles FIE citées plus bas (§ 3, § 4,
 § 5 bis, questions 1 et 2) valent pour le relais FIE des armes olympiques. Pour le Sabre Laser,
 ces sections s'appliquent une fois le barème et l'escalade tranchés (#2208, #2209) ; d'ici là,
-le moteur enregistre le carton (type, motif, groupe) sans calculer de points.
+le moteur enregistre le carton (type, motif, groupe) sans l'appliquer au score.
+
+**Barème provisoire du Sabre Laser** (décision du mainteneur, 2026-11-23, en attendant
+l'arbitrage de #2208). `WEAPON_CARD_CONFIGS[LASER].scoreImpact` reprend le barème de la tablette
+(docs/ARBITRAGE.md § 3.4, `src/remote/js/refereeCards.js`) : blanc 0 (2ᵉ blanc → jaune), jaune
+**+3 points**, rouge **+5 points**, noir exclusion ; parité domaine / tablette testée
+(`refereeCards.test.ts`). L'escalade par groupe du Sabre Laser reste celle du domaine (#2209).
+Arme à la carte (+1 / +1) et armes olympiques inchangées.
+
+**Score maximum du Sabre Laser individuel** (même décision). Le combat s'arrête à 15
+(`LASER_SCORE_LIMIT`), mais le score saisi peut dépasser 15 (touche finale en cible C, sortie
+d'arène +3, cartons). Score maximum de poule et de tableau : **25 par défaut**, réglable dans la
+formule de 15 à 50 (`maxScoreLimits`, `src/shared/domain/formula/validateFormulaSettings.ts` ;
+escrime olympique et épreuves par équipes : poule 1-15, tableau 1-50, inchangé). Ce plafond
+remplace « pas de plafond » de #2205 : `validatePoolScore` et `recordTableauScore` appliquent le
+réglage (`score_above_max`). Épreuves créées avec l'ancien repli 5 / 21 (#2174 → #2205), sans
+migration : une poule sous 15, impossible au Sabre Laser et refusée par la validation, se lit 25,
+le tableau à 21 de la même paire aussi (`readLaserMaxScores`, appelée à la lecture de l'épreuve).
 
 **Cartons individuels hors équipes, pour comparaison** : ils ne sont pas non plus des faits du
 journal. Le contrat ne les lit que (`getMatchCards`, `getCardsByMatchIds`, droit `cards:read`,
@@ -163,7 +180,8 @@ individuel ne s'annule pas ainsi (§ 4).
 - `src/shared/domain/penalties/cards.ts` reçoit `determineCardType` et les tables de
   `cardSystem.ts`, **séparées par règlement** : FIE pour les armes olympiques (motifs t.170,
   escalade t.165 à t.169, jaune sans touche, pas de blanc ; #2207), ASL-FFE pour le Sabre Laser
-  (barème et escalade arbitrés dans #2208 et #2209). `createCard` y devient
+  (barème provisoire jaune +3 / rouge +5, escalade inchangée ; arbitrage dans #2208 et #2209).
+  `createCard` y devient
   `buildCard({ id, at, … })` : identifiant et heure injectés. `cardSystem.ts` réexporte le temps
   de la migration des appelants.
 - `src/shared/domain/teams/teamCards.ts` : `relayCardFor(rencontre, côté, relais, motif |

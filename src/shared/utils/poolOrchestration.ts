@@ -160,7 +160,7 @@ export type PoolScoreErrorCode =
 
 /**
  * Validation d'un score de poule, identique à la saisie de l'écran :
- * entiers ≥ 0, pas au-delà du score max (sauf Sabre Laser), égalité tranchée (vainqueur ou priorité),
+ * entiers ≥ 0, pas au-delà du score max, égalité tranchée (vainqueur ou priorité),
  * pas d'égalité au score max (o.17, hors Sabre Laser), pas d'égalité au Sabre Laser. Renvoie un code d'erreur ou null.
  */
 export function validatePoolScore(input: {
@@ -177,14 +177,9 @@ export function validatePoolScore(input: {
   const { scoreA, scoreB, maxScore } = input;
   if (![scoreA, scoreB].every(s => Number.isInteger(s) && s >= 0)) return 'score_invalid';
   if (input.priority && !input.tieByVictory) return 'priority_not_allowed';
-  // Score max 0 = illimité (comme l'écran). Sabre Laser : pas de plafond, un combat en 15 points
-  // peut finir à 19 et un carton peut encore ajouter des points (Livret 2 FFE III, IX.1, #2194)
-  if (
-    !input.specialStatus &&
-    !input.isLaserSabre &&
-    maxScore > 0 &&
-    (scoreA > maxScore || scoreB > maxScore)
-  )
+  // Score max 0 = illimité (comme l'écran). Sabre Laser : réglage de l'épreuve, 25 par défaut
+  // (touche finale en cible C, sortie, cartons ; provisoire, #2208)
+  if (!input.specialStatus && maxScore > 0 && (scoreA > maxScore || scoreB > maxScore))
     return 'score_above_max';
   // Égalité au score max impossible au règlement (o.17), hors Sabre Laser
   if (!input.specialStatus && !input.isLaserSabre && isTieAtScoreLimit(scoreA, scoreB, maxScore))

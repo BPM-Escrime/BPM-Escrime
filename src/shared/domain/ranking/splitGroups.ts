@@ -18,6 +18,7 @@ import {
   PoolRanking,
 } from '../../types';
 import type { ConsolationBracket, FinalResult, TableauMatch } from '../tableau/tableauTypes';
+import { maxScoreLimits } from '../formula/validateFormulaSettings';
 
 /** Critère de séparation des tableaux (réglage postPoolSplitCriteria) */
 export type SplitCriteria = 'gender';
@@ -228,11 +229,15 @@ export function buildSplitCompetitionData(
     ...settings
   } = source.settings ?? ({} as CompetitionSettings);
   const merged = { ...REQUIRED_SETTINGS_DEFAULTS, ...settings };
-  // Pas de poules dans la compétition séparée : borner le score de poule à la limite DB (15)
+  // Pas de poules dans la compétition séparée : borner le score de poule à la limite de l'arme
+  // (15 ; Sabre Laser : 50, #2208)
   if (typeof merged.defaultPoolMaxScore !== 'number' || !(merged.defaultPoolMaxScore >= 1)) {
     merged.defaultPoolMaxScore = REQUIRED_SETTINGS_DEFAULTS.defaultPoolMaxScore;
   }
-  merged.defaultPoolMaxScore = Math.min(merged.defaultPoolMaxScore, 15);
+  merged.defaultPoolMaxScore = Math.min(
+    merged.defaultPoolMaxScore,
+    maxScoreLimits({ weapon: source.weapon, isTeamEvent: !!source.isTeamEvent }).pool.max
+  );
   return {
     title: title.trim(),
     date: toValidDate(source.date) ?? now,

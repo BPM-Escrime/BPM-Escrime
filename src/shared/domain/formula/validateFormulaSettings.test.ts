@@ -2,7 +2,7 @@
  * validateFormulaSettings (docs/adr/0012) : bornes, cohérence, formule à la carte, champs jugés.
  */
 import { describe, it, expect } from 'vitest';
-import { validateFormulaSettings } from './validateFormulaSettings';
+import { maxScoreLimits, validateFormulaSettings } from './validateFormulaSettings';
 import {
   buildDefaultCompetitionSettings,
   getFallbackCompetitionSettings,
@@ -19,12 +19,18 @@ describe('validateFormulaSettings', () => {
     for (const weapon of Object.values(Weapon)) {
       for (const category of Object.values(Category)) {
         const created = buildDefaultCompetitionSettings({ weapon, category });
-        if (created) expect(validateFormulaSettings(created)).toEqual([]);
-        expect(validateFormulaSettings(getFallbackCompetitionSettings(weapon, category))).toEqual(
-          []
-        );
+        if (created) expect(validateFormulaSettings(created, undefined, { weapon })).toEqual([]);
+        expect(
+          validateFormulaSettings(getFallbackCompetitionSettings(weapon, category), undefined, {
+            weapon,
+          })
+        ).toEqual([]);
         const team = buildDefaultCompetitionSettings({ weapon, category, isTeamEvent: true });
-        if (team) expect(validateFormulaSettings(team)).toEqual([]);
+        if (team) {
+          expect(validateFormulaSettings(team, undefined, { weapon, isTeamEvent: true })).toEqual(
+            []
+          );
+        }
       }
     }
   });
@@ -34,6 +40,26 @@ describe('validateFormulaSettings', () => {
       fields({ ...base(), defaultPoolMaxScore: 16, poolRounds: 6, poolSizeMin: 7, poolSizeMax: 5 })
     ).toEqual(['defaultPoolMaxScore', 'poolRounds', 'poolSizeMax']);
     expect(fields({ ...base(), defaultTableMaxScore: 2.5 })).toEqual(['defaultTableMaxScore']);
+  });
+
+  it('score max du Sabre Laser individuel : 15 à 50 (#2208) ; équipes et olympique : 1-15', () => {
+    const laser = (v: number, isTeamEvent = false) =>
+      validateFormulaSettings({ defaultPoolMaxScore: v, defaultTableMaxScore: v }, undefined, {
+        weapon: Weapon.LASER,
+        isTeamEvent,
+      }).map(i => i.field);
+    expect(laser(25)).toEqual([]);
+    expect(laser(30)).toEqual([]);
+    expect(laser(15)).toEqual([]);
+    expect(laser(50)).toEqual([]);
+    expect(laser(14)).toEqual(['defaultPoolMaxScore', 'defaultTableMaxScore']);
+    expect(laser(51)).toEqual(['defaultPoolMaxScore', 'defaultTableMaxScore']);
+    expect(laser(5, true)).toEqual([]);
+    expect(laser(25, true)).toEqual(['defaultPoolMaxScore']);
+    expect(
+      validateFormulaSettings({ defaultPoolMaxScore: 16 }, undefined, { weapon: Weapon.EPEE })
+    ).toHaveLength(1);
+    expect(maxScoreLimits({ weapon: Weapon.CUSTOM }).pool).toEqual({ min: 1, max: 15 });
   });
 
   it('qualifiés : pas plus de valeurs que de tours suivants', () => {

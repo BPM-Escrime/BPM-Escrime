@@ -63,9 +63,9 @@ Compétition ouverte → **⚙️ Propriétés**.
 |---|---|---|
 | Tours de poules | `1` | `0` possible avec Tour Quest direct |
 | Élimination directe | Activée | |
-| Score max poules | ≥ score maximal attendu (ex. `21`) | Saisie manuelle refusée au-delà ; défaut `21` |
+| Score max poules | `25` (de `15` à `50`) | Combat en 15, score saisi au-delà possible (touche finale, sortie, cartons) ; refusé au-delà du réglage ; défaut `25` |
 | Chrono poules (s) | `180` | Chrono tablette en poule |
-| Score max tableau | ≥ score maximal attendu | |
+| Score max tableau | `25` (de `15` à `50`) | Défaut `25` ; épreuve créée avec l'ancien repli 5 / 21 : lue 25 / 25 |
 | Chrono tableau (s) | `180` | Chrono tablette en tableau |
 | Match pour la 3ᵉ place | selon règlement | |
 | Signature des matchs de tableau | conseillé | Écran signatures sur tablette après chaque match |

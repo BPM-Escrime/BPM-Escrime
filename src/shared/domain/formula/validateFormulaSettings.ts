@@ -6,7 +6,9 @@
  * Licensed under GPL-3.0
  */
 import type { CompetitionSettings, CustomFormulaConfig, FormulaPhaseNode } from '../../types';
+import { Weapon } from '../../types';
 import { MAX_POOL_ROUNDS } from './formulaDraft';
+import { LASER_MAX_SCORE_LIMITS } from './laserMaxScores';
 
 export interface FormulaIssue {
   /** Réglage en cause (chemin pointé : customFormula.phases[0].config.maxScore) */
@@ -22,6 +24,26 @@ export const FORMULA_LIMITS = {
   poolSize: { min: 3, max: 64 },
   timerSeconds: { min: 1, max: 3600 },
 } as const;
+
+/** Épreuve dont la formule est jugée : bornes du score maximum */
+export interface FormulaScope {
+  weapon?: Weapon | string;
+  isTeamEvent?: boolean;
+}
+
+/**
+ * Bornes du score maximum de poule et de tableau. Sabre Laser individuel : 15 à 50, défaut 25
+ * (score saisi au-delà de 15 : touche finale en cible C, sortie, cartons ; provisoire, #2208).
+ * Autres armes et épreuves par équipes (relais) : FORMULA_LIMITS (poule 1-15, tableau 1-50).
+ */
+export function maxScoreLimits(scope: FormulaScope = {}): {
+  pool: { min: number; max: number };
+  table: { min: number; max: number };
+} {
+  if (scope.weapon === Weapon.LASER && !scope.isTeamEvent)
+    return { pool: LASER_MAX_SCORE_LIMITS, table: LASER_MAX_SCORE_LIMITS };
+  return { pool: FORMULA_LIMITS.poolMaxScore, table: FORMULA_LIMITS.tableMaxScore };
+}
 
 const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
 const PHASE_TYPES = ['pool_round', 'direct_elimination', 'classification'];
@@ -98,15 +120,18 @@ function checkCustomFormula(out: FormulaIssue[], f: CustomFormulaConfig) {
 /**
  * Écarts de la formule. `fields` : seuls les réglages modifiés sont jugés (une épreuve 2.0 aux
  * réglages anciens hors bornes reste modifiable pour le reste, ADR-0012) ; absent : tout.
+ * `scope` : arme et épreuve par équipes, bornes du score maximum (`maxScoreLimits`).
  */
 export function validateFormulaSettings(
   settings: Partial<CompetitionSettings>,
-  fields?: ReadonlyArray<keyof CompetitionSettings>
+  fields?: ReadonlyArray<keyof CompetitionSettings>,
+  scope: FormulaScope = {}
 ): FormulaIssue[] {
   const out: FormulaIssue[] = [];
   const s = settings;
-  range(out, 'defaultPoolMaxScore', s.defaultPoolMaxScore, FORMULA_LIMITS.poolMaxScore);
-  range(out, 'defaultTableMaxScore', s.defaultTableMaxScore, FORMULA_LIMITS.tableMaxScore);
+  const scoreLimits = maxScoreLimits(scope);
+  range(out, 'defaultPoolMaxScore', s.defaultPoolMaxScore, scoreLimits.pool);
+  range(out, 'defaultTableMaxScore', s.defaultTableMaxScore, scoreLimits.table);
   range(out, 'defaultPoolTimerSeconds', s.defaultPoolTimerSeconds, FORMULA_LIMITS.timerSeconds);
   range(out, 'defaultTableTimerSeconds', s.defaultTableTimerSeconds, FORMULA_LIMITS.timerSeconds);
   range(out, 'restTimeSeconds', s.restTimeSeconds, { min: 0, max: 3600 });
