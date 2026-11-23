@@ -3,7 +3,7 @@
  * Licensed under GPL-3.0
  */
 
-import { recordFinishedScore } from '../scoreCommand';
+import { recordFinishedScore, scoreRefusal } from '../scoreCommand';
 import path from 'path';
 import os from 'os';
 import type { Server as SocketIOServer } from 'socket.io';
@@ -261,29 +261,30 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
 
       // Score par la commande recordScore (#1980, ADR-0005) ; statut spécial du tireur
       // concerné (abandon_A, forfait_B…) : score et retrait ensemble (docs/adr/0016).
-      // Égalité sans vainqueur : chemin historique
+      // Égalité sans vainqueur : refusée par le moteur comme tout score hors règle (#2151)
       const special = /^(abandon|forfait|exclusion)_(A|B)$/.exec(specialStatus ?? '');
+      if (specialStatus && !special) return res.status(400).json({ error: 'invalid_params' });
       const specialKind = special?.[1] as 'abandon' | 'forfait' | 'exclusion' | undefined;
       const specialWinner: 'A' | 'B' | null = special ? (special[2] === 'A' ? 'B' : 'A') : null;
-      const recorded =
-        (!specialStatus || !!special) &&
-        !!(specialWinner ?? winner) &&
-        recordFinishedScore(ctx.db, {
-          competitionId: ctx.session?.competitionId,
-          matchId,
-          scoreA: sA,
-          scoreB: sB,
-          winner: specialWinner ?? winner,
-          ...(specialKind ? { specialStatus: specialKind } : {}),
-          source: 'tablet',
-          author: resolvedRef?.id ?? bodyRefereeId,
-          audit: {
-            reason: 'pool_remote_entry',
-            refereeId: resolvedRef?.id ?? bodyRefereeId,
-            refereeName: resolvedRef?.name,
-            ipAddress: clientIp,
-          },
-        });
+      const outcome = recordFinishedScore(ctx.db, {
+        competitionId: ctx.session?.competitionId,
+        matchId,
+        scoreA: sA,
+        scoreB: sB,
+        winner: specialWinner ?? winner,
+        ...(specialKind ? { specialStatus: specialKind } : {}),
+        source: 'tablet',
+        author: resolvedRef?.id ?? bodyRefereeId,
+        audit: {
+          reason: 'pool_remote_entry',
+          refereeId: resolvedRef?.id ?? bodyRefereeId,
+          refereeName: resolvedRef?.name,
+          ipAddress: clientIp,
+        },
+      });
+      if (outcome.kind === 'refused') return res.status(409).json(scoreRefusal(outcome));
+      // Chemin historique provisoire (#2151, étape 2) : match absent de la session
+      const recorded = outcome.kind === 'accepted';
       if (!recorded) {
         ctx.db.updateMatch(matchId, {
           scoreA: scoreAObj,

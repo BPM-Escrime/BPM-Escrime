@@ -79,7 +79,7 @@ d('recordFinishedScore', () => {
         author: 'ref-1',
         audit: { refereeName: 'Anne ARBITRE', ipAddress: '10.0.0.7', reason: 'pool_remote_entry' },
       })
-    ).toBe(true);
+    ).toEqual({ kind: 'accepted' });
     expect(listMatches(ctx, comp.id).find(x => x.matchId === m.matchId)?.state).toBe('done');
     const event = db.eventLog.getSince(comp.id, 0).find(e => e.type === 'ScoreRecorded');
     expect(event).toMatchObject({ type: 'ScoreRecorded', source: 'tablet', author: 'ref-1' });
@@ -113,24 +113,31 @@ d('recordFinishedScore', () => {
         winner: 'A',
         source: 'cyrano',
       })
-    ).toBe(true);
+    ).toEqual({ kind: 'accepted' });
     expect(last(db.eventLog.getSince(comp.id, 0))?.source).toBe('cyrano');
     expect(last(db.getScoreAuditLog(`${comp.id}-${semi.matchId}`))?.changedBy).toBe('device');
   });
 
-  it('épreuve par équipes, match inconnu, sans épreuve : chemin historique', () => {
+  it('match inconnu, sans épreuve : chemin historique provisoire ; règle : refus (#2151)', () => {
     const comp = setup(4);
     generatePools({ db }, comp.id, { poolCount: 1 });
     const m = listMatches({ db }, comp.id, { state: 'ready' })[0];
     const base = { matchId: m.matchId, scoreA: 5, scoreB: 2, winner: 'A' as const };
-    expect(recordFinishedScore(db, { ...base, competitionId: null, source: 'tablet' })).toBe(false);
+    expect(recordFinishedScore(db, { ...base, competitionId: null, source: 'tablet' })).toEqual({
+      kind: 'fallback',
+      code: 'no_competition',
+    });
     expect(
       recordFinishedScore(db, { ...base, competitionId: comp.id, matchId: 'x', source: 'tablet' })
-    ).toBe(false);
+    ).toMatchObject({ kind: 'fallback', code: 'match_not_found' });
+    // Score hors bornes : refusé, plus de repli qui l'écrirait quand même
+    expect(
+      recordFinishedScore(db, { ...base, scoreA: 9, competitionId: comp.id, source: 'tablet' })
+    ).toMatchObject({ kind: 'refused', code: 'score_above_max' });
     db.updateCompetition(comp.id, { isTeamEvent: true } as never);
-    expect(recordFinishedScore(db, { ...base, competitionId: comp.id, source: 'tablet' })).toBe(
-      false
-    );
+    expect(
+      recordFinishedScore(db, { ...base, competitionId: comp.id, source: 'tablet' })
+    ).toMatchObject({ kind: 'refused', code: 'unsupported_format' });
     expect(db.eventLog.getRevision(comp.id)).toBe(1); // PoolsGenerated seul
   });
 
@@ -166,7 +173,7 @@ d('recordFinishedScore', () => {
         specialStatus: 'exclusion',
         blackCard: true,
       })
-    ).toBe(true);
+    ).toEqual({ kind: 'accepted' });
     expect(db.getFencer(culprit)).toMatchObject({ status: 'X', exclusionReason: 'black_card' });
     const types = db.eventLog.getSince(comp.id, 1).map(e => e.type);
     expect(types).toEqual(['ScoreRecorded', 'FencerWithdrawn']);

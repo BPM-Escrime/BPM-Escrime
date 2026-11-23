@@ -651,6 +651,7 @@
   'error.registration_closed': 'Enskrivadur serret',
   'error.registration_failed': 'Fazi en ur enskrivañ',
   'error.reinstate_failed': 'Fazi en ur adenframmañ',
+  'error.score_refused': "Skor nac'het gant post an DT : {{detail}}",
   'error.results_fetch_failed': "Fazi en ur dastum an disoc'hoù",
   'error.save_failed': 'Fazi en ur enrollañ',
   'error.score_save_failed': 'Fazi en ur enrollañ ar skor',

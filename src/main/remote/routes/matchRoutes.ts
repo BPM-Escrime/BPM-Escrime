@@ -3,7 +3,7 @@
  * Licensed under GPL-3.0
  */
 
-import { recordFinishedScore } from '../scoreCommand';
+import { checkFinishedScore, recordFinishedScore, scoreRefusal } from '../scoreCommand';
 import { FencerStatus, MatchStatus, type Match } from '../../../shared/types';
 import type {
   Arena,
@@ -351,6 +351,24 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
         priority: priorityWinner,
       });
 
+      // Contrôle du moteur avant toute écriture (#2151) : score refusé par une règle (bornes,
+      // égalité, tableau tiré, tour suivant joué…) → refus rendu à la tablette, rien d'écrit
+      const check = ctx.isTrainingMode
+        ? null
+        : checkFinishedScore(ctx.db, {
+            competitionId: ctx.session?.competitionId,
+            matchId,
+            scoreA,
+            scoreB,
+            winner,
+            source: 'tablet',
+            ...(blackCarded ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
+          });
+      if (check?.kind === 'refused') {
+        ctx.logDiag(`[REST /finish] score refusé (${check.code}) : ${matchId}`);
+        return res.status(409).json(scoreRefusal(check));
+      }
+
       // Exclu sur carton noir : statut d'avant la fin (annulation du carton), pour savoir ensuite
       // si le moteur l'a exclu (recordScore avec statut, docs/adr/0016)
       const culpritRef: FinishedMatchView | undefined = dbMatch || inMemoryMatch || undefined;
@@ -387,14 +405,8 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
       };
 
       if (dbMatch) {
-        // Match persisté en DB : mise à jour directe
-        ctx.db.updateMatch(matchId, {
-          scoreA: scoreAObj,
-          scoreB: scoreBObj,
-          status: MatchStatus.FINISHED,
-        });
-        emitCompetitionEvent('matches:changed', ctx.session?.competitionId);
-        // Synchroniser sessionMatchScores pour que peekNextMatch/loadNextMatch
+        // Match persisté en DB : écrit par recordScore (finishArenaMatch, ou ci-dessous hors
+        // arène), plus d'écriture directe (#2151). Synchroniser sessionMatchScores pour que peekNextMatch/loadNextMatch
         // puisse filtrer ce match comme terminé (sinon il réapparaît comme "prochain")
         ctx.sessionMatchScores.set(matchId, {
           scoreA: scoreAObj,
@@ -422,7 +434,7 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
           // Match non trouvé dans une arène active : notifier quand même le renderer
           // (cas où l'arbitre soumet depuis referee.html mais l'arène a déjà changé)
           // Score par la commande recordScore (#1980) ; carton noir : score et exclusion ensemble
-          const recorded = recordFinishedScore(ctx.db, {
+          const outcome = recordFinishedScore(ctx.db, {
             competitionId: ctx.session?.competitionId,
             matchId,
             scoreA,
@@ -431,6 +443,16 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
             source: 'tablet',
             ...(blackCarded ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
           });
+          // Chemin historique provisoire (#2151, étape 2) : match absent de la session
+          if (outcome.kind === 'fallback') {
+            ctx.db.updateMatch(matchId, {
+              scoreA: scoreAObj,
+              scoreB: scoreBObj,
+              status: MatchStatus.FINISHED,
+            });
+            emitCompetitionEvent('matches:changed', ctx.session?.competitionId);
+          }
+          const recorded = outcome.kind !== 'fallback';
           const mainWin = getSharedMainWindow();
           if (mainWin) {
             const isTableauMatch = !dbMatch.poolId;
@@ -476,15 +498,17 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
           const mainWin = getSharedMainWindow();
           if (mainWin) {
             const sm = ctx.sessionMatches.find(m => m.id === matchId);
-            const recorded = recordFinishedScore(ctx.db, {
-              competitionId: ctx.session?.competitionId,
-              matchId,
-              scoreA,
-              scoreB,
-              winner: winner as 'A' | 'B' | null,
-              source: 'tablet',
-              ...(blackCarded ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
-            });
+            // Écrit ou refusé par le moteur : l'écran n'applique pas le score lui-même
+            const recorded =
+              recordFinishedScore(ctx.db, {
+                competitionId: ctx.session?.competitionId,
+                matchId,
+                scoreA,
+                scoreB,
+                winner: winner as 'A' | 'B' | null,
+                source: 'tablet',
+                ...(blackCarded ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
+              }).kind !== 'fallback';
             notifyScreen({
               kind: 'match_finished',
               competitionId: ctx.session?.competitionId ?? null,
