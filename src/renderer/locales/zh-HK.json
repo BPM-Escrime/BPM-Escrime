@@ -4370,6 +4370,7 @@
     "hint_arenas": "所需劍場數目。「優化」會找出最多可容納數目。",
     "arena_names": "劍道名稱",
     "arena_name": "劍道 {{n}}",
+    "arena_rotate": "旋轉場地 {{n}}",
     "hint_margin": "平面圖與牆內側的距離。",
     "spacing": "間距",
     "spacing_packed": "緊貼（最小）",

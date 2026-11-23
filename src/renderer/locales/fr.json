@@ -4370,6 +4370,7 @@
     "hint_arenas": "Nombre d’arènes souhaité. « Optimiser » cherche le maximum possible.",
     "arena_names": "Noms des arènes",
     "arena_name": "Arène {{n}}",
+    "arena_rotate": "Tourner l'arène {{n}}",
     "hint_margin": "Distance du plan à l’intérieur des murs.",
     "spacing": "Espacement",
     "spacing_packed": "Collées (minimum)",
