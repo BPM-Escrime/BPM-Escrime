@@ -13,6 +13,7 @@ import {
   type RoadmapVariables,
 } from '@shared/domain/roadmap/roadmap';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TimeInput } from '../common/TimeInput';
 
 type FieldEl = HTMLInputElement | HTMLTextAreaElement;
 
@@ -89,29 +90,32 @@ export const TextField: React.FC<TextFieldProps> = ({
   const focus = useFieldFocus();
   const onFocus = (e: React.FocusEvent<FieldEl>) =>
     focus?.register({ el: e.currentTarget, set: onChange });
-  const control = multiline ? (
-    <textarea
-      id={id}
-      className="roadmap-input"
-      value={value}
-      rows={autoRows(value, rows)}
-      placeholder={placeholder}
-      aria-label={label ? undefined : ariaLabel}
-      onFocus={onFocus}
-      onChange={e => onChange(e.target.value)}
-    />
-  ) : (
-    <input
-      id={id}
-      className="roadmap-input"
-      type={type}
-      value={value}
-      placeholder={placeholder}
-      aria-label={label ? undefined : ariaLabel}
-      onFocus={type === 'text' || type === 'email' ? onFocus : undefined}
-      onChange={e => onChange(e.target.value)}
-    />
-  );
+  const control =
+    type === 'time' ? (
+      <TimeInput id={id} className="roadmap-input" value={value} onChange={onChange} />
+    ) : multiline ? (
+      <textarea
+        id={id}
+        className="roadmap-input"
+        value={value}
+        rows={autoRows(value, rows)}
+        placeholder={placeholder}
+        aria-label={label ? undefined : ariaLabel}
+        onFocus={onFocus}
+        onChange={e => onChange(e.target.value)}
+      />
+    ) : (
+      <input
+        id={id}
+        className="roadmap-input"
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        aria-label={label ? undefined : ariaLabel}
+        onFocus={type === 'text' || type === 'email' ? onFocus : undefined}
+        onChange={e => onChange(e.target.value)}
+      />
+    );
   if (!label) return control;
   return (
     <label className={`roadmap-field ${className ?? ''}`}>

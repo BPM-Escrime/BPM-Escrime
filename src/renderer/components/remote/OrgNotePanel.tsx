@@ -6,6 +6,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TimeInput } from '../common/TimeInput';
 import { useRemoteApi } from '../../api/remoteApi';
 
 const ORG_NOTE_PREFIXES = ['resume', 'start', 'end', 'break', 'lunch', 'ceremony'] as const;
@@ -154,11 +155,11 @@ export const OrgNotePanel: React.FC<OrgNotePanelProps> = React.memo(({ competiti
               </option>
             ))}
           </select>
-          <input
-            type="time"
+          <TimeInput
+            className=""
             value={orgNoteTime}
-            onChange={e => setOrgNoteTime(e.target.value)}
-            style={STYLES.orgNoteTimeInput}
+            onChange={setOrgNoteTime}
+            selectStyle={STYLES.orgNoteTimeInput}
           />
         </div>
       )}
