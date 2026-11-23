@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 139 | 1194 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 124 | 673 |
+| `src/renderer/components/` | 125 | 676 |
 | E2E Playwright (`e2e/`) | 16 | 46 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 31 | 317 |
+| `src/shared/domain/` | 32 | 333 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **576** | **4436** |
+| **Total** | **578** | **4455** |
 
-Unitaires : 560 fichiers, 4390 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 562 fichiers, 4409 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -7197,6 +7197,16 @@ Unitaires : 560 fichiers, 4390 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/roadmap/roadmapDocx.test.ts</code> — 3 tests</summary>
+
+- **roadmapDocx**
+  - échappe le XML et retire les caractères interdits
+  - parties du paquet, texte résolu, bandeau coloré, section masquée absente
+  - fichier zip relisible
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/settingsModal.helpers.test.ts</code> — 4 tests</summary>
 
 - **readInputModes (saisie simplifiée / enchaînée exclusives)**
@@ -9026,6 +9036,32 @@ Unitaires : 560 fichiers, 4390 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - sans réglage : neutralité de club seule, charge équilibrée
   - réglage partiel : complété par les défauts
   - fusion : la neutralité se modifie champ par champ, le reste est conservé
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/roadmap/roadmap.test.ts</code> — 16 tests</summary>
+
+- **roadmap : dates et horaires**
+  - saison sportive à partir du 1er septembre
+  - date limite : N jours avant, change de mois
+  - ouverture et scratch suggérés depuis le début
+  - heure à la française
+- **roadmap : variables**
+  - valeurs dérivées
+  - remplace les connues, signale les vides, laisse les inconnues
+  - expandVariables garde les vides
+  - puces et paragraphes
+- **roadmap : modèles et complétude**
+  - modèle sabre laser : sections de la feuille Briva Isara
+  - l'essentiel connu est repris
+  - complétude : champs requis, lignes vides, variables sans valeur
+  - section désactivée ignorée
+  - section de la bibliothèque : identifiants libres
+  - moveItem borné
+- **roadmap : relecture**
+  - aller-retour JSON
+  - rejette un autre fichier, nettoie les champs
 
 </details>
 
