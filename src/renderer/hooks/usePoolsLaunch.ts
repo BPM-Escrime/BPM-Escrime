@@ -18,7 +18,8 @@ import { useToast } from '../components/Toast';
 import { useTranslation } from './useTranslation';
 import type { RecordScoreOutcome } from '../components/tableau/tableauViewShared';
 
-const LOCAL_CODES = new Set(['unavailable', 'unsupported_format']);
+/** Pas de moteur (hors Electron) : lancement en mémoire seulement */
+const LOCAL_CODES = new Set(['unavailable']);
 
 /** Composition envoyée au moteur : identifiants, pistes et ordre des matchs tels que préparés */
 export function poolComposition(pools: Pool[]) {
@@ -33,11 +34,7 @@ export function poolComposition(pools: Pool[]) {
   }));
 }
 
-export function usePoolsLaunch(
-  competitionId: string | undefined,
-  /** Sauvegarde en attente de l'écran écrite avant la commande */
-  flushSession: () => Promise<void>
-) {
+export function usePoolsLaunch(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   const { t } = useTranslation();
@@ -45,7 +42,6 @@ export function usePoolsLaunch(
     async (pools: Pool[]): Promise<RecordScoreOutcome> => {
       if (!competitionId || pools.length === 0) return 'local';
       try {
-        await flushSession();
         // Pertes de scores déjà confirmées par le DT (confirmScoresLoss) : remplacement admis
         await client.call('generatePools', {
           competitionId,
@@ -60,15 +56,12 @@ export function usePoolsLaunch(
         return 'refused';
       }
     },
-    [client, competitionId, flushSession, showToast, t]
+    [client, competitionId, showToast, t]
   );
 }
 
 /** Tireur ajouté à une poule lancée par addPoolFencer (PoolFencerAdded au journal) */
-export function usePoolFencerAdd(
-  competitionId: string | undefined,
-  flushSession: () => Promise<void>
-) {
+export function usePoolFencerAdd(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   const { t } = useTranslation();
@@ -76,7 +69,6 @@ export function usePoolFencerAdd(
     async (poolId: string, fencerId: string): Promise<RecordScoreOutcome> => {
       if (!competitionId) return 'local';
       try {
-        await flushSession();
         await client.call('addPoolFencer', { competitionId, poolId, fencerId });
         return 'recorded';
       } catch (e) {
@@ -86,7 +78,7 @@ export function usePoolFencerAdd(
         return 'refused';
       }
     },
-    [client, competitionId, flushSession, showToast, t]
+    [client, competitionId, showToast, t]
   );
 }
 
@@ -95,10 +87,7 @@ export function usePoolFencerAdd(
  * placement complet, TableauGenerated au journal (docs/adr/0017). Le tableau se régénère à
  * l'écran quand le classement change : remplacement admis, comme avant.
  */
-export function useTableauGenerate(
-  competitionId: string | undefined,
-  flushSession: () => Promise<void>
-) {
+export function useTableauGenerate(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   const { t } = useTranslation();
@@ -112,7 +101,6 @@ export function useTableauGenerate(
     ): Promise<RecordScoreOutcome> => {
       if (!competitionId || matches.length === 0) return 'local';
       try {
-        await flushSession();
         await client.call('generateTableau', {
           competitionId,
           composition: tableauComposition(matches),
@@ -129,7 +117,7 @@ export function useTableauGenerate(
         return 'refused';
       }
     },
-    [client, competitionId, flushSession, showToast, t]
+    [client, competitionId, showToast, t]
   );
 }
 
@@ -137,17 +125,13 @@ export function useTableauGenerate(
  * Vagues du tournoi des rapières par le moteur (launchRapieresWave, endRapieresWaves,
  * docs/adr/0017) ; « local » : moteur absent, l'écran garde l'état lui-même.
  */
-export function useRapieresWaves(
-  competitionId: string | undefined,
-  flushSession: () => Promise<void>
-) {
+export function useRapieresWaves(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   const run = useCallback(
     async (send: () => Promise<unknown>): Promise<RecordScoreOutcome> => {
       if (!competitionId) return 'local';
       try {
-        await flushSession();
         await send();
         return 'recorded';
       } catch (e) {
@@ -157,7 +141,7 @@ export function useRapieresWaves(
         return 'refused';
       }
     },
-    [competitionId, flushSession, showToast]
+    [competitionId, showToast]
   );
   const launchWave = useCallback(
     (wave: number) =>
@@ -173,10 +157,7 @@ export function useRapieresWaves(
 }
 
 /** Score annulé par clearScore (ScoreCleared au journal, docs/adr/0017) */
-export function useScoreClear(
-  competitionId: string | undefined,
-  flushSession: () => Promise<void>
-) {
+export function useScoreClear(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   const { t } = useTranslation();
@@ -184,7 +165,6 @@ export function useScoreClear(
     async (matchId: string): Promise<RecordScoreOutcome> => {
       if (!competitionId) return 'local';
       try {
-        await flushSession();
         await client.call('clearScore', { competitionId, matchId });
         return 'recorded';
       } catch (e) {
@@ -199,7 +179,7 @@ export function useScoreClear(
         return 'refused';
       }
     },
-    [client, competitionId, flushSession, showToast, t]
+    [client, competitionId, showToast, t]
   );
 }
 
@@ -209,10 +189,7 @@ export interface AssignmentsInput {
 }
 
 /** Arbitres et pistes écrits par le moteur (assignMatches, docs/adr/0017) */
-export function useAssignMatches(
-  competitionId: string | undefined,
-  flushSession: () => Promise<void>
-) {
+export function useAssignMatches(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   return useCallback(
@@ -220,7 +197,6 @@ export function useAssignMatches(
       if (!competitionId) return 'local';
       if (!input.pools?.length && !input.matches?.length) return 'recorded';
       try {
-        await flushSession();
         await client.call('assignMatches', { competitionId, ...input });
         return 'recorded';
       } catch (e) {
@@ -230,7 +206,7 @@ export function useAssignMatches(
         return 'refused';
       }
     },
-    [client, competitionId, flushSession, showToast]
+    [client, competitionId, showToast]
   );
 }
 
@@ -276,10 +252,7 @@ export interface CompetitionCommandInputs {
   };
 }
 
-export function useCompetitionCommand(
-  competitionId: string | undefined,
-  flushSession: () => Promise<void>
-) {
+export function useCompetitionCommand(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   return useCallback(
@@ -289,7 +262,6 @@ export function useCompetitionCommand(
     ): Promise<RecordScoreOutcome> => {
       if (!competitionId) return 'local';
       try {
-        await flushSession();
         await (client.call as (n: string, i: unknown) => Promise<unknown>)(name, {
           competitionId,
           ...input,
@@ -302,7 +274,7 @@ export function useCompetitionCommand(
         return 'refused';
       }
     },
-    [client, competitionId, flushSession, showToast]
+    [client, competitionId, showToast]
   );
 }
 

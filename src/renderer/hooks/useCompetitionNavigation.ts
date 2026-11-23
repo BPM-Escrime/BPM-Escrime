@@ -74,8 +74,6 @@ interface UseCompetitionNavigationParams {
   groupTableaux: Record<string, GroupTableau>;
   /** Groupe affiché (préférence du poste) et son tableau */
   showSplitGroup: (group: string | null) => void;
-  /** Sauvegarde en attente écrite avant une commande du moteur (docs/adr/0017) */
-  flushSession?: () => Promise<void>;
 }
 
 /** Transitions entre phases : classement, tableau (3e place, rapières), tour de poules suivant. */
@@ -114,7 +112,6 @@ export function useCompetitionNavigation({
   activeSplitGroup,
   groupTableaux,
   showSplitGroup,
-  flushSession,
 }: UseCompetitionNavigationParams) {
   const client = useBpmClient();
   const { showToast } = useToast();
@@ -151,12 +148,11 @@ export function useCompetitionNavigation({
     input: { fencerIds?: string[]; group?: string } = {}
   ): Promise<'recorded' | 'local' | 'refused'> => {
     try {
-      await flushSession?.();
       await client.call(name, { competitionId: competition.id, ...input });
       return 'recorded';
     } catch (e) {
       const code = (e as { code?: string }).code ?? 'internal';
-      if (code === 'unavailable' || code === 'unsupported_format') return 'local';
+      if (code === 'unavailable') return 'local';
       showToast((e as Error).message ?? code, 'error');
       return 'refused';
     }
@@ -288,11 +284,10 @@ export function useCompetitionNavigation({
   /**
    * Clôture par le moteur (closePoolRound, PoolRoundClosed au journal, docs/adr/0017) :
    * simulation pour la confirmation, puis commande ; l'écran relit tireurs et état.
-   * « local » : moteur absent ou format qu'il ne pilote pas.
+   * « local » : moteur absent (hors Electron).
    */
   const closeRoundByCommand = async (): Promise<'recorded' | 'local' | 'refused'> => {
     try {
-      await flushSession?.();
       const sim = await client.call('closePoolRound', {
         competitionId: competition.id,
         dryRun: true,
@@ -310,7 +305,7 @@ export function useCompetitionNavigation({
       return 'recorded';
     } catch (e) {
       const code = (e as { code?: string }).code ?? 'internal';
-      if (code === 'unavailable' || code === 'unsupported_format') return 'local';
+      if (code === 'unavailable') return 'local';
       if (code === 'not_enough_qualifiers') {
         showToast('Il faut au moins 4 qualifiés pour un nouveau tour de poules.', 'warning');
       } else {

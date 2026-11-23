@@ -7,6 +7,7 @@ import { FencerStatus, MatchStatus } from '../../shared/types';
 import { recordRemoteEvent } from './remoteEvents';
 import { emitCompetitionEvent } from '../ipc/dbHandlers';
 import { checkFinishedScore, recordFinishedScore, type FinishOutcome } from './scoreCommand';
+import { runRemoteCommand } from './remoteCommand';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import type { ArenaEventList } from '../remoteScoreServer';
 import { getSharedMainWindow } from '../mainWindowRef';
@@ -101,16 +102,8 @@ export function recallPrevMatchResult(
   }
 
   const restored = restoreForCorrection(snapshot);
-  // Purge des lignes DB du match : le « fin de match » suivant les réécrit (sinon doublons)
-  if (!ctx.isTrainingMode) {
-    try {
-      const dbId = ctx.resolveDbMatchId(restored);
-      if (dbId) ctx.db.clearArenaEvents(dbId);
-    } catch (e) {
-      logger.warn(LogCategory.NETWORK, '[RemoteScoreServer] PREV : purge DB échouée', e);
-      return { ok: false, reason: 'error' };
-    }
-  }
+  // Plus de purge des événements en base : la fin de match suivante les remplace d'un bloc
+  // (recordMatchEvents, #2175), sans doublon ni échec possible à ce stade
 
   const pending: ArenaMatch | null = arena.currentMatch;
   if (pending && pending.status !== 'finished' && pending.isTableau) {
@@ -279,88 +272,84 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): void
     try {
       // Id DB du match : composite pour un match de tableau (sinon FK rejetée → journal vide, #1031)
       const matchId = ctx.resolveDbMatchId(arena.currentMatch);
-      // Persister le timing en DB
-      if (matchId && arena.startTime) {
-        const durationSec = arena.currentMatch.duration ?? 0;
-        ctx.db.updateMatchTiming(
-          matchId,
-          arena.startTime.toISOString(),
-          arena.currentMatch.endTime!.toISOString(),
-          durationSec
+      const competitionId = ctx.session?.competitionId;
+      if (matchId && competitionId) {
+        const now = new Date().toISOString();
+        const times = ctx.arenaEventTimes.get(arenaId);
+        // Horodatage réel de l'événement (replay #1074), sinon fin de match
+        const timeOf = (list: ArenaEventList, i: number) => times?.[list][i] ?? now;
+        const uid = (fencerId: string, kind: string, i: number) =>
+          `${matchId}-${fencerId}-${kind}-${i}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const sides = [
+          ['A', arena.currentMatch.fencerA?.id],
+          ['B', arena.currentMatch.fencerB?.id],
+        ] as const;
+        const cardLists = ctx.arenaCards.get(arenaId) ?? { cardsA: [], cardsB: [] };
+        const touchLists = ctx.arenaTouches.get(arenaId) ?? { touchesA: [], touchesB: [] };
+        const ZONE_POINTS: Record<string, number> = { A: 1, B: 3, C: 5 };
+        const cards = sides.flatMap(([side, fencerId]) =>
+          fencerId
+            ? cardLists[`cards${side}`].map((cardType, i) => ({
+                id: uid(fencerId, cardType, i),
+                fencerId,
+                cardType,
+                reason: 'unknown',
+                cardGroup: 1,
+                timestamp: timeOf(`cards${side}`, i),
+                pointsAwarded: 0,
+                resultingExclusion: false,
+              }))
+            : []
         );
-      }
-
-      // Persister les cartons accumulés en mémoire
-      const cards = ctx.arenaCards.get(arenaId) ?? { cardsA: [], cardsB: [] };
-      const now = new Date().toISOString();
-      const times = ctx.arenaEventTimes.get(arenaId);
-      // Horodatage réel de l'événement (replay #1074), sinon fin de match
-      const timeOf = (list: ArenaEventList, i: number) => times?.[list][i] ?? now;
-      if (matchId) {
-        const persistCards = (
-          list: string[],
-          fencerId: string | undefined,
-          key: ArenaEventList
-        ) => {
-          if (!fencerId) return;
-          for (const [i, cardType] of list.entries()) {
-            ctx.db.saveCard({
-              id: `${matchId}-${fencerId}-${cardType}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-              matchId,
-              fencerId,
-              cardType,
-              reason: 'unknown',
-              cardGroup: 1,
-              timestamp: timeOf(key, i),
-              pointsAwarded: 0,
-              resultingExclusion: false,
-            });
-          }
-        };
-        persistCards(cards.cardsA, arena.currentMatch.fencerA?.id, 'cardsA');
-        persistCards(cards.cardsB, arena.currentMatch.fencerB?.id, 'cardsB');
-
-        // Persister les touches par zone
-        const touches = ctx.arenaTouches.get(arenaId) ?? { touchesA: [], touchesB: [] };
-        const persistTouches = (
-          zoneList: string[],
-          fencerId: string | undefined,
-          key: ArenaEventList
-        ) => {
-          if (!fencerId) return;
-          const ZONE_POINTS: Record<string, number> = { A: 1, B: 3, C: 5 };
-          for (const [i, zone] of zoneList.entries()) {
-            ctx.db.saveTouch({
-              id: `${matchId}-${fencerId}-${zone}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-              matchId,
-              fencerId,
-              zone,
-              points: ZONE_POINTS[zone] ?? 1,
-              timestamp: timeOf(key, i),
-              isValidInSuddenDeath: false,
-              isReversed: false,
-            });
-          }
-        };
-        persistTouches(touches.touchesA, arena.currentMatch.fencerA?.id, 'touchesA');
-        persistTouches(touches.touchesB, arena.currentMatch.fencerB?.id, 'touchesB');
-
-        // Persister les sorties d'arène
-        const exits = ctx.arenaExits.get(arenaId) ?? [];
-        for (const [i, exit] of exits.entries()) {
+        const touches = sides.flatMap(([side, fencerId]) =>
+          fencerId
+            ? touchLists[`touches${side}`].map((zone, i) => ({
+                id: uid(fencerId, zone, i),
+                fencerId,
+                zone,
+                points: ZONE_POINTS[zone] ?? 1,
+                timestamp: timeOf(`touches${side}`, i),
+                isValidInSuddenDeath: false,
+                isReversed: false,
+              }))
+            : []
+        );
+        const exits = (ctx.arenaExits.get(arenaId) ?? []).flatMap((exit, i) => {
           const fencerId =
-            exit.fencer === 'A' ? arena.currentMatch.fencerA?.id : arena.currentMatch.fencerB?.id;
-          if (!fencerId) continue;
-          ctx.db.saveArenaExit({
-            id: `${matchId}-${fencerId}-exit-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            matchId,
-            fencerId,
-            exitType: exit.isVoluntary ? 'arena_exit_voluntary' : 'arena_exit',
-            timestamp: timeOf('exits', i),
-            // Escrime olympique : une touche ; Sabre Laser : 3 points (#1027)
-            pointsAwarded: ctx.sessionModernRules ? 1 : 3,
-          });
-        }
+            exit.fencer === 'A' ? arena.currentMatch!.fencerA?.id : arena.currentMatch!.fencerB?.id;
+          return fencerId
+            ? [
+                {
+                  id: uid(fencerId, 'exit', i),
+                  fencerId,
+                  exitType: exit.isVoluntary
+                    ? ('arena_exit_voluntary' as const)
+                    : ('arena_exit' as const),
+                  timestamp: timeOf('exits', i),
+                  // Escrime olympique : une touche ; Sabre Laser : 3 points (#1027)
+                  pointsAwarded: ctx.sessionModernRules ? 1 : 3,
+                },
+              ]
+            : [];
+        });
+        // Commande recordMatchEvents (#2175) : un bloc, dans sa transaction, hors journal
+        const run = runRemoteCommand(ctx.db, 'recordMatchEvents', {
+          competitionId,
+          matchId,
+          cards,
+          touches,
+          exits,
+          ...(arena.startTime && arena.currentMatch.endTime
+            ? {
+                timing: {
+                  startTime: arena.startTime.toISOString(),
+                  endTime: new Date(arena.currentMatch.endTime).toISOString(),
+                  duration: arena.currentMatch.duration ?? 0,
+                },
+              }
+            : {}),
+        });
+        if (!run.ok) throw new Error(`recordMatchEvents refusée (${run.code})`);
       }
     } catch (e) {
       ctx.logDiag(

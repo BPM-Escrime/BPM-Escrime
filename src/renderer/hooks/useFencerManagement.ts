@@ -13,12 +13,7 @@ import { useTranslation } from './useTranslation';
 import { useCompetitionEvent } from './useCompetitionEvent';
 import { useBpmClient } from '../api/BpmClientContext';
 import { canToggleCheckIn } from '../../shared/domain/fencers/fencerStatus';
-import {
-  FENCER_DETAIL_KEYS,
-  detailsInput,
-  fencerFromDTO,
-  registerInput,
-} from '../api/fencerMapping';
+import { detailsInput, fencerFromDTO, registerInput } from '../api/fencerMapping';
 
 interface UseFencerManagementProps {
   competition: Competition;
@@ -105,8 +100,9 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
 
   /**
    * Écriture d'une mise à jour : identité par updateFencerDetails, classement d'entrée par
-   * setFencerRankings (docs/adr/0018). Statut et motif restent écrits directement : ils
-   * viennent des chemins locaux des formats que le moteur ne pilote pas (exceptions de #1980).
+   * setFencerRankings (docs/adr/0018). Le statut et le motif ne s'écrivent que par les
+   * commandes qui portent leur règle (checkIn, withdrawFencer, reinstateFencer, closePoolRound :
+   * docs/adr/0016, 0024) ; ici ils ne changent que l'affichage (moteur absent).
    */
   const persistFencerUpdate = useCallback(
     async (fencerId: string, updates: Partial<Fencer>) => {
@@ -123,12 +119,6 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
           rankings: [{ fencerId, ranking }],
         });
       }
-      const rest = Object.fromEntries(
-        Object.entries(updates).filter(
-          ([k]) => k !== 'ranking' && !(FENCER_DETAIL_KEYS as readonly string[]).includes(k)
-        )
-      ) as Partial<Fencer>;
-      if (Object.keys(rest).length > 0) await window.electronAPI?.db?.updateFencer(fencerId, rest);
     },
     [client, competition.id]
   );
@@ -153,8 +143,8 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
     [fencers, competition, onUpdate, showToast, persistFencerUpdate, t]
   );
 
-  // Mettre à jour plusieurs tireurs en une seule mise à jour d'état
-  // (updateFencer en boucle écrase les MAJ : closure sur `fencers` périmée)
+  // Plusieurs tireurs en une seule mise à jour d'état (updateFencer en boucle écrase les MAJ :
+  // closure sur `fencers` périmée). Affichage seulement : tour suivant hors moteur
   const updateFencers = useCallback(
     async (updates: Record<string, Partial<Fencer>>) => {
       const ids = Object.keys(updates);
@@ -165,15 +155,6 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
       );
       setFencers(updatedFencers);
       onUpdate({ ...competition, fencers: updatedFencers });
-      await Promise.allSettled(
-        ids.map(id =>
-          window.electronAPI?.db
-            ?.updateFencer?.(id, updates[id])
-            .catch(err =>
-              logger.error(LogCategory.UI, `Failed to update fencer ${id}`, err as Error)
-            )
-        )
-      );
     },
     [fencers, competition, onUpdate]
   );

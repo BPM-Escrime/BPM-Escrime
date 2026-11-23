@@ -8,20 +8,7 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useCompetitionSession } from './useCompetitionSession';
 
-const baseProps = () => ({
-  competitionId: 'c1',
-  currentPhase: 'pools' as const,
-  currentPoolRound: 1,
-  pools: [],
-  poolHistory: [],
-  overallRanking: [],
-  tableauMatches: [],
-  finalResults: [],
-  consolationBrackets: [],
-  skipPoolPhase: false,
-  remoteArenaCount: 2,
-  poolPrepParams: { poolCount: 0, minFencersPerPool: 5, maxFencersPerPool: 7 },
-});
+const baseProps = () => ({ competitionId: 'c1' });
 
 afterEach(() => {
   delete (window as any).electronAPI;
@@ -51,33 +38,6 @@ describe('restoreState', () => {
     expect(result.current.restoredState!.currentPoolRound).toBe(3);
     expect(result.current.restoredState!.skipPoolPhase).toBe(true);
     expect(result.current.restoredState!.pools).toHaveLength(1);
-  });
-});
-
-describe('saveState', () => {
-  it('ne sauvegarde pas tant que non chargé / sans API', async () => {
-    const { result } = renderHook(() => useCompetitionSession(baseProps()));
-    await act(async () => {
-      await result.current.saveState();
-    });
-    // aucune API → pas d'erreur, rien à vérifier sinon l'absence de crash
-    expect(result.current.isLoaded).toBe(true);
-  });
-
-  it('sérialise l’état et mappe la phase en nombre', async () => {
-    const saveSessionState = vi.fn(async (_cid: string, _state: any) => {});
-    const getSessionState = vi.fn(async () => null);
-    (window as any).electronAPI = { db: { saveSessionState, getSessionState } };
-    const { result } = renderHook(() => useCompetitionSession(baseProps()));
-    await waitFor(() => expect(result.current.isLoaded).toBe(true));
-    await act(async () => {
-      await result.current.saveState();
-    });
-    expect(saveSessionState).toHaveBeenCalled();
-    const [cid, state] = saveSessionState.mock.calls[0];
-    expect(cid).toBe('c1');
-    expect(state.currentPhase).toBe(2); // 'pools' -> 2
-    expect(state.uiState.currentPhase).toBe('pools');
   });
 });
 
@@ -185,23 +145,22 @@ describe('projection du moteur (docs/adr/0017, étape 4a)', () => {
   });
 });
 
-describe('étape 4c (docs/adr/0017) : l’écran n’écrit plus l’état', () => {
-  it('changement local sans exception : aucune sauvegarde ; exception documentée : sauvegarde', async () => {
+describe('lot N (docs/adr/0017, 0024) : l’écran n’écrit plus l’état, tous formats', () => {
+  it('aucune écriture de l’état, ni pendant la saisie ni à la fermeture', async () => {
     const saveSessionState = vi.fn(async () => ({}));
+    const saveSessionStateSync = vi.fn(() => true);
     const getSessionState = vi.fn(async () => null);
-    (window as any).electronAPI = { db: { saveSessionState, getSessionState } };
-    const props = baseProps();
-    const view = renderHook(p => useCompetitionSession(p), { initialProps: props });
+    (window as any).electronAPI = {
+      db: { saveSessionState, saveSessionStateSync, getSessionState },
+    };
+    const view = renderHook(() => useCompetitionSession(baseProps()));
     await waitFor(() => expect(view.result.current.isLoaded).toBe(true));
-    view.rerender({ ...props, currentPhase: 'ranking' as never });
+    view.rerender();
+    window.dispatchEvent(new Event('beforeunload'));
+    view.unmount();
     await new Promise(r => setTimeout(r, 650));
     expect(saveSessionState).not.toHaveBeenCalled();
-
-    const kept = renderHook(p => useCompetitionSession(p), {
-      initialProps: { ...props, persistLocally: true },
-    });
-    await waitFor(() => expect(kept.result.current.isLoaded).toBe(true));
-    kept.rerender({ ...props, persistLocally: true, currentPhase: 'ranking' as never });
-    await waitFor(() => expect(saveSessionState).toHaveBeenCalled(), { timeout: 2000 });
+    expect(saveSessionStateSync).not.toHaveBeenCalled();
+    expect(Object.keys(view.result.current)).not.toContain('flushPendingSave');
   });
 });

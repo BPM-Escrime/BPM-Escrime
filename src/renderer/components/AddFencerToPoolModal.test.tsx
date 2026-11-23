@@ -66,7 +66,7 @@ const dto = (f: Fencer) => ({
 
 beforeEach(() => {
   (window as any).electronAPI = {
-    // Tireurs lus par le contrat (listFencers) ; synchro des tables : chemin des exceptions
+    // Tireurs lus par le contrat (listFencers) ; plus aucune écriture par le préload (lot N)
     api: fakeApiBridge({ listFencers: async () => [inPool, free].map(dto) }),
     db: {
       syncPoolSnapshot: vi.fn(async () => undefined),
@@ -87,7 +87,7 @@ describe('AddFencerToPoolModal', () => {
     expect(screen.queryByText(/Dupont/)).not.toBeInTheDocument();
   });
 
-  it('sélectionne un tireur et confirme l’ajout (poule locale + synchro DB)', async () => {
+  it('moteur absent : ajout à l’affichage seulement, rien écrit en base', async () => {
     const onConfirm = vi.fn();
     render(
       <AddFencerToPoolModal
@@ -105,11 +105,7 @@ describe('AddFencerToPoolModal', () => {
     expect(updated.matches).toHaveLength(1);
     expect(updated.matches[0].fencerA?.id).toBe('2');
     expect(updated.matches[0].fencerB?.id).toBe('1');
-    const sync = (window as any).electronAPI.db.syncPoolSnapshot;
-    expect(sync).toHaveBeenCalledWith(
-      'c1',
-      expect.objectContaining({ id: 'p1', fencerIds: ['1', '2'] })
-    );
+    expect((window as any).electronAPI.db.syncPoolSnapshot).not.toHaveBeenCalled();
   });
 
   it('ajout par la commande addPoolFencer : rien d’écrit localement, fenêtre fermée', async () => {
@@ -131,25 +127,6 @@ describe('AddFencerToPoolModal', () => {
     expect(onAddByCommand).toHaveBeenCalledWith('2');
     expect(onConfirm).not.toHaveBeenCalled();
     expect((window as any).electronAPI.db.syncPoolSnapshot).not.toHaveBeenCalled();
-  });
-
-  it('ajoute quand même le tireur si la poule est absente de la base (#905)', async () => {
-    (window as any).electronAPI.db.syncPoolSnapshot = vi.fn(async () => {
-      throw new Error('Pool p1 introuvable');
-    });
-    const onConfirm = vi.fn();
-    render(
-      <AddFencerToPoolModal
-        pool={pool}
-        competitionId="c1"
-        onConfirm={onConfirm}
-        onClose={vi.fn()}
-      />
-    );
-    fireEvent.click(await screen.findByText(/Martin/));
-    fireEvent.click(screen.getByText('Ajouter le tireur'));
-    await waitFor(() => expect(onConfirm).toHaveBeenCalled());
-    expect(onConfirm.mock.calls[0][0].fencers).toHaveLength(2);
   });
 
   it('exclut les tireurs déjà placés dans une autre poule', async () => {

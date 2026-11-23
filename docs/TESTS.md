@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 271 |
-| `src/main/` | 147 | 1241 |
+| `src/main/` | 149 | 1253 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 131 | 702 |
+| `src/renderer/components/` | 131 | 703 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 36 | 384 |
+| `src/shared/domain/` | 36 | 385 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **597** | **4582** |
+| **Total** | **599** | **4596** |
 
-Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 581 fichiers, 4546 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3318,9 +3318,10 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 7 tests</summary>
 
 - createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue et valeur invalide refusées
+- createCompetition : Sabre Laser individuel et par équipes créés (réglages de repli)
 - updateCompetitionDetails : titre, date, lieu ; entrée stricte
 - updateCompetitionSettings : fusion, serveur distant prévenu, arme figée après le tirage
 - deleteCompetition : saisie distante arrêtée, épreuve supprimée
@@ -3508,6 +3509,16 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/replayFormats.test.ts</code> — 4 tests</summary>
+
+- tableaux séparés, deux groupes : poules, tableau de chaque groupe, retrait, sans écart
+- épreuve séparée : groupe extrait, tableau joué dans chaque épreuve, sans écart
+- relais FIE : poule, retrait et réintégration, remplaçant, tableau jusqu’à la finale, sans écart
+- arène Sabre Laser : calendrier de 8 équipes, tableau jusqu’à la finale, sans écart
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/reports.test.ts</code> — 4 tests</summary>
 
 - getCompetitionStats : matchs de poule, durée moyenne, palmarès
@@ -3541,10 +3552,21 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/simulation.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/engine/commands/signatures.test.ts</code> — 3 tests</summary>
+
+- matchs terminés exigés, puis feuille verrouillée une fois signée par tous
+- tireur hors poule, image non PNG : refus
+- match de poule refusé, match inconnu refusé
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/simulation.test.ts</code> — 4 tests</summary>
 
 - remplace touches, cartons et durée ; null efface ; rien au journal
 - match absent : found faux ; épreuve inconnue ou entrée invalide refusées
+- remplace les événements du match d’un bloc, chrono compris ; listes vides : effacés
+- match pas en base : found faux, rien d’écrit
 
 </details>
 
@@ -3693,15 +3715,17 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/withdrawal.test.ts</code> — 7 tests</summary>
+<summary><code>src/main/engine/commands/withdrawal.test.ts</code> — 9 tests</summary>
 
 - à l’appel : forfait DNS, journal, puis réintégration
 - en poules : matchs non disputés perdus, simulation sans écriture, réintégration
+- instantané écrit par l’écran d’avant le lot N (même format) : relu par reinstateFencer
 - au tableau : exclusion sur carton noir, l’adversaire passe ; réintégration bornée
 - adversaire pas encore connu au tableau : match\_not\_ready
 - recordScore avec statut du perdant : ScoreRecorded et FencerWithdrawn sous une commande
 - recordScore : exclusion sur carton noir, motif black\_card
-- épreuve par équipes, tireur inconnu : refus
+- tireur inconnu : refus
+- épreuve par équipes (docs/adr/0024, §3) : statut et motif, journal sans match, pas d’instantané
 
 </details>
 
@@ -3737,13 +3761,11 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/dbHandlers.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/ipc/dbHandlers.test.ts</code> — 2 tests</summary>
 
 - **bus d’événements db (#1298)**
   - emitCompetitionEvent diffuse aux fenêtres
-  - db:updateMatch et db:createMatch émettent matches:changed
-  - db:updateMatch : motif de correction au journal, jamais écrit dans le match (#1996)
-  - db:updateMatch : score déjà en base (écrit par recordScore) ni réécrit ni journalisé (#1980)
+  - lot N (docs/adr/0024) : plus aucun canal d’écriture de l’épreuve par le préload
 
 </details>
 
@@ -4182,12 +4204,13 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/placeSearch.test.ts</code> — 3 tests</summary>
+<summary><code>src/main/placeSearch.test.ts</code> — 4 tests</summary>
 
 - **createPlaceSearch**
   - Photon répond : pas d’appel à la Géoplateforme, réponse gardée
   - Photon en panne → Géoplateforme
   - hors ligne → unavailable, rien de gardé
+  - en-têtes valides pour fetch (ASCII) : sinon tout appel échoue, « pas de connexion »
 
 </details>
 
@@ -4619,17 +4642,16 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/recallPrev.test.ts</code> — 7 tests</summary>
+<summary><code>src/main/remote/recallPrev.test.ts</code> — 6 tests</summary>
 
 - **recallPrevMatch**
   - rend le match terminé à l’arène, scores conservés, et restaure les événements
   - refuse sans rien modifier hors fenêtre
   - refuse un combat en cours
-  - n’efface rien et ne rend rien si la purge DB échoue
   - remet en tête de file un match DE non commencé
 - **recallPrevMatchResult (motif du refus pour la tablette, #2001)**
   - renvoie ok au succès
-  - renvoie le motif : aucun match, hors fenêtre, combat en cours, purge en échec
+  - renvoie le motif : aucun match, hors fenêtre, combat en cours
 
 </details>
 
@@ -4704,11 +4726,13 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/sessionOps.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/remote/sessionOps.test.ts</code> — 4 tests</summary>
 
 - **updateMatchScore**
   - match d’entraînement sur une arène : score appliqué, pas d’erreur
   - match introuvable partout : erreur « Match non trouvé »
+  - match en base : mémoire seulement, jamais terminé par ce chemin (#2175)
+  - match déjà terminé (hors arène) : file hors-ligne rejouée sans effet (#2175)
 
 </details>
 
@@ -5342,12 +5366,14 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/posteUiState.test.ts</code> — 3 tests</summary>
+<summary><code>src/renderer/hooks/posteUiState.test.ts</code> — 5 tests</summary>
 
 - **posteUiState**
   - écrit et relit par épreuve, fusionne les champs
   - stockage illisible : rien
   - onglet du poste borné par la phase de l’épreuve ; onglets latéraux libres
+  - épreuve par équipes : onglets jamais verrouillés, rouverts tels quels (lot N)
+  - tirage non lancé gardé par le poste, effacé au lancement ; stockage illisible : rien
 
 </details>
 
@@ -5496,21 +5522,18 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionSession.test.tsx</code> — 9 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionSession.test.tsx</code> — 7 tests</summary>
 
 - **restoreState**
   - marque isLoaded même sans electronAPI
   - restaure l’état depuis la DB avec mapping de phase
-- **saveState**
-  - ne sauvegarde pas tant que non chargé / sans API
-  - sérialise l’état et mappe la phase en nombre
 - **projection du moteur (docs/adr/0017, étape 4a)**
   - restaure par getCompetitionState
   - relit sur journal:appended plus récent, ignore une révision déjà lue
   - rafale de signaux : une relecture en cours, une seule de plus au besoin
   - journal avancé sans réécriture du bloc (pointage) : saisie locale gardée
-- **étape 4c (docs/adr/0017) : l’écran n’écrit plus l’état**
-  - changement local sans exception : aucune sauvegarde ; exception documentée : sauvegarde
+- **lot N (docs/adr/0017, 0024) : l’écran n’écrit plus l’état, tous formats**
+  - aucune écriture de l’état, ni pendant la saisie ni à la fermeture
 
 </details>
 
@@ -5559,7 +5582,7 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - lève une erreur si l’API est absente
 - **updateFencer**
   - met à jour le tireur et notifie
-  - classement par setFencerRankings, statut écrit directement (formats hors moteur)
+  - classement par setFencerRankings ; statut à l’affichage seulement (commandes, ADR-0024)
 - **setFencersStatus**
   - met à jour plusieurs tireurs en un seul état (#1051)
 - **updateFencers**
@@ -5583,9 +5606,9 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 <summary><code>src/renderer/hooks/useFencerWithdrawal.test.tsx</code> — 4 tests</summary>
 
 - **useFencerWithdrawal**
-  - retrait par la commande, après la sauvegarde en attente ; matchs perdus annoncés
+  - retrait par la commande ; matchs perdus annoncés
   - réintégration par la commande
-  - format hors moteur ou hors Electron : repli local, sans message
+  - hors Electron : repli local, sans message ; plus de repli sur unsupported\_format
   - refus du moteur : message, rien d’appliqué
 
 </details>
@@ -5759,8 +5782,8 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 <summary><code>src/renderer/hooks/useRecordScore.test.tsx</code> — 4 tests</summary>
 
 - **useRecordScore**
-  - écrit par la commande après la sauvegarde en attente
-  - format hors moteur : saisie locale, sans message
+  - écrit par la commande
+  - épreuve par équipes (unsupported\_format) : refus affiché, plus de saisie locale
   - score refusé : message, rien d’appliqué
   - hors Electron ou sans épreuve : saisie locale
 
@@ -5871,13 +5894,12 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/AddFencerToPoolModal.test.tsx</code> — 6 tests</summary>
+<summary><code>src/renderer/components/AddFencerToPoolModal.test.tsx</code> — 5 tests</summary>
 
 - **AddFencerToPoolModal**
   - affiche les tireurs disponibles (hors poule)
-  - sélectionne un tireur et confirme l’ajout (poule locale + synchro DB)
+  - moteur absent : ajout à l’affichage seulement, rien écrit en base
   - ajout par la commande addPoolFencer : rien d’écrit localement, fenêtre fermée
-  - ajoute quand même le tireur si la poule est absente de la base (#905)
   - exclut les tireurs déjà placés dans une autre poule
   - le bouton ajouter est désactivé sans sélection
 
@@ -5892,7 +5914,7 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 21 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 22 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5905,6 +5927,7 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - ajoute une zone public nommée depuis le menu « Zone »
   - nomme une arène et affiche son nom sur le plan
   - tourne une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle
+  - tourne une arène librement par sa poignée ronde du plan, touche R : quart de tour
   - change la couleur d'une zone puis revient à la couleur par défaut
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
   - ne permet jamais plus d'arènes que le maximum de la zone
@@ -6001,14 +6024,15 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/CompetitionView.test.tsx</code> — 13 tests</summary>
+<summary><code>src/renderer/components/CompetitionView.test.tsx</code> — 14 tests</summary>
 
 - **CompetitionView**
   - affiche la navigation des phases, appel actif et poules verrouillées
   - sans élimination directe, la phase tableau est absente
   - « Préparer les poules » désactivé sous 4 tireurs pointés
-  - génère les poules, les persiste en base et passe en préparation
-  - préparation non lancée : le tirage est relu en base au rechargement, pas de nouveau tirage
+  - génère les poules, sans rien écrire en base, et passe en préparation
+  - préparation non lancée : le tirage du poste est relu au rechargement, pas de nouveau tirage
+  - préparation écrite en base par une version précédente : relue (lecture seule)
   - restaure la phase sauvegardée (session) et permet de revenir en arrière
   - cliquer une phase désactivée ne change pas de phase
   - plusieurs tours de poules : libellé « tour 1/2 »
@@ -6033,7 +6057,7 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 <details>
 <summary><code>src/renderer/components/CompetitionViewTeams.test.tsx</code> — 5 tests</summary>
 
-- épreuve neuve : pas d’état du moteur avant l’ouverture ; l’écran écrit son bloc
+- épreuve neuve : état et bloc « teams » dès la création, sans écriture de l’écran
 - épreuve d’avant E1 (rencontres de l’écran) : reprise telle quelle, rien réécrit ni tiré
 - composition et poules depuis l’écran : inscription, affectation, tirage par le contrat
 - relais à l’écran : touches comptées localement, fin, réouverture, remplacement, refus traduit
@@ -8869,7 +8893,7 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaDisciplines.test.ts</code> — 11 tests</summary>
+<summary><code>src/shared/domain/arena/arenaDisciplines.test.ts</code> — 12 tests</summary>
 
 - **disciplines du planificateur**
   - laser : cercle de sécurité Ø 12 m
@@ -8883,6 +8907,7 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **rotation des arènes**
   - laser : quart de tour, retour à 0 après 270
   - piste et scène : demi-tour, emprise alignée sur les murs
+  - souris : libre en laser (aimantation optionnelle), demi-tour pour piste et scène
   - valeur invalide ou négative ramenée au pas
 
 </details>

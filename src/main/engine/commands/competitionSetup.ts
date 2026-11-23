@@ -12,7 +12,10 @@ import {
   type Competition,
   type CompetitionSettings,
 } from '../../../shared/types';
-import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
+import {
+  buildDefaultCompetitionSettings,
+  getFallbackCompetitionSettings,
+} from '../../../shared/utils/defaultCompetitionSettings';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
@@ -75,8 +78,16 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
   const date = new Date(input.date);
   if (Number.isNaN(date.getTime())) throw new CommandError('invalid_date', 'Date invalide');
   const patch = input.settings ?? {};
+  // Sabre Laser individuel : aucun défaut imposé (undefined) ; la base exige pourtant les
+  // touches de poule et de tableau → réglages de repli
+  const defaults =
+    buildDefaultCompetitionSettings({
+      weapon: input.weapon,
+      category: input.category,
+      isTeamEvent: !!input.isTeamEvent,
+    }) ?? getFallbackCompetitionSettings(input.weapon, input.category);
   const settings = {
-    ...buildDefaultCompetitionSettings({ weapon: input.weapon, category: input.category }),
+    ...defaults,
     ...patch,
   } as CompetitionSettings;
   assertFormula(validateFormulaSettings(settings));

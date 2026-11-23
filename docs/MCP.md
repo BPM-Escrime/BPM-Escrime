@@ -721,7 +721,7 @@ Aucun argument.
 
 ### `withdraw_fencer` — Retirer un tireur
 
-*⚠️ écriture, destructif.* Retire un tireur de l’épreuve : abandon (médical), forfait ou exclusion (« blackCard » : carton noir). À l’appel : statut seul. En poules : ses matchs non disputés sont perdus (DNS s’il n’a commencé aucun match). Au tableau : son match en cours est perdu, l’adversaire passe. Refus si le tableau est terminé ou si l’adversaire n’est pas encore connu. « dryRun: true » donne les matchs perdus sans rien écrire. Annulation : reinstate_fencer.
+*⚠️ écriture, destructif.* Retire un tireur de l’épreuve : abandon (médical), forfait ou exclusion (« blackCard » : carton noir). À l’appel : statut seul. En poules : ses matchs non disputés sont perdus (DNS s’il n’a commencé aucun match). Au tableau : son match en cours est perdu, l’adversaire passe. Refus si le tableau est terminé ou si l’adversaire n’est pas encore connu. Épreuve par équipes : statut et motif seuls, rencontres inchangées (remplaçant : substitute_team_fencer). « dryRun: true » donne les matchs perdus sans rien écrire. Annulation : reinstate_fencer.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|

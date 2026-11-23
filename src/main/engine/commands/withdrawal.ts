@@ -3,7 +3,9 @@
  * withdrawFencer : abandon, forfait, exclusion (carton noir) ; reinstateFencer : annulation.
  * Règle : shared/domain/fencers/withdrawal (planWithdrawal, planReinstatement). Écritures dans
  * la transaction de runCommand : statut, instantané (fencer_abandons), matchs (base et état
- * de session), journal (FencerWithdrawn, FencerReinstated).
+ * de session), journal (FencerWithdrawn, FencerReinstated). Épreuve par équipes (docs/adr/0024,
+ * §3) : statut et motif seuls, sans instantané ni effet sur les rencontres (remplacement :
+ * substituteTeamFencer).
  * Licensed under GPL-3.0
  */
 import {
@@ -82,15 +84,6 @@ function refuse(code: RefusalCode): never {
   throw new CommandError(code, REFUSAL_MESSAGES[code]);
 }
 
-function assertSupportedFormat(comp: Competition): void {
-  if (comp.isTeamEvent) {
-    throw new CommandError(
-      'unsupported_format',
-      'Épreuve par équipes : retrait d’une équipe à l’écran'
-    );
-  }
-}
-
 function fencerOrThrow(ctx: CommandContext, competitionId: string, fencerId: string): Fencer {
   const fencer = ctx.db.getFencersByCompetition(competitionId).find(f => f.id === fencerId);
   if (!fencer) throw new CommandError('fencer_not_found', `Tireur introuvable : ${fencerId}`);
@@ -155,7 +148,10 @@ export function applyWithdrawal(
   /** Instantané fourni par l'appelant (recordScore : état d'avant le score) */
   snapshot: WithdrawalMatchSnapshot[] = plan.snapshot
 ): { events: NewJournalEvent[]; done: boolean } {
-  ctx.db.saveAbandonSnapshot(fencer.id, comp.id, fencer.status, input.reason, snapshot);
+  // Épreuve par équipes (docs/adr/0024, §4) : pas d'instantané, aucun relais touché
+  if (!comp.isTeamEvent) {
+    ctx.db.saveAbandonSnapshot(fencer.id, comp.id, fencer.status, input.reason, snapshot);
+  }
   ctx.db.updateFencer(fencer.id, { status: plan.status, exclusionReason: plan.exclusionReason });
   const events: NewJournalEvent[] = [
     {
@@ -209,7 +205,6 @@ export function applyWithdrawal(
 /** Retrait d'un tireur : abandon, forfait, exclusion (carton noir) */
 export function withdrawFencer(ctx: CommandContext, input: WithdrawFencerInput) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
-  assertSupportedFormat(comp);
   const fencer = fencerOrThrow(ctx, comp.id, input.fencerId);
   const session = readSession(ctx, comp.id);
   const { state, slot } = stateOf(comp, session, fencer.id);
@@ -242,7 +237,6 @@ export function withdrawFencer(ctx: CommandContext, input: WithdrawFencerInput) 
 /** Réintégration d'un tireur retiré : statut et matchs d'avant le retrait */
 export function reinstateFencer(ctx: CommandContext, input: ReinstateFencerInput) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
-  assertSupportedFormat(comp);
   const fencer = fencerOrThrow(ctx, comp.id, input.fencerId);
   const session = readSession(ctx, comp.id);
   const { state, slot } = stateOf(comp, session, fencer.id);

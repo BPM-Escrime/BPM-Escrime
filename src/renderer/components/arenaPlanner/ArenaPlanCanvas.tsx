@@ -51,7 +51,8 @@ type DragState =
   | { mode: 'move'; id: string; dx: number; dy: number }
   | { mode: 'arena'; index: number; dx: number; dy: number }
   | { mode: 'resize'; id: string; cx: number; cy: number; rot: number }
-  | { mode: 'rotate'; id: string; cx: number; cy: number };
+  | { mode: 'rotate'; id: string; cx: number; cy: number }
+  | { mode: 'arenaRotate'; index: number; cx: number; cy: number };
 
 /** Couleur par défaut d'un élément : reprend arena-planner-modal.css (type, puis zone) */
 const KIND_COLOR: Record<RoomItem['kind'], string> = {
@@ -95,6 +96,10 @@ export interface ArenaPlanCanvasProps {
   onSelect: (id: string | null) => void;
   onMove: (id: string, x: number, y: number) => void;
   onMoveArena: (index: number, x: number, y: number) => void;
+  /** Poignée ronde d'une arène : angle choisi à la souris (aimanté à 15° si `snap`) */
+  onRotateArena?: (index: number, deg: number, snapDeg?: number) => void;
+  /** Touche R sur la poignée : un pas de rotation */
+  onStepArena?: (index: number) => void;
   onResize: (id: string, widthM: number, heightM: number) => void;
   onRotate: (id: string, deg: number) => void;
   onDelete: (id: string) => void;
@@ -115,6 +120,8 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   onSelect,
   onMove,
   onMoveArena,
+  onRotateArena,
+  onStepArena,
   onResize,
   onRotate,
   onDelete,
@@ -207,6 +214,10 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
     }
     // Rotation : 0° vers le haut, sens horaire
     const deg = (Math.atan2(p.x - drag.cx, -(p.y - drag.cy)) * 180) / Math.PI;
+    if (drag.mode === 'arenaRotate') {
+      onRotateArena?.(drag.index, deg, snap ? ROTATE_STEP_DEG : undefined);
+      return;
+    }
     const snapped = snap ? Math.round(deg / ROTATE_STEP_DEG) * ROTATE_STEP_DEG : deg;
     onRotate(drag.id, snapped);
   };
@@ -322,6 +333,13 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
             center={c}
             name={arenaNames?.[i]}
             rotationDeg={arenaRotations?.[i]}
+            onRotateGrab={
+              onRotateArena
+                ? e => startDrag(e, { mode: 'arenaRotate', index: i, cx: c.x, cy: c.y })
+                : undefined
+            }
+            onRotateStep={onStepArena ? () => onStepArena(i) : undefined}
+            rotateTitle={t('arenaPlanner.arena_rotate', { n: i + 1 })}
             grabTitle={t('arenaPlanner.handle_arena')}
             onGrab={e => {
               const p = toMetres(e.clientX, e.clientY);
