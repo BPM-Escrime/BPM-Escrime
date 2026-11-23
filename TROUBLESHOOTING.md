@@ -717,7 +717,7 @@ sudo chown $USER:$USER BPM - Escrime.Modern.AppImage
 **Windows**:
 
 ```cmd
-del /q /f /s "%APPDATA%\bpm-escrime\updates\*"
+del /q /f /s "%APPDATA%\BPM - Escrime\updates\*"
 ```
 
 **Mac/Linux**:
@@ -984,9 +984,9 @@ Use built-in diagnostic tool:
 
 ### Log Files Location
 
-**Windows**: `%APPDATA%/bpm-escrime/logs/`
-**Mac**: `~/Library/Logs/bpm-escrime/`
-**Linux**: `~/.local/share/bpm-escrime/logs/`
+**Windows**: `%APPDATA%/BPM - Escrime/` (journal : voir Diagnostic)
+**Mac**: `~/Library/Application Support/BPM - Escrime/`
+**Linux**: `~/.config/BPM - Escrime/`
 
 ### Network Diagnostics
 

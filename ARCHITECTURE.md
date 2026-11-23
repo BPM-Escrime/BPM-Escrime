@@ -1,6 +1,6 @@
 # BPM - Escrime (Base de Poules et Management) — Architecture
 
-> Version **1.0.3**, build **#1365** (octobre 2026).
+> Version **3.0.0**, build **#2041** (novembre 2026).
 > Dépendances et versions : [docs/STACK_TECHNIQUE.md](docs/STACK_TECHNIQUE.md).
 > Interface d'arbitrage : [docs/ARBITRAGE.md](docs/ARBITRAGE.md).
 > Décisions d'architecture : [docs/adr/](docs/adr/README.md) ; couches et inventaire du renderer : [§ 9](#9-couches-dépendances-et-inventaire-du-renderer-1979).

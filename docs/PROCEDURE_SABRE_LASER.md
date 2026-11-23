@@ -1,6 +1,6 @@
 # Procédure de bout en bout — compétition Sabre Laser
 
-> Version de référence : **1.0.3 build #1370**. Procédure organisateur, de la création de
+> Version de référence : **3.0.0 build #2041**. Procédure organisateur, de la création de
 > la compétition à l'export des résultats, pour une épreuve **individuelle** Sabre Laser.
 > Épreuve par équipes (format arène) : [TEAM_COMPETITIONS.md](TEAM_COMPETITIONS.md) et
 > [SCENARIOS_MATCH.md §16](SCENARIOS_MATCH.md#16-sabre-laser-équipe--format-arène).

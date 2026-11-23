@@ -1,6 +1,6 @@
 # Scénarios de match — tablette d'arbitrage
 
-> Version de référence : **1.0.3 build #1365**. Comportements décrits d'après
+> Version de référence : **3.0.0 build #2041**. Comportements décrits d'après
 > `src/remote/referee.html` et `src/main/remoteScoreServer.ts`.
 > Description de chaque bouton : [ARBITRAGE.md](ARBITRAGE.md).
 

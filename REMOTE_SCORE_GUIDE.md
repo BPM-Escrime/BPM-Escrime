@@ -1,6 +1,6 @@
 # BPM - Escrime (Base de Poules et Management) — Saisie distante (guide organisateur)
 
-> Version **1.0.3**, build **#1365**.
+> Version **3.0.0**, build **#2041**.
 > Côté arbitre : [docs/ARBITRAGE.md](docs/ARBITRAGE.md) · cas pratiques :
 > [docs/SCENARIOS_MATCH.md](docs/SCENARIOS_MATCH.md) · événements Socket.IO :
 > [docs/SOCKET_EVENTS.md](docs/SOCKET_EVENTS.md).

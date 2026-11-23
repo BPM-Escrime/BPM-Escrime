@@ -219,21 +219,21 @@ For remote scoring functionality, you need additional devices:
 
 ### Windows
 
-- **Application Data**: `%APPDATA%/bpm-escrime/`
-- **Logs**: `%APPDATA%/bpm-escrime/logs/`
-- **Database**: Documents/BPM - Escrime/
+- **Application Data**: `%APPDATA%/BPM - Escrime/`
+- **Journal d'erreurs** : dans le navigateur du poste (clé `bellepoule-error-logs`), exportable via « Diagnostic ». Pas de fichier de log séparé.
+- **Base** : dans « Application Data » (fichier `bellepoule.db`) ; **sauvegardes** : `Documents/BPM - Escrime/`
 
 ### macOS
 
-- **Application Data**: `~/Library/Application Support/bpm-escrime/`
-- **Logs**: `~/Library/Logs/bpm-escrime/`
-- **Database**: `~/Documents/BPM - Escrime/`
+- **Application Data**: `~/Library/Application Support/BPM - Escrime/`
+- **Journal d'erreurs** : dans le navigateur du poste (clé `bellepoule-error-logs`), exportable via « Diagnostic ». Pas de fichier de log séparé.
+- **Base** : dans « Application Data » (fichier `bellepoule.db`) ; **sauvegardes** : `~/Documents/BPM - Escrime/`
 
 ### Linux
 
 - **Application Data**: `~/.config/BPM - Escrime/`
-- **Logs**: `~/.local/share/bpm-escrime/logs/`
-- **Database**: `~/Documents/BPM - Escrime/`
+- **Journal d'erreurs** : dans le navigateur du poste (clé `bellepoule-error-logs`), exportable via « Diagnostic ». Pas de fichier de log séparé.
+- **Base** : dans « Application Data » (fichier `bellepoule.db`) ; **sauvegardes** : `~/Documents/BPM - Escrime/`
 
 ## 🔄 Updates
 
