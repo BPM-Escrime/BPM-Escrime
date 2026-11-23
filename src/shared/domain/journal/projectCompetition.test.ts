@@ -255,13 +255,107 @@ describe('projectCompetition : épreuves par équipes (docs/adr/0024, lot E1)', 
           relays: [{ relayId: 'c-p1-1-r1', order: 1, fencerAId: 'A1', fencerBId: 'B1' }],
         },
       ],
+      tableau: null,
+      relayResults: {},
+      decisions: {},
     });
     const redrawn = projectCompetition([
       ...first,
+      ev('RelayScoreRecorded', { matchId: 'c-p1-1', relayId: 'c-p1-1-r1', scoreA: 5, scoreB: 2 }),
+      ev('TeamMatchDecided', { matchId: 'c-p1-1', winnerTeamId: 'A' }),
       ev('TeamPoolsGenerated', { pools: [{ number: 1, teamIds: ['A', 'C'] }] }),
       scheduled('c-p1-1', 'A', 'C'),
     ]);
     expect(redrawn.teams?.matches.map(m => [m.matchId, m.teamBId])).toEqual([['c-p1-1', 'C']]);
+    // Rencontre retirée par le nouveau tirage : ses résultats aussi
+    expect(redrawn.teams?.relayResults).toEqual({});
+    expect(redrawn.teams?.decisions).toEqual({});
     expect(projectCompetition([]).teams).toBeNull();
+  });
+});
+
+describe('projectCompetition : relais et tableau d’équipes (docs/adr/0024, lot E2)', () => {
+  const tableauMatch = (matchId: string, round: number, position: number, a: string, b: string) =>
+    ev('TeamMatchScheduled', {
+      matchId,
+      teamAId: a,
+      teamBId: b,
+      pool: null,
+      round,
+      position,
+      relays: [
+        { relayId: `${matchId}-r1`, order: 1, fencerAId: `${a}1`, fencerBId: `${b}1` },
+        { relayId: `${matchId}-r2`, order: 2, fencerAId: `${a}2`, fencerBId: `${b}2` },
+      ],
+    });
+  const slots = [
+    { round: 2, position: 0, teamAId: 'A', teamBId: 'D', isBye: false },
+    { round: 2, position: 1, teamAId: 'B', teamBId: 'C', isBye: false },
+  ];
+  const start = [
+    ev('TeamTableauGenerated', { size: 4, slots }),
+    tableauMatch('t2-0', 2, 0, 'A', 'D'),
+    tableauMatch('t2-1', 2, 1, 'B', 'C'),
+  ];
+  const decideFirst = [
+    ev('RelayScoreRecorded', { matchId: 't2-0', relayId: 't2-0-r1', scoreA: 5, scoreB: 1 }),
+    ev('RelayScoreRecorded', { matchId: 't2-0', relayId: 't2-0-r2', scoreA: 5, scoreB: 4 }),
+    ev('TeamMatchDecided', { matchId: 't2-0', winnerTeamId: 'A' }),
+    ev('RelayScoreRecorded', { matchId: 't2-1', relayId: 't2-1-r1', scoreA: 0, scoreB: 5 }),
+    ev('RelayScoreRecorded', { matchId: 't2-1', relayId: 't2-1-r2', scoreA: 5, scoreB: 5 }),
+    ev('TeamMatchDecided', { matchId: 't2-1', winnerTeamId: 'C' }),
+    tableauMatch('t1-0', 1, 0, 'A', 'C'),
+  ];
+
+  it('tableau tiré : journal complet ; scores des relais, rencontres décidées, finale formée', () => {
+    const facts = projectCompetition([...start, ...decideFirst]);
+    expect(facts.complete).toBe(true);
+    expect(facts.teams?.tableau).toEqual({ size: 4, slots });
+    expect(facts.teams?.relayResults['t2-0-r2']).toEqual({ matchId: 't2-0', scoreA: 5, scoreB: 4 });
+    expect(facts.teams?.decisions).toEqual({ 't2-0': 'A', 't2-1': 'C' });
+    expect(facts.teams?.matches.map(m => m.matchId)).toEqual(['t2-0', 't2-1', 't1-0']);
+  });
+
+  it('relais rouvert : résultat et décision retirés, rencontre suivante retirée', () => {
+    const facts = projectCompetition([
+      ...start,
+      ...decideFirst,
+      ev('RelayReopened', { matchId: 't2-1', relayId: 't2-1-r2' }),
+    ]);
+    expect(facts.teams?.relayResults['t2-1-r2']).toBeUndefined();
+    expect(facts.teams?.relayResults['t2-1-r1']).toBeDefined();
+    expect(facts.teams?.decisions).toEqual({ 't2-0': 'A' });
+    expect(facts.teams?.matches.map(m => m.matchId)).toEqual(['t2-0', 't2-1']);
+    // Relais rouvert d'une rencontre non décidée : rien d'autre ne bouge
+    const again = projectCompetition([
+      ...start,
+      ev('RelayScoreRecorded', { matchId: 't2-0', relayId: 't2-0-r1', scoreA: 5, scoreB: 1 }),
+      ev('RelayReopened', { matchId: 't2-0', relayId: 't2-0-r1' }),
+    ]);
+    expect(again.teams?.relayResults).toEqual({});
+    expect(again.teams?.matches).toHaveLength(2);
+  });
+
+  it('remplaçant : tireur changé dans les relais nommés ; nouveau tableau remplace le précédent', () => {
+    const facts = projectCompetition([
+      ...start,
+      ev('TeamFencerSubstituted', {
+        matchId: 't2-1',
+        teamId: 'C',
+        outFencerId: 'C2',
+        inFencerId: 'C4',
+        relayIds: ['t2-1-r2'],
+      }),
+    ]);
+    const m = facts.teams?.matches.find(x => x.matchId === 't2-1');
+    expect(m?.relays.map(r => r.fencerBId)).toEqual(['C1', 'C4']);
+    const redrawn = projectCompetition([
+      ...start,
+      ...decideFirst,
+      ev('TeamTableauGenerated', { size: 2, slots: [{ ...slots[0], round: 1 }] }),
+    ]);
+    expect(redrawn.teams?.matches).toEqual([]);
+    expect(redrawn.teams?.relayResults).toEqual({});
+    expect(redrawn.teams?.decisions).toEqual({});
   });
 });

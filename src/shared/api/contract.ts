@@ -1473,7 +1473,7 @@ export const contract = {
   ...simulationOperations,
   // Tableaux séparés : extraction d'un groupe en épreuve séparée (docs/adr/0024)
   ...splitOperations,
-  ...teamOperations, // Épreuves par équipes : inscription, poules d'équipes (docs/adr/0024)
+  ...teamOperations, // Épreuves par équipes : inscription, poules, relais, tableau (docs/adr/0024)
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────
