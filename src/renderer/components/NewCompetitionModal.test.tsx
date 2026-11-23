@@ -105,4 +105,32 @@ describe('NewCompetitionModal', () => {
       expect.objectContaining({ name: 'CLUB 1', members: expect.any(Array) }),
     ]);
   });
+  it("niveau GREG de l'import visible et modifiable dans Propriétés à la création (#1328)", async () => {
+    const xml =
+      '<BaseCompetitionIndividuelle Date="20.06.2027" Annee="2026 - 2027" TitreLong="Circuit national" Categorie="SENIOR" Domaine="N" Sexe="M" Arme="E" ID="123456" Championnat="FFE"><Tireurs>' +
+      '<Tireur Nom="NOM1" Prenom="P1" Licence="900001" Sexe="M" Club="CLUB"/>' +
+      '</Tireurs><Arbitres/></BaseCompetitionIndividuelle>';
+    (window as unknown as { electronAPI: unknown }).electronAPI = {
+      dialog: {
+        openFederalFiles: vi.fn().mockResolvedValue({
+          names: ['EXEMPLE.xml'],
+          files: [{ name: 'EXEMPLE.xml', content: xml }],
+        }),
+      },
+    };
+    const { onCreate, container } = setup();
+    fireEvent.click(screen.getByText('federalImport.choose'));
+    await waitFor(() =>
+      expect(screen.getByPlaceholderText('newCompetition.title_ph')).toHaveValue('Circuit national')
+    );
+
+    fireEvent.click(screen.getByText('competitionHeader.properties'));
+    const level = document.getElementById('greg-level') as HTMLSelectElement;
+    expect(level).toHaveValue('CN');
+    fireEvent.change(level, { target: { value: 'F' } });
+    fireEvent.click(screen.getByText('properties.save'));
+
+    fireEvent.submit(container.querySelector('form')!);
+    expect(onCreate.mock.calls[0][0].settings.gregLevel).toBe('F');
+  });
 });
