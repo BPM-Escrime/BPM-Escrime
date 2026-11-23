@@ -135,10 +135,15 @@ export function planArenaGrid(room: RoomSize, arenaCount: number, marginM = 1): 
   };
 }
 
+/** Type d'une zone de la salle (élément « blocked »), qui en fixe la couleur sur le plan */
+export type RoomZoneType = 'fencers' | 'public' | 'dt';
+
 /** Élément matériel posé sur le plan (table, prise, accessoire), rectangle en mètres. */
 export interface RoomItem {
   id: string;
   kind: 'table' | 'outlet' | 'accessory' | 'exit' | 'blocked';
+  /** Zone combattants, public ou DT ; absent = zone bloquée ou équipement */
+  zone?: RoomZoneType;
   label: string;
   x: number;
   y: number;
@@ -331,6 +336,7 @@ export interface RoomEquipment {
   kind: RoomItem['kind'];
   widthM: number;
   heightM: number;
+  zone?: RoomZoneType;
 }
 
 export const ROOM_EQUIPMENT: readonly RoomEquipment[] = [
@@ -363,9 +369,9 @@ export const ROOM_EQUIPMENT: readonly RoomEquipment[] = [
  * bloquée libre : emprises au sol que les arènes évitent, taille par défaut en mètres.
  */
 export const ROOM_ZONES: readonly RoomEquipment[] = [
-  { id: 'fencers', kind: 'blocked', widthM: 6, heightM: 4 },
-  { id: 'public', kind: 'blocked', widthM: 10, heightM: 4 },
-  { id: 'dt', kind: 'blocked', widthM: 4, heightM: 3 },
+  { id: 'fencers', kind: 'blocked', widthM: 6, heightM: 4, zone: 'fencers' },
+  { id: 'public', kind: 'blocked', widthM: 10, heightM: 4, zone: 'public' },
+  { id: 'dt', kind: 'blocked', widthM: 4, heightM: 3, zone: 'dt' },
 ];
 
 /** Élément créé depuis un équipement du catalogue, taille bornée à la salle. */
@@ -379,7 +385,9 @@ export function createEquipmentItem(
   const heightM = Math.max(MIN_ITEM_SIZE_M, Math.min(equipment.heightM, room.lengthM));
   const x = Math.min(0.5, Math.max(0, room.widthM - widthM));
   const y = Math.min(0.5, Math.max(0, room.lengthM - heightM));
-  return { id, kind: equipment.kind, label, x, y, rotationDeg: 0, widthM, heightM };
+  const item: RoomItem = { id, kind: equipment.kind, label, x, y, rotationDeg: 0, widthM, heightM };
+  if (equipment.zone) item.zone = equipment.zone;
+  return item;
 }
 
 /**

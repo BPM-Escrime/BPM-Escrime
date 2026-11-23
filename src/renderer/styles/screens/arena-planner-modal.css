@@ -207,6 +207,19 @@
   fill-opacity: 0.85;
 }
 
+/* Zones de la salle : une couleur par type (menu « Zone ») */
+.arena-planner-item-blocked.arena-planner-zone-fencers {
+  fill: #86efac;
+}
+
+.arena-planner-item-blocked.arena-planner-zone-public {
+  fill: #c4b5fd;
+}
+
+.arena-planner-item-blocked.arena-planner-zone-dt {
+  fill: #fdba74;
+}
+
 .arena-planner-item-selected {
   stroke: #2563eb;
   stroke-width: 0.15;

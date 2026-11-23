@@ -89,7 +89,8 @@ describe('ArenaPlannerModal', () => {
     fireEvent.change(screen.getByLabelText('arenaPlanner.add_zone'), {
       target: { value: 'public' },
     });
-    expect(screen.getByRole('button', { name: /arenaPlanner\.zone_public/ })).toBeInTheDocument();
+    const zone = screen.getByRole('button', { name: /arenaPlanner\.zone_public/ });
+    expect(zone.querySelector('.arena-planner-zone-public')).not.toBeNull();
   });
 
   it('nomme une arène et affiche son nom sur le plan', () => {
