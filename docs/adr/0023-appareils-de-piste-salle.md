@@ -90,6 +90,26 @@ avec le droit `remote:admin`, jamais servies sur le réseau :
 - `cyrano_pistes` reste en lecture seule jusqu'à la 3.0, puis elle est supprimée par une
   migration ultérieure.
 
+**Pilotage hors compétition** (#2117, partie 2)
+
+- La configuration de la salle envoie un **affichage libre** aux appareils : arme, noms et
+  nations (ou clubs), ou remise à blanc, sur plusieurs pistes en une fois
+  (`sendStripDisplay`, `listVenueStripControl`, `onStripControlChanged`). C'est une commande du
+  modèle commun des appareils (`panel`), pas un match : pas d'Id de tireur, pas de fait
+  d'épreuve, **pas de journal**, état en mémoire seulement.
+- **Piste occupée** : refusée si une épreuve en saisie distante dont la salle résolue est cette
+  salle a l'arène de la piste dans sa séance ; une piste que cette épreuve a passée en manuel
+  (`manualStrips`) reste pilotable.
+- **Accusé de réception** : Cyrano n'acquitte pas un `DISP`. L'accusé est l'état suivant de
+  l'appareil (un `HELLO` suit le `DISP` pour le provoquer) qui renvoie les noms et l'arme
+  envoyés ; appareil en plein combat : refusé ; rien sous 8 s : sans réponse. OPP2 : écho
+  `apparatus/fencers`.
+- Les appareils de la salle pilotée sont chargés dans les pilotes **après** ceux des salles des
+  épreuves suivies : une épreuve garde toujours la priorité sur une piste du pilote commune.
+- Déclaration en masse (`setStripDevices`, `exportStripDevices`, `importStripDevices`) : le
+  fichier circule par contenu, jamais par chemin ; import validé ligne par ligne, rien d'écrit
+  sur erreur.
+
 ## Conséquences
 
 - Un appareil se déclare une fois, dans les réglages de la salle. Toutes les épreuves et

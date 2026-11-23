@@ -22,6 +22,8 @@ import {
   buildEmptyFencersBody,
   buildFencersBody,
   buildMatchBody,
+  buildPanelFencersBody,
+  buildPanelMatchBody,
   buildScoreBody,
   isValidOpp2Piste,
   OPP2_STATES,
@@ -31,6 +33,7 @@ import {
   parseOpp2Payload,
   parseOpp2Time,
   parseOpp2Topic,
+  opp2PanelEcho,
   SOFTWARE_PUBLISH,
   type Opp2Topic,
 } from './codec';
@@ -47,6 +50,7 @@ import type {
   PisteSideState,
   PisteState,
 } from '../piste/types';
+import type { StripEcho, StripPanel } from '../../shared/types/stripDevice';
 
 export const OPP2_DRIVER_ID = 'opp2';
 
@@ -198,6 +202,10 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
     return id;
   }
 
+  panelEcho(_piste: string, panel: StripPanel): StripEcho {
+    return opp2PanelEcho(panel);
+  }
+
   send(piste: string, command: PisteCommand): boolean {
     const rt = this.pistes.get(piste);
     if (!rt || !this.running) return false;
@@ -223,6 +231,19 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
       case 'clear':
         this.publish(piste, 'fencers', buildEmptyFencersBody());
         for (const side of SIDES) if (rt.state[side]) delete rt.state[side]!.id;
+        return true;
+      case 'panel':
+        // Affichage libre hors compétition (#2117) : identités oubliées, seul l'écho
+        // `apparatus/fencers` de l'appareil les rétablit (accusé de réception)
+        this.publish(piste, 'fencers', buildPanelFencersBody(command.panel));
+        this.publish(piste, 'match', buildPanelMatchBody(command.panel));
+        for (const side of SIDES) {
+          const s = rt.state[side];
+          if (!s) continue;
+          delete s.id;
+          delete s.name;
+          delete s.nat;
+        }
         return true;
       case 'ack':
       case 'nak':
@@ -352,6 +373,7 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
       case 'state': {
         const state = OPP2_STATES[asString(msg.state) ?? ''];
         if (!state) return false;
+        this.emit('echo', rt.status.piste, { active: state !== 'waiting' });
         // Fin déjà proposée par `control` END : pas de seconde fin
         if (state === 'ending' && st.state === 'ending') return false;
         st.state = state;
@@ -413,6 +435,10 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
         return true;
       }
       case 'fencers': {
+        // Écho de l'affichage (accusé d'un affichage libre, #2117) : noms tels qu'affichés
+        const nameOf = (side: 'left' | 'right') =>
+          asString(asObject(asObject(msg[side])?.fencer)?.name) ?? '';
+        this.emit('echo', rt.status.piste, { left: nameOf('left'), right: nameOf('right') });
         // Inversion gaucher / droitier par l'arbitre, ou écho : le PisteHub rapproche par Id
         for (const side of SIDES) {
           const f = asObject(asObject(msg[side])?.fencer);

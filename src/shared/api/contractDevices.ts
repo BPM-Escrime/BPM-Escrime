@@ -9,14 +9,18 @@
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';
-import { command, CompetitionId, Id, query } from './contractDef';
+import { command, CompetitionId, Id, query, subscription } from './contractDef';
 import { MAX_VENUE_STRIPS, type Venue } from '../types/appSettings';
 import type {
   CompetitionStripDevices,
   CyranoFrameLog,
   CyranoStatus,
   Opp2Status,
+  StripControlChange,
   StripDeviceEntry,
+  StripDevicesImportReport,
+  StripSendResult,
+  VenueStripControl,
 } from '../types/stripDevice';
 
 const Nothing = z.void();
@@ -45,6 +49,19 @@ export const StripDeviceSchema = z.discriminatedUnion('protocol', [
 ]);
 
 const StartedPort = z.custom<{ port: number }>();
+
+/** Côté d'un affichage libre : champ absent = inchangé, chaîne vide = effacé */
+const PanelSide = z.strictObject({
+  name: z.string().max(40).optional(),
+  nat: z.string().max(20).optional(),
+});
+
+/** Déclaration d'une piste dans un envoi en masse ou un fichier d'import */
+export const StripDeclarationSchema = z.strictObject({
+  strip: Strip,
+  label: z.string().max(40).optional(),
+  device: StripDeviceSchema.nullable(),
+});
 
 export const devicesOperations = {
   // ── Déclaration sur la salle ──
@@ -158,6 +175,66 @@ export const devicesOperations = {
       action: z.enum(['ack', 'next', 'prev', 'resync']),
     }),
     output: z.custom<{ done: boolean }>(),
+    permission: 'remote:admin',
+  }),
+
+  // ── Pilotage de la salle hors compétition (#2117) ──
+  listVenueStripControl: query({
+    description:
+      'Grille du pilotage de la salle : pour chaque piste, protocole, liaison (null : pilote arrêté), épreuve en cours qui l’occupe, dernier affichage libre envoyé et son accusé (pending, acked, refused, no_response). Charge les appareils de la salle dans les pilotes. Salle inconnue : venue_not_found.',
+    input: z.strictObject({ venueId: VenueId }),
+    output: z.custom<VenueStripControl>(),
+    permission: 'remote:admin',
+  }),
+  sendStripDisplay: command({
+    description:
+      'Affichage libre hors compétition sur plusieurs pistes (`all` : toutes les pistes déclarées) : arme, noms et nationalités (ou clubs) gauche / droite, remise à blanc (`clear`). Champ absent : inchangé ; fusionné avec le dernier envoi. Résultat par piste : sent, busy (épreuve en cours, sauf piste passée en manuel par elle), offline, not_declared, unavailable (pilote arrêté). Ordre d’affichage seulement : aucun fait d’épreuve, aucun journal. Rien à envoyer : invalid_input.',
+    input: z.strictObject({
+      venueId: VenueId,
+      strips: z.union([z.array(Strip).min(1).max(MAX_VENUE_STRIPS), z.literal('all')]),
+      weapon: z.enum(['E', 'F', 'S']).optional(),
+      left: PanelSide.optional(),
+      right: PanelSide.optional(),
+      clear: z.boolean().optional(),
+    }),
+    output: z.custom<StripSendResult[]>(),
+    permission: 'remote:admin',
+  }),
+  onStripControlChanged: subscription({
+    description:
+      'Avis du pilotage de la salle : accusé d’un affichage libre ou liaison d’un appareil changés (identifiants seulement). L’écran relit listVenueStripControl.',
+    input: z.strictObject({}),
+    output: z.custom<StripControlChange>(),
+    permission: 'remote:admin',
+  }),
+  setStripDevices: command({
+    description:
+      'Déclaration en masse des appareils d’une salle (ajout en lot) : chaque piste citée reçoit son appareil (null : retiré) et son libellé s’il est donné ; pistes non citées inchangées, pistes absentes créées. Une seule transaction. Salle inconnue : venue_not_found.',
+    input: z.strictObject({
+      venueId: VenueId,
+      devices: z.array(StripDeclarationSchema).min(1).max(MAX_VENUE_STRIPS),
+    }),
+    output: z.custom<Venue>(),
+    permission: 'remote:admin',
+  }),
+  // Commande (verbe + objet, docs/adr/0008) bien qu'elle n'écrive rien : une requête commence
+  // par get / list, le nom exportStripDevices est celui du ticket
+  exportStripDevices: command({
+    description:
+      'Fichier JSON des appareils de la salle (format bellepoule-strip-devices, version 1), à enregistrer par l’écran ; n’écrit rien. Salle inconnue : venue_not_found.',
+    input: z.strictObject({ venueId: VenueId }),
+    output: z.custom<{ content: string; fileName: string }>(),
+    permission: 'remote:admin',
+  }),
+  importStripDevices: command({
+    description:
+      'Import du contenu d’un fichier d’appareils (format courant ou ancien export du panneau Cyrano) : chaque ligne validée par le schéma, erreurs rendues ligne par ligne. Une erreur : rien n’est écrit. `dryRun` : contrôle sans écrire. Fichier illisible : device_refused.',
+    input: z.strictObject({
+      venueId: VenueId,
+      content: z.string().min(1).max(512_000),
+      dryRun: z.boolean().optional(),
+    }),
+    output: z.custom<StripDevicesImportReport>(),
     permission: 'remote:admin',
   }),
 };

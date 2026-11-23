@@ -50,6 +50,13 @@ function fakePort() {
     routes: () => ({ '1': 'c1' }),
     setOptions: vi.fn(),
     action: vi.fn(() => true),
+    control: {
+      watchVenue: vi.fn(),
+      activeArenas: vi.fn((): { competitionId: string; arenas: number[] }[] => []),
+      link: vi.fn((): string | null => 'online'),
+      send: vi.fn(() => true),
+      last: vi.fn(() => null),
+    },
   };
 }
 

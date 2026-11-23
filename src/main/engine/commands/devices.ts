@@ -21,20 +21,27 @@ import { getCompetitionOrThrow } from './competitions';
 import { refusingAsync } from './refusal';
 
 type Ops = typeof devicesOperations;
-type DevicesOps = keyof Ops;
+/** Pilotage de la salle et déclaration en masse : devicesControl.ts */
+export type DevicesControlOps =
+  | 'listVenueStripControl'
+  | 'sendStripDisplay'
+  | 'setStripDevices'
+  | 'exportStripDevices'
+  | 'importStripDevices';
+type DevicesOps = Exclude<keyof Ops, DevicesControlOps | 'onStripControlChanged'>;
 
-type DevicesHandler<N extends DevicesOps> = (
+export type DevicesHandler<N extends keyof Ops> = (
   ctx: CommandContext,
   input: z.output<Ops[N]['input']>
 ) => z.output<Ops[N]['output']> | Promise<z.output<Ops[N]['output']>>;
 
 /** Pilotes ; refus « unavailable » hors du poste Electron (tests, MCP) */
-function portOf(ctx: CommandContext): DevicesPort {
+export function portOf(ctx: CommandContext): DevicesPort {
   if (!ctx.devices) throw new CommandError('unavailable', 'Pilotes des appareils indisponibles');
   return ctx.devices;
 }
 
-function venueOrThrow(ctx: CommandContext, venueId: string): Venue {
+export function venueOrThrow(ctx: CommandContext, venueId: string): Venue {
   const venue = ctx.db.settings.getVenue(venueId);
   if (!venue) throw new CommandError('venue_not_found', `Salle introuvable : ${venueId}`);
   return venue;
@@ -81,7 +88,7 @@ export function competitionStripDevices(
 }
 
 /** Tables des pilotes à relire après une déclaration ; sans pilote (tests, MCP) : rien */
-const reload = (ctx: CommandContext, focus?: string) => ctx.devices?.reload(focus);
+export const reload = (ctx: CommandContext, focus?: string) => ctx.devices?.reload(focus);
 
 export const devicesHandlers: { [N in DevicesOps]: DevicesHandler<N> } = {
   // ── Déclaration sur la salle ──

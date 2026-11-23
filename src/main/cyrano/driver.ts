@@ -18,7 +18,9 @@ import {
   cyranoPCardField,
   parseCyranoStopwatch,
 } from './deviceState';
-import type { CyranoNameLength } from './names';
+import { formatCyranoName, formatCyranoNat, type CyranoNameLength } from './names';
+import type { StripEcho, StripPanel, StripPanelSide } from '../../shared/types/stripDevice';
+import { isBlankPanel } from '../../shared/domain/stripDevices/stripControl';
 import type {
   PisteCommand,
   PisteDisplay,
@@ -153,6 +155,48 @@ export function pisteDisplayToDisp(
   );
 }
 
+/** Nom libre (pilotage de la salle) tel que l'appareil l'affiche : translittéré, tronqué */
+const panelName = (side: StripPanelSide | undefined, nameLength: CyranoNameLength): string =>
+  side?.name ? formatCyranoName(side.name, '', nameLength) : '';
+
+function panelFencer(side: StripPanelSide | undefined, nameLength: CyranoNameLength) {
+  return {
+    id: '',
+    name: panelName(side, nameLength),
+    nat: formatCyranoNat(side?.nat),
+    status: 'U' as const,
+  };
+}
+
+/**
+ * Affichage libre hors compétition (#2117) → champs d'un DISP : arme, noms (convention et
+ * troncature de names.ts), nations sur 3 caractères ; sans Id de tireur (pas un match).
+ * Affichage vide : DISP vide (appareil remis à blanc).
+ */
+export function panelToDisp(panel: StripPanel, nameLength: CyranoNameLength = 10): CyranoDisp {
+  if (isBlankPanel(panel)) return EMPTY_DISP;
+  return {
+    round: '1',
+    type: 'I',
+    weapon: panel.weapon,
+    priority: 'N',
+    right: panelFencer(panel.right, nameLength),
+    left: panelFencer(panel.left, nameLength),
+  };
+}
+
+/** Ce que l'INFO suivant doit porter après un affichage libre */
+export function cyranoPanelEcho(panel: StripPanel, nameLength: CyranoNameLength = 10): StripEcho {
+  return {
+    ...(panel.weapon ? { weapon: panel.weapon } : {}),
+    left: panelName(panel.left, nameLength),
+    right: panelName(panel.right, nameLength),
+    clear: isBlankPanel(panel),
+  };
+}
+
+const ACTIVE_STATES = new Set(['F', 'H', 'P', 'E']);
+
 export const CYRANO_CAPABILITIES: PisteDriverCapabilities = {
   names: true,
   remote: true,
@@ -209,8 +253,16 @@ export class CyranoPisteDriver extends EventEmitter<PisteDriverEvents> implement
     );
   }
 
-  private onInfo = (link: CyranoPisteStatus, msg: CyranoMessage): void =>
+  private onInfo = (link: CyranoPisteStatus, msg: CyranoMessage): void => {
+    // INFO complet : noms, arme et état toujours présents (vides s'ils manquent)
+    this.emit('echo', link.piste, {
+      active: msg.state !== undefined && ACTIVE_STATES.has(msg.state),
+      weapon: msg.weapon ?? '',
+      left: msg.left?.name ?? '',
+      right: msg.right?.name ?? '',
+    });
     this.emitInput(link, { kind: 'state', state: cyranoToPisteState(msg) });
+  };
 
   private onNext = (link: CyranoPisteStatus): void => this.emitInput(link, { kind: 'next' });
 
@@ -236,6 +288,10 @@ export class CyranoPisteDriver extends EventEmitter<PisteDriverEvents> implement
     return cyranoFencerId(id);
   }
 
+  panelEcho(_piste: string, panel: StripPanel): StripEcho {
+    return cyranoPanelEcho(panel, this.nameLength);
+  }
+
   send(piste: string, command: PisteCommand): boolean {
     switch (command.kind) {
       case 'display':
@@ -246,6 +302,13 @@ export class CyranoPisteDriver extends EventEmitter<PisteDriverEvents> implement
         );
       case 'clear':
         return this.server.sendDisp(piste, EMPTY_DISP);
+      case 'panel': {
+        // L'appareil n'acquitte pas un DISP : un HELLO derrière lui fait renvoyer aussitôt
+        // un INFO, qui sert d'accusé de réception (spéc. § 2 : HELLO → INFO)
+        const sent = this.server.sendDisp(piste, panelToDisp(command.panel, this.nameLength));
+        if (sent) this.server.sendHello(piste);
+        return sent;
+      }
       case 'ack':
         return this.server.sendAck(piste);
       case 'nak':

@@ -287,6 +287,50 @@ export class SettingsRepo {
     return this.getVenue(venueId)!;
   }
 
+  /**
+   * Déclaration en masse (#2117, docs/adr/0023) : appareil (et libellé s'il est donné) de
+   * plusieurs pistes, dans une seule transaction ; pistes non citées inchangées, pistes
+   * absentes créées. Salle inconnue ou numéro invalide : erreur, rien n'est écrit.
+   */
+  public setStripDevices(
+    venueId: string,
+    entries: readonly { strip: number; label?: string; device: StripDevice | null }[]
+  ): Venue {
+    if (!this.sql.db) throw new Error('Database not open');
+    for (const e of entries) {
+      if (!Number.isInteger(e.strip) || e.strip < 1 || e.strip > MAX_VENUE_STRIPS) {
+        throw new Error(`Numéro de piste invalide : ${e.strip}`);
+      }
+    }
+    this.sql.transaction(() => {
+      if (!this.sql.queryOne<{ id: string }>('SELECT id FROM venues WHERE id = ?', [venueId])) {
+        throw new Error(`Salle introuvable : ${venueId}`);
+      }
+      for (const e of entries) {
+        const config = e.device ? JSON.stringify(e.device) : null;
+        if (e.label === undefined) {
+          this.sql.run(
+            `INSERT INTO venue_strips (venue_id, number, label, device_config) VALUES (?, ?, NULL, ?)
+             ON CONFLICT(venue_id, number) DO UPDATE SET device_config = excluded.device_config`,
+            [venueId, e.strip, config]
+          );
+        } else {
+          this.sql.run(
+            `INSERT INTO venue_strips (venue_id, number, label, device_config) VALUES (?, ?, ?, ?)
+             ON CONFLICT(venue_id, number) DO UPDATE SET label = excluded.label,
+               device_config = excluded.device_config`,
+            [venueId, e.strip, e.label.trim() || null, config]
+          );
+        }
+      }
+      this.sql.run('UPDATE venues SET updated_at = ? WHERE id = ?', [
+        new Date().toISOString(),
+        venueId,
+      ]);
+    });
+    return this.getVenue(venueId)!;
+  }
+
   /** Salle propre d'une épreuve (`competitions.venue_id`, ADR-0019) ; null : aucune */
   public getCompetitionVenueId(competitionId: string): string | null {
     if (!this.sql.db) return null;

@@ -151,3 +151,119 @@ export interface StripDeviceOptions {
 
 /** Actions de secours par piste (#1829) */
 export type StripDeviceAction = 'ack' | 'next' | 'prev' | 'resync';
+
+// ─── Pilotage de la salle hors compétition (#2117, docs/adr/0023) ─────────────
+
+/** Armes transmissibles aux appareils (Cyrano, OPP2) : épée, fleuret, sabre */
+export type StripPanelWeapon = 'E' | 'F' | 'S';
+export const STRIP_PANEL_WEAPONS: readonly StripPanelWeapon[] = ['E', 'F', 'S'];
+
+/** Côté de l'appareil piloté : nom et nationalité (ou club) affichés */
+export interface StripPanelSide {
+  name?: string;
+  nat?: string;
+}
+
+/**
+ * Affichage libre d'un appareil hors compétition : arme, noms et nationalités. Ce n'est pas un
+ * match : aucun identifiant de tireur, aucun fait d'épreuve. Vide : appareil remis à blanc.
+ */
+export interface StripPanel {
+  weapon?: StripPanelWeapon;
+  left?: StripPanelSide;
+  right?: StripPanelSide;
+}
+
+/**
+ * Ce que l'appareil doit renvoyer pour confirmer un affichage libre (accusé de réception) :
+ * noms tels que le pilote les a envoyés (troncature du protocole), arme si le protocole la
+ * renvoie. `clear` : appareil remis à blanc.
+ */
+export interface StripEcho {
+  weapon?: string;
+  left: string;
+  right: string;
+  clear: boolean;
+}
+
+/**
+ * Accusé d'un affichage libre : en attente, reçu (l'appareil affiche ce qui a été envoyé),
+ * refusé (appareil en plein combat : il ignore l'affichage), sans réponse (délai dépassé).
+ */
+export type StripAckState = 'pending' | 'acked' | 'refused' | 'no_response';
+
+/**
+ * Résultat d'un envoi, par piste : envoyé, refusé car occupé par une épreuve en cours, hors
+ * ligne, piste sans appareil déclaré, pilote arrêté (ou appareil non chargé).
+ */
+export type StripSendOutcome = 'sent' | 'busy' | 'offline' | 'not_declared' | 'unavailable';
+
+export interface StripSendResult {
+  strip: number;
+  outcome: StripSendOutcome;
+  /** Épreuve qui occupe la piste (`busy`) */
+  competitionId?: string;
+}
+
+/** Dernier affichage libre envoyé à une piste et son accusé */
+export interface StripLastSend {
+  at: number;
+  ack: StripAckState;
+  /** Heure de l'accusé (reçu, refusé ou délai dépassé) */
+  ackAt?: number;
+  clear: boolean;
+  panel: StripPanel;
+}
+
+/** Épreuve en cours qui occupe une piste de la salle */
+export interface StripBusy {
+  competitionId: string;
+  title: string;
+}
+
+/** Ligne de la grille du pilotage de la salle */
+export interface StripControlRow {
+  strip: number;
+  label?: string;
+  protocol: StripDeviceProtocol | null;
+  /** Identifiant de piste du pilote ; null sans appareil */
+  piste: string | null;
+  /** Liaison ; null : pilote arrêté ou appareil non chargé */
+  link: StripDeviceLink | null;
+  busy: StripBusy | null;
+  last: StripLastSend | null;
+}
+
+/** Grille du pilotage de la salle (listVenueStripControl) */
+export interface VenueStripControl {
+  venueId: string;
+  venueName: string;
+  cyranoRunning: boolean;
+  opp2Running: boolean;
+  strips: StripControlRow[];
+}
+
+/** Avis du pilotage de la salle (onStripControlChanged) : l'écran relit la grille */
+export interface StripControlChange {
+  kind: 'ack' | 'link';
+  piste: string;
+  venueId?: string;
+  strip?: number;
+  ack?: StripAckState;
+}
+
+/** Déclaration d'une piste dans un envoi en masse ou un fichier d'import */
+export interface StripDeviceDeclaration {
+  strip: number;
+  label?: string;
+  device: StripDevice | null;
+}
+
+/** Rapport d'un import d'appareils (importStripDevices) */
+export interface StripDevicesImportReport {
+  /** Écrit en base (false : essai à blanc, ou erreurs : rien n'est écrit) */
+  applied: boolean;
+  /** Pistes valides lues dans le fichier */
+  strips: number;
+  errors: { line: number; message: string }[];
+}

@@ -54,6 +54,27 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
   ['routes', () => api.routes()],
   ['setOptions', () => api.setOptions({ nameLength: 12, natSource: 'club', international: true })],
   ['action', () => api.action('1', 'ack')],
+  ['control.list', () => api.control.list('v1')],
+  [
+    'control.send',
+    () =>
+      api.control.send('v1', [1, 2], {
+        weapon: 'S',
+        left: { name: 'Dupont L', nat: 'FRA' },
+        right: { name: '', nat: '' },
+      }),
+  ],
+  ['control.send (toutes, remise à blanc)', () => api.control.send('v1', 'all', { clear: true })],
+  [
+    'setStripDevices',
+    () =>
+      api.setStripDevices('v1', [
+        { strip: 1, device: { protocol: 'cyrano', ip: '10.0.0.1' } },
+        { strip: 2, label: 'Podium', device: null },
+      ]),
+  ],
+  ['exportStripDevices', () => api.exportStripDevices('v1')],
+  ['importStripDevices', () => api.importStripDevices('v1', '{"strips":[]}', true)],
 ];
 
 describe('devicesApi : entrées du contrat', () => {
@@ -71,6 +92,27 @@ describe('devicesApi : entrées du contrat', () => {
       await call();
       called.add(seen[0].name);
     }
-    expect(Object.keys(devicesOperations).filter(n => !called.has(n))).toEqual([]);
+    expect(
+      Object.entries(devicesOperations)
+        .filter(([n, d]) => d.kind !== 'subscription' && !called.has(n))
+        .map(([n]) => n)
+    ).toEqual([]);
+  });
+
+  it('onStripControlChanged : abonnement de l’écran', async () => {
+    const subscribed: string[] = [];
+    const sub = createDevicesApi(
+      new IpcClient(() => ({
+        ...bridge,
+        subscribe: async (...args: unknown[]) => {
+          subscribed.push(JSON.stringify(args));
+          return { ok: true as const, data: null };
+        },
+      }))
+    );
+    const off = sub.control.onChange(() => undefined);
+    await new Promise(r => setTimeout(r, 0));
+    expect(subscribed.join()).toContain('onStripControlChanged');
+    expect(typeof off).toBe('function');
   });
 });

@@ -6,7 +6,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pencil, Plus, Star, Trash2 } from 'lucide-react';
+import { Pencil, Plus, RadioTower, Star, Trash2, X } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useConfirm } from './ConfirmDialog';
 import { useToast } from './Toast';
@@ -17,6 +17,8 @@ import { MAX_VENUE_STRIPS, type Venue, type VenueInput } from '../../shared/type
 import VenueStripsEditor from './VenueStripsEditor';
 import { applyStripEdits, stripEditError, type StripEdit } from './venueStripsEdit';
 import { useStationApi } from '../api/stationApi';
+import VenueStripControlPanel from './VenueStripControlPanel';
+import VenueStripBulkTools from './VenueStripBulkTools';
 
 interface Draft {
   id?: string;
@@ -121,6 +123,8 @@ const VenuesSettingsSection: React.FC = () => {
   const [venues, setVenues] = useState<Venue[] | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [nameInvalid, setNameInvalid] = useState(false);
+  /** Salle dont on pilote les appareils (#2117) ; `revision` relit la grille après un ajout */
+  const [controlled, setControlled] = useState<{ id: string; revision: number } | null>(null);
 
   const reload = useCallback(async () => {
     setVenues(await api.listVenues());
@@ -210,6 +214,17 @@ const VenuesSettingsSection: React.FC = () => {
                 >
                   {t('venues.edit')}
                 </Button>
+                <Button
+                  style={SMALL_BTN}
+                  icon={<Icon icon={RadioTower} />}
+                  aria-label={t('stripControl.open', { name: v.name })}
+                  aria-pressed={controlled?.id === v.id}
+                  onClick={() =>
+                    setControlled(controlled?.id === v.id ? null : { id: v.id, revision: 0 })
+                  }
+                >
+                  {t('stripControl.open_short')}
+                </Button>
                 {!v.isDefault && (
                   <Button
                     style={SMALL_BTN}
@@ -232,6 +247,33 @@ const VenuesSettingsSection: React.FC = () => {
             </li>
           ))}
         </ul>
+      )}
+
+      {controlled && venues.some(v => v.id === controlled.id) && (
+        <div className="strip-control-box">
+          <div className="u-row-between">
+            <strong>{venues.find(v => v.id === controlled.id)?.name}</strong>
+            <Button
+              style={SMALL_BTN}
+              icon={<Icon icon={X} />}
+              aria-label={t('stripControl.close')}
+              onClick={() => setControlled(null)}
+            >
+              {t('stripControl.close')}
+            </Button>
+          </div>
+          <VenueStripBulkTools
+            venueId={controlled.id}
+            onChanged={() => {
+              void reload();
+              setControlled({ id: controlled.id, revision: controlled.revision + 1 });
+            }}
+          />
+          <VenueStripControlPanel
+            key={`${controlled.id}-${controlled.revision}`}
+            venueId={controlled.id}
+          />
+        </div>
       )}
 
       {draft ? (
