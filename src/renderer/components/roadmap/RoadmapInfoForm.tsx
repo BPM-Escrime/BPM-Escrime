@@ -6,10 +6,15 @@
 
 import React from 'react';
 import { CalendarClock, Download, Wand2 } from 'lucide-react';
-import { deadlineOf, suggestSchedule, type RoadmapInfo } from '@shared/domain/roadmap/roadmap';
+import {
+  deadlineOf,
+  suggestSchedule,
+  variablesOfField,
+  type RoadmapInfo,
+} from '@shared/domain/roadmap/roadmap';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Button } from '../common/Button';
-import { TextField, infoFieldId } from './roadmapFields';
+import { FieldLabel, TextField, infoFieldId } from './roadmapFields';
 import { PlaceSearchField } from '../common/PlaceSearchField';
 
 interface RoadmapInfoFormProps {
@@ -45,6 +50,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
         label={t('roadmap.field_title')}
         value={info.title}
         id={infoFieldId('title')}
+        variables={variablesOfField('title')}
         onChange={set('title')}
       />
       <div className="roadmap-grid-2">
@@ -53,6 +59,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
           value={info.edition}
           placeholder={t('roadmap.field_edition_ph')}
           id={infoFieldId('edition')}
+          variables={variablesOfField('edition')}
           onChange={set('edition')}
         />
         <TextField
@@ -60,11 +67,12 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
           type="date"
           value={info.date}
           id={infoFieldId('date')}
+          variables={variablesOfField('date')}
           onChange={set('date')}
         />
       </div>
       <label className="roadmap-field">
-        <span className="roadmap-field-label">{t('roadmap.field_venue')}</span>
+        <FieldLabel label={t('roadmap.field_venue')} variables={variablesOfField('venue')} />
         <PlaceSearchField
           id={infoFieldId('venue')}
           className="roadmap-input"
@@ -80,6 +88,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
         multiline
         rows={1}
         id={infoFieldId('address')}
+        variables={variablesOfField('address')}
         onChange={set('address')}
       />
 
@@ -93,6 +102,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
             type="time"
             value={info.openTime}
             id={infoFieldId('openTime')}
+            variables={variablesOfField('openTime')}
             onChange={set('openTime')}
           />
           <TextField
@@ -100,6 +110,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
             type="time"
             value={info.scratchTime}
             id={infoFieldId('scratchTime')}
+            variables={variablesOfField('scratchTime')}
             onChange={set('scratchTime')}
           />
           <TextField
@@ -107,6 +118,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
             type="time"
             value={info.startTime}
             id={infoFieldId('startTime')}
+            variables={variablesOfField('startTime')}
             onChange={set('startTime')}
           />
         </div>
@@ -127,10 +139,14 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
         value={info.fees}
         multiline
         id={infoFieldId('fees')}
+        variables={variablesOfField('fees')}
         onChange={set('fees')}
       />
       <label className="roadmap-field">
-        <span className="roadmap-field-label">{t('roadmap.field_deadline')}</span>
+        <FieldLabel
+          label={t('roadmap.field_deadline')}
+          variables={variablesOfField('deadlineDays')}
+        />
         <div className="roadmap-inline">
           <input
             id={infoFieldId('deadlineDays')}
@@ -154,6 +170,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
         label={t('roadmap.field_organizer')}
         value={info.organizer}
         id={infoFieldId('organizer')}
+        variables={variablesOfField('organizer')}
         onChange={set('organizer')}
       />
 
@@ -164,6 +181,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
             label={t('roadmap.field_name')}
             value={info.contactName}
             id={infoFieldId('contactName')}
+            variables={variablesOfField('contactName')}
             onChange={set('contactName')}
           />
           <TextField
@@ -171,6 +189,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
             type="email"
             value={info.contactEmail}
             id={infoFieldId('contactEmail')}
+            variables={variablesOfField('contactEmail')}
             onChange={set('contactEmail')}
           />
         </div>
@@ -182,6 +201,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
             label={t('roadmap.field_name')}
             value={info.contact2Name}
             id={infoFieldId('contact2Name')}
+            variables={variablesOfField('contact2Name')}
             onChange={set('contact2Name')}
           />
           <TextField
@@ -189,6 +209,7 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
             type="email"
             value={info.contact2Email}
             id={infoFieldId('contact2Email')}
+            variables={variablesOfField('contact2Email')}
             onChange={set('contact2Email')}
           />
         </div>

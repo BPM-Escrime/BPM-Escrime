@@ -195,6 +195,23 @@
   color: var(--color-text-light);
 }
 
+/* Variables alimentées par le champ, à côté du libellé */
+.roadmap-field-vars {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-left: 0.4rem;
+  font-weight: 400;
+}
+
+.roadmap-field-vars code {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0 0.4rem;
+  font-size: 0.72rem;
+  color: var(--color-primary);
+}
+
 .roadmap-input {
   width: 100%;
   min-width: 0;

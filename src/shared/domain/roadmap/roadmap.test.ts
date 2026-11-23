@@ -19,6 +19,7 @@ import {
   seasonOf,
   splitVariables,
   suggestSchedule,
+  variablesOfField,
 } from './roadmap';
 import { SUGGESTED_SECTIONS, createRoadmap, sectionFromSeed } from './presets';
 
@@ -49,6 +50,16 @@ describe('roadmap : dates et horaires', () => {
   it('heure à la française', () => {
     expect(frenchTime('09:15')).toBe('9h15');
     expect(frenchTime('10:00')).toBe('10h00');
+  });
+});
+
+describe('roadmap : champs → variables', () => {
+  it('chaque champ annonce les variables qu’il alimente', () => {
+    expect(variablesOfField('venue')).toEqual(['lieu']);
+    expect(variablesOfField('date')).toEqual(['date', 'date_limite', 'saison']);
+    expect(variablesOfField('deadlineDays')).toEqual(['date_limite']);
+    expect(variablesOfField('contactName')).toEqual(['contact']);
+    expect(variablesOfField('contact2Email')).toEqual(['contact']);
   });
 });
 
