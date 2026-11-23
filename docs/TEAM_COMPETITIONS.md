@@ -168,8 +168,11 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   tableau dont les poules sont finies mais pas encore créé se tire par le bouton. Le relais
   en cours est le premier non terminé : un relais terminé hors ordre par l'ancien écran se
   rouvre d'abord.
-- Sabre Laser en mode points : le compteur de l'écran s'arrête au palier du relais (une
-  zone qui le dépasserait est ramenée au palier), le moteur refusant un cumul au-delà.
+- Palier du relais (#2188) : une seule équipe peut le dépasser, d'une touche au plus (FIE t.41.1 :
+  dernière touche valable et touche de pénalisation accordées ensemble). En Sabre Laser mode
+  points, la dernière touche peut le dépasser de 4 points (cible C à 5 points depuis palier − 1,
+  Livret 2 FFE) ; le compteur de l'écran est plafonné d'autant. En arène, plafond de l'assaut en
+  points : 5 touches × 5 points.
 - Moteur : une égalité au dernier relais est admise en poule (pas de vainqueur) ; au tableau,
   le vainqueur est donné (`winner`, minute avec priorité). Un relais de poule peut être
   rouvert après le tirage du tableau, qui garde son placement.

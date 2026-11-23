@@ -125,7 +125,7 @@ d('Arène équipe des tablettes par les commandes (docs/adr/0024, lot E4)', () =
 
   it('relais au-delà du palier : refusé par le moteur, motif rendu à la tablette, rien d’écrit', async () => {
     const { handlers, relay, errors } = await setup();
-    relay(6, 2); // relais 1 : palier 5
+    relay(7, 2); // relais 1 : palier 5, une touche de plus au plus (t.41.1)
     expect(errors()).toEqual([
       [
         'team_arena_error',
@@ -135,7 +135,8 @@ d('Arène équipe des tablettes par les commandes (docs/adr/0024, lot E4)', () =
     expect(journal('RelayScoreRecorded')).toHaveLength(0);
     expect(fx.db.teams.getTeamMatch(fx.matchId)!.bouts[0].status).toBe('not_started');
     // L'arène garde le relais et son score en direct : correction puis nouvelle fin
-    expect(team()).toMatchObject({ currentBoutIndex: 0, liveScoreA: 6, liveScoreB: 2 });
+    expect(team()).toMatchObject({ currentBoutIndex: 0, liveScoreA: 7, liveScoreB: 2 });
+    handlers.team_touch({ arenaId: '1', side: 'A', points: -1 });
     handlers.team_touch({ arenaId: '1', side: 'A', points: -1 });
     handlers.team_advance_bout({ arenaId: '1' });
     expect(errors()).toHaveLength(1);

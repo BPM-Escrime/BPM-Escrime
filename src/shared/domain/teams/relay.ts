@@ -50,17 +50,35 @@ export function relayMaxScore(weapon: Weapon, settings?: Partial<TeamSettings> |
 }
 
 /** Pas et cible cumulée du relais FIE (réglages de l'épreuve), comme l'arène équipe */
-export function relayRuleOf(
-  weapon: Weapon,
-  settings?: Partial<TeamSettings> | null
-): { stepSize: number; target: number } {
+/** Règle de relais : pas du palier, cible, et touches ou points (Sabre Laser, zones 1/3/5) */
+export interface RelayRule {
+  stepSize: number;
+  target: number;
+  mode?: 'touches' | 'points';
+}
+
+/** Valeur maximale d'une touche en mode points (Sabre Laser, cible C) */
+const MAX_TOUCH_POINTS = 5;
+
+/**
+ * Dépassement du palier admis pour l'équipe qui termine le relais :
+ * - touches : une touche (FIE t.41.1 : dernière touche valable et touche de pénalisation
+ *   accordées en même temps, les deux comptent) ;
+ * - points (Sabre Laser) : la dernière touche peut valoir jusqu'à 5 points depuis palier − 1
+ *   (Livret 2 FFE : « 14 + touche finale sur une cible vitale à 5 points » = 19).
+ */
+export function relayOvershoot(rule: RelayRule): number {
+  return rule.mode === 'points' ? MAX_TOUCH_POINTS - 1 : 1;
+}
+
+export function relayRuleOf(weapon: Weapon, settings?: Partial<TeamSettings> | null): RelayRule {
   const rule = getTeamTargetRule(
     weapon,
     teamSizeOf(settings),
     settings?.laserTeamMode ?? 'touches',
     settings?.teamRelayStepSize ?? 5
   );
-  return { stepSize: rule.stepSize, target: rule.target };
+  return { stepSize: rule.stepSize, target: rule.target, mode: rule.mode };
 }
 
 /** Titulaires d'une équipe, par ordre (`teamOrder`), limités à la taille d'équipe */
@@ -260,8 +278,11 @@ export function relayWinner(
 }
 
 /**
- * Score d'un relais au-delà de ce qu'il peut porter : cumul au-delà du palier du relais en
- * relais FIE (`min(ordre × pas, cible)`), score de l'assaut au-delà du plafond en arène
+ * Score d'un relais au-delà de ce qu'il peut porter (#2188) :
+ * - relais FIE : cumul au-delà du palier (`min(ordre × pas, cible)`), sauf pour **une** équipe
+ *   qui le dépasse d'au plus `relayOvershoot` (FIE t.41.1 ; Sabre Laser en points) ;
+ * - arène Sabre Laser : score de l'assaut au-delà du plafond de touches (en points : plafond
+ *   × 5, chaque touche pouvant valoir 5 points).
  */
 export function relayScoreAboveMax(
   relays: readonly RelayScore[],
@@ -269,12 +290,18 @@ export function relayScoreAboveMax(
   scoreA: number,
   scoreB: number,
   format: TeamFormat,
-  rule: { stepSize: number; target: number }
+  rule: RelayRule
 ): boolean {
   const cap = relayCap(order, format, rule);
-  if (format === 'laser-arena') return scoreA > cap || scoreB > cap;
+  if (format === 'laser-arena') {
+    const max = rule.mode === 'points' ? cap * MAX_TOUCH_POINTS : cap;
+    return scoreA > max || scoreB > max;
+  }
   const before = relayCumulative(relays, order - 1);
-  return before.scoreA + scoreA > cap || before.scoreB + scoreB > cap;
+  const overA = before.scoreA + scoreA - cap;
+  const overB = before.scoreB + scoreB - cap;
+  if (overA > 0 && overB > 0) return true;
+  return Math.max(overA, overB) > relayOvershoot(rule);
 }
 
 /** Le relais `order` peut s'enregistrer : tous les précédents sont terminés */
