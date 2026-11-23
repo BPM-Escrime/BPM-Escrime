@@ -10,6 +10,8 @@ import type { RouteContext } from './context';
 import { getSharedMainWindow } from '../../mainWindowRef';
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
 import { notifyScreen } from '../remoteActivity';
+import { runRemoteCommand } from '../remoteCommand';
+import { registerInput } from '../../../shared/api/registration';
 
 type Guard = (cookieHeader: string | undefined) => {
   status: number;
@@ -107,16 +109,15 @@ function registerSelfCheckinRoutes(ctx: RegistrationRouteContext): void {
     if (fencer.status === FencerStatus.CHECKED_IN) {
       return res.json({ success: true, already: true, ...who });
     }
-    // Ne jamais écraser un statut sportif (éliminé, exclu, forfait…)
-    if (fencer.status !== FencerStatus.NOT_CHECKED_IN) {
-      return res.status(409).json({ error: 'status_locked' });
-    }
-    try {
-      ctx.db.updateFencer(fencer.id, { status: FencerStatus.CHECKED_IN });
-    } catch (err) {
-      logger.error(LogCategory.NETWORK, '[RemoteScoreServer] Erreur auto-pointage:', toError(err));
-      return res.status(500).json({ error: 'update_failed' });
-    }
+    // Pointage par la commande checkIn (#2159) : statut sportif (éliminé, exclu, forfait…)
+    // jamais écrasé, règle du moteur (canToggleCheckIn)
+    const run = runRemoteCommand(ctx.db, 'checkIn', {
+      competitionId,
+      fencers: [fencer.id],
+      present: true,
+    });
+    if (!run.ok) return res.status(500).json({ error: 'update_failed' });
+    if (run.result.skipped > 0) return res.status(409).json({ error: 'status_locked' });
     const mainWin = getSharedMainWindow();
     if (mainWin && !mainWin.isDestroyed?.()) {
       notifyScreen({
@@ -207,14 +208,27 @@ export function registerRegistrationRoutes(ctx: RegistrationRouteContext): void 
         gender,
         club: strip(club) || undefined,
         license: strip(license, 50) || undefined,
-        nationality: strip(nationality, 3) || 'FRA',
+        // Code ISO de 2 ou 3 lettres exigé par le contrat ; sinon FRA, comme avant
+        nationality: (strip(nationality, 3) ?? '').length >= 2 ? strip(nationality, 3) : 'FRA',
         birthDate: birthDate ? new Date(birthDate) : undefined,
         photo:
           photo && typeof photo === 'string' && photo.startsWith('data:image/') ? photo : undefined,
-        status: 'N', // NOT_CHECKED_IN
+        status: FencerStatus.NOT_CHECKED_IN,
       };
 
-      const newFencer = ctx.db.addFencer(competitionId, fencerData as Partial<Fencer>);
+      // Inscription par la commande registerFencers (#2159, docs/adr/0018)
+      const run = runRemoteCommand(ctx.db, 'registerFencers', {
+        competitionId,
+        fencers: [registerInput(fencerData as Partial<Fencer>)],
+      });
+      if (!run.ok) {
+        logger.warn(
+          LogCategory.NETWORK,
+          `[RemoteScoreServer] Inscription refusée (${run.code}) : ${run.message}`
+        );
+        return res.status(400).json({ error: 'registration_failed' });
+      }
+      const newFencer = run.result.fencers[0];
       logger.info(
         LogCategory.NETWORK,
         `[RemoteScoreServer] Inscription tireur: ${fencerData.lastName} ${fencerData.firstName} (id=${newFencer.id})`
@@ -330,23 +344,20 @@ export function registerRegistrationRoutes(ctx: RegistrationRouteContext): void 
     if (!text) return res.status(400).json({ error: 'empty_comment' });
     const authorName = typeof author === 'string' ? author.trim().slice(0, 100) : null;
     const arena = ctx.findArenaOfReferee(refereeId);
-    try {
-      const saved = ctx.db.addRefereeComment(
-        competitionId,
-        refereeId,
-        text,
-        authorName,
-        arena ? ctx.arenaMatchLabel(arena) : null
-      );
-      res.json({ success: true, comment: saved });
-    } catch (err) {
-      logger.error(
-        LogCategory.NETWORK,
-        '[RemoteScoreServer] Erreur commentaire formateur:',
-        toError(err)
-      );
-      res.status(500).json({ error: 'save_failed' });
+    // Commande addRefereeComment (#2159)
+    const run = runRemoteCommand(ctx.db, 'addRefereeComment', {
+      competitionId,
+      refereeId,
+      comment: text,
+      author: authorName,
+      matchLabel: arena ? ctx.arenaMatchLabel(arena) : null,
+    });
+    if (!run.ok) {
+      if (run.code === 'referee_not_found')
+        return res.status(404).json({ error: 'referee_unknown' });
+      return res.status(500).json({ error: 'save_failed' });
     }
+    res.json({ success: true, comment: run.result });
   });
 
   ctx.app.get('/api/checkin/status', (req, res) => {
@@ -420,22 +431,26 @@ export function registerRegistrationRoutes(ctx: RegistrationRouteContext): void 
 
     try {
       if (kind === 'fencers') {
-        const fencer = ctx.db.getFencersByCompetition(competitionId).find(f => f.id === id);
-        if (!fencer) return res.status(404).json({ error: 'fencer_not_found' });
-        // Ne jamais écraser un statut sportif (éliminé, exclu, forfait…)
-        if (fencer.status !== 'P' && fencer.status !== 'N') {
-          return res.status(409).json({ error: 'status_locked' });
+        // Commande checkIn (#2159) : statut sportif jamais écrasé (règle du moteur)
+        const run = runRemoteCommand(ctx.db, 'checkIn', { competitionId, fencers: [id], present });
+        if (!run.ok) return res.status(500).json({ error: 'update_failed' });
+        if (run.result.unknown.length > 0) {
+          return res.status(404).json({ error: 'fencer_not_found' });
         }
-        ctx.db.updateFencer(id, {
-          status: present ? FencerStatus.CHECKED_IN : FencerStatus.NOT_CHECKED_IN,
-        });
+        if (run.result.skipped > 0) return res.status(409).json({ error: 'status_locked' });
       } else {
         const referee = ctx.db.getRefereesByCompetition(competitionId).find(r => r.id === id);
         if (!referee) return res.status(404).json({ error: 'referee_not_found' });
+        // Arbitre affecté à une poule : l'appel distant ne le dépointe pas (l'écran le peut)
         if (referee.status === 'assigned') {
           return res.status(409).json({ error: 'referee_already_assigned' });
         }
-        ctx.db.updateReferee(id, { status: present ? 'available' : 'unavailable' });
+        const run = runRemoteCommand(ctx.db, 'setRefereeAvailability', {
+          competitionId,
+          refereeIds: [id],
+          available: present,
+        });
+        if (!run.ok) return res.status(500).json({ error: 'update_failed' });
       }
     } catch (err) {
       logger.error(LogCategory.NETWORK, '[RemoteScoreServer] Erreur appel distant:', toError(err));
