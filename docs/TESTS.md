@@ -106,24 +106,24 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 271 |
-| `src/main/` | 133 | 1155 |
+| `src/main/` | 135 | 1169 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 122 | 654 |
-| E2E Playwright (`e2e/`) | 14 | 43 |
+| `src/renderer/components/` | 123 | 661 |
+| E2E Playwright (`e2e/`) | 15 | 44 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 9 | 38 |
+| `src/renderer/api/` | 9 | 39 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 28 | 267 |
+| `src/shared/domain/` | 30 | 286 |
 | `src/shared/platform/` | 1 | 8 |
-| **Total** | **560** | **4316** |
+| **Total** | **566** | **4358** |
 
-Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3202,12 +3202,13 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/devicesPort.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/devicesPort.test.ts</code> — 5 tests</summary>
 
 - sans épreuve suivie : appareils de la salle par défaut, tables par protocole
 - épreuves suivies : salles de l’épreuve du panneau puis des épreuves en saisie distante
 - démarrage et arrêt : PisteHub branché tant qu’un pilote tourne ; interface invalide refusée
 - manualStripsOf : réglage de l’épreuve normalisé
+- pilotage de la salle : salle pilotée chargée après les épreuves, liaison par protocole
 
 </details>
 
@@ -3339,6 +3340,19 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
 - refus du pilote : device\_refused (message pour l’opérateur)
 - état, routes, options, secours
 - sans pilote (tests, MCP) : unavailable ; la déclaration reste possible
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/devicesControl.test.ts</code> — 7 tests</summary>
+
+- grille : protocole, liaison, piste occupée, dernier envoi ; salle chargée dans les pilotes
+- envoi en masse : verdict par piste, piste manuelle de l’épreuve libre, aucun journal
+- « toutes » les pistes déclarées ; arme seule fusionnée ; remise à blanc ; rien à envoyer refusé
+- piste inconnue du pilote au moment de l’envoi : indisponible
+- setStripDevices : pistes citées seulement, libellé gardé si absent, pistes créées
+- export puis import dans une autre salle ; essai à blanc ; erreurs ligne par ligne
+- import de l’ancien export du panneau Cyrano
 
 </details>
 
@@ -4013,6 +4027,21 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - sideCards : jaune, rouges, puis rouges et noirs P (jaune P non repris)
   - cardCounts : cartons d’arène → compteurs à afficher
   - isActiveState : assaut, halte, pause
+
+</details>
+
+<details>
+<summary><code>src/main/piste/stripControl.test.ts</code> — 6 tests</summary>
+
+- **affichage libre Cyrano**
+  - DISP : arme, noms translittérés et tronqués, nations sur 3 caractères, sans Id
+- **StripControl**
+  - Cyrano : DISP puis HELLO, piste gardée, INFO qui reflète l’envoi = reçu
+  - Cyrano : appareil en plein combat = refusé ; sans INFO = sans réponse
+  - OPP2 : fencers + match publiés sans Id ; écho apparatus/fencers = reçu
+  - OPP2 : appareil en combat = refusé ; piste inconnue ou pilote arrêté : pas d’envoi
+- **PisteHub : affichage libre gardé sur une piste libre**
+  - retour en ligne sans épreuve : pas de remise à blanc si la piste est pilotée par la salle
 
 </details>
 
@@ -6028,7 +6057,7 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/NewCompetitionModal.test.tsx</code> — 5 tests</summary>
+<summary><code>src/renderer/components/NewCompetitionModal.test.tsx</code> — 6 tests</summary>
 
 - **NewCompetitionModal**
   - crée une compétition avec le titre saisi
@@ -6036,6 +6065,7 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - propriétés saisies à la création : appliquées à cette compétition seulement
   - le bouton annuler ferme la modale
   - pré-remplit et verrouille les champs depuis le .zip de l'extranet (#1938)
+  - niveau GREG de l'import visible et modifiable dans Propriétés à la création (#1328)
 
 </details>
 
@@ -6203,6 +6233,21 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - au-dessus, centré sur le déclencheur
   - bascule en dessous si pas de place en haut
   - recadré au bord droit de la fenêtre
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/VenueStripControlPanel.test.tsx</code> — 6 tests</summary>
+
+- **buildRequest**
+  - seuls les champs saisis partent
+- **VenueStripControlPanel**
+  - grille : liaison, piste occupée, accusé reçu, pilote OPP2 arrêté
+  - envoi en masse : arme, noms, nations ; résultat par piste ; toutes ; remise à blanc
+  - sans sélection ni champ : rien n’est envoyé
+- **VenueStripBulkTools**
+  - ajout en lot (IP incrémentée) puis export par contenu
+  - import : erreurs du contrôle affichées ligne par ligne, rien d’écrit
 
 </details>
 
@@ -7318,6 +7363,13 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
+<summary><code>e2e/electron/strip-control.spec.ts</code> — 1 test</summary>
+
+- pilotage de la salle : arme et noms envoyés à 2 pistes, accusé visible
+
+</details>
+
+<details>
 <summary><code>e2e/electron/withdrawal.spec.ts</code> — 1 test</summary>
 
 - sortie médicale depuis l’appel puis réactivation : matchs perdus puis rendus
@@ -8306,11 +8358,12 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/api/devicesApi.test.ts</code> — 2 tests</summary>
+<summary><code>src/renderer/api/devicesApi.test.ts</code> — 3 tests</summary>
 
 - **devicesApi : entrées du contrat**
   - %s _(each)_
   - chaque opération des appareils est atteignable par un appel de l’écran
+  - onStripControlChanged : abonnement de l’écran
 
 </details>
 
@@ -8840,6 +8893,29 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/stripDevices/stripControl.test.ts</code> — 12 tests</summary>
+
+- **selectStrips**
+  - toutes : pistes déclarées ; liste : sans doublon, triée, gardée telle quelle
+- **stripOccupancy**
+  - épreuve de la salle dont la séance a l’arène de la piste (arène déclarée sur l’appareil)
+  - piste passée en manuel par l’épreuve : libre ; autre salle : ignorée
+  - deux épreuves : la piste manuelle de l’une reste occupée par l’autre
+- **stripSendOutcome**
+  - ordre : non déclarée, occupée, indisponible, hors ligne, envoyée
+- **mergeStripPanel**
+  - champ absent : inchangé ; chaîne vide : effacé ; espaces réduits
+  - remise à blanc : repart de rien, puis applique la même demande
+  - affichage vide, demande vide
+- **stripAckVerdict**
+  - noms et arme renvoyés : reçu (casse et espaces ignorés)
+  - appareil en plein combat sans l’affichage : refusé ; au repos : on attend
+  - morceau sans nom ni arme : rien de conclusif ; remise à blanc : noms vides
+  - délai d’attente
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/stripDevices/stripDevices.test.ts</code> — 9 tests</summary>
 
 - **toStripDevice**
@@ -8856,6 +8932,22 @@ Unitaires : 546 fichiers, 4273 tests. E2E : 14 fichiers, 43 tests (comptage stat
   - pistes manuelles de l’épreuve marquées
 - **driverTables**
   - sépare Cyrano et OPP2, première déclaration d’une piste gardée
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/stripDevices/stripDevicesFile.test.ts</code> — 7 tests</summary>
+
+- **incrementIpv4**
+  - dernier octet puis retenue ; adresse invalide ou hors plage : null
+- **buildStripDeviceBatch**
+  - Cyrano : IP de départ incrémentée, port, version, mode
+  - profil Saint-George : IP déduite du numéro de piste ; sans IP : piste écartée
+  - OPP2 ; plage bornée à la piste 100
+- **fichier d’appareils**
+  - export puis lecture : lignes numérotées
+  - ancien export Cyrano repris ; tableau nu accepté ; erreurs de format
+  - doublons ; déclarations d’une salle triées
 
 </details>
 
