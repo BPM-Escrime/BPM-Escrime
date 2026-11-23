@@ -217,9 +217,7 @@ export const devicesOperations = {
     output: z.custom<Venue>(),
     permission: 'remote:admin',
   }),
-  // Commande (verbe + objet, docs/adr/0008) bien qu'elle n'écrive rien : une requête commence
-  // par get / list, le nom exportStripDevices est celui du ticket
-  exportStripDevices: command({
+  getStripDevicesFile: query({
     description:
       'Fichier JSON des appareils de la salle (format bellepoule-strip-devices, version 1), à enregistrer par l’écran ; n’écrit rien. Salle inconnue : venue_not_found.',
     input: z.strictObject({ venueId: VenueId }),

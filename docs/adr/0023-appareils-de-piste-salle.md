@@ -106,7 +106,7 @@ avec le droit `remote:admin`, jamais servies sur le réseau :
   `apparatus/fencers`.
 - Les appareils de la salle pilotée sont chargés dans les pilotes **après** ceux des salles des
   épreuves suivies : une épreuve garde toujours la priorité sur une piste du pilote commune.
-- Déclaration en masse (`setStripDevices`, `exportStripDevices`, `importStripDevices`) : le
+- Déclaration en masse (`setStripDevices`, `getStripDevicesFile`, `importStripDevices`) : le
   fichier circule par contenu, jamais par chemin ; import validé ligne par ligne, rien d'écrit
   sur erreur.
 

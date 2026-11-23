@@ -171,7 +171,7 @@ export const devicesControlHandlers: { [N in DevicesControlOps]: DevicesHandler<
     return venue;
   },
 
-  exportStripDevices: (ctx, { venueId }) => {
+  getStripDevicesFile: (ctx, { venueId }) => {
     const venue = venueOrThrow(ctx, venueId);
     const declared = venueDeclarations(venue.strips, toStripDevice).filter(d => d.device);
     return {

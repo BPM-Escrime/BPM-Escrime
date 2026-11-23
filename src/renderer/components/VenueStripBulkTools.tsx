@@ -81,7 +81,7 @@ const VenueStripBulkTools: React.FC<Props> = ({ venueId, onChanged }) => {
 
   const exportFile = async () => {
     try {
-      const file = await api.exportStripDevices(venueId);
+      const file = await api.getStripDevicesFile(venueId);
       await platform.saveFile({
         suggestedName: file.fileName,
         filters: JSON_FILTER,

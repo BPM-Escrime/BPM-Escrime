@@ -78,7 +78,7 @@ export function createDevicesApi(client: BpmClient) {
     // ── Déclaration en masse (#2117) ──
     setStripDevices: (venueId: string, devices: StripDeviceDeclaration[]) =>
       c('setStripDevices', { venueId, devices }),
-    exportStripDevices: (venueId: string) => c('exportStripDevices', { venueId }),
+    getStripDevicesFile: (venueId: string) => q('getStripDevicesFile', { venueId }),
     importStripDevices: (venueId: string, content: string, dryRun = false) =>
       c('importStripDevices', { venueId, content, dryRun }),
   };

@@ -26,7 +26,7 @@ export type DevicesControlOps =
   | 'listVenueStripControl'
   | 'sendStripDisplay'
   | 'setStripDevices'
-  | 'exportStripDevices'
+  | 'getStripDevicesFile'
   | 'importStripDevices';
 type DevicesOps = Exclude<keyof Ops, DevicesControlOps | 'onStripControlChanged'>;
 

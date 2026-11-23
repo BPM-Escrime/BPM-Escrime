@@ -287,7 +287,7 @@ d('déclaration en masse, export et import', () => {
 
   it('export puis import dans une autre salle ; essai à blanc ; erreurs ligne par ligne', async () => {
     const venue = await hall();
-    const file = await op('exportStripDevices', { venueId: venue.id });
+    const file = await op('getStripDevicesFile', { venueId: venue.id });
     expect(file.fileName).toBe('appareils-halle-nord.json');
     const parsed = JSON.parse(file.content);
     expect(parsed).toMatchObject({ format: 'bellepoule-strip-devices', version: 1 });

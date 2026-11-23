@@ -201,14 +201,14 @@ externe qui envoyait les ordres aux appareils). Capture : [26-pilotage-salle](sc
   invalide et rien n'est écrit, erreurs rendues ligne par ligne. Capture :
   [25-salle-appareils](screenshots/25-salle-appareils.png).
 
-| Opération (droit `remote:admin`, jamais sur le réseau, pas de MCP)      | Rôle                                                                    |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `listVenueStripControl({ venueId })`                                    | grille du pilotage                                                      |
-| `sendStripDisplay({ venueId, strips, weapon?, left?, right?, clear? })` | affichage libre en masse, résultat par piste                            |
-| `onStripControlChanged`                                                 | avis : accusé ou liaison changés (l'écran relit la grille)              |
-| `setStripDevices({ venueId, devices })`                                 | ajout en lot : pistes citées seulement, une transaction                 |
-| `exportStripDevices({ venueId })`                                       | contenu JSON et nom de fichier (commande : verbe + objet, n'écrit rien) |
-| `importStripDevices({ venueId, content, dryRun? })`                     | import validé ligne par ligne (`applied`, `strips`, `errors`)           |
+| Opération (droit `remote:admin`, jamais sur le réseau, pas de MCP)      | Rôle                                                          |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `listVenueStripControl({ venueId })`                                    | grille du pilotage                                            |
+| `sendStripDisplay({ venueId, strips, weapon?, left?, right?, clear? })` | affichage libre en masse, résultat par piste                  |
+| `onStripControlChanged`                                                 | avis : accusé ou liaison changés (l'écran relit la grille)    |
+| `setStripDevices({ venueId, devices })`                                 | ajout en lot : pistes citées seulement, une transaction       |
+| `getStripDevicesFile({ venueId })`                                      | contenu JSON et nom de fichier (requête, n’écrit rien)        |
+| `importStripDevices({ venueId, content, dryRun? })`                     | import validé ligne par ligne (`applied`, `strips`, `errors`) |
 
 Code : règles pures `src/shared/domain/stripDevices/stripControl.ts` (sélection, occupation,
 verdict, fusion, accusé) et `stripDevicesFile.ts` (lot, fichier) ; envoi et accusé

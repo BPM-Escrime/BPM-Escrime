@@ -63,7 +63,7 @@ function install(extra: Record<string, (i: Record<string, unknown>) => unknown> 
       ]),
       startOpp2Broker: record('startOpp2Broker', () => ({ port: 1883 })),
       setStripDevices: record('setStripDevices', () => ({})),
-      exportStripDevices: record('exportStripDevices', () => ({
+      getStripDevicesFile: record('getStripDevicesFile', () => ({
         content: '{"strips":[]}',
         fileName: 'appareils-halle.json',
       })),

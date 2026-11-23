@@ -73,7 +73,7 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
         { strip: 2, label: 'Podium', device: null },
       ]),
   ],
-  ['exportStripDevices', () => api.exportStripDevices('v1')],
+  ['getStripDevicesFile', () => api.getStripDevicesFile('v1')],
   ['importStripDevices', () => api.importStripDevices('v1', '{"strips":[]}', true)],
 ];
 
