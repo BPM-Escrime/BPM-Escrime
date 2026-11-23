@@ -113,7 +113,7 @@ export function checkFinishedScore(db: DatabaseManager, score: FinishedScore): F
 
 /**
  * Réintégration par reinstateFencer (annulation d'un carton noir depuis la tablette,
- * docs/adr/0016) : true si le moteur l'a écrite, false pour le chemin historique.
+ * docs/adr/0016) : true si le moteur l'a écrite, false si refusée (rien d'écrit).
  */
 export function reinstateByCommand(
   db: DatabaseManager,
@@ -136,7 +136,7 @@ export function reinstateByCommand(
   } catch (e) {
     logger.info(
       LogCategory.NETWORK,
-      `[reinstateByCommand] ${fencerId} : chemin historique (${(e as { code?: string }).code ?? 'internal'})`
+      `[reinstateByCommand] ${fencerId} : réintégration refusée (${(e as { code?: string }).code ?? 'internal'})`
     );
     return false;
   }

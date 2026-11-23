@@ -43,6 +43,14 @@ vi.mock('http', () => ({
   }),
 }));
 
+// Réintégration par la commande reinstateFencer (docs/adr/0016) : simulée ici, la base de
+// test n'a pas de journal (#2134 : plus d'écriture directe en repli)
+const reinstateByCommand = vi.hoisted(() => vi.fn(() => true));
+vi.mock('./remote/scoreCommand', async orig => ({
+  ...(await orig<typeof import('./remote/scoreCommand')>()),
+  reinstateByCommand,
+}));
+
 import { createServer } from 'http';
 import { RemoteScoreServer } from './remoteScoreServer';
 import { setUiLanguage } from './menuLabels';
@@ -1046,16 +1054,28 @@ describe('RemoteScoreServer', () => {
         vi.fn()
       );
       expect(res.json).toHaveBeenCalledWith({ success: true, matchId: 'm1' });
-      expect(mockDb.updateFencer).toHaveBeenLastCalledWith('a', {
-        status: 'Q',
-        exclusionReason: null,
-      });
+      expect(reinstateByCommand).toHaveBeenCalledWith(expect.anything(), 'comp-1', 'a');
       const reopened = (server as any).sessionMatchScores.get('m1');
       expect(reopened.status).toBe('in_progress');
       expect(reopened.scoreA).toMatchObject({ value: 3, isExclusion: false, isVictory: false });
       expect(reopened.scoreB).toMatchObject({ value: 2, isVictory: false });
       expect((server as any).isMatchPlayable((server as any).sessionMatches[1])).toBe(true);
       expect((server as any).sessionBlackCards.size).toBe(0);
+    });
+
+    it('commande refusée : 409, rien d’écrit ni rouvert (#2134)', async () => {
+      await giveBlackCard();
+      reinstateByCommand.mockReturnValueOnce(false);
+      mockDb.updateFencer.mockClear();
+      const res = makeRes();
+      findHandler('post', '/api/arenas/:arenaId/black-cards/:fencerId/cancel')(
+        makeReq({ method: 'POST', params: { arenaId: 'arena1', fencerId: 'a' } }),
+        res,
+        vi.fn()
+      );
+      expect(res.status).toHaveBeenCalledWith(409);
+      expect(mockDb.updateFencer).not.toHaveBeenCalled();
+      expect((server as any).isMatchPlayable((server as any).sessionMatches[1])).toBe(false);
     });
 
     it("refuse l'annulation d'un carton noir en tableau", async () => {

@@ -287,8 +287,6 @@ export interface StationPort {
   dayStrips: {
     board(dayId: string): DayStripBoard | null;
     assign(dayId: string, strip: number, key: string): boolean;
-    setRule(dayId: string, strip: number, rule: unknown): boolean;
-    setAutoAssign(dayId: string, on: boolean): boolean;
   };
 }
 
