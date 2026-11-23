@@ -482,6 +482,7 @@
     "uncheck_all": "Uncheck all",
     "view": "View",
     "default": "Not specified",
+    "optional": "Optional",
     "save_and_add": "Save and add",
     "remove": "Remove",
     "move_up": "Move up",
@@ -4370,6 +4371,7 @@
     "hint_arenas": "Number of arenas you want. “Optimize” finds the maximum possible.",
     "arena_names": "Arena names",
     "arena_name": "Arena {{n}}",
+    "arena_rotate": "Rotate arena {{n}}",
     "hint_margin": "Distance from the plan to the inside of the walls.",
     "spacing": "Spacing",
     "spacing_packed": "Packed (minimum)",
@@ -4595,7 +4597,8 @@
     "info_contactName": "Contact name",
     "info_contactEmail": "Contact email",
     "variables": "Variables",
-    "variables_hint": "Click to insert into the current field: the value follows the essentials.",
+    "variables_hint": "Values: “Essentials” tab. Chip = insert into the current field; dashed = no value. Highlighted variable in the preview: click to fill it in.",
+    "variable_empty": "fill in under “Essentials”",
     "var_titre": "Competition name",
     "var_edition": "Edition",
     "var_date": "Competition date",
@@ -4619,6 +4622,7 @@
     "layout_text": "Text",
     "move_up": "Move up",
     "move_down": "Move down",
+    "drag_section": "Drag to move the section",
     "delete_section": "Delete section",
     "delete_section_confirm": "Delete the “{{title}}” section?",
     "row_label": "Heading",
@@ -4655,5 +4659,11 @@
     "exported": "Document exported",
     "preview_hint": "A4 preview: click a section to edit it",
     "content_note": "Pre-filled content is written in French (FFE rules). Draft saved automatically on this computer."
+  },
+  "placeSearch": {
+    "loading": "Searching…",
+    "empty": "No place found",
+    "offline": "Search unavailable (no connection)",
+    "credit": "Data © OpenStreetMap, IGN"
   }
 }

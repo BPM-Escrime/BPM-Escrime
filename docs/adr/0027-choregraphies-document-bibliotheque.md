@@ -1,4 +1,4 @@
-# ADR-0026 — Une chorégraphie est un document versionné de la bibliothèque du poste, compatible `.chore`
+# ADR-0027 — Une chorégraphie est un document versionné de la bibliothèque du poste, compatible `.chore`
 
 - **Statut** : Proposée
 - **Date** : 2026-11-23

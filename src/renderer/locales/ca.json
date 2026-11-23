@@ -482,6 +482,7 @@
     "uncheck_all": "Cancel·lar Tots",
     "view": "Veure",
     "default": "No especificat",
+    "optional": "Opcional",
     "save_and_add": "Desar i afegir",
     "remove": "Treure",
     "move_up": "Pujar",
@@ -4370,6 +4371,7 @@
     "hint_arenas": "Nombre d’arenes desitjat. «Optimitza» troba el màxim possible.",
     "arena_names": "Noms de les pistes",
     "arena_name": "Pista {{n}}",
+    "arena_rotate": "Gira l'arena {{n}}",
     "hint_margin": "Distància del plànol a l’interior de les parets.",
     "spacing": "Espaiat",
     "spacing_packed": "Junts (mínim)",
@@ -4595,7 +4597,8 @@
     "info_contactName": "Nom del contacte",
     "info_contactEmail": "Correu electrònic del contacte",
     "variables": "Variables",
-    "variables_hint": "Feu clic per inserir-la al camp actual: el valor segueix l'essencial.",
+    "variables_hint": "Valors: pestanya «L'essencial». Etiqueta = inserir al camp actual; discontínua = sense valor. Variable ressaltada a la previsualització: feu-hi clic per omplir-la.",
+    "variable_empty": "a omplir a «L'essencial»",
     "var_titre": "Nom de la competició",
     "var_edition": "Edició",
     "var_date": "Data de la competició",
@@ -4619,6 +4622,7 @@
     "layout_text": "Text",
     "move_up": "Puja",
     "move_down": "Baixa",
+    "drag_section": "Arrossegueu per moure la secció",
     "delete_section": "Suprimeix la secció",
     "delete_section_confirm": "Voleu suprimir la secció «{{title}}»?",
     "row_label": "Epígraf",
@@ -4655,5 +4659,11 @@
     "exported": "Document exportat",
     "preview_hint": "Vista prèvia A4: feu clic en una secció per editar-la",
     "content_note": "El contingut precarregat està redactat en francès (reglaments FFE). L'esborrany es desa automàticament en aquest ordinador."
+  },
+  "placeSearch": {
+    "loading": "Cercant…",
+    "empty": "No s'ha trobat cap lloc",
+    "offline": "Cerca no disponible (sense connexió)",
+    "credit": "Dades © OpenStreetMap, IGN"
   }
 }

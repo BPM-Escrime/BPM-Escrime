@@ -482,6 +482,7 @@
     "uncheck_all": "Tout dépointer",
     "view": "Voir",
     "default": "Non spécifié",
+    "optional": "Optionnel",
     "save_and_add": "Enregistrer et ajouter",
     "remove": "Retirer",
     "move_up": "Monter",
@@ -4370,6 +4371,7 @@
     "hint_arenas": "Nombre d’arènes souhaité. « Optimiser » cherche le maximum possible.",
     "arena_names": "Noms des arènes",
     "arena_name": "Arène {{n}}",
+    "arena_rotate": "Tourner l'arène {{n}}",
     "hint_margin": "Distance du plan à l’intérieur des murs.",
     "spacing": "Espacement",
     "spacing_packed": "Collées (minimum)",
@@ -4595,7 +4597,8 @@
     "info_contactName": "Nom du contact",
     "info_contactEmail": "E-mail du contact",
     "variables": "Variables",
-    "variables_hint": "Cliquez pour insérer dans le champ en cours : la valeur suit l'essentiel.",
+    "variables_hint": "Valeurs : onglet « L'essentiel ». Pastille = insertion dans le champ en cours ; pointillés = sans valeur. Variable surlignée dans l'aperçu : cliquez pour la remplir.",
+    "variable_empty": "à remplir dans « L'essentiel »",
     "var_titre": "Nom de la compétition",
     "var_edition": "Édition",
     "var_date": "Date de la compétition",
@@ -4619,6 +4622,7 @@
     "layout_text": "Texte",
     "move_up": "Monter",
     "move_down": "Descendre",
+    "drag_section": "Glisser pour déplacer la section",
     "delete_section": "Supprimer la section",
     "delete_section_confirm": "Supprimer la section « {{title}} » ?",
     "row_label": "Intitulé",
@@ -4655,5 +4659,11 @@
     "exported": "Document exporté",
     "preview_hint": "Aperçu A4 : cliquez sur une section pour la modifier",
     "content_note": "Le contenu prérempli est rédigé en français (règlements FFE). Brouillon gardé automatiquement sur ce poste."
+  },
+  "placeSearch": {
+    "loading": "Recherche…",
+    "empty": "Aucun lieu trouvé",
+    "offline": "Recherche indisponible (pas de connexion)",
+    "credit": "Données © OpenStreetMap, IGN"
   }
 }

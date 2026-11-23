@@ -482,6 +482,7 @@
     "uncheck_all": "Annulla tutte le conferme",
     "view": "Vedi",
     "default": "Non specificato",
+    "optional": "Facoltativo",
     "save_and_add": "Salva e aggiungi",
     "remove": "Rimuovi",
     "move_up": "Sposta su",
@@ -4370,6 +4371,7 @@
     "hint_arenas": "Numero di arene desiderato. «Ottimizza» trova il massimo possibile.",
     "arena_names": "Nomi delle pedane",
     "arena_name": "Pedana {{n}}",
+    "arena_rotate": "Ruota l'arena {{n}}",
     "hint_margin": "Distanza della pianta dall’interno delle pareti.",
     "spacing": "Spaziatura",
     "spacing_packed": "Vicine (minimo)",
@@ -4595,7 +4597,8 @@
     "info_contactName": "Nome del contatto",
     "info_contactEmail": "E-mail del contatto",
     "variables": "Variabili",
-    "variables_hint": "Clicca per inserire nel campo corrente: il valore segue l'essenziale.",
+    "variables_hint": "Valori: scheda «L'essenziale». Etichetta = inserisci nel campo corrente; tratteggiata = senza valore. Variabile evidenziata nell'anteprima: clicca per compilarla.",
+    "variable_empty": "da compilare in «L'essenziale»",
     "var_titre": "Nome della gara",
     "var_edition": "Edizione",
     "var_date": "Data della gara",
@@ -4619,6 +4622,7 @@
     "layout_text": "Testo",
     "move_up": "Sposta su",
     "move_down": "Sposta giù",
+    "drag_section": "Trascina per spostare la sezione",
     "delete_section": "Elimina sezione",
     "delete_section_confirm": "Eliminare la sezione «{{title}}»?",
     "row_label": "Intestazione",
@@ -4655,5 +4659,11 @@
     "exported": "Documento esportato",
     "preview_hint": "Anteprima A4: clicca su una sezione per modificarla",
     "content_note": "Il contenuto precompilato è redatto in francese (regolamenti FFE). La bozza viene salvata automaticamente su questo computer."
+  },
+  "placeSearch": {
+    "loading": "Ricerca…",
+    "empty": "Nessun luogo trovato",
+    "offline": "Ricerca non disponibile (nessuna connessione)",
+    "credit": "Dati © OpenStreetMap, IGN"
   }
 }

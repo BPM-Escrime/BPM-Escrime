@@ -101,6 +101,23 @@ describe('ArenaPlannerModal', () => {
     expect(document.querySelector('.arena-planner-arena-name')).toHaveTextContent('Piste Rouge');
   });
 
+  it('tourne une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle', () => {
+    const { container } = render(<ArenaPlannerModal onClose={() => {}} />);
+    const rotate = screen.getByRole('button', { name: 'arenaPlanner.arena_rotate n=1' });
+    expect(rotate).toHaveTextContent('0°');
+    fireEvent.click(rotate);
+    expect(rotate).toHaveTextContent('90°');
+    const turned = container.querySelector('.arena-planner-guard-red')!.parentElement!;
+    expect(turned.getAttribute('transform')).toMatch(/^rotate\(90 /);
+    // Chiffres des rôles gardés droits
+    const label = container.querySelector('.arena-planner-role-label')!;
+    expect(label.getAttribute('transform')).toMatch(/^rotate\(-90 /);
+    fireEvent.click(rotate);
+    fireEvent.click(rotate);
+    fireEvent.click(rotate);
+    expect(rotate).toHaveTextContent('0°');
+  });
+
   it("change la couleur d'une zone puis revient à la couleur par défaut", () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
     fireEvent.change(screen.getByLabelText('arenaPlanner.add_zone'), {

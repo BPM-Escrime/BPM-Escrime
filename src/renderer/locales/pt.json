@@ -482,6 +482,7 @@
     "uncheck_all": "Anular todas as presenças",
     "view": "Ver",
     "default": "Não especificado",
+    "optional": "Opcional",
     "save_and_add": "Guardar e adicionar",
     "remove": "Remover",
     "move_up": "Subir",
@@ -4370,6 +4371,7 @@
     "hint_arenas": "Número de arenas pretendido. «Otimizar» encontra o máximo possível.",
     "arena_names": "Nomes das pistas",
     "arena_name": "Pista {{n}}",
+    "arena_rotate": "Rodar a arena {{n}}",
     "hint_margin": "Distância da planta ao interior das paredes.",
     "spacing": "Espaçamento",
     "spacing_packed": "Juntas (mínimo)",
@@ -4595,7 +4597,8 @@
     "info_contactName": "Nome do contacto",
     "info_contactEmail": "E-mail do contacto",
     "variables": "Variáveis",
-    "variables_hint": "Clique para inserir no campo atual: o valor acompanha o essencial.",
+    "variables_hint": "Valores: separador «O essencial». Etiqueta = inserir no campo atual; tracejada = sem valor. Variável realçada na pré-visualização: clique para a preencher.",
+    "variable_empty": "preencher em «O essencial»",
     "var_titre": "Nome da competição",
     "var_edition": "Edição",
     "var_date": "Data da competição",
@@ -4619,6 +4622,7 @@
     "layout_text": "Texto",
     "move_up": "Subir",
     "move_down": "Descer",
+    "drag_section": "Arraste para mover a secção",
     "delete_section": "Eliminar secção",
     "delete_section_confirm": "Eliminar a secção «{{title}}»?",
     "row_label": "Rótulo",
@@ -4655,5 +4659,11 @@
     "exported": "Documento exportado",
     "preview_hint": "Pré-visualização A4: clique numa secção para a editar",
     "content_note": "O conteúdo pré-preenchido está redigido em francês (regulamentos FFE). O rascunho é guardado automaticamente neste computador."
+  },
+  "placeSearch": {
+    "loading": "A pesquisar…",
+    "empty": "Nenhum local encontrado",
+    "offline": "Pesquisa indisponível (sem ligação)",
+    "credit": "Dados © OpenStreetMap, IGN"
   }
 }

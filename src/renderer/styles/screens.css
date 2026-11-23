@@ -80,6 +80,7 @@
 @import './screens/voice-score-controller.css';
 @import './screens/wifi-qr-modal.css';
 @import './screens/arena-planner-modal.css';
+@import './screens/place-search.css';
 @import './screens/roadmap-modal.css';
 @import './screens/wiki-article-renderer.css';
 @import './screens/wiki-modal.css';
