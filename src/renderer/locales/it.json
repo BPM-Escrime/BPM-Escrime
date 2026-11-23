@@ -4657,5 +4657,11 @@
     "exported": "Documento esportato",
     "preview_hint": "Anteprima A4: clicca su una sezione per modificarla",
     "content_note": "Il contenuto precompilato è redatto in francese (regolamenti FFE). La bozza viene salvata automaticamente su questo computer."
+  },
+  "placeSearch": {
+    "loading": "Ricerca…",
+    "empty": "Nessun luogo trovato",
+    "offline": "Ricerca non disponibile (nessuna connessione)",
+    "credit": "Dati © OpenStreetMap, IGN"
   }
 }

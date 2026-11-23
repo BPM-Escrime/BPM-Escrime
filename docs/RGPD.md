@@ -96,6 +96,11 @@ tablette : à la sélection d'un match, tireurs et arbitre viennent de la sessio
 Toujours retirés, quel que soit le réglage : date de naissance, licence, IP des tablettes,
 photo (sauf affichage des photos activé pour la session). Appliqué à chaud.
 
+**Recherche de lieu** : le texte tapé dans un champ « Lieu » (création de compétition, feuille
+de route) part du poste vers `photon.komoot.io`, puis `data.geopf.fr` (IGN) en secours, pour
+proposer des lieux. Rien d'autre : ni nom de personne, ni donnée de l'épreuve
+([ADR-0026](adr/0026-recherche-de-lieu.md)).
+
 ### Suppression d'une compétition
 
 Supprimer une compétition efface toutes ses lignes : tireurs, poules, matchs de poule et de

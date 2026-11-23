@@ -24,6 +24,7 @@ import { Settings } from 'lucide-react';
 import FederalImportPanel from './FederalImportPanel';
 import { useFederalImport, type FederalCreationPayload } from '../hooks/useFederalImport';
 import type { FederalNotice } from '../../shared/utils/fileParser/federalImport';
+import { PlaceSearchField } from './common/PlaceSearchField';
 
 interface NewCompetitionModalProps {
   onClose: () => void;
@@ -449,13 +450,12 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
                 <label className="form-label" htmlFor="new-competition-location">
                   {t('competition.location')} ({t('actions.default')})
                 </label>
-                <input
+                <PlaceSearchField
                   id="new-competition-location"
-                  type="text"
                   className="form-input"
                   placeholder={t('newCompetition.location_ph')}
                   value={location}
-                  onChange={e => setLocation(e.target.value)}
+                  onChange={setLocation}
                   disabled={locks.location}
                 />
               </div>

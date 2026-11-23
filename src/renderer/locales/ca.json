@@ -4657,5 +4657,11 @@
     "exported": "Document exportat",
     "preview_hint": "Vista prèvia A4: feu clic en una secció per editar-la",
     "content_note": "El contingut precarregat està redactat en francès (reglaments FFE). L'esborrany es desa automàticament en aquest ordinador."
+  },
+  "placeSearch": {
+    "loading": "Cercant…",
+    "empty": "No s'ha trobat cap lloc",
+    "offline": "Cerca no disponible (sense connexió)",
+    "credit": "Dades © OpenStreetMap, IGN"
   }
 }
