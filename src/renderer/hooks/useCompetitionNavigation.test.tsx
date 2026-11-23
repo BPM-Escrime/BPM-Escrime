@@ -60,9 +60,8 @@ const setup = (
     finalResults: [],
     setFinalResults: vi.fn(),
     activeSplitGroup: null,
-    setActiveSplitGroup: vi.fn(),
-    splitTableauStates: {},
-    setSplitTableauStates: vi.fn(),
+    groupTableaux: {},
+    showSplitGroup: vi.fn(),
     ...fns,
   };
   const { result } = renderHook(

@@ -9,7 +9,14 @@
  * Les écarts de structure (poules, tours, placement du tableau) sont rendus sans être corrigés.
  * Licensed under GPL-3.0
  */
-import { MatchStatus, type Competition, type FencerStatus, type Pool } from '../../../shared/types';
+import {
+  MatchStatus,
+  type Competition,
+  type FencerStatus,
+  type Pool,
+  type PoolRanking,
+} from '../../../shared/types';
+import { importedRanking } from '../../../shared/domain/ranking/splitGroups';
 import {
   applyScoreToPool,
   buildMatchScores,
@@ -78,7 +85,12 @@ function statusesOf(ctx: CommandContext, competitionId: string): Record<string, 
 function diagnose(ctx: CommandContext, competitionId: string) {
   const facts = projectCompetition(readJournal(ctx, competitionId));
   const session = readSession(ctx, competitionId);
-  const divergences = compareWithState(facts, stateView(session), statusesOf(ctx, competitionId));
+  const settings = ctx.db.getCompetition(competitionId)?.settings ?? {};
+  const divergences = compareWithState(
+    facts,
+    stateView(session, settings),
+    statusesOf(ctx, competitionId)
+  );
   return { facts, session, divergences };
 }
 
@@ -227,11 +239,42 @@ export function rebuildCompetitionState(
     if (plan.rapieres) {
       patch.rapieres = { ...(session.rapieres as object), ...plan.rapieres };
     }
+    // Tableaux séparés (docs/adr/0024, lot A3) : groupes extraits, classement importé
+    if (plan.splitOff) {
+      const splitOffCompetitionIds = { ...comp.settings?.splitOffCompetitionIds, ...plan.splitOff };
+      ctx.db.updateCompetition(comp.id, {
+        settings: { ...comp.settings, splitOffCompetitionIds } as Competition['settings'],
+      });
+    }
+    if (plan.importRanking && facts.importedRanking) {
+      patch.overallRanking = rebuildImportedRanking(ctx, comp.id, facts.importedRanking);
+    }
     if (Object.keys(patch).length > 0) writeSession(ctx, comp.id, patch);
   });
   emitSession(ctx, comp.id);
   if (plan.statuses.size > 0) ctx.emitChange?.({ scope: 'fencers', competitionIds: [comp.id] });
+  if (plan.splitOff) ctx.emitChange?.({ scope: 'competitions', competitionIds: [comp.id] });
   return report(diagnose(ctx, comp.id).divergences, plan.repaired, false);
+}
+
+/**
+ * Classement importé d'une épreuve séparée, d'après le journal : statistiques de poule relues
+ * dans l'épreuve d'origine, rangs seuls si elle a été supprimée (docs/adr/0024)
+ */
+function rebuildImportedRanking(
+  ctx: CommandContext,
+  competitionId: string,
+  imported: NonNullable<CompetitionFacts['importedRanking']>
+) {
+  const fencers = new Map(ctx.db.getFencersByCompetition(competitionId).map(f => [f.id, f]));
+  const source = ctx.db.getCompetition(imported.sourceCompetitionId)
+    ? readSession(ctx, imported.sourceCompetitionId).overallRanking
+    : null;
+  return importedRanking(
+    imported.ranking,
+    fencers,
+    Array.isArray(source) ? (source as PoolRanking[]) : null
+  );
 }
 
 /** Corrections applicables, sans écriture */
@@ -252,6 +295,8 @@ function planRepair(
   const mainChanged = new Set<TableauSlot>();
   const bracketChanged = new Set<TableauSlot>();
   let rapieres: { launchedWave: number; wavesEnded: boolean } | null = null;
+  let splitOff: Record<string, string> | null = null;
+  let importRanking = false;
 
   for (const d of divergences) {
     switch (d.kind) {
@@ -289,6 +334,17 @@ function planRepair(
           repaired.push(d);
         }
         break;
+      case 'split_off':
+        if (facts.splitOffGroups[d.id]) {
+          splitOff ??= {};
+          splitOff[d.id] = facts.splitOffGroups[d.id].targetCompetitionId;
+          repaired.push(d);
+        }
+        break;
+      case 'imported_ranking':
+        importRanking = true;
+        repaired.push(d);
+        break;
       default:
         break;
     }
@@ -299,5 +355,5 @@ function planRepair(
       slot,
       ...settleBracket(comp, session, slot.matches, slot.brackets, mainChanged.has(slot), slot),
     }));
-  return { repaired, statuses, pools, tableaux, rapieres };
+  return { repaired, statuses, pools, tableaux, rapieres, splitOff, importRanking };
 }

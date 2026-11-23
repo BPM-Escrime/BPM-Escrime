@@ -54,9 +54,15 @@ type DragState =
   | { mode: 'resize'; id: string; cx: number; cy: number; rot: number }
   | { mode: 'rotate'; id: string; cx: number; cy: number };
 
+/** Classes CSS d'un élément : type, puis type de zone (couleur) */
+export const itemClass = (item: RoomItem): string =>
+  item.zone ? `${ITEM_CLASS[item.kind]} arena-planner-zone-${item.zone}` : ITEM_CLASS[item.kind];
+
 export interface ArenaPlanCanvasProps {
   room: RoomSize;
   centers: Point[];
+  /** Noms des arènes, par rang, écrits au-dessus de chaque arène */
+  arenaNames?: string[];
   items: RoomItem[];
   selectedId: string | null;
   conflictIds: Set<string>;
@@ -74,6 +80,7 @@ export interface ArenaPlanCanvasProps {
 export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   room,
   centers,
+  arenaNames,
   items,
   selectedId,
   conflictIds,
@@ -324,6 +331,16 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
               y2={g.center.y + 0.6}
               className="arena-planner-guard-green"
             />
+            {arenaNames?.[i]?.trim() ? (
+              <text
+                x={g.center.x}
+                y={g.center.y - ARENA_ZONE_RADIUS_M - 0.3}
+                className="arena-planner-arena-name"
+                textAnchor="middle"
+              >
+                {arenaNames[i].trim()}
+              </text>
+            ) : null}
             {g.roles.map(r => (
               <g key={r.label}>
                 <circle
@@ -353,7 +370,7 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
           const cy = item.y + item.heightM / 2;
           const classes = [
             'arena-planner-item',
-            ITEM_CLASS[item.kind],
+            itemClass(item),
             selected ? 'arena-planner-item-selected' : '',
             conflict ? 'arena-planner-item-conflict' : '',
           ]

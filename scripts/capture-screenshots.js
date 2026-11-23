@@ -113,10 +113,15 @@ async function main() {
 
     // Compétition de démonstration
     await win.evaluate(async fencers => {
-      const db = window.electronAPI.db;
-      const c = await db.createCompetition({
+      // Épreuve et tireurs par le contrat d'API (docs/adr/0018)
+      const call = async (name, input) => {
+        const r = await window.electronAPI.api.invoke(name, input);
+        if (!r.ok) throw new Error(`${name} : ${r.error.message}`);
+        return r.data;
+      };
+      const { competitionId } = await call('createCompetition', {
         title: 'Challenge de la Ville — Épée Senior',
-        date: new Date('2026-11-14'),
+        date: '2026-11-14',
         location: 'Gymnase Jean Moulin',
         weapon: 'E',
         gender: 'X',
@@ -136,19 +141,18 @@ async function main() {
           minTeamSize: 3,
         },
       });
-      let i = 0;
-      for (const [lastName, firstName, club] of fencers) {
-        i++;
-        await db.addFencer(c.id, {
+      await call('registerFencers', {
+        competitionId,
+        fencers: fencers.map(([lastName, firstName, club], i) => ({
           lastName,
           firstName,
           club,
-          gender: i % 2 ? 'M' : 'F',
+          gender: i % 2 ? 'F' : 'M',
           nationality: 'FRA',
-          ranking: i,
+          ranking: i + 1,
           status: 'N',
-        });
-      }
+        })),
+      });
     }, FENCERS);
     // Salle par défaut et ses appareils (#2117, docs/adr/0023) : pistes 1 à 4 Cyrano (appareils
     // simulés), 5 et 6 OPP2 ; pilote Cyrano démarré
@@ -339,18 +343,26 @@ async function main() {
         return r.data;
       };
       const [first] = await db.getAllCompetitions();
-      const second = await db.createCompetition({
+      const { competitionId: secondId } = await call('createCompetition', {
         title: 'Challenge de la Ville — Fleuret U17',
-        date: new Date('2026-11-14'),
+        date: '2026-11-14',
         location: 'Gymnase Jean Moulin',
         weapon: 'F',
         gender: 'X',
         category: 'U17',
         color: '#e8590c',
       });
-      for (const [i, [lastName, firstName, club]] of fencers.slice(0, 10).entries()) {
-        await db.addFencer(second.id, { lastName, firstName, club, ranking: i + 1, status: 'N' });
-      }
+      const second = { id: secondId };
+      await call('registerFencers', {
+        competitionId: secondId,
+        fencers: fencers.slice(0, 10).map(([lastName, firstName, club], i) => ({
+          lastName,
+          firstName,
+          club,
+          ranking: i + 1,
+          status: 'N',
+        })),
+      });
       const day = await call('createEventDay', {
         name: 'Challenge de la Ville',
         date: '2026-11-14',

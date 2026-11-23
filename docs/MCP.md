@@ -73,7 +73,7 @@ il n'est pas limité aux dossiers de l'agent.
 | `get_competition` | `competitionId` | Détail, réglages, phases, nombre de tireurs et de poules |
 | `list_fencers` | `competitionId` | Tireurs : nom, club, statut de pointage, classement |
 | `get_pool_ranking` | `competitionId`, `poolId?` | Classement de chaque poule, matchs joués / total |
-| `get_bracket` | `competitionId` | Matchs du tableau : tour, tireurs, score, vainqueur |
+| `get_bracket` | `competitionId`, `group?` | Matchs du tableau : tour, tireurs, score, vainqueur ; tableaux séparés : groupe de chaque match, filtre `group` |
 | `list_referees` | `competitionId` | Arbitres : nom, club, catégorie, statut |
 | `day_overview` | `dayId?` | Journées ; avec `dayId` : arbitres partagés, conflits |
 | `strip_occupation` | `dayId` | Pistes de la journée : occupée, libre, réservée |
@@ -120,7 +120,7 @@ finale. Équipes, rapières, tours de poules multiples et « tirer toutes les pl
 l'écran (erreur `unsupported_format`) pour `generate_pools` et `build_bracket` sans `composition`, et pour `assign_referees`.
 `record_score` accepte aussi les tours multiples (tour courant ; tour terminé figé : `round_closed`),
 les rapières et « toutes les places » (barrages, tableaux de classement listés par `list_matches`
-avec leur nom dans `bracket`). Refusés : épreuves par équipes, tableaux séparés après les poules.
+avec leur nom dans `bracket`) et les tableaux séparés après les poules (un tableau par groupe, identifiants préfixés `F:32-0`). Refusées : épreuves par équipes.
 
 ## Paramétrage du poste et salles
 
@@ -183,7 +183,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (54)
+## Référence des outils (55)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -222,11 +222,12 @@ Aucun argument.
 
 ### `get_bracket` — Tableau d’élimination directe
 
-*lecture.* Matchs du tableau : tour, tireurs, score, vainqueur (exempts inclus).
+*lecture.* Matchs du tableau : tour, tireurs, score, vainqueur (exempts inclus). Tableaux séparés après les poules : tous les tableaux, chaque match avec son groupe, ou celui de « group ».
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `group` | string |  | Tableaux séparés après les poules : groupe du tableau (« F », « M ») ; facultatif |
 
 ### `list_referees` — Arbitres d’une épreuve
 
@@ -321,7 +322,7 @@ Aucun argument.
 | `since` | integer |  | Dernière révision connue (0 : tout) |
 | `limit` | integer |  | Nombre maximum (1000) |
 
-### En écriture, sur autorisation (37)
+### En écriture, sur autorisation (38)
 
 ### `create_competition` — Créer une épreuve
 
@@ -780,6 +781,19 @@ Aucun argument.
 | `refereeId` | string / null | oui | Identifiant de l’arbitre (list_referees), ou null |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `split_off_group` — Extraire un groupe en épreuve séparée
+
+*écriture.* Tableaux séparés après les poules : extrait un groupe (« F », « M ») dans une épreuve séparée. Dans une seule transaction : crée l’épreuve (mêmes réglages, sans le mode couplé), y copie les tireurs du groupe (pointés, rang après poules), y écrit le classement après poules du groupe (phase Classement), puis note l’épreuve séparée sur l’épreuve d’origine (le groupe n’y a plus de tableau). Refus : épreuve sans tableaux séparés (invalid_input), groupe absent du classement ou déjà extrait (split_group_not_found), tableau du groupe déjà tiré (bracket_exists).
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `group` | string | oui | Groupe à extraire (« F », « M ») |
+| `title` | string | oui | Titre de l’épreuve séparée |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve d’origine : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
 
 <!-- outils-mcp:fin -->

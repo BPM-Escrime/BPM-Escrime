@@ -747,6 +747,8 @@
   'results.round_semis': 'Semifinals',
   'results.round_quarters': 'Quarts de final',
   'results.round_n': 'Taula de {{n}}',
+  'results.group_F': 'Dones',
+  'results.group_M': 'Homes',
   'results.final_rank': 'Posició final',
   'results.pool_rank': 'Posició després de poules',
   'results.match_won': 'Victòria',

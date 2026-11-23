@@ -752,6 +752,8 @@
   'results.round_semis': 'Demi-finales',
   'results.round_quarters': 'Quarts de finale',
   'results.round_n': 'Tableau de {{n}}',
+  'results.group_F': 'Dames',
+  'results.group_M': 'Hommes',
   'results.final_rank': 'Classement final',
   'results.pool_rank': 'Classement après poules',
   'results.match_won': 'Victoire',

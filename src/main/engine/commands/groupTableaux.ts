@@ -7,9 +7,9 @@
  * réécrivent ce tableau seul.
  *
  * Reprise des épreuves en cours : un tableau tiré à la racine d'une épreuve à tableaux séparés
- * (avant ce lot, par l'écran) est le tableau du groupe de ses tireurs, identifiants inchangés.
- * Il reste rangé à la racine tant que l'écran l'y écrit (persistLocally, jusqu'au lot A2) ;
- * un tirage du même groupe par generateTableau le remplace dans groupTableaux.
+ * (avant le lot A1, par l'écran) est le tableau du groupe de ses tireurs, identifiants
+ * inchangés. Lu comme tel (getCompetitionState), il quitte la racine pour groupTableaux à sa
+ * première réécriture par une commande (lot A2 : l'écran n'écrit plus l'état).
  * Licensed under GPL-3.0
  */
 import type { Competition } from '../../../shared/types';
@@ -141,14 +141,51 @@ export function slotPatch(
   if (next.tableauMatches) root.tableauMatches = next.tableauMatches;
   if (next.consolationBrackets) root.consolationBrackets = next.consolationBrackets;
   if (next.finalResults) root.finalResults = next.finalResults;
-  if (slot.atRoot || slot.group === null) return root;
+  if (slot.group === null) return root;
   const groups = sessionGroupTableaux(session);
+  if (slot.atRoot) {
+    // Tableau repris (lot A2) : déplacé dans son groupe, identifiants inchangés ; racine vidée
+    const legacy = rootSlot(session, slot.group);
+    const moved: GroupTableau = {
+      tableauMatches: legacy.matches,
+      consolationBrackets: legacy.brackets,
+      finalResults: legacy.finalResults,
+      ...next,
+    };
+    return {
+      tableauMatches: [],
+      consolationBrackets: [],
+      finalResults: [],
+      groupTableaux: { ...groups, [slot.group]: moved },
+    };
+  }
   const current = groups[slot.group] ?? {
     tableauMatches: [],
     consolationBrackets: [],
     finalResults: [],
   };
   return { groupTableaux: { ...groups, [slot.group]: { ...current, ...next } } };
+}
+
+/**
+ * Tableaux des groupes tels que l'écran les lit (getCompetitionState) : groupTableaux, plus le
+ * tableau repris de la racine rangé sous son groupe. null : épreuve sans tableaux séparés.
+ */
+export function groupTableauxView(
+  comp: Competition,
+  session: Record<string, unknown>
+): Record<string, GroupTableau> | null {
+  if (!splitCriteria(comp)) return null;
+  const out: Record<string, GroupTableau> = {};
+  for (const s of tableauSlots(comp, session)) {
+    if (s.group === null) continue;
+    out[s.group] = {
+      tableauMatches: s.matches,
+      consolationBrackets: s.brackets,
+      finalResults: s.finalResults,
+    };
+  }
+  return out;
 }
 
 /** Groupes à tirer après les poules (tireurs du classement, groupes extraits écartés) */

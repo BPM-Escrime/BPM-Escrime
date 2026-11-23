@@ -106,11 +106,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 272 |
-| `src/main/` | 138 | 1189 |
+| `src/main/` | 141 | 1201 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 124 | 673 |
-| E2E Playwright (`e2e/`) | 16 | 46 |
+| `src/renderer/components/` | 126 | 680 |
+| E2E Playwright (`e2e/`) | 17 | 48 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
 | `src/renderer/contexts/` | 1 | 7 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 31 | 311 |
+| `src/shared/domain/` | 32 | 338 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **575** | **4425** |
+| **Total** | **582** | **4473** |
 
-Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3235,6 +3235,16 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/api/invokeSync.test.ts</code> — 4 tests</summary>
+
+- commande d’épreuve : réglages par défaut du moteur, puis inscription journalisée
+- fonction du poste (journée) : exécutée sans journal
+- entrée invalide ou requête : refus du contrat, rien d’écrit
+- transaction englobante : un échec annule les commandes déjà passées
+
+</details>
+
+<details>
 <summary><code>src/main/engine/api/runCommand.test.ts</code> — 8 tests</summary>
 
 - révision à jour : écrit, rend la révision avant et après
@@ -3272,6 +3282,17 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - aucune opération club:\*, station:\* ou remote:\* n’est exposée à l’agent
 - **STATION\_PERMISSIONS (pas de journal, pas de réseau)**
   - couvre exactement les droits club:, station: et remote: du contrat
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/arenaPlan.test.ts</code> — 5 tests</summary>
+
+- aucun plan : null
+- saveArenaPlan puis getArenaPlan : plan relu à l’identique ; null l’efface
+- dryRun : rien n’est écrit
+- le plan survit aux écritures de l’état de session et des réglages
+- plan invalide ou épreuve inconnue refusés
 
 </details>
 
@@ -3388,8 +3409,8 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 - retirer le tableau d’un groupe laisse l’autre ; rejeu et reconstruction
 - placement de l’écran admis pour un groupe, identifiants préfixés
 - « toutes les places » par groupe : tableaux de classement préfixés, rejeu sans écart
-- reprise : tableau tiré à la racine avant les groupes, rangé dans le groupe de ses tireurs
-- sauvegarde du bloc par l’écran : les tableaux des groupes sont gardés
+- reprise : tableau tiré à la racine avant les groupes, déplacé dans le groupe de ses tireurs
+- affichage : état de l’écran, résultats, vue du tableau et page publique lisent tous les tableaux
 - nouveau tirage des poules : tableaux des groupes retirés
 
 </details>
@@ -3529,6 +3550,18 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 
 - remplace touches, cartons et durée ; null efface ; rien au journal
 - match absent : found faux ; épreuve inconnue ou entrée invalide refusées
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/splitOff.test.ts</code> — 6 tests</summary>
+
+- crée l’épreuve séparée en une commande, journalise les deux faits, rejoue sans écart
+- après l’extraction : le groupe n’a plus de tableau ici, l’épreuve séparée tire le sien
+- refus : sans tableaux séparés, groupe inconnu, déjà extrait, tableau tiré ; dryRun
+- échec au milieu : tout est annulé (ni épreuve, ni tireurs, ni marque, ni journal)
+- rebuildCompetitionState : marque et classement importé rendus d’après le journal
+- outil MCP split\_off\_group (écriture)
 
 </details>
 
@@ -3674,14 +3707,13 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/dbHandlers.test.ts</code> — 5 tests</summary>
+<summary><code>src/main/ipc/dbHandlers.test.ts</code> — 4 tests</summary>
 
 - **bus d’événements db (#1298)**
   - emitCompetitionEvent diffuse aux fenêtres
   - db:updateMatch et db:createMatch émettent matches:changed
   - db:updateMatch : motif de correction au journal, jamais écrit dans le match (#1996)
   - db:updateMatch : score déjà en base (écrit par recordScore) ni réécrit ni journalisé (#1980)
-  - db:addFencer émet fencers:changed pour la compétition
 
 </details>
 
@@ -3754,12 +3786,10 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/validation.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/ipc/validation.test.ts</code> — 2 tests</summary>
 
 - **validation IPC (#1774)**
   - validateUUID accepte un UUID, refuse le reste
-  - validateCompetitionData exige titre, date (Date) et arme
-  - validateFencerData exige nom/prénom, ref optionnelle positive
   - validateMatchData exige numéro et score max positifs
 
 </details>
@@ -5793,7 +5823,7 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 15 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 17 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5803,6 +5833,8 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - supprime l'élément sélectionné avec la touche Suppr
   - ajoute une issue de secours collée au mur, sans alerte
   - ajoute une zone bloquée et permet de changer sa largeur
+  - ajoute une zone public nommée depuis le menu « Zone »
+  - nomme une arène et affiche son nom sur le plan
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
   - ne permet jamais plus d'arènes que le maximum de la zone
   - étire les arènes avec « Espacées » et les centre avec « Centré »
@@ -5914,6 +5946,14 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - **compétition par équipes (#1085)**
     - remplace poules/tableau individuels par les phases équipes
     - « Composer les équipes » ouvre la phase équipes intégrée (sans modale)
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/CompetitionViewSplit.test.tsx</code> — 2 tests</summary>
+
+- deux groupes tirés et joués, changement d’onglet, rechargement : les deux tableaux restent
+- groupe des femmes extrait en épreuve séparée par la commande (lot A3)
 
 </details>
 
@@ -7186,6 +7226,16 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/roadmap/roadmapDocx.test.ts</code> — 3 tests</summary>
+
+- **roadmapDocx**
+  - échappe le XML et retire les caractères interdits
+  - parties du paquet, texte résolu, bandeau coloré, section masquée absente
+  - fichier zip relisible
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/settingsModal.helpers.test.ts</code> — 4 tests</summary>
 
 - **readInputModes (saisie simplifiée / enchaînée exclusives)**
@@ -7427,6 +7477,14 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 <summary><code>e2e/electron/remote-scoring.spec.ts</code> — 1 test</summary>
 
 - tablette (piste 1) et appareil Cyrano (piste 2) : scores par le moteur, affichés à l’écran
+
+</details>
+
+<details>
+<summary><code>e2e/electron/split-tableaux.spec.ts</code> — 2 tests</summary>
+
+- tableaux séparés : deux tableaux joués, retrouvés après rechargement
+- tableaux séparés : groupe extrait en épreuve séparée
 
 </details>
 
@@ -8677,7 +8735,7 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 46 tests</summary>
+<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 52 tests</summary>
 
 - **computeArenaGeometry**
   - place les lignes de mise en garde à 2 m du centre, soit 4 m entre elles
@@ -8734,6 +8792,14 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - renvoie null si la salle est trop petite
   - renvoie null si une arène tombe sur une zone bloquée
   - gère zéro arène
+- **équipements de salle (catalogue du menu déroulant)**
+  - identifiants uniques, tailles positives
+  - vestiaires : zone bloquée à la taille du catalogue, dans la salle
+  - salle plus petite que l’équipement : taille bornée à la salle
+- **placeOnFreeSpot**
+  - place libre : inchangé
+  - place occupée : décalé à côté, sans chevauchement
+  - zone de sécurité d’une arène évitée
 
 </details>
 
@@ -8778,7 +8844,7 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 9 tests</summary>
+<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 11 tests</summary>
 
 - **projectCompetition**
   - journal complet seulement s’il commence (après l’appel) par un tirage
@@ -8791,6 +8857,8 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - un tableau par groupe ; décisions rangées dans leur tableau
   - nouveau tirage d’un groupe : ses décisions seules sont retirées
   - nouveau tirage des poules : tous les tableaux retirés
+  - groupe extrait (lot A3) : noté, plus de tableau pour lui ici
+  - épreuve séparée : journal complet dès le classement importé
 
 </details>
 
@@ -8850,7 +8918,7 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/ranking/splitGroups.test.ts</code> — 11 tests</summary>
+<summary><code>src/shared/domain/ranking/splitGroups.test.ts</code> — 14 tests</summary>
 
 - **splitCompetition**
   - propose un titre par défaut
@@ -8865,6 +8933,10 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - identifiants préfixés par le groupe, sans double préfixe
   - lecture de tous les tableaux : racine et groupes
   - reprise : groupe d’un tableau tiré à la racine, d’après ses tireurs
+- **extraction d’un groupe (docs/adr/0024, lot A3)**
+  - refus : sans tableaux séparés, groupe extrait, tableau tiré, groupe absent
+  - projection de départ : phase Classement, sans poules ni tableau
+  - classement importé : statistiques de l’épreuve d’origine, sinon rangs seuls
 
 </details>
 
@@ -9007,6 +9079,32 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - sans réglage : neutralité de club seule, charge équilibrée
   - réglage partiel : complété par les défauts
   - fusion : la neutralité se modifie champ par champ, le reste est conservé
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/roadmap/roadmap.test.ts</code> — 16 tests</summary>
+
+- **roadmap : dates et horaires**
+  - saison sportive à partir du 1er septembre
+  - date limite : N jours avant, change de mois
+  - ouverture et scratch suggérés depuis le début
+  - heure à la française
+- **roadmap : variables**
+  - valeurs dérivées
+  - remplace les connues, signale les vides, laisse les inconnues
+  - expandVariables garde les vides
+  - puces et paragraphes
+- **roadmap : modèles et complétude**
+  - modèle sabre laser : sections de la feuille Briva Isara
+  - l'essentiel connu est repris
+  - complétude : champs requis, lignes vides, variables sans valeur
+  - section désactivée ignorée
+  - section de la bibliothèque : identifiants libres
+  - moveItem borné
+- **roadmap : relecture**
+  - aller-retour JSON
+  - rejette un autre fichier, nettoie les champs
 
 </details>
 

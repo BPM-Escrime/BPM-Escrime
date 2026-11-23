@@ -748,6 +748,8 @@
   'results.round_semis': 'Полуфиналы',
   'results.round_quarters': 'Четвертьфиналы',
   'results.round_n': 'Таблица {{n}}',
+  'results.group_F': 'Женщины',
+  'results.group_M': 'Мужчины',
   'results.final_rank': 'Итоговое место',
   'results.pool_rank': 'Место после пулов',
   'results.match_won': 'Победа',

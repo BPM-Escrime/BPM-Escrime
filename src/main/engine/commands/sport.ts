@@ -891,9 +891,12 @@ export function buildBracket(
     throw new CommandError('no_direct_elimination', 'Épreuve sans élimination directe');
   }
   const pools = sessionPools(session);
+  // Épreuve séparée (docs/adr/0024, lot A3) : classement après poules importé, sans poules
+  const imported = !!comp.settings?.splitFromCompetitionId && pools.length === 0;
   if (
     !options.composition &&
     !session.skipPoolPhase &&
+    !imported &&
     (pools.length === 0 || !areAllPoolsComplete(pools))
   ) {
     throw new CommandError('pools_not_complete', 'Toutes les poules doivent être terminées');
@@ -1233,21 +1236,28 @@ export const tableauCompletedEvent = (group: string | null) => ({
 
 // ─── Résultats ──────────────────────────────────────────────────────────────
 
-/** Données de résultats d'une épreuve (export) */
+/**
+ * Données de résultats d'une épreuve (export). Tableaux séparés (docs/adr/0024) : matchs de
+ * tous les tableaux, classements finaux des groupes à la suite (ordre des groupes).
+ */
 export function resultsData(ctx: CommandContext, competitionId: string) {
   const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
   const fencers: Fencer[] = ctx.db.getFencersByCompetition(competitionId);
+  const slots = [...tableauSlots(comp, session)].sort((a, b) =>
+    (a.group ?? '').localeCompare(b.group ?? '')
+  );
   return {
     competition: { ...comp, fencers, referees: ctx.db.getRefereesByCompetition(competitionId) },
     pools: sessionPools(session),
     overallRanking: Array.isArray(session.overallRanking)
       ? (session.overallRanking as PoolRanking[])
       : [],
-    tableauMatches: sessionTableau(session),
-    finalResults: Array.isArray(session.finalResults)
-      ? (session.finalResults as Array<{ rank: number; fencer: Fencer; eliminatedAt: string }>)
-      : [],
+    tableauMatches: slots.flatMap(s => s.matches),
+    finalResults: slots.flatMap(
+      s =>
+        s.finalResults as unknown as Array<{ rank: number; fencer: Fencer; eliminatedAt: string }>
+    ),
     fencers,
     referees: ctx.db.getRefereesByCompetition(competitionId),
   };

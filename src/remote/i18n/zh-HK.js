@@ -734,6 +734,8 @@
   'results.round_semis': '準決賽',
   'results.round_quarters': '八強',
   'results.round_n': '{{n}} 強',
+  'results.group_F': '女子',
+  'results.group_M': '男子',
   'results.final_rank': '最終名次',
   'results.pool_rank': '分組賽後排名',
   'results.match_won': '勝',

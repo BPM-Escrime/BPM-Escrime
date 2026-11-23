@@ -205,10 +205,15 @@ async function main() {
 
     // ── Compétition de démonstration (préparée en français) ──
     await win.evaluate(async fencers => {
-      const db = window.electronAPI.db;
-      const c = await db.createCompetition({
+      // Épreuve et tireurs par le contrat d'API (docs/adr/0018)
+      const call = async (name, input) => {
+        const r = await window.electronAPI.api.invoke(name, input);
+        if (!r.ok) throw new Error(`${name} : ${r.error.message}`);
+        return r.data;
+      };
+      const { competitionId } = await call('createCompetition', {
         title: 'Challenge de la Ville — Épée Senior',
-        date: new Date('2026-11-14'),
+        date: '2026-11-14',
         location: 'Gymnase Jean Moulin',
         weapon: 'E',
         gender: 'X',
@@ -228,19 +233,18 @@ async function main() {
           minTeamSize: 3,
         },
       });
-      let i = 0;
-      for (const [lastName, firstName, club] of fencers) {
-        i++;
-        await db.addFencer(c.id, {
+      await call('registerFencers', {
+        competitionId,
+        fencers: fencers.map(([lastName, firstName, club], i) => ({
           lastName,
           firstName,
           club,
-          gender: i % 2 ? 'M' : 'F',
+          gender: i % 2 ? 'F' : 'M',
           nationality: 'FRA',
-          ranking: i,
+          ranking: i + 1,
           status: 'N',
-        });
-      }
+        })),
+      });
     }, FENCERS);
     await win.reload();
     await win.waitForTimeout(2500);

@@ -14,6 +14,9 @@ import {
   allConsolationBrackets,
   legacyTableauGroup,
   sessionGroupTableaux,
+  splitOffRefusal,
+  splitOffSessionState,
+  importedRanking,
 } from './splitGroups';
 import type { ConsolationBracket, TableauMatch } from '../tableau/tableauTypes';
 import { validateCompetitionData } from '../../../database/validation';
@@ -246,5 +249,60 @@ describe('tableaux séparés (docs/adr/0024)', () => {
     expect(legacyTableauGroup([tm('2-0', null, f)], 'gender')).toBe('F');
     expect(legacyTableauGroup([tm('2-0', fencer('x', Gender.MIXED))], 'gender')).toBeNull();
     expect(legacyTableauGroup([tm('2-0', f)], undefined)).toBeNull();
+  });
+});
+
+describe('extraction d’un groupe (docs/adr/0024, lot A3)', () => {
+  const ranking = [
+    rank(fencer('f1', Gender.FEMALE), 1),
+    rank(fencer('m1', Gender.MALE), 2),
+    rank(fencer('f2', Gender.FEMALE), 3),
+  ];
+  const split = { settings: { postPoolSplitCriteria: 'gender' } } as Pick<Competition, 'settings'>;
+
+  it('refus : sans tableaux séparés, groupe extrait, tableau tiré, groupe absent', () => {
+    expect(splitOffRefusal({ settings: {} } as never, ranking, 'F', 0)?.code).toBe('invalid_input');
+    const extracted = {
+      settings: { postPoolSplitCriteria: 'gender', splitOffCompetitionIds: { F: 'c2' } },
+    } as never;
+    expect(splitOffRefusal(extracted, ranking, 'F', 0)?.code).toBe('split_group_not_found');
+    expect(splitOffRefusal(split, ranking, 'F', 4)?.code).toBe('bracket_exists');
+    expect(splitOffRefusal(split, ranking, 'X', 0)?.code).toBe('split_group_not_found');
+    expect(splitOffRefusal(split, [], 'F', 0)?.code).toBe('split_group_not_found');
+    expect(splitOffRefusal(split, ranking, 'F', 0)).toBeNull();
+  });
+
+  it('projection de départ : phase Classement, sans poules ni tableau', () => {
+    const s = splitOffSessionState(ranking);
+    expect(s).toMatchObject({
+      currentPhase: 3,
+      pools: [],
+      tableauMatches: [],
+      skipPoolPhase: false,
+    });
+    expect(s.overallRanking).toBe(ranking);
+  });
+
+  it('classement importé : statistiques de l’épreuve d’origine, sinon rangs seuls', () => {
+    const copies = new Map([
+      ['n1', fencer('n1', Gender.FEMALE)],
+      ['n2', fencer('n2', Gender.FEMALE)],
+    ]);
+    const entries = [
+      { fencerId: 'n2', sourceFencerId: 'f2', rank: 2 },
+      { fencerId: 'n1', sourceFencerId: 'f1', rank: 1 },
+      { fencerId: 'gone', sourceFencerId: 'f9', rank: 3 },
+    ];
+    const withStats = importedRanking(entries, copies, ranking);
+    expect(withStats.map(r => [r.fencer.id, r.rank, r.victories])).toEqual([
+      ['n1', 1, 2],
+      ['n2', 2, 2],
+    ]);
+    expect(withStats[0].fencer.poolStats?.victories).toBe(2);
+    const ranksOnly = importedRanking(entries, copies, null);
+    expect(ranksOnly.map(r => [r.fencer.id, r.rank, r.victories])).toEqual([
+      ['n1', 1, 0],
+      ['n2', 2, 0],
+    ]);
   });
 });

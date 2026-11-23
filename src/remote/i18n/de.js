@@ -753,6 +753,8 @@
   'results.round_semis': 'Halbfinale',
   'results.round_quarters': 'Viertelfinale',
   'results.round_n': 'Runde der {{n}}',
+  'results.group_F': 'Damen',
+  'results.group_M': 'Herren',
   'results.final_rank': 'Endplatzierung',
   'results.pool_rank': 'Platz nach den Pools',
   'results.match_won': 'Sieg',

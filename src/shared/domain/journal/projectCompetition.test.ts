@@ -197,4 +197,25 @@ describe('tableaux séparés après les poules (docs/adr/0024)', () => {
     expect(facts.groupTableaux).toEqual({});
     expect(facts.bracketResults).toEqual({});
   });
+
+  it('groupe extrait (lot A3) : noté, plus de tableau pour lui ici', () => {
+    const facts = projectCompetition([
+      drawn(1),
+      groupTableau('M'),
+      ev('GroupSplitOff', { group: 'F', targetCompetitionId: 'c2', fencerIds: ['a', 'c'] }),
+    ]);
+    expect(facts.splitOffGroups).toEqual({
+      F: { targetCompetitionId: 'c2', fencerIds: ['a', 'c'] },
+    });
+    expect(Object.keys(facts.groupTableaux)).toEqual(['M']);
+  });
+
+  it('épreuve séparée : journal complet dès le classement importé', () => {
+    const ranking = [{ fencerId: 'x', sourceFencerId: 'a', rank: 1 }];
+    const facts = projectCompetition([
+      ev('SplitRankingImported', { sourceCompetitionId: 'c1', group: 'F', ranking }),
+    ]);
+    expect(facts.complete).toBe(true);
+    expect(facts.importedRanking).toEqual({ sourceCompetitionId: 'c1', group: 'F', ranking });
+  });
 });

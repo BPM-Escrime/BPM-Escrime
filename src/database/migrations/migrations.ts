@@ -1287,4 +1287,12 @@ export const ALL_MIGRATIONS: Migration[] = [
     // Lignes de cyrano_pistes non reprises ou en conflit : journal de diagnostic
     diagnose: stripDeviceDiagnostics,
   },
+  {
+    version: 48,
+    description:
+      'Plan de salle du planificateur d’arène enregistré sur l’épreuve : competitions.arena_plan (docs/adr/0025)',
+    up(db) {
+      db.run(`ALTER TABLE competitions ADD COLUMN arena_plan TEXT`);
+    },
+  },
 ];

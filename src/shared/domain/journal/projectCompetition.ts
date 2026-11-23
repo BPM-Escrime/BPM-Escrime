@@ -83,6 +83,19 @@ export interface CompetitionFacts {
    * par match (identifiants uniques dans l'épreuve)
    */
   bracketResults: Record<string, MatchFact>;
+  /**
+   * Groupes extraits dans une épreuve séparée (GroupSplitOff, docs/adr/0024) : ils n'ont plus
+   * d'onglet ni de tableau dans cette épreuve
+   */
+  splitOffGroups: Record<string, { targetCompetitionId: string; fencerIds: string[] }>;
+  /**
+   * Épreuve séparée : classement après poules importé (SplitRankingImported), son premier fait
+   */
+  importedRanking: {
+    sourceCompetitionId: string;
+    group: string;
+    ranking: Array<{ fencerId: string; sourceFencerId: string; rank: number }>;
+  } | null;
   /** Tournoi des rapières : vague lancée, vagues arrêtées (undefined : jamais lancées) */
   rapieres?: { wave: number; ended: boolean };
   /** Révision du dernier événement rejoué */
@@ -94,6 +107,7 @@ type ReplayEvent = JournalEventBody & { revision?: number };
 const FACT_EVENTS: ReadonlySet<string> = new Set([
   JOURNAL_EVENT.poolsGenerated,
   JOURNAL_EVENT.poolsSkipped,
+  JOURNAL_EVENT.splitRankingImported,
   JOURNAL_EVENT.tableauGenerated,
 ]);
 const CHECK_IN_EVENTS: ReadonlySet<string> = new Set([
@@ -111,6 +125,8 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
     tableau: null,
     groupTableaux: {},
     bracketResults: {},
+    splitOffGroups: {},
+    importedRanking: null,
     revision: 0,
   };
   const firstFact = events.find(e => !CHECK_IN_EVENTS.has(e.type));
@@ -310,6 +326,23 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
           facts.tableau = null;
         }
         break;
+      case JOURNAL_EVENT.groupSplitOff: {
+        const { group, targetCompetitionId, fencerIds } = event.payload;
+        facts.splitOffGroups[group] = { targetCompetitionId, fencerIds: [...fencerIds] };
+        // Le groupe extrait n'a plus de tableau ici (le tirage est refusé avant l'extraction)
+        clearGroupResults(group);
+        delete facts.groupTableaux[group];
+        break;
+      }
+      case JOURNAL_EVENT.splitRankingImported: {
+        const { sourceCompetitionId, group, ranking } = event.payload;
+        facts.importedRanking = {
+          sourceCompetitionId,
+          group,
+          ranking: ranking.map(r => ({ ...r })),
+        };
+        break;
+      }
       case JOURNAL_EVENT.rapieresWaveLaunched:
         facts.rapieres = { ended: false, ...facts.rapieres, wave: event.payload.wave };
         break;

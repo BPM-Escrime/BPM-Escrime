@@ -50,6 +50,12 @@
   margin: 0.6rem 0;
 }
 
+/* Menu des équipements : largeur du contenu, pas de la colonne */
+.arena-planner-toolbar .arena-planner-equipment {
+  width: auto;
+  max-width: 16rem;
+}
+
 .arena-planner-rooms,
 .arena-planner-zoom {
   display: flex;
@@ -147,6 +153,19 @@
   fill: #111827;
 }
 
+.arena-planner-arena-name {
+  fill: var(--color-text);
+  font-size: 0.8px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.arena-planner-arena-names {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .arena-planner-role-label {
   fill: #ffffff;
   font-size: 0.45px;
@@ -186,6 +205,19 @@
 .arena-planner-item-blocked {
   fill: #9ca3af;
   fill-opacity: 0.85;
+}
+
+/* Zones de la salle : une couleur par type (menu « Zone ») */
+.arena-planner-item-blocked.arena-planner-zone-fencers {
+  fill: #86efac;
+}
+
+.arena-planner-item-blocked.arena-planner-zone-public {
+  fill: #c4b5fd;
+}
+
+.arena-planner-item-blocked.arena-planner-zone-dt {
+  fill: #fdba74;
 }
 
 .arena-planner-item-selected {
@@ -282,4 +314,118 @@
 
 .arena-planner-arena-grab {
   cursor: move;
+}
+
+/* Propriétés de la salle : carte repliable, résumé toujours visible */
+.arena-planner-props {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-surface);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.arena-planner-props-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.arena-planner-props-summary::-webkit-details-marker {
+  display: none;
+}
+
+.arena-planner-props-summary::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid var(--color-text-muted);
+  border-bottom: 2px solid var(--color-text-muted);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.arena-planner-props[open] > .arena-planner-props-summary::before {
+  transform: rotate(45deg);
+}
+
+.arena-planner-props-summary:hover {
+  background: var(--color-bg);
+}
+
+.arena-planner-props-summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.arena-planner-props-title {
+  font-weight: 600;
+}
+
+.arena-planner-props-chip {
+  margin-left: auto;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.arena-planner-props-body {
+  padding: 0.25rem 0.75rem 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.arena-planner-group {
+  border: 0;
+  border-top: 1px dashed var(--color-border);
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0 0;
+  min-width: 0;
+}
+
+.arena-planner-group > legend {
+  padding: 0 0.35rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-planner-props-summary::before {
+    transition: none;
+  }
+}
+
+/* Largeur et longueur sur une ligne, indice commun */
+.arena-planner-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.arena-planner-row > .arena-planner-field {
+  margin-bottom: 0;
+}
+
+.arena-planner-row-hint {
+  margin-bottom: 0.6rem;
+}
+
+/* Menu des équipements à la hauteur des boutons de la barre d'outils */
+.arena-planner-toolbar .form-input.arena-planner-equipment {
+  height: auto;
+  min-height: 0;
+  padding: 0.3rem 1.8rem 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.3;
 }

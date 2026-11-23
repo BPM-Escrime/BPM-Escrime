@@ -1,32 +1,29 @@
 /**
  * BPM - Escrime - Compétition couplée : groupes du tableau et séparation en compétition
  * distincte (extrait de CompetitionView, #1599)
+ * Tableaux séparés après les poules (docs/adr/0024, lot A2) : un tableau par groupe, tenu par
+ * le moteur (state.groupTableaux, getCompetitionState) ; le groupe affiché est une préférence
+ * du poste, comme l'onglet. L'écran ne garde aucun tableau en mémoire. Extraction d'un groupe
+ * en épreuve séparée : commande splitOffGroup (lot A3) ; l'écran n'écrit rien.
  * Licensed under GPL-3.0
  */
-import { useMemo } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { Gender } from '../../shared/types';
-import type { Competition, Fencer, PoolRanking } from '../../shared/types';
-import type { CompetitionCreateData, FencerCreateData } from '../../shared/types/preload';
+import type { Competition, PoolRanking } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
-import {
-  buildSplitCompetitionData,
-  extractSplitGroupRanking,
-  remapRankingFencers,
-  toSplitFencerData,
-} from '../../shared/domain/ranking/splitGroups';
+import { ApiError } from '../../shared/api/client';
+import { planSplitGroups, type GroupTableau } from '../../shared/domain/ranking/splitGroups';
+import { useBpmClient } from '../api/BpmClientContext';
 import type {
   ConsolationBracket,
   FinalResult,
   TableauMatch,
 } from '../../shared/domain/tableau/tableauTypes';
 import { useToast } from '../components/Toast';
-import type { Phase } from './useCompetitionSession';
+import { readPosteUiState, writePosteUiState } from './posteUiState';
+import type { Phase, SessionState } from './useCompetitionSession';
 
-type SplitTableauStates = Record<
-  string,
-  { matches: TableauMatch[]; consolation: ConsolationBracket[]; results: FinalResult[] }
->;
+type GroupTableaux = Record<string, GroupTableau>;
 
 interface UseSplitGroupsParams {
   competition: Competition;
@@ -34,19 +31,32 @@ interface UseSplitGroupsParams {
   onOpenCompetition?: (competitionId: string) => void;
   setCurrentPhase: Dispatch<SetStateAction<Phase>>;
   overallRanking: PoolRanking[];
-  tableauMatches: TableauMatch[];
   setTableauMatches: Dispatch<SetStateAction<TableauMatch[]>>;
-  consolationBrackets: ConsolationBracket[];
   setConsolationBrackets: Dispatch<SetStateAction<ConsolationBracket[]>>;
-  finalResults: FinalResult[];
   setFinalResults: Dispatch<SetStateAction<FinalResult[]>>;
   activeSplitGroup: string | null;
   setActiveSplitGroup: Dispatch<SetStateAction<string | null>>;
+  groupTableaux: GroupTableaux;
+  setGroupTableaux: Dispatch<SetStateAction<GroupTableaux>>;
   setPendingSplitOffGroup: Dispatch<SetStateAction<string | null>>;
   splitOffInProgress: boolean;
   setSplitOffInProgress: Dispatch<SetStateAction<boolean>>;
-  splitTableauStates: SplitTableauStates;
-  setSplitTableauStates: Dispatch<SetStateAction<SplitTableauStates>>;
+}
+
+/**
+ * Onglets des groupes : groupes restants après les poules (classement, groupes extraits
+ * écartés) et groupes dont le tableau est tiré, dans l'ordre alphabétique.
+ */
+export function splitTabGroups(
+  ranking: PoolRanking[],
+  criteria: string | undefined,
+  splitOffIds: Partial<Record<string, string>> | undefined,
+  tableaux: GroupTableaux
+): string[] {
+  if (!criteria) return [];
+  const groups = new Set(planSplitGroups(ranking, criteria, splitOffIds).map(g => g.group));
+  for (const [g, t] of Object.entries(tableaux)) if (t.tableauMatches.length > 0) groups.add(g);
+  return [...groups].sort();
 }
 
 /** Groupes disponibles, bascule entre groupes du tableau et extraction d'un groupe. */
@@ -56,61 +66,99 @@ export function useSplitGroups({
   onOpenCompetition,
   setCurrentPhase,
   overallRanking,
-  tableauMatches,
   setTableauMatches,
-  consolationBrackets,
   setConsolationBrackets,
-  finalResults,
   setFinalResults,
   activeSplitGroup,
   setActiveSplitGroup,
+  groupTableaux,
+  setGroupTableaux,
   setPendingSplitOffGroup,
   splitOffInProgress,
   setSplitOffInProgress,
-  splitTableauStates,
-  setSplitTableauStates,
 }: UseSplitGroupsParams) {
   const { showToast } = useToast();
+  const client = useBpmClient();
   const postPoolSplitCriteria = competition.settings?.postPoolSplitCriteria;
   const splitOffCompetitionIds = competition.settings?.splitOffCompetitionIds;
+  // Lus par les rappels stables (relecture de l'état, changement d'onglet)
+  const tableauxRef = useRef(groupTableaux);
+  const activeRef = useRef(activeSplitGroup);
+  useLayoutEffect(() => {
+    tableauxRef.current = groupTableaux;
+    activeRef.current = activeSplitGroup;
+  }, [groupTableaux, activeSplitGroup]);
 
-  // Groupes disponibles pour la séparation (pour les onglets du tableau)
-  const splitGroups = useMemo((): string[] => {
-    if (postPoolSplitCriteria !== 'gender') return [];
-    const genders = new Set<string>();
-    for (const r of overallRanking) {
-      const g = r.fencer.gender as string;
-      if (g !== Gender.MIXED && !splitOffCompetitionIds?.[g]) genders.add(g);
-    }
-    return Array.from(genders).sort();
-  }, [postPoolSplitCriteria, overallRanking, splitOffCompetitionIds]);
+  // Groupes disponibles pour la séparation (onglets du tableau)
+  const splitGroups = useMemo(
+    () =>
+      splitTabGroups(overallRanking, postPoolSplitCriteria, splitOffCompetitionIds, groupTableaux),
+    [postPoolSplitCriteria, overallRanking, splitOffCompetitionIds, groupTableaux]
+  );
+
+  /** Groupe affiché et son tableau, lu dans l'état du moteur (aucune copie locale) */
+  const showSplitGroup = useCallback(
+    (group: string | null, tableaux: GroupTableaux = tableauxRef.current) => {
+      activeRef.current = group;
+      setActiveSplitGroup(group);
+      const t = group ? tableaux[group] : undefined;
+      setTableauMatches(t?.tableauMatches ?? []);
+      setConsolationBrackets(t?.consolationBrackets ?? []);
+      setFinalResults(t?.finalResults ?? []);
+    },
+    [setActiveSplitGroup, setTableauMatches, setConsolationBrackets, setFinalResults]
+  );
+
+  /**
+   * État relu (chargement, signal du journal) : tableaux des groupes rangés, groupe affiché
+   * gardé s'il existe encore, sinon celui du poste, sinon le premier.
+   */
+  const applyGroupTableaux = useCallback(
+    (state: Partial<SessionState>) => {
+      const tableaux = state.groupTableaux ?? {};
+      tableauxRef.current = tableaux;
+      setGroupTableaux(tableaux);
+      const groups = splitTabGroups(
+        state.overallRanking ?? [],
+        postPoolSplitCriteria,
+        splitOffCompetitionIds,
+        tableaux
+      );
+      const preferred = activeRef.current ?? readPosteUiState(competition.id).splitGroup;
+      const group = preferred && groups.includes(preferred) ? preferred : (groups[0] ?? null);
+      showSplitGroup(group, tableaux);
+    },
+    [
+      competition.id,
+      postPoolSplitCriteria,
+      splitOffCompetitionIds,
+      setGroupTableaux,
+      showSplitGroup,
+    ]
+  );
+
+  // Groupes apparus après le chargement (classement après poules) ou groupe extrait : un
+  // groupe est toujours affiché, sinon le tableau tirerait tous les tireurs ensemble
+  useEffect(() => {
+    if (!postPoolSplitCriteria || splitGroups.length === 0) return;
+    if (activeSplitGroup && splitGroups.includes(activeSplitGroup)) return;
+    const preferred = readPosteUiState(competition.id).splitGroup;
+    showSplitGroup(preferred && splitGroups.includes(preferred) ? preferred : splitGroups[0]);
+  }, [postPoolSplitCriteria, splitGroups, activeSplitGroup, competition.id, showSplitGroup]);
+
+  // Groupe affiché : préférence du poste, comme l'onglet (docs/adr/0017 §4)
+  useEffect(() => {
+    if (activeSplitGroup) writePosteUiState(competition.id, { splitGroup: activeSplitGroup });
+  }, [competition.id, activeSplitGroup]);
 
   // Basculer vers un autre groupe dans un tableau déjà ouvert
   const handleSwitchSplitGroup = (newGroup: string) => {
     if (newGroup === activeSplitGroup) return;
-    // Sauvegarder l'état courant
-    if (activeSplitGroup) {
-      setSplitTableauStates(prev => ({
-        ...prev,
-        [activeSplitGroup]: {
-          matches: tableauMatches,
-          consolation: consolationBrackets,
-          results: finalResults,
-        },
-      }));
-    }
-    const saved = splitTableauStates[newGroup];
-    setTableauMatches(saved?.matches ?? []);
-    setConsolationBrackets(saved?.consolation ?? []);
-    setFinalResults(saved?.results ?? []);
-    setActiveSplitGroup(newGroup);
-    // Revenir au classement si le groupe choisi n'a pas de résultats
-    if (!saved?.results?.length) {
-      setCurrentPhase('tableau');
-    }
+    showSplitGroup(newGroup);
+    // Revenir au tableau si le groupe choisi n'a pas de résultats
+    if (!groupTableaux[newGroup]?.finalResults.length) setCurrentPhase('tableau');
   };
 
-  // Compétition couplée : extraire un groupe dans une compétition séparée (ou l'ouvrir si déjà créée)
   const handleSplitOff = (group: string) => {
     const existingId = splitOffCompetitionIds?.[group];
     if (existingId) {
@@ -124,61 +172,43 @@ export function useSplitGroups({
     if (splitOffInProgress) return;
     setSplitOffInProgress(true);
     try {
-      const db = window.electronAPI.db;
-      const groupRanking = extractSplitGroupRanking(overallRanking, group);
-      const created = await db.createCompetition(
-        buildSplitCompetitionData(
-          competition,
-          title,
-          group,
-          new Date()
-        ) as unknown as CompetitionCreateData
-      );
-      const newFencerByOldId = new Map<string, Fencer>();
-      for (const r of groupRanking) {
-        const f = await db.addFencer(
-          created.id,
-          toSplitFencerData(r) as unknown as FencerCreateData
-        );
-        newFencerByOldId.set(r.fencer.id, f);
-      }
-      // Démarrer la nouvelle compétition directement au classement après poules
-      await db.saveSessionState(created.id, {
-        currentPhase: 3,
-        overallRanking: remapRankingFencers(groupRanking, newFencerByOldId),
-        pools: [],
-        poolHistory: [],
-        tableauMatches: [],
-        finalResults: [],
-        consolationBrackets: [],
-        currentPoolRound: 1,
-        skipPoolPhase: false,
-      } as unknown as Parameters<typeof db.saveSessionState>[1]);
-
+      // Épreuve séparée créée par le moteur, en une transaction (docs/adr/0024, lot A3)
+      const created = await client.call('splitOffGroup', {
+        competitionId: competition.id,
+        group,
+        title,
+      });
+      const targetId = created.competitionId!;
       const settings = {
         ...competition.settings,
-        splitOffCompetitionIds: { ...splitOffCompetitionIds, [group]: created.id },
+        splitOffCompetitionIds: { ...splitOffCompetitionIds, [group]: targetId },
       };
-      await db.updateCompetition(competition.id, { settings });
       onUpdate({ ...competition, settings } as Competition);
       if (activeSplitGroup === group) setActiveSplitGroup(null);
       setPendingSplitOffGroup(null);
-      showToast(
-        `Compétition « ${created.title} » créée (${groupRanking.length} tireurs)`,
-        'success'
-      );
-      onOpenCompetition?.(created.id);
+      showToast(`Compétition « ${title.trim()} » créée (${created.fencers} tireurs)`, 'success');
+      onOpenCompetition?.(targetId);
     } catch (e) {
       logger.error(
         LogCategory.DATABASE,
         'Split-off competition creation failed',
         e instanceof Error ? e : undefined
       );
-      showToast('Erreur lors de la création de la compétition séparée', 'error');
+      showToast(
+        e instanceof ApiError ? e.message : 'Erreur lors de la création de la compétition séparée',
+        'error'
+      );
     } finally {
       setSplitOffInProgress(false);
     }
   };
 
-  return { splitGroups, handleSwitchSplitGroup, handleSplitOff, createSplitOffCompetition };
+  return {
+    splitGroups,
+    showSplitGroup,
+    applyGroupTableaux,
+    handleSwitchSplitGroup,
+    handleSplitOff,
+    createSplitOffCompetition,
+  };
 }

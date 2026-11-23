@@ -142,8 +142,8 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setRankingChanged,
     activeSplitGroup,
     setActiveSplitGroup,
-    splitTableauStates,
-    setSplitTableauStates,
+    groupTableaux,
+    setGroupTableaux,
     onOpenCompetition,
     setPendingSplitOffGroup,
     splitOffInProgress,
@@ -159,11 +159,41 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   // Modifications de préparation gardées au retour vers l'appel (#1649)
   const [poolPrepDraft, setPoolPrepDraft] = useState<PoolPrepDraft | null>(null);
 
-  // Étape 4c (docs/adr/0017) : seul le moteur écrit l'état, sauf exceptions documentées
-  const persistLocally = !!competition.settings?.postPoolSplitCriteria || !!competition.isTeamEvent;
+  // Tableaux séparés après les poules (docs/adr/0024) : un tableau par groupe, tenu par le
+  // moteur ; groupe affiché = préférence du poste
+  const splitCriteria = competition.settings?.postPoolSplitCriteria;
+  const {
+    splitGroups,
+    showSplitGroup,
+    applyGroupTableaux,
+    handleSwitchSplitGroup,
+    handleSplitOff,
+    createSplitOffCompetition,
+  } = useSplitGroups({
+    competition,
+    onUpdate,
+    onOpenCompetition,
+    setCurrentPhase,
+    overallRanking,
+    setTableauMatches,
+    setConsolationBrackets,
+    setFinalResults,
+    activeSplitGroup,
+    setActiveSplitGroup,
+    groupTableaux,
+    setGroupTableaux,
+    setPendingSplitOffGroup,
+    splitOffInProgress,
+    setSplitOffInProgress,
+  });
+
+  // Étape 4c (docs/adr/0017) : seul le moteur écrit l'état, sauf exception documentée
+  // (épreuves par équipes, jusqu'aux lots E de l'ADR-0024)
+  const persistLocally = !!competition.isTeamEvent;
   const { isLoaded, flushPendingSave } = useCompetitionRestore({
     competitionId: competition.id,
     persistLocally,
+    onGroupTableaux: splitCriteria ? applyGroupTableaux : undefined,
     currentPhase,
     setCurrentPhase,
     currentPoolRound,
@@ -226,14 +256,23 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   const rapieresWaves = useRapieresWaves(competition.id, flushPendingSave);
   const clearScore = useScoreClear(competition.id, flushPendingSave);
   const assignMatches = useAssignMatches(competition.id, flushPendingSave);
-  // Tableaux séparés : le moteur tient un tableau par groupe (docs/adr/0024, lot A1) ; l'écran
-  // garde son tableau local jusqu'au lot A2 (onglets lus dans la projection)
-  const splitLocal = !!competition.settings?.postPoolSplitCriteria;
+  // Tableaux séparés (docs/adr/0024) : retirer « le tableau » sans groupe retire celui de
+  // chaque groupe qui en a un (classement après poules corrigé : tous sont à refaire)
   const engineCompetitionCommand = useCompetitionCommand(competition.id, flushPendingSave);
   const runCompetitionCommand: typeof engineCompetitionCommand = useCallback(
-    async (name, input) =>
-      splitLocal && name === 'clearTableau' ? 'local' : engineCompetitionCommand(name, input),
-    [engineCompetitionCommand, splitLocal]
+    async (name, input) => {
+      if (!splitCriteria || name !== 'clearTableau' || (input as { group?: string }).group) {
+        return engineCompetitionCommand(name, input);
+      }
+      let outcome: Awaited<ReturnType<typeof engineCompetitionCommand>> = 'recorded';
+      for (const [group, t] of Object.entries(groupTableaux)) {
+        if (t.tableauMatches.length === 0 && t.consolationBrackets.length === 0) continue;
+        outcome = await engineCompetitionCommand(name, { ...input, group });
+        if (outcome !== 'recorded') return outcome;
+      }
+      return outcome;
+    },
+    [engineCompetitionCommand, splitCriteria, groupTableaux]
   );
   const localUpdateScore = ctx.updateScore;
   const updateScore = useCallback(
@@ -348,17 +387,19 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     void ctx.toggleCheckIn(id);
   };
 
-  // Tableau écrit par le moteur ; rapières : mode de tableau joint (journal, #1441)
+  // Tableau écrit par le moteur ; rapières : mode de tableau joint (journal, #1441) ; tableaux
+  // séparés : tableau du groupe affiché (docs/adr/0024), jamais tous les tireurs ensemble
   const generateTableau = useCallback(
     (matches: TableauMatch[], thirdPlaceMatch: boolean): Promise<RecordScoreOutcome> =>
-      splitLocal
-        ? Promise.resolve('local')
+      splitCriteria && !activeSplitGroup
+        ? Promise.resolve('refused')
         : generateTableauCommand(
             matches,
             thirdPlaceMatch,
-            isRapieres ? rapieres.tableauMode : undefined
+            isRapieres ? rapieres.tableauMode : undefined,
+            splitCriteria ? (activeSplitGroup ?? undefined) : undefined
           ),
-    [generateTableauCommand, isRapieres, rapieres.tableauMode, splitLocal]
+    [generateTableauCommand, isRapieres, rapieres.tableauMode, splitCriteria, activeSplitGroup]
   );
 
   // ─── Retrait et réintégration d'un tireur (docs/adr/0016) ─────────────────
@@ -556,34 +597,10 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setTableauMatches,
     consolationBrackets,
     setConsolationBrackets,
-    finalResults,
-    setFinalResults,
     activeSplitGroup,
-    setActiveSplitGroup,
-    splitTableauStates,
-    setSplitTableauStates,
+    groupTableaux,
+    showSplitGroup,
   });
-  const { splitGroups, handleSwitchSplitGroup, handleSplitOff, createSplitOffCompetition } =
-    useSplitGroups({
-      competition,
-      onUpdate,
-      onOpenCompetition,
-      setCurrentPhase,
-      overallRanking,
-      tableauMatches,
-      setTableauMatches,
-      consolationBrackets,
-      setConsolationBrackets,
-      finalResults,
-      setFinalResults,
-      activeSplitGroup,
-      setActiveSplitGroup,
-      setPendingSplitOffGroup,
-      splitOffInProgress,
-      setSplitOffInProgress,
-      splitTableauStates,
-      setSplitTableauStates,
-    });
 
   const questConfig = competition.settings?.questConfig;
   const questEnabled = isLaserSabre && questConfig?.enabled === true;

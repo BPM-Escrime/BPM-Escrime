@@ -201,7 +201,7 @@ Ne plus ajouter d'appel direct à `window.electronAPI` pour une opération du co
 
 Lot 2 commencé : `useCompetitionEvent` s'abonne par `onCompetitionEvents`, le choix d'arbitre
 du tableau lit `listReferees`. `useMatchDbSync` n'écrit plus les matchs que pour les formats hors
-moteur (tableaux séparés, équipes) : ailleurs le moteur les écrit dans la transaction de la
+moteur (équipes) : ailleurs le moteur les écrit dans la transaction de la
 commande. Journal des matchs (`useMatchAuditStore`) et signatures de poule passent par le
 contrat ; tests : `fakeApiBridge` (`src/renderer/testUtils/apiBridge.ts`) simule le pont.
 Statistiques : `AnalyticsDashboard`, `FencerStatsTable`, `FencerDetailModal` et `analyticsService`
@@ -283,6 +283,7 @@ même identifiant (renvoi après une coupure), elle n'écrit rien et est refusé
 | `adjustRanking` / `skipPools` / `clearTableau` | `RankingAdjusted` / `PoolsSkipped` / `TableauCleared`                                      |
 | `withdrawFencer`                               | `FencerWithdrawn` ; au tableau, `TableauMatchDecided` (et `TableauCompleted`)              |
 | `reinstateFencer`                              | `FencerReinstated`                                                                         |
+| `splitOffGroup`                                | `GroupSplitOff` (épreuve d'origine), `SplitRankingImported` (épreuve séparée), même `commandId` |
 
 - Source : `CommandContext.actor` (IPC : `screen` ; MCP : `mcp`, auteur `agent` ; défaut `engine`).
 - Une commande qui écrit rend `revision` et diffuse `{ type: 'journal:appended', competitionId, revision }`
@@ -321,7 +322,7 @@ l'adresse de la tablette, `device`, `mcp`. Le journal d'épreuve ne porte que l'
 l'arbitre (RGPD).
 
 Restent sur le chemin historique (saisie locale de l'écran, ou écriture directe du serveur) : épreuves
-par équipes, tableaux séparés après les poules, égalité sans vainqueur sur la feuille de poule, scores en cours et synchronisation hors ligne des
+par équipes, égalité sans vainqueur sur la feuille de poule, scores en cours et synchronisation hors ligne des
 tablettes (`updateMatchScore`).
 
 Retrait d'un tireur ([ADR-0016](adr/0016-retrait-reintegration-tireur.md)) : étape 1 faite, règle
@@ -352,7 +353,7 @@ passe par `addPoolFencer` (`PoolFencerAdded`). Palier « clôture de tour » fai
 passe par `closePoolRound` (simulation pour la confirmation, puis commande ; `PoolRoundClosed`).
 Palier « tableau » fait : le tableau calculé à l'écran (`planTableau`, classement d'entrée de la
 vue) part au moteur avec son placement complet (`generateTableau`, `TableauGenerated`) ; tableaux
-séparés après les poules : tableau local. Palier « correction » fait : un score de poule corrigé
+séparés après les poules : tableau du groupe affiché (`group`, ADR-0024 lot A2). Palier « correction » fait : un score de poule corrigé
 après le tirage passe par `recordScore` avec `correction { reason, rebuildTableau }` (motif au
 journal des scores, `ScoreRecorded.correction`, tableau gardé ou retiré dans la même commande).
 Palier « état d'interface » commencé : une relecture après une commande ne change plus l'onglet
@@ -372,16 +373,16 @@ et remplissage automatique du tableau traduits en commandes (`clearScore`, `reco
 (onglet affiché, bornes de taille de la préparation des poules, pistes de la saisie distante) :
 gardé dans le navigateur par épreuve (`posteUiState`), plus dans l'état partagé ; au chargement,
 l'onglet du poste est rouvert s'il ne devance pas la phase de l'épreuve. **Exception documentée**
-(décision du mainteneur, 2026-11-21, révisable) : les tableaux séparés après les poules restent
-écrits par l'écran, comme les épreuves par équipes ; l'étape 4c ne les couvre pas. Composition des
+(décision du mainteneur, 2026-11-21, levée pour les tableaux séparés par l'ADR-0024, lot A2) : les
+épreuves par équipes restent écrites par l'écran ; l'étape 4c ne les couvre pas. Composition des
 équipes des rapières par `setRapieresTeams` (`RapieresTeamsUpdated`, identifiants seulement :
 la composition, personnelle, n'est pas rejouable). Tableaux de classement du
 remplissage « toutes les places » : scores des matchs connus du moteur par commandes.
 
 **Étape 4c faite** : l'écran n'écrit plus l'état de l'épreuve (`useCompetitionSession` ne
 sauvegarde plus, ni en différé ni à la fermeture) ; seul le moteur l'écrit, l'écran le relit
-(`getCompetitionState`). Exceptions documentées, où l'écran l'écrit encore : tableaux séparés
-après les poules, épreuves par équipes (`persistLocally`). La préparation des poules (avant
+(`getCompetitionState`). Exception documentée, où l'écran l'écrit encore : épreuves par équipes
+(`persistLocally`, jusqu'aux lots E de l'ADR-0024). La préparation des poules (avant
 « Lancer ») reste un brouillon de l'écran, non conservé au redémarrage.
 
 **Tableaux séparés après les poules** ([ADR-0024](adr/0024-tableaux-separes-equipes-moteur.md)),
@@ -398,11 +399,37 @@ compris), uniques dans l'épreuve et dans la table `matches`. Règles pures :
 (facultatif, `schemaVersion` 1 ; absent = tableau unique). Phase Résultats quand chaque groupe
 restant est terminé. Le partage du classement n'est pas journalisé (dérivé). Rejeu :
 `projectCompetition` rend `groupTableaux`, `compareWithState` compare chaque tableau de groupe.
-`getCompetitionState` expose `groupTableaux`. Reprise : un tableau tiré à la racine avant ce lot
-est le tableau du groupe de ses tireurs (identifiants inchangés) ; il reste à la racine tant que
-l'écran l'y écrit. Jusqu'au lot A2, l'écran garde son tableau local pour ce format
-(`generateTableau` et `clearTableau` en repli local) et sa sauvegarde du bloc conserve
-`groupTableaux`.
+`getCompetitionState` expose `groupTableaux` (tableau repris compris). Reprise : un tableau tiré à
+la racine avant ce lot est le tableau du groupe de ses tireurs (identifiants inchangés) ; il quitte
+la racine pour `groupTableaux` à sa première réécriture par une commande. Les tableaux des autres
+groupes, qui n'étaient qu'en mémoire de l'écran, ne sont pas récupérés.
+Lot A2 fait (écran) : onglets des groupes lus dans `state.groupTableaux` (groupes restants du
+classement et groupes tirés), groupe affiché = préférence du poste (`posteUiState.splitGroup`) ;
+plus de tableau en mémoire (`splitTableauStates` supprimé), plus de sauvegarde du bloc par l'écran
+pour ce format (`persistLocally` : équipes seulement). L'écran appelle `generateTableau` avec le
+groupe affiché ; « retirer le tableau » sans groupe (correction de poule, classement changé) retire
+celui de chaque groupe tiré. Lecteurs de l'affichage sur tous les tableaux : résultats publics
+(`/api/competitions/:id/results-data` : tours et classements finaux avec `group`), export
+(`resultsData` : matchs de tous les tableaux, classements des groupes à la suite), outil MCP
+`get_bracket` (`group` de chaque match, filtre `group`).
+Lot A3 fait (épreuve séparée) : `splitOffGroup` (`{ competitionId, group, title }`, outil MCP
+`split_off_group`, droit `competition:write`) remplace les écritures de l'écran
+(`useSplitGroups` : `createCompetition`, `addFencer`, `saveSessionState`, `updateCompetition` par
+le préload, sans transaction ; canaux `db:createCompetition`, `db:updateCompetition`,
+`db:addFencer` retirés). Dans **une** transaction (`runCommand` ouvre une transaction SQLite sur
+la base entière ; révision et `commandId` contrôlés sur l'épreuve d'origine) : épreuve séparée
+créée (`buildSplitCompetitionData`), tireurs du groupe copiés (pointés, rang après poules),
+projection de départ (phase Classement, classement après poules du groupe avec ses
+statistiques), puis `splitOffCompetitionIds` posé sur l'épreuve d'origine. Journal :
+`GroupSplitOff { group, targetCompetitionId, fencerIds }` (origine) et
+`SplitRankingImported { sourceCompetitionId, group, ranking: [{ fencerId, sourceFencerId, rank }] }`
+(premier fait de l'épreuve séparée, journal complet). Refus : `invalid_input` (épreuve sans
+tableaux séparés), `split_group_not_found` (groupe absent du classement ou déjà extrait),
+`bracket_exists` (tableau du groupe tiré). L'épreuve séparée tire son tableau sans poules
+(classement importé). Rejeu : `projectCompetition` rend `splitOffGroups` et `importedRanking` ;
+`compareWithState` signale `split_off` (marque absente des réglages, si `stateView` reçoit les
+réglages) et `imported_ranking` (tireurs du classement) ; `rebuildCompetitionState` les répare
+(statistiques de poule relues dans l'épreuve d'origine, rangs seuls si elle a été supprimée).
 
 **Étape 5 commencée** : `projectCompetition(events)` (`src/shared/domain/journal`) rejoue le
 journal et rend les faits rejouables : statuts des tireurs nommés par le journal, tours de poules
@@ -410,7 +437,8 @@ journal et rend les faits rejouables : statuts des tireurs nommés par le journa
 et des tableaux de classement, vague des rapières. Les dérivés (classements, tableaux de
 classement, classement final) n'y sont pas. `compareWithState` liste les écarts entre ces faits et
 l'état tenu par le moteur (identifiants et nombres seulement). Un journal est **complet** s'il
-commence, après l'appel, par `PoolsGenerated`, `PoolsSkipped` ou `TableauGenerated` ; sinon seuls
+commence, après l'appel, par `PoolsGenerated`, `PoolsSkipped`, `SplitRankingImported` (épreuve
+séparée) ou `TableauGenerated` ; sinon seuls
 les faits qu'il contient sont comparés. Ignorés au rejeu : `PoolCompleted`, `TableauCompleted`
 (signaux), `RankingAdjusted` (dérivé), `RapieresTeamsUpdated` (composition personnelle). Les
 tableaux de classement ont un identifiant déterministe, tiré de leur parent et de leur tour

@@ -27,6 +27,9 @@ const WikiModal = React.lazy(() => import('./components/WikiModal'));
 const ArenaPlannerModal = React.lazy(() =>
   import('./components/ArenaPlannerModal').then(m => ({ default: m.ArenaPlannerModal }))
 );
+const RoadmapModal = React.lazy(() =>
+  import('./components/roadmap/RoadmapModal').then(m => ({ default: m.RoadmapModal }))
+);
 const WifiQRModal = React.lazy(() =>
   import('./components/WifiQRModal').then(m => ({ default: m.WifiQRModal }))
 );
@@ -68,6 +71,7 @@ const AppContent: React.FC = () => {
   const [showWifiQR, setShowWifiQR] = useState(false);
   const [showTVRemote, setShowTVRemote] = useState(false);
   const [showArenaPlanner, setShowArenaPlanner] = useState(false);
+  const [showRoadmap, setShowRoadmap] = useState(false);
   const [remoteServerUrl, setRemoteServerUrl] = useState<string | null>(null);
   const [remoteArenaCount, setRemoteArenaCount] = useState<number>(1);
   // Entraînement / démo autonome : état et lancement (#1897)
@@ -283,6 +287,7 @@ const AppContent: React.FC = () => {
           onWifiQR={() => setShowWifiQR(true)}
           onTVRemote={() => setShowTVRemote(true)}
           onArenaPlanner={() => setShowArenaPlanner(true)}
+          onRoadmap={() => setShowRoadmap(true)}
           onStartDemo={handleStartDemo}
           onSettings={() => setShowSettingsModal(true)}
         />
@@ -424,7 +429,16 @@ const AppContent: React.FC = () => {
 
         {showArenaPlanner && (
           <Suspense fallback={null}>
-            <ArenaPlannerModal onClose={() => setShowArenaPlanner(false)} />
+            <ArenaPlannerModal
+              onClose={() => setShowArenaPlanner(false)}
+              competitionId={view === 'competition' ? (currentCompetition?.id ?? null) : null}
+            />
+          </Suspense>
+        )}
+
+        {showRoadmap && (
+          <Suspense fallback={null}>
+            <RoadmapModal onClose={() => setShowRoadmap(false)} competition={currentCompetition} />
           </Suspense>
         )}
 

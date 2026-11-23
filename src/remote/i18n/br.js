@@ -747,6 +747,8 @@
   'results.round_semis': 'Hanter-dibennoù',
   'results.round_quarters': 'Kardoù dibenn',
   'results.round_n': 'Taolenn {{n}}',
+  'results.group_F': "Merc'hed",
+  'results.group_M': 'Gwazed',
   'results.final_rank': 'Renk diwezhañ',
   'results.pool_rank': 'Renk goude ar poulloù',
   'results.match_won': "Trec'h",
