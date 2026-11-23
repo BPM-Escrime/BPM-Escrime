@@ -310,6 +310,9 @@
     "density_comfortable": "寬鬆",
     "density_standard": "標準",
     "density_compact": "緊湊",
+    "time_format": "時間格式",
+    "time_format_24h": "24 小時制 (14:30)",
+    "time_format_12h": "上午/下午 (2:30 PM)",
     "pool_rounds": "分組賽輪次",
     "has_direct_elimination": "直接淘汰賽",
     "default_pool_max_score": "分組賽最高分數",
@@ -522,7 +525,10 @@
     "minutes": "分鐘",
     "seconds": "秒",
     "hours": "小時",
-    "days": "天"
+    "days": "天",
+    "period": "上午/下午",
+    "am": "上午",
+    "pm": "下午"
   },
   "pdfTemplate": {
     "modalTitle": "自訂PDF匯出",

@@ -24,6 +24,7 @@ import { Settings } from 'lucide-react';
 import FederalImportPanel from './FederalImportPanel';
 import { useFederalImport, type FederalCreationPayload } from '../hooks/useFederalImport';
 import type { FederalNotice } from '../../shared/utils/fileParser/federalImport';
+import { TimeInput } from './common/TimeInput';
 import { PlaceSearchField } from './common/PlaceSearchField';
 
 interface NewCompetitionModalProps {
@@ -284,13 +285,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
                     <label className="form-label" htmlFor={`new-competition-${key}`}>
                       {t(`federalImport.${key}`)}
                     </label>
-                    <input
-                      id={`new-competition-${key}`}
-                      type="time"
-                      className="form-input"
-                      value={value}
-                      onChange={e => setValue(e.target.value)}
-                    />
+                    <TimeInput id={`new-competition-${key}`} value={value} onChange={setValue} />
                   </div>
                 ))}
               </div>

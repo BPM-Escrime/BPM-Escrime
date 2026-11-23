@@ -10,6 +10,7 @@ import { logger, LogCategory } from '@shared/services/logger';
 import { isWebhookUrlSafe } from '@shared/services/notificationService';
 import { loadUiScale, saveUiScale, type UiScale } from '../../services/uiScale';
 import { loadUiDensity, saveUiDensity, type UiDensity } from '../../services/uiDensity';
+import { reloadTimeFormat } from '../../services/timeFormat';
 import {
   LOGO_STORAGE_KEY,
   LOGO_LIBRARY_MAX,
@@ -323,6 +324,7 @@ export function useSettingsHandlers(ctx: Ctx) {
       setConfettiDisabled(isConfettiDisabled());
       handleUiScaleChange(loadUiScale());
       handleUiDensityChange(loadUiDensity());
+      reloadTimeFormat();
       if (values['bellepoule-pdf-templates'] !== undefined)
         await usePdfTemplateStore.persist?.rehydrate?.();
       const lang = values['bellepoule-language'] as Language | undefined;
