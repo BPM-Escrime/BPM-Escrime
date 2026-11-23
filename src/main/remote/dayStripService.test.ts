@@ -52,11 +52,9 @@ function setup() {
   const calls: Record<string, (...args: unknown[]) => unknown> = {
     'eventDay:getStripBoard': service.board,
     'eventDay:assignStrip': service.assign,
-    'eventDay:setStripRule': service.setRule,
-    'eventDay:setAutoAssign': service.setAutoAssign,
   };
   const call = (channel: string, ...args: unknown[]) => calls[channel](...args);
-  return { call, server, dispose, rules };
+  return { call, server, dispose, rules, db };
 }
 
 describe('dayStripService (#1878)', () => {
@@ -77,30 +75,20 @@ describe('dayStripService (#1878)', () => {
 
   it('affectation : piste hors salle ou réservée refusée, piste libre acceptée', () => {
     expect(ctx.call('eventDay:assignStrip', 'd1', 9, 'c1|pool:p2')).toBe(false);
-    expect(
-      ctx.call('eventDay:setStripRule', 'd1', 2, {
-        competitions: null,
-        pools: false,
-        tableau: true,
-        tableauMax: null,
-      })
-    ).toBe(true);
+    // Réservation écrite par la commande setDayStripRule (eventDay.test.ts)
+    ctx.db.stripRules.setStripRule('d1', 2, {
+      competitions: null,
+      pools: false,
+      tableau: true,
+      tableauMax: null,
+    });
     expect(ctx.call('eventDay:assignStrip', 'd1', 2, 'c1|pool:p2')).toBe(false);
     expect(ctx.call('eventDay:assignStrip', 'd1', 3, 'c1|pool:p2')).toBe(true);
     expect(ctx.server.moveWorkToArena).toHaveBeenCalledWith(expect.anything(), 3);
   });
 
-  it('réservation : entrées invalides refusées, null retire la réservation', () => {
-    expect(ctx.call('eventDay:setStripRule', 'd1', 0, {})).toBe(false);
-    expect(ctx.call('eventDay:setStripRule', 'd1', 4, {})).toBe(false);
-    ctx.call('eventDay:setStripRule', 'd1', 2, { pools: false });
-    expect(ctx.rules[2]).toMatchObject({ pools: false });
-    ctx.call('eventDay:setStripRule', 'd1', 2, null);
-    expect(ctx.rules[2]).toBeUndefined();
-  });
-
   it('affectation automatique : la piste libre est prise sans clic', async () => {
-    expect(ctx.call('eventDay:setAutoAssign', 'd1', true)).toBe(true);
+    ctx.db.stripRules.setAutoAssign('d1', true);
     await vi.waitFor(() => expect(ctx.server.moveWorkToArena).toHaveBeenCalledTimes(1), {
       timeout: 1000,
     });

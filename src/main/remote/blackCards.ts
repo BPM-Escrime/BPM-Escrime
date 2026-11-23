@@ -7,8 +7,7 @@ import { MatchStatus, FencerStatus, Score } from '../../shared/types';
 import type { BlackCardRecord } from './types';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { getSharedMainWindow } from '../mainWindowRef';
-import { logger, LogCategory, toError } from '../../shared/services/logger';
-import { emitCompetitionEvent } from '../ipc/dbHandlers';
+import { logger, LogCategory } from '../../shared/services/logger';
 import { reinstateByCommand } from './scoreCommand';
 import { notifyScreen } from './remoteActivity';
 
@@ -103,17 +102,10 @@ export function cancelBlackCard(
   }
 
   const status = record.previousStatus;
-  // Réintégration par le moteur (docs/adr/0016) : statut et matchs d'avant l'exclusion, journal
-  const recorded = reinstateByCommand(ctx.db, ctx.session?.competitionId, fencerId);
-  try {
-    if (!recorded) ctx.db.updateFencer(fencerId, { status, exclusionReason: null });
-  } catch (e) {
-    logger.error(
-      LogCategory.NETWORK,
-      '[RemoteScoreServer] Erreur réintégration combattant:',
-      toError(e)
-    );
-    return { success: false, status: 500, error: 'reinstate_failed' };
+  // Réintégration par le moteur seulement (docs/adr/0016, #2134) : statut et matchs d'avant
+  // l'exclusion, journal. Commande refusée : rien d'écrit, le DT corrige au poste.
+  if (!reinstateByCommand(ctx.db, ctx.session?.competitionId, fencerId)) {
+    return { success: false, status: 409, error: 'reinstate_failed' };
   }
 
   // Rouvrir le match interrompu par le carton noir avec le score atteint
@@ -132,14 +124,6 @@ export function cancelBlackCard(
     isForfait: false,
   });
   // Base : remise par le moteur à l'état d'avant le carton ; le score atteint reste celui de l'arène
-  if (dbMatch && !recorded) {
-    ctx.db.updateMatch(matchId, {
-      scoreA: reopened(scoreA),
-      scoreB: reopened(scoreB),
-      status: MatchStatus.IN_PROGRESS,
-    });
-    emitCompetitionEvent('matches:changed');
-  }
   ctx.sessionMatchScores.set(matchId, {
     scoreA: reopened(scoreA),
     scoreB: reopened(scoreB),
@@ -189,7 +173,7 @@ export function cancelBlackCard(
       scoreA,
       scoreB,
       // Réintégration écrite par le moteur : l'écran relit tireurs et session
-      recorded,
+      recorded: true,
     });
   }
   return { success: true, matchId };

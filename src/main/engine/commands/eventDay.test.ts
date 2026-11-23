@@ -77,4 +77,34 @@ describe('opérations de la journée (#1714)', () => {
     repo.getCompetitionDayId.mockReturnValueOnce(null);
     expect(await call('listBusyElsewhere', { competitionId: 'c1' })).toEqual({});
   });
+
+  it('réservation et affectation automatique : écrites par la commande (#2134)', async () => {
+    const rules: Record<number, unknown> = {};
+    let auto = false;
+    const db = {
+      eventDays: {
+        getDay: (id: string) => (id === 'd1' ? { id, stripCount: 3, competitionIds: [] } : null),
+      },
+      stripRules: {
+        setStripRule: (_d: string, n: number, r: unknown) => {
+          if (r) rules[n] = r;
+          else delete rules[n];
+        },
+        setAutoAssign: (_d: string, on: boolean) => void (auto = on),
+      },
+    } as unknown as DatabaseManager;
+    const run = (op: OperationName, input: Record<string, unknown>) => invoke({ db }, op, input);
+    // Sans port du poste : la commande écrit elle-même
+    expect(await run('setDayStripRule', { dayId: 'd1', strip: 4, rule: {} })).toBe(false);
+    expect(await run('setDayStripRule', { dayId: 'inconnue', strip: 1, rule: {} })).toBe(false);
+    expect(await run('setDayStripRule', { dayId: 'd1', strip: 2, rule: { pools: false } })).toBe(
+      true
+    );
+    expect(rules[2]).toMatchObject({ pools: false });
+    await run('setDayStripRule', { dayId: 'd1', strip: 2, rule: null });
+    expect(rules[2]).toBeUndefined();
+    expect(await run('setDayAutoAssign', { dayId: 'd1', on: true })).toBe(true);
+    expect(auto).toBe(true);
+    expect(await run('setDayAutoAssign', { dayId: 'inconnue', on: true })).toBe(false);
+  });
 });
