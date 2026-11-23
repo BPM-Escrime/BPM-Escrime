@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 149 | 1250 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 131 | 702 |
+| `src/renderer/components/` | 131 | 703 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 36 | 384 |
+| `src/shared/domain/` | 36 | 385 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **599** | **4591** |
+| **Total** | **599** | **4593** |
 
-Unitaires : 581 fichiers, 4541 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 581 fichiers, 4543 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5911,7 +5911,7 @@ Unitaires : 581 fichiers, 4541 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 21 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 22 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5924,6 +5924,7 @@ Unitaires : 581 fichiers, 4541 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - ajoute une zone public nommée depuis le menu « Zone »
   - nomme une arène et affiche son nom sur le plan
   - tourne une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle
+  - tourne une arène librement par sa poignée ronde du plan, touche R : quart de tour
   - change la couleur d'une zone puis revient à la couleur par défaut
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
   - ne permet jamais plus d'arènes que le maximum de la zone
@@ -8889,7 +8890,7 @@ Unitaires : 581 fichiers, 4541 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaDisciplines.test.ts</code> — 11 tests</summary>
+<summary><code>src/shared/domain/arena/arenaDisciplines.test.ts</code> — 12 tests</summary>
 
 - **disciplines du planificateur**
   - laser : cercle de sécurité Ø 12 m
@@ -8903,6 +8904,7 @@ Unitaires : 581 fichiers, 4541 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **rotation des arènes**
   - laser : quart de tour, retour à 0 après 270
   - piste et scène : demi-tour, emprise alignée sur les murs
+  - souris : libre en laser (aimantation optionnelle), demi-tour pour piste et scène
   - valeur invalide ou négative ramenée au pas
 
 </details>
