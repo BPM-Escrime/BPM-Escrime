@@ -11,7 +11,10 @@ import {
   ARENA_GUARD_OFFSET_M,
   ARENA_SAFETY_RADIUS_M,
   checkRoomItems,
+  createEquipmentItem,
   createRoomItem,
+  ROOM_EQUIPMENT,
+  placeOnFreeSpot,
   moveRoomItem,
   resizeRoomItem,
   resizeRoomItemAroundCenter,
@@ -429,5 +432,59 @@ describe('spreadArenaCenters', () => {
 
   it('gère zéro arène', () => {
     expect(spreadArenaCenters({ widthM: 20, lengthM: 20 }, 0, 1)).toEqual([]);
+  });
+});
+
+describe('équipements de salle (catalogue du menu déroulant)', () => {
+  it('identifiants uniques, tailles positives', () => {
+    const ids = ROOM_EQUIPMENT.map(e => e.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const e of ROOM_EQUIPMENT) {
+      expect(e.widthM).toBeGreaterThan(0);
+      expect(e.heightM).toBeGreaterThan(0);
+    }
+  });
+
+  it('vestiaires : zone bloquée à la taille du catalogue, dans la salle', () => {
+    const lockers = ROOM_EQUIPMENT.find(e => e.id === 'locker_room')!;
+    const item = createEquipmentItem(lockers, 'item-1', 'Vestiaires', { widthM: 20, lengthM: 20 });
+    expect(item).toMatchObject({ kind: 'blocked', label: 'Vestiaires', widthM: 6, heightM: 4 });
+    expect(checkRoomItems({ widthM: 20, lengthM: 20 }, [], [item])).toEqual([]);
+  });
+
+  it('salle plus petite que l’équipement : taille bornée à la salle', () => {
+    const bleachers = ROOM_EQUIPMENT.find(e => e.id === 'bleachers')!;
+    const item = createEquipmentItem(bleachers, 'item-1', 'Gradins', { widthM: 6, lengthM: 2 });
+    expect(item).toMatchObject({ x: 0, y: 0, widthM: 6, heightM: 2 });
+  });
+});
+
+describe('placeOnFreeSpot', () => {
+  const room = { widthM: 20, lengthM: 20 };
+  const lockers = ROOM_EQUIPMENT.find(e => e.id === 'locker_room')!;
+  const toilets = ROOM_EQUIPMENT.find(e => e.id === 'toilets')!;
+
+  it('place libre : inchangé', () => {
+    const item = createEquipmentItem(lockers, 'a', 'Vestiaires', room);
+    expect(placeOnFreeSpot(item, [], room, [])).toEqual(item);
+  });
+
+  it('place occupée : décalé à côté, sans chevauchement', () => {
+    const first = createEquipmentItem(lockers, 'a', 'Vestiaires', room);
+    const second = placeOnFreeSpot(
+      createEquipmentItem(toilets, 'b', 'Sanitaires', room),
+      [first],
+      room,
+      []
+    );
+    expect(checkRoomItems(room, [], [first, second])).toEqual([]);
+    expect(second.x).toBeGreaterThanOrEqual(first.x + first.widthM - 1e-6);
+  });
+
+  it('zone de sécurité d’une arène évitée', () => {
+    const item = placeOnFreeSpot(createEquipmentItem(toilets, 'b', 'Sanitaires', room), [], room, [
+      { x: 10, y: 10 },
+    ]);
+    expect(checkRoomItems(room, [{ x: 10, y: 10 }], [item])).toEqual([]);
   });
 });

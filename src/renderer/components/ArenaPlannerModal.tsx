@@ -16,12 +16,15 @@ import { Button } from './common/Button';
 import { logger, LogCategory } from '@shared/services/logger';
 import {
   checkRoomItems,
+  createEquipmentItem,
   createRoomItem,
   moveArenaWithPush,
   moveRoomItem,
+  placeOnFreeSpot,
   resizeRoomItemAroundCenter,
   rotateRoomItem,
   resizeRoomItem,
+  ROOM_EQUIPMENT,
   type ArenaAlign,
   type ArenaSpacing,
   type RoomItem,
@@ -37,9 +40,12 @@ import {
   roomDimsKey,
   type RoomPlan,
 } from './arenaPlanner/roomPlans';
+import { maxIdSuffix, useArenaPlanPersistence } from './arenaPlanner/useArenaPlanPersistence';
 
 interface ArenaPlannerModalProps {
   onClose: () => void;
+  /** Épreuve ouverte : plan chargé et enregistré sur elle (docs/adr/0025) */
+  competitionId?: string | null;
 }
 
 type ItemKind = RoomItem['kind'];
@@ -58,7 +64,7 @@ type Updater<T> = T | ((prev: T) => T);
 
 const fmt = (n: number) => (Math.round(n * 10) / 10).toString();
 
-export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose }) => {
+export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, competitionId }) => {
   const { t } = useTranslation();
   const [rooms, setRooms] = useState<RoomPlan[]>(() => [
     newRoomPlan('room-1', `${t('arenaPlanner.room_default')} 1`),
@@ -103,6 +109,29 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const [exportError, setExportError] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
   const idCounter = useRef(0);
+
+  useArenaPlanPersistence({
+    competitionId,
+    rooms,
+    activeId,
+    onLoad: saved => {
+      setRooms(saved.rooms);
+      const active = saved.rooms.find(r => r.id === saved.activeRoomId) ?? saved.rooms[0];
+      setActiveId(active.id);
+      setSelectedId(null);
+      roomCounter.current = Math.max(
+        saved.rooms.length,
+        maxIdSuffix(
+          saved.rooms.map(r => r.id),
+          'room'
+        )
+      );
+      idCounter.current = maxIdSuffix(
+        saved.rooms.flatMap(r => r.items.map(i => i.id)),
+        'item'
+      );
+    },
+  });
 
   const layout = useMemo(() => computeRoomLayout(plan), [plan]);
   const parsed = layout?.parsed ?? null;
@@ -163,6 +192,25 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     const count = items.filter(i => i.kind === kind).length + 1;
     const label = `${t(KIND_LABEL_KEY[kind])} ${count}`;
     setItems(prev => [...prev, createRoomItem(kind, id, label, room)]);
+    setSelectedId(id);
+  };
+
+  /** Équipement du catalogue (vestiaires, gradins, infirmerie…) */
+  const addEquipment = (equipmentId: string) => {
+    const equipment = ROOM_EQUIPMENT.find(e => e.id === equipmentId);
+    if (!room || !equipment) return;
+    idCounter.current += 1;
+    const id = `item-${idCounter.current}`;
+    const name = t(`arenaPlanner.equipment_${equipment.id}`);
+    const count = items.filter(i => i.label === name || i.label.startsWith(`${name} `)).length;
+    const label = count ? `${name} ${count + 1}` : name;
+    const item = placeOnFreeSpot(
+      createEquipmentItem(equipment, id, label, room),
+      items,
+      room,
+      centers
+    );
+    setItems(prev => [...prev, item]);
     setSelectedId(id);
   };
 
@@ -393,105 +441,130 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
 
       <div className="arena-planner-layout">
         <aside className="arena-planner-sidebar" aria-label={t('arenaPlanner.title')}>
-          <div className="arena-planner-field">
-            <label className="form-label" htmlFor="arena-room-name">
-              {t('arenaPlanner.room_name')}
-            </label>
-            <input
-              id="arena-room-name"
-              className="form-input"
-              type="text"
-              value={plan.name}
-              onChange={e => setRoomName(e.target.value)}
-            />
-          </div>
-          <div className="arena-planner-field">
-            <label className="form-label" htmlFor="arena-width">
-              {t('arenaPlanner.width')}
-            </label>
-            <input
-              id="arena-width"
-              className="form-input"
-              type="text"
-              inputMode="decimal"
-              value={width}
-              onChange={e => setWidth(e.target.value)}
-            />
-            <p className="arena-planner-hint">{t('arenaPlanner.hint_width')}</p>
-          </div>
-          <div className="arena-planner-field">
-            <label className="form-label" htmlFor="arena-length">
-              {t('arenaPlanner.length')}
-            </label>
-            <input
-              id="arena-length"
-              className="form-input"
-              type="text"
-              inputMode="decimal"
-              value={length}
-              onChange={e => setLength(e.target.value)}
-            />
-            <p className="arena-planner-hint">{t('arenaPlanner.hint_length')}</p>
-          </div>
-          <div className="arena-planner-field">
-            <label className="form-label" htmlFor="arena-count">
-              {t('arenaPlanner.arenas')}
-            </label>
-            <input
-              id="arena-count"
-              className="form-input"
-              type="text"
-              inputMode="numeric"
-              value={arenas}
-              onChange={e => setArenas(e.target.value)}
-            />
-            <p className="arena-planner-hint">{t('arenaPlanner.hint_arenas')}</p>
-          </div>
-          <div className="arena-planner-field">
-            <label className="form-label" htmlFor="arena-margin">
-              {t('arenaPlanner.margin')}
-            </label>
-            <input
-              id="arena-margin"
-              className="form-input"
-              type="text"
-              inputMode="decimal"
-              value={margin}
-              onChange={e => setMargin(e.target.value)}
-            />
-            <p className="arena-planner-hint">{t('arenaPlanner.hint_margin')}</p>
-          </div>
-          <div className="arena-planner-field">
-            <label className="form-label" htmlFor="arena-spacing">
-              {t('arenaPlanner.spacing')}
-            </label>
-            <select
-              id="arena-spacing"
-              className="form-input"
-              value={spacing}
-              onChange={e => setSpacing(e.target.value as ArenaSpacing)}
-            >
-              <option value="packed">{t('arenaPlanner.spacing_packed')}</option>
-              <option value="spread">{t('arenaPlanner.spacing_spread')}</option>
-            </select>
-            <p className="arena-planner-hint">{t('arenaPlanner.hint_spacing')}</p>
-          </div>
-          <div className="arena-planner-field">
-            <label className="form-label" htmlFor="arena-align">
-              {t('arenaPlanner.align')}
-            </label>
-            <select
-              id="arena-align"
-              className="form-input"
-              value={align}
-              onChange={e => setAlign(e.target.value as ArenaAlign)}
-            >
-              <option value="left">{t('arenaPlanner.align_left')}</option>
-              <option value="center">{t('arenaPlanner.align_center')}</option>
-              <option value="right">{t('arenaPlanner.align_right')}</option>
-            </select>
-            <p className="arena-planner-hint">{t('arenaPlanner.hint_align')}</p>
-          </div>
+          <details className="arena-planner-props" open>
+            <summary className="arena-planner-props-summary">
+              <span className="arena-planner-props-title">{t('arenaPlanner.props_title')}</span>
+              <span className="arena-planner-props-chip">
+                {parsed
+                  ? t('arenaPlanner.props_summary', {
+                      width: fmt(parsed.w),
+                      length: fmt(parsed.l),
+                      count: layout?.arenaCount ?? 0,
+                    })
+                  : t('arenaPlanner.invalid')}
+              </span>
+            </summary>
+            <div className="arena-planner-props-body">
+              <div className="arena-planner-field">
+                <label className="form-label" htmlFor="arena-room-name">
+                  {t('arenaPlanner.room_name')}
+                </label>
+                <input
+                  id="arena-room-name"
+                  className="form-input"
+                  type="text"
+                  value={plan.name}
+                  onChange={e => setRoomName(e.target.value)}
+                />
+              </div>
+              <fieldset className="arena-planner-group">
+                <legend>{t('arenaPlanner.group_dimensions')}</legend>
+                <div className="arena-planner-row">
+                  <div className="arena-planner-field">
+                    <label className="form-label" htmlFor="arena-width">
+                      {t('arenaPlanner.width')}
+                    </label>
+                    <input
+                      id="arena-width"
+                      className="form-input"
+                      type="text"
+                      inputMode="decimal"
+                      value={width}
+                      onChange={e => setWidth(e.target.value)}
+                    />
+                  </div>
+                  <div className="arena-planner-field">
+                    <label className="form-label" htmlFor="arena-length">
+                      {t('arenaPlanner.length')}
+                    </label>
+                    <input
+                      id="arena-length"
+                      className="form-input"
+                      type="text"
+                      inputMode="decimal"
+                      value={length}
+                      onChange={e => setLength(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <p className="arena-planner-hint arena-planner-row-hint">
+                  {t('arenaPlanner.hint_width')}
+                </p>
+                <div className="arena-planner-field">
+                  <label className="form-label" htmlFor="arena-margin">
+                    {t('arenaPlanner.margin')}
+                  </label>
+                  <input
+                    id="arena-margin"
+                    className="form-input"
+                    type="text"
+                    inputMode="decimal"
+                    value={margin}
+                    onChange={e => setMargin(e.target.value)}
+                  />
+                  <p className="arena-planner-hint">{t('arenaPlanner.hint_margin')}</p>
+                </div>
+              </fieldset>
+              <fieldset className="arena-planner-group">
+                <legend>{t('arenaPlanner.group_arenas')}</legend>
+                <div className="arena-planner-field">
+                  <label className="form-label" htmlFor="arena-count">
+                    {t('arenaPlanner.arenas')}
+                  </label>
+                  <input
+                    id="arena-count"
+                    className="form-input"
+                    type="text"
+                    inputMode="numeric"
+                    value={arenas}
+                    onChange={e => setArenas(e.target.value)}
+                  />
+                  <p className="arena-planner-hint">{t('arenaPlanner.hint_arenas')}</p>
+                </div>
+                <div className="arena-planner-field">
+                  <label className="form-label" htmlFor="arena-spacing">
+                    {t('arenaPlanner.spacing')}
+                  </label>
+                  <select
+                    id="arena-spacing"
+                    className="form-input"
+                    value={spacing}
+                    onChange={e => setSpacing(e.target.value as ArenaSpacing)}
+                  >
+                    <option value="packed">{t('arenaPlanner.spacing_packed')}</option>
+                    <option value="spread">{t('arenaPlanner.spacing_spread')}</option>
+                  </select>
+                  <p className="arena-planner-hint">{t('arenaPlanner.hint_spacing')}</p>
+                </div>
+                <div className="arena-planner-field">
+                  <label className="form-label" htmlFor="arena-align">
+                    {t('arenaPlanner.align')}
+                  </label>
+                  <select
+                    id="arena-align"
+                    className="form-input"
+                    value={align}
+                    onChange={e => setAlign(e.target.value as ArenaAlign)}
+                  >
+                    <option value="left">{t('arenaPlanner.align_left')}</option>
+                    <option value="center">{t('arenaPlanner.align_center')}</option>
+                    <option value="right">{t('arenaPlanner.align_right')}</option>
+                  </select>
+                  <p className="arena-planner-hint">{t('arenaPlanner.hint_align')}</p>
+                </div>
+              </fieldset>
+            </div>
+          </details>
 
           <div className="arena-planner-actions">
             <Button
@@ -559,6 +632,20 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
                     {t(TOOL_LABEL_KEY[kind])}
                   </Button>
                 ))}
+                <select
+                  className="form-input arena-planner-equipment"
+                  aria-label={t('arenaPlanner.add_equipment')}
+                  value=""
+                  disabled={!room}
+                  onChange={e => addEquipment(e.target.value)}
+                >
+                  <option value="">{t('arenaPlanner.add_equipment')}</option>
+                  {ROOM_EQUIPMENT.map(e => (
+                    <option key={e.id} value={e.id}>
+                      {t(`arenaPlanner.equipment_${e.id}`)}
+                    </option>
+                  ))}
+                </select>
                 <Button
                   type="button"
                   size="sm"
