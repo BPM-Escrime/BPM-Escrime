@@ -233,12 +233,12 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     };
   },
   getCompetitionState: (ctx, { competitionId }) => {
-    getCompetitionOrThrow(ctx, competitionId);
+    const comp = getCompetitionOrThrow(ctx, competitionId);
     const session = readSession(ctx, competitionId);
     return {
       revision: ctx.db.eventLog.getRevision(competitionId),
       sessionRevision: typeof session.revision === 'number' ? session.revision : 0,
-      state: competitionState(session),
+      state: competitionState(session, comp),
     };
   },
   getMatchHistory: (ctx, { competitionId, matchId }) => {

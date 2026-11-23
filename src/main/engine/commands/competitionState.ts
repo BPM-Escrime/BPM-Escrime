@@ -5,14 +5,29 @@
  * Licensed under GPL-3.0
  */
 import type { CompetitionStateDTO } from '../../../shared/api/contract';
-
+import type { Competition } from '../../../shared/types';
 import { sessionGroupTableaux } from '../../../shared/domain/ranking/splitGroups';
+import { groupTableauxView } from './groupTableaux';
 
 const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
-/** État d'une épreuve à partir du bloc de session ; null si l'épreuve n'a jamais été ouverte */
-export function competitionState(session: Record<string, unknown>): CompetitionStateDTO | null {
+/**
+ * État d'une épreuve à partir du bloc de session ; null si l'épreuve n'a jamais été ouverte.
+ * Tableaux séparés après les poules (docs/adr/0024) : un tableau par groupe dans
+ * groupTableaux, tableau repris de la racine compris (rangé sous son groupe).
+ */
+export function competitionState(
+  session: Record<string, unknown>,
+  comp?: Competition
+): CompetitionStateDTO | null {
   if (Object.keys(session).length === 0) return null;
+  const groups = comp ? groupTableauxView(comp, session) : null;
+  // Tableau repris lu dans son groupe : la racine ne le montre plus
+  const rootMoved =
+    !!groups &&
+    Array.isArray(session.tableauMatches) &&
+    session.tableauMatches.length > 0 &&
+    Object.values(groups).some(g => g.tableauMatches === session.tableauMatches);
   const ui = (session.uiState ?? {}) as { currentPoolRound?: number };
   const prep = session.poolPrepParams as CompetitionStateDTO['poolPrepParams'];
   return {
@@ -21,9 +36,9 @@ export function competitionState(session: Record<string, unknown>): CompetitionS
     poolHistory: arr(session.poolHistory),
     appelHistory: arr(session.appelHistory),
     overallRanking: arr(session.overallRanking),
-    tableauMatches: arr(session.tableauMatches),
-    finalResults: arr(session.finalResults),
-    consolationBrackets: arr(session.consolationBrackets),
+    tableauMatches: rootMoved ? [] : arr(session.tableauMatches),
+    finalResults: rootMoved ? [] : arr(session.finalResults),
+    consolationBrackets: rootMoved ? [] : arr(session.consolationBrackets),
     // Tour courant : l'écran le range dans uiState, le moteur au premier niveau
     currentPoolRound: Number(ui.currentPoolRound ?? session.currentPoolRound ?? 1) || 1,
     skipPoolPhase: session.skipPoolPhase === true,
@@ -36,9 +51,11 @@ export function competitionState(session: Record<string, unknown>): CompetitionS
       : {}),
     ...(session.rapieres ? { rapieres: session.rapieres as CompetitionStateDTO['rapieres'] } : {}),
     ...(prep ? { poolPrepParams: prep } : {}),
-    // Tableaux séparés après les poules (docs/adr/0024) : lus par l'écran au lot A2
-    ...(session.groupTableaux && Object.keys(sessionGroupTableaux(session)).length > 0
-      ? { groupTableaux: sessionGroupTableaux(session) }
-      : {}),
+    // Tableaux séparés après les poules (docs/adr/0024) : onglets de l'écran (lot A2)
+    ...(groups
+      ? { groupTableaux: groups }
+      : session.groupTableaux && Object.keys(sessionGroupTableaux(session)).length > 0
+        ? { groupTableaux: sessionGroupTableaux(session) }
+        : {}),
   };
 }

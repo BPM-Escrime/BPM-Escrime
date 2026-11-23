@@ -13,6 +13,7 @@ import type {
   FinalResult,
   TableauMatch,
 } from '../../../shared/domain/tableau/tableauTypes';
+import type { GroupTableau } from '../../../shared/domain/ranking/splitGroups';
 
 export const CV_REMOTE_INIT = {
   isRemoteActive: false,
@@ -34,10 +35,8 @@ export const CV_SPLIT_INIT = {
   activeSplitGroup: null as string | null,
   pendingSplitOffGroup: null as string | null,
   splitOffInProgress: false,
-  splitTableauStates: {} as Record<
-    string,
-    { matches: TableauMatch[]; consolation: ConsolationBracket[]; results: FinalResult[] }
-  >,
+  /** Tableaux des groupes lus dans l'état du moteur (docs/adr/0024) */
+  groupTableaux: {} as Record<string, GroupTableau>,
 };
 
 export const CV_DATA_INIT = {

@@ -22,11 +22,8 @@ import type {
   RapieresTableauMode,
   RapieresSession,
 } from '../../shared/domain/rapieres/rapieres.types';
-import type {
-  ConsolationBracket,
-  FinalResult,
-  TableauMatch,
-} from '../../shared/domain/tableau/tableauTypes';
+import type { ConsolationBracket, TableauMatch } from '../../shared/domain/tableau/tableauTypes';
+import type { GroupTableau } from '../../shared/domain/ranking/splitGroups';
 import { useConfirm } from '../components/ConfirmDialog';
 import { useToast } from '../components/Toast';
 import type { Phase } from './useCompetitionSession';
@@ -39,11 +36,6 @@ import { isTableauEligible } from '../../shared/domain/fencers/fencerStatus';
 
 type PoolManagement = ReturnType<typeof usePoolManagement>;
 type Setter<T> = Dispatch<SetStateAction<T>>;
-type SplitTableauStates = Record<
-  string,
-  { matches: TableauMatch[]; consolation: ConsolationBracket[]; results: FinalResult[] }
->;
-
 interface UseCompetitionNavigationParams {
   competition: Competition;
   onUpdate: (competition: Competition) => void;
@@ -77,12 +69,11 @@ interface UseCompetitionNavigationParams {
   setTableauMatches: Setter<TableauMatch[]>;
   consolationBrackets: ConsolationBracket[];
   setConsolationBrackets: Setter<ConsolationBracket[]>;
-  finalResults: FinalResult[];
-  setFinalResults: Setter<FinalResult[]>;
   activeSplitGroup: string | null;
-  setActiveSplitGroup: Setter<string | null>;
-  splitTableauStates: SplitTableauStates;
-  setSplitTableauStates: Setter<SplitTableauStates>;
+  /** Tableaux des groupes lus dans l'état du moteur (docs/adr/0024) */
+  groupTableaux: Record<string, GroupTableau>;
+  /** Groupe affiché (préférence du poste) et son tableau */
+  showSplitGroup: (group: string | null) => void;
   /** Sauvegarde en attente écrite avant une commande du moteur (docs/adr/0017) */
   flushSession?: () => Promise<void>;
 }
@@ -120,12 +111,9 @@ export function useCompetitionNavigation({
   setTableauMatches,
   consolationBrackets,
   setConsolationBrackets,
-  finalResults,
-  setFinalResults,
   activeSplitGroup,
-  setActiveSplitGroup,
-  splitTableauStates,
-  setSplitTableauStates,
+  groupTableaux,
+  showSplitGroup,
   flushSession,
 }: UseCompetitionNavigationParams) {
   const client = useBpmClient();
@@ -160,7 +148,7 @@ export function useCompetitionNavigation({
   /** Commande d'épreuve de l'écran (clearTableau, skipPools ; docs/adr/0017) */
   const runCommand = async (
     name: 'clearTableau' | 'skipPools',
-    input: { fencerIds?: string[] } = {}
+    input: { fencerIds?: string[]; group?: string } = {}
   ): Promise<'recorded' | 'local' | 'refused'> => {
     try {
       await flushSession?.();
@@ -174,8 +162,25 @@ export function useCompetitionNavigation({
     }
   };
 
-  /** Tableau retiré par le moteur (TableauCleared) ; repli local hors moteur */
-  const clearTableau = async () => {
+  const splitCriteria = competition.settings?.postPoolSplitCriteria;
+
+  /**
+   * Tableau retiré par le moteur (TableauCleared) ; repli local hors moteur. Tableaux séparés
+   * (docs/adr/0024) : tableaux des groupes « groups » qui en ont un, chacun par sa commande.
+   */
+  const clearTableau = async (groups: string[] = []) => {
+    if (splitCriteria) {
+      for (const group of groups) {
+        const t = groupTableaux[group];
+        if (!t || (t.tableauMatches.length === 0 && t.consolationBrackets.length === 0)) continue;
+        if ((await runCommand('clearTableau', { group })) !== 'local') continue;
+        if (group === activeSplitGroup) {
+          setTableauMatches([]);
+          setConsolationBrackets([]);
+        }
+      }
+      return;
+    }
     if (tableauMatches.length === 0 && consolationBrackets.length === 0) return;
     if ((await runCommand('clearTableau')) !== 'local') return;
     setTableauMatches([]);
@@ -204,32 +209,16 @@ export function useCompetitionNavigation({
     setRankingValidated(true);
     // Ne pas recalculer : overallRanking est déjà à jour
 
-    if (splitGroup && splitGroup !== activeSplitGroup) {
-      // Sauvegarder l'état du groupe courant avant de basculer
-      if (activeSplitGroup) {
-        setSplitTableauStates(prev => ({
-          ...prev,
-          [activeSplitGroup]: {
-            matches: tableauMatches,
-            consolation: consolationBrackets,
-            results: finalResults,
-          },
-        }));
-      }
-      // Charger l'état sauvegardé du nouveau groupe (ou partir de zéro)
-      const saved = splitTableauStates[splitGroup];
-      setTableauMatches(saved?.matches ?? []);
-      setConsolationBrackets(saved?.consolation ?? []);
-      setFinalResults(saved?.results ?? []);
-      setActiveSplitGroup(splitGroup);
-    }
+    // Tableaux séparés (docs/adr/0024) : groupe affiché = préférence du poste, tableau lu dans
+    // l'état du moteur ; le groupe visé devient le groupe affiché
+    const group = splitCriteria ? (splitGroup ?? activeSplitGroup) : null;
+    if (group && group !== activeSplitGroup) showSplitGroup(group);
 
     // Tableau déjà tiré : on y retourne sans le refaire, sinon ses matchs joués seraient
     // effacés par le choix de la petite finale (#1996)
-    const targetHasTableau =
-      splitGroup && splitGroup !== activeSplitGroup
-        ? (splitTableauStates[splitGroup]?.matches.length ?? 0) > 0
-        : tableauMatches.length > 0;
+    const targetHasTableau = group
+      ? (groupTableaux[group]?.tableauMatches.length ?? 0) > 0
+      : tableauMatches.length > 0;
     if (targetHasTableau) {
       setCurrentPhase('tableau');
       return;
@@ -237,7 +226,7 @@ export function useCompetitionNavigation({
 
     // Si le classement a changé, réinitialiser les matches du tableau
     if (rankingChanged) {
-      void clearTableau();
+      void clearTableau(Object.keys(groupTableaux));
       setRankingChanged(false);
       showToast("Le classement a changé. Le tableau d'élimination va être régénéré.", 'warning');
     }
@@ -249,11 +238,11 @@ export function useCompetitionNavigation({
     }
     // Tirer toutes les places → 3ème place implicite, pas de question
     if (playAllPositions) {
-      handleThirdPlaceDecision(true);
+      handleThirdPlaceDecision(true, undefined, group);
       return;
     }
     // 3ème place décidée dans la formule (#1125, #2013) : plus de question au lancement
-    handleThirdPlaceDecision(thirdPlaceMatch);
+    handleThirdPlaceDecision(thirdPlaceMatch, undefined, group);
   };
 
   /** Rapières : mode de tableau choisi dans la popup (#1441) */
@@ -268,7 +257,12 @@ export function useCompetitionNavigation({
     handleThirdPlaceDecision(thirdPlaceMatch, extra);
   };
 
-  const handleThirdPlaceDecision = (thirdPlace: boolean, extra?: { playAllPositions: boolean }) => {
+  const handleThirdPlaceDecision = (
+    thirdPlace: boolean,
+    extra?: { playAllPositions: boolean },
+    /** Tableaux séparés : groupe du tableau à refaire (docs/adr/0024) */
+    group: string | null = activeSplitGroup
+  ) => {
     const settings = { ...competition.settings, ...extra, thirdPlaceMatch: thirdPlace };
     const updatedCompetition = { ...competition, settings };
 
@@ -277,7 +271,7 @@ export function useCompetitionNavigation({
     );
 
     onUpdate(updatedCompetition);
-    void clearTableau();
+    void clearTableau(group ? [group] : []);
     setCurrentPhase('tableau');
   };
 

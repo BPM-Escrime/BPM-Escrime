@@ -22,6 +22,7 @@ import type {
   RapieresLegacyState,
   RapieresSession,
 } from '../../shared/domain/rapieres/rapieres.types';
+import type { GroupTableau } from '../../shared/domain/ranking/splitGroups';
 
 export type Phase =
   | 'checkin'
@@ -96,6 +97,8 @@ export interface SessionState {
     currentPoolRound: number;
     pools: number;
   };
+  /** Tableaux séparés après les poules : un tableau par groupe, lu seulement (docs/adr/0024) */
+  groupTableaux?: Record<string, GroupTableau>;
   /** Révision de l'état : incrémentée par la couche domaine (MCP, #1880) */
   revision?: number;
   /**
@@ -109,7 +112,7 @@ interface UseCompetitionSessionProps {
   competitionId: string;
   /**
    * L'écran écrit encore l'état de l'épreuve (étape 4c de l'ADR-0017 : non, sauf exceptions
-   * documentées — tableaux séparés après les poules, épreuves par équipes). Ailleurs, seul le
+   * documentées — épreuves par équipes, docs/adr/0024). Ailleurs, seul le
    * moteur écrit l'état ; l'écran le relit.
    */
   persistLocally?: boolean;
@@ -274,6 +277,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
             remoteArenaCount: state.remoteArenaCount,
             remoteStripStart: state.remoteStripStart,
             rapieres: state.rapieres,
+            ...(state.groupTableaux ? { groupTableaux: state.groupTableaux } : {}),
             poolPrepParams: state.poolPrepParams || {
               poolCount: 0,
               minFencersPerPool: 5,

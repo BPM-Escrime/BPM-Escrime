@@ -752,6 +752,8 @@
   'results.round_semis': 'Semifinales',
   'results.round_quarters': 'Cuartos de final',
   'results.round_n': 'Tabla de {{n}}',
+  'results.group_F': 'Damas',
+  'results.group_M': 'Hombres',
   'results.final_rank': 'Puesto final',
   'results.pool_rank': 'Puesto tras poules',
   'results.match_won': 'Victoria',

@@ -30,9 +30,9 @@ import {
   isLaser,
   sessionPoolHistory,
   sessionPools,
-  sessionTableau,
   writeSession,
 } from './sport';
+import { allTableauMatches } from '../../../shared/domain/ranking/splitGroups';
 
 /** Au moins 4 qualifiés pour un nouveau tour (règle de l'écran) */
 export const MIN_ROUND_QUALIFIERS = 4;
@@ -49,7 +49,7 @@ export function closePoolRound(ctx: CommandContext, input: ClosePoolRoundInput) 
   assertScoreSupported(comp);
   const session = readSession(ctx, comp.id);
   const pools = sessionPools(session);
-  if (sessionTableau(session).length > 0) {
+  if (allTableauMatches(session).length > 0) {
     throw new CommandError('bracket_exists', 'Tableau déjà tiré : plus de tour de poules');
   }
   if (pools.length === 0 || !areAllPoolsComplete(pools)) {

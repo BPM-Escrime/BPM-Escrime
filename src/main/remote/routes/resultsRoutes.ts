@@ -13,7 +13,10 @@ import {
   type TableauMatchView,
 } from '../sessionStateView';
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
-import { allTableauMatches } from '../../../shared/domain/ranking/splitGroups';
+import {
+  allTableauMatches,
+  sessionGroupTableaux,
+} from '../../../shared/domain/ranking/splitGroups';
 
 /** Matchs de tous les tableaux de l'épreuve (tableau unique ou tableaux des groupes) */
 const sessionTableauMatches = (state: SessionStateView | null): TableauMatchView[] =>
@@ -47,12 +50,19 @@ const publicFencer = (f: FencerView | null | undefined) =>
     ? { id: f.id, lastName: f.lastName ?? '', firstName: f.firstName ?? '', club: f.club ?? '' }
     : null;
 
+/** Groupe d'un match de tableau séparé (identifiant préfixé « F:32-0 », docs/adr/0024) */
+const matchGroup = (id: string): string | null => /^([^:]+):/.exec(id)?.[1] ?? null;
+
 /**
  * Tours du tableau pour la page publique des résultats (#1858) : exempts exclus,
- * du plus récent (finale) au premier tour.
+ * du plus récent (finale) au premier tour. Tableaux séparés après les poules
+ * (docs/adr/0024) : tours de chaque groupe, groupe par groupe, avec leur groupe.
  */
 export function publicTableauRounds(matches: TableauMatchView[] | undefined) {
-  const byRound = new Map<number, ReturnType<typeof toMatch>[]>();
+  const byRound = new Map<
+    string,
+    { round: number; group: string | null; list: ReturnType<typeof toMatch>[] }
+  >();
   function toMatch(m: TableauMatchView) {
     const finished = m.status === MatchStatus.FINISHED || m.status === 'finished' || !!m.winner;
     return {
@@ -69,12 +79,40 @@ export function publicTableauRounds(matches: TableauMatchView[] | undefined) {
   for (const m of matches ?? []) {
     if (m.isBye || !m.fencerA?.id || !m.fencerB?.id) continue;
     const round = m.round || 1;
-    if (!byRound.has(round)) byRound.set(round, []);
-    byRound.get(round)!.push(toMatch(m));
+    const group = matchGroup(m.id);
+    const key = `${group ?? ''}|${round}`;
+    if (!byRound.has(key)) byRound.set(key, { round, group, list: [] });
+    byRound.get(key)!.list.push(toMatch(m));
   }
-  return Array.from(byRound.entries())
-    .sort(([a], [b]) => a - b)
-    .map(([round, list]) => ({ round, matches: list.sort((a, b) => a.position - b.position) }));
+  return Array.from(byRound.values())
+    .sort((a, b) => (a.group ?? '').localeCompare(b.group ?? '') || a.round - b.round)
+    .map(({ round, group, list }) => ({
+      round,
+      ...(group ? { group } : {}),
+      matches: list.sort((a, b) => a.position - b.position),
+    }));
+}
+
+/**
+ * Classement final de la page publique : tableau unique, ou classements des groupes à la
+ * suite, chacun avec son groupe (docs/adr/0024)
+ */
+export function publicFinalResults(state: SessionStateView | null) {
+  const rows = (list: RankingRowView[] | undefined, group: string | null) =>
+    (list || [])
+      .filter(r => !!r?.fencer?.id && typeof r.rank === 'number')
+      .map(r => ({
+        rank: r.rank as number,
+        fencer: publicFencer(r.fencer),
+        ...(group ? { group } : {}),
+      }));
+  const groups = sessionGroupTableaux((state ?? {}) as Record<string, unknown>);
+  return [
+    ...rows(state?.finalResults, null),
+    ...Object.keys(groups)
+      .sort()
+      .flatMap(g => rows(groups[g].finalResults as unknown as RankingRowView[], g)),
+  ];
 }
 
 /** Résultats, tableau, historique d'entraînement et journal des matchs. */
@@ -92,7 +130,8 @@ export function registerResultsRoutes(ctx: RouteContext): void {
       const sessionState = ctx.db.getSessionState(competitionId) as SessionStateView | null;
       const sessionPools = sessionState?.pools || [];
       // Tableau seul (sans poules) : session_state également prioritaire (#1858)
-      if (sessionPools.length > 0 || (sessionState?.tableauMatches?.length ?? 0) > 0) {
+      const tableauMatches = sessionTableauMatches(sessionState);
+      if (sessionPools.length > 0 || tableauMatches.length > 0) {
         const poolResults = sessionPools.map(pool => {
           const rankings = (pool.ranking || []).map(r => ({
             id: r.fencer?.id ?? '',
@@ -153,10 +192,9 @@ export function registerResultsRoutes(ctx: RouteContext): void {
           },
           pools: poolResults,
           overallRanking,
-          tableau: publicTableauRounds(sessionState?.tableauMatches),
-          finalResults: (sessionState?.finalResults || [])
-            .filter(r => !!r?.fencer?.id && typeof r.rank === 'number')
-            .map(r => ({ rank: r.rank as number, fencer: publicFencer(r.fencer) })),
+          // Tableau unique ou tableaux des groupes (docs/adr/0024)
+          tableau: publicTableauRounds(tableauMatches),
+          finalResults: publicFinalResults(sessionState),
         });
       }
 

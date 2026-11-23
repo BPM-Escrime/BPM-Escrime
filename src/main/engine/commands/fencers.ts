@@ -9,7 +9,8 @@ import { FencerStatus, Gender, type Fencer } from '../../../shared/types';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { readSession } from './sessionView';
-import { sessionPools, sessionTableau } from './sport';
+import { sessionPools } from './sport';
+import { allTableauMatches } from '../../../shared/domain/ranking/splitGroups';
 
 /** Données d'identité d'un tireur, sans règle (docs/adr/0018) */
 export interface FencerDetailsInput {
@@ -65,7 +66,7 @@ export function drawDone(ctx: CommandContext, competitionId: string): boolean {
   const session = readSession(ctx, competitionId);
   return (
     sessionPools(session).length > 0 ||
-    sessionTableau(session).length > 0 ||
+    allTableauMatches(session).length > 0 ||
     session.skipPoolPhase === true
   );
 }

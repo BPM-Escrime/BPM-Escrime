@@ -751,6 +751,8 @@
   'results.round_semis': 'Meias-finais',
   'results.round_quarters': 'Quartos de final',
   'results.round_n': 'Quadro de {{n}}',
+  'results.group_F': 'Feminino',
+  'results.group_M': 'Masculino',
   'results.final_rank': 'Posição final',
   'results.pool_rank': 'Posição após poules',
   'results.match_won': 'Vitória',
