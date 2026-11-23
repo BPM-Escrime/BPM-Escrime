@@ -30,6 +30,7 @@ import { getArenaPlan, saveArenaPlan } from '../commands/arenaPlan';
 import { clearScore } from '../commands/scoreClear';
 import { assignMatches } from '../commands/assignments';
 import { adjustRanking, clearTableau, skipPools } from '../commands/ranking';
+import { splitOffGroup } from '../commands/splitOff';
 import { rebuildCompetitionState } from '../commands/rebuild';
 import {
   fencerDTO,
@@ -122,6 +123,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   skipPools: (ctx, { expectedRevision: _r, commandId: _c, ...input }) => skipPools(ctx, input),
   clearTableau: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     clearTableau(ctx, input),
+  splitOffGroup: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    splitOffGroup(ctx, input),
   rebuildCompetitionState: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     rebuildCompetitionState(ctx, input),
   createCompetition: (ctx, { commandId: _c, ...input }) => createCompetition(ctx, input),

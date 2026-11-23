@@ -3,22 +3,17 @@
  * distincte (extrait de CompetitionView, #1599)
  * Tableaux séparés après les poules (docs/adr/0024, lot A2) : un tableau par groupe, tenu par
  * le moteur (state.groupTableaux, getCompetitionState) ; le groupe affiché est une préférence
- * du poste, comme l'onglet. L'écran ne garde aucun tableau en mémoire.
+ * du poste, comme l'onglet. L'écran ne garde aucun tableau en mémoire. Extraction d'un groupe
+ * en épreuve séparée : commande splitOffGroup (lot A3) ; l'écran n'écrit rien.
  * Licensed under GPL-3.0
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import type { Competition, Fencer, PoolRanking } from '../../shared/types';
-import type { CompetitionCreateData, FencerCreateData } from '../../shared/types/preload';
+import type { Competition, PoolRanking } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
-import {
-  buildSplitCompetitionData,
-  extractSplitGroupRanking,
-  planSplitGroups,
-  remapRankingFencers,
-  toSplitFencerData,
-  type GroupTableau,
-} from '../../shared/domain/ranking/splitGroups';
+import { ApiError } from '../../shared/api/client';
+import { planSplitGroups, type GroupTableau } from '../../shared/domain/ranking/splitGroups';
+import { useBpmClient } from '../api/BpmClientContext';
 import type {
   ConsolationBracket,
   FinalResult,
@@ -83,6 +78,7 @@ export function useSplitGroups({
   setSplitOffInProgress,
 }: UseSplitGroupsParams) {
   const { showToast } = useToast();
+  const client = useBpmClient();
   const postPoolSplitCriteria = competition.settings?.postPoolSplitCriteria;
   const splitOffCompetitionIds = competition.settings?.splitOffCompetitionIds;
   // Lus par les rappels stables (relecture de l'état, changement d'onglet)
@@ -176,57 +172,32 @@ export function useSplitGroups({
     if (splitOffInProgress) return;
     setSplitOffInProgress(true);
     try {
-      const db = window.electronAPI.db;
-      const groupRanking = extractSplitGroupRanking(overallRanking, group);
-      const created = await db.createCompetition(
-        buildSplitCompetitionData(
-          competition,
-          title,
-          group,
-          new Date()
-        ) as unknown as CompetitionCreateData
-      );
-      const newFencerByOldId = new Map<string, Fencer>();
-      for (const r of groupRanking) {
-        const f = await db.addFencer(
-          created.id,
-          toSplitFencerData(r) as unknown as FencerCreateData
-        );
-        newFencerByOldId.set(r.fencer.id, f);
-      }
-      // Démarrer la nouvelle compétition directement au classement après poules
-      await db.saveSessionState(created.id, {
-        currentPhase: 3,
-        overallRanking: remapRankingFencers(groupRanking, newFencerByOldId),
-        pools: [],
-        poolHistory: [],
-        tableauMatches: [],
-        finalResults: [],
-        consolationBrackets: [],
-        currentPoolRound: 1,
-        skipPoolPhase: false,
-      } as unknown as Parameters<typeof db.saveSessionState>[1]);
-
+      // Épreuve séparée créée par le moteur, en une transaction (docs/adr/0024, lot A3)
+      const created = await client.call('splitOffGroup', {
+        competitionId: competition.id,
+        group,
+        title,
+      });
+      const targetId = created.competitionId!;
       const settings = {
         ...competition.settings,
-        splitOffCompetitionIds: { ...splitOffCompetitionIds, [group]: created.id },
+        splitOffCompetitionIds: { ...splitOffCompetitionIds, [group]: targetId },
       };
-      await db.updateCompetition(competition.id, { settings });
       onUpdate({ ...competition, settings } as Competition);
       if (activeSplitGroup === group) setActiveSplitGroup(null);
       setPendingSplitOffGroup(null);
-      showToast(
-        `Compétition « ${created.title} » créée (${groupRanking.length} tireurs)`,
-        'success'
-      );
-      onOpenCompetition?.(created.id);
+      showToast(`Compétition « ${title.trim()} » créée (${created.fencers} tireurs)`, 'success');
+      onOpenCompetition?.(targetId);
     } catch (e) {
       logger.error(
         LogCategory.DATABASE,
         'Split-off competition creation failed',
         e instanceof Error ? e : undefined
       );
-      showToast('Erreur lors de la création de la compétition séparée', 'error');
+      showToast(
+        e instanceof ApiError ? e.message : 'Erreur lors de la création de la compétition séparée',
+        'error'
+      );
     } finally {
       setSplitOffInProgress(false);
     }

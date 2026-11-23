@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { test, expect, createCompetition } from './app';
 
 /**
- * Tableaux séparés après les poules (docs/adr/0024, lot A2) : un tableau par groupe tenu par
+ * Tableaux séparés après les poules (docs/adr/0024, lots A2 et A3) : un tableau par groupe tenu par
  * le moteur. Poules communes jouées par le contrat, puis à l'écran : tableau des hommes et
  * des femmes, un score dans chacun, rechargement de la fenêtre : les deux tableaux restent.
  */
@@ -114,4 +114,68 @@ test('tableaux séparés : deux tableaux joués, retrouvés après rechargement'
   await expect(scored(win)).toHaveCount(1);
   await tabs.filter({ hasText: /F[ée]minin/ }).click();
   await expect(scored(win)).toHaveCount(1);
+});
+
+/**
+ * Lot A3 : groupe des femmes extrait en épreuve séparée par la commande splitOffGroup ;
+ * l'épreuve séparée s'ouvre au classement, tireuses et classement présents.
+ */
+test('tableaux séparés : groupe extrait en épreuve séparée', async ({ win }) => {
+  await createCompetition(win, TITLE);
+  await poolsPlayed(win);
+  await win.getByRole('button', { name: /revenir à la liste des comp/i }).click();
+  await win.locator('.competition-card', { hasText: TITLE }).click();
+
+  await win
+    .getByRole('button', { name: /^classement/i })
+    .first()
+    .click();
+  await win.getByRole('button', { name: /Créer la compétition ♀ Femmes/ }).click();
+  const dialog = win.getByRole('dialog');
+  await expect(dialog.locator('input')).toHaveValue(`${TITLE} – Dames`);
+  await dialog.getByRole('button', { name: /^Créer la compétition$/ }).click();
+  await expect(dialog).toBeHidden();
+
+  // Épreuve séparée ouverte au classement : les quatre tireuses, aucun tireur
+  await expect(win.getByText('TIREUSE0').first()).toBeVisible();
+  for (const name of ['TIREUSE2', 'TIREUSE4', 'TIREUSE6']) {
+    await expect(win.getByText(name).first()).toBeVisible();
+  }
+  await expect(win.getByText('TIREUR1')).toHaveCount(0);
+
+  // Écritures du moteur : épreuve, tireuses pointées, classement importé, journaux
+  const check = await win.evaluate(async title => {
+    const api = window.electronAPI.api;
+    const call = async (name: string, input: Record<string, unknown>) => {
+      const env = (await api.invoke(name, input)) as Envelope;
+      if (!env.ok) throw new Error(`${name} : ${env.error?.message}`);
+      return env.data as Record<string, unknown>;
+    };
+    const comps = await window.electronAPI.db.getAllCompetitions();
+    const source = comps.find(c => c.title === title)!;
+    const target = comps.find(c => c.title === `${title} – Dames`)!;
+    const state = (await call('getCompetitionState', { competitionId: target.id })).state as {
+      overallRanking: unknown[];
+    };
+    const fencers = (await call('listFencers', { competitionId: target.id })) as unknown as Array<{
+      status: string;
+    }>;
+    const events = (await call('getCompetitionEvents', { competitionId: target.id })) as {
+      events: Array<{ type: string }>;
+    };
+    return {
+      splitOff: source.settings?.splitOffCompetitionIds?.F === target.id,
+      ranking: state.overallRanking.length,
+      fencers: fencers.length,
+      notCheckedIn: fencers.filter(f => f.status === 'N').length,
+      events: events.events.map(e => e.type),
+    };
+  }, TITLE);
+  expect(check).toEqual({
+    splitOff: true,
+    ranking: 4,
+    fencers: 4,
+    notCheckedIn: 0,
+    events: ['SplitRankingImported'],
+  });
 });

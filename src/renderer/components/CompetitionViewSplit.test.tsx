@@ -257,4 +257,48 @@ d('tableaux séparés à l’écran (docs/adr/0024, lot A2)', () => {
       )
     ).toBe(true);
   }, 60_000);
+
+  it('groupe des femmes extrait en épreuve séparée par la commande (lot A3)', async () => {
+    const comp = await poolsPlayed();
+    const onOpenCompetition = vi.fn();
+    const onUpdate = vi.fn();
+    render(
+      <TranslationProvider>
+        <ToastProvider>
+          <ConfirmProvider>
+            <CompetitionView
+              competition={comp}
+              onUpdate={onUpdate}
+              onOpenCompetition={onOpenCompetition}
+            />
+          </ConfirmProvider>
+        </ToastProvider>
+      </TranslationProvider>
+    );
+    await screen.findAllByText(/NOM0/);
+    const steps = () => Array.from(document.querySelectorAll<HTMLElement>('.phase-step'));
+    const create = await waitFor(() => {
+      fireEvent.click(steps()[3]);
+      return screen.getByRole('button', { name: /Créer la compétition ♀ Femmes/ });
+    });
+    fireEvent.click(create);
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Créer la compétition$/ }));
+
+    await waitFor(() => expect(onOpenCompetition).toHaveBeenCalledTimes(1));
+    const targetId = onOpenCompetition.mock.calls[0][0] as string;
+    // Écritures du moteur seulement : épreuve séparée, tireuses, classement, marque, journaux
+    expect(db.getCompetition(comp.id)!.settings?.splitOffCompetitionIds).toEqual({ F: targetId });
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settings: expect.objectContaining({ splitOffCompetitionIds: { F: targetId } }),
+      })
+    );
+    const copies = db.getFencersByCompetition(targetId);
+    expect(copies).toHaveLength(4);
+    expect(copies.every(f => f.gender === Gender.FEMALE)).toBe(true);
+    expect(session(targetId).overallRanking).toHaveLength(4);
+    expect(db.eventLog.getSince(comp.id).some(e => e.type === 'GroupSplitOff')).toBe(true);
+    expect(db.eventLog.getSince(targetId).map(e => e.type)).toEqual(['SplitRankingImported']);
+  }, 60_000);
 });

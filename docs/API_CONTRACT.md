@@ -283,6 +283,7 @@ même identifiant (renvoi après une coupure), elle n'écrit rien et est refusé
 | `adjustRanking` / `skipPools` / `clearTableau` | `RankingAdjusted` / `PoolsSkipped` / `TableauCleared`                                      |
 | `withdrawFencer`                               | `FencerWithdrawn` ; au tableau, `TableauMatchDecided` (et `TableauCompleted`)              |
 | `reinstateFencer`                              | `FencerReinstated`                                                                         |
+| `splitOffGroup`                                | `GroupSplitOff` (épreuve d'origine), `SplitRankingImported` (épreuve séparée), même `commandId` |
 
 - Source : `CommandContext.actor` (IPC : `screen` ; MCP : `mcp`, auteur `agent` ; défaut `engine`).
 - Une commande qui écrit rend `revision` et diffuse `{ type: 'journal:appended', competitionId, revision }`
@@ -411,6 +412,24 @@ celui de chaque groupe tiré. Lecteurs de l'affichage sur tous les tableaux : r�
 (`/api/competitions/:id/results-data` : tours et classements finaux avec `group`), export
 (`resultsData` : matchs de tous les tableaux, classements des groupes à la suite), outil MCP
 `get_bracket` (`group` de chaque match, filtre `group`).
+Lot A3 fait (épreuve séparée) : `splitOffGroup` (`{ competitionId, group, title }`, outil MCP
+`split_off_group`, droit `competition:write`) remplace les écritures de l'écran
+(`useSplitGroups` : `createCompetition`, `addFencer`, `saveSessionState`, `updateCompetition` par
+le préload, sans transaction ; canaux `db:createCompetition`, `db:updateCompetition`,
+`db:addFencer` retirés). Dans **une** transaction (`runCommand` ouvre une transaction SQLite sur
+la base entière ; révision et `commandId` contrôlés sur l'épreuve d'origine) : épreuve séparée
+créée (`buildSplitCompetitionData`), tireurs du groupe copiés (pointés, rang après poules),
+projection de départ (phase Classement, classement après poules du groupe avec ses
+statistiques), puis `splitOffCompetitionIds` posé sur l'épreuve d'origine. Journal :
+`GroupSplitOff { group, targetCompetitionId, fencerIds }` (origine) et
+`SplitRankingImported { sourceCompetitionId, group, ranking: [{ fencerId, sourceFencerId, rank }] }`
+(premier fait de l'épreuve séparée, journal complet). Refus : `invalid_input` (épreuve sans
+tableaux séparés), `split_group_not_found` (groupe absent du classement ou déjà extrait),
+`bracket_exists` (tableau du groupe tiré). L'épreuve séparée tire son tableau sans poules
+(classement importé). Rejeu : `projectCompetition` rend `splitOffGroups` et `importedRanking` ;
+`compareWithState` signale `split_off` (marque absente des réglages, si `stateView` reçoit les
+réglages) et `imported_ranking` (tireurs du classement) ; `rebuildCompetitionState` les répare
+(statistiques de poule relues dans l'épreuve d'origine, rangs seuls si elle a été supprimée).
 
 **Étape 5 commencée** : `projectCompetition(events)` (`src/shared/domain/journal`) rejoue le
 journal et rend les faits rejouables : statuts des tireurs nommés par le journal, tours de poules
@@ -418,7 +437,8 @@ journal et rend les faits rejouables : statuts des tireurs nommés par le journa
 et des tableaux de classement, vague des rapières. Les dérivés (classements, tableaux de
 classement, classement final) n'y sont pas. `compareWithState` liste les écarts entre ces faits et
 l'état tenu par le moteur (identifiants et nombres seulement). Un journal est **complet** s'il
-commence, après l'appel, par `PoolsGenerated`, `PoolsSkipped` ou `TableauGenerated` ; sinon seuls
+commence, après l'appel, par `PoolsGenerated`, `PoolsSkipped`, `SplitRankingImported` (épreuve
+séparée) ou `TableauGenerated` ; sinon seuls
 les faits qu'il contient sont comparés. Ignorés au rejeu : `PoolCompleted`, `TableauCompleted`
 (signaux), `RankingAdjusted` (dérivé), `RapieresTeamsUpdated` (composition personnelle). Les
 tableaux de classement ont un identifiant déterministe, tiré de leur parent et de leur tour
