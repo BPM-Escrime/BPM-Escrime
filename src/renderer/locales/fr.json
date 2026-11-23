@@ -2748,6 +2748,10 @@
   },
   "competitionNav": {
     "back": "Retour",
+    "organization": "Organisation",
+    "organization_intro": "Préparer l'épreuve : salle et informations aux tireurs.",
+    "organization_arena_desc": "Disposer les pistes et arènes dans la salle",
+    "organization_roadmap_desc": "Horaires, lieu et consignes de l'épreuve",
     "quest": "Tour Quest",
     "generate": "Préparer les poules",
     "planning": "Planning",

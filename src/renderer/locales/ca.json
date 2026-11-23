@@ -2748,6 +2748,10 @@
   },
   "competitionNav": {
     "back": "Torna",
+    "organization": "Organització",
+    "organization_intro": "Preparar la prova: sala i informació per als tiradors.",
+    "organization_arena_desc": "Disposar les pistes i arenes a la sala",
+    "organization_roadmap_desc": "Horaris, lloc i instruccions de la prova",
     "quest": "Ronda Quest",
     "generate": "Preparar les poules",
     "planning": "Planificació",

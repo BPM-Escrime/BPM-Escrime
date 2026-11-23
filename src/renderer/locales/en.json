@@ -2748,6 +2748,10 @@
   },
   "competitionNav": {
     "back": "Back",
+    "organization": "Organisation",
+    "organization_intro": "Prepare the event: venue and information for fencers.",
+    "organization_arena_desc": "Lay out strips and arenas in the venue",
+    "organization_roadmap_desc": "Event schedule, venue and instructions",
     "quest": "Quest round",
     "generate": "Prepare pools",
     "planning": "Planning",

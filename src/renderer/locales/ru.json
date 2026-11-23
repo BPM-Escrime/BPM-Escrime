@@ -2748,6 +2748,10 @@
   },
   "competitionNav": {
     "back": "Назад",
+    "organization": "Организация",
+    "organization_intro": "Подготовка соревнования: зал и информация для фехтовальщиков.",
+    "organization_arena_desc": "Разместить дорожки и арены в зале",
+    "organization_roadmap_desc": "Расписание, место и указания соревнования",
     "quest": "Раунд Quest",
     "generate": "Подготовить пулы",
     "planning": "Планирование",
