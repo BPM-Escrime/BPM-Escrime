@@ -39,6 +39,7 @@ export const ERRORS = {
   referee_not_found: e('not_found', 'Arbitre introuvable'),
   pool_not_found: e('not_found', 'Poule introuvable'),
   match_not_found: e('not_found', 'Match introuvable'),
+  fencer_not_in_pool: e('not_found', 'Tireur absent de cette poule'),
   split_group_not_found: e('not_found', 'Groupe de tableaux séparés inconnu ou extrait'),
   team_not_found: e('not_found', 'Équipe introuvable dans l’épreuve'),
   withdrawal_not_found: e('not_found', 'Aucun retrait à annuler pour ce tireur'),
@@ -58,6 +59,7 @@ export const ERRORS = {
   referee_busy: e('conflict', 'Arbitre déjà occupé sur ce créneau'),
   file_exists: e('conflict', 'Fichier déjà présent'),
   club_exists: e('conflict', 'Club de la sauvegarde déjà présent sur le poste'),
+  signatures_locked: e('conflict', 'Feuille déjà signée par tous les tireurs'),
   competition_open: e(
     'conflict',
     'Épreuve ouverte ou servie aux tablettes : à fermer avant l’anonymisation ou l’effacement'
@@ -67,6 +69,8 @@ export const ERRORS = {
   score_invalid: e('rule', 'Score non entier ou négatif'),
   score_above_max: e('rule', 'Score au-delà du score maximal'),
   tie_at_max: e('rule', 'Égalité au score maximal (o.17)'),
+  fencer_matches_pending: e('rule', 'Matchs du tireur pas tous terminés : signature refusée'),
+  signature_tableau_only: e('rule', 'Signature de match réservée au tableau'),
   draw_needs_winner: e('rule', 'Égalité : vainqueur ou priorité requis'),
   draw_not_allowed: e('rule', 'Égalité interdite (Sabre Laser)'),
   priority_not_allowed: e('rule', 'Priorité non prévue pour cette arme'),

@@ -32,6 +32,12 @@ const ScoreAuditSchema = z.object({
   tableauPosition: z.number().nullable().optional(),
 });
 
+/** Signature dessinée sur la tablette : image PNG en data URL, 200 000 caractères au plus */
+const SignatureImage = z
+  .string()
+  .max(200_000)
+  .refine(s => s.startsWith('data:image/png;base64,'), 'Image PNG attendue (data URL)');
+
 const RefereeCommentSchema = z.object({
   id: z.string(),
   competitionId: z.string(),
@@ -71,6 +77,38 @@ export const reportOperations = {
     }),
     output: RefereeCommentSchema,
     permission: 'referees:write',
+  }),
+
+  signPoolSheet: command({
+    description:
+      'Signature d’un tireur sur la feuille de poule (tablette) : image PNG, hors journal. Tireur de la poule (fencer_not_in_pool), tous ses matchs terminés (fencer_matches_pending), feuille pas encore signée par tous (signatures_locked).',
+    input: z.object({
+      competitionId: CompetitionId,
+      poolId: Id,
+      fencerId: Id,
+      signatureData: SignatureImage,
+    }),
+    output: z.object({
+      poolId: z.string(),
+      fencerId: z.string(),
+      signed: z.number().int(),
+      total: z.number().int(),
+      locked: z.boolean(),
+    }),
+    permission: 'score:write',
+  }),
+
+  signMatchSheet: command({
+    description:
+      'Signature d’un tireur sur la feuille d’un match du tableau (tablette) : image PNG, hors journal. Match de poule refusé (signature_tableau_only).',
+    input: z.object({
+      competitionId: CompetitionId,
+      matchId: Id.describe('Identifiant de tableau ou composite en base'),
+      fencerId: Id,
+      signatureData: SignatureImage,
+    }),
+    output: z.object({ matchId: z.string(), fencerId: z.string() }),
+    permission: 'score:write',
   }),
 
   getTableauSignatures: query({
