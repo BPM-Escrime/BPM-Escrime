@@ -703,7 +703,6 @@
     "addCard": "Aggiungi un cartellino",
     "doubleTooltip": "Tocco doppio simultaneo (nessuna priorità nella spada)",
     "double": "doppio",
-    "resetBout": "Azzera questo assalto",
     "cardFor": "Cartellino per {{name}}:",
     "reasonPlaceholder": "-- motivo --",
     "teamCardsTitle": "Cartellini squadra « E » — {{team}}",
@@ -712,7 +711,7 @@
     "tableauNeedTwo": "Servono almeno 2 squadre per generare un tabellone.",
     "tableauNone": "Nessun tabellone generato.",
     "tableauGenerate": "Genera il tabellone ({{count}} squadre)",
-    "tableauRegenerate": "Rigenera / fai avanzare il tabellone",
+    "tableauRegenerate": "Rifai il tabellone",
     "roundQuarterfinals": "Quarti di finale",
     "roundOf16": "Ottavi di finale",
     "roundOf32": "Sedicesimi di finale",
@@ -727,7 +726,14 @@
     "loading": "Caricamento…",
     "teamCount": "{{count}} squadre",
     "toCompose": "Componi le squadre",
-    "cardSaveError": "Cartellino non registrato"
+    "cardSaveError": "Cartellino non registrato",
+    "removeTouch": "Togliere una stoccata",
+    "endRelay": "Chiudi la frazione",
+    "reopenRelay": "Riapri questa frazione per correggerla",
+    "tieNeedsWinner": "Parità: designare il vincitore (minuto con priorità)",
+    "priorityWinner": "Vincitore: {{team}}",
+    "substituteOut": "-- esce ({{team}}) --",
+    "substitute": "Fai entrare la riserva"
   },
   "kiosk": {
     "tbd": "Da definire",
@@ -1101,7 +1107,18 @@
     "password_too_short": "Password troppo corta (min. 8 caratteri)",
     "no_pending_file": "Nessun file in attesa",
     "wrong_password": "Password errata",
-    "invalid_settings": "Impostazioni non valide"
+    "invalid_settings": "Impostazioni non valide",
+    "relay_out_of_order": "Frazione fuori ordine: chiudere le frazioni precedenti o riaprire questa per correggerla",
+    "no_reserve": "Squadra senza riserva",
+    "reserve_used": "Riserva già entrata nell’incontro",
+    "no_later_relay": "Nessuna frazione rimasta per questo schermidore nell’incontro",
+    "team_incomplete": "Squadra incompleta: mancano titolari",
+    "team_not_found": "Squadra non trovata",
+    "next_match_played": "L’incontro successivo del tabellone è già iniziato",
+    "pools_not_complete": "Incontri del girone non terminati",
+    "draw_done": "Sorteggio già fatto: formazione bloccata (solo sostituzione)",
+    "bracket_has_scores": "Tabellone già iniziato: frazioni disputate",
+    "pools_have_scores": "Gironi già iniziati: frazioni disputate"
   },
   "properties": {
     "backup_dir_label": "Cartella di backup dedicata (facoltativa)",

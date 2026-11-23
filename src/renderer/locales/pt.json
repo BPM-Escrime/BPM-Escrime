@@ -703,7 +703,6 @@
     "addCard": "Adicionar um cartão",
     "doubleTooltip": "Toque duplo simultâneo (sem prioridade na espada)",
     "double": "duplo",
-    "resetBout": "Repor este assalto",
     "cardFor": "Cartão para {{name}}:",
     "reasonPlaceholder": "-- motivo --",
     "teamCardsTitle": "Cartões «E» da equipa — {{team}}",
@@ -712,7 +711,7 @@
     "tableauNeedTwo": "São necessárias pelo menos 2 equipas para gerar um quadro.",
     "tableauNone": "Nenhum quadro gerado.",
     "tableauGenerate": "Gerar quadro ({{count}} equipas)",
-    "tableauRegenerate": "Regenerar / avançar o quadro",
+    "tableauRegenerate": "Sortear de novo o quadro",
     "roundQuarterfinals": "Quartos de final",
     "roundOf16": "Oitavos de final",
     "roundOf32": "Dezasseis avos de final",
@@ -727,7 +726,14 @@
     "loading": "A carregar…",
     "teamCount": "{{count}} equipas",
     "toCompose": "Compor equipas",
-    "cardSaveError": "Cartão não guardado"
+    "cardSaveError": "Cartão não guardado",
+    "removeTouch": "Retirar um toque",
+    "endRelay": "Terminar o revezamento",
+    "reopenRelay": "Reabrir este revezamento para o corrigir",
+    "tieNeedsWinner": "Empate: designar o vencedor (minuto com prioridade)",
+    "priorityWinner": "Vencedor: {{team}}",
+    "substituteOut": "-- sai ({{team}}) --",
+    "substitute": "Fazer entrar o suplente"
   },
   "kiosk": {
     "ranking": "Classificação",
@@ -1101,7 +1107,18 @@
     "password_too_short": "Palavra-passe demasiado curta (mín. 8 caracteres)",
     "no_pending_file": "Nenhum ficheiro pendente",
     "wrong_password": "Palavra-passe incorreta",
-    "invalid_settings": "Definições inválidas"
+    "invalid_settings": "Definições inválidas",
+    "relay_out_of_order": "Revezamento fora de ordem: terminar os revezamentos anteriores ou reabrir este para o corrigir",
+    "no_reserve": "Equipa sem suplente",
+    "reserve_used": "Suplente já entrou no encontro",
+    "no_later_relay": "Nenhum revezamento restante para este atirador no encontro",
+    "team_incomplete": "Equipa incompleta: faltam titulares",
+    "team_not_found": "Equipa não encontrada",
+    "next_match_played": "O encontro seguinte do quadro já começou",
+    "pools_not_complete": "Encontros de poule não terminados",
+    "draw_done": "Sorteio já feito: composição fixa (apenas substituição)",
+    "bracket_has_scores": "Quadro já começado: revezamentos disputados",
+    "pools_have_scores": "Poules já começadas: revezamentos disputados"
   },
   "properties": {
     "backup_dir_label": "Pasta de cópias dedicada (opcional)",

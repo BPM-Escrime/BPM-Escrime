@@ -3,7 +3,10 @@
  * Composant présentationnel : reconstruit l'arbre à partir de round/position
  * (pas d'arbre séparé à persister) et réutilise TeamPoolView pour la saisie
  * de score de chaque match réel (mêmes règles arme-aware : cible progressive,
- * touche double épée, zones Sabre Laser, cartons).
+ * touche double épée, zones Sabre Laser, cartons). Rencontres tirées et avancées par le
+ * moteur (generateTeamTableau, recordRelayScore) : le tableau se tire par le bouton, jamais à
+ * l'ouverture (docs/adr/0024, lot E3) ; exempts et cases en attente affichés d'après le
+ * placement du classement de poule.
  * Licensed under GPL-3.0
  */
 
@@ -22,12 +25,12 @@ import {
   resolveTeamTableauSlot,
 } from '../../shared/domain/teams/teamCalculations';
 import { LaserArenaBoutCap } from '../../shared/domain/teams/laserArenaCalculations';
-import TeamPoolView, { CardTarget } from './TeamPoolView';
+import TeamPoolView, { CardTarget, RelayHandlers } from './TeamPoolView';
 import { useTranslation } from '../contexts/TranslationContext';
 
 interface Props {
   teams: TeamRow[];
-  rankedTeams: TeamRow[]; // équipes triées par classement de poule (ordre de seed)
+  rankedTeams: TeamRow[]; // placement du tableau (rankTeamsForTableau, comme le moteur)
   tableauMatches: TeamMatchRow[];
   weapon: string;
   targetRule: TeamTargetRule;
@@ -37,7 +40,7 @@ interface Props {
   scoringMatchId: string | null;
   onToggleScoring: (matchId: string) => void;
   onScoreBout: (bout: TeamBoutRow, side: 'A' | 'B' | 'double', points?: number) => void;
-  onResetBout: (bout: TeamBoutRow) => void;
+  relay: RelayHandlers;
   boutCards: Record<string, Card[]>;
   cardTarget: CardTarget | null;
   onSetCardTarget: (target: CardTarget | null) => void;
@@ -77,7 +80,7 @@ const TeamTableauView: React.FC<Props> = ({
   scoringMatchId,
   onToggleScoring,
   onScoreBout,
-  onResetBout,
+  relay,
   boutCards,
   cardTarget,
   onSetCardTarget,
@@ -182,7 +185,7 @@ const TeamTableauView: React.FC<Props> = ({
                   scoringMatchId={scoringMatchId}
                   onToggleScoring={onToggleScoring}
                   onScoreBout={onScoreBout}
-                  onResetBout={onResetBout}
+                  relay={relay}
                   boutCards={boutCards}
                   cardTarget={cardTarget}
                   onSetCardTarget={onSetCardTarget}

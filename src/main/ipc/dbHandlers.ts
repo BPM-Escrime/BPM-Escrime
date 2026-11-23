@@ -195,89 +195,12 @@ export function registerDbHandlers({ db, remoteServers }: DbHandlersContext): vo
     return db.createTeam(competitionId, name, club);
   });
 
-  ipcMain.handle('db:getTeamsByCompetition', async (_, competitionId: string) => {
-    return db.getTeamsByCompetition(competitionId);
-  });
-
-  ipcMain.handle('db:deleteTeam', async (_, teamId: string) => {
-    return db.deleteTeam(teamId);
-  });
-
   ipcMain.handle(
     'db:upsertTeamFencer',
     async (_, teamId: string, fencerId: string, teamOrder: number, isReserve: boolean) => {
       return db.upsertTeamFencer(teamId, fencerId, teamOrder, isReserve);
     }
   );
-
-  ipcMain.handle('db:removeTeamFencer', async (_, teamId: string, fencerId: string) => {
-    return db.removeTeamFencer(teamId, fencerId);
-  });
-
-  ipcMain.handle(
-    'db:createTeamMatch',
-    async (
-      _,
-      competitionId: string,
-      poolNumber: number,
-      teamAId: string,
-      teamBId: string,
-      round?: number
-    ) => {
-      return db.createTeamMatch(competitionId, poolNumber, teamAId, teamBId, round);
-    }
-  );
-
-  ipcMain.handle('db:getTeamMatchesByCompetition', async (_, competitionId: string) => {
-    return db.getTeamMatchesByCompetition(competitionId);
-  });
-
-  ipcMain.handle(
-    'db:createTeamBout',
-    async (
-      _,
-      matchId: string,
-      boutOrder: number,
-      fencerAId: string,
-      fencerBId: string,
-      maxScore: number
-    ) => {
-      return db.createTeamBout(matchId, boutOrder, fencerAId, fencerBId, maxScore);
-    }
-  );
-
-  ipcMain.handle(
-    'db:updateTeamBout',
-    async (
-      _,
-      boutId: string,
-      scoreA: number,
-      scoreB: number,
-      status: string,
-      winnerId: string | null
-    ) => {
-      return db.updateTeamBout(boutId, scoreA, scoreB, status, winnerId);
-    }
-  );
-
-  ipcMain.handle(
-    'db:createTeamTableauMatch',
-    async (
-      _,
-      competitionId: string,
-      tableId: string,
-      round: number,
-      position: number,
-      teamAId: string,
-      teamBId: string
-    ) => {
-      return db.createTeamTableauMatch(competitionId, tableId, round, position, teamAId, teamBId);
-    }
-  );
-
-  ipcMain.handle('db:getTeamTableauMatches', async (_, competitionId: string, tableId: string) => {
-    return db.getTeamTableauMatches(competitionId, tableId);
-  });
 
   ipcMain.handle(
     'db:createTeamMatchCard',

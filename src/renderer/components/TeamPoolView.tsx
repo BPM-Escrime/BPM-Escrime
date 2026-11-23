@@ -2,11 +2,13 @@
  * BPM - Escrime - Vue poule équipes
  * Composant présentationnel : l'état (matchs, cartons, sélection) est possédé
  * par le parent (TeamManagerView), suivant le même pattern que PoolView/PoolRankingView.
+ * Relais (docs/adr/0024, lot E3) : seul le relais en cours se saisit ; « Terminer » l'envoie au
+ * moteur, le dernier relais terminé se rouvre, le remplaçant entre par la commande.
  * Licensed under GPL-3.0
  */
 
 import { TipButton } from './Tooltip';
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardReason, TargetZone, ZONE_POINTS } from '../../shared/types';
 import {
   TeamRow,
@@ -20,7 +22,7 @@ import { determineTeamCardEscalation } from '../../shared/domain/teams/teamCardE
 import { CARD_REASON_LABELS, getAvailableReasons } from '../../shared/utils/cardSystem';
 import { useConfirm } from './ConfirmDialog';
 import { useTranslation } from '../contexts/TranslationContext';
-import { Flag, Radio, Swords, Undo2 } from 'lucide-react';
+import { Check, Flag, Radio, Swords, Undo2, UserRoundCog } from 'lucide-react';
 import { Icon } from './common/Icon';
 import EmptyState from './common/EmptyState';
 import { CardIcon } from './common/CardIcon';
@@ -37,6 +39,19 @@ export interface CardTarget {
   fencerId: string;
 }
 
+/** Actions de relais du parent, toutes par le contrat (docs/adr/0024) */
+export interface RelayHandlers {
+  /** Termine le relais en cours avec le score compté à l'écran (recordRelayScore) */
+  onEndRelay: (matchId: string, bout: TeamBoutRow) => void;
+  /** Rouvre le dernier relais terminé de la rencontre (reopenRelay) */
+  onReopenRelay: (matchId: string) => void;
+  /** Rencontre dont le dernier relais finit à égalité au tableau : vainqueur à désigner */
+  pendingTieMatchId: string | null;
+  onResolveTie: (winner: 'A' | 'B') => void;
+  /** Le remplaçant de l'équipe entre à la place du tireur sortant (substituteTeamFencer) */
+  onSubstitute: (matchId: string, teamId: string, outFencerId: string) => void;
+}
+
 interface Props {
   teams: TeamRow[];
   matches: TeamMatchRow[];
@@ -48,7 +63,7 @@ interface Props {
   scoringMatchId: string | null;
   onToggleScoring: (matchId: string) => void;
   onScoreBout: (bout: TeamBoutRow, side: 'A' | 'B' | 'double', points?: number) => void;
-  onResetBout: (bout: TeamBoutRow) => void;
+  relay: RelayHandlers;
   boutCards: Record<string, Card[]>;
   cardTarget: CardTarget | null;
   onSetCardTarget: (target: CardTarget | null) => void;
@@ -81,7 +96,7 @@ const TeamPoolView: React.FC<Props> = ({
   scoringMatchId,
   onToggleScoring,
   onScoreBout,
-  onResetBout,
+  relay,
   boutCards,
   cardTarget,
   onSetCardTarget,
@@ -109,6 +124,12 @@ const TeamPoolView: React.FC<Props> = ({
         const ta = teamById.get(m.teamAId);
         const tb = teamById.get(m.teamBId);
         const isScoring = scoringMatchId === m.id;
+        // Relais en cours : le premier non terminé ; seul le dernier terminé se rouvre
+        const currentOrder = m.bouts.find(b => b.status !== 'finished')?.boutOrder ?? null;
+        const lastFinishedOrder = Math.max(
+          0,
+          ...m.bouts.filter(b => b.status === 'finished').map(b => b.boutOrder)
+        );
         const statusColor =
           m.status === 'finished'
             ? 'bg-green-50 border-green-200'
@@ -181,6 +202,8 @@ const TeamPoolView: React.FC<Props> = ({
                   const fa = fencerName(bout.fencerAId);
                   const fb = fencerName(bout.fencerBId);
                   const done = bout.status === 'finished';
+                  const current = bout.boutOrder === currentOrder;
+                  const locked = done || !current;
                   const cap = isLaserArena
                     ? (boutCap?.maxTouches ?? 5)
                     : Math.min(
@@ -209,7 +232,7 @@ const TeamPoolView: React.FC<Props> = ({
                                 <TipButton
                                   key={zone}
                                   onClick={() => onScoreBout(bout, 'A', ZONE_POINTS[zone])}
-                                  disabled={done}
+                                  disabled={locked}
                                   tip={t('teams.zoneTooltip', {
                                     zone,
                                     points: ZONE_POINTS[zone],
@@ -224,10 +247,19 @@ const TeamPoolView: React.FC<Props> = ({
                             <button
                               aria-label={t('actions.add')}
                               onClick={() => onScoreBout(bout, 'A')}
-                              disabled={done}
+                              disabled={locked}
                               className="w-8 h-8 text-sm font-bold rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 disabled:opacity-40 flex-shrink-0"
                             >
                               +
+                            </button>
+                          )}
+                          {current && (
+                            <button
+                              aria-label={t('teams.removeTouch')}
+                              onClick={() => onScoreBout(bout, 'A', -1)}
+                              className="w-6 h-6 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex-shrink-0"
+                            >
+                              −
                             </button>
                           )}
                           <span className="text-sm font-medium truncate">{fa}</span>
@@ -267,10 +299,18 @@ const TeamPoolView: React.FC<Props> = ({
                           <div className="text-xs text-gray-400">
                             /{cap} · A{bout.boutOrder}
                           </div>
+                          {current && (
+                            <button
+                              onClick={() => relay.onEndRelay(m.id, bout)}
+                              className="mt-0.5 text-[10px] px-1.5 py-0.5 rounded border border-green-200 text-green-700 bg-green-50 hover:bg-gray-100"
+                            >
+                              <Icon icon={Check} /> {t('teams.endRelay')}
+                            </button>
+                          )}
                           {isEpee && (
                             <button
                               onClick={() => onScoreBout(bout, 'double')}
-                              disabled={done}
+                              disabled={locked}
                               title={t('teams.doubleTooltip')}
                               className="mt-0.5 text-[10px] px-1.5 py-0.5 rounded border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 disabled:opacity-40"
                             >
@@ -300,6 +340,15 @@ const TeamPoolView: React.FC<Props> = ({
                             </span>
                           ))}
                           <span className="text-sm font-medium truncate text-right">{fb}</span>
+                          {current && (
+                            <button
+                              aria-label={t('teams.removeTouch')}
+                              onClick={() => onScoreBout(bout, 'B', -1)}
+                              className="w-6 h-6 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex-shrink-0"
+                            >
+                              −
+                            </button>
+                          )}
                           {isLaserPoints ? (
                             <div className="flex gap-0.5">
                               {(
@@ -308,7 +357,7 @@ const TeamPoolView: React.FC<Props> = ({
                                 <TipButton
                                   key={zone}
                                   onClick={() => onScoreBout(bout, 'B', ZONE_POINTS[zone])}
-                                  disabled={done}
+                                  disabled={locked}
                                   tip={t('teams.zoneTooltip', {
                                     zone,
                                     points: ZONE_POINTS[zone],
@@ -323,17 +372,17 @@ const TeamPoolView: React.FC<Props> = ({
                             <button
                               aria-label={t('actions.add')}
                               onClick={() => onScoreBout(bout, 'B')}
-                              disabled={done}
+                              disabled={locked}
                               className="w-8 h-8 text-sm font-bold rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 disabled:opacity-40 flex-shrink-0"
                             >
                               +
                             </button>
                           )}
-                          {done && (
+                          {done && bout.boutOrder === lastFinishedOrder && (
                             <TipButton
-                              onClick={() => onResetBout(bout)}
+                              onClick={() => relay.onReopenRelay(m.id)}
                               className="w-6 h-6 text-xs rounded text-red-400 hover:text-red-600 flex-shrink-0"
-                              tip={t('teams.resetBout')}
+                              tip={t('teams.reopenRelay')}
                             >
                               <Icon icon={Undo2} />
                             </TipButton>
@@ -375,6 +424,54 @@ const TeamPoolView: React.FC<Props> = ({
                     </React.Fragment>
                   );
                 })}
+                {relay.pendingTieMatchId === m.id && (
+                  <div className="mt-2 flex items-center gap-2 flex-wrap px-2 py-1.5 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                    <span className="text-gray-700">{t('teams.tieNeedsWinner')}</span>
+                    {(
+                      [
+                        ['A', ta],
+                        ['B', tb],
+                      ] as const
+                    ).map(([side, team]) => (
+                      <button
+                        key={side}
+                        onClick={() => relay.onResolveTie(side)}
+                        className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        {t('teams.priorityWinner', { team: team?.name ?? side })}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {currentOrder !== null && (
+                  <div className="mt-2 pt-2 border-t border-gray-200 grid grid-cols-2 gap-3 text-xs">
+                    {(
+                      [
+                        ['A', ta],
+                        ['B', tb],
+                      ] as const
+                    ).map(([side, team]) =>
+                      team && team.fencers.some(f => f.isReserve) ? (
+                        <SubstitutePicker
+                          key={side}
+                          side={side}
+                          team={team}
+                          fencerIds={[
+                            ...new Set(
+                              m.bouts
+                                .filter(b => b.status !== 'finished')
+                                .map(b => (side === 'A' ? b.fencerAId : b.fencerBId))
+                            ),
+                          ]}
+                          fencerName={fencerName}
+                          onSubstitute={out => relay.onSubstitute(m.id, team.id, out)}
+                        />
+                      ) : (
+                        <div key={side} />
+                      )
+                    )}
+                  </div>
+                )}
                 {isLaserArena && onAddTeamCard && (
                   <div className="mt-2 pt-2 border-t border-gray-200 grid grid-cols-2 gap-3 text-xs">
                     {[['A', ta, m.teamAId] as const, ['B', tb, m.teamBId] as const].map(
@@ -421,6 +518,46 @@ const TeamPoolView: React.FC<Props> = ({
           </div>
         );
       })}
+    </div>
+  );
+};
+
+/** Remplacement : tireur sortant choisi parmi ceux des relais à tirer de l'équipe */
+const SubstitutePicker: React.FC<{
+  side: 'A' | 'B';
+  team: TeamRow;
+  fencerIds: string[];
+  fencerName: (id: string) => string;
+  onSubstitute: (outFencerId: string) => void;
+}> = ({ side, team, fencerIds, fencerName, onSubstitute }) => {
+  const { t } = useTranslation();
+  const [out, setOut] = useState('');
+  return (
+    <div className={`flex items-center gap-1 flex-wrap ${side === 'B' ? 'justify-end' : ''}`}>
+      <select
+        aria-label={t('teams.substituteOut', { team: team.name })}
+        value={out}
+        onChange={e => setOut(e.target.value)}
+        className="border border-gray-300 rounded px-1.5 py-1 text-xs"
+      >
+        <option value="">{t('teams.substituteOut', { team: team.name })}</option>
+        {fencerIds.map(id => (
+          <option key={id} value={id}>
+            {fencerName(id)}
+          </option>
+        ))}
+      </select>
+      <button
+        onClick={() => {
+          if (!out) return;
+          onSubstitute(out);
+          setOut('');
+        }}
+        disabled={!out}
+        className="px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+      >
+        <Icon icon={UserRoundCog} /> {t('teams.substitute')}
+      </button>
     </div>
   );
 };

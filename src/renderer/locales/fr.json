@@ -703,7 +703,6 @@
     "addCard": "Ajouter un carton",
     "doubleTooltip": "Touche double simultanée (pas de priorité en épée)",
     "double": "double",
-    "resetBout": "Réinitialiser cet assaut",
     "cardFor": "Carton pour {{name}} :",
     "reasonPlaceholder": "-- motif --",
     "teamCardsTitle": "Cartons équipe « E » — {{team}}",
@@ -712,7 +711,7 @@
     "tableauNeedTwo": "Il faut au moins 2 équipes pour générer un tableau.",
     "tableauNone": "Aucun tableau généré.",
     "tableauGenerate": "Générer le tableau ({{count}} équipes)",
-    "tableauRegenerate": "Régénérer / faire avancer le tableau",
+    "tableauRegenerate": "Tirer de nouveau le tableau",
     "roundQuarterfinals": "Quarts de finale",
     "roundOf16": "Huitièmes de finale",
     "roundOf32": "Seizièmes de finale",
@@ -727,7 +726,14 @@
     "loading": "Chargement…",
     "teamCount": "{{count}} équipes",
     "toCompose": "Composer les équipes",
-    "cardSaveError": "Carton non enregistré"
+    "cardSaveError": "Carton non enregistré",
+    "removeTouch": "Retirer une touche",
+    "endRelay": "Terminer le relais",
+    "reopenRelay": "Rouvrir ce relais pour le corriger",
+    "tieNeedsWinner": "Égalité : désigner le vainqueur (minute avec priorité)",
+    "priorityWinner": "Vainqueur : {{team}}",
+    "substituteOut": "-- sortant ({{team}}) --",
+    "substitute": "Faire entrer le remplaçant"
   },
   "kiosk": {
     "tbd": "À déterminer",
@@ -1101,7 +1107,18 @@
     "password_too_short": "Mot de passe trop court (8 caractères min.)",
     "no_pending_file": "Aucun fichier en attente",
     "wrong_password": "Mot de passe incorrect",
-    "invalid_settings": "Réglages invalides"
+    "invalid_settings": "Réglages invalides",
+    "relay_out_of_order": "Relais hors ordre : terminer les relais précédents, ou rouvrir ce relais pour le corriger",
+    "no_reserve": "Équipe sans remplaçant",
+    "reserve_used": "Remplaçant déjà entré dans la rencontre",
+    "no_later_relay": "Plus aucun relais à tirer pour ce tireur dans la rencontre",
+    "team_incomplete": "Équipe incomplète : titulaires manquants",
+    "team_not_found": "Équipe introuvable",
+    "next_match_played": "La rencontre suivante du tableau a déjà commencé",
+    "pools_not_complete": "Rencontres de poule non terminées",
+    "draw_done": "Tirage déjà fait : composition figée (remplacement seulement)",
+    "bracket_has_scores": "Tableau déjà commencé : relais joués",
+    "pools_have_scores": "Poules déjà commencées : relais joués"
   },
   "properties": {
     "backup_dir_label": "Dossier de sauvegarde dédié (facultatif)",
