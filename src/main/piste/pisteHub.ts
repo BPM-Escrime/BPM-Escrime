@@ -124,6 +124,12 @@ export class PisteHub {
   private manualCache = new Map<string, ReadonlySet<number>>();
   /** Numéro de piste de salle de chaque piste du pilote (identifiant OPP2 ≠ numéro) */
   private stripNumbers = new Map<string, number>();
+  /**
+   * Pistes affichant un affichage libre du pilotage de la salle (#2117) : sans arène dans une
+   * épreuve, un retour en ligne ou un changement de mode ne les remet pas à blanc. Le premier
+   * match envoyé par une épreuve reprend la main.
+   */
+  private panelHeld = new Set<string>();
 
   constructor(
     driver: PisteDriver,
@@ -187,6 +193,11 @@ export class PisteHub {
       this.manualCache.set(competitionId, strips);
     }
     return strips.has(this.stripNumbers.get(link.piste) ?? Number(link.piste));
+  }
+
+  /** Affichage libre envoyé par le pilotage de la salle : gardé tant qu'aucune épreuve n'a la piste */
+  holdPanel(piste: string): void {
+    this.panelHeld.add(piste);
   }
 
   /** Alertes en cours, par piste (panneau Cyrano). */
@@ -457,6 +468,9 @@ export class PisteHub {
     const match = arena?.currentMatch;
     if (arena && match && !isFinished(match, arena.status)) {
       this.sendMatch(piste, match, match.scoreA, match.scoreB);
+    } else if (!arena && this.panelHeld.has(piste)) {
+      // Piste libre pilotée par la salle : son affichage libre reste (#2117)
+      return;
     } else {
       this.device.set(piste, { matchId: null });
       this.driver.send(piste, { kind: 'clear' });
@@ -599,6 +613,7 @@ export class PisteHub {
       // Champ épreuve : seulement entre plusieurs épreuves (sinon celui du pilote)
       competition: this.competitionField(remote, status),
     });
+    this.panelHeld.delete(piste);
     logger.info(LogCategory.NETWORK, `Cyrano: DISP → ${piste} (match ${match.id})`);
   }
 

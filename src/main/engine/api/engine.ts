@@ -64,6 +64,7 @@ import {
 } from '../commands/remoteClients';
 import { onTrainingActivity, trainingHandlers } from '../commands/training';
 import { devicesHandlers } from '../commands/devices';
+import { devicesControlHandlers, onStripControlChanged } from '../commands/devicesControl';
 import { competitionStats } from '../commands/competitionStats';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
@@ -252,6 +253,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   onTrainingActivity,
   // Appareils de piste (docs/adr/0023) : salle, pilotes Cyrano et OPP2 ; sans journal
   ...devicesHandlers,
+  ...devicesControlHandlers,
+  onStripControlChanged,
 };
 
 export const isOperation = (name: unknown): name is OperationName =>

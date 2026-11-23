@@ -15,6 +15,7 @@ import type {
   PisteLink,
   PisteNameLength,
 } from './types';
+import type { StripEcho, StripPanel } from '../../shared/types/stripDevice';
 
 export const MULTI_DRIVER_ID = 'piste';
 
@@ -40,6 +41,9 @@ export class MultiPisteDriver extends EventEmitter<PisteDriverEvents> implements
       });
       d.on('status', link => {
         if (this.ownerOf(link.piste) === d) this.emit('status', link);
+      });
+      d.on('echo', (piste, state) => {
+        if (this.ownerOf(piste) === d) this.emit('echo', piste, state);
       });
     }
   }
@@ -76,6 +80,10 @@ export class MultiPisteDriver extends EventEmitter<PisteDriverEvents> implements
   fencerId(id: string, piste?: string): string {
     const d = piste !== undefined ? this.ownerOf(piste) : this.drivers[0];
     return (d ?? this.drivers[0])?.fencerId(id, piste) ?? id;
+  }
+
+  panelEcho(piste: string, panel: StripPanel): StripEcho | null {
+    return this.ownerOf(piste)?.panelEcho?.(piste, panel) ?? null;
   }
 
   setNameLength(length: PisteNameLength): void {

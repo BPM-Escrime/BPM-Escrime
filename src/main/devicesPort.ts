@@ -21,6 +21,7 @@ import type { MqttBroker } from './opp2/mqttBroker';
 import type { Opp2PisteDriver } from './opp2/driver';
 import type { PisteHub } from './piste/pisteHub';
 import type { StripDeviceOptions } from '../shared/types/stripDevice';
+import type { StripControl } from './piste/stripControl';
 
 /** Port MQTT standard (spéc. OPP2 § 4.7) */
 export const OPP2_DEFAULT_PORT = 1883;
@@ -33,6 +34,10 @@ export interface DevicesPortOptions {
   pisteHub: PisteHub;
   /** Épreuves en saisie distante (identifiants des serveurs distants, hors entraînement) */
   activeCompetitions: () => string[];
+  /** Pilotage de la salle hors compétition (#2117) */
+  stripControl: StripControl;
+  /** Arènes de la séance de chaque épreuve en saisie distante (pistes occupées) */
+  activeArenas: () => { competitionId: string; arenas: number[] }[];
 }
 
 /** Pistes passées en manuel d'une épreuve (`settings.manualStrips`), lues en base */
@@ -47,9 +52,13 @@ export function createDevicesPort({
   opp2Driver,
   pisteHub,
   activeCompetitions,
+  stripControl,
+  activeArenas,
 }: DevicesPortOptions): DevicesPort {
   /** Épreuve du panneau de l'écran (dernier démarrage d'un pilote, changement de salle) */
   let focus: string | null = null;
+  /** Salle du pilotage hors compétition (#2117) : chargée après celles des épreuves suivies */
+  let controlVenue: string | null = null;
   const ctx = { db } as CommandContext;
 
   /** Salles des épreuves suivies, sans doublon ; aucune : salle par défaut */
@@ -66,6 +75,9 @@ export function createDevicesPort({
       const fallback = db.settings.getDefaultVenue();
       if (fallback) venues.set(fallback.id, fallback);
     }
+    // Salle pilotée : les épreuves gardent la priorité sur une piste du pilote en commun
+    const controlled = controlVenue ? db.settings.getVenue(controlVenue) : null;
+    if (controlled && !venues.has(controlled.id)) venues.set(controlled.id, controlled);
     return [...venues.values()];
   };
 
@@ -150,5 +162,27 @@ export function createDevicesPort({
       }
     },
     action: (piste, action) => pisteHub.pisteAction(piste, action),
+    control: {
+      watchVenue: venueId => {
+        if (controlVenue === venueId) return;
+        controlVenue = venueId;
+        reload();
+      },
+      activeArenas,
+      link: device => {
+        if (device.device.protocol === 'cyrano') {
+          if (!cyranoServer.running) return null;
+          const ip = device.device.ip;
+          const status = cyranoServer
+            .getStatuses()
+            .find(p => p.piste === device.piste && p.ip === ip);
+          return status?.status ?? null;
+        }
+        if (!broker.running) return null;
+        return opp2Driver.findPiste(device.piste)?.status ?? null;
+      },
+      send: (target, panel) => stripControl.send(target, panel),
+      last: (piste, match) => stripControl.lastFor(piste, match),
+    },
   };
 }

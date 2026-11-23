@@ -55,6 +55,8 @@ import { Opp2PisteDriver } from './opp2/driver';
 import { MultiPisteDriver } from './piste/multiDriver';
 import { PisteHub } from './piste/pisteHub';
 import { createDevicesPort, manualStripsOf } from './devicesPort';
+import { StripControl } from './piste/stripControl';
+import { publishStripControlChange } from './engine/api/events';
 import { TRAINING_ID } from './trainingServer';
 import { registerApiHandlers } from './engine/api/ipcAdapter';
 import { emitChangeVia } from './mcp/mcpDomain';
@@ -217,9 +219,10 @@ const opp2Broker = new MqttBroker();
 const opp2Driver = new Opp2PisteDriver(opp2Broker, {
   software: { name: 'BellePoule Modern', version: app.getVersion() },
 });
+// Pilotes Cyrano (#1829) et OPP2 (#1960) du modèle commun des appareils de piste
+const pisteDriver = new MultiPisteDriver([new CyranoPisteDriver(cyranoServer), opp2Driver]);
 const pisteHub = new PisteHub(
-  // Pilotes Cyrano (#1829) et OPP2 (#1960) du modèle commun des appareils de piste
-  new MultiPisteDriver([new CyranoPisteDriver(cyranoServer), opp2Driver]),
+  pisteDriver,
   // Toutes les épreuves : chaque piste suit celle de son affectation en cours (#1878)
   () => [...remoteServers.values()].map(entry => entry.server),
   {
@@ -270,6 +273,12 @@ const remoteServerContext = {
     devicesPort.reload();
   },
 };
+// Pilotage de la salle hors compétition (#2117) : affichage libre et accusé, sans journal
+const stripControl = new StripControl({
+  driver: pisteDriver,
+  hold: piste => pisteHub.holdPanel(piste),
+  onChange: publishStripControlChange,
+});
 // Pilotes Cyrano et OPP2 vus par le contrat (ex-canaux cyrano:* et opp2:*, docs/adr/0023)
 const devicesPort = createDevicesPort({
   db,
@@ -278,6 +287,17 @@ const devicesPort = createDevicesPort({
   opp2Driver,
   pisteHub,
   activeCompetitions: () => [...remoteServers.keys()].filter(id => id !== TRAINING_ID),
+  stripControl,
+  activeArenas: () =>
+    [...remoteServers.entries()]
+      .filter(([id]) => id !== TRAINING_ID)
+      .map(([competitionId, entry]) => ({
+        competitionId,
+        arenas: entry.server
+          .getAllArenas()
+          .map(a => Number(String(a.id).replace(/^arena/, '')))
+          .filter(n => Number.isInteger(n) && n > 0),
+      })),
 });
 
 // Dépendances des outils MCP (#1880) : base, écran à rafraîchir, serveur distant, Cyrano, fichiers

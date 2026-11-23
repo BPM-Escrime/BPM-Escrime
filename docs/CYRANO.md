@@ -156,6 +156,66 @@ Disposition : le journal des trames
 défile jusqu'aux dernières trames (sauf si on remonte pour lire) dans son propre cadre, sans élargir
 la page ; l'export contient les 200 dernières trames et se rejoue dans le simulateur (§ 3).
 
+### Pilotage de la salle (hors compétition, #2117)
+
+Paramètres → Salles et pistes → bouton **Appareils** d'une salle : déclaration en masse et
+pilotage direct des appareils de la salle, **sans compétition ouverte** (remplace l'application
+externe qui envoyait les ordres aux appareils). Capture : [26-pilotage-salle](screenshots/26-pilotage-salle.png).
+
+- **Grille** : n° et libellé, protocole, liaison (en ligne, incertain, hors ligne, jamais vu ;
+  « pilote arrêté » si le pilote du protocole ne tourne pas), épreuve en cours qui occupe la
+  piste, dernier envoi et son accusé. Pilote arrêté : bouton pour le démarrer
+  (`startCyranoServer` / `startOpp2Broker`, port et interface mémorisés du panneau). Ouvrir la
+  grille charge les appareils de la salle dans les pilotes, après ceux des épreuves suivies
+  (une piste du pilote commune aux deux reste à l'épreuve).
+- **Envoi en masse** : pistes cochées (ou toutes), puis un seul envoi de l'**arme** (épée,
+  fleuret, sabre), des **noms** et **nations ou clubs** gauche / droite, ou une **remise à
+  blanc**. Champ vide : inchangé ; l'envoi est fusionné avec le précédent de la piste (envoyer
+  l'arme seule garde les noms).
+- **Résultat par piste** : `sent` (envoyé), `busy` (refusé : une épreuve en saisie distante dans
+  cette salle a l'arène de la piste dans sa séance ; une piste qu'elle a passée en manuel,
+  `manualStrips`, reste pilotable), `offline`, `not_declared`, `unavailable` (pilote arrêté, ou
+  piste du pilote prise par une autre salle).
+- **Trames** : Cyrano → `DISP` (EFP1 / EFP1.1 selon la piste) : arme, `Type=I`, `Round=1`, noms
+  par la convention et la troncature de `names.ts` (longueur des noms du panneau), nation sur 3
+  caractères, **sans Id de tireur** ; remise à blanc → `DISP` vide. OPP2 → `software/fencers`
+  (noms en majuscules, code CIO ou club, Id vide) et `software/match` (arme seule). Une piste
+  libre garde son affichage au retour en ligne de l'appareil ; le premier match envoyé par une
+  épreuve reprend la main.
+- **Accusé de réception** : Cyrano n'acquitte pas un `DISP` (seule la fin de match a ACK /
+  NAK). Le pilote envoie un `HELLO` juste derrière le `DISP` : l'appareil répond par un `INFO`
+  complet. **Reçu** quand un `INFO` renvoie les noms envoyés et l'arme ; **refusé** quand
+  l'appareil est en plein combat (`F`, `H`, `P`, `E`) sans les afficher (un appareil conforme
+  ignore un `DISP` en état actif, § 4) ; un `INFO` croisé au repos est ignoré. OPP2 : l'écho
+  `apparatus/fencers` (noms) fait foi, `apparatus/state` actif vaut refus ; l'arme n'est pas
+  renvoyée par OPP2. Rien dans les **8 s** : **sans réponse** (pas forcément un échec : un
+  appareil OPP2 qui ne renvoie pas `apparatus/fencers` reste « sans réponse »).
+- **Ni fait d'épreuve, ni journal** : ordres d'affichage seulement, état en mémoire (perdu au
+  redémarrage) ; les noms ne sont jamais tracés (RGPD), l'avis `onStripControlChanged` ne porte
+  que des identifiants.
+- **Déclaration en masse** : ajout en lot (première piste, nombre, protocole, IP de la première
+  piste incrémentée, port, version, profil constructeur Standard / EFP1.1 / Saint-George, dont
+  l'IP `192.168.1.(100 + piste)`), export et import JSON des appareils de la salle (format
+  `bellepoule-strip-devices` version 1 ; l'ancien export du panneau Cyrano est relu). Le fichier
+  circule par contenu (`usePlatform`), jamais par chemin. Import contrôlé d'abord : une ligne
+  invalide et rien n'est écrit, erreurs rendues ligne par ligne. Capture :
+  [25-salle-appareils](screenshots/25-salle-appareils.png).
+
+| Opération (droit `remote:admin`, jamais sur le réseau, pas de MCP)      | Rôle                                                          |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `listVenueStripControl({ venueId })`                                    | grille du pilotage                                            |
+| `sendStripDisplay({ venueId, strips, weapon?, left?, right?, clear? })` | affichage libre en masse, résultat par piste                  |
+| `onStripControlChanged`                                                 | avis : accusé ou liaison changés (l'écran relit la grille)    |
+| `setStripDevices({ venueId, devices })`                                 | ajout en lot : pistes citées seulement, une transaction       |
+| `getStripDevicesFile({ venueId })`                                      | contenu JSON et nom de fichier (requête, n’écrit rien)        |
+| `importStripDevices({ venueId, content, dryRun? })`                     | import validé ligne par ligne (`applied`, `strips`, `errors`) |
+
+Code : règles pures `src/shared/domain/stripDevices/stripControl.ts` (sélection, occupation,
+verdict, fusion, accusé) et `stripDevicesFile.ts` (lot, fichier) ; envoi et accusé
+`src/main/piste/stripControl.ts` (commande `panel` du modèle commun, événement `echo` des
+pilotes) ; handlers `src/main/engine/commands/devicesControl.ts` ; écran
+`VenueStripControlPanel.tsx`, `VenueStripBulkTools.tsx`.
+
 ### 2 ter. Modes par piste (#1829)
 
 | Mode                  | Sortie vers l'appareil | Entrées de l'appareil                      | Commandes du poste                |

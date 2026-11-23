@@ -35,7 +35,7 @@ const cyrano = {
   stop: vi.fn(async () => {
     cyrano.running = false;
   }),
-  getStatuses: () => [],
+  getStatuses: vi.fn((): { piste: string; ip: string; status: string }[] => []),
   getLog: () => [],
 };
 const broker = {
@@ -56,7 +56,9 @@ const driver = {
   stop: vi.fn(),
   getStatuses: () => [],
   getUnknownPistes: () => [],
+  findPiste: vi.fn((): { status: string } | undefined => undefined),
 };
+const control = { send: vi.fn(() => true), lastFor: vi.fn(() => null) };
 const hub = {
   setStripNumbers: vi.fn(),
   refreshManualStrips: vi.fn(),
@@ -77,6 +79,8 @@ const port = () =>
     opp2Driver: driver as unknown as Opp2PisteDriver,
     pisteHub: hub as unknown as PisteHub,
     activeCompetitions: () => active,
+    stripControl: control as never,
+    activeArenas: () => [{ competitionId: 'c1', arenas: [1] }],
   });
 
 const competition = (title: string) =>
@@ -163,5 +167,57 @@ d('createDevicesPort', () => {
     });
     expect(manualStripsOf(db, comp.id)).toEqual([1, 3]);
     expect(manualStripsOf(db, 'inconnue')).toEqual([]);
+  });
+
+  it('pilotage de la salle : salle pilotée chargée après les épreuves, liaison par protocole', async () => {
+    const main = db.settings.upsertVenue({ name: 'Principale', stripCount: 1 });
+    const hall = db.settings.upsertVenue({ name: 'Halle', stripCount: 2 });
+    db.settings.setStripDevice(main.id, 1, { protocol: 'cyrano', ip: '10.0.0.1' });
+    db.settings.setStripDevice(hall.id, 1, { protocol: 'cyrano', ip: '10.9.9.1' });
+    db.settings.setStripDevice(hall.id, 2, { protocol: 'opp2', opp2Id: 'b' });
+    const devices = port();
+    devices.control.watchVenue(hall.id);
+    // Salle par défaut d'abord (piste 1 en commun : la sienne l'emporte), puis la salle pilotée
+    expect(cyrano.setPistes).toHaveBeenLastCalledWith([{ piste: '1', ip: '10.0.0.1', arena: 1 }]);
+    expect(driver.setPistes).toHaveBeenLastCalledWith([{ piste: 'b', arena: 2 }]);
+    // Même salle : pas de rechargement
+    const calls = cyrano.setPistes.mock.calls.length;
+    devices.control.watchVenue(hall.id);
+    expect(cyrano.setPistes.mock.calls.length).toBe(calls);
+
+    const cyr = {
+      strip: 1,
+      device: { protocol: 'cyrano' as const, ip: '10.9.9.1' },
+      arena: 1,
+      piste: '1',
+      manual: false,
+    };
+    const opp = {
+      strip: 2,
+      device: { protocol: 'opp2' as const },
+      arena: 2,
+      piste: 'b',
+      manual: false,
+    };
+    // Pilotes arrêtés : liaison inconnue
+    expect(devices.control.link(cyr)).toBeNull();
+    expect(devices.control.link(opp)).toBeNull();
+    cyrano.running = true;
+    broker.running = true;
+    // Piste 1 chargée avec l'adresse d'une autre salle : non chargée pour celle-ci
+    cyrano.getStatuses.mockReturnValue([{ piste: '1', ip: '10.0.0.1', status: 'online' }]);
+    expect(devices.control.link(cyr)).toBeNull();
+    cyrano.getStatuses.mockReturnValue([{ piste: '1', ip: '10.9.9.1', status: 'stale' }]);
+    expect(devices.control.link(cyr)).toBe('stale');
+    driver.findPiste.mockReturnValue({ status: 'online' });
+    expect(devices.control.link(opp)).toBe('online');
+    expect(devices.control.activeArenas()).toEqual([{ competitionId: 'c1', arenas: [1] }]);
+    const target = { venueId: hall.id, strip: 1, piste: '1', protocol: 'cyrano' as const };
+    expect(devices.control.send(target, { weapon: 'S' })).toBe(true);
+    expect(control.send).toHaveBeenCalledWith(target, { weapon: 'S' });
+    devices.control.last('1', { venueId: hall.id, strip: 1 });
+    expect(control.lastFor).toHaveBeenCalledWith('1', { venueId: hall.id, strip: 1 });
+    cyrano.running = false;
+    broker.running = false;
   });
 });
