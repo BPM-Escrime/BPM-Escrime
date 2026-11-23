@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 146 | 1235 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 128 | 690 |
+| `src/renderer/components/` | 129 | 693 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 35 | 375 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **592** | **4555** |
+| **Total** | **593** | **4558** |
 
-Unitaires : 574 fichiers, 4505 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -7300,6 +7300,16 @@ Unitaires : 574 fichiers, 4505 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - poules et tableau : état de l’épreuve ; sans état ou échec : vides
   - signatures des poules par poule et tireur ; échec : objet vide
   - signatures du tableau rangées par côté ; échec : objet vide
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/roadmap/RoadmapPreview.test.tsx</code> — 3 tests</summary>
+
+- **RoadmapPreview**
+  - clic sur une variable sans valeur → onPickVariable, pas la section
+  - clic ailleurs dans une section → onPickSection
+  - {date} manquante dans l’en-tête → onPickVariable("date")
 
 </details>
 

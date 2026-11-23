@@ -4,6 +4,7 @@
  * Escrime : piste FIE 14 × 2 m, dégagements, lignes, couloir de sécurité, tireurs et arbitre.
  * Escrime artistique : espace scénique 10 × 8 m, dégagements, arbitres jardin / cour, jury.
  * Géométrie : shared/domain/arena. Plan d'une salle (poignée de déplacement) et vue d'ensemble.
+ * Rotation autour du centre : lignes, tireurs, arbitres et assesseurs tournent ; chiffres et nom restent droits.
  * Licensed under GPL-3.0
  */
 
@@ -32,9 +33,11 @@ export interface ArenaShapeProps {
   /** Poignée de déplacement (zone de combat, piste ou scène) */
   onGrab?: (e: React.PointerEvent<SVGElement>) => void;
   grabTitle?: string;
+  /** Rotation de l'arène autour de son centre, en degrés (sens horaire) */
+  rotationDeg?: number;
 }
 
-const Roles: React.FC<{ roles: PlanRole[] }> = ({ roles }) => (
+const Roles: React.FC<{ roles: PlanRole[]; rot: number }> = ({ roles, rot }) => (
   <>
     {roles.map(r => (
       <g key={r.label}>
@@ -44,6 +47,7 @@ const Roles: React.FC<{ roles: PlanRole[] }> = ({ roles }) => (
           y={r.position.y + 0.15}
           className="arena-planner-role-label"
           textAnchor="middle"
+          transform={rot ? `rotate(${-rot} ${r.position.x} ${r.position.y})` : undefined}
         >
           {r.label}
         </text>
@@ -87,7 +91,10 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
   compact,
   onGrab,
   grabTitle,
+  rotationDeg = 0,
 }) => {
+  const rot = Number.isFinite(rotationDeg) ? rotationDeg % 360 : 0;
+  const turn = rot ? `rotate(${rot} ${center.x} ${center.y})` : undefined;
   const grab = onGrab
     ? { onPointerDown: onGrab, className: 'arena-planner-arena-grab' }
     : { className: '' };
@@ -98,52 +105,54 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
     const g = computePisteGeometry(center);
     return (
       <g className="arena-planner-arena arena-planner-arena-fencing">
-        <rect {...centredRect(center, fp.halfX, fp.halfY)} className="arena-planner-safety" />
-        <rect
-          {...centredRect(center, g.halfTotalM, g.halfWidthM)}
-          className="arena-planner-runoff"
-        />
-        <rect
-          {...centredRect(center, g.halfLengthM, g.halfWidthM)}
-          className={`arena-planner-piste ${grab.className}`}
-          onPointerDown={grab.onPointerDown}
-        >
-          {title}
-        </rect>
-        {compact ? null : (
-          <>
-            <PisteLine c={center} dx={0} hy={g.halfWidthM} className="arena-planner-piste-line" />
-            {g.lines.guard.map(dx => (
-              <PisteLine
-                key={`g${dx}`}
-                c={center}
-                dx={dx}
-                hy={g.halfWidthM}
-                className={dx < 0 ? 'arena-planner-guard-red' : 'arena-planner-guard-green'}
-              />
-            ))}
-            {g.lines.warning.map(dx => (
-              <PisteLine
-                key={`w${dx}`}
-                c={center}
-                dx={dx}
-                hy={g.halfWidthM}
-                className="arena-planner-piste-warning"
-              />
-            ))}
-            {g.lines.end.map(dx => (
-              <PisteLine
-                key={`e${dx}`}
-                c={center}
-                dx={dx}
-                hy={g.halfWidthM}
-                className="arena-planner-piste-end"
-              />
-            ))}
-            <Name center={center} top={g.halfWidthM} name={name} />
-            <Roles roles={g.roles} />
-          </>
-        )}
+        <g transform={turn}>
+          <rect {...centredRect(center, fp.halfX, fp.halfY)} className="arena-planner-safety" />
+          <rect
+            {...centredRect(center, g.halfTotalM, g.halfWidthM)}
+            className="arena-planner-runoff"
+          />
+          <rect
+            {...centredRect(center, g.halfLengthM, g.halfWidthM)}
+            className={`arena-planner-piste ${grab.className}`}
+            onPointerDown={grab.onPointerDown}
+          >
+            {title}
+          </rect>
+          {compact ? null : (
+            <>
+              <PisteLine c={center} dx={0} hy={g.halfWidthM} className="arena-planner-piste-line" />
+              {g.lines.guard.map(dx => (
+                <PisteLine
+                  key={`g${dx}`}
+                  c={center}
+                  dx={dx}
+                  hy={g.halfWidthM}
+                  className={dx < 0 ? 'arena-planner-guard-red' : 'arena-planner-guard-green'}
+                />
+              ))}
+              {g.lines.warning.map(dx => (
+                <PisteLine
+                  key={`w${dx}`}
+                  c={center}
+                  dx={dx}
+                  hy={g.halfWidthM}
+                  className="arena-planner-piste-warning"
+                />
+              ))}
+              {g.lines.end.map(dx => (
+                <PisteLine
+                  key={`e${dx}`}
+                  c={center}
+                  dx={dx}
+                  hy={g.halfWidthM}
+                  className="arena-planner-piste-end"
+                />
+              ))}
+              <Roles roles={g.roles} rot={rot} />
+            </>
+          )}
+        </g>
+        {compact ? null : <Name center={center} top={g.halfWidthM} name={name} />}
       </g>
     );
   }
@@ -152,20 +161,18 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
     const g = computeStageGeometry(center);
     return (
       <g className="arena-planner-arena arena-planner-arena-artistic">
-        <rect {...centredRect(center, fp.halfX, fp.halfY)} className="arena-planner-safety" />
-        <rect
-          {...centredRect(center, g.halfWidthM, g.halfDepthM)}
-          className={`arena-planner-stage ${grab.className}`}
-          onPointerDown={grab.onPointerDown}
-        >
-          {title}
-        </rect>
-        {compact ? null : (
-          <>
-            <Name center={center} top={g.halfDepthM} name={name} />
-            <Roles roles={g.roles} />
-          </>
-        )}
+        <g transform={turn}>
+          <rect {...centredRect(center, fp.halfX, fp.halfY)} className="arena-planner-safety" />
+          <rect
+            {...centredRect(center, g.halfWidthM, g.halfDepthM)}
+            className={`arena-planner-stage ${grab.className}`}
+            onPointerDown={grab.onPointerDown}
+          >
+            {title}
+          </rect>
+          {compact ? null : <Roles roles={g.roles} rot={rot} />}
+        </g>
+        {compact ? null : <Name center={center} top={g.halfDepthM} name={name} />}
       </g>
     );
   }
@@ -173,41 +180,43 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
   const g = computeArenaGeometry(center);
   return (
     <g className="arena-planner-arena">
-      <circle
-        cx={center.x}
-        cy={center.y}
-        r={ARENA_SAFETY_RADIUS_M}
-        className="arena-planner-safety"
-      />
-      <circle
-        cx={center.x}
-        cy={center.y}
-        r={ARENA_ZONE_RADIUS_M}
-        className={`arena-planner-zone ${grab.className}`}
-        onPointerDown={grab.onPointerDown}
-      >
-        {title}
-      </circle>
-      {compact ? null : (
-        <>
-          <line
-            x1={center.x + g.guardLines.red}
-            y1={center.y - 0.6}
-            x2={center.x + g.guardLines.red}
-            y2={center.y + 0.6}
-            className="arena-planner-guard-red"
-          />
-          <line
-            x1={center.x + g.guardLines.green}
-            y1={center.y - 0.6}
-            x2={center.x + g.guardLines.green}
-            y2={center.y + 0.6}
-            className="arena-planner-guard-green"
-          />
-          <Name center={center} top={ARENA_ZONE_RADIUS_M} name={name} />
-          <Roles roles={g.roles} />
-        </>
-      )}
+      <g transform={turn}>
+        <circle
+          cx={center.x}
+          cy={center.y}
+          r={ARENA_SAFETY_RADIUS_M}
+          className="arena-planner-safety"
+        />
+        <circle
+          cx={center.x}
+          cy={center.y}
+          r={ARENA_ZONE_RADIUS_M}
+          className={`arena-planner-zone ${grab.className}`}
+          onPointerDown={grab.onPointerDown}
+        >
+          {title}
+        </circle>
+        {compact ? null : (
+          <>
+            <line
+              x1={center.x + g.guardLines.red}
+              y1={center.y - 0.6}
+              x2={center.x + g.guardLines.red}
+              y2={center.y + 0.6}
+              className="arena-planner-guard-red"
+            />
+            <line
+              x1={center.x + g.guardLines.green}
+              y1={center.y - 0.6}
+              x2={center.x + g.guardLines.green}
+              y2={center.y + 0.6}
+              className="arena-planner-guard-green"
+            />
+            <Roles roles={g.roles} rot={rot} />
+          </>
+        )}
+      </g>
+      {compact ? null : <Name center={center} top={ARENA_ZONE_RADIUS_M} name={name} />}
     </g>
   );
 };
