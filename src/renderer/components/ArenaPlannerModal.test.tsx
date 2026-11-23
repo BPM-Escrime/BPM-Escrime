@@ -103,7 +103,7 @@ describe('ArenaPlannerModal', () => {
 
   it('tourne une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle', () => {
     const { container } = render(<ArenaPlannerModal onClose={() => {}} />);
-    const rotate = screen.getByRole('button', { name: 'arenaPlanner.arena_rotate n=1' });
+    const rotate = screen.getAllByRole('button', { name: 'arenaPlanner.arena_rotate n=1' })[0];
     expect(rotate).toHaveTextContent('0°');
     fireEvent.click(rotate);
     expect(rotate).toHaveTextContent('90°');
@@ -116,6 +116,19 @@ describe('ArenaPlannerModal', () => {
     fireEvent.click(rotate);
     fireEvent.click(rotate);
     expect(rotate).toHaveTextContent('0°');
+  });
+
+  it('tourne une arène librement par sa poignée ronde du plan, touche R : quart de tour', () => {
+    const { container } = render(<ArenaPlannerModal onClose={() => {}} />);
+    const handle = container.querySelector<SVGGElement>('.arena-planner-arena-rotate')!;
+    const turned = () =>
+      container.querySelector('.arena-planner-guard-red')!.parentElement!.getAttribute('transform');
+    fireEvent.keyDown(handle, { key: 'r' });
+    expect(turned()).toMatch(/^rotate\(90 /);
+    fireEvent.keyDown(handle, { key: 'R' });
+    expect(turned()).toMatch(/^rotate\(180 /);
+    // Poignée dans le groupe tourné : elle suit l'arène
+    expect(handle.parentElement!.getAttribute('transform')).toMatch(/^rotate\(180 /);
   });
 
   it("change la couleur d'une zone puis revient à la couleur par défaut", () => {

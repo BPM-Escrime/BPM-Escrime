@@ -5,6 +5,7 @@ import {
   computeStageGeometry,
   FENCING_PISTE,
   nextArenaRotation,
+  snapArenaRotation,
 } from './arenaDisciplines';
 import {
   checkRoomItems,
@@ -120,11 +121,19 @@ describe('rotation des arènes', () => {
     expect(nextArenaRotation(0, 'laser')).toBe(90);
     expect(nextArenaRotation(90, 'laser')).toBe(180);
     expect(nextArenaRotation(270, 'laser')).toBe(0);
+    expect(nextArenaRotation(37.5, 'laser')).toBe(127.5);
   });
   it('piste et scène : demi-tour, emprise alignée sur les murs', () => {
     expect(nextArenaRotation(0, 'fencing')).toBe(180);
     expect(nextArenaRotation(180, 'fencing')).toBe(0);
     expect(nextArenaRotation(90, 'artistic')).toBe(0);
+  });
+  it('souris : libre en laser (aimantation optionnelle), demi-tour pour piste et scène', () => {
+    expect(snapArenaRotation(37.26, 'laser')).toBe(37.3);
+    expect(snapArenaRotation(37, 'laser', 15)).toBe(30);
+    expect(snapArenaRotation(-30, 'laser')).toBe(330);
+    expect(snapArenaRotation(100, 'fencing')).toBe(180);
+    expect(snapArenaRotation(-80, 'artistic', 15)).toBe(0);
   });
   it('valeur invalide ou négative ramenée au pas', () => {
     expect(nextArenaRotation(Number.NaN)).toBe(90);

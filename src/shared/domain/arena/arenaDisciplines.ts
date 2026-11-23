@@ -133,9 +133,28 @@ export function arenaRotationStep(discipline: ArenaDiscipline = 'laser'): number
   return discipline === 'laser' ? 90 : 180;
 }
 
-/** Rotation suivante d'une arène, dans [0, 360), arrondie au pas de la discipline. */
+/**
+ * Angle d'une arène tournée à la souris, dans [0, 360). Sabre Laser : libre, arrondi à
+ * `snapDeg` si donné (aimantation). Piste et scène : arrondi au demi-tour.
+ */
+export function snapArenaRotation(
+  deg: number,
+  discipline: ArenaDiscipline = 'laser',
+  snapDeg?: number
+): number {
+  const raw = Number.isFinite(deg) ? deg : 0;
+  const step = discipline === 'laser' ? snapDeg : arenaRotationStep(discipline);
+  const snapped = step && step > 0 ? Math.round(raw / step) * step : raw;
+  return (Math.round((((snapped % 360) + 360) % 360) * 10) / 10) % 360;
+}
+
+/**
+ * Rotation suivante d'une arène (bouton, touche R), dans [0, 360) : un pas de plus.
+ * Sabre Laser : depuis l'angle libre courant. Piste et scène : arrondie au demi-tour.
+ */
 export function nextArenaRotation(current: number, discipline: ArenaDiscipline = 'laser'): number {
   const step = arenaRotationStep(discipline);
-  const snapped = Math.round((Number.isFinite(current) ? current : 0) / step) * step;
+  const cur = Number.isFinite(current) ? current : 0;
+  const snapped = discipline === 'laser' ? cur : Math.round(cur / step) * step;
   return (((snapped + step) % 360) + 360) % 360;
 }

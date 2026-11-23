@@ -377,6 +377,16 @@
   cursor: grab;
 }
 
+.arena-planner-arena-rotate {
+  cursor: grab;
+  outline: none;
+}
+
+.arena-planner-arena-rotate:focus-visible .arena-planner-handle {
+  stroke: #f59e0b;
+  stroke-width: 0.12;
+}
+
 .arena-planner-handle-stem {
   stroke: #2563eb;
   stroke-width: 0.06;
