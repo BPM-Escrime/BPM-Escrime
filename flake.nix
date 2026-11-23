@@ -64,7 +64,7 @@
           npmDeps = pkgs.fetchNpmDeps {
             name = "bellepoule-npm-deps";
             inherit src;
-            hash = "sha256-HxX9dS6rBCOSJszHFDtrhZw0JTNm2mE7ygdy4loqlA4=";
+            hash = "sha256-druV42ZQUsZuUjma6NEhg2bTho3mktyK30SQ513vTb8=";
           };
 
           # Pas de scripts d'installation : le postinstall d'Electron télécharge un
