@@ -33,13 +33,19 @@ import {
   emitSession,
   isLaser,
   persistTableau,
-  sessionConsolation,
   sessionPoolHistory,
   sessionPools,
-  sessionTableau,
   settleBracket,
+  tableauCompletedEvent,
   writeSession,
 } from './sport';
+import {
+  allTableauxDone,
+  cloneSlot,
+  slotOfFencer,
+  slotPatch,
+  type TableauSlot,
+} from './groupTableaux';
 
 export interface WithdrawFencerInput {
   competitionId: string;
@@ -91,15 +97,24 @@ function fencerOrThrow(ctx: CommandContext, competitionId: string, fencerId: str
   return fencer;
 }
 
-function stateOf(comp: Competition, session: Record<string, unknown>): WithdrawalState {
+/**
+ * État vu par la règle de retrait : poules, et tableau du tireur (tableau unique, ou tableau
+ * de son groupe avec des tableaux séparés, docs/adr/0024)
+ */
+function stateOf(
+  comp: Competition,
+  session: Record<string, unknown>,
+  fencerId: string
+): { state: WithdrawalState; slot: TableauSlot } {
+  const slot = cloneSlot(slotOfFencer(comp, session, fencerId));
   return {
-    pools: sessionPools(session),
-    tableau: sessionTableau(session).map(m => ({ ...m })),
-    consolation: sessionConsolation(session).map(b => ({
-      ...b,
-      matches: b.matches.map(m => ({ ...m })),
-    })),
-    isLaserSabre: isLaser(comp),
+    state: {
+      pools: sessionPools(session),
+      tableau: slot.matches,
+      consolation: slot.brackets,
+      isLaserSabre: isLaser(comp),
+    },
+    slot,
   };
 }
 
@@ -135,6 +150,8 @@ export function applyWithdrawal(
   fencer: Fencer,
   plan: WithdrawalPlan,
   input: { reason: WithdrawalReason; blackCard?: boolean; matchId?: string | null },
+  /** Tableau du tireur (docs/adr/0024) */
+  slot: Pick<TableauSlot, 'group' | 'atRoot'>,
   /** Instantané fourni par l'appelant (recordScore : état d'avant le score) */
   snapshot: WithdrawalMatchSnapshot[] = plan.snapshot
 ): { events: NewJournalEvent[]; done: boolean } {
@@ -163,14 +180,17 @@ export function applyWithdrawal(
     writeSession(ctx, comp.id, { pools: plan.pools, overallRanking });
   } else if (plan.phase === 'tableau' && plan.forfeitedMatchIds.length > 0) {
     const mainChanged = plan.tableau.some(m => plan.forfeitedMatchIds.includes(m.id));
-    const settled = settleBracket(comp, session, plan.tableau, plan.consolation, mainChanged);
+    const settled = settleBracket(comp, session, plan.tableau, plan.consolation, mainChanged, slot);
     done = settled.done;
     persistTableau(ctx, comp, plan.tableau);
-    writeSession(ctx, comp.id, {
+    const patch = slotPatch(session, slot, {
       tableauMatches: plan.tableau,
       consolationBrackets: settled.brackets,
       finalResults: settled.finalResults,
-      ...(done ? { currentPhase: PHASE.results } : {}),
+    });
+    writeSession(ctx, comp.id, {
+      ...patch,
+      ...(allTableauxDone(comp, session, patch, done) ? { currentPhase: PHASE.results } : {}),
     });
     const decided = [...plan.tableau, ...settled.brackets.flatMap(b => b.matches)].find(
       m => m.id === plan.forfeitedMatchIds[0]
@@ -181,7 +201,7 @@ export function applyWithdrawal(
         payload: { matchId: decided.id, winnerId: decided.winner.id },
       });
     }
-    if (done) events.push({ type: EVENT.tableauCompleted, payload: {} });
+    if (done) events.push(tableauCompletedEvent(slot.group));
   }
   return { events, done };
 }
@@ -192,10 +212,7 @@ export function withdrawFencer(ctx: CommandContext, input: WithdrawFencerInput) 
   assertSupportedFormat(comp);
   const fencer = fencerOrThrow(ctx, comp.id, input.fencerId);
   const session = readSession(ctx, comp.id);
-  const state = stateOf(comp, session);
-  if (state.tableau.length > 0 && comp.settings?.postPoolSplitCriteria) {
-    throw new CommandError('unsupported_format', 'Tableaux séparés après les poules : à l’écran');
-  }
+  const { state, slot } = stateOf(comp, session, fencer.id);
   const plan = planWithdrawal(state, {
     fencerId: fencer.id,
     currentStatus: fencer.status,
@@ -214,7 +231,7 @@ export function withdrawFencer(ctx: CommandContext, input: WithdrawFencerInput) 
   };
   if (input.dryRun) return report;
   ctx.db.transaction(() => {
-    const { events } = applyWithdrawal(ctx, comp, session, fencer, plan, input);
+    const { events } = applyWithdrawal(ctx, comp, session, fencer, plan, input, slot);
     recordEvents(ctx, comp.id, events);
   });
   ctx.emitChange?.({ scope: 'fencers', competitionIds: [comp.id] });
@@ -228,7 +245,7 @@ export function reinstateFencer(ctx: CommandContext, input: ReinstateFencerInput
   assertSupportedFormat(comp);
   const fencer = fencerOrThrow(ctx, comp.id, input.fencerId);
   const session = readSession(ctx, comp.id);
-  const state = stateOf(comp, session);
+  const { state, slot } = stateOf(comp, session, fencer.id);
   const stored = ctx.db.getAbandonSnapshot(fencer.id);
   const snapshot =
     stored && stored.competitionId === comp.id
@@ -272,12 +289,14 @@ export function reinstateFencer(ctx: CommandContext, input: ReinstateFencerInput
     ctx.db.deleteAbandonSnapshot(fencer.id);
     const tableauTouched = plan.tableau !== state.tableau || plan.consolation !== state.consolation;
     if (tableauTouched) {
-      const settled = settleBracket(comp, session, plan.tableau, plan.consolation, false);
+      const settled = settleBracket(comp, session, plan.tableau, plan.consolation, false, slot);
       persistTableau(ctx, comp, plan.tableau);
       writeSession(ctx, comp.id, {
-        tableauMatches: plan.tableau,
-        consolationBrackets: settled.brackets,
-        finalResults: settled.finalResults,
+        ...slotPatch(session, slot, {
+          tableauMatches: plan.tableau,
+          consolationBrackets: settled.brackets,
+          finalResults: settled.finalResults,
+        }),
         ...(session.currentPhase === PHASE.results ? { currentPhase: PHASE.tableau } : {}),
       });
     } else if (state.pools.length > 0) {

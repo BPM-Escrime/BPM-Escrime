@@ -226,7 +226,15 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   const rapieresWaves = useRapieresWaves(competition.id, flushPendingSave);
   const clearScore = useScoreClear(competition.id, flushPendingSave);
   const assignMatches = useAssignMatches(competition.id, flushPendingSave);
-  const runCompetitionCommand = useCompetitionCommand(competition.id, flushPendingSave);
+  // Tableaux séparés : le moteur tient un tableau par groupe (docs/adr/0024, lot A1) ; l'écran
+  // garde son tableau local jusqu'au lot A2 (onglets lus dans la projection)
+  const splitLocal = !!competition.settings?.postPoolSplitCriteria;
+  const engineCompetitionCommand = useCompetitionCommand(competition.id, flushPendingSave);
+  const runCompetitionCommand: typeof engineCompetitionCommand = useCallback(
+    async (name, input) =>
+      splitLocal && name === 'clearTableau' ? 'local' : engineCompetitionCommand(name, input),
+    [engineCompetitionCommand, splitLocal]
+  );
   const localUpdateScore = ctx.updateScore;
   const updateScore = useCallback(
     (...args: Parameters<typeof localUpdateScore>): Promise<RecordScoreOutcome> => {
@@ -342,13 +350,15 @@ export function useCompetitionSessionSync(ctx: Ctx) {
 
   // Tableau écrit par le moteur ; rapières : mode de tableau joint (journal, #1441)
   const generateTableau = useCallback(
-    (matches: TableauMatch[], thirdPlaceMatch: boolean) =>
-      generateTableauCommand(
-        matches,
-        thirdPlaceMatch,
-        isRapieres ? rapieres.tableauMode : undefined
-      ),
-    [generateTableauCommand, isRapieres, rapieres.tableauMode]
+    (matches: TableauMatch[], thirdPlaceMatch: boolean): Promise<RecordScoreOutcome> =>
+      splitLocal
+        ? Promise.resolve('local')
+        : generateTableauCommand(
+            matches,
+            thirdPlaceMatch,
+            isRapieres ? rapieres.tableauMode : undefined
+          ),
+    [generateTableauCommand, isRapieres, rapieres.tableauMode, splitLocal]
   );
 
   // ─── Retrait et réintégration d'un tireur (docs/adr/0016) ─────────────────

@@ -8,16 +8,18 @@
  */
 import { FencerStatus, type Pool, type PoolRanking } from '../../../shared/types';
 import { generateInitialRanking } from '../../../shared/utils/poolCalculations';
+import { allTableauMatches } from '../../../shared/domain/ranking/splitGroups';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { EVENT, recordEvents } from './eventLog';
 import { readSession } from './sessionView';
+import { slotOfGroup, slotPatch } from './groupTableaux';
 import {
   PHASE,
   assertScoreSupported,
+  assertTableauGroup,
   emitSession,
   sessionPools,
-  sessionTableau,
   writeSession,
 } from './sport';
 
@@ -88,7 +90,7 @@ export function skipPools(
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
   assertScoreSupported(comp);
   const session = readSession(ctx, comp.id);
-  if (sessionTableau(session).length > 0) {
+  if (allTableauMatches(session).length > 0) {
     throw new CommandError('bracket_exists', 'Tableau déjà tiré');
   }
   const all = ctx.db.getFencersByCompetition(comp.id);
@@ -124,20 +126,29 @@ export function skipPools(
   return report;
 }
 
-/** Tableau retiré : refait sur le classement courant à l'ouverture de l'onglet Tableau */
+/**
+ * Tableau retiré : refait sur le classement courant à l'ouverture de l'onglet Tableau.
+ * Tableaux séparés : tableau du groupe « group » seul (docs/adr/0024).
+ */
 export function clearTableau(
   ctx: CommandContext,
-  input: { competitionId: string; dryRun?: boolean }
+  input: { competitionId: string; group?: string; dryRun?: boolean }
 ) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
   assertScoreSupported(comp);
   const session = readSession(ctx, comp.id);
-  const had = sessionTableau(session).length;
+  const group = assertTableauGroup(comp, session, input.group);
+  const slot = slotOfGroup(comp, session, group);
+  const had = slot.matches.length;
   const report = { dryRun: !!input.dryRun, cleared: had };
   if (input.dryRun || had === 0) return report;
   ctx.db.transaction(() => {
-    writeSession(ctx, comp.id, { tableauMatches: [], consolationBrackets: [], finalResults: [] });
-    recordEvents(ctx, comp.id, [{ type: EVENT.tableauCleared, payload: {} }]);
+    writeSession(
+      ctx,
+      comp.id,
+      slotPatch(session, slot, { tableauMatches: [], consolationBrackets: [], finalResults: [] })
+    );
+    recordEvents(ctx, comp.id, [{ type: EVENT.tableauCleared, payload: group ? { group } : {} }]);
   });
   emitSession(ctx, comp.id);
   return report;

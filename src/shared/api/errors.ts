@@ -39,6 +39,7 @@ export const ERRORS = {
   referee_not_found: e('not_found', 'Arbitre introuvable'),
   pool_not_found: e('not_found', 'Poule introuvable'),
   match_not_found: e('not_found', 'Match introuvable'),
+  split_group_not_found: e('not_found', 'Groupe de tableaux séparés inconnu ou extrait'),
   withdrawal_not_found: e('not_found', 'Aucun retrait à annuler pour ce tireur'),
   dir_not_found: e('not_found', 'Dossier introuvable'),
   venue_not_found: e('not_found', 'Salle introuvable'),

@@ -27,10 +27,10 @@ import {
   calculatePoolRanking,
   calculatePoolRankingQuest,
   getPoolWinnerIds,
-  splitRankingByGender,
   isDnf,
   isDnsRanking,
 } from '../../shared/utils/poolCalculations';
+import { splitRankingByGender } from '../../shared/domain/ranking/splitGroups';
 import { useToast } from './Toast';
 import { CardIcon } from './common/CardIcon';
 import { Icon } from './common/Icon';

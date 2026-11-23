@@ -15,7 +15,7 @@ import SplitCompetitionModal from './SplitCompetitionModal';
 import {
   defaultSplitCompetitionTitle,
   extractSplitGroupRanking,
-} from '../../shared/utils/splitCompetition';
+} from '../../shared/domain/ranking/splitGroups';
 import ImportModal from './ImportModal';
 import PoolPrepView from './PoolPrepView';
 import { TEAM_PHASE_VIEWS, isTeamPhase } from './competition/teamPhases';

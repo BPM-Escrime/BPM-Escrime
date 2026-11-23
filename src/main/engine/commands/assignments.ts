@@ -8,18 +8,13 @@
  * Licensed under GPL-3.0
  */
 import type { Pool, Referee } from '../../../shared/types';
-import type { ConsolationBracket, TableauMatch } from '../../../shared/domain/tableau/tableauTypes';
+import type { TableauMatch } from '../../../shared/domain/tableau/tableauTypes';
 import { propagatePoolReferee } from '../../../shared/utils/refereeStats';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { readSession } from './sessionView';
-import {
-  emitSession,
-  sessionConsolation,
-  sessionPools,
-  sessionTableau,
-  writeSession,
-} from './sport';
+import { emitSession, sessionPools, writeSession } from './sport';
+import { cloneSlot, slotPatch, tableauSlots, type TableauSlot } from './groupTableaux';
 
 export interface PoolAssignment {
   poolId: string;
@@ -58,11 +53,11 @@ export function assignMatches(ctx: CommandContext, input: AssignMatchesInput) {
   };
 
   let pools: Pool[] = sessionPools(session);
-  let tableau: TableauMatch[] = sessionTableau(session);
-  let brackets: ConsolationBracket[] = sessionConsolation(session);
+  // Tableau unique ou tableaux des groupes (docs/adr/0024) : chacun réécrit s'il est touché
+  const slots = tableauSlots(comp, session).map(cloneSlot);
+  const touched = new Set<TableauSlot>();
   const poolWrites = new Set<string>();
   const matchWrites: Array<{ dbId: string; refereeId: string | null }> = [];
-  let tableauTouched = false;
 
   for (const a of input.pools ?? []) {
     const pool = pools.find(p => p.id === a.poolId);
@@ -118,19 +113,22 @@ export function assignMatches(ctx: CommandContext, input: AssignMatchesInput) {
       }
       continue;
     }
-    if (tableau.some(m => m.id === a.matchId)) {
-      tableau = tableau.map(m => (m.id === a.matchId ? applyToTableau(m, a) : m));
-      tableauTouched = true;
-      continue;
-    }
-    const bracket = brackets.find(b => b.matches.some(m => m.id === a.matchId));
-    if (!bracket) throw new CommandError('match_not_found', `Match introuvable : ${a.matchId}`);
-    brackets = brackets.map(b =>
-      b.id === bracket.id
-        ? { ...b, matches: b.matches.map(m => (m.id === a.matchId ? applyToTableau(m, a) : m)) }
-        : b
+    const slot = slots.find(
+      s =>
+        s.matches.some(m => m.id === a.matchId) ||
+        s.brackets.some(b => b.matches.some(m => m.id === a.matchId))
     );
-    tableauTouched = true;
+    if (!slot) throw new CommandError('match_not_found', `Match introuvable : ${a.matchId}`);
+    if (slot.matches.some(m => m.id === a.matchId)) {
+      slot.matches = slot.matches.map(m => (m.id === a.matchId ? applyToTableau(m, a) : m));
+    } else {
+      slot.brackets = slot.brackets.map(b =>
+        b.matches.some(m => m.id === a.matchId)
+          ? { ...b, matches: b.matches.map(m => (m.id === a.matchId ? applyToTableau(m, a) : m)) }
+          : b
+      );
+    }
+    touched.add(slot);
   }
 
   const report = {
@@ -149,10 +147,18 @@ export function assignMatches(ctx: CommandContext, input: AssignMatchesInput) {
         /* non bloquant */
       }
     }
-    writeSession(ctx, comp.id, {
-      pools,
-      ...(tableauTouched ? { tableauMatches: tableau, consolationBrackets: brackets } : {}),
-    });
+    let patch: Record<string, unknown> = { pools };
+    for (const slot of touched) {
+      const view = { ...session, ...patch };
+      patch = {
+        ...patch,
+        ...slotPatch(view, slot, {
+          tableauMatches: slot.matches,
+          consolationBrackets: slot.brackets,
+        }),
+      };
+    }
+    writeSession(ctx, comp.id, patch);
   });
   emitSession(ctx, comp.id);
   return report;

@@ -15,7 +15,9 @@ import {
   isBracketComplete,
   resetTableauMatch,
 } from '../../../shared/domain/tableau/tableauTypes';
+import { allTableauMatches } from '../../../shared/domain/ranking/splitGroups';
 import { CommandError, type CommandContext } from './context';
+import { slotOfMatch, slotPatch } from './groupTableaux';
 import { getCompetitionOrThrow } from './competitions';
 import { EVENT, recordEvents } from './eventLog';
 import { readSession } from './sessionView';
@@ -25,10 +27,8 @@ import {
   emitSession,
   isLaser,
   persistTableau,
-  sessionConsolation,
   sessionPoolHistory,
   sessionPools,
-  sessionTableau,
   settleBracket,
   writeSession,
 } from './sport';
@@ -41,11 +41,10 @@ export function clearScore(
   assertScoreSupported(comp);
   const session = readSession(ctx, comp.id);
   const pools = sessionPools(session);
-  const tableau = sessionTableau(session);
   const poolIndex = pools.findIndex(p => p.matches.some(m => m.id === input.matchId));
 
   if (poolIndex >= 0) {
-    if (tableau.length > 0) {
+    if (allTableauMatches(session).length > 0) {
       throw new CommandError('bracket_exists', 'Tableau déjà tiré : poules figées');
     }
     const report = { dryRun: !!input.dryRun, kind: 'pool' as const, matchId: input.matchId };
@@ -100,12 +99,13 @@ export function clearScore(
     return report;
   }
 
-  const brackets = sessionConsolation(session);
+  // Tableau qui contient le match : unique, ou celui de son groupe (docs/adr/0024)
+  const slot = slotOfMatch(comp, session, input.matchId);
+  if (!slot) throw new CommandError('match_not_found', `Match introuvable : ${input.matchId}`);
+  const tableau = slot.matches;
+  const brackets = slot.brackets;
   const inMain = tableau.some(m => m.id === input.matchId);
   const bracket = brackets.find(b => b.matches.some(m => m.id === input.matchId));
-  if (!inMain && !bracket) {
-    throw new CommandError('match_not_found', `Match introuvable : ${input.matchId}`);
-  }
   const list = inMain ? tableau : bracket!.matches;
   const target = list.find(m => m.id === input.matchId)!;
   // « Toutes les places » : perdants déjà versés dans un tableau de classement → à l'écran
@@ -131,13 +131,15 @@ export function clearScore(
         b.id === bracket.id ? { ...b, matches: reset, isComplete: isBracketComplete(reset) } : b
       )
     : brackets;
-  const settled = settleBracket(comp, session, matches, nextBrackets, false);
+  const settled = settleBracket(comp, session, matches, nextBrackets, false, slot);
   ctx.db.transaction(() => {
     persistTableau(ctx, comp, matches);
     writeSession(ctx, comp.id, {
-      tableauMatches: matches,
-      consolationBrackets: settled.brackets,
-      finalResults: settled.finalResults,
+      ...slotPatch(session, slot, {
+        tableauMatches: matches,
+        consolationBrackets: settled.brackets,
+        finalResults: settled.finalResults,
+      }),
       ...(session.currentPhase === PHASE.results ? { currentPhase: PHASE.tableau } : {}),
     });
     recordEvents(ctx, comp.id, [{ type: EVENT.scoreCleared, payload: { matchId: input.matchId } }]);

@@ -4,6 +4,7 @@
  * Licensed under GPL-3.0
  */
 import type { RemoteSession } from '../../shared/types/remote';
+import { allConsolationBrackets, allTableauMatches } from '../../shared/domain/ranking/splitGroups';
 
 export interface ResolvedReferee {
   id: string;
@@ -100,11 +101,11 @@ export function resolveTableauMatchReferees(
   if (!matchId || !session) return null;
   try {
     const state = ctx.getSessionState(session.competitionId) as SessionStateLike | null;
+    // Tableau unique ou tableaux des groupes (docs/adr/0024)
+    const raw = (state ?? {}) as Record<string, unknown>;
     const all = [
-      ...asList<StateEntry>(state?.tableauMatches),
-      ...asList<StateEntry>(state?.consolationBrackets).flatMap(b =>
-        asList<StateEntry>(b?.matches)
-      ),
+      ...(allTableauMatches(raw) as unknown as StateEntry[]),
+      ...allConsolationBrackets(raw).flatMap(b => b.matches as unknown as StateEntry[]),
     ];
     const refs = refsOf(all.find(x => x?.id === matchId));
     return refs.length < 2 ? null : joinReferees(ctx, refs);

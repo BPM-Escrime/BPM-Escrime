@@ -11,6 +11,7 @@ import { applyTableauAdvancement, getTableauAdvancement } from '../../utils/cust
 import type { getActiveFormula } from '../../utils/customFormulaSettings';
 import { rapieresTableauQualifiers, type RapieresTableauMode } from '../rapieres/tableauQualifiers';
 import type { TableauMatch } from '../tableau/tableauTypes';
+import { filterSplitGroup } from './splitGroups';
 
 export interface MatchProgress {
   done: number;
@@ -73,15 +74,6 @@ export function computeEffectiveTableauRanking(
     // Qualifiés pour le tableau selon la formule (pourcentage, nombre, taille de tableau)
     ranking = applyTableauAdvancement(ranking, getTableauAdvancement(customFormula));
   }
-  if (postPoolSplitCriteria === 'gender' && activeSplitGroup) {
-    ranking = ranking
-      .filter(r => (r.fencer.gender as string) === activeSplitGroup)
-      .map((r, i) => ({ ...r, rank: i + 1 }));
-  } else if (postPoolSplitCriteria === 'gender' && splitOffCompetitionIds) {
-    // Groupes extraits dans une compétition séparée : exclus du tableau de cette compétition
-    ranking = ranking
-      .filter(r => !splitOffCompetitionIds[r.fencer.gender as string])
-      .map((r, i) => ({ ...r, rank: i + 1 }));
-  }
-  return ranking;
+  // Tableaux séparés : groupe affiché, ou groupes extraits écartés (docs/adr/0024)
+  return filterSplitGroup(ranking, postPoolSplitCriteria, activeSplitGroup, splitOffCompetitionIds);
 }

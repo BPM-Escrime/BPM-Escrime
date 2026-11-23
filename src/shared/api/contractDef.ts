@@ -77,6 +77,16 @@ export type ApiContract = Record<string, OperationDef>;
 
 export const Id = z.string().trim().min(1).max(200);
 export const CompetitionId = Id.describe('Identifiant de la compétition (list_competitions)');
+/** Tableaux séparés après les poules (docs/adr/0024) : groupe d'un tableau */
+export const SplitGroup = z
+  .string()
+  .trim()
+  .min(1)
+  .max(20)
+  .optional()
+  .describe(
+    'Tableaux séparés après les poules : groupe du tableau (« F », « M »), exigé pour ce format'
+  );
 export const DryRun = z.boolean().optional().describe('Décrit le résultat sans rien écrire');
 export const CommandId = z
   .string()

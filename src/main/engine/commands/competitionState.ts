@@ -6,6 +6,8 @@
  */
 import type { CompetitionStateDTO } from '../../../shared/api/contract';
 
+import { sessionGroupTableaux } from '../../../shared/domain/ranking/splitGroups';
+
 const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
 /** État d'une épreuve à partir du bloc de session ; null si l'épreuve n'a jamais été ouverte */
@@ -34,5 +36,9 @@ export function competitionState(session: Record<string, unknown>): CompetitionS
       : {}),
     ...(session.rapieres ? { rapieres: session.rapieres as CompetitionStateDTO['rapieres'] } : {}),
     ...(prep ? { poolPrepParams: prep } : {}),
+    // Tableaux séparés après les poules (docs/adr/0024) : lus par l'écran au lot A2
+    ...(session.groupTableaux && Object.keys(sessionGroupTableaux(session)).length > 0
+      ? { groupTableaux: sessionGroupTableaux(session) }
+      : {}),
   };
 }

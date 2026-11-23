@@ -10,6 +10,8 @@
 import { z } from 'zod';
 
 const Id = z.string();
+/** Groupe d'un tableau séparé après les poules (aujourd'hui le sexe : « F », « M ») */
+const Group = z.string();
 const SpecialStatus = z.enum(['abandon', 'forfait', 'exclusion']);
 
 /** Types d'événements écrits par le moteur */
@@ -60,7 +62,8 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
   ),
   member(JOURNAL_EVENT.poolCompleted, z.object({ poolId: Id })),
   member(JOURNAL_EVENT.tableauMatchDecided, z.object({ matchId: Id, winnerId: Id })),
-  member(JOURNAL_EVENT.tableauCompleted, z.object({})),
+  // Tableaux séparés après les poules (docs/adr/0024) : group absent = tableau unique
+  member(JOURNAL_EVENT.tableauCompleted, z.object({ group: Group.optional() })),
   // Retrait et réintégration d'un tireur (docs/adr/0016)
   member(
     JOURNAL_EVENT.fencerWithdrawn,
@@ -115,6 +118,8 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
   member(
     JOURNAL_EVENT.tableauGenerated,
     z.object({
+      /** Tableaux séparés : groupe du tableau (docs/adr/0024) ; absent = tableau unique */
+      group: Group.optional(),
       size: z.number().int(),
       thirdPlaceMatch: z.boolean(),
       playAllPositions: z.boolean(),
@@ -152,7 +157,7 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
     })
   ),
   member(JOURNAL_EVENT.poolsSkipped, z.object({ fencerIds: z.array(Id) })),
-  member(JOURNAL_EVENT.tableauCleared, z.object({})),
+  member(JOURNAL_EVENT.tableauCleared, z.object({ group: Group.optional() })),
   // Composition des équipes des rapières : identifiants seulement (RGPD), non rejouable
   member(JOURNAL_EVENT.rapieresTeamsUpdated, z.object({ fencerIds: z.array(Id) })),
   member(

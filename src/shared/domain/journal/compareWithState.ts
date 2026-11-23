@@ -6,7 +6,8 @@
  */
 import { MatchStatus, type Match, type Pool } from '../../types';
 import type { ConsolationBracket, TableauMatch } from '../tableau/tableauTypes';
-import type { CompetitionFacts, MatchFact, PoolFact } from './projectCompetition';
+import type { CompetitionFacts, MatchFact, PoolFact, TableauFact } from './projectCompetition';
+import { sessionGroupTableaux } from '../ranking/splitGroups';
 
 export type DivergenceKind =
   | 'fencer_status'
@@ -39,6 +40,11 @@ export interface CompetitionStateView {
   skipPoolPhase?: boolean;
   tableauMatches: TableauMatch[];
   consolationBrackets: ConsolationBracket[];
+  /** Tableaux séparés après les poules : tableau de chaque groupe (docs/adr/0024) */
+  groupTableaux?: Record<
+    string,
+    { tableauMatches: TableauMatch[]; consolationBrackets: ConsolationBracket[] }
+  >;
   rapieres?: { launchedWave?: number; wavesEnded?: boolean };
 }
 
@@ -154,42 +160,28 @@ export function compareWithState(
     out.push({ kind: 'pools_skipped', id: 'pools', expected: true, actual: false });
   }
 
-  const brackets = state.consolationBrackets.flatMap(b => b.matches);
-  const allBracket = [...state.tableauMatches, ...brackets];
-  if (!facts.tableau) {
-    if (facts.complete && state.tableauMatches.length > 0) {
-      out.push({ kind: 'tableau_unexpected', id: 'tableau', actual: state.tableauMatches.length });
-    }
-  } else if (state.tableauMatches.length === 0) {
-    out.push({ kind: 'tableau_missing', id: 'tableau', expected: facts.tableau.size });
-  } else {
-    for (const slot of facts.tableau.slots) {
-      const m = state.tableauMatches.find(x => x.id === slot.matchId);
-      const gap =
-        !m ||
-        m.round !== slot.round ||
-        m.position !== slot.position ||
-        !!m.isBye !== slot.isBye ||
-        (slot.fencerAId !== null && m.fencerA?.id !== slot.fencerAId) ||
-        (slot.fencerBId !== null && m.fencerB?.id !== slot.fencerBId);
-      if (gap) {
-        out.push({
-          kind: 'tableau_slot',
-          id: slot.matchId,
-          expected: slot,
-          actual: m
-            ? {
-                round: m.round,
-                position: m.position,
-                isBye: !!m.isBye,
-                fencerAId: m.fencerA?.id ?? null,
-                fencerBId: m.fencerB?.id ?? null,
-              }
-            : null,
-        });
-      }
-    }
+  // Tableau unique, puis tableau de chaque groupe (docs/adr/0024)
+  const groups = state.groupTableaux ?? {};
+  compareTableau(facts.tableau, state.tableauMatches, 'tableau', facts.complete, out);
+  for (const group of new Set([...Object.keys(facts.groupTableaux), ...Object.keys(groups)])) {
+    compareTableau(
+      facts.groupTableaux[group] ?? null,
+      groups[group]?.tableauMatches ?? [],
+      group,
+      facts.complete,
+      out
+    );
   }
+  const matchesOf = (t: {
+    tableauMatches: TableauMatch[];
+    consolationBrackets: ConsolationBracket[];
+  }) => [...t.tableauMatches, ...t.consolationBrackets.flatMap(b => b.matches)];
+  // Matchs des tableaux que le journal connaît (tirage journalisé)
+  const known = [
+    ...(facts.tableau ? matchesOf(state) : []),
+    ...Object.keys(facts.groupTableaux).flatMap(g => (groups[g] ? matchesOf(groups[g]) : [])),
+  ];
+  const allBracket = [matchesOf(state), ...Object.values(groups).map(matchesOf)].flat();
 
   for (const [matchId, fact] of Object.entries(facts.bracketResults)) {
     const m = allBracket.find(x => x.id === matchId);
@@ -202,12 +194,11 @@ export function compareWithState(
       });
     }
   }
-  // Décision de l'état absente du journal (exemptions mises à part : elles se déduisent)
-  if (facts.tableau) {
-    for (const m of allBracket) {
-      if (m.winner && !m.isBye && m.fencerA && m.fencerB && !(m.id in facts.bracketResults)) {
-        out.push({ kind: 'bracket_result_unknown', id: m.id, actual: m.winner.id });
-      }
+  // Décision de l'état absente du journal (exemptions mises à part : elles se déduisent),
+  // dans les tableaux que le journal connaît
+  for (const m of known) {
+    if (m.winner && !m.isBye && m.fencerA && m.fencerB && !(m.id in facts.bracketResults)) {
+      out.push({ kind: 'bracket_result_unknown', id: m.id, actual: m.winner.id });
     }
   }
 
@@ -223,6 +214,52 @@ export function compareWithState(
   return out;
 }
 
+/** Placement du tableau (unique ou d'un groupe) comparé au tirage du journal */
+function compareTableau(
+  fact: TableauFact | null,
+  matches: TableauMatch[],
+  id: string,
+  complete: boolean,
+  out: Divergence[]
+): void {
+  if (!fact) {
+    if (complete && matches.length > 0) {
+      out.push({ kind: 'tableau_unexpected', id, actual: matches.length });
+    }
+    return;
+  }
+  if (matches.length === 0) {
+    out.push({ kind: 'tableau_missing', id, expected: fact.size });
+    return;
+  }
+  for (const slot of fact.slots) {
+    const m = matches.find(x => x.id === slot.matchId);
+    const gap =
+      !m ||
+      m.round !== slot.round ||
+      m.position !== slot.position ||
+      !!m.isBye !== slot.isBye ||
+      (slot.fencerAId !== null && m.fencerA?.id !== slot.fencerAId) ||
+      (slot.fencerBId !== null && m.fencerB?.id !== slot.fencerBId);
+    if (gap) {
+      out.push({
+        kind: 'tableau_slot',
+        id: slot.matchId,
+        expected: slot,
+        actual: m
+          ? {
+              round: m.round,
+              position: m.position,
+              isBye: !!m.isBye,
+              fencerAId: m.fencerA?.id ?? null,
+              fencerBId: m.fencerB?.id ?? null,
+            }
+          : null,
+      });
+    }
+  }
+}
+
 /** Vue de comparaison lue dans l'état de session du moteur */
 export function stateView(session: Record<string, unknown>): CompetitionStateView {
   const list = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
@@ -233,6 +270,7 @@ export function stateView(session: Record<string, unknown>): CompetitionStateVie
     skipPoolPhase: session.skipPoolPhase === true,
     tableauMatches: list<TableauMatch>(session.tableauMatches),
     consolationBrackets: list<ConsolationBracket>(session.consolationBrackets),
+    groupTableaux: sessionGroupTableaux(session),
     rapieres: session.rapieres as CompetitionStateView['rapieres'],
   };
 }

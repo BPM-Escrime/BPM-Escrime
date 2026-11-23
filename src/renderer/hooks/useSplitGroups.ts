@@ -14,7 +14,7 @@ import {
   extractSplitGroupRanking,
   remapRankingFencers,
   toSplitFencerData,
-} from '../../shared/utils/splitCompetition';
+} from '../../shared/domain/ranking/splitGroups';
 import type {
   ConsolationBracket,
   FinalResult,
@@ -127,7 +127,12 @@ export function useSplitGroups({
       const db = window.electronAPI.db;
       const groupRanking = extractSplitGroupRanking(overallRanking, group);
       const created = await db.createCompetition(
-        buildSplitCompetitionData(competition, title, group) as unknown as CompetitionCreateData
+        buildSplitCompetitionData(
+          competition,
+          title,
+          group,
+          new Date()
+        ) as unknown as CompetitionCreateData
       );
       const newFencerByOldId = new Map<string, Fencer>();
       for (const r of groupRanking) {

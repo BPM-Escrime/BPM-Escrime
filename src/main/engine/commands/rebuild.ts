@@ -38,15 +38,20 @@ import type { CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { readSession } from './sessionView';
 import {
+  allTableauxDone,
+  cloneSlot,
+  slotPatch,
+  tableauSlots,
+  type TableauSlot,
+} from './groupTableaux';
+import {
   PHASE,
   assertScoreSupported,
   emitSession,
   isLaser,
   persistTableau,
-  sessionConsolation,
   sessionPoolHistory,
   sessionPools,
-  sessionTableau,
   settleBracket,
   writeSession,
 } from './sport';
@@ -201,12 +206,22 @@ export function rebuildCompetitionState(
         isLaser(comp)
       );
     }
-    if (plan.tableau) {
-      persistTableau(ctx, comp, plan.tableau.matches);
-      patch.tableauMatches = plan.tableau.matches;
-      patch.consolationBrackets = plan.tableau.brackets;
-      patch.finalResults = plan.tableau.finalResults;
-      if (plan.tableau.done) patch.currentPhase = PHASE.results;
+    // Tableaux réparés : unique, ou ceux des groupes (docs/adr/0024)
+    let done = false;
+    for (const t of plan.tableaux) {
+      persistTableau(ctx, comp, t.slot.matches);
+      Object.assign(
+        patch,
+        slotPatch({ ...session, ...patch }, t.slot, {
+          tableauMatches: t.slot.matches,
+          consolationBrackets: t.brackets,
+          finalResults: t.finalResults,
+        })
+      );
+      done = allTableauxDone(comp, session, patch, t.done);
+    }
+    if (plan.tableaux.length > 0) {
+      if (done) patch.currentPhase = PHASE.results;
       else if (session.currentPhase === PHASE.results) patch.currentPhase = PHASE.tableau;
     }
     if (plan.rapieres) {
@@ -233,13 +248,9 @@ function planRepair(
     (current?.pools ?? []).flatMap(p => p.matches.map(m => [m.matchId, m.result] as const))
   );
   let pools: PoolRepair | null = null;
-  const main = sessionTableau(session).map(m => ({ ...m }));
-  const brackets = sessionConsolation(session).map(b => ({
-    ...b,
-    matches: b.matches.map(m => ({ ...m })),
-  }));
-  let mainChanged = false;
-  let bracketChanged = false;
+  const slots = tableauSlots(comp, session).map(cloneSlot);
+  const mainChanged = new Set<TableauSlot>();
+  const bracketChanged = new Set<TableauSlot>();
   let rapieres: { launchedWave: number; wavesEnded: boolean } | null = null;
 
   for (const d of divergences) {
@@ -255,9 +266,20 @@ function planRepair(
         break;
       }
       case 'bracket_result': {
-        const where = repairBracketMatch(main, brackets, d.id, facts.bracketResults[d.id]);
-        if (where === 'main') mainChanged = true;
-        if (where === 'consolation') bracketChanged = true;
+        const slot = slots.find(
+          s =>
+            s.matches.some(m => m.id === d.id) ||
+            s.brackets.some(b => b.matches.some(m => m.id === d.id))
+        );
+        if (!slot) break;
+        const where = repairBracketMatch(
+          slot.matches,
+          slot.brackets,
+          d.id,
+          facts.bracketResults[d.id]
+        );
+        if (where === 'main') mainChanged.add(slot);
+        if (where === 'consolation') bracketChanged.add(slot);
         if (where) repaired.push(d);
         break;
       }
@@ -271,12 +293,11 @@ function planRepair(
         break;
     }
   }
-  const tableau =
-    mainChanged || bracketChanged
-      ? {
-          matches: main,
-          ...settleBracket(comp, session, main, brackets, mainChanged),
-        }
-      : null;
-  return { repaired, statuses, pools, tableau, rapieres };
+  const tableaux = slots
+    .filter(s => mainChanged.has(s) || bracketChanged.has(s))
+    .map(slot => ({
+      slot,
+      ...settleBracket(comp, session, slot.matches, slot.brackets, mainChanged.has(slot), slot),
+    }));
+  return { repaired, statuses, pools, tableaux, rapieres };
 }
