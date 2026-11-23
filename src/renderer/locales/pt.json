@@ -4665,5 +4665,11 @@
     "exported": "Documento exportado",
     "preview_hint": "Pré-visualização A4: clique numa secção para a editar",
     "content_note": "O conteúdo pré-preenchido está redigido em francês (regulamentos FFE). O rascunho é guardado automaticamente neste computador."
+  },
+  "placeSearch": {
+    "loading": "A pesquisar…",
+    "empty": "Nenhum local encontrado",
+    "offline": "Pesquisa indisponível (sem ligação)",
+    "credit": "Dados © OpenStreetMap, IGN"
   }
 }

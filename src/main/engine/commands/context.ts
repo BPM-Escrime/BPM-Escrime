@@ -16,6 +16,7 @@ import type {
 import type { DayStripBoard } from '../../../shared/types/eventDay';
 import type { McpLogEntry, McpStatus } from '../../../shared/types/mcp';
 import type { BackupDirDTO } from '../../../shared/types/systemSettings';
+import type { PlaceSuggestion } from '../../../shared/domain/places/placeSearch';
 import type { PrivacySettings } from '../../../shared/types/privacy';
 import type { CustomTheme, FirewallDiagnosis } from '../../../shared/types/remote';
 import type { RemoteServerInfo, TtsConfig } from '../../../shared/types/preload';
@@ -289,6 +290,16 @@ export interface StationPort {
     info(): BackupDirDTO;
     /** Revient au dossier par défaut */
     reset(): BackupDirDTO;
+  };
+  /**
+   * Recherche de lieu sur Internet (Photon, Géoplateforme ; docs/adr/0026). Absent : tests,
+   * poste sans réseau sortant ; la requête répond alors « indisponible ».
+   */
+  places?: {
+    search(
+      query: string,
+      language: string
+    ): Promise<{ suggestions: PlaceSuggestion[]; unavailable: boolean }>;
   };
   /** Pistes de la journée en temps réel (serveurs distants des épreuves) */
   dayStrips: {

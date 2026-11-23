@@ -3,7 +3,7 @@
  * Branche sur le CommandContext ce que les opérations du poste ne peuvent pas faire seules :
  * thèmes d'écrans (<userData>/themes.json), réglages RGPD (<userData>/privacy-settings.json),
  * serveur MCP, pistes de la journée en temps réel (serveurs distants des épreuves), dossiers
- * par défaut de l'agent. Remplace les canaux `settings:*`, `themes:*`, `eventDay:*`,
+ * par défaut de l'agent, recherche de lieu (docs/adr/0026). Remplace les canaux `settings:*`, `themes:*`, `eventDay:*`,
  * `privacy:*` et `mcp:*` migrés.
  * Licensed under GPL-3.0
  */
@@ -19,6 +19,7 @@ import { setNameMasking } from './remote/publicDto';
 import { createDayStripService, type DayStripServiceContext } from './remote/dayStripService';
 import type { createMcpController } from './mcp/mcpController';
 import { resolveBackupDir, writeBackupSettings } from './backupSettings';
+import { createPlaceSearch } from './placeSearch';
 
 export interface StationPortOptions {
   db: DatabaseManager;
@@ -67,6 +68,7 @@ export function createStationPort(opts: StationPortOptions): StationServices {
         return resolveBackupDir(opts.userDataDir(), opts.documentsDir());
       },
     },
+    places: { search: createPlaceSearch() },
     dayStrips,
   };
   return { port, stop: () => dayStrips.dispose() };
