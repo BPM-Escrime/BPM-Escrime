@@ -8,7 +8,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { DatabaseManager } from '../database';
 import { getL } from './menuLabels';
-import { authorizePath } from './pathAuthorization';
 import { readImportText } from './xlsxToCsv';
 import { isEncryptedBpm } from './bpmCrypto';
 
