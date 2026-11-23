@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This comprehensive guide covers common issues, error messages, and their solutions for BPM - Escrime users.
+This comprehensive guide covers common issues, error messages, and their solutions for BPM - Escrime (Base de Poules et Management) users.
 
 ## 📋 Table of Contents
 

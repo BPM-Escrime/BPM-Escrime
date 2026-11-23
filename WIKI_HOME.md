@@ -1,4 +1,4 @@
-# BPM - Escrime - Wiki Home
+# BPM - Escrime (Base de Poules et Management) - Wiki Home
 
 Welcome to BPM - Escrime comprehensive documentation hub. BPM - Escrime is a modern fencing tournament management software rewritten from original software using cutting-edge web technologies.
 

@@ -1,6 +1,6 @@
 # Development Guide
 
-This comprehensive guide is for contributors who want to develop, extend, or maintain BPM - Escrime.
+This comprehensive guide is for contributors who want to develop, extend, or maintain BPM - Escrime (Base de Poules et Management).
 
 ## 📋 Table of Contents
 

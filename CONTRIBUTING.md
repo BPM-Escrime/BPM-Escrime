@@ -1,4 +1,4 @@
-# Contribuer à BPM - Escrime
+# Contribuer à BPM - Escrime (Base de Poules et Management)
 
 Merci de votre intérêt pour le projet !
 

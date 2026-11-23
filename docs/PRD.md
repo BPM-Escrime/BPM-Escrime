@@ -1,5 +1,5 @@
 # 📋 Product Requirements Document (PRD)
-# BPM - Escrime
+# BPM - Escrime (Base de Poules et Management)
 
 **Version** : 1.2  
 **Date** : 21 février 2026  

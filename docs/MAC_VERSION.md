@@ -1,6 +1,6 @@
 # macOS : choisir la bonne version (Apple Silicon ou Intel)
 
-BPM - Escrime est publié en **deux versions macOS**. Il faut prendre celle qui correspond au processeur du Mac.
+BPM - Escrime (Base de Poules et Management) est publié en **deux versions macOS**. Il faut prendre celle qui correspond au processeur du Mac.
 
 | Votre Mac | Fichier à télécharger |
 |---|---|

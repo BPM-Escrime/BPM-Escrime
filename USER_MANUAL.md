@@ -1,6 +1,6 @@
 # User Manual
 
-This comprehensive guide covers all features of BPM - Escrime for tournament organizers, referees, and competition managers.
+This comprehensive guide covers all features of BPM - Escrime (Base de Poules et Management) for tournament organizers, referees, and competition managers.
 
 ## 📖 Table of Contents
 

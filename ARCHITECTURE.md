@@ -1,4 +1,4 @@
-# BPM - Escrime — Architecture
+# BPM - Escrime (Base de Poules et Management) — Architecture
 
 > Version **1.0.3**, build **#1365** (octobre 2026).
 > Dépendances et versions : [docs/STACK_TECHNIQUE.md](docs/STACK_TECHNIQUE.md).

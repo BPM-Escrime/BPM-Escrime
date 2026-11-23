@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide covers how to download, install, and run BPM - Escrime on Windows, macOS, and Linux.
+This guide covers how to download, install, and run BPM - Escrime (Base de Poules et Management) on Windows, macOS, and Linux.
 
 ## 📥 System Requirements
 

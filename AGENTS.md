@@ -1,4 +1,4 @@
-# BPM - Escrime - Agent Instructions
+# BPM - Escrime (Base de Poules et Management) - Agent Instructions
 
 ## Project Overview
 
