@@ -253,7 +253,13 @@ le champ `group`.
   - Tableaux séparés : à la première lecture, le moteur range le `tableauMatches` existant dans
     le groupe de ses tireurs. Ses identifiants restent sans préfixe : ils sont uniques, puisque
     les autres groupes n'étaient pas enregistrés. Les tableaux des autres groupes, qui n'étaient
-    qu'en mémoire, sont à retirer : on le dit dans les notes de version.
+    qu'en mémoire, sont à retirer : on le dit dans les notes de version 3.0, rubrique
+    « Changements de comportement » (lot A2) :
+
+    > Tableaux séparés après les poules : chaque groupe garde désormais son tableau, y compris
+    > après un redémarrage. Pour une épreuve en cours tirée avec une version précédente, seul le
+    > tableau du groupe affiché au dernier enregistrement est repris ; les tableaux des autres
+    > groupes, qui n'étaient pas enregistrés, ne sont pas récupérés : ils sont à tirer de nouveau.
   - Équipes : les rencontres et relais en base sont repris tels quels (UUID). Le journal de ces
     épreuves est incomplet. `rebuildCompetitionState` part alors des tables, comme pour toute
     épreuve antérieure au premier palier.
