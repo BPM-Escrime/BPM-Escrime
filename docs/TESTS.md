@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 271 |
-| `src/main/` | 149 | 1250 |
+| `src/main/` | 149 | 1253 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 131 | 703 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 36 | 385 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **599** | **4593** |
+| **Total** | **599** | **4596** |
 
-Unitaires : 581 fichiers, 4543 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 581 fichiers, 4546 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3561,10 +3561,12 @@ Unitaires : 581 fichiers, 4543 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/simulation.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/engine/commands/simulation.test.ts</code> — 4 tests</summary>
 
 - remplace touches, cartons et durée ; null efface ; rien au journal
 - match absent : found faux ; épreuve inconnue ou entrée invalide refusées
+- remplace les événements du match d’un bloc, chrono compris ; listes vides : effacés
+- match pas en base : found faux, rien d’écrit
 
 </details>
 
@@ -4640,17 +4642,16 @@ Unitaires : 581 fichiers, 4543 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/recallPrev.test.ts</code> — 7 tests</summary>
+<summary><code>src/main/remote/recallPrev.test.ts</code> — 6 tests</summary>
 
 - **recallPrevMatch**
   - rend le match terminé à l’arène, scores conservés, et restaure les événements
   - refuse sans rien modifier hors fenêtre
   - refuse un combat en cours
-  - n’efface rien et ne rend rien si la purge DB échoue
   - remet en tête de file un match DE non commencé
 - **recallPrevMatchResult (motif du refus pour la tablette, #2001)**
   - renvoie ok au succès
-  - renvoie le motif : aucun match, hors fenêtre, combat en cours, purge en échec
+  - renvoie le motif : aucun match, hors fenêtre, combat en cours
 
 </details>
 
@@ -4725,11 +4726,13 @@ Unitaires : 581 fichiers, 4543 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/sessionOps.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/remote/sessionOps.test.ts</code> — 4 tests</summary>
 
 - **updateMatchScore**
   - match d’entraînement sur une arène : score appliqué, pas d’erreur
   - match introuvable partout : erreur « Match non trouvé »
+  - match en base : mémoire seulement, jamais terminé par ce chemin (#2175)
+  - match déjà terminé (hors arène) : file hors-ligne rejouée sans effet (#2175)
 
 </details>
 
