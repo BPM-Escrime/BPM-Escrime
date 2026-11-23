@@ -1126,25 +1126,31 @@ export const contract = {
 
   assignReferee: command({
     description:
-      'Arbitre d’une poule choisi à la main : il remplace l’arbitre principal et passe sur les matchs de la poule. Un arbitre non neutre est accepté et signalé (« conflicts »). « refereeId: null » retire l’arbitre.',
-    input: z.object({
-      competitionId: CompetitionId,
-      poolNumber: z.number().int().min(1).describe('Numéro de la poule'),
-      refereeId: Id.nullable().describe('Identifiant de l’arbitre (list_referees), ou null'),
-      dryRun: DryRun,
-      expectedRevision: ExpectedRevision,
-      commandId: CommandId,
-    }),
+      'Arbitre choisi à la main (docs/adr/0014), pour une poule (« poolNumber » : il remplace l’arbitre principal et passe sur les matchs de la poule) ou pour un match (« matchId » : poule ou tableau, ce match seulement). Un arbitre non neutre est accepté et signalé (« conflicts »). « refereeId: null » retire l’arbitre.',
+    input: z
+      .object({
+        competitionId: CompetitionId,
+        poolNumber: z.number().int().min(1).optional().describe('Numéro de la poule'),
+        matchId: Id.optional().describe('Match de poule ou de tableau (list_matches)'),
+        refereeId: Id.nullable().describe('Identifiant de l’arbitre (list_referees), ou null'),
+        dryRun: DryRun,
+        expectedRevision: ExpectedRevision,
+        commandId: CommandId,
+      })
+      .refine(i => (i.poolNumber === undefined) !== (i.matchId === undefined), {
+        message: 'poolNumber ou matchId, l’un des deux exactement',
+      }),
     output: z.object({
       dryRun: z.boolean(),
-      poolNumber: z.number(),
+      poolNumber: z.number().nullable(),
+      matchId: z.string().nullable(),
       referee: z.string().nullable(),
       conflicts: z.array(NeutralityCriterion),
       warnings: z.array(z.string()),
       revision: Revision,
     }),
     permission: 'referees:write',
-    mcp: { name: 'assign_referee', title: 'Arbitre d’une poule (à la main)', idempotent: true },
+    mcp: { name: 'assign_referee', title: 'Arbitre à la main (poule ou match)', idempotent: true },
   }),
 
   listFencers: query({

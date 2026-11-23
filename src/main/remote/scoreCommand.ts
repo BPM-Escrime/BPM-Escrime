@@ -112,6 +112,37 @@ export function checkFinishedScore(db: DatabaseManager, score: FinishedScore): F
 }
 
 /**
+ * Arbitre du match en cours choisi sur la tablette (« changer d'arbitre ») : commande
+ * assignReferee sur `matchId` (docs/adr/0014, #2151) ; true si le moteur l'a écrit.
+ */
+export function assignMatchRefereeByCommand(
+  db: DatabaseManager,
+  competitionId: string | null | undefined,
+  matchId: string,
+  refereeId: string
+): boolean {
+  if (!competitionId || !db.eventLog) return false;
+  try {
+    invokeCommandSync(
+      {
+        db,
+        actor: { source: 'tablet' },
+        emitChange: emitChangeVia((type, id) => emitCompetitionEvent(type, id)),
+      },
+      'assignReferee',
+      { competitionId, matchId: sessionMatchId(competitionId, matchId), refereeId }
+    );
+    return true;
+  } catch (e) {
+    logger.info(
+      LogCategory.NETWORK,
+      `[assignMatchRefereeByCommand] ${matchId} : arbitre refusé (${(e as { code?: string }).code ?? 'internal'})`
+    );
+    return false;
+  }
+}
+
+/**
  * Réintégration par reinstateFencer (annulation d'un carton noir depuis la tablette,
  * docs/adr/0016) : true si le moteur l'a écrite, false si refusée (rien d'écrit).
  */
