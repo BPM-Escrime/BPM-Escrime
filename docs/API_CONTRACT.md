@@ -47,88 +47,88 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 
 <!-- codes-erreur:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-| Code                         | Catégorie  | Sens                                                                                           |
-| ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
-| `invalid_input`              | transport  | Entrée refusée par le schéma de l’opération                                                    |
-| `unknown_operation`          | transport  | Opération absente du contrat                                                                   |
-| `competition_not_found`      | not_found  | Épreuve introuvable                                                                            |
-| `fencer_not_found`           | not_found  | Tireur introuvable dans l’épreuve                                                              |
-| `referee_not_found`          | not_found  | Arbitre introuvable                                                                            |
-| `pool_not_found`             | not_found  | Poule introuvable                                                                              |
-| `match_not_found`            | not_found  | Match introuvable                                                                              |
-| `withdrawal_not_found`       | not_found  | Aucun retrait à annuler pour ce tireur                                                         |
-| `dir_not_found`              | not_found  | Dossier introuvable                                                                            |
-| `venue_not_found`            | not_found  | Salle introuvable                                                                              |
-| `revision_conflict`          | conflict   | Révision attendue périmée : relire le journal puis renvoyer                                    |
-| `command_already_applied`    | conflict   | Commande déjà appliquée (même commandId)                                                       |
-| `bracket_exists`             | conflict   | Tableau déjà construit                                                                         |
-| `bracket_has_scores`         | conflict   | Tableau déjà commencé : scores saisis                                                          |
-| `pools_have_scores`          | conflict   | Poules déjà commencées : scores saisis                                                         |
-| `next_match_played`          | conflict   | Un match qui suit a déjà été joué                                                              |
-| `round_closed`               | conflict   | Tour de poules déjà clos                                                                       |
-| `draw_done`                  | conflict   | Tirage déjà fait                                                                               |
-| `already_withdrawn`          | conflict   | Tireur déjà retiré                                                                             |
-| `referee_busy`               | conflict   | Arbitre déjà occupé sur ce créneau                                                             |
-| `file_exists`                | conflict   | Fichier déjà présent                                                                           |
-| `club_exists`                | conflict   | Club de la sauvegarde déjà présent sur le poste                                                |
-| `competition_open`           | conflict   | Épreuve ouverte ou servie aux tablettes : à fermer avant l’anonymisation ou l’effacement       |
-| `score_invalid`              | rule       | Score non entier ou négatif                                                                    |
-| `score_above_max`            | rule       | Score au-delà du score maximal                                                                 |
-| `tie_at_max`                 | rule       | Égalité au score maximal (o.17)                                                                |
-| `draw_needs_winner`          | rule       | Égalité : vainqueur ou priorité requis                                                         |
-| `draw_not_allowed`           | rule       | Égalité interdite (Sabre Laser)                                                                |
-| `priority_not_allowed`       | rule       | Priorité non prévue pour cette arme                                                            |
-| `winner_required`            | rule       | Vainqueur requis                                                                               |
-| `winner_contradicts_score`   | rule       | Vainqueur contraire au score                                                                   |
-| `winner_unresolved`          | rule       | Vainqueur impossible à déterminer                                                              |
-| `correction_special_refused` | rule       | Correction après tirage : pas de statut spécial                                                |
-| `match_not_ready`            | rule       | Match pas encore formé                                                                         |
-| `pools_not_complete`         | rule       | Poules non terminées                                                                           |
-| `no_pools`                   | rule       | Aucune poule                                                                                   |
-| `no_ranking`                 | rule       | Aucun classement                                                                               |
-| `no_direct_elimination`      | rule       | Pas de tableau dans la formule                                                                 |
-| `no_final_results`           | rule       | Résultats finals pas encore disponibles                                                        |
-| `no_referees`                | rule       | Aucun arbitre disponible                                                                       |
-| `not_enough_fencers`         | rule       | Pas assez de tireurs                                                                           |
-| `not_enough_qualifiers`      | rule       | Pas assez de qualifiés                                                                         |
-| `fencer_already_in_pool`     | rule       | Tireur déjà dans une poule                                                                     |
-| `tableau_complete`           | rule       | Tableau terminé                                                                                |
-| `invalid_composition`        | rule       | Composition invalide                                                                           |
-| `invalid_pool_count`         | rule       | Nombre de poules invalide                                                                      |
-| `invalid_pool_size`          | rule       | Taille de poule invalide                                                                       |
-| `invalid_wave`               | rule       | Vague invalide                                                                                 |
-| `invalid_title`              | rule       | Titre invalide                                                                                 |
-| `invalid_date`               | rule       | Date invalide                                                                                  |
-| `invalid_name`               | rule       | Nom invalide                                                                                   |
-| `not_in_season`              | rule       | Épreuve hors saison                                                                            |
-| `unknown_setting`            | rule       | Réglage inconnu                                                                                |
-| `invalid_settings`           | rule       | Réglages de formule hors bornes ou incohérents                                                 |
-| `unsupported_format`         | rule       | Format d’épreuve non pris en charge                                                            |
-| `invalid_path`               | rule       | Chemin invalide                                                                                |
-| `invalid_extension`          | rule       | Extension de fichier refusée                                                                   |
-| `path_not_allowed`           | rule       | Chemin hors des dossiers autorisés                                                             |
-| `pdf_unavailable`            | rule       | Export PDF indisponible dans ce mode                                                           |
-| `unavailable`                | rule       | Fonction indisponible dans ce mode                                                             |
-| `remote_not_running`         | rule       | Saisie distante de l’épreuve non démarrée                                                      |
-| `remote_already_running`     | rule       | Saisie distante de l’épreuve déjà démarrée                                                     |
-| `port_in_use`                | rule       | Port d’écoute déjà utilisé                                                                     |
-| `tls_cert_failed`            | rule       | Certificat TLS impossible à générer                                                            |
-| `training_not_started`       | rule       | Serveur d’entraînement non démarré                                                             |
-| `training_already_started`   | rule       | Serveur d’entraînement déjà démarré                                                            |
-| `invalid_theme`              | rule       | Thème d’entraînement inconnu ou personnalisé                                                   |
-| `strip_not_found`            | not_found  | Piste introuvable sur le serveur distant                                                       |
-| `invalid_url`                | rule       | URL refusée (https vers un hôte public requis)                                                 |
-| `remote_refused`             | rule       | Serveur distant : demande refusée (message pour l’opérateur)                                   |
-| `weak_password`              | rule       | Mot de passe trop court                                                                        |
-| `password_required`          | rule       | Archive chiffrée : mot de passe requis                                                         |
-| `wrong_password`             | rule       | Mot de passe faux ou archive altérée                                                           |
-| `invalid_file`               | rule       | Fichier illisible ou au format inattendu                                                       |
-| `club_refused`               | rule       | Mode Club : demande refusée (message pour l’opérateur)                                         |
-| `device_refused`             | rule       | Appareils de piste (Cyrano, OPP2) : demande refusée (message pour l’opérateur)                 |
-| `station_refused`            | rule       | Réglages du poste, salles, journée, RGPD ou agent : demande refusée (message pour l’opérateur) |
-| `permission_denied`          | permission | Droit manquant pour cette opération                                                            |
-| `internal`                   | internal   | Panne interne, journalisée                                                                     |
-| `write_failed`               | internal   | Écriture impossible                                                                            |
+| Code | Catégorie | Sens |
+| --- | --- | --- |
+| `invalid_input` | transport | Entrée refusée par le schéma de l’opération |
+| `unknown_operation` | transport | Opération absente du contrat |
+| `competition_not_found` | not_found | Épreuve introuvable |
+| `fencer_not_found` | not_found | Tireur introuvable dans l’épreuve |
+| `referee_not_found` | not_found | Arbitre introuvable |
+| `pool_not_found` | not_found | Poule introuvable |
+| `match_not_found` | not_found | Match introuvable |
+| `withdrawal_not_found` | not_found | Aucun retrait à annuler pour ce tireur |
+| `dir_not_found` | not_found | Dossier introuvable |
+| `venue_not_found` | not_found | Salle introuvable |
+| `revision_conflict` | conflict | Révision attendue périmée : relire le journal puis renvoyer |
+| `command_already_applied` | conflict | Commande déjà appliquée (même commandId) |
+| `bracket_exists` | conflict | Tableau déjà construit |
+| `bracket_has_scores` | conflict | Tableau déjà commencé : scores saisis |
+| `pools_have_scores` | conflict | Poules déjà commencées : scores saisis |
+| `next_match_played` | conflict | Un match qui suit a déjà été joué |
+| `round_closed` | conflict | Tour de poules déjà clos |
+| `draw_done` | conflict | Tirage déjà fait |
+| `already_withdrawn` | conflict | Tireur déjà retiré |
+| `referee_busy` | conflict | Arbitre déjà occupé sur ce créneau |
+| `file_exists` | conflict | Fichier déjà présent |
+| `club_exists` | conflict | Club de la sauvegarde déjà présent sur le poste |
+| `competition_open` | conflict | Épreuve ouverte ou servie aux tablettes : à fermer avant l’anonymisation ou l’effacement |
+| `score_invalid` | rule | Score non entier ou négatif |
+| `score_above_max` | rule | Score au-delà du score maximal |
+| `tie_at_max` | rule | Égalité au score maximal (o.17) |
+| `draw_needs_winner` | rule | Égalité : vainqueur ou priorité requis |
+| `draw_not_allowed` | rule | Égalité interdite (Sabre Laser) |
+| `priority_not_allowed` | rule | Priorité non prévue pour cette arme |
+| `winner_required` | rule | Vainqueur requis |
+| `winner_contradicts_score` | rule | Vainqueur contraire au score |
+| `winner_unresolved` | rule | Vainqueur impossible à déterminer |
+| `correction_special_refused` | rule | Correction après tirage : pas de statut spécial |
+| `match_not_ready` | rule | Match pas encore formé |
+| `pools_not_complete` | rule | Poules non terminées |
+| `no_pools` | rule | Aucune poule |
+| `no_ranking` | rule | Aucun classement |
+| `no_direct_elimination` | rule | Pas de tableau dans la formule |
+| `no_final_results` | rule | Résultats finals pas encore disponibles |
+| `no_referees` | rule | Aucun arbitre disponible |
+| `not_enough_fencers` | rule | Pas assez de tireurs |
+| `not_enough_qualifiers` | rule | Pas assez de qualifiés |
+| `fencer_already_in_pool` | rule | Tireur déjà dans une poule |
+| `tableau_complete` | rule | Tableau terminé |
+| `invalid_composition` | rule | Composition invalide |
+| `invalid_pool_count` | rule | Nombre de poules invalide |
+| `invalid_pool_size` | rule | Taille de poule invalide |
+| `invalid_wave` | rule | Vague invalide |
+| `invalid_title` | rule | Titre invalide |
+| `invalid_date` | rule | Date invalide |
+| `invalid_name` | rule | Nom invalide |
+| `not_in_season` | rule | Épreuve hors saison |
+| `unknown_setting` | rule | Réglage inconnu |
+| `invalid_settings` | rule | Réglages de formule hors bornes ou incohérents |
+| `unsupported_format` | rule | Format d’épreuve non pris en charge |
+| `invalid_path` | rule | Chemin invalide |
+| `invalid_extension` | rule | Extension de fichier refusée |
+| `path_not_allowed` | rule | Chemin hors des dossiers autorisés |
+| `pdf_unavailable` | rule | Export PDF indisponible dans ce mode |
+| `unavailable` | rule | Fonction indisponible dans ce mode |
+| `remote_not_running` | rule | Saisie distante de l’épreuve non démarrée |
+| `remote_already_running` | rule | Saisie distante de l’épreuve déjà démarrée |
+| `port_in_use` | rule | Port d’écoute déjà utilisé |
+| `tls_cert_failed` | rule | Certificat TLS impossible à générer |
+| `training_not_started` | rule | Serveur d’entraînement non démarré |
+| `training_already_started` | rule | Serveur d’entraînement déjà démarré |
+| `invalid_theme` | rule | Thème d’entraînement inconnu ou personnalisé |
+| `strip_not_found` | not_found | Piste introuvable sur le serveur distant |
+| `invalid_url` | rule | URL refusée (https vers un hôte public requis) |
+| `remote_refused` | rule | Serveur distant : demande refusée (message pour l’opérateur) |
+| `weak_password` | rule | Mot de passe trop court |
+| `password_required` | rule | Archive chiffrée : mot de passe requis |
+| `wrong_password` | rule | Mot de passe faux ou archive altérée |
+| `invalid_file` | rule | Fichier illisible ou au format inattendu |
+| `club_refused` | rule | Mode Club : demande refusée (message pour l’opérateur) |
+| `device_refused` | rule | Appareils de piste (Cyrano, OPP2) : demande refusée (message pour l’opérateur) |
+| `station_refused` | rule | Réglages du poste, salles, journée, RGPD ou agent : demande refusée (message pour l’opérateur) |
+| `permission_denied` | permission | Droit manquant pour cette opération |
+| `internal` | internal | Panne interne, journalisée |
+| `write_failed` | internal | Écriture impossible |
 
 <!-- codes-erreur:fin -->
 
