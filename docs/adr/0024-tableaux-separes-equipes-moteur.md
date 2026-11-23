@@ -1,6 +1,6 @@
 # ADR-0024 — Tableaux séparés et épreuves par équipes passent par le moteur
 
-- **Statut** : Proposée
+- **Statut** : Acceptée (2026-11-23)
 - **Date** : 2026-11-23
 - **Tickets** : #2100, #1980, #1981 (épique #1978)
 
@@ -271,25 +271,16 @@ le champ `group`.
 - L'étape 4c de l'ADR-0017 n'a plus d'exception. `unsupported_format` reste au catalogue pour les
   commandes individuelles appelées sur une épreuve par équipes.
 
-## Questions ouvertes pour la revue
+## Questions tranchées à la revue (2026-11-23)
 
-Ces choix sont tranchés ci-dessus par défaut. La revue peut les changer avant l'acceptation.
+Le mainteneur a retenu les recommandations :
 
-1. **Onglets ou épreuves séparées.** Faut-il garder les tableaux par groupe dans la même
-   épreuve (décision ci-dessus), ou extraire toujours chaque groupe en épreuve séparée ?
-   Recommandation : garder les onglets, pour ne pas changer le produit pendant la stabilisation
-   de la 3.0.
-2. **Saisie à l'écran touche par touche.** On propose de n'enregistrer que la fin du relais.
-   L'autre choix serait une commande non journalisée pour le score en cours. Recommandation : fin
-   de relais seulement. Après un plantage de l'écran, on ressaisit un seul relais.
-3. **Composition après le tirage.** On propose de la figer, sauf remplacement. L'autre choix
-   serait d'admettre un changement de titulaires entre deux rencontres, pour les rencontres
-   futures seulement. Recommandation : figer, et rouvrir si un organisateur le demande.
-4. **Bloc `teams` dans `getCompetitionState`, ou requête à part `getTeamEventState`.**
-   Recommandation : le bloc, pour garder une seule relecture par signal.
-5. **Tableaux des groupes perdus des épreuves en cours.** Suffit-il d'une note de version, ou
-   faut-il une reprise assistée ? Recommandation : la note. Le défaut existe déjà aujourd'hui à
-   chaque rechargement.
+1. **Onglets ou épreuves séparées** : on garde les tableaux par groupe dans la même épreuve.
+2. **Saisie à l'écran** : seule la fin du relais est enregistrée ; le compteur de touches reste
+   un état de l'écran.
+3. **Composition après le tirage** : figée, sauf remplacement.
+4. **État des équipes** : bloc `teams` dans `getCompetitionState`.
+5. **Tableaux des groupes perdus des épreuves en cours** : une note de version suffit.
 
 ## Alternatives écartées
 
@@ -297,7 +288,7 @@ Ces choix sont tranchés ci-dessus par défaut. La revue peut les changer avant 
   par épreuve, et toutes les commandes resteraient telles quelles. Mais le produit change (plus
   d'onglets), les tireurs sont toujours copiés, et il faut un serveur distant par groupe pour
   tirer les deux tableaux en même temps. C'est une décision de produit, pas d'architecture (voir
-  les questions ouvertes).
+  les questions tranchées).
 - **Concaténer les tableaux des groupes dans `tableauMatches` avec un champ `group`** : moins de
   lecteurs à toucher, mais toutes les règles du tableau (propagation, classement final, tableaux
   de classement) raisonnent sur un seul tableau par tour et par position. Il faudrait les filtrer
