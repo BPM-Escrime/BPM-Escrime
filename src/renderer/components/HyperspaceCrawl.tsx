@@ -18,8 +18,8 @@ interface Props {
 }
 
 // Logo du crawl : nom de marque, identique dans toutes les langues.
-const LOGO_TOP = 'BELLE';
-const LOGO_BOTTOM = 'POULE';
+const LOGO_TOP = 'BPM';
+const LOGO_BOTTOM = 'ESCRIME';
 
 /** Titres parodiques disponibles (clés about.crawl_title_N), choisis par build % N. */
 export const CRAWL_TITLE_COUNT = 7;
