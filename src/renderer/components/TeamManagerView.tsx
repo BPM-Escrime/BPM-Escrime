@@ -24,6 +24,7 @@ import {
 } from '../../shared/domain/teams/laserArenaCalculations';
 import {
   relayCap,
+  relayOvershoot,
   relayCumulative,
   relayRuleOf,
   teamFormatOf,
@@ -287,7 +288,9 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
       ? { scoreA: 0, scoreB: 0 }
       : relayCumulative(relayScoresOf(match), bout.boutOrder - 1);
     const cap = relayCap(bout.boutOrder, format, rule);
-    const clamp = (v: number, prior: number) => Math.max(0, Math.min(v, cap - prior));
+    // Relais en points (Sabre Laser) : la dernière touche peut dépasser le palier (cible C, #2188)
+    const ceiling = !isLaserArena && rule.mode === 'points' ? cap + relayOvershoot(rule) : cap;
+    const clamp = (v: number, prior: number) => Math.max(0, Math.min(v, ceiling - prior));
     const next: Draft = {
       scoreA: clamp(cur.scoreA + (side === 'B' ? 0 : points), before.scoreA),
       scoreB: clamp(cur.scoreB + (side === 'A' ? 0 : points), before.scoreB),
