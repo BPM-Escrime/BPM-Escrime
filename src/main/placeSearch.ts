@@ -22,7 +22,7 @@ export interface PlaceSearchResult {
 
 const TIMEOUT_MS = 5000;
 const CACHE_MAX = 100;
-const USER_AGENT = 'BPM-Escrime (logiciel de gestion de compétitions d’escrime)';
+const USER_AGENT = 'BPM-Escrime (fencing tournament manager)';
 
 export function createPlaceSearch(fetchImpl: typeof fetch = fetch) {
   const cache = new Map<string, PlaceSuggestion[]>();
