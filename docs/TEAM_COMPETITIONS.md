@@ -180,7 +180,13 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   relais en cours, ou sur le dernier relais terminé tant que le suivant n'a pas commencé ; le
   dernier relais d'une rencontre terminée le reçoit encore tant que la rencontre suivante de
   l'équipe n'a pas commencé (carton signalé après le END de l'appareil). Le carton n'écrit
-  aucune touche : la touche du rouge est dans le score saisi. Branchement de l'écran (C2) à venir.
+  aucune touche : la touche du rouge est dans le score saisi. Lot C2 : l'écran lit les cartons
+  dans le bloc `teams` et les écrit par ces commandes (succès affiché après la réponse du moteur,
+  motifs FIE pour les armes olympiques, motifs Sabre Laser sinon ; points rendus par le moteur).
+  Carton E : « Désignation tardive » (escalade du moteur) ou type choisi. Annulation : bouton sur
+  le carton, après confirmation (sauf noir individuel : réintégration du tireur). Bouton
+  « Abandon » (`withdrawTeam`) dans la rencontre ; équipe « Exclue » ou « N'a pas terminé »,
+  rencontres de poule annulées, rencontres à tirer non saisissables.
 - Tablette et appareils par les commandes (ADR-0028, lot C3) : `team_card` → `giveTeamCard`,
   `team_fencer_card` → `giveRelayCard` avec le motif, source `tablet` ; refus du moteur (équipe
   étrangère à la rencontre `team_not_in_match`, équipe exclue `team_withdrawn`, motif hors du

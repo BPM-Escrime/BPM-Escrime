@@ -4,26 +4,25 @@
  * par le parent (TeamManagerView), suivant le même pattern que PoolView/PoolRankingView.
  * Relais (docs/adr/0024, lot E3) : seul le relais en cours se saisit ; « Terminer » l'envoie au
  * moteur, le dernier relais terminé se rouvre, le remplaçant entre par la commande.
+ * Cartons (docs/adr/0028, lot C2) : rendus par le moteur (type, points, exclusion), donnés et
+ * annulés par les commandes du parent ; aucun barème ni escalade calculé ici. Équipe retirée :
+ * mention « Exclue » / « N'a pas terminé », rencontres de poule annulées, rencontres à tirer
+ * non saisissables.
  * Licensed under GPL-3.0
  */
 
 import { TipButton } from './Tooltip';
 import React, { useState } from 'react';
-import { Card, CardReason, TargetZone, ZONE_POINTS } from '../../shared/types';
-import {
-  TeamRow,
-  TeamMatchRow,
-  TeamBoutRow,
-  TeamMatchCardRow,
-} from '../../shared/domain/teams/team.types';
+import { CardReason, TargetZone, Weapon, ZONE_POINTS } from '../../shared/types';
+import { TeamRow, TeamMatchRow, TeamBoutRow } from '../../shared/domain/teams/team.types';
 import { TeamTargetRule, getRelayCap } from '../../shared/domain/teams/teamCalculations';
 import { LaserArenaBoutCap } from '../../shared/domain/teams/laserArenaCalculations';
-import { determineTeamCardEscalation } from '../../shared/domain/teams/teamCardEscalation';
 import { CARD_REASON_LABELS } from '../../shared/utils/cardSystem';
 import { getAvailableReasons } from '../../shared/domain/penalties/cards';
+import type { RelayCardDTO, TeamCardDTO, TeamWithdrawalDTO } from '../hooks/useTeamCompetition';
 import { useConfirm } from './ConfirmDialog';
 import { useTranslation } from '../contexts/TranslationContext';
-import { Check, Flag, Radio, Swords, Undo2, UserRoundCog } from 'lucide-react';
+import { Check, DoorOpen, Flag, Radio, Swords, Undo2, UserRoundCog, X } from 'lucide-react';
 import { Icon } from './common/Icon';
 import EmptyState from './common/EmptyState';
 import { CardIcon } from './common/CardIcon';
@@ -51,6 +50,16 @@ export interface RelayHandlers {
   onResolveTie: (winner: 'A' | 'B') => void;
   /** Le remplaçant de l'équipe entre à la place du tireur sortant (substituteTeamFencer) */
   onSubstitute: (matchId: string, teamId: string, outFencerId: string) => void;
+  /** Équipe incomplète sans remplaçant qui abandonne (withdrawTeam, o.99.7.a) ; relais FIE */
+  onWithdrawTeam?: (matchId: string, teamId: string) => void;
+}
+
+/** Cartons de l'écran, tous par les commandes du parent (docs/adr/0028) */
+export interface CardHandlers {
+  /** Carton E ; sans type : celui de l'escalade du moteur */
+  onAddTeamCard?: (matchId: string, teamId: string, type?: TeamCardDTO['type']) => void;
+  /** Annulation par le Directoire technique (cancelTeamCard / cancelRelayCard) */
+  onCancelCard?: (matchId: string, cardId: string, kind: 'team' | 'relay') => void;
 }
 
 interface Props {
@@ -65,7 +74,7 @@ interface Props {
   onToggleScoring: (matchId: string) => void;
   onScoreBout: (bout: TeamBoutRow, side: 'A' | 'B' | 'double', points?: number) => void;
   relay: RelayHandlers;
-  boutCards: Record<string, Card[]>;
+  boutCards: Record<string, RelayCardDTO[]>;
   cardTarget: CardTarget | null;
   onSetCardTarget: (target: CardTarget | null) => void;
   selectedReason: CardReason | '';
@@ -77,12 +86,10 @@ interface Props {
   // (retard de désignation), distincts des cartons individuels par tireur.
   isLaserArena?: boolean;
   boutCap?: LaserArenaBoutCap;
-  matchCards?: Record<string, TeamMatchCardRow[]>;
-  onAddTeamCard?: (
-    matchId: string,
-    teamId: string,
-    type: 'white' | 'yellow' | 'red' | 'black'
-  ) => void;
+  matchCards?: Record<string, TeamCardDTO[]>;
+  cards?: CardHandlers;
+  /** Équipes retirées ou exclues, par équipe */
+  withdrawn?: Record<string, TeamWithdrawalDTO>;
   onAssignArena?: (matchId: string, arenaId: string) => void;
 }
 
@@ -108,12 +115,32 @@ const TeamPoolView: React.FC<Props> = ({
   isLaserArena = false,
   boutCap,
   matchCards = {},
-  onAddTeamCard,
+  cards = {},
+  withdrawn = {},
   onAssignArena,
 }) => {
   const { prompt } = useConfirm();
   const { t } = useTranslation();
   const teamById = new Map(teams.map(team => [team.id, team]));
+  const { onAddTeamCard, onCancelCard } = cards;
+  const withdrawnLabel = (teamId: string) => {
+    const w = withdrawn[teamId];
+    if (!w) return null;
+    return (
+      <div className="text-xs font-semibold text-red-600">
+        {t(w.reason === 'exclusion' ? 'teams.statusExcluded' : 'teams.statusAbandoned')}
+      </div>
+    );
+  };
+  const relayCardBadge = (matchId: string, c: RelayCardDTO) => (
+    <RelayCardBadge
+      key={c.id}
+      card={c}
+      onCancel={
+        onCancelCard && c.type !== 'BLACK' ? () => onCancelCard(matchId, c.id, 'relay') : undefined
+      }
+    />
+  );
 
   if (matches.length === 0) {
     return emptyLabel ? <EmptyState icon={<Icon icon={Swords} />} title={emptyLabel} /> : null;
@@ -124,7 +151,11 @@ const TeamPoolView: React.FC<Props> = ({
       {matches.map(m => {
         const ta = teamById.get(m.teamAId);
         const tb = teamById.get(m.teamBId);
-        const isScoring = scoringMatchId === m.id;
+        // Équipe retirée (o.99.8) : rencontres de poule annulées, rencontres à tirer refusées
+        const involvesWithdrawn = !!(withdrawn[m.teamAId] || withdrawn[m.teamBId]);
+        const cancelled = involvesWithdrawn && m.poolNumber != null;
+        const refused = involvesWithdrawn && m.status !== 'finished';
+        const isScoring = scoringMatchId === m.id && !refused;
         // Relais en cours : le premier non terminé ; seul le dernier terminé se rouvre
         const currentOrder = m.bouts.find(b => b.status !== 'finished')?.boutOrder ?? null;
         const lastFinishedOrder = Math.max(
@@ -146,6 +177,7 @@ const TeamPoolView: React.FC<Props> = ({
                 <div className="text-center flex-1">
                   <div className="font-bold text-gray-900">{ta?.name ?? '—'}</div>
                   <div className="text-xs text-gray-400">{ta?.club}</div>
+                  {withdrawnLabel(m.teamAId)}
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-700">
@@ -162,13 +194,19 @@ const TeamPoolView: React.FC<Props> = ({
                         ? t('teams.matchInProgress')
                         : t('teams.matchNotStarted')}
                   </div>
+                  {(cancelled || refused) && (
+                    <div className="text-xs font-medium text-red-600">
+                      {t(cancelled ? 'teams.matchCancelled' : 'teams.matchRefused')}
+                    </div>
+                  )}
                 </div>
                 <div className="text-center flex-1">
                   <div className="font-bold text-gray-900">{tb?.name ?? '—'}</div>
                   <div className="text-xs text-gray-400">{tb?.club}</div>
+                  {withdrawnLabel(m.teamBId)}
                 </div>
               </div>
-              {onAssignArena && (
+              {onAssignArena && !refused && (
                 <button
                   onClick={async () => {
                     const arenaId = await prompt({
@@ -185,7 +223,8 @@ const TeamPoolView: React.FC<Props> = ({
               )}
               <button
                 onClick={() => onToggleScoring(m.id)}
-                className={`ml-4 text-xs px-3 py-1.5 rounded border ${isScoring ? 'bg-gray-200 border-gray-300 text-gray-700' : 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'}`}
+                disabled={refused}
+                className={`ml-4 text-xs px-3 py-1.5 rounded border disabled:opacity-40 ${isScoring ? 'bg-gray-200 border-gray-300 text-gray-700' : 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'}`}
               >
                 {isScoring ? t('actions.close') : t('teams.score')}
               </button>
@@ -264,11 +303,7 @@ const TeamPoolView: React.FC<Props> = ({
                             </button>
                           )}
                           <span className="text-sm font-medium truncate">{fa}</span>
-                          {cardsA.map(c => (
-                            <span key={c.id} title={CARD_REASON_LABELS[c.reason]}>
-                              <CardIcon type={c.type} />
-                            </span>
-                          ))}
+                          {cardsA.map(c => relayCardBadge(m.id, c))}
                           <TipButton
                             onClick={() =>
                               onSetCardTarget(
@@ -335,11 +370,7 @@ const TeamPoolView: React.FC<Props> = ({
                           >
                             <Icon icon={Flag} />
                           </TipButton>
-                          {cardsB.map(c => (
-                            <span key={c.id} title={CARD_REASON_LABELS[c.reason]}>
-                              <CardIcon type={c.type} />
-                            </span>
-                          ))}
+                          {cardsB.map(c => relayCardBadge(m.id, c))}
                           <span className="text-sm font-medium truncate text-right">{fb}</span>
                           {current && (
                             <button
@@ -396,12 +427,13 @@ const TeamPoolView: React.FC<Props> = ({
                             {t('teams.cardFor', { name: fencerName(cardTarget.fencerId) })}
                           </span>
                           <select
+                            aria-label={t('teams.reasonPlaceholder')}
                             value={selectedReason}
                             onChange={e => onSelectReason(e.target.value as CardReason)}
                             className="border border-gray-300 rounded px-1.5 py-1 text-xs"
                           >
                             <option value="">{t('teams.reasonPlaceholder')}</option>
-                            {getAvailableReasons(weapon as any).map(reason => (
+                            {getAvailableReasons(weapon as Weapon).map(reason => (
                               <option key={reason} value={reason}>
                                 {CARD_REASON_LABELS[reason]}
                               </option>
@@ -473,12 +505,28 @@ const TeamPoolView: React.FC<Props> = ({
                     )}
                   </div>
                 )}
+                {!isLaserArena && relay.onWithdrawTeam && m.status !== 'finished' && (
+                  <div className="mt-2 pt-2 border-t border-gray-200 grid grid-cols-2 gap-3 text-xs">
+                    {[['A', ta] as const, ['B', tb] as const].map(([side, team]) => (
+                      <div key={side} className={side === 'B' ? 'text-right' : ''}>
+                        {team && !withdrawn[team.id] && (
+                          <TipButton
+                            onClick={() => relay.onWithdrawTeam?.(m.id, team.id)}
+                            tip={t('teams.withdrawTeamTooltip')}
+                            className="px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50"
+                          >
+                            <Icon icon={DoorOpen} /> {t('teams.withdrawTeam', { team: team.name })}
+                          </TipButton>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {isLaserArena && onAddTeamCard && (
                   <div className="mt-2 pt-2 border-t border-gray-200 grid grid-cols-2 gap-3 text-xs">
                     {[['A', ta, m.teamAId] as const, ['B', tb, m.teamBId] as const].map(
                       ([side, team, teamId]) => {
-                        const cards = (matchCards[m.id] ?? []).filter(c => c.teamId === teamId);
-                        const suggested = determineTeamCardEscalation(cards);
+                        const teamCards = (matchCards[m.id] ?? []).filter(c => c.teamId === teamId);
                         return (
                           <div key={side} className={side === 'B' ? 'text-right' : ''}>
                             <div className="text-gray-500 mb-1">
@@ -487,24 +535,38 @@ const TeamPoolView: React.FC<Props> = ({
                             <div
                               className={`flex items-center gap-1 flex-wrap ${side === 'B' ? 'justify-end' : ''}`}
                             >
+                              <TipButton
+                                onClick={() => onAddTeamCard(m.id, teamId)}
+                                tip={t('teams.teamCardEscalateTooltip')}
+                                className="px-1.5 py-0.5 rounded border border-blue-400 text-blue-700 hover:bg-blue-50"
+                              >
+                                {t('teams.teamCardEscalate')}
+                              </TipButton>
                               {TEAM_CARD_TYPES.map(type => (
                                 <TipButton
                                   key={type}
                                   onClick={() => onAddTeamCard(m.id, teamId, type)}
-                                  tip={t(
-                                    type === suggested
-                                      ? 'teams.teamCardTooltipSuggested'
-                                      : 'teams.teamCardTooltip',
-                                    { type }
-                                  )}
-                                  className={`px-1.5 py-0.5 rounded border hover:bg-gray-50 ${type === suggested ? 'border-blue-400 ring-1 ring-blue-300' : 'border-gray-200'}`}
+                                  tip={t('teams.teamCardTooltip', { type })}
+                                  className="px-1.5 py-0.5 rounded border border-gray-200 hover:bg-gray-50"
                                 >
                                   <CardIcon type={type} />
                                 </TipButton>
                               ))}
-                              {cards.map(c => (
-                                <span key={c.id} title={c.reason}>
-                                  <CardIcon type={c.type} />
+                              {teamCards.map(c => (
+                                <span key={c.id} className="inline-flex items-center">
+                                  <CardIcon
+                                    type={c.type}
+                                    label={t('teams.teamCardTooltip', { type: c.type })}
+                                  />
+                                  {onCancelCard && (
+                                    <TipButton
+                                      onClick={() => onCancelCard(m.id, c.id, 'team')}
+                                      tip={t('teams.cancelCard')}
+                                      className="text-gray-400 hover:text-red-600"
+                                    >
+                                      <Icon icon={X} />
+                                    </TipButton>
+                                  )}
                                 </span>
                               ))}
                             </div>
@@ -520,6 +582,41 @@ const TeamPoolView: React.FC<Props> = ({
         );
       })}
     </div>
+  );
+};
+
+/**
+ * Carton d'un relais : type et points rendus par le moteur ; motif nul = carton de l'appareil de
+ * piste, groupe à compléter (ADR-0028 q. 6). Bouton d'annulation (Directoire technique) sauf noir.
+ */
+const RelayCardBadge: React.FC<{ card: RelayCardDTO; onCancel?: () => void }> = ({
+  card,
+  onCancel,
+}) => {
+  const { t } = useTranslation();
+  const reason = card.reason
+    ? (CARD_REASON_LABELS[card.reason as CardReason] ?? card.reason)
+    : t('teams.cardNoGroup');
+  const title =
+    card.pointsAwarded > 0
+      ? t('teams.cardPointsAwarded', { reason, points: card.pointsAwarded })
+      : reason;
+  return (
+    <span className="inline-flex items-center flex-shrink-0" title={title}>
+      <CardIcon type={card.type} label={title} />
+      {card.pointsAwarded > 0 && (
+        <span className="text-[10px] text-gray-500">+{card.pointsAwarded}</span>
+      )}
+      {onCancel && (
+        <TipButton
+          onClick={onCancel}
+          tip={t('teams.cancelCard')}
+          className="text-[10px] text-gray-400 hover:text-red-600"
+        >
+          <Icon icon={X} />
+        </TipButton>
+      )}
+    </span>
   );
 };
 

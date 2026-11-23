@@ -10,6 +10,7 @@ import { test, expect } from './app';
  * tablette `/equipe1/arbitre` (Chromium) joue les relais par recordRelayScore ; une égalité au
  * dernier relais du tableau demande la priorité (t.41.5, #2191), choisie par l'arbitre sur la
  * tablette : la rencontre est décidée pour l'équipe prioritaire.
+ * Lot C2 de l'ADR-0028 : carton donné à l'écran par giveRelayCard, retrouvé au rechargement.
  */
 const TITLE = 'E2E Équipes';
 
@@ -20,6 +21,7 @@ type TeamMatch = {
   scoreBoutsB: number;
   teamBId?: string;
   winnerId?: string | null;
+  bouts?: Array<{ cards: Array<{ type: string; reason: string | null }> }>;
 };
 type TeamsRead = { state: { teams: { poolMatches: TeamMatch[]; tableauMatches: TeamMatch[] } } };
 
@@ -136,6 +138,17 @@ test('équipes : poule et tableau joués à l’écran par le moteur, retrouvés
   await expect(win.getByText('Alpha gagne')).toBeVisible();
   await expect(win.getByText('5 – 0')).toBeVisible();
 
+  // Carton au dernier relais terminé (rencontre suivante pas commencée), par giveRelayCard
+  // (docs/adr/0028, lot C2) : affiché après la réponse du moteur
+  await win.getByRole('button', { name: 'Ajouter un carton' }).nth(16).click();
+  const reason = win.getByRole('combobox', { name: '-- motif --' });
+  await reason.selectOption('fie_body_contact');
+  await reason.locator('..').getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await expect(win.getByText('Carton enregistré')).toBeVisible();
+  await expect(
+    win.getByRole('img', { name: 'Corps à corps pour éviter une touche' })
+  ).toBeVisible();
+
   // Tableau : rien à l'ouverture, tiré par le bouton, finale gagnée par Alpha 1-0
   await win.locator('.phase-step', { hasText: 'Tableau équipes' }).click();
   const draw = win.getByRole('button', { name: 'Générer le tableau (2 équipes)' });
@@ -161,6 +174,9 @@ test('équipes : poule et tableau joués à l’écran par le moteur, retrouvés
   await expect(win.getByText('Alpha gagne')).toBeVisible();
   const after = await api<TeamsRead>(win, 'getCompetitionState', { competitionId: id });
   expect(after.state.teams.poolMatches[0]).toMatchObject({ scoreBoutsA: 5, scoreBoutsB: 0 });
+  expect(after.state.teams.poolMatches[0].bouts?.[8].cards).toMatchObject([
+    { type: 'YELLOW', reason: 'fie_body_contact' },
+  ]);
   expect(after.state.teams.tableauMatches[0]).toMatchObject({
     status: 'finished',
     scoreBoutsA: 1,

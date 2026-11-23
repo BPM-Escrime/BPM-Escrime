@@ -78,8 +78,7 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
   const date = new Date(input.date);
   if (Number.isNaN(date.getTime())) throw new CommandError('invalid_date', 'Date invalide');
   const patch = input.settings ?? {};
-  // Sabre Laser individuel : aucun défaut imposé (undefined) ; la base exige pourtant les
-  // touches de poule et de tableau → réglages de repli
+  // Arme sans défaut de création (undefined) : réglages de repli, la base exige les touches
   const defaults =
     buildDefaultCompetitionSettings({
       weapon: input.weapon,
@@ -90,7 +89,12 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
     ...defaults,
     ...patch,
   } as CompetitionSettings;
-  assertFormula(validateFormulaSettings(settings));
+  assertFormula(
+    validateFormulaSettings(settings, undefined, {
+      weapon: input.weapon,
+      isTeamEvent: !!input.isTeamEvent,
+    })
+  );
   if (input.dryRun) return { dryRun: true, competitionId: null };
   const created = ctx.db.createCompetition({
     title: input.title.trim(),
@@ -182,7 +186,11 @@ export function updateCompetitionSettings(
     assertFormula(
       validateFormulaSettings(
         { ...comp.settings, ...patch },
-        Object.keys(patch) as Array<keyof CompetitionSettings>
+        Object.keys(patch) as Array<keyof CompetitionSettings>,
+        {
+          weapon: input.weapon ?? comp.weapon,
+          isTeamEvent: input.isTeamEvent ?? !!comp.isTeamEvent,
+        }
       )
     );
   }
