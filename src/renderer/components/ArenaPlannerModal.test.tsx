@@ -101,6 +101,23 @@ describe('ArenaPlannerModal', () => {
     expect(document.querySelector('.arena-planner-arena-name')).toHaveTextContent('Piste Rouge');
   });
 
+  it("change la couleur d'une zone puis revient à la couleur par défaut", () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.change(screen.getByLabelText('arenaPlanner.add_zone'), {
+      target: { value: 'dt' },
+    });
+    const rect = () =>
+      screen
+        .getByRole('button', { name: /arenaPlanner\.zone_dt/ })
+        .querySelector('rect') as SVGRectElement;
+    const picker = screen.getByLabelText('arenaPlanner.item_color') as HTMLInputElement;
+    expect(picker.value).toBe('#fdba74');
+    fireEvent.change(picker, { target: { value: '#ff0000' } });
+    expect(rect().style.fill).toMatch(/#ff0000|rgb\(255, 0, 0\)/);
+    fireEvent.click(screen.getByText('arenaPlanner.item_color_reset'));
+    expect(rect().style.fill).toBe('');
+  });
+
   it("Optimiser affiche le maximum trouvé et règle le nombre d'arènes", () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
     fireEvent.change(screen.getByLabelText('arenaPlanner.width'), { target: { value: '30' } });

@@ -4395,6 +4395,8 @@
     "add_room": "Añadir una sala",
     "remove_room": "Eliminar la sala",
     "item_text": "Texto mostrado",
+    "item_color": "Color",
+    "item_color_reset": "Color por defecto",
     "overview": "Vista general",
     "overview_hint": "Arrastra una sala para moverla (flechas del teclado); doble clic o Intro para abrirla.",
     "overview_room_line": "{{name}}: {{width}} × {{length}} m, {{count}} arena(s)",

@@ -15,7 +15,7 @@ import {
   type Point,
   type RoomItem,
 } from '@shared/domain/arena/arenaPlanner';
-import { itemClass } from './ArenaPlanCanvas';
+import { itemClass, itemStyle } from './ArenaPlanCanvas';
 import { PlanZoomBar, usePlanZoom, type PlanBox } from './planZoom';
 
 const VIEW_PAD_M = 3;
@@ -199,6 +199,7 @@ export const SitePlanCanvas: React.FC<SitePlanCanvasProps> = ({
                     height={item.heightM}
                     pointerEvents="none"
                     className={`arena-planner-item ${itemClass(item)}`}
+                    style={itemStyle(item)}
                     transform={rot ? `rotate(${rot} ${cx} ${cy})` : undefined}
                   />
                 );

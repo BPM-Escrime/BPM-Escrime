@@ -34,6 +34,7 @@ import { ArenaPlanCanvas, KIND_LABEL_KEY } from './arenaPlanner/ArenaPlanCanvas'
 import { ArenaPlanHelp } from './arenaPlanner/ArenaPlanHelp';
 import { AddItemMenus, KIND_OPTION_PREFIX } from './arenaPlanner/AddItemMenus';
 import { ArenaNamesFields } from './arenaPlanner/ArenaNamesFields';
+import { ItemColorField, withColor } from './arenaPlanner/ItemColorField';
 import { SitePlanCanvas, type SiteRoom } from './arenaPlanner/SitePlanCanvas';
 import {
   computeRoomLayout,
@@ -266,6 +267,11 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
     if (!selectedItem) return;
     setItems(prev => prev.map(i => (i.id === selectedItem.id ? { ...i, label: value } : i)));
   };
+
+  /** Couleur de l'élément sélectionné ; undefined = couleur par défaut */
+  const setItemColor = (color?: string) =>
+    selectedItem &&
+    setItems(prev => prev.map(i => (i.id === selectedItem.id ? withColor(i, color) : i)));
 
   const removeItem = (id: string) => {
     setItems(prev => prev.filter(i => i.id !== id));
@@ -688,6 +694,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                         onChange={e => editLabel(e.target.value)}
                       />
                     </label>
+                    <ItemColorField item={selectedItem} onChange={setItemColor} />
                     <label className="form-label">
                       {t('arenaPlanner.pos_x')}
                       <input

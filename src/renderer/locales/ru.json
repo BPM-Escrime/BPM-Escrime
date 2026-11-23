@@ -4395,6 +4395,8 @@
     "add_room": "Добавить зал",
     "remove_room": "Удалить зал",
     "item_text": "Отображаемый текст",
+    "item_color": "Цвет",
+    "item_color_reset": "Цвет по умолчанию",
     "overview": "Общий план",
     "overview_hint": "Перетащите зал, чтобы переместить его (стрелки); двойной щелчок или Enter — открыть.",
     "overview_room_line": "{{name}}: {{width}} × {{length}} м, арен: {{count}}",
