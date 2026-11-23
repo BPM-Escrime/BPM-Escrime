@@ -373,6 +373,24 @@
   cursor: nwse-resize;
 }
 
+.arena-planner-handle-move {
+  cursor: move;
+  outline: none;
+}
+
+.arena-planner-handle-move:focus-visible {
+  stroke: #f59e0b;
+  stroke-width: 0.12;
+}
+
+.arena-planner-arena-selection {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 0.08;
+  stroke-dasharray: 0.3 0.2;
+  pointer-events: none;
+}
+
 .arena-planner-handle-rotate {
   cursor: grab;
 }

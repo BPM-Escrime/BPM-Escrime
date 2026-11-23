@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 271 |
-| `src/main/` | 149 | 1253 |
+| `src/main/` | 149 | 1260 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 131 | 703 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 36 | 385 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **599** | **4596** |
+| **Total** | **599** | **4603** |
 
-Unitaires : 581 fichiers, 4546 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 581 fichiers, 4553 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2999,7 +2999,7 @@ Unitaires : 581 fichiers, 4546 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/cyrano/e2eTeam.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/cyrano/e2eTeam.test.ts</code> — 8 tests</summary>
 
 - DISP Type=T reçu par UDP : relais 1 (ordre FIE), tireurs du relais, nation = équipe
 - relais 1 : touches de l’appareil → score du relais sur l’arène équipe, rien en base
@@ -3007,6 +3007,8 @@ Unitaires : 581 fichiers, 4546 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - relais 2 : BEGIN sans remise à zéro, remplaçant demandé (RESERVE), pas encore pris en compte
 - VALIDATE → relais 3 ; remplaçant par substituteTeamFencer ; PREV → relais 2 rouvert
 - relais 2 réenregistré puis relais 3 à 9 : rencontre terminée, journal rejoué sans écart
+- relais 9 terminé à 45-45 sans priorité : NAK, rien d’enregistré
+- priorité à gauche puis VALIDATE : ACK, rencontre décidée pour l’équipe B, rejeu sans écart
 
 </details>
 
@@ -4030,12 +4032,14 @@ Unitaires : 581 fichiers, 4546 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/opp2/e2eTeam.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/opp2/e2eTeam.test.ts</code> — 6 tests</summary>
 
 - relais 1 à 3 : END → ACK, relais enregistré par le moteur (source opp2), relais suivant affiché
 - PREV avant le début du relais 4 : relais 3 rouvert par reopenRelay, puis réenregistré
 - END au-delà du palier du relais : NAK, rien d’enregistré
 - relais 4 à 9 : rencontre terminée par le moteur, journal rejoué sans écart
+- relais 9 terminé à 45-45 sans priorité : NAK, rien d’enregistré
+- priorité à droite : ACK, rencontre décidée pour l’équipe A (source opp2), rejeu sans écart
 
 </details>
 
@@ -4164,7 +4168,7 @@ Unitaires : 581 fichiers, 4546 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/piste/teamRelayPiste.test.ts</code> — 30 tests</summary>
+<summary><code>src/main/piste/teamRelayPiste.test.ts</code> — 32 tests</summary>
 
 - rencontre assignée : DISP Type=T du relais 1, tireurs du relais, nation = équipe
 - rencontre de tableau : phase du tableau, A\<tour\>, position + 1
@@ -4195,7 +4199,9 @@ Unitaires : 581 fichiers, 4546 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **dernier relais : règles de fin individuelles**
   - END après une rencontre terminée hors de ce poste (aucun ACK donné) : NAK
   - égalité sans priorité : NAK
-  - vainqueur imposé (priorité à égalité) : NAK, non enregistrable par le modèle d’équipe
+  - priorité à égalité (t.41.5) : ACK, rencontre décidée pour le prioritaire
+  - victoire / défaite imposée à égalité, sans priorité : NAK, rien d’enregistré
+  - priorité sans égalité : ignorée, vainqueur au cumul
   - victoire au cumul : ACK, rencontre terminée par le moteur, affichage vide
 - **verrou appareil maître sur la tablette équipe**
   - maître et en ligne : ajout de touche, cartons, relais suivant, remise à zéro refusés ; retrait permis
@@ -4765,11 +4771,12 @@ Unitaires : 581 fichiers, 4546 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/teamArena.test.ts</code> — 3 tests</summary>
+<summary><code>src/main/remote/teamArena.test.ts</code> — 4 tests</summary>
 
 - relais FIE complet : 9 relais par la tablette, rencontre terminée, rejeu sans écart
 - relais au-delà du palier : refusé par le moteur, motif rendu à la tablette, rien d’écrit
 - égalité au tableau à la fin du dernier relais : draw\_needs\_winner, rencontre non décidée
+- égalité au tableau au dernier relais : priorité choisie à la tablette (t.41.5), rencontre décidée
 
 </details>
 

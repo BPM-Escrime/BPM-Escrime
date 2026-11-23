@@ -78,6 +78,18 @@ function sourceOf(driver: PisteDriver, piste: string): TeamSource {
   return (owner ?? driver).id === 'opp2' ? 'opp2' : 'cyrano';
 }
 
+/**
+ * Côté A / B désigné par la priorité de l'appareil à égalité du score cumulé, tireurs en
+ * statut normal ; sinon undefined (victoire / défaite, carton noir, abandon : autres cas).
+ */
+function priorityWinner(state: PisteState, sides: PisteSides): 'A' | 'B' | undefined {
+  if (state.priority !== 'right' && state.priority !== 'left') return undefined;
+  if ((sides.A.status ?? 'normal') !== 'normal' || (sides.B.status ?? 'normal') !== 'normal')
+    return undefined;
+  if ((sides.A.score ?? 0) !== (sides.B.score ?? 0)) return undefined;
+  return (state.priority === 'right') === sides.aOnRight ? 'A' : 'B';
+}
+
 /** Clé d'un relais pour l'état connu de l'appareil et l'ACK. */
 const relayKey = (matchId: string, bout: Pick<TeamArenaBout, 'boutOrder'>) =>
   `team:${matchId}#${bout.boutOrder}`;
@@ -373,11 +385,14 @@ export class TeamRelayPiste {
     // Abandon ou exclusion annoncé par l'appareil
     const out = [sides.A, sides.B].find(s => s.status === 'abandon' || s.status === 'exclusion');
     const forfeit = !!out;
-    // Dernier relais : le modèle d'équipe déduit le vainqueur du cumul, un vainqueur imposé par
-    // l'appareil (priorité à égalité, abandon, exclusion) ne peut pas être enregistré → NAK tracé.
-    // Relais intermédiaire : fin toujours correcte (spéc. § 4), acquittée plus bas ; l'abandon
-    // ou l'exclusion est signalé au DT, jamais perdu en silence.
-    if (view.isLast && (forfeit || pisteEndOutcome(state, sides).winner)) {
+    // Dernier relais à égalité : la priorité de l'appareil (tirée avant la minute
+    // supplémentaire, t.41.5) désigne le vainqueur de la rencontre (#2191).
+    const winner = view.isLast && !forfeit ? priorityWinner(state, sides) : undefined;
+    // Dernier relais : le modèle d'équipe déduit le vainqueur du cumul ; un autre vainqueur
+    // imposé par l'appareil (abandon, exclusion, victoire / défaite) ne peut pas être enregistré
+    // → NAK tracé. Relais intermédiaire : fin toujours correcte (spéc. § 4), acquittée plus
+    // bas ; l'abandon ou l'exclusion est signalé au DT, jamais perdu en silence.
+    if (view.isLast && !winner && (forfeit || pisteEndOutcome(state, sides).winner)) {
       this.send(piste, 'nak');
       logger.warn(
         LogCategory.NETWORK,
@@ -395,7 +410,7 @@ export class TeamRelayPiste {
     // Score du relais contrôlé par le moteur avant l'ACK (recordRelayScore en simulation)
     const arena = String(link.arena);
     const source = sourceOf(this.host.driver, piste);
-    const check = checkRelayFinish(ctx, arena, source);
+    const check = checkRelayFinish(ctx, arena, source, winner);
     if (!check.ok) {
       this.send(piste, 'nak');
       logger.info(LogCategory.NETWORK, `Cyrano: NAK → ${piste} (refus du moteur : ${check.code})`);
@@ -404,9 +419,13 @@ export class TeamRelayPiste {
     const key = relayKey(view.state.matchId, bout);
     this.send(piste, 'ack');
     this.host.acked.set(piste, key);
-    logger.info(LogCategory.NETWORK, `Cyrano: ACK → ${piste} (relais ${bout.boutOrder})`);
+    logger.info(
+      LogCategory.NETWORK,
+      `Cyrano: ACK → ${piste} (relais ${bout.boutOrder}` +
+        `${winner ? `, priorité à égalité : ${winner}` : ''})`
+    );
     // Relais enregistré par le moteur ; diffusion après l'éventuel remplaçant
-    const recorded = finishRelay(ctx, arena, source, { broadcast: false });
+    const recorded = finishRelay(ctx, arena, source, { broadcast: false, winner });
     if (!recorded.ok) {
       logger.error(
         LogCategory.NETWORK,

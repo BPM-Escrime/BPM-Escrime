@@ -39,7 +39,37 @@ export interface ArenaShapeProps {
   onRotateGrab?: (e: React.PointerEvent<SVGElement>) => void;
   onRotateStep?: () => void;
   rotateTitle?: string;
+  /** Arène sélectionnée (clic) : contour, carré de déplacement et rond de rotation */
+  selected?: boolean;
+  /** Clavier sur le carré de déplacement : flèches, R, Échap */
+  onHandleKeyDown?: (e: React.KeyboardEvent<SVGElement>) => void;
 }
+
+const MOVE_HANDLE_M = 0.7;
+const SELECTION_PAD_M = 0.3;
+
+/** Carré de déplacement au centre de l'arène sélectionnée (glisser ou flèches du clavier). */
+const MoveHandle: React.FC<{
+  c: Point;
+  title?: string;
+  onGrab?: (e: React.PointerEvent<SVGElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<SVGElement>) => void;
+}> = ({ c, title, onGrab, onKeyDown }) => (
+  <rect
+    role="button"
+    tabIndex={0}
+    aria-label={title}
+    x={c.x - MOVE_HANDLE_M / 2}
+    y={c.y - MOVE_HANDLE_M / 2}
+    width={MOVE_HANDLE_M}
+    height={MOVE_HANDLE_M}
+    className="arena-planner-handle arena-planner-handle-move"
+    onPointerDown={onGrab}
+    onKeyDown={onKeyDown}
+  >
+    {title ? <title>{title}</title> : null}
+  </rect>
+);
 
 const ROTATE_HANDLE_R_M = 0.4;
 const ROTATE_STEM_M = 1;
@@ -143,6 +173,8 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
   onRotateGrab,
   onRotateStep,
   rotateTitle,
+  selected,
+  onHandleKeyDown,
 }) => {
   const rot = Number.isFinite(rotationDeg) ? rotationDeg % 360 : 0;
   const turn = rot ? `rotate(${rot} ${center.x} ${center.y})` : undefined;
@@ -151,15 +183,28 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
     : { className: '' };
   const title = onGrab && grabTitle ? <title>{grabTitle}</title> : null;
   const fp = arenaFootprint(discipline);
+  // Poignées seulement sur l'arène sélectionnée, dans le groupe tourné
   const rotateHandle =
-    onRotateGrab && !compact ? (
-      <RotateHandle
-        c={center}
-        top={fp.halfY}
-        title={rotateTitle}
-        onGrab={onRotateGrab}
-        onStep={onRotateStep}
-      />
+    selected && !compact ? (
+      <g className="arena-planner-arena-handles">
+        <rect
+          {...(fp.shape === 'circle'
+            ? centredRect(center, fp.halfX + SELECTION_PAD_M, fp.halfX + SELECTION_PAD_M)
+            : centredRect(center, fp.halfX + SELECTION_PAD_M, fp.halfY + SELECTION_PAD_M))}
+          rx={fp.shape === 'circle' ? fp.halfX + SELECTION_PAD_M : 0}
+          className="arena-planner-arena-selection"
+        />
+        {onRotateGrab ? (
+          <RotateHandle
+            c={center}
+            top={fp.halfY}
+            title={rotateTitle}
+            onGrab={onRotateGrab}
+            onStep={onRotateStep}
+          />
+        ) : null}
+        <MoveHandle c={center} title={grabTitle} onGrab={onGrab} onKeyDown={onHandleKeyDown} />
+      </g>
     ) : null;
 
   if (discipline === 'fencing') {
