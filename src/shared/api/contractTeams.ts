@@ -255,7 +255,7 @@ export const teamRelayOperations = {
     description:
       'Épreuve par équipes : enregistre le score d’un relais (le score du relais, pas le cumul) et le termine. Le cumul, le vainqueur du relais et celui de la rencontre se calculent. ' +
       'Dernier relais : rencontre terminée ; égalité au tableau → « winner » requis (minute avec priorité), en poule → égalité. Au tableau, la rencontre suivante est créée dès que ses deux équipes sont connues. ' +
-      'Refus : rencontre inconnue (match_not_found), relais déjà terminé ou précédents non terminés (relay_out_of_order), cumul au-delà du palier du relais FIE (une seule équipe peut le dépasser d’une touche, t.41.1, ou de 4 points en Sabre Laser points) ou assaut au-delà du plafond en arène (score_above_max), égalité sans vainqueur au tableau (draw_needs_winner), vainqueur contraire au score (winner_contradicts_score). ' +
+      'Refus : rencontre inconnue (match_not_found), relais déjà terminé ou précédents non terminés (relay_out_of_order), cumul au-delà du palier du relais FIE (armes olympiques : une seule équipe peut le dépasser d’une touche, t.41.1 ; Sabre Laser en points : de 4 points) ou assaut au-delà du plafond en arène (score_above_max), égalité sans vainqueur au tableau (draw_needs_winner), vainqueur contraire au score (winner_contradicts_score). ' +
       'Journal : RelayScoreRecorded, puis TeamMatchDecided et TeamMatchScheduled selon le cas.',
     input: z.object({
       competitionId: CompetitionId,

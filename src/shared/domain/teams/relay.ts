@@ -55,20 +55,28 @@ export interface RelayRule {
   stepSize: number;
   target: number;
   mode?: 'touches' | 'points';
+  /** Relais FIE des armes olympiques (épée, fleuret, sabre) : règlement FIE (t.41) */
+  fie?: boolean;
 }
+
+const FIE_WEAPONS: readonly Weapon[] = [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE];
 
 /** Valeur maximale d'une touche en mode points (Sabre Laser, cible C) */
 const MAX_TOUCH_POINTS = 5;
 
 /**
- * Dépassement du palier admis pour l'équipe qui termine le relais :
- * - touches : une touche (FIE t.41.1 : dernière touche valable et touche de pénalisation
- *   accordées en même temps, les deux comptent) ;
- * - points (Sabre Laser) : la dernière touche peut valoir jusqu'à 5 points depuis palier − 1
- *   (Livret 2 FFE : « 14 + touche finale sur une cible vitale à 5 points » = 19).
+ * Dépassement du palier admis pour l'équipe qui termine le relais (ADR-0028, « Deux
+ * règlements, deux barèmes ») :
+ * - relais FIE (armes olympiques) : une touche (t.41.1 : dernière touche valable et touche de
+ *   pénalisation accordées en même temps, les deux comptent) ;
+ * - Sabre Laser en points : la dernière touche peut valoir jusqu'à 5 points depuis palier − 1
+ *   (Livret 2 FFE VIII.1 : « 14 + touche finale sur une cible vitale à 5 points » = 19) ;
+ * - Sabre Laser en touches, arme à la carte : aucun (t.41.1 est une règle FIE ; à arbitrer
+ *   pour le Sabre Laser, #2208).
  */
 export function relayOvershoot(rule: RelayRule): number {
-  return rule.mode === 'points' ? MAX_TOUCH_POINTS - 1 : 1;
+  if (rule.mode === 'points') return MAX_TOUCH_POINTS - 1;
+  return rule.fie ? 1 : 0;
 }
 
 export function relayRuleOf(weapon: Weapon, settings?: Partial<TeamSettings> | null): RelayRule {
@@ -78,7 +86,12 @@ export function relayRuleOf(weapon: Weapon, settings?: Partial<TeamSettings> | n
     settings?.laserTeamMode ?? 'touches',
     settings?.teamRelayStepSize ?? 5
   );
-  return { stepSize: rule.stepSize, target: rule.target, mode: rule.mode };
+  return {
+    stepSize: rule.stepSize,
+    target: rule.target,
+    mode: rule.mode,
+    fie: FIE_WEAPONS.includes(weapon),
+  };
 }
 
 /** Titulaires d'une équipe, par ordre (`teamOrder`), limités à la taille d'équipe */
