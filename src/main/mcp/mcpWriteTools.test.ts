@@ -30,8 +30,10 @@ function setup() {
   const db = {
     getCompetition: (id: string) => (id === 'c1' ? { id: 'c1', title: 'Open' } : null),
     getFencersByCompetition: () => fencers,
+    // Commandes du contrat (#2134) : transaction du moteur
+    transaction: <T>(fn: () => T): T => fn(),
     createCompetition: vi.fn((d: { title: string }) => ({ id: 'new', ...d })),
-    addFencer: vi.fn(),
+    addFencer: vi.fn((_: string, f: Partial<Fencer>) => ({ id: 'x', ref: 9, ...f })),
     updateFencer: vi.fn(),
   };
   const notify = vi.fn();
@@ -75,10 +77,12 @@ describe('outils d’écriture MCP', () => {
     };
     const dry = await json(call('create_competition', { ...args, dryRun: true }));
     expect(dry.dryRun).toBe(true);
-    expect(dry.wouldCreate.settings).toBeDefined();
+    expect(dry.wouldCreate).toMatchObject({ title: 'Open M15', weapon: 'F' });
     expect(db.createCompetition).not.toHaveBeenCalled();
     const done = await json(call('create_competition', args));
     expect(done.created.id).toBe('new');
+    // Création par la commande createCompetition : réglages par défaut du moteur
+    expect(db.createCompetition.mock.calls[0][0]).toMatchObject({ settings: expect.any(Object) });
     expect(notify).toHaveBeenCalledWith('competitions:changed', 'new');
     expect((await call('create_competition', { ...args, weapon: 'Z' })).result?.isError).toBe(true);
   });
@@ -141,9 +145,11 @@ describe('import_day (#1880)', () => {
         comps.set(c.id, c);
         return c;
       }),
-      addFencer: vi.fn((cid: string, f: Fencer) =>
-        fencers.set(cid, [...(fencers.get(cid) ?? []), f])
-      ),
+      addFencer: vi.fn((cid: string, f: Fencer) => {
+        const created = { ...f, id: `f${++n}`, ref: n };
+        fencers.set(cid, [...(fencers.get(cid) ?? []), created]);
+        return created;
+      }),
       eventDays: {
         listDays: () => days,
         createDay: vi.fn((d: { name: string; date: string }) => {
@@ -159,6 +165,7 @@ describe('import_day (#1880)', () => {
         getLinks: () => ({}),
         getCompetitionWeapons: () => ({}),
         syncCompetition: () => ({ added: 0, updated: 0 }),
+        importCompetitionReferees: () => ({ imported: 0, updated: 0 }),
         getDay: (id: string) => days.find(d => d.id === id) ?? null,
       },
     };
