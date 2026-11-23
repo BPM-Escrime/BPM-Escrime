@@ -54,6 +54,10 @@ type DragState =
   | { mode: 'resize'; id: string; cx: number; cy: number; rot: number }
   | { mode: 'rotate'; id: string; cx: number; cy: number };
 
+/** Classes CSS d'un élément : type, puis type de zone (couleur) */
+export const itemClass = (item: RoomItem): string =>
+  item.zone ? `${ITEM_CLASS[item.kind]} arena-planner-zone-${item.zone}` : ITEM_CLASS[item.kind];
+
 export interface ArenaPlanCanvasProps {
   room: RoomSize;
   centers: Point[];
@@ -366,7 +370,7 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
           const cy = item.y + item.heightM / 2;
           const classes = [
             'arena-planner-item',
-            ITEM_CLASS[item.kind],
+            itemClass(item),
             selected ? 'arena-planner-item-selected' : '',
             conflict ? 'arena-planner-item-conflict' : '',
           ]

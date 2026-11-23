@@ -8,7 +8,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Category, FencerStatus, Gender, Weapon, type Fencer } from '../../shared/types';
-import { buildDefaultCompetitionSettings } from '../../shared/utils/defaultCompetitionSettings';
 import {
   decodeTextFile,
   parseFFEFile,
@@ -17,9 +16,10 @@ import {
   parseXMLFile,
   parseEngardeRefereeFile,
 } from '../../shared/utils/fileParser';
-import { syncDay } from '../engine/commands/eventDay';
 import { importIdentityKeys } from '../../shared/utils/personIdentity';
+import { registerInput } from '../../shared/api/registration';
 import { McpToolError, type McpDeps, type McpTool } from './mcpTools';
+import { runContractCommand } from './mcpDomain';
 import { xlsxToCsv } from '../xlsxToCsv';
 import { isWithinRoots } from '../engine/commands/files';
 
@@ -76,16 +76,20 @@ export const competitionOrThrow = (deps: McpDeps, id: unknown) => {
 /** Clés d'identité : licence si connue, et nom + prénom (doublon dès qu'une clé coïncide) */
 export const keysOf = importIdentityKeys;
 
-/** Données d'une épreuve à créer (réglages par défaut de la fenêtre « Nouvelle compétition ») */
+/**
+ * Entrée de createCompetition (réglages par défaut calculés par le moteur, comme la fenêtre
+ * « Nouvelle compétition »)
+ */
 function competitionData(args: Args) {
   const title = typeof args.title === 'string' ? args.title.trim().slice(0, 200) : '';
   if (!title) throw new McpToolError('Argument « title » requis');
-  const date = new Date(String(args.date ?? ''));
-  if (Number.isNaN(date.getTime())) throw new McpToolError('« date » invalide (AAAA-MM-JJ)');
+  const date = String(args.date ?? '');
+  if (Number.isNaN(new Date(date).getTime())) {
+    throw new McpToolError('« date » invalide (AAAA-MM-JJ)');
+  }
   const weapon = pick(args.weapon, [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE], 'weapon');
   const gender = pick(args.gender, [Gender.MALE, Gender.FEMALE, Gender.MIXED], 'gender');
   const category = pick(args.category, Object.values(Category), 'category');
-  const settings = buildDefaultCompetitionSettings({ weapon, category });
   return {
     title,
     date,
@@ -93,9 +97,11 @@ function competitionData(args: Args) {
     gender,
     category,
     ...(typeof args.location === 'string' ? { location: args.location.slice(0, 200) } : {}),
-    ...(settings ? { settings } : {}),
   };
 }
+
+/** Taille maximale d'un lot de registerFencers (contrat) */
+const REGISTER_BATCH = 2000;
 
 /**
  * Lit un fichier du poste DT : chemin absolu, extension autorisée, 5 Mo maximum, et dans
@@ -213,9 +219,15 @@ function importFencersFile(
   const { format, parsed, warnings } = parseFencersFile(file);
   const existing = new Set(deps.db.getFencersByCompetition(competitionId).flatMap(keysOf));
   const toAdd: Partial<Fencer>[] = [];
+  const errors = parsed.errors.slice(0, 20);
   let duplicates = 0;
   for (const f of parsed.fencers) {
     if (!f.lastName) continue;
+    // Prénom exigé par registerFencers (comme à l'écran)
+    if (!f.firstName?.trim()) {
+      if (errors.length < 20) errors.push(`${f.lastName} : prénom manquant, tireur ignoré`);
+      continue;
+    }
     const keys = keysOf(f);
     if (keys.some(k => existing.has(k))) {
       duplicates++;
@@ -229,12 +241,17 @@ function importFencersFile(
     read: parsed.fencers.length,
     toAdd: toAdd.length,
     duplicates,
-    errors: parsed.errors.slice(0, 20),
+    errors,
     warnings,
   };
   if (dryRun || toAdd.length === 0) return { dryRun, ...report };
-  for (const f of toAdd) deps.db.addFencer(competitionId, f);
-  deps.notify('fencers:changed', competitionId);
+  // Inscription par la commande du contrat (ADR-0005, 0018) : écran prévenu par le moteur
+  for (let i = 0; i < toAdd.length; i += REGISTER_BATCH) {
+    runContractCommand(deps, 'registerFencers', {
+      competitionId,
+      fencers: toAdd.slice(i, i + REGISTER_BATCH).map(registerInput),
+    });
+  }
   return { dryRun: false, added: toAdd.length, ...report };
 }
 
@@ -271,9 +288,8 @@ export const MCP_WRITE_TOOLS: McpWriteTool[] = [
     run: (deps, args) => {
       const data = competitionData(args);
       if (dryRunOf(args)) return { dryRun: true, wouldCreate: data };
-      const created = deps.db.createCompetition(data);
-      deps.notify('competitions:changed', created.id);
-      return { created: { id: created.id, title: created.title } };
+      const { competitionId } = runContractCommand(deps, 'createCompetition', data);
+      return { created: { id: competitionId, title: data.title } };
     },
   },
   {
@@ -363,10 +379,12 @@ export const MCP_WRITE_TOOLS: McpWriteTool[] = [
         const dayCreated = !day;
         if (!day && !dryRun) {
           const strips = Number(args.stripCount);
-          day = db.eventDays.createDay({
+          day = runContractCommand(deps, 'createEventDay', {
             name,
             date,
-            ...(Number.isInteger(strips) && strips > 0 ? { stripCount: strips } : {}),
+            ...(Number.isInteger(strips) && strips > 0 && strips <= 999
+              ? { stripCount: strips }
+              : {}),
           });
         }
         const inDay = new Map(
@@ -380,8 +398,12 @@ export const MCP_WRITE_TOOLS: McpWriteTool[] = [
           let id = inDay.get(spec.data.title) ?? null;
           const created = !id;
           if (!id && !dryRun && day) {
-            id = db.createCompetition(spec.data).id;
-            db.eventDays.setCompetitionDay(id, day.id);
+            id = runContractCommand(deps, 'createCompetition', spec.data).competitionId;
+            if (id)
+              runContractCommand(deps, 'assignCompetitionToDay', {
+                competitionId: id,
+                dayId: day.id,
+              });
           }
           const fencers =
             content === null
@@ -405,16 +427,19 @@ export const MCP_WRITE_TOOLS: McpWriteTool[] = [
           });
           if (!dryRun && day) {
             for (const r of toAdd) {
-              db.eventDays.createReferee(day.id, {
-                firstName: r.firstName,
-                lastName: r.lastName,
-                club: r.club,
-                license: r.license,
-                category: r.category,
-                weapons: [],
+              runContractCommand(deps, 'registerEventDayReferee', {
+                dayId: day.id,
+                details: {
+                  firstName: r.firstName,
+                  lastName: r.lastName,
+                  club: r.club,
+                  license: r.license,
+                  category: r.category,
+                  weapons: [],
+                },
               });
             }
-            syncDay(db, day.id);
+            runContractCommand(deps, 'syncEventDayReferees', { dayId: day.id });
           }
           referees = {
             read: parsed.referees.length,

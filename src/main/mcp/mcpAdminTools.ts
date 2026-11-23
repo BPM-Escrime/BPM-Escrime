@@ -5,10 +5,10 @@
  * Licensed under GPL-3.0
  */
 
-import type { Competition } from '../../shared/types';
+import type { Weapon } from '../../shared/types';
 import type { ImportedReferee } from '../../shared/utils/fileParser';
 import { parseEngardeRefereeFile, parseXMLFile } from '../../shared/utils/fileParser';
-import { syncDay } from '../engine/commands/eventDay';
+import { registerRefereeInput } from '../../shared/api/registration';
 import {
   getSettings,
   listVenues,
@@ -28,13 +28,13 @@ import {
   type McpWriteTool,
 } from './mcpWriteTools';
 import {
-  guard,
   optBool,
   optInt,
   optPick,
   optStr,
   readDomain,
   reqStr,
+  runContractCommand,
   writeDomain,
 } from './mcpDomain';
 
@@ -61,10 +61,13 @@ async function readReferees(deps: McpWriteDeps, file: unknown) {
   return { referees: engarde.referees as ImportedReferee[], errors: engarde.errors };
 }
 
-/** Garde les arbitres absents de `existing` (licence, ou nom + prénom), sans doublon interne */
+/**
+ * Garde les arbitres absents de `existing` (licence, ou nom + prénom), sans doublon interne.
+ * Nom exigé par les commandes d'inscription (registerReferees).
+ */
 function newReferees(referees: ImportedReferee[], existing: Set<string>): ImportedReferee[] {
   return referees.filter(r => {
-    if (!r.lastName && !r.firstName) return false;
+    if (!r.lastName?.trim()) return false;
     const keys = keysOf(r);
     if (keys.some(k => existing.has(k))) return false;
     keys.forEach(k => existing.add(k));
@@ -95,19 +98,23 @@ async function importReferees(deps: McpWriteDeps, args: Args) {
       new Set(db.eventDays.listReferees(day.id).flatMap(r => keysOf(r)))
     );
     if (!dry && toAdd.length > 0) {
+      // Commandes du contrat (ADR-0005, #2134), en une transaction : tout ou rien
       db.transaction(() => {
         for (const r of toAdd) {
-          db.eventDays.createReferee(day.id, {
-            firstName: r.firstName,
-            lastName: r.lastName,
-            club: r.club,
-            license: r.license,
-            category: r.category,
-            weapons: weapons as never,
+          runContractCommand(deps, 'registerEventDayReferee', {
+            dayId: day.id,
+            details: {
+              firstName: r.firstName,
+              lastName: r.lastName,
+              club: r.club,
+              license: r.license,
+              category: r.category,
+              weapons: weapons as Weapon[],
+            },
           });
         }
         // Arbitres de la journée reportés dans ses épreuves (selon leurs armes)
-        syncDay(db, day.id);
+        runContractCommand(deps, 'syncEventDayReferees', { dayId: day.id });
       });
       deps.notify('competitions:changed');
     }
@@ -124,24 +131,17 @@ async function importReferees(deps: McpWriteDeps, args: Args) {
     new Set(db.getRefereesByCompetition(competition.id).flatMap(r => keysOf(r)))
   );
   if (!dry && toAdd.length > 0) {
+    // Commandes du contrat (ADR-0005, 0018, #2134), en une transaction : tout ou rien
     db.transaction(() => {
-      for (const r of toAdd) {
-        db.createReferee(competition.id, {
-          name: `${r.firstName} ${r.lastName}`.trim(),
-          club: r.club,
-          license: r.license,
-          category: r.category,
-          nationality: r.nationality,
-          gender: r.gender,
-        });
-      }
+      runContractCommand(deps, 'registerReferees', {
+        competitionId: competition.id,
+        referees: toAdd.map(r => registerRefereeInput({ ...r, lastName: r.lastName ?? '' })),
+      });
       // Arbitres importés : gestion des arbitres activée d'office, comme à l'écran (#1504)
       if (!competition.settings?.refereeFeatureEnabled) {
-        db.updateCompetition(competition.id, {
-          settings: {
-            ...competition.settings,
-            refereeFeatureEnabled: true,
-          } as Competition['settings'],
+        runContractCommand(deps, 'updateCompetitionSettings', {
+          competitionId: competition.id,
+          settings: { refereeFeatureEnabled: true },
         });
       }
     });
@@ -342,7 +342,7 @@ export const MCP_ADMIN_TOOLS: McpWriteTool[] = [
       const fencers = deps.db.getFencersByCompetition(competition.id).length;
       if (dryRunOf(args)) return { dryRun: true, wouldDelete: competition.title, fencers };
       deps.stopRemote?.(competition.id);
-      guard(() => deps.db.deleteCompetition(competition.id));
+      runContractCommand(deps, 'deleteCompetition', { competitionId: competition.id });
       deps.notify('competitions:changed');
       return { deleted: competition.id, title: competition.title, fencers };
     },

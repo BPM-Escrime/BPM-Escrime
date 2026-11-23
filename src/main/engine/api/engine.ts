@@ -398,6 +398,36 @@ export function invokeCommandSync<N extends OperationName>(
   return runJournaled(ctx, handler, input, log) as Output<N>;
 }
 
+/**
+ * Toute commande appelée de façon synchrone dans le main (outils MCP composés, #2134) :
+ * même chemin que `invoke` (validation, journal de l'épreuve ou fonction du poste), sans
+ * promesse, pour s'insérer dans une transaction englobante. Commande asynchrone refusée.
+ */
+export function invokeSync<N extends OperationName>(
+  ctx: CommandContext,
+  name: N,
+  raw: unknown
+): Output<N> {
+  if (contract[name].kind !== 'command') {
+    throw new ApiError('unknown_operation', `« ${name} » n’est pas une commande`);
+  }
+  const input = parseInput(name, raw);
+  const handler = handlers[name] as (c: CommandContext, i: unknown) => unknown;
+  const log = STATION_PERMISSIONS.has(contract[name].permission) ? null : journalOf(ctx, input);
+  if (log) return runJournaled(ctx, handler, input, log) as Output<N>;
+  let result: unknown;
+  try {
+    result = handler(ctx, input);
+  } catch (e) {
+    throw toApiError(e);
+  }
+  if (result && typeof (result as { then?: unknown }).then === 'function') {
+    (result as Promise<unknown>).catch(() => undefined);
+    throw new ApiError('internal', `« ${name} » : commande asynchrone, appel synchrone impossible`);
+  }
+  return result as Output<N>;
+}
+
 /** Commande portant sur une épreuve dont le journal est disponible */
 function journalOf(ctx: CommandContext, input: unknown) {
   const { competitionId, expectedRevision, commandId } = (input ?? {}) as {
