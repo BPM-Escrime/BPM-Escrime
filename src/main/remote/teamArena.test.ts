@@ -52,6 +52,7 @@ vi.mock('better-sqlite3-multiple-ciphers', async () => ({
 import { RemoteScoreServer } from '../remoteScoreServer';
 import { hasNodeSqlite } from '../../database/testing/nodeSqliteDatabase';
 import { invokeCommandSync } from '../engine/api/engine';
+import { getPublicTeamArenaState } from './teamArena';
 import { teamRelayFixture, type TeamRelayFixture } from '../__tests__/teamRelayFixture';
 
 const d = hasNodeSqlite ? describe : describe.skip;
@@ -165,6 +166,47 @@ d('Arène équipe des tablettes par les commandes (docs/adr/0024, lot E4)', () =
     ]);
     expect(team()).toMatchObject({ currentBoutIndex: 8, liveScoreA: 5, liveScoreB: 5 });
     expect(journal('TeamMatchDecided')).toHaveLength(1); // poule seulement
+    expect(fx.divergences()).toEqual([]);
+  });
+
+  it('égalité au tableau au dernier relais : priorité choisie à la tablette (t.41.5), rencontre décidée', async () => {
+    let tableauMatch = '';
+    const { handlers, relay, errors } = await setup(f => {
+      f.play(Array.from({ length: 9 }, () => [5, 4] as [number, number]));
+      tableauMatch = invokeCommandSync(f.ctx, 'generateTeamTableau', {
+        competitionId: f.competitionId,
+      }).matchIds[0];
+      return tableauMatch;
+    });
+    const publicState = () =>
+      getPublicTeamArenaState(remote.teamArenaCtx, '1') as { tieNeedsWinner: boolean };
+    for (let n = 1; n <= 7; n++) relay(5, 5);
+    // Relais intermédiaire à égalité : aucun vainqueur demandé
+    expect(publicState().tieNeedsWinner).toBe(false);
+    relay(5, 5);
+    // Dernier relais : vainqueur demandé tant que le cumul est à égalité
+    expect(publicState().tieNeedsWinner).toBe(true);
+    for (let i = 0; i < 5; i++) handlers.team_touch({ arenaId: '1', side: 'A', points: 1 });
+    expect(publicState().tieNeedsWinner).toBe(false);
+    for (let i = 0; i < 5; i++) handlers.team_touch({ arenaId: '1', side: 'B', points: 1 });
+    expect(publicState().tieNeedsWinner).toBe(true);
+    // Côté invalide ignoré : égalité refusée comme sans priorité
+    handlers.team_advance_bout({ arenaId: '1', winner: 'X' });
+    expect(errors()).toEqual([
+      [
+        'team_arena_error',
+        expect.objectContaining({ error: 'score_refused', code: 'draw_needs_winner' }),
+      ],
+    ]);
+    handlers.team_advance_bout({ arenaId: '1', winner: 'B' });
+    expect(errors()).toHaveLength(1);
+    const m = fx.db.teams.getTeamMatch(tableauMatch)!;
+    expect(m).toMatchObject({ status: 'finished', winnerId: m.teamBId });
+    expect(m.bouts[8]).toMatchObject({ status: 'finished', scoreA: 5, scoreB: 5 });
+    const decided = journal('TeamMatchDecided');
+    expect(decided).toHaveLength(2);
+    expect(decided[1]).toMatchObject({ source: 'tablet' });
+    expect(team().currentBoutIndex).toBe(-1);
     expect(fx.divergences()).toEqual([]);
   });
 });

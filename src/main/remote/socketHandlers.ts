@@ -357,10 +357,12 @@ export function setupSocketHandlers(ctx: SocketHandlersContext): void {
 
     // Termine l'assaut en cours par recordRelayScore (docs/adr/0024, lot E4), avance au
     // suivant s'il en reste. Refus du moteur : rien d'écrit, motif rendu à la tablette.
-    socket.on('team_advance_bout', (data: { arenaId: string }) => {
+    // `winner` : priorité tirée à égalité au dernier relais (t.41.5, #2191).
+    socket.on('team_advance_bout', (data: { arenaId: string; winner?: 'A' | 'B' }) => {
       if (!ctx.checkSocketArenaAuth(socket, data?.arenaId)) return;
       if (teamDeviceLocked(data.arenaId, 'team_advance_bout')) return;
-      const outcome = advanceTeamBout(ctx, data.arenaId, 'tablet');
+      const winner = data.winner === 'A' || data.winner === 'B' ? data.winner : undefined;
+      const outcome = advanceTeamBout(ctx, data.arenaId, 'tablet', { winner });
       if (!outcome.ok) socket.emit('team_arena_error', teamRefusal(outcome));
     });
 

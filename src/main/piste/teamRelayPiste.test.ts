@@ -527,12 +527,46 @@ d('PisteHub — relais FIE par équipes (Type=T)', () => {
       expect(bout(9).status).toBe('not_started');
     });
 
-    it('vainqueur imposé (priorité à égalité) : NAK, non enregistrable par le modèle d’équipe', async () => {
+    it('priorité à égalité (t.41.5) : ACK, rencontre décidée pour le prioritaire', async () => {
+      await start(eight);
+      // Priorité à gauche : tireur de l'équipe B (A est affiché à droite)
+      device(
+        info('E', 9, { id: r(9)[0], score: 45 }, { id: r(9)[1], score: 45 }, { priority: 'L' })
+      );
+      expect(out[out.length - 2]).toBe('ACK');
+      expect(count('NAK')).toBe(0);
+      expect(bout(9)).toMatchObject({ status: 'finished', scoreA: 5, scoreB: 5 });
+      expect(fx.db.teams.getTeamMatch(fx.matchId)).toMatchObject({
+        status: 'finished',
+        winnerId: fx.teamBId,
+      });
+      expect(journal('TeamMatchDecided')).toHaveLength(1);
+      expect(journal('TeamMatchDecided')[0]).toMatchObject({ source: 'cyrano' });
+      expect(fx.divergences()).toEqual([]);
+    });
+
+    it('victoire / défaite imposée à égalité, sans priorité : NAK, rien d’enregistré', async () => {
       await start(eight);
       device(
-        info('E', 9, { id: r(9)[0], score: 45 }, { id: r(9)[1], score: 45 }, { priority: 'R' })
+        info(
+          'E',
+          9,
+          { id: r(9)[0], score: 45, status: 'V' },
+          { id: r(9)[1], score: 45, status: 'D' }
+        )
       );
       expect(out[out.length - 1]).toBe('NAK');
+      expect(bout(9).status).toBe('not_started');
+      expect(journal('TeamMatchDecided')).toHaveLength(0);
+    });
+
+    it('priorité sans égalité : ignorée, vainqueur au cumul', async () => {
+      await start(eight);
+      device(
+        info('E', 9, { id: r(9)[0], score: 45 }, { id: r(9)[1], score: 43 }, { priority: 'L' })
+      );
+      expect(out[out.length - 2]).toBe('ACK');
+      expect(fx.db.teams.getTeamMatch(fx.matchId)).toMatchObject({ winnerId: fx.teamAId });
     });
 
     it('victoire au cumul : ACK, rencontre terminée par le moteur, affichage vide', async () => {

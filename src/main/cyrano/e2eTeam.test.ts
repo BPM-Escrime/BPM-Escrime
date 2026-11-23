@@ -4,6 +4,8 @@
  * équipe `/equipe1`) ↔ commandes du moteur (docs/adr/0024, lot E4), base SQLite réelle.
  * Scénario : relais 1 → VALIDATE → ACK → relais 2 aux cumuls → remplaçant → VALIDATE →
  * relais 3 → PREV (relais 2 rouvert) → relais 2 à 9 → rencontre terminée, rejeu sans écart.
+ * Tableau : dernier relais à égalité, NAK sans priorité, ACK avec la priorité de l'appareil
+ * (t.41.5, #2191) et rencontre décidée pour le prioritaire.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 
@@ -56,6 +58,7 @@ import { PisteHub } from '../piste/pisteHub';
 import { hasNodeSqlite } from '../../database/testing/nodeSqliteDatabase';
 import { Weapon } from '../../shared/types';
 import { teamRelayFixture, type TeamRelayFixture } from '../__tests__/teamRelayFixture';
+import { invokeCommandSync } from '../engine/api/engine';
 // Appareil simulé (scripts/lib/cyranoDevice.js), testé ici car Vitest ne couvre que src/
 const { CyranoDevice } = require('../../../scripts/lib/cyranoDevice.js');
 
@@ -215,6 +218,95 @@ d(
       expect(journal('TeamMatchDecided')).toHaveLength(1);
       // Le remplaçant a tiré les relais 4 et 7
       expect(bout(4).fencerAId).toBe(fx.A[3]);
+      expect(fx.divergences()).toEqual([]);
+    });
+  }
+);
+
+d(
+  'Cyrano bout en bout : égalité au dernier relais du tableau, priorité (t.41.5, #2191)',
+  { timeout: 60_000 },
+  () => {
+    let fx: TeamRelayFixture;
+    let cyrano: CyranoServer;
+    let remote: RemoteScoreServer;
+    let device: InstanceType<typeof CyranoDevice>;
+    let hub: PisteHub;
+    let matchId = '';
+    let acks = 0;
+    let naks = 0;
+    const team = () => remote.teamArenaCtx.teamArenaState.get('1')!;
+    const snap = () => device.snapshot();
+    const match = () => fx.db.teams.getTeamMatch(matchId)!;
+    const journal = (type: string) =>
+      fx.db.eventLog.getSince(fx.competitionId).filter(e => e.type === type);
+
+    beforeAll(async () => {
+      fx = await teamRelayFixture({ weapon: Weapon.EPEE });
+      // Poule jouée, tableau tiré, finale jouée à égalité jusqu'au relais 8 (40-40)
+      fx.play(Array.from({ length: 9 }, () => [5, 4] as [number, number]));
+      matchId = invokeCommandSync(fx.ctx, 'generateTeamTableau', {
+        competitionId: fx.competitionId,
+      }).matchIds[0];
+      for (let n = 1; n <= 8; n++)
+        invokeCommandSync(fx.ctx, 'recordRelayScore', {
+          competitionId: fx.competitionId,
+          matchId,
+          relay: n,
+          scoreA: 5,
+          scoreB: 5,
+        });
+      remote = new RemoteScoreServer(fx.db, 8066);
+      cyrano = new CyranoServer({ host: '127.0.0.1', port: 0, helloIntervalMs: 60_000 });
+      const serverPort = await cyrano.start(0);
+      device = new CyranoDevice({ piste: '1', port: 0, serverPort, server: '127.0.0.1' });
+      await device.start();
+      device.port = device.sock.address().port;
+      cyrano.setPistes([{ piste: '1', ip: '127.0.0.1', port: device.port, arena: 1 }]);
+      hub = new PisteHub(new CyranoPisteDriver(cyrano), () => remote);
+      hub.attach();
+      const sendAck = cyrano.sendAck.bind(cyrano);
+      vi.spyOn(cyrano, 'sendAck').mockImplementation(p => (++acks, sendAck(p)));
+      const sendNak = cyrano.sendNak.bind(cyrano);
+      vi.spyOn(cyrano, 'sendNak').mockImplementation(p => (++naks, sendNak(p)));
+      remote.cyranoTeamHook = id => hub.onTeamArenaUpdate(id, remote);
+      remote.setTeamArenaMatch('1', matchId, false);
+      const last = match().bouts[8];
+      await until(
+        () => snap().team && snap().relay === 9 && snap().right.id === short(last.fencerAId)
+      );
+    });
+
+    afterAll(async () => {
+      device?.stop();
+      await cyrano?.stop();
+      fx?.db.close();
+    });
+
+    it('relais 9 terminé à 45-45 sans priorité : NAK, rien d’enregistré', async () => {
+      expect(snap()).toMatchObject({ right: { score: 40 }, left: { score: 40 } });
+      device.command('begin');
+      for (let i = 0; i < 5; i++) device.command('r+');
+      for (let i = 0; i < 5; i++) device.command('l+');
+      await until(() => team().liveScoreA === 5 && team().liveScoreB === 5);
+      device.command('validate');
+      await until(() => naks > 0);
+      expect(acks).toBe(0);
+      expect(match().bouts[8].status).not.toBe('finished');
+      expect(journal('TeamMatchDecided')).toHaveLength(1); // poule seulement
+    });
+
+    it('priorité à gauche puis VALIDATE : ACK, rencontre décidée pour l’équipe B, rejeu sans écart', async () => {
+      await until(() => snap().state === 'H');
+      device.command('pl');
+      device.command('validate');
+      await until(() => acks > 0 && team().currentBoutIndex === -1);
+      expect(naks).toBe(1);
+      expect(match()).toMatchObject({ status: 'finished', winnerId: match().teamBId });
+      expect(match().bouts[8]).toMatchObject({ status: 'finished', scoreA: 5, scoreB: 5 });
+      const decided = journal('TeamMatchDecided');
+      expect(decided).toHaveLength(2);
+      expect(decided[1]).toMatchObject({ source: 'cyrano' });
       expect(fx.divergences()).toEqual([]);
     });
   }
