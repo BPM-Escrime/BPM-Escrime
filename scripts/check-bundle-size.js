@@ -21,7 +21,7 @@ const BUDGETS = {
   dt: 2.25 * MiB,
   initial: 2.75 * MiB,
   chunk: 1.25 * MiB, // CompetitionView ≈ 1.0 MiB en build dev (nov. 2026)
-  total: 8.5 * MiB, // ≈ 8.07 MiB en build dev (nov. 2026, #1996 correction de poule après tableau ; 8.01 MiB avant)
+  total: 9 * MiB, // ≈ 8.51 MiB en build dev (nov. 2026, #1981 fichiers par le contrat ; 8.07 MiB avec #1996)
 };
 
 function walkJsFiles(dir) {
