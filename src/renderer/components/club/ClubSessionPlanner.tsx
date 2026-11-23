@@ -35,7 +35,7 @@ import { formatMinutes, planDuration } from '../../../shared/utils/clubPlan';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useClubApi } from '../../api/clubApi';
 import { ToggleChip } from '../common/ToggleChip';
-import { TimeInput24 } from '../common/TimeInput24';
+import { TimeInput } from '../common/TimeInput';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
 import { ClubWeaponSelect } from './ClubWeaponSelect';
@@ -224,7 +224,7 @@ export const ClubSessionPlanner: React.FC<ClubSessionPlannerProps> = ({
             <div className="form-label">
               <label>
                 {t('clubSession.start_time')}
-                <TimeInput24
+                <TimeInput
                   className="form-input form-select"
                   value={startTime}
                   onChange={setStartTime}

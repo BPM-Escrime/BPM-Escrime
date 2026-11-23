@@ -1271,14 +1271,14 @@
   white-space: nowrap;
 }
 
-/* Saisie d'heure 24 h (TimeInput24) */
-.time-input-24 {
+/* Saisie d'heure (TimeInput) */
+.time-input {
   display: flex;
   gap: 0.25rem;
   align-items: center;
 }
 
-.time-input-24 > select {
+.time-input > select {
   flex: 1;
   min-width: 0;
 }

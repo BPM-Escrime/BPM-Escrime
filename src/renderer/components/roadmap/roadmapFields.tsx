@@ -8,7 +8,7 @@
 import React, { createContext, useCallback, useContext, useRef } from 'react';
 import { ROADMAP_VARIABLES, type RoadmapVariable } from '@shared/domain/roadmap/roadmap';
 import { useTranslation } from '../../hooks/useTranslation';
-import { TimeInput24 } from '../common/TimeInput24';
+import { TimeInput } from '../common/TimeInput';
 
 type FieldEl = HTMLInputElement | HTMLTextAreaElement;
 
@@ -82,7 +82,7 @@ export const TextField: React.FC<TextFieldProps> = ({
     focus?.register({ el: e.currentTarget, set: onChange });
   const control =
     type === 'time' ? (
-      <TimeInput24 className="roadmap-input" value={value} onChange={onChange} />
+      <TimeInput className="roadmap-input" value={value} onChange={onChange} />
     ) : multiline ? (
       <textarea
         className="roadmap-input"

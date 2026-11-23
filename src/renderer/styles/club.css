@@ -315,7 +315,7 @@
   flex-direction: column;
   gap: 0.75rem;
 }
-.club-row .time-input-24 {
+.club-row .time-input {
   width: 10rem;
 }
 .club-drag-handle {
