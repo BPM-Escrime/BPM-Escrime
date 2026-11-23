@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Outils MCP : séances du Mode Club (#1872, #1880)
+ * BPM - Escrime - Outils MCP : séances du Mode Club (#1872, #1880)
  * Lister, lire, préparer, ouvrir, fermer et rouvrir les séances d'un club, pointer les
  * membres, compléter le bilan. Mêmes dépôts que l'écran (`db.club`) ; fermer la séance
  * la délie du serveur d'entraînement, comme le fait `club:closeSession`.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - États du stepper de phases (#1533)
+ * BPM - Escrime - États du stepper de phases (#1533)
  * fait / en cours / à faire / bloqué ; le motif de blocage est affiché en texte visible.
  * Licensed under GPL-3.0
  */

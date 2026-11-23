@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - État d'interface du poste, par épreuve (#1980, docs/adr/0017)
+ * BPM - Escrime - État d'interface du poste, par épreuve (#1980, docs/adr/0017)
  * Onglet affiché, bornes de taille de la préparation des poules, pistes de la saisie distante :
  * propres à ce poste, gardés dans le navigateur (localStorage), plus dans l'état partagé de
  * l'épreuve. Lecture tolérante : stockage absent, illisible ou bloqué → rien.

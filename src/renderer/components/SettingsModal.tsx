@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Settings Modal Component
+ * BPM - Escrime - Settings Modal Component
  * Licensed under GPL-3.0
  */
 

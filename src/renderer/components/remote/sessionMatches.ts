@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Matchs transmis au serveur de saisie distante au démarrage
+ * BPM - Escrime - Matchs transmis au serveur de saisie distante au démarrage
  * Licensed under GPL-3.0
  */
 import type { Pool } from '../../../shared/types';

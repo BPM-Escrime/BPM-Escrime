@@ -1,8 +1,8 @@
 /**
- * BellePoule Modern - Champs Cyrano d'un appareil : Id, chrono, cartons P (#1720, #1829)
+ * BPM - Escrime - Champs Cyrano d'un appareil : Id, chrono, cartons P (#1720, #1829)
  * Conversions propres au protocole, utilisées par le pilote Cyrano (`driver.ts`) ; la lecture
  * d'un état rapportée au match de l'arène est hors protocole (`src/main/piste/pisteState.ts`).
- * - Id tireur : le protocole limite le champ à 8 caractères ; les identifiants BellePoule
+ * - Id tireur : le protocole limite le champ à 8 caractères ; les identifiants BPM - Escrime
  *   (UUID, 36 caractères) arrivent tronqués.
  * - Chrono `m:ss` / `m:ss.cc` → secondes.
  * - Carton P (EFP1.1, champ 12) ↔ compteurs jaune / rouge / noir P.

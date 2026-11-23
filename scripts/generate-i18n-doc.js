@@ -30,7 +30,7 @@ const REFERENCE = 'fr';
 // Clés volontairement identiques au français, par langue (sigles, abréviations, termes
 // d'escrime internationaux) : scripts/i18n-allow-same.json, sections `app` et `remote` (#1160).
 const ALLOW_SAME = JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n-allow-same.json'), 'utf8'));
-const SAME_AS_FR_OK = /^[\p{N}\p{P}\p{S}\s]*$|^(BellePoule.*|OK|Quest|Club|Total|Arena|Message|Points?|Score|Sabre|Laser|Poules?|Classement|Version|Mode|Stop|Pause|Zones?|Notes?|Tableau|Format|Ranking|Info|Type|Statistiques|Date)$/iu;
+const SAME_AS_FR_OK = /^[\p{N}\p{P}\p{S}\s]*$|^(BPM - Escrime.*|OK|Quest|Club|Total|Arena|Message|Points?|Score|Sabre|Laser|Poules?|Classement|Version|Mode|Stop|Pause|Zones?|Notes?|Tableau|Format|Ranking|Info|Type|Statistiques|Date)$/iu;
 
 function flatten(obj, prefix = '', out = {}) {
   for (const [key, value] of Object.entries(obj)) {

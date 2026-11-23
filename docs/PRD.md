@@ -1,5 +1,5 @@
 # 📋 Product Requirements Document (PRD)
-# BellePoule Modern
+# BPM - Escrime
 
 **Version** : 1.2  
 **Date** : 21 février 2026  
@@ -27,7 +27,7 @@
 
 ### 1.1 Vision
 
-**BellePoule Modern** a pour ambition de devenir **LA référence mondiale** pour la gestion des compétitions d'escrime, en remplaçant complètement l'ancien logiciel BellePoule par une solution moderne, performante et évolutive.
+**BPM - Escrime** a pour ambition de devenir **LA référence mondiale** pour la gestion des compétitions d'escrime, en remplaçant complètement l'ancien logiciel BPM - Escrime par une solution moderne, performante et évolutive.
 
 > *"Un logiciel d'escrime moderne, gratuit et open source, conçu par et pour la communauté."*
 
@@ -36,7 +36,7 @@
 | Objectif | Description | Horizon |
 |----------|-------------|---------|
 | **Adoption** | 10 clubs utilisateurs actifs | 12 mois |
-| **Remplacement** | Alternative crédible à l'ancien BellePoule | 6 mois |
+| **Remplacement** | Alternative crédible à l'ancien BPM - Escrime | 6 mois |
 | **Référence** | Standard de facto en France | 24 mois |
 | **International** | Expansion hors France (Belgique, Suisse, etc.) | 36 mois |
 
@@ -465,7 +465,7 @@
 |--------|--------|--------|-------------|
 | .fff (FFE) | ✅ | 🔜 | Format Fédération Française |
 | .csv | ✅ | ✅ | Universel |
-| .xml | ✅ | ✅ | BellePoule legacy |
+| .xml | ✅ | ✅ | BPM - Escrime legacy |
 | .pdf | ❌ | ✅ | Impression/archivage |
 | .json | ✅ | ✅ | Sauvegarde/échange |
 
@@ -649,7 +649,7 @@ Q1 2026                    Q2 2026                    Q3 2026
 ### 10.2 Références
 
 - [GitHub Repository](https://github.com/BellePoule-Modern/bellepoule-modern)
-- [BellePoule Original](http://betton.escrime.free.fr/index.php/bellepoule)
+- [Original software](http://betton.escrime.free.fr/index.php/bellepoule)
 - [Règlement FFE Sabre Laser](https://www.ffescrime.fr/wp-content/uploads/2024/09/Livret2_CombatSportif_v.Sept25-FR.pdf)
 - [Règlement FFE](https://www.escrime-ffe.fr/)
 - [Règlement FIE](https://fie.org/)
@@ -675,5 +675,5 @@ Q1 2026                    Q2 2026                    Q3 2026
 ---
 
 *Document généré le 19 février 2026*  
-*BellePoule Modern - Open Source sous licence GPL-3.0*
+*BPM - Escrime - Open Source sous licence GPL-3.0*
 

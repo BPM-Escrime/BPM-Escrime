@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Démo autonome : choix de l'arme avant lancement
+ * BPM - Escrime - Démo autonome : choix de l'arme avant lancement
  * Licensed under GPL-3.0
  */
 import React from 'react';

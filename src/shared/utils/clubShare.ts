@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : fichiers de partage entre utilisateurs.
+ * BPM - Escrime - Mode Club (#1872) : fichiers de partage entre utilisateurs.
  * Exercices de la bibliothèque et plans de séance, en JSON versionné et validé à l'import.
  * Licensed under GPL-3.0
  */

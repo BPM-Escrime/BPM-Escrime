@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : cartes de membre imprimables.
+ * BPM - Escrime - Mode Club (#1872) : cartes de membre imprimables.
  * Format carte bancaire (85,6 × 54 mm), 10 par A4 portrait, traits de coupe.
  * Logo + nom du club, nom/prénom, QR d'identification `BPC1:M:<code>` + code en clair.
  * Licensed under GPL-3.0

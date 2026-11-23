@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Onglet « Formule » des propriétés, organisé par phase (#2013, étape A)
+ * BPM - Escrime - Onglet « Formule » des propriétés, organisé par phase (#2013, étape A)
  * Frise Appel → Poules (tours) → Tour Quest → Tableau → Classement final ;
  * réglages de la phase sélectionnée ; relevé de cohérence avec la catégorie.
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types IPC « réglages système » : proxy réseau, dossiers de sauvegarde
+ * BPM - Escrime - Types IPC « réglages système » : proxy réseau, dossiers de sauvegarde
  * Licensed under GPL-3.0
  * Extraits de preload.ts (plafond de longueur, cf. scripts/check-quality-ratchet.js).
  */
@@ -14,7 +14,7 @@ export interface ProxySettingsDTO {
 /** Dossier de sauvegarde par défaut (Paramètres → Sauvegarde) */
 export interface BackupDirDTO {
   dir: string;
-  /** true : pas de réglage, dossier `<Documents>/BellePoule` */
+  /** true : pas de réglage, dossier `<Documents>/BPM - Escrime` */
   isDefault: boolean;
 }
 

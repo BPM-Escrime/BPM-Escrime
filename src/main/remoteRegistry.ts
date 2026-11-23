@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Registre des serveurs distants actifs (extrait de main.ts, #1155) :
+ * BPM - Escrime - Registre des serveurs distants actifs (extrait de main.ts, #1155) :
  * un serveur par compétition (+ mode entraînement), ports réservés.
  * Licensed under GPL-3.0
  */

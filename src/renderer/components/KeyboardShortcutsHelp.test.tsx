@@ -3,7 +3,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 
-vi.mock('../contexts/TranslationContext', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
+vi.mock('../contexts/TranslationContext', () => ({
+  useTranslation: () => ({ t: (k: string) => k }),
+}));
 
 describe('KeyboardShortcutsHelp (#1533)', () => {
   it('documente la navigation entre phases : Ctrl + 1…8 et Ctrl + ←/→', () => {

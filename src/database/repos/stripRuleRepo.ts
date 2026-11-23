@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pistes d'une journée multi-épreuves (#1878) : réservation par piste
+ * BPM - Escrime - Pistes d'une journée multi-épreuves (#1878) : réservation par piste
  * (épreuves et phases autorisées) et affectation automatique des pistes libérées.
  * Licensed under GPL-3.0
  */

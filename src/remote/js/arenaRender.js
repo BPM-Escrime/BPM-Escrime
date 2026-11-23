@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écran d'arène : rendu du match en cours, extrait de arena.html (#1401)
+ * BPM - Escrime - Écran d'arène : rendu du match en cours, extrait de arena.html (#1401)
  * Badge de statut, noms/scores, couleurs inversées, cartons, chrono, bannières de mort subite.
  * Le DOM et les dépendances (T, escHtml, BPTimer) sont injectés. Servi en /js/arenaRender.js (CSP 'self').
  * Licensed under GPL-3.0

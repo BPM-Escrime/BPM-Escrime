@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - horodatage d'AnalyticsDashboard (#1293)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

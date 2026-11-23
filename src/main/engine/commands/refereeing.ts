@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Commandes des arbitres (docs/adr/0014) : réglages d'affectation
+ * BPM - Escrime - Commandes des arbitres (docs/adr/0014) : réglages d'affectation
  * (fusion côté moteur dans competitions.settings.refereeing), affectation automatique des
  * poules par le moteur unique (shared/domain/referees), affectation à la main.
  * Licensed under GPL-3.0

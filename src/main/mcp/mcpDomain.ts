@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Outils MCP : passerelle vers la couche domaine (#1880)
+ * BPM - Escrime - Outils MCP : passerelle vers la couche domaine (#1880)
  * Contexte de domaine construit depuis les dépendances des outils, erreurs métier
  * renvoyées à l'agent, lecture des arguments.
  * Licensed under GPL-3.0

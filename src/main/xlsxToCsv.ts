@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Conversion XLSX → CSV (première feuille) (#1211)
+ * BPM - Escrime - Conversion XLSX → CSV (première feuille) (#1211)
  * Lecture minimale d'un classeur Office Open XML (JSZip) : chaînes partagées,
  * chaînes en ligne, nombres. Les dates restent en numéro de série Excel.
  * Licensed under GPL-3.0

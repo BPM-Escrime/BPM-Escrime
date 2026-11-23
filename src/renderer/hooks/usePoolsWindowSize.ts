@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Taille de fenêtre en vue « poule unique » (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Taille de fenêtre en vue « poule unique » (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import { useEffect, useRef } from 'react';

@@ -1,8 +1,8 @@
-# Guide d'Export PDF - BellePoule Modern
+# Guide d'Export PDF - BPM - Escrime
 
 ## 🎯 Vue d'Ensemble
 
-L'export PDF de BellePoule Modern permet de générer des documents professionnels pour les compétitions d'escrime, avec un format optimisé pour l'impression et le partage.
+L'export PDF de BPM - Escrime permet de générer des documents professionnels pour les compétitions d'escrime, avec un format optimisé pour l'impression et le partage.
 
 ## 📋 Fonctionnalités Disponibles
 
@@ -223,7 +223,7 @@ const exportConfig = {
 - **Documentation en ligne** : `aide > documentation`
 - **Signalement de bugs** : `aide > signaler un problème`
 - **Demandes de fonctionnalités** : `aide > suggestions`
-- **Contact technique** : support@bellepoule-modern.com
+- **Contact technique** : support@bpm-escrime.com
 
 ### Communauté
 - **Forum** : discuter avec d'autres utilisateurs

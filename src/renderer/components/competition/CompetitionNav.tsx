@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Competition Navigation Sub-component
+ * BPM - Escrime - Competition Navigation Sub-component
  * Licensed under GPL-3.0
  */
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières (mode spécial, arme « À la carte ») (#1118)
+ * BPM - Escrime - Tournoi des rapières (mode spécial, arme « À la carte ») (#1118)
  * Binômes de deux tireurs gérés comme les tireurs d'une compétition classique :
  * chaque équipe est un tireur (nom = nom d'équipe, club = niveau), la composition est
  * enregistrée dans l'état de session (clé `rapieres`). Poules jouées en vagues.

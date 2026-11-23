@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests - primitives Modal / Button / Card (#1157)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

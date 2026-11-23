@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Export PDF détaillé par combattant
+ * BPM - Escrime - Export PDF détaillé par combattant
  * Licensed under GPL-3.0
  */
 

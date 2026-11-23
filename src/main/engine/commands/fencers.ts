@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Inscription des tireurs (#1981, docs/adr/0018)
+ * BPM - Escrime - Inscription des tireurs (#1981, docs/adr/0018)
  * registerFencers, updateFencerDetails, setFencerRankings, unregisterFencers : commandes
  * d'intention à la place des écritures de table de l'écran. Pas de journal : l'inscription
  * précède le tirage, où le journal commence (docs/adr/0017).

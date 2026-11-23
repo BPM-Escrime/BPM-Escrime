@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : identité du club (nom, logo, arme, pistes, QR des
+ * BPM - Escrime - Mode Club (#1872) : identité du club (nom, logo, arme, pistes, QR des
  * pistes). Onglet Identité de l'espace club.
  * Licensed under GPL-3.0
  */

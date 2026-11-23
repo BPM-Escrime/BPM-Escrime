@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modal Resize Hook
+ * BPM - Escrime - Modal Resize Hook
  * Licensed under GPL-3.0
  */
 

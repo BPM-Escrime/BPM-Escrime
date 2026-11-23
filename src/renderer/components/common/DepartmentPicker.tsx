@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Sélecteur de département français (liste déroulante, #1504)
+ * BPM - Escrime - Sélecteur de département français (liste déroulante, #1504)
  * Licensed under GPL-3.0
  */
 

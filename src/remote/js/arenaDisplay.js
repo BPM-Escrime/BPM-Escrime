@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écran d'arène : classe ArenaDisplay (socket, thème, annonces, mise à jour du match).
+ * BPM - Escrime - Écran d'arène : classe ArenaDisplay (socket, thème, annonces, mise à jour du match).
  * Extrait de arena.html (#1600) : lintable et testable ; la logique pure reste dans les modules arena*.js.
  * Script classique chargé en <script src="/js/arenaDisplay.js"> (CSP : pas de script inline).
  * Licensed under GPL-3.0

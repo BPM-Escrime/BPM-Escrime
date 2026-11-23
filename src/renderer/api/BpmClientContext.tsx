@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fournisseur du client d'API de l'écran (#1981)
+ * BPM - Escrime - Fournisseur du client d'API de l'écran (#1981)
  * Les composants appellent useBpmClient() au lieu de window.electronAPI.
  * Licensed under GPL-3.0
  */

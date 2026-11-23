@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Économie d'encre à l'impression (Paramètres → Documents)
+ * BPM - Escrime - Économie d'encre à l'impression (Paramètres → Documents)
  * Retire les fonds colorés, passe le texte et les traits en noir, et les images en niveaux de gris.
  * Appliqué au HTML juste avant le rendu PDF ou l'impression (processus principal).
  * Licensed under GPL-3.0

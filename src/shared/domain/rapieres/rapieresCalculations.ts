@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : calculs (#1118)
+ * BPM - Escrime - Tournoi des rapières : calculs (#1118)
  * Répartition des poules par niveau, vagues de rencontres, qualification pour le tableau,
  * classements par niveau et par catégorie d'âge.
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitres de l'épreuve occupés dans une autre épreuve
+ * BPM - Escrime - Arbitres de l'épreuve occupés dans une autre épreuve
  * de la même journée (#1714). Clé = id d'arbitre de l'épreuve.
  * Licensed under GPL-3.0
  */

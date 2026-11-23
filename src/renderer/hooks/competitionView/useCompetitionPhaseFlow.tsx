@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Enchaînement des phases : navigation, arbitres, groupes, valeurs dérivées et carte de poule
+ * BPM - Escrime - Enchaînement des phases : navigation, arbitres, groupes, valeurs dérivées et carte de poule
  * Licensed under GPL-3.0
  */
 

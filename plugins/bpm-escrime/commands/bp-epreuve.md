@@ -1,9 +1,9 @@
 ---
-description: Conduire une épreuve BellePoule — pointage, poules, arbitres, scores, tableau, résultats — nécessite « Autoriser l'écriture »
+description: Conduire une épreuve BPM - Escrime — pointage, poules, arbitres, scores, tableau, résultats — nécessite « Autoriser l'écriture »
 argument-hint: <titre ou identifiant de l'épreuve> [étape]
 ---
 
-Conduis une épreuve dans BellePoule Modern avec le serveur MCP `bellepoule` (skill `bellepoule`). Arguments : $ARGUMENTS
+Conduis une épreuve dans BPM - Escrime avec le serveur MCP `bpm-escrime` (skill `bpm-escrime`). Arguments : $ARGUMENTS
 
 1. Retrouve l'épreuve (`list_competitions`) ; si plusieurs correspondent, demande laquelle. Lis son état (`get_competition`, `list_fencers`, `list_matches`) et annonce l'étape en cours.
 2. **Pointage** : `list_fencers`, puis `check_in` avec la liste donnée par le DT (identifiants ou dossards). Ne pointe jamais sans liste explicite.

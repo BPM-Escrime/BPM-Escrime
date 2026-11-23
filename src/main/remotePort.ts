@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Port du serveur distant (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Port du serveur distant (#1981 lot 2, docs/adr/0022)
  * Branche sur le CommandContext ce que les opérations du serveur distant ne peuvent pas faire
  * seules : registre des serveurs et ports (remoteRegistry), certificat TLS, pare-feu, logo et
  * synthèse vocale du poste (<userData>/logo.dat, tts-config.json), webhook. Remplace les canaux
@@ -92,6 +92,6 @@ export function createRemoteAdminPort(opts: RemotePortOptions): RemoteAdminPort 
     setActiveWave: (competitionId, matchIds, poolsClosed) =>
       setActiveWave(competitionId, matchIds, poolsClosed),
     testWebhook: url =>
-      postWebhook(url, { text: '✅ BellePoule Modern — test de notification webhook' }),
+      postWebhook(url, { text: '✅ BPM - Escrime — test de notification webhook' }),
   };
 }

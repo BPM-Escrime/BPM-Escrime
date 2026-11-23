@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Synchronisation inscription / appel distants selon la phase (extrait de
+ * BPM - Escrime - Synchronisation inscription / appel distants selon la phase (extrait de
  * CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

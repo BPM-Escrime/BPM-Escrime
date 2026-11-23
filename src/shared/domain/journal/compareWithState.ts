@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écarts entre le journal rejoué et l'état de l'épreuve (#1980, docs/adr/0017)
+ * BPM - Escrime - Écarts entre le journal rejoué et l'état de l'épreuve (#1980, docs/adr/0017)
  * Compare les faits de projectCompetition à la projection tenue par le moteur (session_state)
  * et aux statuts des tables. Écarts en identifiants et nombres seulement (RGPD).
  * Licensed under GPL-3.0

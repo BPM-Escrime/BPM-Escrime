@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : import de membres depuis un fichier de tireurs
+ * BPM - Escrime - Mode Club (#1872) : import de membres depuis un fichier de tireurs
  * (FFE .fff / CSV / TXT / XML). Conversion + dédoublonnage par licence, sinon nom + prénom.
  * Licensed under GPL-3.0
  */

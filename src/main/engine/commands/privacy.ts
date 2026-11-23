@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - RGPD (#1882) : opérations du contrat (docs/adr/0022), reprise de l'ancien
+ * BPM - Escrime - RGPD (#1882) : opérations du contrat (docs/adr/0022), reprise de l'ancien
  * ipc/privacyHandlers.ts. Droits des personnes (accès, portabilité, anonymisation, effacement),
  * durée de conservation, affichage des noms sur le réseau. Les archives .bpm chiffrées et
  * l'export JSON d'une personne (dialogue natif, chemin de fichier) restent des canaux IPC.

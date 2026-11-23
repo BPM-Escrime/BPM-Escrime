@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tableau View Component
+ * BPM - Escrime - Tableau View Component
  * Direct Elimination Table
  * Licensed under GPL-3.0
  */

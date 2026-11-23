@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - KPI d'un tireur dans l'onglet Graphiques (#1817) :
+ * BPM - Escrime - KPI d'un tireur dans l'onglet Graphiques (#1817) :
  * progression au classement, écart moyen des scores, séries de victoires / défaites.
  * Licensed under GPL-3.0
  */

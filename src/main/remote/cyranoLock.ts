@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Verrou de saisie quand l'appareil de piste fait foi (#1829)
+ * BPM - Escrime - Verrou de saisie quand l'appareil de piste fait foi (#1829)
  * Appareil Cyrano en mode maître et en ligne : points et cartons viennent de l'appareil ; la
  * tablette ne fait que corriger par retrait. Les entrées de l'appareil (pseudo-socket
  * `cyrano:<piste>`) passent toujours.

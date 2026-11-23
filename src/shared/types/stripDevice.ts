@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Appareil de piste déclaré sur la piste d'une salle (docs/adr/0023)
+ * BPM - Escrime - Appareil de piste déclaré sur la piste d'une salle (docs/adr/0023)
  * Colonne `venue_strips.device_config` : protocole, adresse, port, mode, version, identifiant
  * OPP2. Une épreuve retrouve les appareils de sa salle et peut seulement passer une piste en
  * manuel (`settings.manualStrips`).
@@ -20,7 +20,7 @@ export const STRIP_DEVICE_PROTOCOLS: readonly StripDeviceProtocol[] = ['cyrano',
 interface StripDeviceBase {
   /** Mode de la piste ; `master` par défaut */
   mode?: StripDeviceMode;
-  /** Arène BellePoule (`/arene{N}`) ; absente : numéro de la piste */
+  /** Arène BPM - Escrime (`/arene{N}`) ; absente : numéro de la piste */
   arena?: number;
 }
 

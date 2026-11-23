@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern — styles extraits des `style={{…}}` statiques (#1300)
+ * BPM - Escrime — styles extraits des `style={{…}}` statiques (#1300)
  * Classes `is-<hash>` générées : une classe par jeu de déclarations (dédupliqué).
  * Le sélecteur doublé garde la priorité de l'ancien style inline sur les règles de composants.
  * Licensed under GPL-3.0

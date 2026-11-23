@@ -1,6 +1,6 @@
 /**
- * BellePoule Modern - Pool Calculation Utilities
- * Based on the original BellePoule pool ranking algorithm
+ * BPM - Escrime - Pool Calculation Utilities
+ * Based on the original pool ranking algorithm
  * Licensed under GPL-3.0
  */
 
@@ -146,7 +146,7 @@ export function parseBoutTable(table: string): [number, number][] {
 }
 
 /**
- * Tables d'usage des poules de 9 à 12 (BellePoule, #1964). Le règlement FIE (o.69) ne donne
+ * Tables d'usage des poules de 9 à 12 (BPM - Escrime, #1964). Le règlement FIE (o.69) ne donne
  * que les poules de 6 et 7 : ces tables ne sont pas réglementaires mais reprises par les
  * logiciels de référence. Aucun tireur ne tire deux matchs de suite.
  */
@@ -623,7 +623,7 @@ export function distributeFencersToPoolsSerpentine(
   }
   const pools: Fencer[][] = Array.from({ length: poolCount }, () => []);
   const indexes = createPoolIndexes(pools);
-  // Quota par valeur (BellePoule) : un club de N tireurs tolère ⌈N/poules⌉ tireurs par poule
+  // Quota par valeur (BPM - Escrime) : un club de N tireurs tolère ⌈N/poules⌉ tireurs par poule
   const quotas = createQuotas(fencers, poolCount);
 
   // Trier les tireurs par classement (meilleur classement = premier, non-classés = derniers)
@@ -648,7 +648,7 @@ export function distributeFencersToPoolsSerpentine(
     const pool = pools[poolIndex];
 
     let chosen = 0;
-    // Têtes de poule (premier chapeau) jamais déplacées (BellePoule)
+    // Têtes de poule (premier chapeau) jamais déplacées (BPM - Escrime)
     const isHead = placed < poolCount;
     // Critères sous le classement : recherche dans le chapeau courant seulement
     let inPot = -1;
@@ -696,7 +696,7 @@ export function distributeFencersToPoolsSerpentine(
   // Rééquilibrer les poules pour assurer un nombre égal (ou presque égal) de tireurs
   rebalancePools(pools, [...separation, ...belowRanking], indexes, quotas);
 
-  // Conflits restants : échanges au plus proche classement (NeoSwapper de BellePoule)
+  // Conflits restants : échanges au plus proche classement (NeoSwapper de BPM - Escrime)
   swapRemainingConflicts(pools, indexes, quotas, [...separation, ...belowRanking], seedOrder);
 
   // Tirage au sort des positions dans la poule (FIE §3)
@@ -721,7 +721,7 @@ function criterionValue(fencer: Fencer, key: SeparationCriterionKey): string | u
 }
 
 /**
- * Échanges à la BellePoule (NeoSwapper) : pour chaque critère par ordre de priorité,
+ * Échanges à la BPM - Escrime (NeoSwapper) : pour chaque critère par ordre de priorité,
  * un tireur au-delà du quota de sa poule est échangé avec le tireur le plus proche au
  * classement (alternance dessous/dessus) d'une autre poule, si l'échange respecte les quotas
  * des critères de priorité supérieure ou égale. Les têtes de poule ne bougent jamais.
@@ -849,7 +849,7 @@ function createQuotas(fencers: Fencer[], poolCount: number): PoolConflictIndex {
   return totals;
 }
 
-/** Quota maximal d'une valeur par poule (club/région/nation), cf. NeoSwapper de BellePoule */
+/** Quota maximal d'une valeur par poule (club/région/nation), cf. NeoSwapper de BPM - Escrime */
 export function separationQuota(total: number, poolCount: number): number {
   return poolCount > 0 ? Math.max(1, Math.ceil(total / poolCount)) : total;
 }

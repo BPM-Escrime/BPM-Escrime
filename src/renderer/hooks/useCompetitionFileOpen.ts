@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Ouverture d'une sauvegarde .bpm par l'écran (#1981, ADR-0021)
+ * BPM - Escrime - Ouverture d'une sauvegarde .bpm par l'écran (#1981, ADR-0021)
  * Fichier choisi par la plateforme, fusion par le contrat (openCompetitionFile). Archive
  * chiffrée (password_required) : le contenu reste en mémoire le temps de la saisie du mot de
  * passe (EncryptedBpmPrompt), puis l'ouverture est renvoyée avec lui. Même invite pour une
@@ -18,7 +18,7 @@ export interface PendingEncryptedFile {
 }
 
 /** Sauvegardes ouvertes par l'accueil (.cotcot : par Fichier → Importer) */
-export const OPEN_FILE_FILTERS = [{ name: 'BellePoule', extensions: ['bpm', 'db'] }];
+export const OPEN_FILE_FILTERS = [{ name: 'BPM - Escrime', extensions: ['bpm', 'db'] }];
 
 export function useCompetitionFileOpen(onOpened: (competitionIds: string[]) => unknown) {
   const files = useFilesApi();

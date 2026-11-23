@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Construction de la pile HTTP / Socket.IO et purge périodique (#1240)
+ * BPM - Escrime - Construction de la pile HTTP / Socket.IO et purge périodique (#1240)
  * Extrait du constructeur de RemoteScoreServer.
  * Licensed under GPL-3.0
  */

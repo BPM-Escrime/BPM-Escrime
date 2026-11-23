@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Thèmes prédéfinis du sélecteur « Thème global »
+ * BPM - Escrime - Thèmes prédéfinis du sélecteur « Thème global »
  * Liste jamais vide même sans thème sauvegardé : piste → Sombre/Clair/Néon,
  * autres écrans → valeurs par défaut de l'éditeur ; thèmes décoratifs
  * (Steampunk, Mousquetaires, Arcade 8-bit, Sumi-e) pour tous.

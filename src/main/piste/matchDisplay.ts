@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Match individuel à afficher sur un appareil de piste (#1720, #1829)
+ * BPM - Escrime - Match individuel à afficher sur un appareil de piste (#1720, #1829)
  * Extrait du PisteHub : tireurs droite (A) / gauche (B), nation, scores, cartons déjà donnés,
  * chrono d'un match rappelé, phase / poule / n° de match, arme, arbitre.
  * Licensed under GPL-3.0

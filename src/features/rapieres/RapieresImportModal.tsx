@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : sélection des équipes à importer (#1211)
+ * BPM - Escrime - Tournoi des rapières : sélection des équipes à importer (#1211)
  * Même principe que l'import de tireurs : liste du fichier, cases à cocher, import groupé.
  * Licensed under GPL-3.0
  */

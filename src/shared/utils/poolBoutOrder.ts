@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Ordre des matchs d'une poule et placement des coéquipiers (#1964)
+ * BPM - Escrime - Ordre des matchs d'une poule et placement des coéquipiers (#1964)
  * Licensed under GPL-3.0
  *
  * Règlement FIE, Règles d'organisation (décembre 2025) :

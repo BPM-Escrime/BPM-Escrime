@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handlers IPC `proxy:*` : proxy réseau (Paramètres → Réseau)
+ * BPM - Escrime - Handlers IPC `proxy:*` : proxy réseau (Paramètres → Réseau)
  * Licensed under GPL-3.0
  */
 import { app, ipcMain, session } from 'electron';

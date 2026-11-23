@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Match Audit Log Store
+ * BPM - Escrime - Match Audit Log Store
  * Licensed under GPL-3.0
  */
 

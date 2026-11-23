@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types et helpers partagés de RemoteScoreManager (extrait, #1599)
+ * BPM - Escrime - Types et helpers partagés de RemoteScoreManager (extrait, #1599)
  * Licensed under GPL-3.0
  */
 import { Competition, Pool } from '../../../shared/types';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Garde de redimensionnement (#1652) : pendant un redimensionnement manuel
+ * BPM - Escrime - Garde de redimensionnement (#1652) : pendant un redimensionnement manuel
  * (bord de fenêtre, dispositions Windows 11), Chromium recompose la page à chaque frame. Le flou
  * `backdrop-filter` de l'en-tête collant et des menus, plus les animations infinies, saturent
  * alors le GPU et le compositeur (DWM) : lag de tout le bureau. On pose `data-resizing` sur

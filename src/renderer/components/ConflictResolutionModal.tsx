@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Conflict Resolution Modal
+ * BPM - Escrime - Conflict Resolution Modal
  * Licensed under GPL-3.0
  */
 

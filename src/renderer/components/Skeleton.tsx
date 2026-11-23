@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Skeleton Loading Components
+ * BPM - Escrime - Skeleton Loading Components
  * UX Improvement: Better loading states
  * Licensed under GPL-3.0
  */

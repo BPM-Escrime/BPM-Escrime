@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : lancer un combat en scannant le QR de la piste
+ * BPM - Escrime - Mode Club (#1872) : lancer un combat en scannant le QR de la piste
  * puis les cartes des deux tireurs. Les tireurs scannés sont pointés présents.
  * Licensed under GPL-3.0
  */

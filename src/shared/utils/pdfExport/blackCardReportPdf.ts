@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Rapport d'exclusion (carton noir) pré-rempli pour la FFE (#1829)
+ * BPM - Escrime - Rapport d'exclusion (carton noir) pré-rempli pour la FFE (#1829)
  * Une page par tireur exclu : compétition, tireur, circonstances du match ; motif, témoins et
  * signatures restent à compléter à la main. Document fédéral : rédigé en français.
  * À adresser sous 48 h à competitions@ffescrime.fr (règlement FFE, annexe 14).
@@ -66,7 +66,7 @@ export function generateBlackCardReportHTML(
     <div class="doc-header">
       <div class="doc-header-left">
         <h1>Rapport d'exclusion — carton noir</h1>
-        <div class="subtitle">Pré-rempli par BellePoule Modern · à compléter, signer et adresser sous 48 h à competitions@ffescrime.fr (FFE, annexe 14)</div>
+        <div class="subtitle">Pré-rempli par BPM - Escrime · à compléter, signer et adresser sous 48 h à competitions@ffescrime.fr (FFE, annexe 14)</div>
       </div>
       <div class="doc-header-badge">N</div>
     </div>

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pool Management Hook
+ * BPM - Escrime - Pool Management Hook
  * Gestion des poules, scores et classements
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Libellé de genre avec icône lucide (#1532)
+ * BPM - Escrime - Libellé de genre avec icône lucide (#1532)
  * Licensed under GPL-3.0
  */
 

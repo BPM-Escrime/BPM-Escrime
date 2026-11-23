@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - État de la vue de poule : affichage, colonnes, arbitres, annulation, ordre des matchs
+ * BPM - Escrime - État de la vue de poule : affichage, colonnes, arbitres, annulation, ordre des matchs
  * Licensed under GPL-3.0
  */
 

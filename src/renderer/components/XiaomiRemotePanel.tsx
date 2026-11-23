@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Xiaomi TV Remote Control Panel
+ * BPM - Escrime - Xiaomi TV Remote Control Panel
  * Licensed under GPL-3.0
  */
 

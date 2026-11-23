@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Laser Sabre "arena" team format
+ * BPM - Escrime - Laser Sabre "arena" team format
  * Règle d'évitement de revanche au 1er tour du tableau : si deux équipes
  * déjà rencontrées en poule tombent l'une contre l'autre au 1er tour du
  * tableau à élimination directe, l'équipe la moins bien classée change de

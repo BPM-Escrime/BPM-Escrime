@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitres entre l'écran et le contrat (#1981, docs/adr/0018)
+ * BPM - Escrime - Arbitres entre l'écran et le contrat (#1981, docs/adr/0018)
  * Licensed under GPL-3.0
  */
 import type { Input, Output } from '../../shared/api/contract';

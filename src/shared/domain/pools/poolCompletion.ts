@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Poule terminée : règle unique (#1979, lot 4)
+ * BPM - Escrime - Poule terminée : règle unique (#1979, lot 4)
  * Un match de poule est réglé s'il est terminé, ou si l'un des tireurs est retiré
  * (abandon, forfait, exclusion) : ce match ne sera pas tiré. Avant le lot 4, l'écran
  * appliquait cette règle et le moteur (MCP) exigeait « terminé » : ils divergeaient.

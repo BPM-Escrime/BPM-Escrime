@@ -1,6 +1,6 @@
-# Migration from Original BellePoule
+# Migration from Original software
 
-This guide helps users transition from the original BellePoule software to BellePoule Modern, covering data compatibility, feature differences, and migration workflows.
+This guide helps users transition from the original software to BPM - Escrime, covering data compatibility, feature differences, and migration workflows.
 
 ## 📋 Table of Contents
 
@@ -14,11 +14,11 @@ This guide helps users transition from the original BellePoule software to Belle
 
 ## 🔄 Overview of Changes
 
-BellePoule Modern is a complete rewrite of the original BellePoule using modern web technologies. While maintaining compatibility with core functionality, it introduces significant improvements in user experience, performance, and cross-platform support.
+BPM - Escrime is a complete rewrite of the original software using modern web technologies. While maintaining compatibility with core functionality, it introduces significant improvements in user experience, performance, and cross-platform support.
 
 ### Key Improvements
 
-| Area | Original BellePoule | BellePoule Modern |
+| Area | Original software | BPM - Escrime |
 |-------|---------------------|-------------------|
 | **Technology** | Java-based | Electron + React |
 | **Platform Support** | Windows/macOS | Windows/macOS/Linux |
@@ -44,10 +44,10 @@ BellePoule Modern is a complete rewrite of the original BellePoule using modern 
 
 ### Supported File Formats
 
-#### Export from Original BellePoule
+#### Export from Original software
 
 **✅ Fully Compatible**:
-- BellePoule XML exports
+- BPM - Escrime XML exports
 - FFF files (.fff format)
 - CSV files with fencer data
 - Competition data with pools and tableaux
@@ -58,20 +58,20 @@ BellePoule Modern is a complete rewrite of the original BellePoule using modern 
 - Historical data (requires XML export)
 
 **❌ Not Directly Compatible**:
-- Original BellePoule binary files
+- Original software binary files
 - Plugin-specific data structures
 - Native file formats
 
-### Export Process from Original BellePoule
+### Export Process from Original software
 
 #### Step 1: Export Competition Data
 
-1. **Open Original BellePoule**
+1. **Open Original software**
 2. **Load Your Competition**
 3. **Export Data**:
 
 ```
-Original BellePoule Menu:
+Original software Menu:
 File → Export → XML Competition
 File → Export → FFF File
 File → Export → CSV Results
@@ -95,14 +95,14 @@ Check the exported files:
 </Competition>
 ```
 
-#### Step 3: Import to BellePoule Modern
+#### Step 3: Import to BPM - Escrime
 
-1. **Open BellePoule Modern**
+1. **Open BPM - Escrime**
 2. **Create New Competition**
 3. **Import Data**:
 
 ```
-BellePoule Modern:
+BPM - Escrime:
 Competition → Import Fencers → Select XML file
 ```
 
@@ -111,15 +111,15 @@ Competition → Import Fencers → Select XML file
 #### If You Only Have Database Files
 
 **Method 1: XML Export (Recommended)**
-1. Install original BellePoule temporarily
+1. Install original software temporarily
 2. Open database files
 3. Export each competition to XML
-4. Import XML files to BellePoule Modern
+4. Import XML files to BPM - Escrime
 
 **Method 2: Manual Recreation**
 1. Export fencer lists to CSV/FFF
 2. Note competition settings
-3. Recreate competitions in BellePoule Modern
+3. Recreate competitions in BPM - Escrime
 4. Import fencer data
 
 #### Export Multiple Competitions
@@ -127,11 +127,11 @@ Competition → Import Fencers → Select XML file
 **Batch Export Script** (if you have many competitions):
 
 ```bash
-# This would be run with original BellePoule automation
-# (conceptual - actual script depends on original BellePoule capabilities)
+# This would be run with original software automation
+# (conceptual - actual script depends on original software capabilities)
 
-for db_file in *.bellepoule; do
-  original_bellepoule --export-xml "$db_file" --output "${db_file%.bellepoule}.xml"
+for db_file in *.original; do
+  original-software --export-xml "$db_file" --output "${db_file%.*}.xml"
 done
 ```
 
@@ -139,7 +139,7 @@ done
 
 ### Core Features
 
-| Feature | Original BellePoule | BellePoule Modern | Status |
+| Feature | Original software | BPM - Escrime | Status |
 |---------|---------------------|-------------------|---------|
 | **Competition Management** | ✅ | ✅ | Enhanced |
 | **Fencer Import** | ✅ | ✅ | Enhanced |
@@ -161,7 +161,7 @@ done
 - Limited format support
 - Manual error handling
 
-**BellePoule Modern**:
+**BPM - Escrime**:
 - Advanced FFF parser with mixed format support
 - Handles names with commas (e.g., "LE-FLOCH,JEAN-BAPTISTE")
 - Automatic format detection
@@ -175,7 +175,7 @@ done
 - Complex setup
 - Limited device support
 
-**BellePoule Modern**:
+**BPM - Escrime**:
 - Built-in web server
 - Tablet/phone browser support
 - Real-time synchronization
@@ -189,7 +189,7 @@ done
 - Traditional desktop app look
 - Limited responsiveness
 
-**BellePoule Modern**:
+**BPM - Escrime**:
 - Modern React interface
 - Responsive design
 - Intuitive workflows
@@ -204,8 +204,8 @@ done
 
 1. **Backup Original Data**
    ```bash
-   # Create backup of original BellePoule data
-   cp -r /path/to/original/bellepoule/data ./backup_$(date +%Y%m%d)
+   # Create backup of original software data
+   cp -r /path/to/original/data ./backup_$(date +%Y%m%d)
    ```
 
 2. **List Active Competitions**
@@ -213,14 +213,14 @@ done
    - Note special settings or plugins used
    - Identify critical data to migrate first
 
-3. **Install BellePoule Modern**
+3. **Install BPM - Escrime**
    - Download latest version
    - Install on test machine first
    - Verify functionality
 
 #### Phase 2: Data Export
 
-1. **Export from Original BellePoule**
+1. **Export from Original software**
    
    **For Each Competition**:
    ```
@@ -248,7 +248,7 @@ done
    - Verify FFF files are readable
    - Test import with small sample
 
-#### Phase 3: Import to BellePoule Modern
+#### Phase 3: Import to BPM - Escrime
 
 1. **Create Competition Templates**
    - Import one sample competition
@@ -258,7 +258,7 @@ done
 2. **Batch Import Process**
    
    **For Each Competition**:
-   1. Create new competition in BellePoule Modern
+   1. Create new competition in BPM - Escrime
    2. Import fencers from FFF/XML file
    3. Configure competition settings
    4. Verify data integrity
@@ -294,7 +294,7 @@ done
 
 **Step 1: Export from Original**
 ```
-Original BellePoule Actions:
+Original software Actions:
 1. Open "Championnat Régional 2024"
 2. File → Export → XML Competition
 3. Save as "regional_2024.xml"
@@ -302,9 +302,9 @@ Original BellePoule Actions:
 5. Save as "regional_2024_fencers.fff"
 ```
 
-**Step 2: Setup in BellePoule Modern**
+**Step 2: Setup in BPM - Escrime**
 ```
-BellePoule Modern Actions:
+BPM - Escrime Actions:
 1. Click "New Competition"
 2. Name: "Championnat Régional 2024"
 3. Weapon: Épée
@@ -357,11 +357,11 @@ split -l 100 large_competition.fff chunk_
 
 # Import chunks sequentially
 for chunk in chunk_*; do
-  bellepoule-modern --import-fff "$chunk" --competition-id "large_2024"
+  bpm-escrime --import-fff "$chunk" --competition-id "large_2024"
 done
 ```
 
-**BellePoule Modern Features**:
+**BPM - Escrime Features**:
 - Optimized large dataset handling
 - Progress indicators for imports
 - Batch processing capabilities
@@ -379,13 +379,13 @@ done
    - Note special rules
    - Identify configuration
 
-2. **Recreate in BellePoule Modern**
+2. **Recreate in BPM - Escrime**
    - Use custom competition settings
    - Implement special scoring if needed
    - Create custom export templates
 
 3. **Alternative: Feature Request**
-   - Submit feature request to BellePoule Modern
+   - Submit feature request to BPM - Escrime
    - Provide detailed requirements
    - Consider contributing code
 
@@ -396,7 +396,7 @@ done
 **Migration Plan**:
 1. **Batch Export Automation**
    ```python
-   # Python script to automate original BellePoule exports
+   # Python script to automate original software exports
    import subprocess
    import os
    
@@ -405,7 +405,7 @@ done
    for db_file in competition_db_files:
        export_path = f"migrated/{os.path.basename(db_file)}.xml"
        subprocess.run([
-           "original_bellepoule",
+           "original-software",
            "--export-xml",
            db_file,
            "--output", export_path
@@ -413,7 +413,7 @@ done
    ```
 
 2. **Convert and Archive**
-   - Import XML files to BellePoule Modern
+   - Import XML files to BPM - Escrime
    - Archive in standardized format
    - Create searchable index
 
@@ -426,10 +426,10 @@ done
 
 ### Navigation and Workflow
 
-#### Original BellePoule Interface
+#### Original software Interface
 ```
 ┌─────────────────────────────────────────────┐
-│ BellePoule                    File Help    │
+│ BPM - Escrime                    File Help    │
 ├─────────────────────────────────────────────┤
 │ [New] [Open] [Save] [Export]              │
 │                                           │
@@ -450,10 +450,10 @@ done
 └─────────────────────────────────────────────┘
 ```
 
-#### BellePoule Modern Interface
+#### BPM - Escrime Interface
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ 🤺 BellePoule Modern                    ☰ Help □ □ ⊗       │
+│ 🤺 BPM - Escrime                    ☰ Help □ □ ⊗       │
 ├─────────────────────────────────────────────────────────────┤
 │ [+ New Competition]           [🔍 Search]        [⚙️]     │
 │                                                             │
@@ -492,7 +492,7 @@ done
 
 ### Menu System Changes
 
-#### Original BellePoule Menu
+#### Original software Menu
 ```
 File   Edit   View   Tools   Help
 ├─ New Competition
@@ -503,7 +503,7 @@ File   Edit   View   Tools   Help
 └─ Exit
 ```
 
-#### BellePoule Modern Menu
+#### BPM - Escrime Menu
 ```
 ☰ Menu
 ├─ Competition
@@ -559,13 +559,13 @@ iconv -f ISO-8859-1 -t UTF-8 competition.xml > competition_utf8.xml
 <CustomPluginData>...</CustomPluginData>
 
 <!-- Fix namespace issues -->
-<bellepoule:Competition xmlns:bellepoule="...">
+<bpm-escrime:Competition xmlns:bpm-escrime="...">
 ```
 
 #### Use FFF Import Instead
 If XML has issues:
 1. Export fencers as FFF from original
-2. Import FFF to BellePoule Modern
+2. Import FFF to BPM - Escrime
 3. Recreate competition manually
 
 ### Issue 2: Fencer Ranking Mismatches
@@ -583,7 +583,7 @@ If XML has issues:
 **Solutions**:
 
 #### Verify Ranking Formula
-BellePoule Modern uses official FIE rules:
+BPM - Escrime uses official FIE rules:
 ```
 Indicator = (Touches Given - Touches Received) + (Victories × 5)
 ```
@@ -629,7 +629,7 @@ echo -e "\xEF\xBB\xBF$(cat competition.xml)" > competition_utf8bom.xml
 4. Import again
 
 #### Manual Correction
-For small datasets, edit names manually in BellePoule Modern interface.
+For small datasets, edit names manually in BPM - Escrime interface.
 
 ### Issue 4: Performance with Large Files
 
@@ -651,7 +651,7 @@ split -l 100 large_file.fff chunk_
 #### Use Competition Templates
 1. Create competition template
 2. Import small batches
-3. Merge data in BellePoule Modern
+3. Merge data in BPM - Escrime
 
 #### Optimize System Resources
 - Close other applications
@@ -662,7 +662,7 @@ split -l 100 large_file.fff chunk_
 
 ### Documentation
 
-1. **User Manual** - Complete guide to BellePoule Modern features
+1. **User Manual** - Complete guide to BPM - Escrime features
 2. **Installation Guide** - Setup and system requirements
 3. **Troubleshooting Guide** - Common issues and solutions
 4. **File Format Specifications** - Supported import/export formats
@@ -671,7 +671,7 @@ split -l 100 large_file.fff chunk_
 
 1. **Migration Overview** - High-level migration process
 2. **Data Import Tutorial** - Step-by-step import guide
-3. **Interface Tour** - BellePoule Modern interface walkthrough
+3. **Interface Tour** - BPM - Escrime interface walkthrough
 4. **Remote Scoring Setup** - Modern remote scoring features
 
 ### Training Materials
@@ -710,8 +710,8 @@ split -l 100 large_file.fff chunk_
 
 ### Pre-Migration Preparation
 
-- [ ] Backup original BellePoule data
-- [ ] Install BellePoule Modern on test machine
+- [ ] Backup original software data
+- [ ] Install BPM - Escrime on test machine
 - [ ] Document current workflows
 - [ ] List active competitions
 - [ ] Identify special requirements
@@ -726,7 +726,7 @@ split -l 100 large_file.fff chunk_
 
 ### Migration Execution
 
-- [ ] Create test competitions in BellePoule Modern
+- [ ] Create test competitions in BPM - Escrime
 - [ ] Import sample data
 - [ ] Verify data integrity
 - [ ] Test all features
@@ -742,7 +742,7 @@ split -l 100 large_file.fff chunk_
 
 ### Ongoing
 
-- [ ] Regular backups in BellePoule Modern
+- [ ] Regular backups in BPM - Escrime
 - [ ] Keep software updated
 - [ ] Monitor for issues
 - [ ] Provide user training
@@ -758,6 +758,6 @@ split -l 100 large_file.fff chunk_
 4. **Have Rollback Plan**: Know how to revert if needed
 5. **Use Support**: Don't hesitate to ask for help
 
-BellePoule Modern is designed to make the migration process as smooth as possible while providing significant improvements in functionality and user experience. The investment in migration pays off quickly through improved efficiency and modern features.
+BPM - Escrime is designed to make the migration process as smooth as possible while providing significant improvements in functionality and user experience. The investment in migration pays off quickly through improved efficiency and modern features.
 
 **Need Help?** Contact our support team through the built-in bug reporter or GitHub discussions for personalized migration assistance.

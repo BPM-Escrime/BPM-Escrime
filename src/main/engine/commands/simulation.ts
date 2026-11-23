@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Événements simulés du remplissage automatique (#1981)
+ * BPM - Escrime - Événements simulés du remplissage automatique (#1981)
  * replaceSimulatedMatchEvents : touches, cartons et durée d'essai d'un match, remplacés d'un
  * bloc (anciennes lignes simulées effacées). Pas un fait de l'épreuve : rien au journal.
  * Licensed under GPL-3.0

@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This comprehensive guide covers common issues, error messages, and their solutions for BellePoule Modern users.
+This comprehensive guide covers common issues, error messages, and their solutions for BPM - Escrime users.
 
 ## 📋 Table of Contents
 
@@ -34,7 +34,7 @@ D'URBAN,JEAN,10/05/1998,M,FRA,,98765432,RHÔNE-ALPES,LYON-URBAN,25
 
 #### 1. Automatic Detection (Recommended)
 
-BellePoule Modern automatically detects mixed formats. Ensure:
+BPM - Escrime automatically detects mixed formats. Ensure:
 
 - File is saved as UTF-8
 - No extra spaces before/after lines
@@ -230,7 +230,7 @@ ping 192.168.1.100  # Replace with computer IP
 
 #### 2. Verify Server Status
 
-**In BellePoule Modern**:
+**In BPM - Escrime**:
 
 1. Check the "📡 Saisie distante" tab
 2. Panel must read "Saisie distante active"
@@ -286,7 +286,7 @@ telnet localhost 8066
 **Windows Defender**:
 
 1. Open Windows Defender Firewall
-2. Allow "BellePoule Modern" through firewall
+2. Allow "BPM - Escrime" through firewall
 3. Add port 8066 to allowed ports
 
 **Mac/Linux**:
@@ -397,7 +397,7 @@ ping 192.168.1.100      # Mac/Linux
 
 #### 1. Automatic Recovery
 
-BellePoule Modern has automatic backup:
+BPM - Escrime has automatic backup:
 
 - Check for backup files in database directory
 - Look for `.backup` or `.old` extensions
@@ -406,9 +406,9 @@ BellePoule Modern has automatic backup:
 
 **Database Locations** (fichier `bellepoule.db`) :
 
-- **Windows**: `%APPDATA%\BellePoule Modern\bellepoule.db`
-- **macOS**: `~/Library/Application Support/BellePoule Modern/bellepoule.db`
-- **Linux**: `~/.config/BellePoule Modern/bellepoule.db`
+- **Windows**: `%APPDATA%\BPM - Escrime\bellepoule.db`
+- **macOS**: `~/Library/Application Support/BPM - Escrime/bellepoule.db`
+- **Linux**: `~/.config/BPM - Escrime/bellepoule.db`
 
 > **Sauvegarde automatique** : La base est sauvegardée toutes les **2 minutes** via autosave, et à chaque fermeture de l'application. L'écriture est atomique (fichier `.tmp` puis renommage) pour éviter la corruption en cas de coupure.
 
@@ -461,15 +461,15 @@ Ensure at least 500MB free space.
 **Linux/Mac**:
 
 ```bash
-ls -la ~/.config/bellepoule-modern/
-chmod 755 ~/.config/bellepoule-modern/
+ls -la ~/.config/BPM - Escrime/
+chmod 755 ~/.config/BPM - Escrime/
 ```
 
 #### 3. Check Antivirus Interference
 
 Some antivirus software blocks database writes:
 
-- Add BellePoule Modern to exceptions
+- Add BPM - Escrime to exceptions
 - Disable real-time scanning temporarily
 - Use Windows Defender exclusions
 
@@ -649,7 +649,7 @@ For very large competitions:
 
 **Allow Application**:
 
-1. Right-click BellePoule Modern → "Open"
+1. Right-click BPM - Escrime → "Open"
 2. Click "Open" in security dialog
 3. Only needed once
 
@@ -689,10 +689,10 @@ sudo pacman -S gtk3 libnotify nss libxtst xorg-server-xvfb at-spi2-core libdrm l
 
 ```bash
 # Make executable
-chmod +x BellePoule.Modern.AppImage
+chmod +x BPM - Escrime.Modern.AppImage
 
 # Fix ownership
-sudo chown $USER:$USER BellePoule.Modern.AppImage
+sudo chown $USER:$USER BPM - Escrime.Modern.AppImage
 ```
 
 ### Issue: Update fails to install
@@ -717,13 +717,13 @@ sudo chown $USER:$USER BellePoule.Modern.AppImage
 **Windows**:
 
 ```cmd
-del /q /f /s "%APPDATA%\bellepoule-modern\updates\*"
+del /q /f /s "%APPDATA%\bpm-escrime\updates\*"
 ```
 
 **Mac/Linux**:
 
 ```bash
-rm -rf ~/.config/bellepoule-modern/updates/*
+rm -rf ~/.config/BPM - Escrime/updates/*
 ```
 
 #### 3. Network Issues
@@ -827,12 +827,12 @@ For persistent issues:
 4. Port: 8066
 5. Allow connection
 6. Select all profiles
-7. Name: "BellePoule Modern Remote"
+7. Name: "BPM - Escrime Remote"
 
 **Add Application Exception**:
 
 1. Programs → Allow app through firewall
-2. Browse to BellePoule Modern executable
+2. Browse to BPM - Escrime executable
 3. Check both private and public networks
 
 #### 2. Configure Mac Firewall
@@ -840,7 +840,7 @@ For persistent issues:
 **System Preferences** → **Security & Privacy** → **Firewall**:
 
 1. Click "Firewall Options"
-2. Add BellePoule Modern
+2. Add BPM - Escrime
 3. Set to "Allow incoming connections"
 
 #### 3. Corporate Network Issues
@@ -848,7 +848,7 @@ For persistent issues:
 **Contact IT Department**:
 
 - Request port 8066 opened
-- Allow BellePoule Modern executable
+- Allow BPM - Escrime executable
 - Configure network exceptions
 
 #### 4. Router Configuration
@@ -874,7 +874,7 @@ For persistent issues:
 
 **Solutions**:
 
-1. Right-click BellePoule Modern → Properties
+1. Right-click BPM - Escrime → Properties
 2. Compatibility tab
 3. "Override high DPI scaling"
 4. Set to "Application"
@@ -894,7 +894,7 @@ For persistent issues:
 2. Virus & threat protection
 3. Protection history
 4. Restore quarantined file
-5. Add exclusion for BellePoule Modern
+5. Add exclusion for BPM - Escrime
 
 ### macOS Specific
 
@@ -909,7 +909,7 @@ For persistent issues:
 
 1. System Preferences → Security & Privacy
 2. General tab
-3. Click "Open Anyway" for BellePoule Modern
+3. Click "Open Anyway" for BPM - Escrime
 4. Enter admin password
 5. Click "Open" in confirmation dialog
 
@@ -941,16 +941,16 @@ For persistent issues:
 
 ```bash
 # Make executable
-chmod +x BellePoule.Modern.AppImage
+chmod +x BPM - Escrime.Modern.AppImage
 
 # Try running from terminal
-./BellePoule.Modern.AppImage
+./BPM - Escrime.Modern.AppImage
 
 # Check dependencies
-ldd BellePoule.Modern.AppImage
+ldd BPM - Escrime.Modern.AppImage
 
 # Install missing libraries
-sudo apt install $(ldd BellePoule.Modern.AppImage | grep "not found" | awk '{print $1}')
+sudo apt install $(ldd BPM - Escrime.Modern.AppImage | grep "not found" | awk '{print $1}')
 ```
 
 #### Issue: Wayland Compatibility
@@ -965,7 +965,7 @@ sudo apt install $(ldd BellePoule.Modern.AppImage | grep "not found" | awk '{pri
 
 ```bash
 # Run with XWayland
-GDK_BACKEND=x11 ./BellePoule.Modern.AppImage
+GDK_BACKEND=x11 ./BPM - Escrime.Modern.AppImage
 
 # Or disable Wayland for specific session
 # Edit /etc/gdm3/custom.conf
@@ -984,9 +984,9 @@ Use built-in diagnostic tool:
 
 ### Log Files Location
 
-**Windows**: `%APPDATA%/bellepoule-modern/logs/`
-**Mac**: `~/Library/Logs/bellepoule-modern/`
-**Linux**: `~/.local/share/bellepoule-modern/logs/`
+**Windows**: `%APPDATA%/bpm-escrime/logs/`
+**Mac**: `~/Library/Logs/bpm-escrime/`
+**Linux**: `~/.local/share/bpm-escrime/logs/`
 
 ### Network Diagnostics
 
@@ -1012,7 +1012,7 @@ netstat -an | grep 8066
 
 ```bash
 # Check memory usage
-top -p $(pgrep BellePoule)
+top -p $(pgrep BPM - Escrime)
 
 # Monitor disk I/O
 iotop -o
@@ -1043,7 +1043,7 @@ uptime
 If application completely unusable:
 
 1. Export all competitions to XML format
-2. Uninstall BellePoule Modern
+2. Uninstall BPM - Escrime
 3. Download and reinstall latest version
 4. Import competitions from XML backups
 

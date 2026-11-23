@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - TableauSignaturesModal
+ * BPM - Escrime - TableauSignaturesModal
  * Consultation des signatures des combattants d'un match terminé du tableau
  * + renvoi de la demande de signature vers une piste si le match n'est pas signé
  * Licensed under GPL-3.0

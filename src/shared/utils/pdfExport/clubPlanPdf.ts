@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : plan de cours d'une séance, PDF ou impression.
+ * BPM - Escrime - Mode Club (#1872) : plan de cours d'une séance, PDF ou impression.
  * En-tête club (logo, nom), date, arme, objectifs ; déroulé chronologique (horaires
  * cumulés, durées, consignes, case à cocher) ; zone de notes à remplir à la main.
  * Licensed under GPL-3.0
@@ -149,7 +149,7 @@ export function generateClubPlanHTML(session: ClubSession, opts: ClubPlanPdfOpti
     ${session.notes ? `<p>${multiline(session.notes)}</p>` : ''}
     <div class="plan-lines">${'<div></div>'.repeat(session.notes ? 4 : 7)}</div>
   </section>
-  <footer class="plan-foot">BellePoule Modern</footer>
+  <footer class="plan-foot">BPM - Escrime</footer>
   </body></html>`;
 }
 

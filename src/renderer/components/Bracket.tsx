@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Interactive Bracket Component
+ * BPM - Escrime - Interactive Bracket Component
  * SVG-based tournament bracket visualization
  * Licensed under GPL-3.0
  */

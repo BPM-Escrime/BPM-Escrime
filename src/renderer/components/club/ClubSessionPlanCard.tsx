@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : plan de cours pendant la séance.
+ * BPM - Escrime - Mode Club (#1872) : plan de cours pendant la séance.
  * Objectifs, exercices à cocher au fil de la séance, notes / compte rendu.
  * Licensed under GPL-3.0
  */

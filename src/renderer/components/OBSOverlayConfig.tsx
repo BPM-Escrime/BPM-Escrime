@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Configurateur OBS Overlay (inline Electron)
+ * BPM - Escrime - Configurateur OBS Overlay (inline Electron)
  * Licensed under GPL-3.0
  */
 

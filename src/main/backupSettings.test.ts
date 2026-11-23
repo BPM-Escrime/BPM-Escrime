@@ -37,14 +37,14 @@ describe('sanitizeBackupDir', () => {
 });
 
 describe('dossier par défaut', () => {
-  it('vaut <Documents>/BellePoule sans réglage', () => {
+  it('vaut <Documents>/BPM - Escrime sans réglage', () => {
     const userData = makeTmp();
     const docs = '/home/u/Documents';
     expect(resolveBackupDir(userData, docs)).toEqual({
       dir: defaultBackupDir(docs),
       isDefault: true,
     });
-    expect(defaultBackupDir(docs)).toBe(path.join(docs, 'BellePoule'));
+    expect(defaultBackupDir(docs)).toBe(path.join(docs, 'BPM - Escrime'));
   });
 
   it('un réglage invalide dans le fichier retombe sur le défaut', () => {

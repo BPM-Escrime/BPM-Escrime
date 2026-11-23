@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Sélecteur de nationalité (saisie du code + liste déroulante avec drapeaux)
+ * BPM - Escrime - Sélecteur de nationalité (saisie du code + liste déroulante avec drapeaux)
  * Licensed under GPL-3.0
  */
 

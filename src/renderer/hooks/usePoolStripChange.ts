@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Changement de piste d'une poule (#1037, #1501)
+ * BPM - Escrime - Changement de piste d'une poule (#1037, #1501)
  * Appliqué immédiatement (saisie distante, liens, QR) ; écrit par le moteur (assignMatches).
  * « local » : moteur absent (hors Electron), état de l'écran seul.
  * Licensed under GPL-3.0

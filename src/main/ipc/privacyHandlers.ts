@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - RGPD côté main (#1882) : réglages appliqués au démarrage, avis à l'écran
+ * BPM - Escrime - RGPD côté main (#1882) : réglages appliqués au démarrage, avis à l'écran
  * d'une archive .bpm chiffrée choisie par Fichier → Ouvrir. Droits des personnes, conservation,
  * export JSON d'une personne (getPersonData) et archives chiffrées (getEncryptedCompetitionFile,
  * openCompetitionFile) sont des opérations du contrat (docs/adr/0021, 0022). Plus aucun canal

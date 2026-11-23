@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fonction « match précédent » (PREV) d'une arène (#1829, manque n°4)
+ * BPM - Escrime - Fonction « match précédent » (PREV) d'une arène (#1829, manque n°4)
  * Fenêtre de correction bornée : on ne rouvre le dernier match terminé que peu de temps après
  * sa fin, tant que le match suivant n'a pas démarré (cf. Engarde : refus au-delà de 3 min).
  * Licensed under GPL-3.0

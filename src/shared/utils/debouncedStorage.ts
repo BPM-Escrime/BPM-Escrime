@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Storage localStorage à écriture différée pour zustand/persist
+ * BPM - Escrime - Storage localStorage à écriture différée pour zustand/persist
  * Évite un JSON.stringify de tout le state à chaque action sur les stores
  * très sollicités (saisie de scores, cartons). La DB reste la source de vérité ;
  * ce cache ne sert qu'à la réhydratation de l'UI.

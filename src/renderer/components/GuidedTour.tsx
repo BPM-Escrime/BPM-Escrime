@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Parcours guidé de la première compétition (#1305)
+ * BPM - Escrime - Parcours guidé de la première compétition (#1305)
  * Licensed under GPL-3.0
  */
 

@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide covers how to download, install, and run BellePoule Modern on Windows, macOS, and Linux.
+This guide covers how to download, install, and run BPM - Escrime on Windows, macOS, and Linux.
 
 ## 📥 System Requirements
 
@@ -28,9 +28,9 @@ This guide covers how to download, install, and run BellePoule Modern on Windows
 
 | Platform | Architecture | Files |
 | --- | --- | --- |
-| **Windows** | x64 | `BellePoule-Modern-<version>-win-x64-portable.exe` |
-| **macOS** | x64 (Intel), arm64 (Apple Silicon) | `BellePoule-Modern-<version>-mac-<arch>.dmg` |
-| **Linux** | x64, arm64 | `BellePoule-Modern-<version>-linux-<arch>.AppImage` |
+| **Windows** | x64 | `BPM-Escrime-<version>-win-x64-portable.exe` |
+| **macOS** | x64 (Intel), arm64 (Apple Silicon) | `BPM-Escrime-<version>-mac-<arch>.dmg` |
+| **Linux** | x64, arm64 | `BPM-Escrime-<version>-linux-<arch>.AppImage` |
 
 `<version>` = `X.Y.Z` (stable, tag `vX.Y.Z`) or `X.Y.Z-dev.N` (pre-release published on every push to `dev`). Rules: [docs/VERSIONING.md](docs/VERSIONING.md).
 
@@ -39,12 +39,12 @@ This guide covers how to download, install, and run BellePoule Modern on Windows
 #### Windows
 
 1. **Installer (`-setup.exe`)**: run it, choose the install folder, desktop shortcut created, launch from the Start Menu.
-2. **Portable (`-portable.exe`)**: run directly, no installation (extracts to `BellePouleModernPortable`).
+2. **Portable (`-portable.exe`)**: run directly, no installation (extracts to `BPMEscrimePortable`).
 
 #### macOS
 
 1. Pick the `.dmg` matching your Mac (`x64` Intel, `arm64` Apple Silicon — how to tell: [docs/MAC_VERSION.md](docs/MAC_VERSION.md)) and open it
-2. Drag BellePoule Modern to your Applications folder
+2. Drag BPM - Escrime to your Applications folder
 3. Right-click the app and select "Open" (first time only to bypass Gatekeeper)
 4. Launch from Applications folder
 
@@ -54,17 +54,17 @@ This guide covers how to download, install, and run BellePoule Modern on Windows
 
    ```bash
    # Make executable
-   chmod +x BellePoule\ Modern-*.AppImage
+   chmod +x BPM - Escrime\ Modern-*.AppImage
 
    # Run directly
-   ./BellePoule\ Modern-*.AppImage
+   ./BPM - Escrime\ Modern-*.AppImage
    ```
 
 2. **Packages**:
 
    ```bash
-   sudo apt install ./BellePoule\ Modern-*.deb    # Debian / Ubuntu
-   sudo dnf install ./BellePoule\ Modern-*.rpm    # Fedora / RHEL
+   sudo apt install ./BPM - Escrime\ Modern-*.deb    # Debian / Ubuntu
+   sudo dnf install ./BPM - Escrime\ Modern-*.rpm    # Fedora / RHEL
    ```
 
 ## 🔧 Advanced Installation
@@ -84,7 +84,7 @@ This guide covers how to download, install, and run BellePoule Modern on Windows
 
    ```bash
    git clone https://github.com/BellePoule-Modern/bellepoule-modern.git
-   cd bellepoule-modern
+   cd bpm-escrime
    ```
 
 2. **Install dependencies**:
@@ -124,7 +124,7 @@ The repository ships a `flake.nix` that builds the app with Nix (Linux, `x86_64`
 
 ```bash
 nix run github:BellePoule-Modern/bellepoule-modern          # run the app
-nix build github:BellePoule-Modern/bellepoule-modern        # → ./result/bin/bellepoule-modern
+nix build github:BellePoule-Modern/bellepoule-modern        # → ./result/bin/bpm-escrime
 ```
 
 For maintainers: the `nix-build` CI job builds the package on every push to `dev` and `main`. When `package-lock.json` changes, regenerate the npm hash in `flake.nix` (`npmDepsHash`):
@@ -135,7 +135,7 @@ nix run nixpkgs#prefetch-npm-deps -- package-lock.json
 
 ### Development Environment Setup
 
-For contributors who want to develop BellePoule Modern:
+For contributors who want to develop BPM - Escrime:
 
 1. **Install VS Code** (recommended)
 2. **Install extensions**:
@@ -172,7 +172,7 @@ For contributors who want to develop BellePoule Modern:
 
 ### Firewall Settings
 
-BellePoule Modern uses the following ports:
+BPM - Escrime uses the following ports:
 
 - **Port 8066**: Remote scoring web server (optional)
 - **Automatic updates**: Port 443 (HTTPS)
@@ -210,7 +210,7 @@ For remote scoring functionality, you need additional devices:
 
 ### Setup Steps
 
-1. Install BellePoule Modern on your main computer
+1. Install BPM - Escrime on your main computer
 2. Connect all devices to the same WiFi network
 3. Start remote scoring from the main interface
 4. Access the web interface from tablets using the provided URL
@@ -219,27 +219,27 @@ For remote scoring functionality, you need additional devices:
 
 ### Windows
 
-- **Application Data**: `%APPDATA%/bellepoule-modern/`
-- **Logs**: `%APPDATA%/bellepoule-modern/logs/`
-- **Database**: Documents/BellePouleModern/
+- **Application Data**: `%APPDATA%/bpm-escrime/`
+- **Logs**: `%APPDATA%/bpm-escrime/logs/`
+- **Database**: Documents/BPM - Escrime/
 
 ### macOS
 
-- **Application Data**: `~/Library/Application Support/bellepoule-modern/`
-- **Logs**: `~/Library/Logs/bellepoule-modern/`
-- **Database**: `~/Documents/BellePouleModern/`
+- **Application Data**: `~/Library/Application Support/bpm-escrime/`
+- **Logs**: `~/Library/Logs/bpm-escrime/`
+- **Database**: `~/Documents/BPM - Escrime/`
 
 ### Linux
 
-- **Application Data**: `~/.config/bellepoule-modern/`
-- **Logs**: `~/.local/share/bellepoule-modern/logs/`
-- **Database**: `~/Documents/BellePouleModern/`
+- **Application Data**: `~/.config/BPM - Escrime/`
+- **Logs**: `~/.local/share/bpm-escrime/logs/`
+- **Database**: `~/Documents/BPM - Escrime/`
 
 ## 🔄 Updates
 
 ### Automatic Updates
 
-- BellePoule Modern checks for updates on startup
+- BPM - Escrime checks for updates on startup
 - You'll be notified when a new version is available
 - Updates are downloaded and installed automatically
 
@@ -284,7 +284,7 @@ For remote scoring functionality, you need additional devices:
 
 **"Permission denied"**
 
-- Make the AppImage executable: `chmod +x BellePoule.Modern.AppImage`
+- Make the AppImage executable: `chmod +x BPM - Escrime.Modern.AppImage`
 - Check file permissions with `ls -la`
 
 **Ubuntu 24.04+ : "FATAL ... SUID sandbox helper binary"** (`npm start` ou binaire Electron)
@@ -341,4 +341,4 @@ For remote scoring functionality, you need additional devices:
 
 ---
 
-**🎉 Congratulations!** You've successfully installed BellePoule Modern. Check out the [User Manual](USER_MANUAL.md) for next steps on creating and managing competitions.
+**🎉 Congratulations!** You've successfully installed BPM - Escrime. Check out the [User Manual](USER_MANUAL.md) for next steps on creating and managing competitions.

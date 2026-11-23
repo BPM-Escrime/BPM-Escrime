@@ -1,4 +1,4 @@
-# Stack Technique - BellePoule Modern
+# Stack Technique - BPM - Escrime
 
 ## Frontend
 
@@ -35,7 +35,7 @@
 ## Structure des dossiers
 
 ```
-bellepoule-modern/
+bpm-escrime/
 ├── src/
 │   ├── shared/
 │   │   ├── types/           # Types TypeScript

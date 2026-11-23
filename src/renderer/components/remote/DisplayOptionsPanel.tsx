@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Options d'affichage de la saisie distante (#1414)
+ * BPM - Escrime - Options d'affichage de la saisie distante (#1414)
  * Thème des écrans, fond d'écran d'attente et vues du kiosk (extrait de RemoteScoreManager).
  * Licensed under GPL-3.0
  */

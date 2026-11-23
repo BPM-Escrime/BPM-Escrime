@@ -5,7 +5,7 @@ test.describe('Application Launch', () => {
     await page.goto('/');
 
     // Titre de l'en-tête (le nom figure aussi dans le message d'accueil)
-    await expect(page.locator('.header-title-text')).toHaveText('BellePoule Modern');
+    await expect(page.locator('.header-title-text')).toHaveText('BPM - Escrime');
   });
 
   test('should display competition list or empty state', async ({ page }) => {

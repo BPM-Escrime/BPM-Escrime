@@ -2,7 +2,7 @@
 
 ## Overview
 
-L'Analytics Dashboard de BellePoule Modern offre aux entraîneurs et organisateurs une vue complète en temps réel des performances et statistiques des compétitions.
+L'Analytics Dashboard de BPM - Escrime offre aux entraîneurs et organisateurs une vue complète en temps réel des performances et statistiques des compétitions.
 
 ## Fonctionnalités principales
 

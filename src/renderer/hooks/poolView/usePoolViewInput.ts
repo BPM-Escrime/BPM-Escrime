@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Saisie des scores de poule : ordre des matchs, modale de score, navigation clavier et molette
+ * BPM - Escrime - Saisie des scores de poule : ordre des matchs, modale de score, navigation clavier et molette
  * Licensed under GPL-3.0
  */
 

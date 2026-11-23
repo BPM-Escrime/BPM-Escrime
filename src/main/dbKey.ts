@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Clé de chiffrement de la base (SQLCipher, #1882)
+ * BPM - Escrime - Clé de chiffrement de la base (SQLCipher, #1882)
  * Licensed under GPL-3.0
  *
  * Clé aléatoire de 256 bits, stockée chiffrée par safeStorage (Keychain / DPAPI / libsecret)

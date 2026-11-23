@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Easter egg « Hyperespace » (double-clic sur le numéro de build)
+ * BPM - Escrime - Easter egg « Hyperespace » (double-clic sur le numéro de build)
  * Saut en hyperespace (canvas), « il y a bien longtemps… », logo, texte déroulant en
  * perspective dont l'épisode = numéro de build en chiffres romains, poule-faucon
  * poursuivie par un carton noir. Marche impériale en chocs de lames. Clic / Échap : retour.

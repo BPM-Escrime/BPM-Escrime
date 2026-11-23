@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Cartons des matchs de poule pour la feuille imprimée (#1829)
+ * BPM - Escrime - Cartons des matchs de poule pour la feuille imprimée (#1829)
  * Les cartons sont en base (`match_cards`) ; la feuille de poule les affiche, cartons P à part
  * (t.124.3.e). Copie des poules : l'état React n'est pas modifié.
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Classement effectif du tableau et progression des matchs
+ * BPM - Escrime - Classement effectif du tableau et progression des matchs
  * Règles pures (#1979, docs/adr/0002), lues par l'écran et le moteur (MCP, sport.ts).
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Vue typée de l'état de session (session_state) lu par le serveur distant (#1775)
+ * BPM - Escrime - Vue typée de l'état de session (session_state) lu par le serveur distant (#1775)
  * L'état est un JSON écrit par le renderer : tous les champs sont optionnels, les routes
  * ne lisent que ce qui est décrit ici.
  * Licensed under GPL-3.0

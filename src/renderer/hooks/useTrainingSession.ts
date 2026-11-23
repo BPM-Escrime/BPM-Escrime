@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode entraînement et démo autonome depuis l'accueil (#1897)
+ * BPM - Escrime - Mode entraînement et démo autonome depuis l'accueil (#1897)
  * Extrait d'App.tsx : serveur d'entraînement, session, panneau et fenêtres de lancement.
  * Licensed under GPL-3.0
  */

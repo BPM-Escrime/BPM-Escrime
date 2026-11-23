@@ -1,11 +1,11 @@
 ---
-name: bellepoule
-description: Interroger et, sur autorisation, piloter BellePoule Modern (logiciel de compétition d'escrime) via son serveur MCP local — état d'une journée ou d'une salle (retards de poules, pistes libres, arbitres disponibles, conflits, tablettes, appareils Cyrano), préparation d'une journée depuis des fichiers de tireurs et d'arbitres, pointage, poules, scores, tableau, export des résultats, salles et pistes. À utiliser dès qu'il est question d'escrime, de compétition, d'épreuve, de poules, de tableau, de pointage, de DT (directoire technique) ou de BellePoule, même sans nommer le MCP.
+name: bpm-escrime
+description: Interroger et, sur autorisation, piloter BPM - Escrime (logiciel de compétition d'escrime) via son serveur MCP local — état d'une journée ou d'une salle (retards de poules, pistes libres, arbitres disponibles, conflits, tablettes, appareils Cyrano), préparation d'une journée depuis des fichiers de tireurs et d'arbitres, pointage, poules, scores, tableau, export des résultats, salles et pistes. À utiliser dès qu'il est question d'escrime, de compétition, d'épreuve, de poules, de tableau, de pointage, de DT (directoire technique) ou de BPM - Escrime, même sans nommer le MCP.
 ---
 
-# BellePoule Modern
+# BPM - Escrime
 
-Le serveur MCP `bellepoule` lit la base du poste du directoire technique (DT). Si le DT a coché « Autoriser l'écriture » (ou lancé `--mcp-write`), il peut aussi préparer une journée (`import_day`), créer une épreuve (`create_competition`), importer des tireurs et des arbitres (`import_fencers`, `import_referees`), pointer (`check_in`), puis conduire l'épreuve : poules (`generate_pools`, `assign_referees`), scores (`record_score`), tableau (`build_bracket`), résultats (`export_results`). Référence complète : `docs/MCP.md` du dépôt.
+Le serveur MCP `bpm-escrime` lit la base du poste du directoire technique (DT). Si le DT a coché « Autoriser l'écriture » (ou lancé `--mcp-write`), il peut aussi préparer une journée (`import_day`), créer une épreuve (`create_competition`), importer des tireurs et des arbitres (`import_fencers`, `import_referees`), pointer (`check_in`), puis conduire l'épreuve : poules (`generate_pools`, `assign_referees`), scores (`record_score`), tableau (`build_bracket`), résultats (`export_results`). Référence complète : `docs/MCP.md` du dépôt.
 
 ## Vocabulaire
 
@@ -32,7 +32,7 @@ Statuts tireur : `CHECKED_IN` pointé, `NOT_CHECKED_IN` absent, `ABANDONED` aban
 - « Y a-t-il des conflits ? » → `day_overview` avec `dayId` : même arbitre sur deux épreuves ou deux pistes, arme non autorisée.
 - Tablettes et appareils : `server_status`, `cyrano_status`.
 
-Répondre court : chiffres clés, puis la liste utile (piste, poule, tireurs). Citer les noms tels que BellePoule les renvoie.
+Répondre court : chiffres clés, puis la liste utile (piste, poule, tireurs). Citer les noms tels que BPM - Escrime les renvoie.
 
 ## Préparer une journée (écriture autorisée)
 Fichiers de tireurs `.fff`, `.csv`, `.xlsx`, `.xml`, `.cotcot`, `.txt` ; arbitres Engarde ou XML. `import_day` avec `dryRun: true` → rapport au DT (épreuves, tireurs lus, doublons, erreurs) → questions → `import_day` réel. Rejouable sans doublon ; un fichier manquant fait échouer l'import sans rien écrire. Voir `/bp-journee`.
@@ -53,4 +53,4 @@ Voir `/bp-epreuve`.
 - Fichiers : lus et écrits seulement dans les dossiers accessibles à l'agent (Paramètres → Système → Agent IA ; par défaut Documents, Téléchargements, Bureau).
 - Erreurs : une réponse `isError` porte un code (`pools_have_scores`, `score_above_max`, `unsupported_format`…). Expliquer, proposer la suite, ne pas forcer.
 - Données personnelles : ne pas recopier plus que nécessaire (RGPD). Le serveur ne fournit ni date de naissance, ni licence, ni photo. Ne jamais afficher le jeton MCP.
-- Si le serveur ne répond pas : BellePoule Modern doit être lancé, avec Paramètres → Système → Agent IA (MCP) activé (ou `--headless --mcp`) ; jeton par `/plugin configure bellepoule` (sinon variable `BELLEPOULE_MCP_TOKEN`, souvent invisible d'un Claude Code lancé depuis VS Code). HTTP 401 « Jeton invalide » / `AUTH_HEADER_REJECTED` : jeton absent ou périmé (après « Nouveau jeton ») → `/plugin configure bellepoule`, puis `/reload-plugins`. Erreur `token_unreadable` : jeton à recréer dans les Paramètres ou par `--mcp-new-token`.
+- Si le serveur ne répond pas : BPM - Escrime doit être lancé, avec Paramètres → Système → Agent IA (MCP) activé (ou `--headless --mcp`) ; jeton par `/plugin configure bpm-escrime` (sinon variable `BPM_ESCRIME_MCP_TOKEN`, souvent invisible d'un Claude Code lancé depuis VS Code). HTTP 401 « Jeton invalide » / `AUTH_HEADER_REJECTED` : jeton absent ou périmé (après « Nouveau jeton ») → `/plugin configure bpm-escrime`, puis `/reload-plugins`. Erreur `token_unreadable` : jeton à recréer dans les Paramètres ou par `--mcp-new-token`.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Classement après poules et tableau à refaire (#1980, docs/adr/0017)
+ * BPM - Escrime - Classement après poules et tableau à refaire (#1980, docs/adr/0017)
  * adjustRanking : classement ajusté par le DT (ordre, points Quest) ou recalculé à l'écran ;
  * skipPools : épreuve sans poules, classement initial sur les tireurs pointés ;
  * clearTableau : tableau retiré, refait sur le classement courant à l'ouverture de l'onglet.

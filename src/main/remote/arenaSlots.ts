@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Sous-pistes du tournoi des rapières (#1118) : pendant les vagues,
+ * BPM - Escrime - Sous-pistes du tournoi des rapières (#1118) : pendant les vagues,
  * plusieurs tablettes arbitrent en même temps des matchs différents d'une même piste.
  * Chaque tablette réclame une sous-piste (`arena3`, `arena3s2`, `arena3s3`…), arène à part
  * entière (score, chrono, cartons) qui partage le mot de passe et la poule de la piste.

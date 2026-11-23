@@ -695,8 +695,8 @@ describe('RemoteScoreServer', () => {
     }
 
     it('isAllowedOrigin : même hôte / LAN acceptés, origine externe refusée', () => {
-      const ok = (o: any) => (server as any).isAllowedOrigin(o, 'bellepoule.local:8066');
-      expect(ok('http://bellepoule.local:8066')).toBe(true);
+      const ok = (o: any) => (server as any).isAllowedOrigin(o, 'bpm-escrime.local:8066');
+      expect(ok('http://bpm-escrime.local:8066')).toBe(true);
       expect(ok('http://192.168.1.10:8066')).toBe(true);
       expect(ok('https://evil.example.com')).toBe(false);
       expect(ok('null')).toBe(false);

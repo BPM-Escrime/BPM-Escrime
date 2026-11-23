@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Penalties Index
+ * BPM - Escrime - Penalties Index
  * Feature 23: Main entry point
  * Licensed under GPL-3.0
  */

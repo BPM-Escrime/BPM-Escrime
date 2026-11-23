@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Optimisation des conflits de poules
+ * BPM - Escrime - Optimisation des conflits de poules
  * Échanges de tireurs entre poules pour réduire les conflits club / région / nation,
  * sans changer la taille des poules ni (autant que possible) l'équilibre du serpentin.
  * Licensed under GPL-3.0

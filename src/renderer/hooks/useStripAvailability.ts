@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pistes indisponibles (plan des pistes, #1501)
+ * BPM - Escrime - Pistes indisponibles (plan des pistes, #1501)
  * Liste des pistes de l'intervalle marquées indisponibles, par compétition.
  * Persistée dans localStorage (confort par poste) ; les consommateurs
  * (cartes de matchs, boutons de piste, répartition automatique) lisent le store.

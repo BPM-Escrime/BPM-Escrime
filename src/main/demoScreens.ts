@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Démo autonome : fenêtres d'écrans distants (arènes, tablette arbitre, tournoi)
+ * BPM - Escrime - Démo autonome : fenêtres d'écrans distants (arènes, tablette arbitre, tournoi)
  * ouvertes sur le serveur d'entraînement en mode démo. L'arbitre virtuel (remote/demoMode.ts)
  * joue les matchs ; ces fenêtres montrent donc la saisie distante en action, sans tablette.
  * Licensed under GPL-3.0
@@ -21,7 +21,7 @@ export function openDemoScreens(serverUrl: string, strips: number): number {
   screens.forEach((s, i) => {
     const win = new BrowserWindow({
       ...bounds[i],
-      title: `BellePoule — ${s.title}`,
+      title: `BPM - Escrime — ${s.title}`,
       autoHideMenuBar: true,
       webPreferences: {
         partition: DEMO_PARTITION,

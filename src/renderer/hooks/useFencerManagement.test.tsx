@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests unitaires - useFencerManagement
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import React from 'react';

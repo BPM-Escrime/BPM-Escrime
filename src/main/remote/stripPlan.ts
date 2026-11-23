@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Plan des pistes partagé avec le serveur distant (#1501)
+ * BPM - Escrime - Plan des pistes partagé avec le serveur distant (#1501)
  * Intervalle de pistes (piste de départ) et pistes indisponibles, transmis par le renderer.
  * Les arènes hors intervalle sont masquées des écrans (kiosque, tableau de bord).
  * Licensed under GPL-3.0

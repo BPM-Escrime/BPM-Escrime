@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Gardes d'accès des espaces appel (checkin) et formateurs (#1240)
+ * BPM - Escrime - Gardes d'accès des espaces appel (checkin) et formateurs (#1240)
  * Extrait de RemoteScoreServer : mots de passe hashés, jetons de session, refus HTTP typés.
  * Licensed under GPL-3.0
  */

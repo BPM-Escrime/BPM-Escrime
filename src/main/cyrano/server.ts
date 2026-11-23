@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Serveur UDP Cyrano (#1720)
+ * BPM - Escrime - Serveur UDP Cyrano (#1720)
  * Registre des pistes (IP ↔ piste), liste blanche d'IP, battement HELLO toutes les 15 s,
  * supervision (en ligne / incertain / hors ligne / jamais vu), journal des trames.
  * Le serveur ne connaît pas le domaine : il émet des événements (`info`, `next`, `prev`)
@@ -41,7 +41,7 @@ export interface CyranoPisteConfig {
   ip: string;
   /** Port UDP de l'appareil (50100 par défaut, 50101 sur certains modèles) */
   port?: number;
-  /** Arène BellePoule rattachée (`/arene{N}`) */
+  /** Arène BPM - Escrime rattachée (`/arene{N}`) */
   arena?: number;
   /** Version du protocole : imposée, ou `auto` (celle de la dernière trame reçue) */
   protocol?: CyranoProtocolSetting;

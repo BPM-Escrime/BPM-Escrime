@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Vue poule équipes
+ * BPM - Escrime - Vue poule équipes
  * Composant présentationnel : l'état (matchs, cartons, sélection) est possédé
  * par le parent (TeamManagerView), suivant le même pattern que PoolView/PoolRankingView.
  * Licensed under GPL-3.0

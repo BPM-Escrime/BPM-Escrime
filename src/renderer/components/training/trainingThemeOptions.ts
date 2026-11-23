@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Thèmes intégrés des écrans d'entraînement (piste, kiosk, arbitre,
+ * BPM - Escrime - Thèmes intégrés des écrans d'entraînement (piste, kiosk, arbitre,
  * lobby), proposés par le mode entraînement et la saisie distante du Mode Club.
  * Licensed under GPL-3.0
  */

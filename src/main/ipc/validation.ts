@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Validation des données IPC reçues du renderer (#1774)
+ * BPM - Escrime - Validation des données IPC reçues du renderer (#1774)
  * Sans dépendance Electron : importée par preload.ts, testable unitairement.
  * Licensed under GPL-3.0
  */

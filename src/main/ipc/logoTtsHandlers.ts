@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handlers IPC app:getTtsConfig / app:getLogo / app:getLogos / app:saveLogos
+ * BPM - Escrime - Handlers IPC app:getTtsConfig / app:getLogo / app:getLogos / app:saveLogos
  * (extraits de main.ts, #1341). Lecture de la synthèse vocale et des logos du poste au
  * démarrage de l'écran, et bibliothèque de logos : les écritures du logo actif et de la synthèse
  * vocale sont les opérations setRemoteLogo et setTtsConfig du contrat (#1981, docs/adr/0022).

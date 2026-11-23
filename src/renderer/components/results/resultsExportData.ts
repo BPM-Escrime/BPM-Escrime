@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Données de secours des exports complets des résultats (#1981)
+ * BPM - Escrime - Données de secours des exports complets des résultats (#1981)
  * Tireurs, poules, matchs de tableau et signatures relus par le contrat quand la vue ne les a
  * pas en mémoire (listFencers, getCompetitionState, getPoolSignatures, getTableauSignatures).
  * Chaque lecture est isolée : un échec ne vide pas tout l'export.

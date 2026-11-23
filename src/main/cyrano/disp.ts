@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Construction d'un DISP Cyrano à partir d'un match (#1720)
+ * BPM - Escrime - Construction d'un DISP Cyrano à partir d'un match (#1720)
  * Descripteur neutre, indépendant du stockage (poule, tableau, arène) :
  * le raccordement aux arènes le remplit puis appelle `CyranoServer.sendDisp`.
  * Licensed under GPL-3.0
@@ -37,7 +37,7 @@ export interface CyranoDispMatch {
   time?: string;
   /** Chrono à reprendre (`m:ss`) : match rappelé (PREV) ; omis pour un match neuf */
   stopwatch?: string;
-  /** Arme BellePoule ('E' | 'F' | 'S' | 'L' | 'C') */
+  /** Arme BPM - Escrime ('E' | 'F' | 'S' | 'L' | 'C') */
   weapon: string;
   team?: boolean;
   /** Tireur affiché à droite / à gauche */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Menu « Outils » de l'en-tête (QR Wi-Fi, télécommande TV, visite
+ * BPM - Escrime - Menu « Outils » de l'en-tête (QR Wi-Fi, télécommande TV, visite
  * guidée, démo). Extrait d'App.tsx (#1897) : état d'ouverture, position et clic extérieur.
  * Licensed under GPL-3.0
  */

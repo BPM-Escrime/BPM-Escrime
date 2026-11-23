@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tireurs entre l'écran et le contrat (#1981, docs/adr/0018)
+ * BPM - Escrime - Tireurs entre l'écran et le contrat (#1981, docs/adr/0018)
  * Le contrat transporte les dates en ISO 8601 ; l'écran manipule des Date.
  * Licensed under GPL-3.0
  */

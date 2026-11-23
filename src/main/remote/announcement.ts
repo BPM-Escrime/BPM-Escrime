@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Annonces carton/sortie relayées aux écrans (extrait de remoteScoreServer.ts).
+ * BPM - Escrime - Annonces carton/sortie relayées aux écrans (extrait de remoteScoreServer.ts).
  * Licensed under GPL-3.0
  */
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : chargement des données et vues actives (extrait de kiosk.html #1401)
+ * BPM - Escrime - Kiosque : chargement des données et vues actives (extrait de kiosk.html #1401)
  * Séquence de requêtes HTTP (fetch injecté) avec rendu progressif via rappels, comme à l'origine.
  * Servi en /js/kioskData.js (CSP 'self').
  * Licensed under GPL-3.0

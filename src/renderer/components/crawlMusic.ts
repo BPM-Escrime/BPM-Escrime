@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bande-son de l'easter egg « Hyperespace »
+ * BPM - Escrime - Bande-son de l'easter egg « Hyperespace »
  * Marche impériale jouée en chocs de lames : pour chaque note, un « swish » de lame
  * fendant l'air puis un « clang » métallique accordé sur la note (partiels inharmoniques
  * de lame d'acier), avec réverbération de salle d'armes. Web Audio uniquement.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - En-tête de la saisie distante : état du serveur, URLs et options
+ * BPM - Escrime - En-tête de la saisie distante : état du serveur, URLs et options
  * Licensed under GPL-3.0
  */
 

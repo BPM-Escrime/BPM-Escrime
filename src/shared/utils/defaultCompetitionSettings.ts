@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglages par défaut d'une nouvelle épreuve (#1880, lot 0)
+ * BPM - Escrime - Réglages par défaut d'une nouvelle épreuve (#1880, lot 0)
  * Source unique pour la modale de création et la couche domaine (MCP, --headless).
  * Licensed under GPL-3.0
  */

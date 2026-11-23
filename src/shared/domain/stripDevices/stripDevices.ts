@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Appareils de piste de la salle (docs/adr/0023) : règles pures
+ * BPM - Escrime - Appareils de piste de la salle (docs/adr/0023) : règles pures
  * - lecture tolérante d'une déclaration (`venue_strips.device_config`, anciennes configurations
  *   Cyrano comprises : `protocol` EFP1 / EFP1.1 / auto devient `version`) ;
  * - salle d'une épreuve : la sienne, sinon celle de sa journée, sinon la salle par défaut ;

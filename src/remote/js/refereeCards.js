@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : règles des cartons (extrait de referee.html #1401)
+ * BPM - Escrime - Arbitre : règles des cartons (extrait de referee.html #1401)
  * Pénalité d'un carton, carton selon le groupe de faute, cartons de passivité (escrime
  * olympique), vainqueur par passivité. Pur, sans DOM. Servi en /js/refereeCards.js (CSP 'self').
  * Licensed under GPL-3.0

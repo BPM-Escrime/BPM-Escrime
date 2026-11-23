@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : QR d'identification d'un membre (même contenu
+ * BPM - Escrime - Mode Club (#1872) : QR d'identification d'un membre (même contenu
  * que sa carte, `BPC1:M:<code>`) à scanner depuis l'écran, et impression de sa seule carte.
  * Licensed under GPL-3.0
  */

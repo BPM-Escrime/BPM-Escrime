@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modèle d'édition de la formule (#2013, étape A ; domaine pur depuis #1979, ADR-0012)
+ * BPM - Escrime - Modèle d'édition de la formule (#2013, étape A ; domaine pur depuis #1979, ADR-0012)
  * Utilisé par la fenêtre de propriétés ; utilisable par le moteur (MCP) sans l'écran.
  * Réglages de structure et de match regroupés par phase : tours de poules, Tour Quest, tableau.
  * Lecture depuis les réglages enregistrés (repli unifié) et réécriture en réglages plats,

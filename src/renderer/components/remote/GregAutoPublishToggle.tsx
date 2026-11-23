@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bouton ON/OFF de publication GREG automatique (#1328)
+ * BPM - Escrime - Bouton ON/OFF de publication GREG automatique (#1328)
  * Licensed under GPL-3.0
  */
 import React from 'react';

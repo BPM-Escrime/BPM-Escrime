@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Add Fencer Modal
+ * BPM - Escrime - Add Fencer Modal
  * Licensed under GPL-3.0
  */
 

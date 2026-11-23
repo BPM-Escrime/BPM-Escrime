@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File Parser - Arbitres Engarde
+ * BPM - Escrime - File Parser - Arbitres Engarde
  * Licensed under GPL-3.0
  */
 

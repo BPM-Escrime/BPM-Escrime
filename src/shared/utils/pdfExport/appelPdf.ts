@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - PDF Export Service
+ * BPM - Escrime - PDF Export Service
  * Export PDF de la liste d'appel
  * Licensed under GPL-3.0
  */
@@ -120,7 +120,7 @@ export function generateAppelHTML(
   </table>`,
     footer: `
   <div class="doc-footer">
-    <span>BellePoule Modern</span>
+    <span>BPM - Escrime</span>
     <span>${now}</span>
   </div>`,
   };

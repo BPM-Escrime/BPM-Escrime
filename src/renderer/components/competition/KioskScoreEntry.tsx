@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - KioskScoreEntry
+ * BPM - Escrime - KioskScoreEntry
  * Mode kiosk plein écran de saisie des scores de poules
  * Licensed under GPL-3.0
  */

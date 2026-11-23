@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pile d'annulation réutilisable (#1301)
+ * BPM - Escrime - Pile d'annulation réutilisable (#1301)
  * Pile bornée d'instantanés « avant action », fenêtre de restauration,
  * verrou une fois l'action transmise (écran distant / sync cloud).
  * Licensed under GPL-3.0

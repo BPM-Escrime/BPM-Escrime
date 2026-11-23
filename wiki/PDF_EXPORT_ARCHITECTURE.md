@@ -2,7 +2,7 @@
 
 ## 🏗️ Vue d'Ensemble
 
-L'architecture du système d'export PDF de BellePoule Modern est conçue pour être modulaire, performante et maintenable.
+L'architecture du système d'export PDF de BPM - Escrime est conçue pour être modulaire, performante et maintenable.
 
 ## 📁 Structure des Fichiers
 

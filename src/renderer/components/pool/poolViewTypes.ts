@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types de PoolView (extrait, #1599)
+ * BPM - Escrime - Types de PoolView (extrait, #1599)
  * Licensed under GPL-3.0
  */
 import type { Fencer, Pool, Referee, Weapon } from '../../../shared/types';

@@ -1,10 +1,10 @@
 /**
- * BellePoule Modern - Broker MQTT intégré pour OPP2 (#1960)
+ * BPM - Escrime - Broker MQTT intégré pour OPP2 (#1960)
  * Broker MQTT 3.1.1 minimal, dans le processus main : aucune installation pour le club.
  * Gère : messages retenus, dernière volonté (LWT), QoS 0 / 1 (QoS 2 accepté en entrée,
  * distribué en QoS 1), keepalive, jokers `+` / `#`. Sessions toujours « propres » (pas de
  * file conservée après déconnexion : OPP2 s'appuie sur les messages retenus).
- * BellePoule s'y branche sans socket (`publish` / `subscribe`, interface `Opp2Bus`).
+ * BPM - Escrime s'y branche sans socket (`publish` / `subscribe`, interface `Opp2Bus`).
  * Authentification et droits d'écriture : crochets `authenticate` / `authorizePublish`
  * (identifiants par appareil, droits par rôle : lot sécurité de #1960).
  * Licensed under GPL-3.0

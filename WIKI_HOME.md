@@ -1,10 +1,10 @@
-# BellePoule Modern - Wiki Home
+# BPM - Escrime - Wiki Home
 
-Welcome to BellePoule Modern comprehensive documentation hub. BellePoule Modern is a modern fencing tournament management software rewritten from original BellePoule using cutting-edge web technologies.
+Welcome to BPM - Escrime comprehensive documentation hub. BPM - Escrime is a modern fencing tournament management software rewritten from original software using cutting-edge web technologies.
 
-## 🤺 About BellePoule Modern
+## 🤺 About BPM - Escrime
 
-BellePoule Modern is a complete rewrite of legendary BellePoule fencing tournament software, bringing it into the modern era with:
+BPM - Escrime is a complete rewrite of legendary fencing tournament software, bringing it into the modern era with:
 
 - **Cross-platform support** (Windows, macOS, Linux)
 - **Modern user interface** built with React
@@ -22,9 +22,9 @@ BellePoule Modern is a complete rewrite of legendary BellePoule fencing tourname
 ### 👤 For Users
 
 #### Getting Started
-- **[Installation Guide](INSTALLATION.md)** - Download, install, and run BellePoule Modern on your platform
+- **[Installation Guide](INSTALLATION.md)** - Download, install, and run BPM - Escrime on your platform
 - **[User Manual](USER_MANUAL.md)** - Complete guide with screenshots for all features
-- **[Migration Guide](MIGRATION_GUIDE.md)** - Transition from original BellePoule
+- **[Migration Guide](MIGRATION_GUIDE.md)** - Transition from original software
 
 #### Features & Usage
 - **[Creating Competitions](USER_MANUAL.md#-creating-a-competition)** - Setup new tournaments
@@ -64,11 +64,11 @@ BellePoule Modern is a complete rewrite of legendary BellePoule fencing tourname
 5. **[Generate pools](USER_MANUAL.md#phase-2-pool-rounds)** automatically
 6. **[Start scoring](REMOTE_SCORE_GUIDE.md#démarrage-express)** matches from tablets
 
-### For Users Migrating from Original BellePoule
+### For Users Migrating from Original software
 
 1. **[Read Migration Guide](MIGRATION_GUIDE.md)** for planning
-2. **[Export data](MIGRATION_GUIDE.md#data-compatibility)** from original BellePoule
-3. **[Import to BellePoule Modern](MIGRATION_GUIDE.md#migration-workflows)**
+2. **[Export data](MIGRATION_GUIDE.md#data-compatibility)** from original software
+3. **[Import to BPM - Escrime](MIGRATION_GUIDE.md#migration-workflows)**
 4. **[Verify data](MIGRATION_GUIDE.md#testing-and-validation)** and test workflows
 
 ### For Developers
@@ -90,7 +90,7 @@ BellePoule Modern is a complete rewrite of legendary BellePoule fencing tourname
 ### 👥 Fencer Management
 - **Advanced FFF file parsing** with mixed format support
 - CSV import/export with flexible delimiters
-- XML BellePoule format compatibility
+- XML BPM - Escrime format compatibility
 - Handle names with commas and special characters
 - UTF-8 encoding support for international characters
 
@@ -123,7 +123,7 @@ BellePoule Modern is a complete rewrite of legendary BellePoule fencing tourname
 User Guides/
 ├── Installation Guide           # Setup and requirements
 ├── User Manual                # Complete feature guide  
-├── Migration Guide             # From original BellePoule
+├── Migration Guide             # From original software
 ├── Troubleshooting Guide       # Common issues
 └── File Format Specifications  # Import/export details
 ```
@@ -168,19 +168,19 @@ Developer Guides/
 
 ### Import Formats
 - **FFF files** (.fff, .csv) - French Fencing Federation standard
-- **XML BellePoule** - Original BellePoule export format
+- **XML BPM - Escrime** - Original software export format
 - **CSV files** - Excel-compatible format with flexible delimiters
 - **Mixed formats** - Advanced parsing for complex naming conventions
 
 ### Export Formats
-- **XML BellePoule** - Compatible with original BellePoule
+- **XML BPM - Escrime** - Compatible with original software
 - **CSV files** - Excel and spreadsheet friendly
 - **PDF reports** - Printable official results
 - **HTML reports** - Web-viewable results
 
-## 🆚 What's New vs Original BellePoule
+## 🆚 What's New vs Original software
 
-| Feature | Original BellePoule | BellePoule Modern |
+| Feature | Original software | BPM - Escrime |
 |---------|---------------------|-------------------|
 | **Platform Support** | Windows, macOS | **Windows, macOS, Linux** ✅ |
 | **User Interface** | Java Swing | **Modern React UI** ✅ |
@@ -243,7 +243,7 @@ We welcome contributions from the community! See the [Development Guide](DEVELOP
 
 ## 📄 License
 
-BellePoule Modern is licensed under **GPL-3.0**, the same license as the original BellePoule. This ensures the software remains free and open source while respecting the original project's philosophy.
+BPM - Escrime is licensed under **GPL-3.0**, the same license as the original software. This ensures the software remains free and open source while respecting the original project's philosophy.
 
 ---
 
@@ -259,6 +259,6 @@ Ready to modernize your fencing tournament management?
 
 ---
 
-*Join the modern era of fencing tournament management with BellePoule Modern - built by fencers, for fencers, with modern technology.* 🤺
+*Join the modern era of fencing tournament management with BPM - Escrime - built by fencers, for fencers, with modern technology.* 🤺
 
 *For the fencing community, by the fencing community.*

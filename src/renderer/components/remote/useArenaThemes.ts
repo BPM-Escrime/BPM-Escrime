@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Thèmes d'affichage des arènes et du kiosque (#1241)
+ * BPM - Escrime - Thèmes d'affichage des arènes et du kiosque (#1241)
  * Sort de RemoteScoreManager l'état des thèmes (globaux, par arène, par type d'écran)
  * et leurs actions : persistance côté serveur distant et thèmes sauvegardés.
  * Licensed under GPL-3.0

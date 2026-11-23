@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mannequin des zones de touche Sabre Laser, partagé entre l'écran
+ * BPM - Escrime - Mannequin des zones de touche Sabre Laser, partagé entre l'écran
  * (TouchZoneHeatmap) et les exports PDF.
  * Règlement : A = main + manche du sabre (1 pt), B = bras ou jambe (3 pts), C = tronc ou tête (5 pts).
  * Une couleur par zone ; intensité selon le rang : foncé = zone la plus sollicitée,

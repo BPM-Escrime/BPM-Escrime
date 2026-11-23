@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Language Selector Component
+ * BPM - Escrime - Language Selector Component
  * Licensed under GPL-3.0
  */
 

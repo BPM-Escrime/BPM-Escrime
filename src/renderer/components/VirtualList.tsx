@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Virtual List Component
+ * BPM - Escrime - Virtual List Component
  * Performance optimization for rendering large lists
  * Licensed under GPL-3.0
  */

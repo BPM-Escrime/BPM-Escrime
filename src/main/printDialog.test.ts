@@ -224,8 +224,8 @@ describe('enregistrement PDF (#1214)', () => {
 
   it('nom de fichier sans caractère interdit', () => {
     expect(pdfFileName('Poule 1/2: "test"')).toBe('Poule 1 2 test.pdf');
-    expect(pdfFileName('')).toBe('BellePoule.pdf');
-    expect(pdfFileName(42)).toBe('BellePoule.pdf');
+    expect(pdfFileName('')).toBe('BPM - Escrime.pdf');
+    expect(pdfFileName(42)).toBe('BPM - Escrime.pdf');
   });
 
   it('rend avec les réglages puis écrit au chemin choisi', async () => {

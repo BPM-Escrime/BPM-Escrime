@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Penalty Utils
+ * BPM - Escrime - Penalty Utils
  * Feature 23: Utility functions
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : props des vues génériques (#1441)
+ * BPM - Escrime - Tournoi des rapières : props des vues génériques (#1441)
  * Appel (colonnes Équipe / Tireurs / Catégorie / Niveau) et préparation des poules
  * (séparation club + regroupement par niveau, nom d'équipe et bulle de niveau).
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - PDF Export Service
+ * BPM - Escrime - PDF Export Service
  * Export PDF de l'arbre du tableau (vue graphique SVG, mono et multi-pages)
  * Licensed under GPL-3.0
  */
@@ -226,7 +226,7 @@ export function generateBracketTreeHTML(
   // ── SVG: footer ─────────────────────────────────────────────────────────────
   const svgFooter = `
   <line x1="${MARGIN_L}" y1="${SVG_H - 10}" x2="${VBW - MARGIN_L}" y2="${SVG_H - 10}" stroke="#e2e8f0" stroke-width="0.75"/>
-  <text x="${MARGIN_L}" y="${SVG_H - 3}" font-family="'Segoe UI',Arial,sans-serif" font-size="7" fill="#94a3b8">BellePoule Modern</text>
+  <text x="${MARGIN_L}" y="${SVG_H - 3}" font-family="'Segoe UI',Arial,sans-serif" font-size="7" fill="#94a3b8">BPM - Escrime</text>
   <text x="${VBW - MARGIN_L}" y="${SVG_H - 3}" font-family="'Segoe UI',Arial,sans-serif" font-size="7" fill="#94a3b8" text-anchor="end">${now}</text>`;
 
   // ── Assemble ─────────────────────────────────────────────────────────────────
@@ -491,7 +491,7 @@ export function generateBracketTreeMultiPageHTML(
   // ── SVG: footer ───────────────────────────────────────────────────────────────
   const svgFooter = `
   <line x1="${MARGIN_L}" y1="${SVG_H - 12}" x2="${VBW - MARGIN_L}" y2="${SVG_H - 12}" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="${MARGIN_L}" y="${SVG_H - 4}" font-family="'Segoe UI',Arial,sans-serif" font-size="9" fill="#94a3b8">BellePoule Modern</text>
+  <text x="${MARGIN_L}" y="${SVG_H - 4}" font-family="'Segoe UI',Arial,sans-serif" font-size="9" fill="#94a3b8">BPM - Escrime</text>
   <text x="${VBW - MARGIN_L}" y="${SVG_H - 4}" font-family="'Segoe UI',Arial,sans-serif" font-size="9" fill="#94a3b8" text-anchor="end">${now}</text>`;
 
   // ── Full SVG content (embedded identically in each page) ─────────────────────

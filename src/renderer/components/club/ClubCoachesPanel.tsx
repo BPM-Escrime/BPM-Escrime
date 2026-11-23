@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : maîtres d'armes du club (encadrement des séances).
+ * BPM - Escrime - Mode Club : maîtres d'armes du club (encadrement des séances).
  * Ajout, fiche (fonction, contact, armes enseignées), archivage, suppression.
  * Licensed under GPL-3.0
  */

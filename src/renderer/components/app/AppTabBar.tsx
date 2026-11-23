@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Barre d'onglets de l'application : accueil, onglet Club (#1872),
+ * BPM - Escrime - Barre d'onglets de l'application : accueil, onglet Club (#1872),
  * compétitions ouvertes (glisser-déposer pour réordonner). Extrait d'App.tsx (#1897).
  * Licensed under GPL-3.0
  */

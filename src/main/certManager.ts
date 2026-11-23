@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - TLS Certificate Manager
+ * BPM - Escrime - TLS Certificate Manager
  * Generates and persists a self-signed certificate for the HTTPS remote score server.
  * Licensed under GPL-3.0
  */
@@ -60,7 +60,7 @@ export async function ensureCert(userDataPath: string): Promise<CertBundle> {
 
   fs.mkdirSync(certsDir, { recursive: true });
 
-  const attrs = [{ name: 'commonName', value: 'BellePoule-LAN' }];
+  const attrs = [{ name: 'commonName', value: 'BPM-Escrime-LAN' }];
   const notAfterDate = new Date();
   notAfterDate.setDate(notAfterDate.getDate() + 3650);
   const generated = await generate(attrs, {

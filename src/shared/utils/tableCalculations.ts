@@ -1,6 +1,6 @@
 /**
- * BellePoule Modern - Direct Elimination Table Utilities
- * Based on the original BellePoule tableau algorithm
+ * BPM - Escrime - Direct Elimination Table Utilities
+ * Based on the original tableau algorithm
  * Licensed under GPL-3.0
  */
 

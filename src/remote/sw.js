@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Service Worker for Offline Mode
+ * BPM - Escrime - Service Worker for Offline Mode
  * Enables offline functionality for referee tablets
  * Licensed under GPL-3.0
  */

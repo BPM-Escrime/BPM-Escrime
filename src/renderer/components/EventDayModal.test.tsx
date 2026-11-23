@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - EventDayModal (journée multi-épreuves, #1714)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

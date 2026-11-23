@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Chargements initiaux de la compétition : tireurs, arbitres, serveur de saisie
+ * BPM - Escrime - Chargements initiaux de la compétition : tireurs, arbitres, serveur de saisie
  * distante (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : équipes enregistrées comme tireurs (#1118)
+ * BPM - Escrime - Tournoi des rapières : équipes enregistrées comme tireurs (#1118)
  * Création / mise à jour d'une équipe et import d'un export d'inscriptions (#1211).
  * Licensed under GPL-3.0
  */

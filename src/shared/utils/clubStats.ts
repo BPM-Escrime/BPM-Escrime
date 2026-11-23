@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : périodes (séance, mois, trimestre,
+ * BPM - Escrime - Mode Club (#1872) : périodes (séance, mois, trimestre,
  * saison sportive septembre → août) et statistiques des membres. Fonctions pures.
  * Licensed under GPL-3.0
  */

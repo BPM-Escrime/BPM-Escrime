@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Session, synchronisation distante, menu natif et rapières de la compétition
+ * BPM - Escrime - Session, synchronisation distante, menu natif et rapières de la compétition
  * Licensed under GPL-3.0
  */
 

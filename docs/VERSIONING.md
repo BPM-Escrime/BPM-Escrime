@@ -1,6 +1,6 @@
 # Règles de versionnage
 
-Ce document fixe la façon dont BellePoule Modern est numéroté, construit et publié.
+Ce document fixe la façon dont BPM - Escrime est numéroté, construit et publié.
 Outil associé : `scripts/version.js` (scripts npm `version:show` / `version:bump`).
 
 ## 1. Deux nombres, deux rôles
@@ -29,7 +29,7 @@ Source de vérité : `version.json`.
 
 ## 2. Quand changer MAJEUR / MINEUR / CORRECTIF
 
-Le « contrat » de BellePoule Modern = fichiers de compétition, base SQLite, interfaces
+Le « contrat » de BPM - Escrime = fichiers de compétition, base SQLite, interfaces
 distantes (tablettes, écrans), formats d'import/export, flux d'arbitrage.
 
 | Incrément | Quand | Exemples |
@@ -54,9 +54,9 @@ claude/… , feature/…  ──PR──▶  dev  ──PR (promotion)──▶ 
 
 | Branche | Canal | Tag | Titre de release | Fichiers |
 |---|---|---|---|---|
-| `dev` | pré-release (`prerelease: true`) | `vX.Y.Z-dev.N` | `🧪 BellePoule Modern X.Y.Z-dev.N (Build #N)` | `BellePoule-Modern-X.Y.Z-dev.N-<os>-<arch>.<ext>` |
-| `hotfix/*` | pré-release (`prerelease: true`) | `vX.Y.Z-rc.N` | `🩹 BellePoule Modern X.Y.Z-rc.N (Build #N)` | `BellePoule-Modern-X.Y.Z-rc.N-<os>-<arch>.<ext>` |
-| `main` | stable (`latest`) | `vX.Y.Z` | `🚀 BellePoule Modern X.Y.Z (Build #N)` | `BellePoule-Modern-X.Y.Z-<os>-<arch>.<ext>` |
+| `dev` | pré-release (`prerelease: true`) | `vX.Y.Z-dev.N` | `🧪 BPM - Escrime X.Y.Z-dev.N (Build #N)` | `BPM-Escrime-X.Y.Z-dev.N-<os>-<arch>.<ext>` |
+| `hotfix/*` | pré-release (`prerelease: true`) | `vX.Y.Z-rc.N` | `🩹 BPM - Escrime X.Y.Z-rc.N (Build #N)` | `BPM-Escrime-X.Y.Z-rc.N-<os>-<arch>.<ext>` |
+| `main` | stable (`latest`) | `vX.Y.Z` | `🚀 BPM - Escrime X.Y.Z (Build #N)` | `BPM-Escrime-X.Y.Z-<os>-<arch>.<ext>` |
 
 `<os>` = `win` / `mac` / `linux` ; Windows ajoute `-portable` ou `-setup`.
 

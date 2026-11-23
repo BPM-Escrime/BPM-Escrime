@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Live Inter-Pool Ranking
+ * BPM - Escrime - Live Inter-Pool Ranking
  * Classement général temps réel agrégeant toutes les poules
  * Licensed under GPL-3.0
  */

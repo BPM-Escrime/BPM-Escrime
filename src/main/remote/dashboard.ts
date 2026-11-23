@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Instantané du tableau de bord et estimation de fin de phase (#1240)
+ * BPM - Escrime - Instantané du tableau de bord et estimation de fin de phase (#1240)
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */

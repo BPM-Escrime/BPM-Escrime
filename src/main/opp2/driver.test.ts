@@ -50,7 +50,7 @@ describe('pilote OPP2 (#1960)', () => {
     driver.on('status', l => links.push(l));
   });
 
-  it('démarrage : BellePoule annoncé (retenu), appareil en ligne via apparatus/connection', () => {
+  it('démarrage : BPM - Escrime annoncé (retenu), appareil en ligne via apparatus/connection', () => {
     driver.start();
     expect(JSON.parse(broker.getRetained(T('connection', 'software'))!.toString())).toMatchObject({
       protocol: 'OPP2',

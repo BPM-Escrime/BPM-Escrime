@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - QR Code Share Component
+ * BPM - Escrime - QR Code Share Component
  * Licensed under GPL-3.0
  */
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File Parser - Format XML BellePoule
+ * BPM - Escrime - File Parser - Format XML BPM - Escrime
  * Licensed under GPL-3.0
  */
 
@@ -86,7 +86,7 @@ function collectTeams(
 }
 
 /**
- * Parse un fichier XML BellePoule / FFE / FIE
+ * Parse un fichier XML BPM - Escrime / FFE / FIE
  */
 export function parseXMLFile(content: string): ImportResult {
   const result: ImportResult = {

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pistes d'une journée en temps réel (#1878) : tableau des pistes,
+ * BPM - Escrime - Pistes d'une journée en temps réel (#1878) : tableau des pistes,
  * affectation, réservation, affectation automatique (port `dayStrips` du poste, docs/adr/0022).
  * Affectation automatique : vérifiée toutes les 5 s pour les journées qui l'ont activée.
  * Licensed under GPL-3.0

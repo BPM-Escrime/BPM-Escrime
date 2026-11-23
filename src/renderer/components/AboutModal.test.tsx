@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - AboutModal
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';
@@ -18,7 +18,7 @@ afterEach(() => {
 describe('AboutModal', () => {
   it('affiche le titre et la licence', () => {
     render(<AboutModal onClose={vi.fn()} />);
-    expect(screen.getByText('BellePoule Modern')).toBeInTheDocument();
+    expect(screen.getByText('BPM - Escrime')).toBeInTheDocument();
     expect(screen.getByText(/GPL-3\.0/)).toBeInTheDocument();
   });
 

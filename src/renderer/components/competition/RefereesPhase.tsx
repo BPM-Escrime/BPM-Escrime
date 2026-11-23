@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Phase « Arbitres » de la compétition (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Phase « Arbitres » de la compétition (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import React from 'react';

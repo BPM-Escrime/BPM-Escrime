@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Briques du contrat d'API (#1981) : forme d'une opération, droits,
+ * BPM - Escrime - Briques du contrat d'API (#1981) : forme d'une opération, droits,
  * constructeurs command / query / subscription, schémas communs. Partagées par contract.ts et
  * les groupes d'opérations déclarés à part (contractDtView.ts).
  * Licensed under GPL-3.0

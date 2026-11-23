@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Cartons noirs : liste par arène et annulation (réintégration) (#1240)
+ * BPM - Escrime - Cartons noirs : liste par arène et annulation (réintégration) (#1240)
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */

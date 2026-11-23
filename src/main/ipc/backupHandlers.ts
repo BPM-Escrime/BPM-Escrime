@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handlers IPC `backup:*` : dossiers de sauvegarde
+ * BPM - Escrime - Handlers IPC `backup:*` : dossiers de sauvegarde
  * (Paramètres → Sauvegarde ; dossier dédié d'une compétition).
  * Le chemin ne vient que du sélecteur natif de dossier.
  * Licensed under GPL-3.0

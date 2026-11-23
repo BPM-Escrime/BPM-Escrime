@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Noms et nations pour les appareils Cyrano (#1720)
+ * BPM - Escrime - Noms et nations pour les appareils Cyrano (#1720)
  * Cyrano n'affiche que l'alphabet latin : translittération puis convention
  * olympique (NOM + initiale du prénom) sur 10, 12 ou 15 caractères.
  * Licensed under GPL-3.0

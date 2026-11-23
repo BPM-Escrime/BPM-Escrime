@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File Parser - Format FFE (.fff / CSV)
+ * BPM - Escrime - File Parser - Format FFE (.fff / CSV)
  * Licensed under GPL-3.0
  */
 

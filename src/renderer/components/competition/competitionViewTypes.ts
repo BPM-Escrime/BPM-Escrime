@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Props de CompetitionView (partagées avec ses hooks, #1599)
+ * BPM - Escrime - Props de CompetitionView (partagées avec ses hooks, #1599)
  * Licensed under GPL-3.0
  */
 import type { Competition } from '../../../shared/types';

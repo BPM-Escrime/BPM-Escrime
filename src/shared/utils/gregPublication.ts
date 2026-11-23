@@ -1,6 +1,6 @@
 /**
- * BellePoule Modern - Publication GREG (escrime-info.com) : mapping des champs du formulaire (#1328)
- * Valeurs reprises de l'ancien BellePoule (greg_uploader.cpp, contest.cpp, category.cpp, application.cpp).
+ * BPM - Escrime - Publication GREG (escrime-info.com) : mapping des champs du formulaire (#1328)
+ * Valeurs reprises de l'ancien BPM - Escrime (greg_uploader.cpp, contest.cpp, category.cpp, application.cpp).
  * Licensed under GPL-3.0
  */
 
@@ -8,7 +8,7 @@ import { Category, Competition, CompetitionSettings, Gender, Weapon } from '../t
 
 export const GREG_UPLOAD_URL = 'https://www.escrime-info.com/gregxml/Greg/envoyer.php';
 
-/** Niveau GREG (codes de l'ancien BellePoule, `level_xml_image`) */
+/** Niveau GREG (codes de l'ancien BPM - Escrime, `level_xml_image`) */
 export type GregLevel = NonNullable<CompetitionSettings['gregLevel']>;
 
 export const GREG_LEVELS: readonly GregLevel[] = ['L', 'Z', 'CN', 'A', 'F', 'IE', 'X'];
@@ -104,7 +104,7 @@ const pad2 = (n: number): string => String(n).padStart(2, '0');
 const GREG_HOST = 'escrime-info.com';
 
 /**
- * Même détection que l'ancien BellePoule : toute adresse dont l'hôte est escrime-info.com
+ * Même détection que l'ancien BPM - Escrime : toute adresse dont l'hôte est escrime-info.com
  * (ou un sous-domaine) part vers GREG. Analyse l'hôte réel : une simple recherche de sous-chaîne
  * accepterait des hôtes arbitraires (ex. escrime-info.com.evil.net, evil.net/escrime-info.com).
  */
@@ -126,7 +126,7 @@ export function gregFileName(title: string): string {
 
 /**
  * Champs du formulaire GREG. Lève une erreur si la compétition ne peut pas être publiée
- * (le serveur refuse une compétition sans lieu, l'ancien BellePoule n'envoyait rien dans ce cas).
+ * (le serveur refuse une compétition sans lieu, l'ancien BPM - Escrime n'envoyait rien dans ce cas).
  */
 export function buildGregFields(competition: GregCompetition): GregFormFields {
   const weapon = WEAPON_GREG[competition.weapon];
@@ -155,7 +155,7 @@ export function buildGregFields(competition: GregCompetition): GregFormFields {
 
 /**
  * Racine native du XML envoyé (GREG et connecteur FTP, #1331).
- * L'export BellePoule écrit `<CompetitionParEquipe>` ; l'ancien fichier natif, et donc le formulaire
+ * L'export BPM - Escrime écrit `<CompetitionParEquipe>` ; l'ancien fichier natif, et donc le formulaire
  * GREG, utilisent le pluriel `<CompetitionParEquipes>`. Remplacement exact des balises racine.
  */
 export function toNativeRootTag(xml: string, isTeamEvent: boolean): string {

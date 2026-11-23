@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Outils MCP d'orchestration sportive (#1880, lot 3)
+ * BPM - Escrime - Outils MCP d'orchestration sportive (#1880, lot 3)
  * Poules, arbitres de poule, scores, tableau, export des résultats. La logique est dans
  * src/main/engine/commands/sport.ts : mêmes fonctions pures que l'écran, qui relit l'état de
  * session après chaque écriture (competition:event « session:changed »).
@@ -67,7 +67,7 @@ export const MCP_SPORT_TOOLS: McpWriteTool[] = [
     name: 'export_results',
     title: 'Exporter les résultats',
     description:
-      'Écrit les résultats dans un fichier d’un dossier accessible à l’agent : xml (BellePoule / FFE), fff (classement FFE), csv (classement après poules), html ou pdf (classement final). ' +
+      'Écrit les résultats dans un fichier d’un dossier accessible à l’agent : xml (BPM - Escrime / FFE), fff (classement FFE), csv (classement après poules), html ou pdf (classement final). ' +
       '« overwrite: true » pour remplacer un fichier existant.',
     inputSchema: {
       type: 'object',

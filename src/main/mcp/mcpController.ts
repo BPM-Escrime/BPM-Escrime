@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Contrôleur du serveur MCP (#1880) : activation, jeton, journal des appels.
+ * BPM - Escrime - Contrôleur du serveur MCP (#1880) : activation, jeton, journal des appels.
  * Les opérations getMcpStatus, updateMcpSettings, regenerateMcpToken et listMcpLog du contrat
  * passent par le port `mcp` du poste (docs/adr/0022).
  * Licensed under GPL-3.0
@@ -101,7 +101,7 @@ export function createMcpController({
   /** Bloc `.mcp.json` du client (URL, jeton) ; rejette McpTokenUnreadableError si le jeton est illisible */
   const clientConfig = async (): Promise<Record<string, unknown>> => ({
     mcpServers: {
-      bellepoule: {
+      'bpm-escrime': {
         type: 'http',
         url: `http://127.0.0.1:${settings().port}/mcp`,
         headers: { Authorization: `Bearer ${await getMcpToken(userDataDir(), secretBox)}` },

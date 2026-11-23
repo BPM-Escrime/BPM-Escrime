@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Options du journal des matchs (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Options du journal des matchs (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import type { Pool } from '../../../shared/types';

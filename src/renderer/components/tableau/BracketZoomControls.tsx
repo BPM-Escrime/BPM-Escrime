@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Boutons de zoom du tableau (extraits de TableauView, #1542)
+ * BPM - Escrime - Boutons de zoom du tableau (extraits de TableauView, #1542)
  * Licensed under GPL-3.0
  */
 import React from 'react';

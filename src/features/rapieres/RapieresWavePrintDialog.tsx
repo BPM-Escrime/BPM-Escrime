@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : choix de la plage de vagues à imprimer (#1441)
+ * BPM - Escrime - Tournoi des rapières : choix de la plage de vagues à imprimer (#1441)
  * Impression anticipée des feuilles de match d'un intervalle de vagues (vague de départ → fin).
  * Licensed under GPL-3.0
  */

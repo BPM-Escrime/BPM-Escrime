@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : création / modification d'un exercice
+ * BPM - Escrime - Mode Club (#1872) : création / modification d'un exercice
  * de la bibliothèque (titre, famille, durée, consignes, images).
  * Licensed under GPL-3.0
  */

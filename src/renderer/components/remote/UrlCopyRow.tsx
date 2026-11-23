@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Ligne « Copier URL + QR code » de la saisie distante (#1414)
+ * BPM - Escrime - Ligne « Copier URL + QR code » de la saisie distante (#1414)
  * Licensed under GPL-3.0
  */
 import { TipButton } from '../Tooltip';

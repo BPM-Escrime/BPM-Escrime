@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Error Logging Utility
+ * BPM - Escrime - Error Logging Utility
  * Centralized error tracking and logging
  * Licensed under GPL-3.0
  */

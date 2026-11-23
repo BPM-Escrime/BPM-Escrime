@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Panneau de choix du tireur pour un statut spécial (médical / forfait / exclusion)
+ * BPM - Escrime - Panneau de choix du tireur pour un statut spécial (médical / forfait / exclusion)
  * Affichage unique poules + tableau, sans pop-up (#1418). Exclusion : question « Carton noir ? » Oui/Non
  * après le choix du tireur.
  * Licensed under GPL-3.0

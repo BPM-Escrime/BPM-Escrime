@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Client IPC du contrat d'API (#1981)
+ * BPM - Escrime - Client IPC du contrat d'API (#1981)
  * Transport Electron (window.electronAPI.api) ; WsClient le remplacera dans un navigateur.
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Synchronisation des scores et pistes distants (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Synchronisation des scores et pistes distants (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import { useCallback, useEffect } from 'react';

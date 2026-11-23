@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - WiFi QR Code Generator Modal
+ * BPM - Escrime - WiFi QR Code Generator Modal
  * Licensed under GPL-3.0
  */
 

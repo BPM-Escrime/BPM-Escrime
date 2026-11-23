@@ -1,4 +1,4 @@
-/* BellePoule Remote — Shared i18n module : moteur ; traductions dans i18n/<langue>.js (#1213) */
+/* BPM - Escrime Remote — Shared i18n module : moteur ; traductions dans i18n/<langue>.js (#1213) */
 /* Le serveur distant sert /i18n.js = i18n/*.js + ce fichier, concaténés */
 (function () {
   const TRANSLATIONS = window.BP_REMOTE_I18N || {};

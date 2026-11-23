@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arguments de ligne de commande du process main (#1880, lot 0)
+ * BPM - Escrime - Arguments de ligne de commande du process main (#1880, lot 0)
  * Licensed under GPL-3.0
  */
 
@@ -37,7 +37,7 @@ function optionValue(argv: readonly string[], name: string): string | null {
   return null;
 }
 
-/** Lit argv (et BELLEPOULE_HEADLESS=1) ; arguments inconnus ignorés (Chromium en ajoute) */
+/** Lit argv (et BPM_ESCRIME_HEADLESS=1) ; arguments inconnus ignorés (Chromium en ajoute) */
 export function parseCliArgs(
   argv: readonly string[],
   env: Readonly<Record<string, string | undefined>> = {}
@@ -50,7 +50,7 @@ export function parseCliArgs(
   return {
     headless:
       argv.includes('--headless') ||
-      env.BELLEPOULE_HEADLESS === '1' ||
+      env.BPM_ESCRIME_HEADLESS === '1' ||
       !!batchImport ||
       mcpPrintConfig,
     batchImport,

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Team Elimination Bracket
+ * BPM - Escrime - Team Elimination Bracket
  * Génère et fait progresser un tableau à élimination directe entre équipes,
  * en réutilisant le calcul de seeding générique (agnostique du type de
  * compétiteur) de `tableCalculations.ts`.

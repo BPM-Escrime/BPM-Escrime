@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - En-tête de l'application (titre, recherche, aide, navigation,
+ * BPM - Escrime - En-tête de l'application (titre, recherche, aide, navigation,
  * Club, entraînement, thème, wiki, outils, paramètres). Extrait d'App.tsx (#1897).
  * Licensed under GPL-3.0
  */

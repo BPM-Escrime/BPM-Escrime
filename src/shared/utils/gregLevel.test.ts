@@ -23,7 +23,7 @@ const base: GregCompetition = {
 };
 
 describe('niveau GREG (#1328)', () => {
-  it('garde les 7 codes de l’ancien BellePoule, « Autre » par défaut', () => {
+  it('garde les 7 codes de l’ancien BPM - Escrime, « Autre » par défaut', () => {
     expect(GREG_LEVELS).toEqual(['L', 'Z', 'CN', 'A', 'F', 'IE', 'X']);
     expect(GREG_DEFAULT_LEVEL).toBe('X');
     expect(isGregLevel('CN')).toBe(true);
@@ -67,7 +67,7 @@ describe('niveau à l’import (#1328)', () => {
   const xml = (attrs: string) =>
     `<CompetitionIndividuelle Type="I" Arme="F" Sexe="M" Categorie="SENIOR" Date="03.10.2026" TitreLong="Challenge" ${attrs}><Tireurs/></CompetitionIndividuelle>`;
 
-  it('lit l’attribut Niveau d’un fichier BellePoule', () => {
+  it('lit l’attribut Niveau d’un fichier BPM - Escrime', () => {
     expect(parseCompetitionHeader(xml('Niveau="IE"'))?.fields.gregLevel).toBe('IE');
   });
 

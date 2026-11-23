@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Journée multi-épreuves (#1714, #1878) : opérations du contrat
+ * BPM - Escrime - Journée multi-épreuves (#1714, #1878) : opérations du contrat
  * (docs/adr/0022), reprise de l'ancien ipc/eventDayHandlers.ts. Les fonctions de domaine
  * (syncDay, importAndSyncDay, buildOverview) restent appelables directement (outils MCP).
  * Licensed under GPL-3.0

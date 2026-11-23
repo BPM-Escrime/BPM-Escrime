@@ -1,5 +1,5 @@
 /**
- * Tests unitaires — tableCalculations.ts (BellePoule Modern)
+ * Tests unitaires — tableCalculations.ts (BPM - Escrime)
  */
 
 import { describe, it, expect } from 'vitest';

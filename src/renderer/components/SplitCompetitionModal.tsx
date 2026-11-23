@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Nom de la compétition séparée (compétition couplée)
+ * BPM - Escrime - Nom de la compétition séparée (compétition couplée)
  * Licensed under GPL-3.0
  */
 

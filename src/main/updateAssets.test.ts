@@ -15,16 +15,16 @@ import {
 const V = '1.4.2';
 const asset = (name: string) => ({ name, size: 1 });
 const ASSETS = [
-  asset(`BellePoule-Modern-${V}-win-x64-portable.exe`),
-  asset(`BellePoule-Modern-${V}-win-x64-setup.exe`),
-  asset(`BellePoule-Modern-${V}-mac-x64.dmg`),
-  asset(`BellePoule-Modern-${V}-mac-arm64.dmg`),
-  asset(`BellePoule-Modern-${V}-mac-arm64.zip`),
-  asset(`BellePoule-Modern-${V}-mac-x64.zip`),
-  asset(`BellePoule-Modern-${V}-linux-amd64.deb`),
-  asset(`BellePoule-Modern-${V}-linux-x86_64.rpm`),
-  asset(`BellePoule-Modern-${V}-linux-x86_64.AppImage`),
-  asset(`BellePoule-Modern-${V}-linux-arm64.AppImage`),
+  asset(`BPM-Escrime-${V}-win-x64-portable.exe`),
+  asset(`BPM-Escrime-${V}-win-x64-setup.exe`),
+  asset(`BPM-Escrime-${V}-mac-x64.dmg`),
+  asset(`BPM-Escrime-${V}-mac-arm64.dmg`),
+  asset(`BPM-Escrime-${V}-mac-arm64.zip`),
+  asset(`BPM-Escrime-${V}-mac-x64.zip`),
+  asset(`BPM-Escrime-${V}-linux-amd64.deb`),
+  asset(`BPM-Escrime-${V}-linux-x86_64.rpm`),
+  asset(`BPM-Escrime-${V}-linux-x86_64.AppImage`),
+  asset(`BPM-Escrime-${V}-linux-arm64.AppImage`),
 ];
 
 describe('detectInstallKind', () => {
@@ -50,7 +50,7 @@ describe('detectInstallKind', () => {
 });
 
 describe('detectInstallKind — macOS / paquets Linux', () => {
-  const MAC_EXE = '/Applications/BellePoule Modern.app/Contents/MacOS/BellePoule Modern';
+  const MAC_EXE = '/Applications/BPM - Escrime.app/Contents/MacOS/BPM - Escrime';
   const files =
     (...l: string[]) =>
     (p: string) =>
@@ -59,7 +59,7 @@ describe('detectInstallKind — macOS / paquets Linux', () => {
   it('macOS : bundle .app dans un dossier inscriptible → macapp', () => {
     expect(detectInstallKind('darwin', {}, { execPath: MAC_EXE, canWrite: () => true })).toEqual({
       kind: 'macapp',
-      target: '/Applications/BellePoule Modern.app',
+      target: '/Applications/BPM - Escrime.app',
     });
   });
 
@@ -83,7 +83,7 @@ describe('detectInstallKind — macOS / paquets Linux', () => {
   });
 
   it('macAppBundle', () => {
-    expect(macAppBundle(MAC_EXE)).toBe('/Applications/BellePoule Modern.app');
+    expect(macAppBundle(MAC_EXE)).toBe('/Applications/BPM - Escrime.app');
     expect(macAppBundle('/usr/bin/node')).toBeNull();
   });
 });
@@ -123,7 +123,7 @@ describe('selectUpdateAsset', () => {
   });
 
   it('macOS .app sans zip publié → dmg', () => {
-    const dmgOnly = [asset(`BellePoule-Modern-${V}-mac-x64.dmg`)];
+    const dmgOnly = [asset(`BPM-Escrime-${V}-mac-x64.dmg`)];
     expect(selectUpdateAsset(dmgOnly, 'darwin', 'x64', 'macapp')?.name).toMatch(/\.dmg$/);
   });
 
@@ -175,18 +175,18 @@ describe('replaceExecutableInPlace', () => {
 });
 
 describe('portableSideBySidePath', () => {
-  const cur = 'D:\\Escrime\\BellePoule-Modern-1.2.1-win-x64-portable.exe';
+  const cur = 'D:\\Escrime\\BPM-Escrime-1.2.1-win-x64-portable.exe';
 
   it('nom de l’asset dans le dossier de l’exe courant', () => {
-    expect(
-      portableSideBySidePath(cur, 'BellePoule-Modern-1.2.2-win-x64-portable.exe', () => false)
-    ).toBe('D:\\Escrime\\BellePoule-Modern-1.2.2-win-x64-portable.exe');
+    expect(portableSideBySidePath(cur, 'BPM-Escrime-1.2.2-win-x64-portable.exe', () => false)).toBe(
+      'D:\\Escrime\\BPM-Escrime-1.2.2-win-x64-portable.exe'
+    );
   });
 
   it('même nom que l’exe courant ou fichier existant → suffixe', () => {
-    expect(
-      portableSideBySidePath(cur, 'BellePoule-Modern-1.2.1-win-x64-portable.exe', () => false)
-    ).toBe('D:\\Escrime\\BellePoule-Modern-1.2.1-win-x64-portable-2.exe');
+    expect(portableSideBySidePath(cur, 'BPM-Escrime-1.2.1-win-x64-portable.exe', () => false)).toBe(
+      'D:\\Escrime\\BPM-Escrime-1.2.1-win-x64-portable-2.exe'
+    );
     const taken = new Set(['D:\\Escrime\\x.exe', 'D:\\Escrime\\x-2.exe']);
     expect(portableSideBySidePath(cur, 'x.exe', p => taken.has(p))).toBe('D:\\Escrime\\x-3.exe');
   });
@@ -196,7 +196,7 @@ describe('portableSideBySidePath', () => {
       'D:\\Escrime\\evil.exe'
     );
     expect(portableSideBySidePath(cur, undefined, () => false)).toBe(
-      'D:\\Escrime\\BellePoule-Modern-portable.exe'
+      'D:\\Escrime\\BPM-Escrime-portable.exe'
     );
   });
 });

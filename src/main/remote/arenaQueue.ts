@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File des arènes : match suivant, réaffectation, répartition des poules, matchs de tableau (#1240)
+ * BPM - Escrime - File des arènes : match suivant, réaffectation, répartition des poules, matchs de tableau (#1240)
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */

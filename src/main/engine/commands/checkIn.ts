@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pointage des tireurs (#1981, opération pilote du contrat d'API)
+ * BPM - Escrime - Pointage des tireurs (#1981, opération pilote du contrat d'API)
  * Par identifiant ou numéro de dossard ; statuts de résultat (abandon, exclusion, forfait…)
  * laissés tels quels. Partagé par l'écran (IPC) et l'agent (MCP check_in).
  * Licensed under GPL-3.0

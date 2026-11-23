@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : paramètres globaux de la saisie distante du club,
+ * BPM - Escrime - Mode Club (#1872) : paramètres globaux de la saisie distante du club,
  * comme pour une compétition : interface réseau, port, HTTPS, thème des écrans et mot de
  * passe commun des pistes. Réseau appliqué au prochain démarrage ; thème et mot de passe
  * appliqués tout de suite si la saisie distante tourne.

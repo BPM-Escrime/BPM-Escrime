@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Diagnostic pare-feu Windows pour la saisie distante (lecture seule).
+ * BPM - Escrime - Diagnostic pare-feu Windows pour la saisie distante (lecture seule).
  * Lit la configuration du pare-feu (profils, réseaux actifs, règles entrantes) et en déduit
  * si le port du serveur peut recevoir des connexions. Ne teste PAS une vraie connexion :
  * sur la machine elle-même, le trafic vers sa propre IP LAN n'est pas représentatif.
@@ -72,7 +72,7 @@ function coversProgram(program: string, exePath: string): boolean {
 
 /**
  * Déduit les constats à partir des données brutes. Pure (testable sans Windows).
- * @param exePath chemin de l'exécutable BellePoule (règle « programme » éventuelle)
+ * @param exePath chemin de l'exécutable BPM - Escrime (règle « programme » éventuelle)
  */
 export function analyzeFirewall(
   raw: RawFirewallData,

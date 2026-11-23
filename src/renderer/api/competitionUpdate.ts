@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écriture d'une épreuve modifiée à l'écran (#1981, docs/adr/0018)
+ * BPM - Escrime - Écriture d'une épreuve modifiée à l'écran (#1981, docs/adr/0018)
  * Sépare les données sans règle (updateCompetitionDetails) de l'arme, du format et des
  * réglages (updateCompetitionSettings) ; seuls les champs qui changent sont envoyés.
  * Licensed under GPL-3.0

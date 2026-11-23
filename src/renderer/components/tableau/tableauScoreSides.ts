@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Position des tireurs dans la saisie de score du tableau (#1826)
+ * BPM - Escrime - Position des tireurs dans la saisie de score du tableau (#1826)
  * Reflète la position réelle sur la piste : le premier appelé (A) est à droite,
  * le second (B) à gauche ; un gaucher face à un droitier reste à gauche.
  * Licensed under GPL-3.0

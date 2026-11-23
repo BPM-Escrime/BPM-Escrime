@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Icon
+ * BPM - Escrime - Icon
  * Enveloppe lucide : tailles par jetons (16 / 20 / 24), trait harmonisé,
  * aria-hidden par défaut (le bouton porte le nom accessible), `label` si l'icône est seule.
  * Licensed under GPL-3.0

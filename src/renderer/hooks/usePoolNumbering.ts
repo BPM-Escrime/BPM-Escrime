@@ -1,12 +1,12 @@
 /**
- * BellePoule Modern - Numérotage des poules (#1864)
+ * BPM - Escrime - Numérotage des poules (#1864)
  * Bulles de la matrice : numéro de placement dans la poule (1, 2, 3…) au lieu des initiales.
  * Réglage global, tous modes, mémorisé localement.
  * Licensed under GPL-3.0
  */
 import { useCallback, useSyncExternalStore } from 'react';
 
-const STORAGE_KEY = 'bellepoule_pool_numbering';
+const STORAGE_KEY = 'bpm_escrime_pool_numbering';
 
 const load = (): boolean => {
   try {

@@ -1,6 +1,6 @@
 /**
  * Tests unitaires - NotificationService (construction des payloads + sécurité webhook)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';

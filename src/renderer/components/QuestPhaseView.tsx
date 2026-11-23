@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Quest Phase View
+ * BPM - Escrime - Quest Phase View
  * Gestion du Tour Quest (Sabre Laser) : configuration, planning, combats
  * Licensed under GPL-3.0
  */

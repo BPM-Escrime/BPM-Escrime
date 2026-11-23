@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Notification Service
+ * BPM - Escrime - Notification Service
  * Browser notifications, mobile push, and webhook alerts
  * Licensed under GPL-3.0
  */

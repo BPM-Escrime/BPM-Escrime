@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : logique du chrono (extrait de referee.html #1401)
+ * BPM - Escrime - Arbitre : logique du chrono (extrait de referee.html #1401)
  * Tick sans dérive, décision de fin de temps et sauvegarde locale (#1717). Sans DOM. Servi en /js/refereeTimer.js (CSP 'self').
  * Licensed under GPL-3.0
  */

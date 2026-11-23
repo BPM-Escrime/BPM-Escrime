@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mise en forme de la vue DT (#1981 lot 3) : fonctions pures, testées.
+ * BPM - Escrime - Mise en forme de la vue DT (#1981 lot 3) : fonctions pures, testées.
  * Licensed under GPL-3.0
  */
 import type { Fencer, Match, Pool } from '../../shared/types';

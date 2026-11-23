@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Contexte passé aux modules de routes du serveur distant (#1065).
+ * BPM - Escrime - Contexte passé aux modules de routes du serveur distant (#1065).
  * Les modules n'accèdent qu'à cet état, exposé par RemoteScoreServer.routeContext()
  * sous forme d'accesseurs (valeurs toujours à jour, même après réassignation).
  * Licensed under GPL-3.0

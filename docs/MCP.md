@@ -1,7 +1,7 @@
 # Agent IA — serveur MCP intégré (#1880)
 
-BellePoule Modern expose un serveur [MCP](https://modelcontextprotocol.io) dans le process main,
-**en lecture** et, sur autorisation, en **écriture** (administrative et sportive) : un agent (Claude Code avec le plugin `plugins/bellepoule`, ou tout client MCP)
+BPM - Escrime expose un serveur [MCP](https://modelcontextprotocol.io) dans le process main,
+**en lecture** et, sur autorisation, en **écriture** (administrative et sportive) : un agent (Claude Code avec le plugin `plugins/bpm-escrime`, ou tout client MCP)
 interroge la salle en langage naturel, prépare une journée, tire les poules, saisit des scores, construit le tableau et exporte les résultats.
 
 ## Activation et sécurité
@@ -25,16 +25,16 @@ interroge la salle en langage naturel, prépare une journée, tire les poules, s
 
 ## Plugin Claude Code
 
-Dans Claude Code : `/plugin install bellepoule --marketplace BellePoule-Modern/bellepoule-modern`
-(depuis un clone : `claude --plugin-dir plugins/bellepoule`), puis `/plugin configure bellepoule`
+Dans Claude Code : `/plugin install bpm-escrime --marketplace BellePoule-Modern/bellepoule-modern`
+(depuis un clone : `claude --plugin-dir plugins/bpm-escrime`), puis `/plugin configure bpm-escrime`
 et `/reload-plugins`. Options (`userConfig`, #1947) :
 
 | Option | Rangement | Repli si non renseignée |
 |---|---|---|
-| `mcp_token` | Stockage sécurisé du système | `BELLEPOULE_MCP_TOKEN` |
-| `mcp_port` | `settings.json` | `BELLEPOULE_MCP_PORT`, sinon 8067 |
+| `mcp_token` | Stockage sécurisé du système | `BPM_ESCRIME_MCP_TOKEN` |
+| `mcp_port` | `settings.json` | `BPM_ESCRIME_MCP_PORT`, sinon 8067 |
 
-Le repli passe par la valeur par défaut des options (`${BELLEPOULE_MCP_TOKEN:-}`), développée
+Le repli passe par la valeur par défaut des options (`${BPM_ESCRIME_MCP_TOKEN:-}`), développée
 par Claude Code après `${user_config.…}`. Une variable exportée dans `~/.zshrc` ou `~/.bashrc`
 n'atteint pas un Claude Code lancé depuis VS Code ou un lanceur graphique : préférer
 `/plugin configure`. Après « Nouveau jeton », le reconfigurer. Un jeton absent ou périmé donne
@@ -47,12 +47,12 @@ la skill et les commandes existe.
 ## Sans écran (ligne de commande)
 
 ```bash
-bellepoule-modern --headless --mcp                # MCP activé pour cette exécution (réglages enregistrés inchangés)
-bellepoule-modern --headless --mcp --mcp-write    # idem, outils d'écriture autorisés
-bellepoule-modern --headless --mcp-port=18067     # idem, sur un autre port
-bellepoule-modern --mcp-print-config              # affiche le bloc .mcp.json (URL, jeton) puis s'arrête
-bellepoule-modern --mcp-new-token                 # crée un nouveau jeton, puis l'affiche de la même façon
-bellepoule-modern --batch-import journee.json [--dry-run]   # import d'une journée, rapport JSON, code 0 / 1
+bpm-escrime --headless --mcp                # MCP activé pour cette exécution (réglages enregistrés inchangés)
+bpm-escrime --headless --mcp --mcp-write    # idem, outils d'écriture autorisés
+bpm-escrime --headless --mcp-port=18067     # idem, sur un autre port
+bpm-escrime --mcp-print-config              # affiche le bloc .mcp.json (URL, jeton) puis s'arrête
+bpm-escrime --mcp-new-token                 # crée un nouveau jeton, puis l'affiche de la même façon
+bpm-escrime --batch-import journee.json [--dry-run]   # import d'une journée, rapport JSON, code 0 / 1
 ```
 
 `--batch-import` prend un manifeste de la forme des arguments d'`import_day` (ci-dessous) ; ses
@@ -173,7 +173,7 @@ encore envoyée à l'écran du club après une écriture de l'agent.
 | `src/main/mcp/mcpSettings.ts` | Réglages et jeton chiffré |
 | `src/main/mcp/mcpController.ts` | Contrôleur du serveur (réglages, jeton, journal), démarrage à l'ouverture de la base ; opérations `getMcpStatus`, `updateMcpSettings`, `regenerateMcpToken`, `listMcpLog` par le port du poste (ADR-0022) |
 | `src/renderer/components/McpSettingsSection.tsx` | Section des Paramètres |
-| `plugins/bellepoule/` | Plugin Claude Code : `.mcp.json`, skill, commandes `/bp-etat`, `/bp-journee`, `/bp-epreuve` ; marketplace `.claude-plugin/marketplace.json` |
+| `plugins/bpm-escrime/` | Plugin Claude Code : `.mcp.json`, skill, commandes `/bp-etat`, `/bp-journee`, `/bp-epreuve` ; marketplace `.claude-plugin/marketplace.json` |
 
 ## Suite (épique #1880)
 
@@ -434,7 +434,7 @@ Aucun argument.
 
 ### `export_results` — Exporter les résultats
 
-*écriture, idempotent.* Écrit les résultats dans un fichier d’un dossier accessible à l’agent : xml (BellePoule / FFE), fff (classement FFE), csv (classement après poules), html ou pdf (classement final). « overwrite: true » pour remplacer un fichier existant.
+*écriture, idempotent.* Écrit les résultats dans un fichier d’un dossier accessible à l’agent : xml (BPM - Escrime / FFE), fff (classement FFE), csv (classement après poules), html ou pdf (classement final). « overwrite: true » pour remplacer un fichier existant.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Cloud Sync Service
+ * BPM - Escrime - Cloud Sync Service
  * Backup, synchronization and cloud storage
  * Licensed under GPL-3.0
  */
@@ -468,7 +468,7 @@ export class CloudSyncService {
     const existingId = searchResult.files[0]?.id;
 
     const metadata = JSON.stringify({ name: fileName, mimeType: 'application/json' });
-    const boundary = 'bellepoule_boundary';
+    const boundary = 'bpm_escrime_boundary';
     const body =
       `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
       `${metadata}\r\n` +

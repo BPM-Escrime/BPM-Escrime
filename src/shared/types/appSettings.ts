@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Paramétrage global du poste et salles (#1880, lot 0)
+ * BPM - Escrime - Paramétrage global du poste et salles (#1880, lot 0)
  * Données du poste et de la salle, pas d'une épreuve : lues par l'écran, le mode
  * --headless et le serveur MCP depuis la base (table app_settings, venues, venue_strips).
  * Licensed under GPL-3.0

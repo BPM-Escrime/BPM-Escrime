@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Événement fenêtre « DT confirme l'abandon » (#2000)
+ * BPM - Escrime - Événement fenêtre « DT confirme l'abandon » (#2000)
  * Émis par DTCallNotification (hors CompetitionView), écouté par useRemoteScoreSync qui pose
  * le statut ABANDONED comme le fait l'appel (matchs restants annulés, magasins rafraîchis).
  * Licensed under GPL-3.0

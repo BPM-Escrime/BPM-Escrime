@@ -1,11 +1,11 @@
 # macOS : choisir la bonne version (Apple Silicon ou Intel)
 
-BellePoule Modern est publié en **deux versions macOS**. Il faut prendre celle qui correspond au processeur du Mac.
+BPM - Escrime est publié en **deux versions macOS**. Il faut prendre celle qui correspond au processeur du Mac.
 
 | Votre Mac | Fichier à télécharger |
 |---|---|
-| Puce **Apple** (M1, M2, M3, M4, M5… ; MacBook Neo) | `BellePoule-Modern-<version>-mac-arm64.dmg` |
-| Processeur **Intel** | `BellePoule-Modern-<version>-mac-x64.dmg` |
+| Puce **Apple** (M1, M2, M3, M4, M5… ; MacBook Neo) | `BPM-Escrime-<version>-mac-arm64.dmg` |
+| Processeur **Intel** | `BPM-Escrime-<version>-mac-x64.dmg` |
 
 `<version>` = `X.Y.Z` (stable) ou `X.Y.Z-dev.N` (pré-release de test). Téléchargement : [dernière version stable](https://github.com/BellePoule-Modern/bellepoule-modern/releases/latest).
 
@@ -55,7 +55,7 @@ uname -m
 
 ### Vérifier la version installée
 
-**Moniteur d'activité** (Applications → Utilitaires), BellePoule Modern lancé, colonne **Type** :
+**Moniteur d'activité** (Applications → Utilitaires), BPM - Escrime lancé, colonne **Type** :
 
 - `Apple` → version `arm64`
 - `Intel` → version `x64` (sous Rosetta si le Mac est Apple Silicon)
@@ -65,14 +65,14 @@ Colonne absente : clic droit sur l'en-tête des colonnes → cocher **Type**.
 ## 3. Installer
 
 1. Ouvrir le `.dmg` téléchargé
-2. Glisser **BellePoule Modern** dans **Applications**
+2. Glisser **BPM - Escrime** dans **Applications**
 3. Premier lancement : l'app est signée ad-hoc, **non notarisée** → macOS la bloque.
    Le téléchargement par navigateur ajoute un attribut de quarantaine. Si macOS affiche
-   « BellePoule Modern est endommagé et ne peut pas être ouvert », l'option **Ouvrir quand même**
+   « BPM - Escrime est endommagé et ne peut pas être ouvert », l'option **Ouvrir quand même**
    n'apparaît pas : il faut retirer la quarantaine dans le Terminal :
 
    ```bash
-   xattr -cr "/Applications/BellePoule Modern.app"
+   xattr -cr "/Applications/BPM - Escrime.app"
    ```
 
    Puis lancer l'app normalement. À faire **après** avoir glissé l'app dans Applications
@@ -81,16 +81,16 @@ Colonne absente : clic droit sur l'en-tête des colonnes → cocher **Type**.
    Si le message persiste, re-signer localement :
 
    ```bash
-   sudo codesign --force --deep --sign - "/Applications/BellePoule Modern.app"
+   sudo codesign --force --deep --sign - "/Applications/BPM - Escrime.app"
    ```
 
 ## 4. Changer de version (x64 → arm64)
 
-1. Quitter BellePoule Modern
-2. Supprimer `/Applications/BellePoule Modern.app`
+1. Quitter BPM - Escrime
+2. Supprimer `/Applications/BPM - Escrime.app`
 3. Installer le bon `.dmg` (étape 3)
 
-Les compétitions sont conservées : la base (`bellepoule.db`) est dans `~/Library/Application Support/BellePoule Modern/`, pas dans l'application.
+Les compétitions sont conservées : la base (`bellepoule.db`) est dans `~/Library/Application Support/BPM - Escrime/`, pas dans l'application.
 
 ## 5. Mises à jour
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Croix rouge médicale (sortie pour raison médicale, #1256)
+ * BPM - Escrime - Croix rouge médicale (sortie pour raison médicale, #1256)
  * Licensed under GPL-3.0
  */
 

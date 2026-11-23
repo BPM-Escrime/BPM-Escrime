@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Analytics Dashboard Component
+ * BPM - Escrime - Analytics Dashboard Component
  * Real-time performance analytics for coaches
  * Licensed under GPL-3.0
  */

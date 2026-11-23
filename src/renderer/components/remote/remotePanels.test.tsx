@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - panneaux extraits de RemoteScoreManager (#1241)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Grille des pistes : URL, mot de passe et thème de chaque écran
+ * BPM - Escrime - Grille des pistes : URL, mot de passe et thème de chaque écran
  * Licensed under GPL-3.0
  */
 

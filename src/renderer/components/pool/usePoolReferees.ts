@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Affectation des arbitres d'une poule (#1241)
+ * BPM - Escrime - Affectation des arbitres d'une poule (#1241)
  * Sort de PoolView la modale de désignation (état regroupé + actions).
  * Licensed under GPL-3.0
  */

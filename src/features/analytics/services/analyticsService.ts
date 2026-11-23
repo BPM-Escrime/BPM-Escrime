@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Analytics Service
+ * BPM - Escrime - Analytics Service
  * Business logic for analytics and statistics
  * Licensed under GPL-3.0
  */

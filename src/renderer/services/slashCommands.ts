@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Commandes « / » de la palette (Ctrl+K)
+ * BPM - Escrime - Commandes « / » de la palette (Ctrl+K)
  * Registre, analyse et exécution. Doc : docs/COMMANDES.md
  * Licensed under GPL-3.0
  */

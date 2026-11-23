@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Team Competition Store
+ * BPM - Escrime - Team Competition Store
  * Feature 22: State management for team events
  * Licensed under GPL-3.0
  */

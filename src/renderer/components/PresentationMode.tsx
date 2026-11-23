@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Presentation Mode Component
+ * BPM - Escrime - Presentation Mode Component
  * Affichage optimisé pour écrans publics/salles d'armes
  * Licensed under GPL-3.0
  */

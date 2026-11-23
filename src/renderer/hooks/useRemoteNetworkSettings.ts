@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglages réseau du serveur distant (HTTPS, port, interface) (#1241)
+ * BPM - Escrime - Réglages réseau du serveur distant (HTTPS, port, interface) (#1241)
  * Extrait de RemoteScoreManager. Valeurs initiales lues dans localStorage.
  * Licensed under GPL-3.0
  */

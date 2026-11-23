@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Codage des fichiers de données en mémoire (#1981, docs/adr/0021) :
+ * BPM - Escrime - Codage des fichiers de données en mémoire (#1981, docs/adr/0021) :
  * photos en ZIP (compétition et Mode Club), archive de tireurs .bpf. Contenu en entrée et en
  * sortie, jamais de chemin : partagé par les opérations du contrat (engine/commands/dataFiles).
  * Licensed under GPL-3.0
@@ -95,7 +95,7 @@ export async function fencersToArchive(
 
 /** Tireurs d'une archive .bpf, validés (tableau borné, champs texte bornés) */
 export async function fencersFromArchive(buffer: Buffer): Promise<Record<string, unknown>[]> {
-  const zip = await loadZip(buffer, 'une archive de tireurs BellePoule (.bpf)');
+  const zip = await loadZip(buffer, 'une archive de tireurs BPM - Escrime (.bpf)');
   const names = new Set(entries(zip));
   const file = names.has('fencers.json') ? zip.file('fencers.json') : null;
   if (!file) throw new InvalidFileError('Format .bpf invalide : fencers.json manquant');

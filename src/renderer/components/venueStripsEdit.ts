@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Édition des pistes d'une salle (#1880, docs/adr/0023) : libellé et
+ * BPM - Escrime - Édition des pistes d'une salle (#1880, docs/adr/0023) : libellé et
  * appareil de piste déclaré sur la salle (Cyrano : adresse IPv4, port, version ; OPP2 :
  * identifiant MQTT ; mode). Fonctions pures, utilisées par VenueStripsEditor.
  * Licensed under GPL-3.0

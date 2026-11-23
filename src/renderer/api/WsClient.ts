@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Client WebSocket du contrat d'API (#1981 lot 3, docs/adr/0020)
+ * BPM - Escrime - Client WebSocket du contrat d'API (#1981 lot 3, docs/adr/0020)
  * Transport navigateur : espace de noms Socket.IO `/api` du serveur distant (wsAdapter).
  * Même interface et mêmes erreurs qu'IpcClient. Un appel fait avant la connexion part à la
  * connexion ; coupure en cours d'appel ou délai dépassé → ApiError('unavailable').

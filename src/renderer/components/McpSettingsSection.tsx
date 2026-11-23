@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Paramètres → Système → Agent IA (MCP) (#1880)
+ * BPM - Escrime - Paramètres → Système → Agent IA (MCP) (#1880)
  * Serveur MCP intégré : activation, port, jeton, configuration du client, dossiers
  * accessibles à l'agent (fichiers d'import lus, exports écrits).
  * Licensed under GPL-3.0
@@ -14,12 +14,12 @@ import { HINT, BOLD, TOGGLE_LABEL } from './settingsModal.styles';
 import { Button } from './common/Button';
 import { useStationApi } from '../api/stationApi';
 
-/** Configuration à coller dans `.mcp.json` (Claude Code, plugin bellepoule) */
+/** Configuration à coller dans `.mcp.json` (Claude Code, plugin bpm-escrime) */
 export function mcpClientConfig(status: Pick<McpStatus, 'port' | 'token'>): string {
   return JSON.stringify(
     {
       mcpServers: {
-        bellepoule: {
+        'bpm-escrime': {
           type: 'http',
           url: `http://127.0.0.1:${status.port}/mcp`,
           headers: { Authorization: `Bearer ${status.token}` },

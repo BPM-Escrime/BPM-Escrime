@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écran d'arène : panneaux d'attente / présentation / match suivant,
+ * BPM - Escrime - Écran d'arène : panneaux d'attente / présentation / match suivant,
  * extraits de arena.html (#1401). Le DOM est injecté. Servi en /js/arenaPanels.js (CSP 'self').
  * Licensed under GPL-3.0
  */

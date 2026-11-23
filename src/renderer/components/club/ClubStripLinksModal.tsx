@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : liens d'une piste en saisie distante —
+ * BPM - Escrime - Mode Club (#1872) : liens d'une piste en saisie distante —
  * affichage de piste (/areneN) et tablette arbitre (/areneN/arbitre), URL à copier et QR.
  * Licensed under GPL-3.0
  */

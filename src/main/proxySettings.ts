@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Proxy réseau (Paramètres → Réseau)
+ * BPM - Escrime - Proxy réseau (Paramètres → Réseau)
  * Licensed under GPL-3.0
  *
  * Fichier `<userData>/proxy-settings.json`, appliqué à la session par défaut au

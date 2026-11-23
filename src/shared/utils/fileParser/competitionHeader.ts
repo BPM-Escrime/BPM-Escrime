@@ -1,9 +1,9 @@
 /**
- * BellePoule Modern - File Parser - En-tête de compétition des fichiers fédéraux (#1938)
+ * BPM - Escrime - File Parser - En-tête de compétition des fichiers fédéraux (#1938)
  * Licensed under GPL-3.0
  *
  * Élément racine du XML FFE / FIE (spécification FIE « Définition des fichiers XML » v3.1,
- * plus les ajouts FFE / Engarde / BellePoule : Type, DateDebut, DateFin, DateFichierXML,
+ * plus les ajouts FFE / Engarde / BPM - Escrime : Type, DateDebut, DateFin, DateFichierXML,
  * Appel, Scratch, Debut, Lieu). Les valeurs brutes sont conservées telles quelles pour être
  * restituées à l'export ; la correspondance avec les énumérations de l'application est à part.
  */
@@ -25,7 +25,7 @@ export interface MappedCompetitionFields {
   category?: Category;
   location?: string;
   organizer?: string;
-  /** Niveau GREG : attribut `Niveau` d'un fichier BellePoule, sinon proposé d'après `Domaine` (#1328) */
+  /** Niveau GREG : attribut `Niveau` d'un fichier BPM - Escrime, sinon proposé d'après `Domaine` (#1328) */
   gregLevel?: GregLevel;
   isTeamEvent: boolean;
   checkInTime?: string;

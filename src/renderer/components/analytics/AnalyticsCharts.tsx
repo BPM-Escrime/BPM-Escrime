@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Graphiques SVG analytics (sans librairie externe)
+ * BPM - Escrime - Graphiques SVG analytics (sans librairie externe)
  * Licensed under GPL-3.0
  */
 

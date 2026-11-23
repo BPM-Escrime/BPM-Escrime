@@ -1,6 +1,6 @@
 /**
  * Tests unitaires pour les calculs de poules
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';
@@ -898,7 +898,7 @@ describe('distributeFencersToPoolsSerpentine — classement déplaçable', () =>
     expect(poolOf(pools, 'f7')).not.toBe(poolOf(pools, 'f3'));
   });
 
-  it('quota BellePoule : club plus nombreux que les poules → ⌈N/poules⌉ par poule toléré', () => {
+  it('quota BPM - Escrime : club plus nombreux que les poules → ⌈N/poules⌉ par poule toléré', () => {
     const fs = Array.from({ length: 12 }, (_, i) => ({
       ...createMockFencer(`q${i + 1}`, i + 1, `Q${i + 1}`),
       ranking: i + 1,

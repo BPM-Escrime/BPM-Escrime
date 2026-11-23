@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : pointage des présents d'une séance.
+ * BPM - Escrime - Mode Club (#1872) : pointage des présents d'une séance.
  * Membres des catégories d'âge du cours (plage début → fin, modifiable), cases à cocher.
  * Licensed under GPL-3.0
  */

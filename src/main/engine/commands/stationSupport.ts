@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Briques communes des opérations du poste (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Briques communes des opérations du poste (#1981 lot 2, docs/adr/0022)
  * Type des gestionnaires, refus des dépôts, port du poste.
  * Licensed under GPL-3.0
  */

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - Confetti
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, vi } from 'vitest';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Actions du serveur de saisie distante : arrêt, mots de passe, formateur, thèmes, URLs d'écrans
+ * BPM - Escrime - Actions du serveur de saisie distante : arrêt, mots de passe, formateur, thèmes, URLs d'écrans
  * Licensed under GPL-3.0
  */
 

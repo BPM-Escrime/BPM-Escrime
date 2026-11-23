@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournament Flow Management
+ * BPM - Escrime - Tournament Flow Management
  * Intelligent scheduling system for tournament optimization
  * Licensed under GPL-3.0
  */

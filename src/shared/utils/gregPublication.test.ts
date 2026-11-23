@@ -50,7 +50,7 @@ describe('buildGregFields (#1328)', () => {
     expect(fields.arme).toBe('S');
   });
 
-  it("mixte = H comme dans l'ancien BellePoule", () => {
+  it("mixte = H comme dans l'ancien BPM - Escrime", () => {
     expect(buildGregFields({ ...base, gender: Gender.MIXED }).genre).toBe('H');
   });
 
@@ -92,7 +92,7 @@ describe('toNativeRootTag (#1328)', () => {
 });
 
 describe('isGregUrl (#1331)', () => {
-  it("reconnaît les adresses escrime-info.com comme l'ancien BellePoule", () => {
+  it("reconnaît les adresses escrime-info.com comme l'ancien BPM - Escrime", () => {
     expect(isGregUrl('escrime-info.com')).toBe(true);
     expect(isGregUrl('https://www.escrime-info.com/x')).toBe(true);
     expect(isGregUrl('ftp://ESCRIME-INFO.COM/')).toBe(true);

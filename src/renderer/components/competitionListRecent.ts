@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Compétitions récentes et épinglées de l'accueil (#1534)
+ * BPM - Escrime - Compétitions récentes et épinglées de l'accueil (#1534)
  * Mémorisées dans le navigateur (préférence par poste). Licensed under GPL-3.0
  */
 

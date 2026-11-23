@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Phase « Quest » (Sabre Laser) de la compétition (extrait de
+ * BPM - Escrime - Phase « Quest » (Sabre Laser) de la compétition (extrait de
  * CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

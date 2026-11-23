@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Appareils de piste : appels de l'écran au contrat d'API (#2117,
+ * BPM - Escrime - Appareils de piste : appels de l'écran au contrat d'API (#2117,
  * docs/adr/0023). Salle de l'épreuve, appareils effectifs, pistes passées en manuel
  * (`settings.manualStrips` par updateCompetitionSettings), pilotes Cyrano et OPP2. Remplace les
  * groupes `cyrano` et `opp2` de window.electronAPI. Un refus du contrat lève ApiError (code

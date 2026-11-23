@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Contexte partagé des sous-composants de RemoteScoreManager (#1599)
+ * BPM - Escrime - Contexte partagé des sous-composants de RemoteScoreManager (#1599)
  * Licensed under GPL-3.0
  */
 import type { useRemoteServerActions } from '../../hooks/remoteScoreManager/useRemoteServerActions';

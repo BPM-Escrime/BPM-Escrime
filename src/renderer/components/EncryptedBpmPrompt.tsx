@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mot de passe d'une archive .bpm chiffrée (RGPD, #1882)
+ * BPM - Escrime - Mot de passe d'une archive .bpm chiffrée (RGPD, #1882)
  * Ouverte par l'accueil (« Ouvrir ») ou par Fichier → Ouvrir : le contenu est déjà dans l'écran,
  * l'ouverture passe par le contrat (openCompetitionFile, ADR-0021). Le mot de passe n'est gardé
  * que le temps de la saisie.

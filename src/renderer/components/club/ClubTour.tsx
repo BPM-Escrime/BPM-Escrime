@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Parcours de première connexion du Mode Club (#1872).
+ * BPM - Escrime - Parcours de première connexion du Mode Club (#1872).
  * Même présentation que le parcours de la première compétition (classes .guided-tour*).
  * Licensed under GPL-3.0
  */

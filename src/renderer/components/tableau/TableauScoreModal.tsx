@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - TableauScoreModal
+ * BPM - Escrime - TableauScoreModal
  * Modale de saisie rapide du score d'un match de tableau
  * Licensed under GPL-3.0
  */

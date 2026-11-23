@@ -8,7 +8,7 @@ import path from 'path';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = path.resolve(__dirname, '../..');
-const OLD_REPO = ['klinnex', 'bellepoule-modern'].join('/');
+const OLD_REPO = ['klinnex', 'bpm-escrime'].join('/');
 const SCANNED = ['src', 'plugins', 'package.json', 'flake.nix'];
 
 function listFiles(target: string): string[] {

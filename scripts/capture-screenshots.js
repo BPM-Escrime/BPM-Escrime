@@ -70,7 +70,7 @@ async function main() {
     await app.firstWindow();
     await wait(1500);
     const splash = app.windows().find(w => w.url().includes('splash'));
-    if (splash) await splash.click('text=Entrer dans BellePoule').catch(() => {});
+    if (splash) await splash.click('text=Entrer dans BPM - Escrime').catch(() => {});
     let win;
     for (let i = 0; i < 40 && !win; i++) {
       win = app.windows().find(w => !w.url().includes('splash'));

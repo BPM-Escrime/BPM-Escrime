@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : choix des maîtres d'armes qui encadrent une séance.
+ * BPM - Escrime - Mode Club : choix des maîtres d'armes qui encadrent une séance.
  * Licensed under GPL-3.0
  */
 import React from 'react';

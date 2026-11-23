@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Clôture d'un tour de poules (#1051, #1980, docs/adr/0017)
+ * BPM - Escrime - Clôture d'un tour de poules (#1051, #1980, docs/adr/0017)
  * closePoolRound : qualifiés selon le classement du tour terminé (formule ou nombre de
  * qualifiés réglé), non-qualifiés éliminés, tour archivé avec son appel figé, nouveau tour à
  * pointer puis à tirer. Mêmes fonctions que l'écran (selectNextRoundFencers…).

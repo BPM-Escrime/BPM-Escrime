@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Vérification d'intégrité des mises à jour
+ * BPM - Escrime - Vérification d'intégrité des mises à jour
  * Licensed under GPL-3.0
  */
 

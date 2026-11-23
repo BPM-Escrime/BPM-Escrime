@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Génération du tableau, saisie des scores, remplissage automatique et annulation de match
+ * BPM - Escrime - Génération du tableau, saisie des scores, remplissage automatique et annulation de match
  * Licensed under GPL-3.0
  */
 

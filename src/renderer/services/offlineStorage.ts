@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Offline Storage Manager
+ * BPM - Escrime - Offline Storage Manager
  * IndexedDB wrapper for offline-first architecture
  * Licensed under GPL-3.0
  */

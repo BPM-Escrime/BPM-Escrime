@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Affectation optimale des arbitres (#1959)
+ * BPM - Escrime - Affectation optimale des arbitres (#1959)
  *
  * Problème d'appariement entre les « créneaux » d'un même tour (poules, ou matchs
  * d'un tour de tableau) et les arbitres disponibles :

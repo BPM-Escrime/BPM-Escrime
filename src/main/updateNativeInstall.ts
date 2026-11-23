@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Installation native des mises à jour (macOS .app, paquets Linux)
+ * BPM - Escrime - Installation native des mises à jour (macOS .app, paquets Linux)
  * Licensed under GPL-3.0
  *
  * Commandes lancées via execFile (sans shell) : chemins absolus, arguments séparés.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : qualification pour le tableau (#1441)
+ * BPM - Escrime - Tournoi des rapières : qualification pour le tableau (#1441)
  * Règles pures (#1979, docs/adr/0002) : lues par l'écran (src/features/rapieres) et le moteur.
  * Licensed under GPL-3.0
  */

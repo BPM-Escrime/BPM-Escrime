@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - XiaomiRemotePanel : liste des clients par push, sans polling (#1291, #1292)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pilote OPP2 du modèle commun des appareils de piste (#1960)
+ * BPM - Escrime - Pilote OPP2 du modèle commun des appareils de piste (#1960)
  * OpenPiste Protocol niveau 2 (JSON sur MQTT). Comme le pilote Cyrano (#1829) :
  * - messages de l'appareil (`apparatus/*`, `remote/control`) → `PisteInput` ;
  * - `PisteCommand` → `software/fencers`, `software/match`, `software/score`,
@@ -131,7 +131,7 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
     return this.unsubscribe.length > 0;
   }
 
-  /** S'abonne aux messages des appareils et annonce BellePoule sur chaque piste. */
+  /** S'abonne aux messages des appareils et annonce BPM - Escrime sur chaque piste. */
   start(): void {
     if (this.running) return;
     this.unsubscribe = [
@@ -141,7 +141,7 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
     for (const piste of this.pistes.keys()) this.announce(piste, true);
   }
 
-  /** Annonce le départ de BellePoule (retenu) et se désabonne. */
+  /** Annonce le départ de BPM - Escrime (retenu) et se désabonne. */
   stop(): void {
     if (!this.running) return;
     for (const piste of this.pistes.keys()) this.announce(piste, false);
@@ -261,7 +261,7 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
   }
 
   private announce(piste: string, online: boolean): void {
-    const sw = this.options.software ?? { name: 'BellePoule Modern' };
+    const sw = this.options.software ?? { name: 'BPM - Escrime' };
     this.publish(
       piste,
       'connection',

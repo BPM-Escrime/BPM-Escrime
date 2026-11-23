@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handlers IPC `updater:*` : mises à jour automatiques
+ * BPM - Escrime - Handlers IPC `updater:*` : mises à jour automatiques
  * (extraits de main.ts, #1341).
  * Licensed under GPL-3.0
  */

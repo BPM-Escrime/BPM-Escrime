@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Onglet « Organisation » du tableau analytique (#1817)
+ * BPM - Escrime - Onglet « Organisation » du tableau analytique (#1817)
  * Avancement, fin estimée et écart au planning, débit, attentes, pistes actives,
  * pertes de connexion / défauts de synchro des saisies distantes.
  * Licensed under GPL-3.0

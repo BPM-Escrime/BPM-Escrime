@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tirage des poules : fonction unique (#1979, lot 4)
+ * BPM - Escrime - Tirage des poules : fonction unique (#1979, lot 4)
  * Écran (PoolPrepView) et moteur (MCP, generate_pools) tirent par cette fonction. Avant le
  * lot 4, l'écran avait son propre tirage (critères ordonnés, nation, niveau) et le moteur
  * un tirage figé (club + région après le classement).
@@ -21,7 +21,7 @@ export interface PoolSeparation {
 }
 
 /**
- * Défaut (BellePoule) : serpentin sur le classement, puis club et région résolus par
+ * Défaut (BPM - Escrime) : serpentin sur le classement, puis club et région résolus par
  * échanges dans le chapeau ; nation inactive.
  */
 export const DEFAULT_POOL_SEPARATION: readonly PoolSeparation[] = [

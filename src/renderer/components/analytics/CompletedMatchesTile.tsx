@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Carte « Matchs terminés » de l'onglet Performances (#1817)
+ * BPM - Escrime - Carte « Matchs terminés » de l'onglet Performances (#1817)
  * Portée affichée (Poules / Tableau) ; détail poules, tableau principal et, en mode
  * « toutes les places », total des matchs de classement.
  * Licensed under GPL-3.0

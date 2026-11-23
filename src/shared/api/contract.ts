@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Contrat d'API unique (#1981, lot 1)
+ * BPM - Escrime - Contrat d'API unique (#1981, lot 1)
  * Chaque opération est décrite une seule fois : entrée (validée par zod), sortie, droit requis,
  * exposition MCP. Les adaptateurs IPC (src/main/engine/api/ipcAdapter.ts) et MCP
  * (src/main/engine/api/mcpAdapter.ts) en sont dérivés ; l'écran appelle un BpmClient

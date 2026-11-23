@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mini-calendrier de choix de date (séances du Mode Club, #1872).
+ * BPM - Escrime - Mini-calendrier de choix de date (séances du Mode Club, #1872).
  * Mois navigable, aujourd'hui entouré, jours déjà occupés par une séance marqués.
  * Licensed under GPL-3.0
  */

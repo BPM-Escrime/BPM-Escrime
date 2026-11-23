@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tests du modèle d'import de tireurs
+ * BPM - Escrime - Tests du modèle d'import de tireurs
  * Licensed under GPL-3.0
  */
 

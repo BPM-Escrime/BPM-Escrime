@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Reconstruction de l'état d'une épreuve (#1980, docs/adr/0017, étape 5)
+ * BPM - Escrime - Reconstruction de l'état d'une épreuve (#1980, docs/adr/0017, étape 5)
  * rebuildCompetitionState : commande de maintenance. Rejoue le journal (projectCompetition),
  * compare à la projection du moteur (compareWithState), puis aligne l'état sur le journal pour
  * les faits rejouables : statuts des tireurs, résultats des matchs de poule du tour courant,

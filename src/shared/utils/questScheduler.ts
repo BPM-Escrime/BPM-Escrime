@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Quest Phase Scheduler
+ * BPM - Escrime - Quest Phase Scheduler
  * Génération du planning de combats pour le Tour Quest (Sabre Laser)
  * Licensed under GPL-3.0
  */

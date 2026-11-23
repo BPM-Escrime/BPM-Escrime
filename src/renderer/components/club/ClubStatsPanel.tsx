@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : statistiques des membres par période
+ * BPM - Escrime - Mode Club (#1872) : statistiques des membres par période
  * (séance, mois, trimestre, saison sportive, tout) — classement du club, puis fiche
  * d'un membre : bilan, progression et face-à-face.
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Serveur distant : clients connectés (écrans, tablettes) et avis à l'écran
+ * BPM - Escrime - Serveur distant : clients connectés (écrans, tablettes) et avis à l'écran
  * (#1981 lot 2, docs/adr/0022). Reprise des anciens canaux IPC remote:getConnectedClients,
  * sendClientCommand, broadcastCommand, renameClient, identifyClient, setClientKioskMode et des
  * avis du préload (onRemoteArenaUpdate, onRemoteMatchFinished, onKioskNoteUpdate…), lus sur le

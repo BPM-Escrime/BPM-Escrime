@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Nombre de pistes issu de la salle (#1880)
+ * BPM - Escrime - Nombre de pistes issu de la salle (#1880)
  * Pistes de la journée de l'épreuve, sinon de sa salle, sinon de la salle par défaut.
  * Licensed under GPL-3.0
  */

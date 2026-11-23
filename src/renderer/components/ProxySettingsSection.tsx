@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Paramètres → Système → Proxy réseau
+ * BPM - Escrime - Paramètres → Système → Proxy réseau
  * Licensed under GPL-3.0
  *
  * Appliqué par le process principal à toute l'app (mises à jour, webhooks…).

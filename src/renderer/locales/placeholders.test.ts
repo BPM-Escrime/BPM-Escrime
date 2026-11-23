@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Paramètres des traductions : `t()` ne remplace que `{{nom}}`.
+ * BPM - Escrime - Paramètres des traductions : `t()` ne remplace que `{{nom}}`.
  * Un `{nom}` simple s'affichait tel quel (« Prêt groupé ({count} matériel(s)) », #1872).
  * Licensed under GPL-3.0
  */

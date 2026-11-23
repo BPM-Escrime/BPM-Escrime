@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : saisie distante des combats libres.
+ * BPM - Escrime - Mode Club (#1872) : saisie distante des combats libres.
  * Les combats du club sont envoyés aux arènes du serveur d'entraînement (tablettes
  * arbitre /arene{N}/arbitre) ; le score final revient dans la séance du club.
  * Licensed under GPL-3.0

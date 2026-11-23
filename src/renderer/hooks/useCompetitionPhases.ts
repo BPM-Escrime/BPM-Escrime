@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Phases d'une compétition : ordre, onglets et verrouillages (extrait de
+ * BPM - Escrime - Phases d'une compétition : ordre, onglets et verrouillages (extrait de
  * CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

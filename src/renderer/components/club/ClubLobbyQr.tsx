@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : lobby des pistes pour la saisie distante en séance
+ * BPM - Escrime - Mode Club (#1872) : lobby des pistes pour la saisie distante en séance
  * (même lobby que le mode entraînement). Lien et QR à scanner par les tablettes arbitres.
  * Licensed under GPL-3.0
  */

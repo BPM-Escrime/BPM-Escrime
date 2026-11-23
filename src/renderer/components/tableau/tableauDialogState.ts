@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - États initiaux des modales de TableauView + signatures PDF (#1241)
+ * BPM - Escrime - États initiaux des modales de TableauView + signatures PDF (#1241)
  * Licensed under GPL-3.0
  */
 import type { TableauMatch } from '../../../shared/domain/tableau/tableauTypes';

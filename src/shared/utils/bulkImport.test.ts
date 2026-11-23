@@ -1,5 +1,5 @@
 /**
- * Tests unitaires — bulkImport.ts (BellePoule Modern)
+ * Tests unitaires — bulkImport.ts (BPM - Escrime)
  */
 
 import { describe, it, expect } from 'vitest';

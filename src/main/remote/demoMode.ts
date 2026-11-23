@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode démo : matchs aléatoires joués automatiquement sur les arènes.
+ * BPM - Escrime - Mode démo : matchs aléatoires joués automatiquement sur les arènes.
  * S'appuie sur la session d'entraînement : le serveur joue le rôle de l'arbitre
  * (démarrage, points, fin de match) avec des tireurs fictifs et des scores aléatoires.
  * Les écrans arène, la saisie distante et le tableau de bord voient donc une activité réelle.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Relevé de cohérence formule ↔ catégorie (#2013, étape A)
+ * BPM - Escrime - Relevé de cohérence formule ↔ catégorie (#2013, étape A)
  * Compare les réglages de chaque phase au référentiel arme + catégorie.
  * Simple relevé : n'empêche jamais d'enregistrer.
  * Référentiel limité aux touches des armes olympiques (defaultMaxScores, #1826) ;

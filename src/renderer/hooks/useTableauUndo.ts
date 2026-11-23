@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Annulation des placements du tableau (#1301)
+ * BPM - Escrime - Annulation des placements du tableau (#1301)
  * Pile d'annulation + verrou : refusée une fois l'action transmise
  * (pistes / arbitres vers les écrans distants, résultats finaux).
  * Licensed under GPL-3.0

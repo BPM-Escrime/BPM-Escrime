@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Planificateur de placement d'arène Sabre Laser (#2075)
+ * BPM - Escrime - Planificateur de placement d'arène Sabre Laser (#2075)
  * Outil à côté du QR Wi-Fi et de la télécommande TV : dimensions de la salle,
  * arènes (grille automatique ou maximum trouvé par « Optimiser »), tables,
  * prises, accessoires, issues de secours et zones bloquées à placer à la souris,
@@ -13,6 +13,7 @@ import Modal from './common/Modal';
 import { Button } from './common/Button';
 import { logger, LogCategory } from '@shared/services/logger';
 import {
+  alignArenaCenters,
   checkRoomItems,
   createRoomItem,
   moveArenaWithPush,
@@ -21,6 +22,9 @@ import {
   rotateRoomItem,
   optimizeArenaLayout,
   resizeRoomItem,
+  spreadArenaCenters,
+  type ArenaAlign,
+  type ArenaSpacing,
   type OptimizedLayout,
   type Point,
   type RoomItem,
@@ -65,6 +69,10 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const [length, setLength] = useState('20');
   const [arenas, setArenas] = useState('1');
   const [margin, setMargin] = useState('1');
+  /** Collées (pas minimal) ou espacées (occupation maximale de la salle) */
+  const [spacing, setSpacing] = useState<ArenaSpacing>('packed');
+  /** Centrage horizontal du bloc d'arènes */
+  const [align, setAlign] = useState<ArenaAlign>('left');
   const [items, setItems] = useState<RoomItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snap, setSnap] = useState(true);
@@ -72,7 +80,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   /** Positions des arènes après un glisser à la souris ; null = positions calculées */
   const [manual, setManual] = useState<{ key: string; centers: Point[] } | null>(null);
   /** Les positions glissées ne valent que pour les dimensions et le nombre d'arènes qui les ont produites */
-  const dimsKey = [width, length, arenas, margin].join('|');
+  const dimsKey = [width, length, arenas, margin, spacing, align].join('|');
   const manualCenters = manual && manual.key === dimsKey ? manual.centers : null;
   const [exportError, setExportError] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
@@ -110,10 +118,15 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   /** Jamais plus d'arènes que le maximum possible. */
   const arenaCount = maxLayout && parsed ? Math.min(parsed.n, maxLayout.count) : 0;
   const clamped = maxLayout !== null && parsed !== null && parsed.n > maxLayout.count;
-  const centers: Point[] = useMemo(
-    () => manualCenters ?? (maxLayout ? maxLayout.centers.slice(0, arenaCount) : []),
-    [manualCenters, maxLayout, arenaCount]
-  );
+  const centers: Point[] = useMemo(() => {
+    if (manualCenters) return manualCenters;
+    if (!maxLayout || !room || !parsed) return [];
+    // « Espacées » : répartition sur la salle ; à défaut (salle trop petite, zone bloquée), collées
+    const base =
+      (spacing === 'spread' && spreadArenaCenters(room, arenaCount, parsed.m, blockedItems)) ||
+      maxLayout.centers.slice(0, arenaCount);
+    return alignArenaCenters(base, room, parsed.m, align, blockedItems);
+  }, [manualCenters, maxLayout, arenaCount, room, parsed, spacing, align, blockedItems]);
 
   const issues = useMemo(() => {
     if (!room) return [];
@@ -322,6 +335,37 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               onChange={e => setMargin(e.target.value)}
             />
             <p className="arena-planner-hint">{t('arenaPlanner.hint_margin')}</p>
+          </div>
+          <div className="arena-planner-field">
+            <label className="form-label" htmlFor="arena-spacing">
+              {t('arenaPlanner.spacing')}
+            </label>
+            <select
+              id="arena-spacing"
+              className="form-input"
+              value={spacing}
+              onChange={e => setSpacing(e.target.value as ArenaSpacing)}
+            >
+              <option value="packed">{t('arenaPlanner.spacing_packed')}</option>
+              <option value="spread">{t('arenaPlanner.spacing_spread')}</option>
+            </select>
+            <p className="arena-planner-hint">{t('arenaPlanner.hint_spacing')}</p>
+          </div>
+          <div className="arena-planner-field">
+            <label className="form-label" htmlFor="arena-align">
+              {t('arenaPlanner.align')}
+            </label>
+            <select
+              id="arena-align"
+              className="form-input"
+              value={align}
+              onChange={e => setAlign(e.target.value as ArenaAlign)}
+            >
+              <option value="left">{t('arenaPlanner.align_left')}</option>
+              <option value="center">{t('arenaPlanner.align_center')}</option>
+              <option value="right">{t('arenaPlanner.align_right')}</option>
+            </select>
+            <p className="arena-planner-hint">{t('arenaPlanner.hint_align')}</p>
           </div>
 
           <div className="arena-planner-actions">

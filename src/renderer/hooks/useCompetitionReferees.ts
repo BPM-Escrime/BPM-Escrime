@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Assignation des arbitres aux matchs de poule / tableau (extrait de
+ * BPM - Escrime - Assignation des arbitres aux matchs de poule / tableau (extrait de
  * CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

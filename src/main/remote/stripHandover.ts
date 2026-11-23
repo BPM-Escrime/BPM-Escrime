@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pistes libérées d'une journée multi-épreuves (#1878) : travail en attente
+ * BPM - Escrime - Pistes libérées d'une journée multi-épreuves (#1878) : travail en attente
  * d'une épreuve (poule sans piste ou en file derrière une autre, match de tableau en file) et
  * déplacement de ce travail vers une piste libre. Pur côté file : l'état reste dans le serveur.
  * Licensed under GPL-3.0

@@ -2,7 +2,7 @@
 /**
  * Garde-fou de rendus des vues live (#1302) : sans changement de données,
  * aucun rendu superflu sur 10 s (jeu de 200 tireurs généré à la main).
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

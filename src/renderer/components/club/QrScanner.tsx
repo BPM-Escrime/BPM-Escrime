@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Lecteur de QR codes par webcam (Mode Club #1872).
+ * BPM - Escrime - Lecteur de QR codes par webcam (Mode Club #1872).
  * BarcodeDetector natif si disponible, sinon jsQR (chargé à la demande).
  * Licensed under GPL-3.0
  */

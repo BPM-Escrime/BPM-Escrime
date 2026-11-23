@@ -2,7 +2,7 @@
 
 ## Overview
 
-L'interface tablette optimisée de BellePoule Modern est spécialement conçue pour les arbitres avec des contrôles tactiles intuitifs et des commandes vocales avancées.
+L'interface tablette optimisée de BPM - Escrime est spécialement conçue pour les arbitres avec des contrôles tactiles intuitifs et des commandes vocales avancées.
 
 ## Fonctionnalités principales
 

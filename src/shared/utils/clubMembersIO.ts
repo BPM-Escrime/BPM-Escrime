@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (membres) : format d'échange CSV / Excel de l'annuaire.
+ * BPM - Escrime - Mode Club (membres) : format d'échange CSV / Excel de l'annuaire.
  * En-têtes et libellés en français fixes (indépendants de la langue de l'interface) ;
  * à l'import, les colonnes sont reconnues par leur intitulé (sans accents ni casse).
  * Licensed under GPL-3.0

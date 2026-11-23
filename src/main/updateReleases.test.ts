@@ -8,22 +8,22 @@ import {
 } from './updateReleases';
 
 const dev = (b: number) => ({
-  name: `🧪 BellePoule Modern 1.2.1-dev.${b} (Build #${b})`,
+  name: `🧪 BPM - Escrime 1.2.1-dev.${b} (Build #${b})`,
   tag_name: `v1.2.1-dev.${b}`,
   prerelease: true,
 });
 const devOf = (v: string, b: number) => ({
-  name: `🧪 BellePoule Modern ${v}-dev.${b} (Build #${b})`,
+  name: `🧪 BPM - Escrime ${v}-dev.${b} (Build #${b})`,
   tag_name: `v${v}-dev.${b}`,
   prerelease: true,
 });
 const rc = (v: string, b: number) => ({
-  name: `🩹 BellePoule Modern ${v}-rc.${b} (Build #${b})`,
+  name: `🩹 BPM - Escrime ${v}-rc.${b} (Build #${b})`,
   tag_name: `v${v}-rc.${b}`,
   prerelease: true,
 });
 const stable = (v: string, b: number) => ({
-  name: `🚀 BellePoule Modern ${v} (Build #${b})`,
+  name: `🚀 BPM - Escrime ${v} (Build #${b})`,
   tag_name: `v${v}`,
   prerelease: false,
 });
@@ -60,7 +60,7 @@ describe('parseReleaseVersion', () => {
   it('lit X.Y.Z dans le tag, sinon le nom', () => {
     expect(parseReleaseVersion(devOf('3.0.0', 1990))).toBe('3.0.0');
     expect(parseReleaseVersion(rc('2.0.1', 1991))).toBe('2.0.1');
-    expect(parseReleaseVersion({ name: 'BellePoule Modern 1.4.2' })).toBe('1.4.2');
+    expect(parseReleaseVersion({ name: 'BPM - Escrime 1.4.2' })).toBe('1.4.2');
     expect(parseReleaseVersion({ name: 'x' })).toBeNull();
   });
 

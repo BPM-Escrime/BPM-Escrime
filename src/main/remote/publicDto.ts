@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Données publiques du serveur distant (#1194) : aucune donnée
+ * BPM - Escrime - Données publiques du serveur distant (#1194) : aucune donnée
  * personnelle ne sort vers le Wi-Fi (REST et Socket.IO), quelle que soit la route.
  * Retirés : date de naissance, licence (tireurs et arbitres), adresse IP des tablettes,
  * photo (sauf diffusions Socket.IO quand l'affichage des photos est activé).

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Données du rapport d'exclusion (carton noir) pour la FFE (#1829)
+ * BPM - Escrime - Données du rapport d'exclusion (carton noir) pour la FFE (#1829)
  * Tireurs exclus par carton noir ; pour chacun, match de la sanction : celui où la base porte
  * un carton noir pour ce tireur, sinon son dernier match joué (poule ou tableau).
  * Licensed under GPL-3.0

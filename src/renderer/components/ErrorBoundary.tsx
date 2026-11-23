@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - React Error Boundary
+ * BPM - Escrime - React Error Boundary
  * Catches JavaScript errors in child component tree
  * Licensed under GPL-3.0
  */

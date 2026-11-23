@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Centre d'export
+ * BPM - Escrime - Centre d'export
  * Point d'entrée unique regroupant les exports jusque-là dispersés entre plusieurs vues
  * (poules, classement, résultats, tableau, export complet).
  * Licensed under GPL-3.0

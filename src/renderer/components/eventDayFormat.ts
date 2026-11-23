@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Libellé d'une occupation d'arbitre sur la journée (#1714).
+ * BPM - Escrime - Libellé d'une occupation d'arbitre sur la journée (#1714).
  * Licensed under GPL-3.0
  */
 import type { DayRefereeAssignment } from '../../shared/types/eventDay';

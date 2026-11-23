@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Effets globaux de l'application, extraits d'App.tsx (#1897) :
+ * BPM - Escrime - Effets globaux de l'application, extraits d'App.tsx (#1897) :
  * chargement initial des compétitions (après db:ready), Ctrl+K, molette sur un champ
  * numérique, logo synchronisé pour les exports PDF.
  * Licensed under GPL-3.0

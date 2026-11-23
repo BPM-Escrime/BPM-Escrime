@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Boîte d'impression intégrée : canaux IPC `print:*` (#1214, étape 1)
+ * BPM - Escrime - Boîte d'impression intégrée : canaux IPC `print:*` (#1214, étape 1)
  * `print:getPrinters` (imprimantes installées), `print:render` (PDF d'aperçu en mémoire,
  * sans fichier temporaire), `print:execute` (impression silencieuse avec les réglages choisis),
  * `print:savePdf` (enregistrement via le dialogue natif), `print:systemDialog` (boîte du système).
@@ -90,7 +90,7 @@ export function pdfFileName(title: unknown): string {
       .join('')
       .replace(/\s+/g, ' ')
       .trim()
-      .slice(0, 80) || 'BellePoule';
+      .slice(0, 80) || 'BPM - Escrime';
   return `${base}.pdf`;
 }
 

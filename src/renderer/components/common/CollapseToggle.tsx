@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bouton compacter/déplier pour les classements
+ * BPM - Escrime - Bouton compacter/déplier pour les classements
  * Licensed under GPL-3.0
  */
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : classement final et matchs suivants (extrait de kiosk.html #1401)
+ * BPM - Escrime - Kiosque : classement final et matchs suivants (extrait de kiosk.html #1401)
  * Calcul du classement depuis le tableau (pur) et gabarits HTML (escHtml et tk injectés).
  * Servi en /js/kioskLists.js (CSP 'self').
  * Licensed under GPL-3.0

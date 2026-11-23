@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests unitaires - useCompetitionSession
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';

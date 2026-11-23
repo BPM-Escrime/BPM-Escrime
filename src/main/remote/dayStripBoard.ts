@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pistes d'une journée multi-épreuves en temps réel (#1878) :
+ * BPM - Escrime - Pistes d'une journée multi-épreuves en temps réel (#1878) :
  * occupation lue sur les serveurs distants des épreuves, travail en attente proposé pour les
  * pistes libérées (selon la réservation de chaque piste), affectation en un clic ou automatique.
  * Une piste n'est proposée qu'une fois libre : on n'interrompt jamais une affectation en cours.

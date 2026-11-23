@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Traductions françaises réelles pour les tests de composants, sans
+ * BPM - Escrime - Traductions françaises réelles pour les tests de composants, sans
  * TranslationProvider : `vi.mock('…/hooks/useTranslation', () => import('…/testUtils/i18nMock'))`.
  * Licensed under GPL-3.0
  */

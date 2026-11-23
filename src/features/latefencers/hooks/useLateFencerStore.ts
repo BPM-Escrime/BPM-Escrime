@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Late Fencer Management
+ * BPM - Escrime - Late Fencer Management
  * Feature 24: Automatic late handling
  * Licensed under GPL-3.0
  */

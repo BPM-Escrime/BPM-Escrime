@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Coordonnées Cyrano d'un match d'arène : Phase, PoulTab, Match (#1720)
+ * BPM - Escrime - Coordonnées Cyrano d'un match d'arène : Phase, PoulTab, Match (#1720)
  * - Poule : PoulTab = numéro de la poule, Match = numéro du match dans la poule.
  * - Tableau : PoulTab = `A<taille>` (A16, A8…), Match = position dans le tour + 1.
  * L'ArenaMatch ne porte pas toujours ces numéros : la base complète ce qui manque.

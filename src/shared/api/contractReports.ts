@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Relevés de l'épreuve (#1981 lot 2)
+ * BPM - Escrime - Relevés de l'épreuve (#1981 lot 2)
  * Historique des scores, commentaires des formateurs, signatures du tableau, chiffres de
  * l'épreuve : lectures seules, à la place des appels window.electronAPI.db de l'écran.
  * Licensed under GPL-3.0

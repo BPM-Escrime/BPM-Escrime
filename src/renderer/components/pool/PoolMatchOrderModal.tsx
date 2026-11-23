@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modal de référence : ordre officiel FIE/FFE des matchs en poule
+ * BPM - Escrime - Modal de référence : ordre officiel FIE/FFE des matchs en poule
  * Licensed under GPL-3.0
  */
 

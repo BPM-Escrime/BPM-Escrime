@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Carte de poule de la phase Poules (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Carte de poule de la phase Poules (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import React from 'react';

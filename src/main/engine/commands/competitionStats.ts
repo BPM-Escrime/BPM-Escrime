@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Chiffres d'une épreuve (#1981 lot 2) : requête getCompetitionStats
+ * BPM - Escrime - Chiffres d'une épreuve (#1981 lot 2) : requête getCompetitionStats
  * Calcul repris de l'ancien analyticsService de l'écran (lecture des poules en base).
  * Licensed under GPL-3.0
  */

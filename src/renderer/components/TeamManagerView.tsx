@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Gestionnaire de compétitions par équipes
+ * BPM - Escrime - Gestionnaire de compétitions par équipes
  * Vue: création d'équipes, affectation tireurs, poule équipes, tableau équipes, scores
  * Licensed under GPL-3.0
  */

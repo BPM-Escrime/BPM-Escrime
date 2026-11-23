@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File hors-ligne de la tablette arbitre (IndexedDB), extraite de referee.html (#1401)
+ * BPM - Escrime - File hors-ligne de la tablette arbitre (IndexedDB), extraite de referee.html (#1401)
  * Script classique : `OfflineQueueInline` est global pour referee.html. Servi en /js/offlineQueue.js (CSP 'self').
  * Testée par refereeOfflineQueue.test.ts. Licensed under GPL-3.0
  */
