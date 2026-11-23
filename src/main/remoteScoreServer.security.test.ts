@@ -381,7 +381,6 @@ describe('RemoteScoreServer', () => {
         await protectArena();
         const state = seedTeamState();
         state.liveScoreA = 2;
-        (mockDb as any).createTeamMatchCard = vi.fn().mockReturnValue({ id: 'c1' });
         const { handlers, socket } = connectSocket();
         handlers[ev]({ arenaId: 'arena1', ...extra });
         expect(socket.emit).toHaveBeenCalledWith('auth_error', expect.anything());
@@ -433,44 +432,8 @@ describe('RemoteScoreServer', () => {
 
         // Relais suivant par recordRelayScore : src/main/remote/teamArena.test.ts (base réelle)
 
-        it('carton individuel : escalade, persistance, motif inconnu refusé', async () => {
-          const cookie = await protectArena();
-          const state = seedTeamState({
-            format: 'fie-relay',
-            weapon: 'E',
-            isLaserPoints: false,
-            bouts: relayBouts(),
-            currentBoutIndex: 1,
-          });
-          const stored: any[] = [];
-          (mockDb as any).getTeamBoutCards = vi.fn(() =>
-            stored.map(card => ({ boutId: 'b2', card }))
-          );
-          (mockDb as any).createTeamBoutCard = vi.fn((_b: string, card: any) => {
-            stored.push(card);
-            return { id: card.id };
-          });
-          const { handlers } = connectSocket(cookie);
-          handlers.team_fencer_card({ arenaId: 'arena1', side: 'A', reason: 'not_a_reason' });
-          expect(state.fencerCards).toHaveLength(0);
-          // Motif du Sabre Laser refusé à l'épée (#2207)
-          handlers.team_fencer_card({ arenaId: 'arena1', side: 'A', reason: 'early_start' });
-          expect(state.fencerCards).toHaveLength(0);
-          handlers.team_fencer_card({ arenaId: 'arena1', side: 'A', reason: 'fie_body_contact' });
-          handlers.team_fencer_card({ arenaId: 'arena1', side: 'A', reason: 'fie_body_contact' });
-          expect(state.fencerCards.map((c: any) => [c.fencerId, c.boutId])).toEqual([
-            ['a2', 'b2'],
-            ['a2', 'b2'],
-          ]);
-          // 1er groupe FIE (t.165) : jaune, puis rouge depuis l'historique persisté
-          expect(state.fencerCards[0].type).toBe('YELLOW');
-          expect(state.fencerCards[1].type).toBe('RED');
-          expect(stored.map(c => [c.group, c.pointsAwarded])).toEqual([
-            [1, 0],
-            [1, 1],
-          ]);
-          expect((mockDb as any).createTeamBoutCard).toHaveBeenCalledTimes(2);
-        });
+        // Cartons par giveTeamCard / giveRelayCard (escalade, refus, noir) :
+        // src/main/remote/teamArena.test.ts (base réelle, docs/adr/0028 lot C3)
 
         it('état public : cumul, palier du relais, cible, motifs de carton', () => {
           seedTeamState({

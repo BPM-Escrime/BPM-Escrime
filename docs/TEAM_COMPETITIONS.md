@@ -134,7 +134,8 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   suivant » persiste le relais (vainqueur = équipe en tête au cumul). L'application
   se met à jour au rechargement de la phase.
 - **Cartons individuels persistés** (table `team_bout_cards`) : saisis dans
-  l'application ou depuis la tablette (motif + escalade sur la rencontre). Pas d'impact
+  l'application ou depuis la tablette (motif + escalade sur la rencontre), ou montrés par
+  l'appareil de piste (jaune, rouge : type seul, groupe à compléter). Pas d'impact
   automatique sur le score (la touche du rouge est dans le score saisi) ; noir : voir
   ci-dessous.
 
@@ -179,8 +180,19 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   relais en cours, ou sur le dernier relais terminé tant que le suivant n'a pas commencé ; le
   dernier relais d'une rencontre terminée le reçoit encore tant que la rencontre suivante de
   l'équipe n'a pas commencé (carton signalé après le END de l'appareil). Le carton n'écrit
-  aucune touche : la touche du rouge est dans le score saisi. Branchement de l'écran (C2), de la
-  tablette et des appareils (C3) à venir : ils écrivent encore directement dans les tables.
+  aucune touche : la touche du rouge est dans le score saisi. Branchement de l'écran (C2) à venir.
+- Tablette et appareils par les commandes (ADR-0028, lot C3) : `team_card` → `giveTeamCard`,
+  `team_fencer_card` → `giveRelayCard` avec le motif, source `tablet` ; refus du moteur (équipe
+  étrangère à la rencontre `team_not_in_match`, équipe exclue `team_withdrawn`, motif hors du
+  règlement…) rendu par `team_arena_error` (`card_refused`), rien d'écrit. Le noir n'est plus
+  refusé par le serveur : `blackCardEnabled` masque seulement le bouton de la tablette (#2186).
+  Noir individuel : la tablette affiche l'issue (rencontre terminée, « équipe exclue »). Appareil
+  (Cyrano, OPP2) : à chaque état reçu, chaque jaune ou rouge montré et pas encore enregistré pour
+  le tireur dans la rencontre → `giveRelayCard` avec le type, source `cyrano` / `opp2`, **avant**
+  le contrôle de la fin du relais : un relais fini au palier + 1 avec un rouge adverse est
+  acquitté (ACK), sans rouge refusé (NAK). Un carton refusé est tracé et ne change pas la réponse
+  à la fin du relais. Après chaque commande, l'arène relit la rencontre (cartons compris) et
+  diffuse `team_arena_state`. Cartons P de l'appareil : lot C4.
 - Carton noir individuel : le tireur est exclu (`withdrawFencer`, carton noir) dans la même
   commande. Armes olympiques (o.99.7.b) : la rencontre est perdue et l'équipe exclue, sans
   classement ; abandon (`withdrawTeam`) : rencontre perdue, l'équipe garde sa place (« N'a pas

@@ -12,14 +12,14 @@ Appareil OPP2 ──MQTT──▶ broker intégré ──▶ Opp2PisteDriver ─
 
 ## Code (`src/main/opp2/`)
 
-| Fichier                   | Rôle                                                                                                                                                                                                                                                  |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mqttPacket.ts`           | Codec MQTT 3.1.1 (CONNECT … DISCONNECT), découpage du flux TCP, jokers `+` / `#`.                                                                                                                                                                     |
+| Fichier                   | Rôle                                                                                                                                                                                                                                                     |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mqttPacket.ts`           | Codec MQTT 3.1.1 (CONNECT … DISCONNECT), découpage du flux TCP, jokers `+` / `#`.                                                                                                                                                                        |
 | `mqttBroker.ts`           | Broker intégré, dans le processus main : messages retenus, dernière volonté, QoS 0 / 1 (QoS 2 accepté en entrée), keepalive. Sessions toujours propres. Crochets `authenticate` / `authorizePublish`. BPM - Escrime s'y branche sans socket (`Opp2Bus`). |
-| `mqttClient.ts`           | Client MQTT minimal : appareil simulé des tests, futur raccordement à un broker externe.                                                                                                                                                              |
-| `codec.ts`                | Sujets `openpiste/{piste}/{rôle}/{message}`, construction des messages `software/*`.                                                                                                                                                                  |
-| `driver.ts`               | `Opp2PisteDriver` : implémente `PisteDriver`.                                                                                                                                                                                                         |
-| `../piste/multiDriver.ts` | `MultiPisteDriver` : plusieurs pilotes derrière un seul `PisteHub`. Une piste appartient au premier pilote qui la déclare : un même n° de piste ne peut pas être Cyrano et OPP2.                                                                      |
+| `mqttClient.ts`           | Client MQTT minimal : appareil simulé des tests, futur raccordement à un broker externe.                                                                                                                                                                 |
+| `codec.ts`                | Sujets `openpiste/{piste}/{rôle}/{message}`, construction des messages `software/*`.                                                                                                                                                                     |
+| `driver.ts`               | `Opp2PisteDriver` : implémente `PisteDriver`.                                                                                                                                                                                                            |
+| `../piste/multiDriver.ts` | `MultiPisteDriver` : plusieurs pilotes derrière un seul `PisteHub`. Une piste appartient au premier pilote qui la déclare : un même n° de piste ne peut pas être Cyrano et OPP2.                                                                         |
 
 Pas de dépendance npm ajoutée.
 
@@ -33,7 +33,7 @@ Pas de dépendance npm ajoutée.
 | `display` : chrono d'un match rappelé                                         | → appareil | `software/clock` (toujours `running: false`)                                             |
 | `clear`                                                                       | → appareil | `software/fencers` vide                                                                  |
 | `ack` / `nak`                                                                 | → appareil | `software/control` `ACK` / `NAK`                                                         |
-| Présence de BPM - Escrime                                                        | → tous     | `software/connection` (retenu) au démarrage, `online: false` à l'arrêt                   |
+| Présence de BPM - Escrime                                                     | → tous     | `software/connection` (retenu) au démarrage, `online: false` à l'arrêt                   |
 | `state` : état F / H / P / W / E                                              | ← appareil | `apparatus/state`                                                                        |
 | `state` : scores, statuts, cartons, priorité                                  | ← appareil | `apparatus/score` (`black_card` → exclusion, `DNS` → abandon)                            |
 | `state` : chrono                                                              | ← appareil | `apparatus/clock`                                                                        |
@@ -61,6 +61,10 @@ Pas de dépendance npm ajoutée.
   l'appareil et ignorés par BPM - Escrime.
 - Messages sans équivalent dans le modèle commun, ignorés : `blade_contact`, `video_review`,
   `scoresheet/*`.
+- Relais par équipes : mêmes règles que Cyrano ([CYRANO.md](CYRANO.md) § 2 octies) ; jaune et
+  rouges d'`apparatus/score` pas encore enregistrés pour le tireur dans la rencontre →
+  `giveRelayCard` (type seul, source `opp2`), avant le contrôle de la fin du relais
+  ([ADR-0028](adr/0028-cartons-equipe-moteur.md), lot C3).
 
 ## Contrat d'API (ex-canaux `opp2:*`, [ADR-0023](adr/0023-appareils-de-piste-salle.md))
 
@@ -72,7 +76,7 @@ passer une piste en manuel (`manualStrips`). Droit `remote:admin`, jamais sur le
 | Opération                                                                | Rôle                                                                                             |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | `startOpp2Broker({ port?, competitionId? })`                             | Démarre le broker (port 1883 par défaut) et le pilote ; appareils de la salle chargés.           |
-| `stopOpp2Broker`                                                         | Annonce le départ de BPM - Escrime, arrête le broker.                                               |
+| `stopOpp2Broker`                                                         | Annonce le départ de BPM - Escrime, arrête le broker.                                            |
 | `getOpp2Status`                                                          | Broker, clients connectés, pistes (liaison, appareil, firmware), pistes vues mais non déclarées. |
 | `listStripDeviceRoutes`, `setStripDeviceOptions`, `runStripDeviceAction` | Communs avec Cyrano : épreuve suivie par piste, options d'affichage, secours.                    |
 
@@ -92,6 +96,9 @@ actif (refusé) ; rien sous 8 s (sans réponse). OPP2 ne renvoie pas l'arme.
   routage Cyrano + OPP2.
 - `e2e.test.ts` : broker TCP réel, appareil simulé sur la piste 3, piste Cyrano déclarée à côté :
   affichage, touches, `END` → `ACK`, `NEXT`, égalité → `NAK`, coupure, retour en ligne.
+- `e2eTeam.test.ts` : relais par équipes par les commandes du moteur (source `opp2`), priorité à
+  égalité, rouge de l'appareil puis `END` au palier + 1 → `ACK` (sans rouge → `NAK`), cartons
+  relus après redémarrage, rejeu sans écart.
 
 ## Reste à faire (#1960)
 

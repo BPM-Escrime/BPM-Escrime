@@ -3,7 +3,8 @@
  * (docs/adr/0024, lot E4) — RemoteScoreServer réel, sockets simulées, base SQLite réelle :
  * relais FIE complet (9 relais) par `team_advance_bout` (recordRelayScore, source tablet),
  * refus du moteur rendu à la tablette (`team_arena_error`, code du catalogue) sans rien
- * écrire, égalité au tableau refusée, journal rejoué sans écart.
+ * écrire, égalité au tableau refusée, journal rejoué sans écart. Cartons (docs/adr/0028, lot
+ * C3) : `team_card` → giveTeamCard, `team_fencer_card` → giveRelayCard, source tablet.
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
@@ -50,6 +51,7 @@ vi.mock('better-sqlite3-multiple-ciphers', async () => ({
 }));
 
 import { RemoteScoreServer } from '../remoteScoreServer';
+import { FencerStatus } from '../../shared/types';
 import { hasNodeSqlite } from '../../database/testing/nodeSqliteDatabase';
 import { invokeCommandSync } from '../engine/api/engine';
 import { getPublicTeamArenaState } from './teamArena';
@@ -67,8 +69,11 @@ d('Arène équipe des tablettes par les commandes (docs/adr/0024, lot E4)', () =
 
   afterEach(() => fx?.db.close());
 
-  async function setup(arenaMatch?: (f: TeamRelayFixture) => string) {
-    fx = await teamRelayFixture();
+  async function setup(
+    arenaMatch?: (f: TeamRelayFixture) => string,
+    options?: Parameters<typeof teamRelayFixture>[0]
+  ) {
+    fx = await teamRelayFixture(options);
     remote = new RemoteScoreServer(fx.db, 8066);
     expect(remote.setTeamArenaMatch('1', arenaMatch?.(fx) ?? fx.matchId, false)).toBe(true);
     const io = (remote as unknown as { io: { on: { mock: { calls: unknown[][] } } } }).io;
@@ -208,6 +213,119 @@ d('Arène équipe des tablettes par les commandes (docs/adr/0024, lot E4)', () =
     expect(decided).toHaveLength(2);
     expect(decided[1]).toMatchObject({ source: 'tablet' });
     expect(team().currentBoutIndex).toBe(-1);
+    expect(fx.divergences()).toEqual([]);
+  });
+
+  // ── Cartons par les commandes (docs/adr/0028, lot C3) ─────────────────────
+
+  it('carton de relais : escalade par giveRelayCard, palier dépassé d’un rouge, rejeu sans écart', async () => {
+    const { handlers, relay, errors } = await setup();
+    const [fencerA] = fx.relay(1);
+    // Motif inconnu, motif du Sabre Laser au sabre (#2207) : refusés, rien d'écrit
+    handlers.team_fencer_card({ arenaId: '1', side: 'A', reason: 'not_a_reason' });
+    handlers.team_fencer_card({ arenaId: '1', side: 'A', reason: 'early_start' });
+    expect(errors()).toHaveLength(2);
+    expect(errors()[1]).toEqual([
+      'team_arena_error',
+      expect.objectContaining({ error: 'card_refused', code: 'invalid_input' }),
+    ]);
+    expect(journal('RelayCardGiven')).toHaveLength(0);
+    // 1er groupe FIE (t.165) : jaune, puis rouge (cumul sur la rencontre)
+    handlers.team_fencer_card({ arenaId: '1', side: 'A', reason: 'fie_body_contact' });
+    handlers.team_fencer_card({ arenaId: '1', side: 'A', reason: 'fie_body_contact' });
+    expect(errors()).toHaveLength(2);
+    const given = journal('RelayCardGiven');
+    const pay = (e: (typeof given)[number]) => e.payload as Record<string, unknown>;
+    expect(given.map(e => [e.source, pay(e).type, pay(e).fencerId])).toEqual([
+      ['tablet', 'YELLOW', fencerA],
+      ['tablet', 'RED', fencerA],
+    ]);
+    // L'arène relit la rencontre : cartons copiés de la table
+    expect(team().fencerCards.map(c => [c.type, c.boutId, c.reason])).toEqual([
+      ['YELLOW', fx.boutId(1), 'fie_body_contact'],
+      ['RED', fx.boutId(1), 'fie_body_contact'],
+    ]);
+    // t.41.1 : rouge à A → B peut finir le relais à palier + 1
+    relay(2, 6);
+    expect(errors()).toHaveLength(2);
+    expect(fx.db.teams.getTeamMatch(fx.matchId)!.bouts[0]).toMatchObject({
+      status: 'finished',
+      scoreA: 2,
+      scoreB: 6,
+    });
+    expect(fx.divergences()).toEqual([]);
+  });
+
+  it('carton noir de relais (escrime olympique) : tireur retiré, équipe exclue, rencontre décidée', async () => {
+    const { handlers, errors } = await setup();
+    handlers.team_touch({ arenaId: '1', side: 'A', points: 1 });
+    // blackCardEnabled absent : le noir n'est pas refusé par le serveur (#2186)
+    handlers.team_fencer_card({ arenaId: '1', side: 'A', reason: 'fie_refusal_to_fence' });
+    expect(errors()).toEqual([]);
+    const [fencerA] = fx.relay(1);
+    const black = journal('RelayCardGiven');
+    expect(black).toHaveLength(1);
+    const commandId = black[0].commandId;
+    for (const type of ['FencerWithdrawn', 'TeamMatchDecided', 'TeamWithdrawn']) {
+      expect(journal(type).filter(e => e.commandId === commandId)).toHaveLength(1);
+    }
+    expect(fx.db.getFencer(fencerA)?.status).toBe(FencerStatus.EXCLUDED);
+    expect(fx.db.teams.getTeamMatch(fx.matchId)).toMatchObject({
+      status: 'finished',
+      winnerId: fx.teamBId,
+    });
+    // La tablette affiche l'issue : rencontre terminée, équipe exclue
+    expect(team().currentBoutIndex).toBe(-1);
+    const pub = getPublicTeamArenaState(remote.teamArenaCtx, '1') as {
+      matchComplete: boolean;
+      withdrawnTeams: unknown[];
+    };
+    expect(pub.matchComplete).toBe(true);
+    expect(pub.withdrawnTeams).toEqual([{ teamId: fx.teamAId, reason: 'exclusion' }]);
+    // Plus de carton ni de relais pour l'équipe exclue
+    handlers.team_fencer_card({ arenaId: '1', side: 'A', reason: 'fie_body_contact' });
+    expect(errors()).toEqual([
+      ['team_arena_error', expect.objectContaining({ error: 'card_refused' })],
+    ]);
+    expect(fx.divergences()).toEqual([]);
+  });
+
+  it('carton E (arène Sabre Laser) : giveTeamCard, équipe étrangère refusée (#2183), noir accepté (#2186)', async () => {
+    // Arène Sabre Laser : calendrier figé pour 8 équipes
+    const teams = 'ABCDEFGH'.split('').map(l => ({
+      name: `Équipe ${l}`,
+      fencers: [1, 2, 3].map(k => ({ lastName: `${l}${k}`, firstName: 'Tireur' })),
+    }));
+    const { handlers, errors } = await setup(undefined, {
+      weapon: 'L' as never,
+      settings: { teamFormat: 'laser-arena', blackCardEnabled: false },
+      teams,
+    });
+    const stranger = fx.db
+      .getTeamMatchesByCompetition(fx.competitionId)
+      .flatMap(m => [m.teamAId, m.teamBId])
+      .find(t => t !== fx.teamAId && t !== fx.teamBId)!;
+    handlers.team_card({ arenaId: '1', teamId: fx.teamAId, type: 'white' });
+    handlers.team_card({ arenaId: '1', teamId: stranger, type: 'yellow' });
+    expect(errors()).toEqual([
+      [
+        'team_arena_error',
+        expect.objectContaining({ error: 'card_refused', code: 'team_not_in_match' }),
+      ],
+    ]);
+    handlers.team_card({ arenaId: '1', teamId: fx.teamBId, type: 'black' });
+    expect(errors()).toHaveLength(1);
+    const given = journal('TeamCardGiven');
+    const pay = (e: (typeof given)[number]) => e.payload as Record<string, unknown>;
+    expect(given.map(e => [e.source, pay(e).teamId, pay(e).type])).toEqual([
+      ['tablet', fx.teamAId, 'white'],
+      ['tablet', fx.teamBId, 'black'],
+    ]);
+    expect(team().cards.map(c => [c.teamId, c.type])).toEqual([
+      [fx.teamAId, 'white'],
+      [fx.teamBId, 'black'],
+    ]);
+    expect(fx.db.getTeamMatchCards(fx.matchId)).toHaveLength(2);
     expect(fx.divergences()).toEqual([]);
   });
 });

@@ -61,13 +61,16 @@ export interface TeamArenaCard {
   createdAt: string;
 }
 
-/** Carton individuel d'un tireur pendant un relais (relais FIE, persisté — #1086) */
+/**
+ * Carton individuel d'un tireur pendant un relais (giveRelayCard, docs/adr/0028) : copie de
+ * la table relue après chaque commande. Motif nul : carton imposé par l'appareil de piste.
+ */
 export interface TeamArenaFencerCard {
   id: string;
   boutId: string;
   fencerId: string;
-  type: string; // white | yellow | red | black (escalade cardSystem)
-  reason: CardReason;
+  type: string; // WHITE | YELLOW | RED | BLACK (CardType)
+  reason: CardReason | null;
 }
 
 export interface TeamArenaState {
@@ -93,9 +96,11 @@ export interface TeamArenaState {
   elapsedAccumulatedSec: number; // temps déjà écoulé (assaut en pause)
   timerStartedAt: number | null; // epoch ms, null = chrono à l'arrêt
   cards: TeamArenaCard[];
+  /** Équipes de la rencontre retirées ou exclues (TeamWithdrawn du journal, docs/adr/0028) */
+  withdrawnTeams?: Array<{ teamId: string; reason: 'exclusion' | 'abandon' }>;
   /**
-   * Cartons montrés par l'appareil de piste, par relais (id de l'assaut) — #1829. L'appareil
-   * ne donne pas le motif : ils ne sont pas enregistrés comme cartons individuels.
+   * Cartons montrés par l'appareil de piste, par relais (id de l'assaut) — #1829. Affichage
+   * (DISP) seulement : chaque nouveau carton est enregistré par giveRelayCard (docs/adr/0028).
    */
   deviceCards?: Record<string, { cardsA: string[]; cardsB: string[] }>;
   /** Appareil de piste relié à l'arène équipe : maître et en ligne → tablette verrouillée */

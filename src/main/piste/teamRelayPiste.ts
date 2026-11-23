@@ -3,7 +3,9 @@
  * Une piste rattachée à l'arène N suit l'arène équipe `/equipe{N}` quand une rencontre en
  * relais FIE y est assignée (`setTeamArenaMatch`). L'appareil affiche le relais en cours :
  * - affichage `type = team`, `round` = n° du relais, tireurs du relais, scores cumulés ;
- * - état reçu : score cumulé → score du relais en cours, cartons reportés à ce relais ;
+ * - état reçu : score cumulé → score du relais en cours ; nouveaux cartons jaunes et rouges
+ *   enregistrés par giveRelayCard (docs/adr/0028, lot C3), avant le score et avant le contrôle
+ *   de la fin du relais : un relais fini au palier + 1 avec un rouge est acquitté (t.41.1) ;
  * - fin d'un relais (pas le dernier) : toujours correcte → ACK, relais enregistré, puis
  *   affichage du relais suivant avec les scores cumulés ; dernier relais : règles de fin
  *   individuelles du module partagé. Le relais est enregistré par recordRelayScore
@@ -276,7 +278,10 @@ export class TeamRelayPiste {
     if (!this.apply(link, state, sides, remote, view)) this.display(link, remote, view);
   }
 
-  /** Score cumulé, cartons et chrono → relais en cours ; false si l'arène refuse le cumul. */
+  /**
+   * Cartons (enregistrés par le moteur), score cumulé et chrono → relais en cours ; false si
+   * l'arène refuse le cumul. Un carton refusé est tracé sans changer la réponse.
+   */
   private apply(
     link: PisteLink,
     state: PisteState,
@@ -296,6 +301,7 @@ export class TeamRelayPiste {
       cumulB,
       cardsA: sideCards(sides.A),
       cardsB: sideCards(sides.B),
+      source: sourceOf(this.host.driver, link.piste),
       stopwatch: state.stopwatch,
       running: state.state === 'fencing',
     });
