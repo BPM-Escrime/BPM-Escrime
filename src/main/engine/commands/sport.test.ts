@@ -86,6 +86,16 @@ describe('validation des scores de poule (identique à l’écran)', () => {
   const base = { maxScore: 5, isLaserSabre: false, tieByVictory: true };
   it('score max, égalité, vainqueur contraire', () => {
     expect(validatePoolScore({ ...base, scoreA: 6, scoreB: 2 })).toBe('score_above_max');
+    // Sabre Laser : pas de plafond (19 possible, cartons en plus ; Livret 2 FFE, #2194)
+    expect(
+      validatePoolScore({
+        ...base,
+        isLaserSabre: true,
+        tieByVictory: false,
+        scoreA: 19,
+        scoreB: 14,
+      })
+    ).toBeNull();
     expect(validatePoolScore({ ...base, scoreA: 3, scoreB: 3 })).toBe('draw_needs_winner');
     expect(validatePoolScore({ ...base, scoreA: 3, scoreB: 3, priority: 'A' })).toBeNull();
     // Règlement o.17 : pas d'égalité au score max, même avec vainqueur (#1990)
