@@ -36,6 +36,11 @@ const call = (op: string, input: Record<string, unknown>) =>
   invoke(ctx, op as never, input as never) as Promise<any>;
 const events = (id: string) => db.eventLog.getSince(id);
 const revision = (id: string) => db.eventLog.getRevision(id);
+/** État de l'épreuve, écran des équipes ouvert (il écrit son bloc, persistLocally) */
+const stateOf = async (id: string) => {
+  if (!db.getSessionState(id)) db.saveSessionState(id, { currentPhase: 10 } as never);
+  return (await call('getCompetitionState', { competitionId: id })).state;
+};
 
 function competition(weapon: Weapon, team = true, settings: Record<string, unknown> = {}) {
   return db.createCompetition({
@@ -225,8 +230,9 @@ d('generateTeamPools : poules d’équipes tirées par le moteur (docs/adr/0024,
     const rebuild = await call('rebuildCompetitionState', { competitionId: comp.id, dryRun: true });
     expect(rebuild.divergences).toEqual([]);
 
-    // Bloc « teams » de getCompetitionState
-    const { state } = await call('getCompetitionState', { competitionId: comp.id });
+    // Bloc « teams » de getCompetitionState ; jamais ouverte : pas d'état (comme l'individuel)
+    expect((await call('getCompetitionState', { competitionId: comp.id })).state).toBeNull();
+    const state = await stateOf(comp.id);
     expect(state.teams).toMatchObject({ format: 'fie-relay', teamSize: 3 });
     expect(state.teams.teams.map((t: { id: string }) => t.id)).toEqual([a, b, c]);
     expect(state.teams.poolMatches).toHaveLength(3);
@@ -287,7 +293,7 @@ d('generateTeamPools : poules d’équipes tirées par le moteur (docs/adr/0024,
     expect(matches[0]).toMatchObject({ poolNumber: 1, round: 1 });
     expect(matches.every(m => m.bouts.every(r => r.maxScore === 5))).toBe(true);
     expect(replay(comp.id).divergences).toEqual([]);
-    const { state } = await call('getCompetitionState', { competitionId: comp.id });
+    const state = await stateOf(comp.id);
     expect(state.teams.format).toBe('laser-arena');
     expect(state.teams.poolRanking).toHaveLength(8);
   });
@@ -351,7 +357,7 @@ d('Non-régression : écran des équipes (écritures par les délégations de la
       'finished',
       null
     );
-    const { state } = await call('getCompetitionState', { competitionId: comp.id });
+    const state = await stateOf(comp.id);
     expect(state.teams.poolMatches).toEqual([
       expect.objectContaining({ id, scoreBoutsA: 5, scoreBoutsB: 3, status: 'finished' }),
     ]);

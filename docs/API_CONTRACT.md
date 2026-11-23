@@ -452,7 +452,7 @@ arène hors 8/12, tireur déjà dans une autre équipe), `team_incomplete`, `tea
 `team_fencers`, `team_matches`, `team_bouts` sont la projection, écrite dans la transaction de la
 commande. `getCompetitionState` rend le bloc `teams` (format, taille d'équipe, équipes et
 composition, rencontres de poule et de tableau avec leurs relais, classement de poule dérivé),
-`null` pour une épreuve individuelle, même sans état de session. Rejeu : `projectCompetition`
+`null` pour une épreuve individuelle ; épreuve jamais ouverte à l'écran : état `null`, comme sur dev (l'écran des équipes écrit encore son bloc, `persistLocally`, jusqu'au lot E3). Rejeu : `projectCompetition`
 rend `teams` (poules, rencontres et relais) ; journal complet dès `TeamPoolsGenerated` ;
 `compareWithState` reçoit la vue des tables (`teamStateView`) et signale `team_pool`,
 `team_match_missing`, `team_match`, `team_match_unexpected` ; `rebuildCompetitionState` les rend

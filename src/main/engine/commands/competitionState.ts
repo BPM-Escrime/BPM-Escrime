@@ -23,8 +23,10 @@ export function competitionState(
   /** Épreuve par équipes : bloc lu dans les tables des équipes (docs/adr/0024) */
   teams?: TeamsStateDTO | null
 ): CompetitionStateDTO | null {
-  // Épreuve par équipes jamais ouverte : son état est dans les tables des équipes
-  if (Object.keys(session).length === 0 && !teams) return null;
+  // Jamais ouverte : pas d'état, épreuve par équipes comprise. L'écran des équipes écrit encore
+  // le bloc lui-même (persistLocally) : un état par défaut déclencherait sa restauration
+  // (phase, onglet) à la première ouverture (docs/adr/0024, jusqu'au lot E3)
+  if (Object.keys(session).length === 0) return null;
   const groups = comp ? groupTableauxView(comp, session) : null;
   // Tableau repris lu dans son groupe : la racine ne le montre plus
   const rootMoved =
