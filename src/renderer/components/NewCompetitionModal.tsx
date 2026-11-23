@@ -127,6 +127,14 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
       specialMode,
     });
 
+  // Réglages initiaux : défauts du formulaire + niveau GREG proposé à l'import (fichier
+  // BellePoule ou Domaine fédéral), visible et modifiable dans Propriétés (#1328)
+  const initialSettings = () => {
+    const base = buildSettings();
+    const gregLevel = header?.fields.gregLevel;
+    return base && gregLevel ? { ...base, gregLevel } : base;
+  };
+
   // Objet transmis à la modale Propriétés : champs du formulaire + brouillon éventuel
   const draftCompetition = {
     id: '',
@@ -137,7 +145,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
     category,
     location,
     organizer: propsDraft?.organizer ?? '',
-    settings: propsDraft?.settings ?? buildSettings(),
+    settings: propsDraft?.settings ?? initialSettings(),
   } as Competition;
 
   const handlePropertiesSave = (updates: Partial<Competition>) => {
@@ -154,7 +162,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
     e.preventDefault();
 
     const payload = federalImport.payload ?? undefined;
-    const baseSettings = propsDraft?.settings ?? buildSettings();
+    const baseSettings = propsDraft?.settings ?? initialSettings();
     const schedule = {
       ...(checkInTime ? { checkIn: checkInTime } : {}),
       ...(scratchTime ? { scratch: scratchTime } : {}),
@@ -166,8 +174,6 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
         ? { federal: { ...header.federal, ...(unlocked ? { unlocked: true } : {}) } }
         : {}),
       ...(Object.keys(schedule).length > 0 ? { schedule } : {}),
-      // Niveau GREG proposé à l'import (fichier BellePoule ou Domaine fédéral), modifiable ensuite (#1328)
-      ...(header?.fields.gregLevel ? { gregLevel: header.fields.gregLevel } : {}),
       // Arbitres importés : gestion des arbitres activée d'office (#1504)
       ...(payload && payload.referees.length > 0 ? { refereeFeatureEnabled: true } : {}),
     };
