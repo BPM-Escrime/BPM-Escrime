@@ -4392,7 +4392,10 @@
     "room_default": "Sala",
     "add_room": "Afegeix una sala",
     "remove_room": "Suprimeix la sala",
-    "item_text": "Text mostrat"
+    "item_text": "Text mostrat",
+    "overview": "Vista general",
+    "overview_hint": "Arrossega una sala per moure-la (fletxes del teclat); doble clic o Retorn per obrir-la.",
+    "overview_room_line": "{{name}}: {{width}} × {{length}} m, {{count}} arena/es"
   },
   "stripControl": {
     "title": "Control de la sala",

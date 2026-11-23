@@ -4392,7 +4392,10 @@
     "room_default": "Halle",
     "add_room": "Halle hinzufügen",
     "remove_room": "Halle entfernen",
-    "item_text": "Angezeigter Text"
+    "item_text": "Angezeigter Text",
+    "overview": "Übersicht",
+    "overview_hint": "Halle ziehen, um sie zu verschieben (Pfeiltasten); Doppelklick oder Eingabe öffnet sie.",
+    "overview_room_line": "{{name}}: {{width}} × {{length}} m, {{count}} Arena(en)"
   },
   "stripControl": {
     "title": "Hallensteuerung",

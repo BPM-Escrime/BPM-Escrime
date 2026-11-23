@@ -174,4 +174,30 @@ describe('ArenaPlannerModal', () => {
     expect(svg.getAttribute('viewBox')).toBe(full);
     expect(screen.getByLabelText('arenaPlanner.zoom_out')).toBeDisabled();
   });
+
+  it("vue d'ensemble : déplace une salle au clavier et l'ouvre avec Entrée", () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.click(screen.getByText('arenaPlanner.add_room'));
+    fireEvent.click(screen.getByText('arenaPlanner.overview'));
+    expect(screen.getByRole('img', { name: 'arenaPlanner.overview' })).toBeInTheDocument();
+    const second = screen.getByRole('button', {
+      name: /^arenaPlanner\.room_default 2, x 23 m, y 0 m/,
+    });
+    fireEvent.keyDown(second, { key: 'ArrowRight', shiftKey: true });
+    fireEvent.keyDown(second, { key: 'ArrowDown', shiftKey: true });
+    expect(
+      screen.getByRole('button', { name: /^arenaPlanner\.room_default 2, x 24 m, y 1 m/ })
+    ).toBeInTheDocument();
+    fireEvent.keyDown(
+      screen.getByRole('button', { name: /^arenaPlanner\.room_default 1, x 0 m/ }),
+      {
+        key: 'Enter',
+      }
+    );
+    expect(screen.queryByRole('img', { name: 'arenaPlanner.overview' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'arenaPlanner.room_default 1' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  });
 });

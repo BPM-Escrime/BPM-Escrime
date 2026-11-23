@@ -4392,7 +4392,10 @@
     "room_default": "Зал",
     "add_room": "Добавить зал",
     "remove_room": "Удалить зал",
-    "item_text": "Отображаемый текст"
+    "item_text": "Отображаемый текст",
+    "overview": "Общий план",
+    "overview_hint": "Перетащите зал, чтобы переместить его (стрелки); двойной щелчок или Enter — открыть.",
+    "overview_room_line": "{{name}}: {{width}} × {{length}} м, арен: {{count}}"
   },
   "stripControl": {
     "title": "Управление залом",

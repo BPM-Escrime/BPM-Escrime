@@ -4392,7 +4392,10 @@
     "room_default": "場館",
     "add_room": "新增場館",
     "remove_room": "刪除場館",
-    "item_text": "顯示文字"
+    "item_text": "顯示文字",
+    "overview": "總覽",
+    "overview_hint": "拖曳場館以移動（方向鍵亦可）；雙擊或按 Enter 開啟。",
+    "overview_room_line": "{{name}}：{{width}} × {{length}} 米，{{count}} 個場地"
   },
   "stripControl": {
     "title": "場地控制",

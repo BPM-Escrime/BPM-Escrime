@@ -71,6 +71,19 @@
   cursor: grabbing;
 }
 
+.arena-planner-site-room {
+  cursor: move;
+}
+
+.arena-planner-site-room:focus-visible {
+  outline: none;
+}
+
+.arena-planner-site-active {
+  stroke: #2563eb;
+  stroke-width: 0.25;
+}
+
 .arena-planner-text-field textarea {
   resize: vertical;
   min-width: 12rem;

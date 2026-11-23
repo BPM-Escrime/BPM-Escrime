@@ -3,7 +3,9 @@
  * Outil à côté du QR Wi-Fi et de la télécommande TV : dimensions de la salle,
  * arènes (grille automatique ou maximum trouvé par « Optimiser »), tables,
  * prises, accessoires, issues de secours et zones bloquées à placer à la souris,
- * texte libre sur chaque élément, plusieurs salles, zoom, export PDF et PNG. La géométrie vient de shared/domain/arena.
+ * texte libre sur chaque élément, zoom, plusieurs salles déplaçables à la
+ * souris sur une vue d'ensemble, export PDF et PNG. La géométrie vient de
+ * shared/domain/arena.
  * Licensed under GPL-3.0
  */
 
@@ -13,24 +15,28 @@ import Modal from './common/Modal';
 import { Button } from './common/Button';
 import { logger, LogCategory } from '@shared/services/logger';
 import {
-  alignArenaCenters,
   checkRoomItems,
   createRoomItem,
   moveArenaWithPush,
   moveRoomItem,
   resizeRoomItemAroundCenter,
   rotateRoomItem,
-  optimizeArenaLayout,
   resizeRoomItem,
-  spreadArenaCenters,
   type ArenaAlign,
   type ArenaSpacing,
-  type OptimizedLayout,
-  type Point,
   type RoomItem,
 } from '@shared/domain/arena/arenaPlanner';
 import { ArenaPlanCanvas, KIND_LABEL_KEY } from './arenaPlanner/ArenaPlanCanvas';
 import { ArenaPlanHelp } from './arenaPlanner/ArenaPlanHelp';
+import { SitePlanCanvas, type SiteRoom } from './arenaPlanner/SitePlanCanvas';
+import {
+  computeRoomLayout,
+  newRoomPlan,
+  nextRoomPosition,
+  parseNumber,
+  roomDimsKey,
+  type RoomPlan,
+} from './arenaPlanner/roomPlans';
 
 interface ArenaPlannerModalProps {
   onClose: () => void;
@@ -48,42 +54,7 @@ const TOOL_LABEL_KEY: Record<ItemKind, string> = {
   blocked: 'arenaPlanner.add_blocked',
 };
 
-/** Une salle du plan : dimensions, arènes et matériel propres. */
-interface RoomPlan {
-  id: string;
-  name: string;
-  width: string;
-  length: string;
-  arenas: string;
-  margin: string;
-  /** Collées (pas minimal) ou espacées (occupation maximale de la salle) */
-  spacing: ArenaSpacing;
-  /** Centrage horizontal du bloc d'arènes */
-  align: ArenaAlign;
-  items: RoomItem[];
-  /** Positions des arènes après un glisser à la souris ; null = positions calculées */
-  manual: { key: string; centers: Point[] } | null;
-}
-
-const newRoomPlan = (id: string, name: string): RoomPlan => ({
-  id,
-  name,
-  width: '20',
-  length: '20',
-  arenas: '1',
-  margin: '1',
-  spacing: 'packed',
-  align: 'left',
-  items: [],
-  manual: null,
-});
-
 type Updater<T> = T | ((prev: T) => T);
-
-const parseNumber = (value: string): number | null => {
-  const n = Number(value.replace(',', '.'));
-  return Number.isFinite(n) ? n : null;
-};
 
 const fmt = (n: number) => (Math.round(n * 10) / 10).toString();
 
@@ -112,7 +83,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
             : r
         )
       );
-  const { width, length, arenas, margin, spacing, align, items, manual } = plan;
+  const { width, length, arenas, margin, spacing, align, items } = plan;
   const setWidth = setField('width');
   const setLength = setField('length');
   const setArenas = setField('arenas');
@@ -125,54 +96,49 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snap, setSnap] = useState(true);
   const [showDims, setShowDims] = useState(false);
+  /** Vue d'ensemble : toutes les salles, déplaçables à la souris */
+  const [overview, setOverview] = useState(false);
   /** Les positions glissées ne valent que pour les dimensions et le nombre d'arènes qui les ont produites */
-  const dimsKey = [width, length, arenas, margin, spacing, align].join('|');
-  const manualCenters = manual && manual.key === dimsKey ? manual.centers : null;
+  const dimsKey = roomDimsKey(plan);
   const [exportError, setExportError] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
   const idCounter = useRef(0);
 
-  const parsed = useMemo(() => {
-    const w = parseNumber(width);
-    const l = parseNumber(length);
-    const n = parseNumber(arenas);
-    const m = parseNumber(margin);
-    if (
-      w === null ||
-      l === null ||
-      n === null ||
-      m === null ||
-      w <= 0 ||
-      l <= 0 ||
-      m < 0 ||
-      n < 1
-    ) {
-      return null;
-    }
-    return { w, l, n: Math.floor(n), m };
-  }, [width, length, arenas, margin]);
+  const layout = useMemo(() => computeRoomLayout(plan), [plan]);
+  const parsed = layout?.parsed ?? null;
+  const room = layout?.room ?? null;
+  const maxLayout = layout?.maxLayout ?? null;
+  const clamped = layout?.clamped ?? false;
+  const centers = useMemo(() => layout?.centers ?? [], [layout]);
 
-  const room = useMemo(() => (parsed ? { widthM: parsed.w, lengthM: parsed.l } : null), [parsed]);
+  /** Salles de la vue d'ensemble (calculées seulement quand elle est affichée). */
+  const siteRooms = useMemo<SiteRoom[]>(() => {
+    if (!overview) return [];
+    return rooms.flatMap(r => {
+      const l = r.id === plan.id ? layout : computeRoomLayout(r);
+      if (!l) return [];
+      return [
+        {
+          id: r.id,
+          name: r.name || t('arenaPlanner.room_default'),
+          x: r.x,
+          y: r.y,
+          widthM: l.room.widthM,
+          lengthM: l.room.lengthM,
+          centers: l.centers,
+          items: r.items,
+        },
+      ];
+    });
+  }, [overview, rooms, plan.id, layout, t]);
 
-  const blockedItems = useMemo(() => items.filter(i => i.kind === 'blocked'), [items]);
+  const moveRoom = (id: string, x: number, y: number) =>
+    setRooms(prev => prev.map(r => (r.id === id ? { ...r, x, y } : r)));
 
-  /** Maximum d'arènes que la zone peut recevoir (marge et zones bloquées prises en compte). */
-  const maxLayout = useMemo<OptimizedLayout | null>(
-    () => (room && parsed ? optimizeArenaLayout(room, parsed.m, blockedItems) : null),
-    [room, parsed, blockedItems]
-  );
-  /** Jamais plus d'arènes que le maximum possible. */
-  const arenaCount = maxLayout && parsed ? Math.min(parsed.n, maxLayout.count) : 0;
-  const clamped = maxLayout !== null && parsed !== null && parsed.n > maxLayout.count;
-  const centers: Point[] = useMemo(() => {
-    if (manualCenters) return manualCenters;
-    if (!maxLayout || !room || !parsed) return [];
-    // « Espacées » : répartition sur la salle ; à défaut (salle trop petite, zone bloquée), collées
-    const base =
-      (spacing === 'spread' && spreadArenaCenters(room, arenaCount, parsed.m, blockedItems)) ||
-      maxLayout.centers.slice(0, arenaCount);
-    return alignArenaCenters(base, room, parsed.m, align, blockedItems);
-  }, [manualCenters, maxLayout, arenaCount, room, parsed, spacing, align, blockedItems]);
+  const openRoom = (id: string) => {
+    selectRoom(id);
+    setOverview(false);
+  };
 
   const issues = useMemo(() => {
     if (!room) return [];
@@ -219,10 +185,13 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const addRoom = () => {
     roomCounter.current += 1;
     const id = `room-${roomCounter.current}`;
-    setRooms(prev => [
-      ...prev,
-      newRoomPlan(id, `${t('arenaPlanner.room_default')} ${prev.length + 1}`),
-    ]);
+    setRooms(prev => {
+      const pos = nextRoomPosition(prev);
+      return [
+        ...prev,
+        newRoomPlan(id, `${t('arenaPlanner.room_default')} ${prev.length + 1}`, pos.x, pos.y),
+      ];
+    });
     setActiveId(id);
     setSelectedId(null);
   };
@@ -291,7 +260,34 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     });
   };
 
+  const legend = () => [
+    t('arenaPlanner.legend_zone'),
+    t('arenaPlanner.legend_safety'),
+    t('arenaPlanner.legend_guard'),
+    t('arenaPlanner.legend_roles'),
+  ];
+
+  /** Texte de l'export de la vue d'ensemble : une ligne par salle. */
+  const siteExportText = () => ({
+    title: `${t('arenaPlanner.title')} — ${t('arenaPlanner.overview')}`,
+    summary: siteRooms.map(r =>
+      t('arenaPlanner.overview_room_line', {
+        name: r.name,
+        width: fmt(r.widthM),
+        length: fmt(r.lengthM),
+        count: r.centers.length,
+      })
+    ),
+    legend: legend(),
+    itemsTitle: t('arenaPlanner.items_title'),
+    items: siteRooms.flatMap(r =>
+      r.items.map(i => `${r.name} — ${i.label.replace(/\n/g, ' ') || t(KIND_LABEL_KEY[i.kind])}`)
+    ),
+    note: t('arenaPlanner.note'),
+  });
+
   const exportText = () => {
+    if (overview) return siteExportText();
     if (!parsed || !maxLayout || !room) return null;
     return {
       title: `${t('arenaPlanner.title')} — ${plan.name}`,
@@ -300,12 +296,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
         t('arenaPlanner.summary_arenas_max', { count: centers.length, max: maxLayout.count }),
         maxText(),
       ],
-      legend: [
-        t('arenaPlanner.legend_zone'),
-        t('arenaPlanner.legend_safety'),
-        t('arenaPlanner.legend_guard'),
-        t('arenaPlanner.legend_roles'),
-      ],
+      legend: legend(),
       itemsTitle: t('arenaPlanner.items_title'),
       items: items.map(i =>
         t('arenaPlanner.item_line', {
@@ -330,7 +321,11 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
       .replace(/[^A-Za-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .toLowerCase();
-    const base = rooms.length > 1 && slug ? `plan-arenes-${slug}` : 'plan-arenes';
+    const base = overview
+      ? 'plan-salles'
+      : rooms.length > 1 && slug
+        ? `plan-arenes-${slug}`
+        : 'plan-arenes';
     try {
       const exporter = await import('./arenaPlanner/arenaPlanExport');
       if (kind === 'pdf') {
@@ -379,6 +374,18 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
         </Button>
         <Button type="button" size="sm" onClick={removeRoom} disabled={rooms.length < 2}>
           {t('arenaPlanner.remove_room')}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={overview ? 'primary' : 'secondary'}
+          aria-pressed={overview}
+          onClick={() => {
+            setOverview(v => !v);
+            setSelectedId(null);
+          }}
+        >
+          {t('arenaPlanner.overview')}
         </Button>
       </div>
 
@@ -508,7 +515,29 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
         </aside>
 
         <div className="arena-planner-main">
-          {parsed && maxLayout && room ? (
+          {overview ? (
+            <>
+              <p className="arena-planner-hint">{t('arenaPlanner.overview_hint')}</p>
+              <SitePlanCanvas
+                rooms={siteRooms}
+                activeId={plan.id}
+                snap={snap}
+                svgRef={svgRef}
+                onSelect={selectRoom}
+                onMove={moveRoom}
+                onOpen={openRoom}
+              />
+              <div className="arena-planner-actions">
+                <Button type="button" variant="primary" onClick={() => runExport('pdf')}>
+                  {t('arenaPlanner.export_pdf')}
+                </Button>
+                <Button type="button" onClick={() => runExport('png')}>
+                  {t('arenaPlanner.export_png')}
+                </Button>
+              </div>
+              {exportError && <p role="alert">{exportError}</p>}
+            </>
+          ) : parsed && maxLayout && room ? (
             <>
               <p role="status" className="arena-planner-status">
                 {maxText()}

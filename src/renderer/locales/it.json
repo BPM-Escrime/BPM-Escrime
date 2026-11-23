@@ -4392,7 +4392,10 @@
     "room_default": "Sala",
     "add_room": "Aggiungi una sala",
     "remove_room": "Elimina la sala",
-    "item_text": "Testo visualizzato"
+    "item_text": "Testo visualizzato",
+    "overview": "Panoramica",
+    "overview_hint": "Trascina una sala per spostarla (frecce della tastiera); doppio clic o Invio per aprirla.",
+    "overview_room_line": "{{name}}: {{width}} × {{length}} m, {{count}} arena/e"
   },
   "stripControl": {
     "title": "Controllo della sala",

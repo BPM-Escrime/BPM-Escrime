@@ -4392,7 +4392,10 @@
     "room_default": "Sal",
     "add_room": "Ouzhpennañ ur sal",
     "remove_room": "Dilemel ar sal",
-    "item_text": "Testenn diskouezet"
+    "item_text": "Testenn diskouezet",
+    "overview": "Gwel hollek",
+    "overview_hint": "Riklañ ur sal evit he fiñval (biroù ar c'hlavier) ; daou-glik pe Enter evit he digeriñ.",
+    "overview_room_line": "{{name}} : {{width}} × {{length}} m, {{count}} tachenn"
   },
   "stripControl": {
     "title": "Merañ ar sal",
