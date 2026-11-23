@@ -130,4 +130,48 @@ describe('ArenaPlannerModal', () => {
     fireEvent.click(screen.getByLabelText('arenaPlanner.dims_option'));
     expect(document.querySelectorAll('.arena-planner-dimline').length).toBeGreaterThan(0);
   });
+
+  it('modifie le texte affiché sur une table, sur plusieurs lignes', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.click(screen.getByText('arenaPlanner.add_table'));
+    fireEvent.change(screen.getByLabelText('arenaPlanner.item_text'), {
+      target: { value: 'Table DT\nRésultats' },
+    });
+    const item = screen.getByRole('button', { name: /Table DT Résultats/ });
+    const lines = Array.from(item.querySelectorAll('tspan')).map(n => n.textContent);
+    expect(lines).toEqual(['Table DT', 'Résultats']);
+  });
+
+  it('ajoute une deuxième salle indépendante, puis la supprime', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.click(screen.getByText('arenaPlanner.add_table'));
+    fireEvent.click(screen.getByText('arenaPlanner.add_room'));
+    expect(screen.getByRole('button', { name: 'arenaPlanner.room_default 2' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.queryByRole('button', { name: /arenaPlanner\.kind_table 1/ })).toBeNull();
+    fireEvent.change(screen.getByLabelText('arenaPlanner.room_name'), {
+      target: { value: 'Gymnase B' },
+    });
+    expect(screen.getByRole('button', { name: 'Gymnase B' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'arenaPlanner.room_default 1' }));
+    expect(screen.getByRole('button', { name: /arenaPlanner\.kind_table 1/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByText('arenaPlanner.remove_room'));
+    expect(screen.queryByRole('button', { name: 'arenaPlanner.room_default 1' })).toBeNull();
+    expect(screen.getByText('arenaPlanner.remove_room').closest('button')).toBeDisabled();
+  });
+
+  it("zoome et revient à la taille réelle sans changer la vue d'export", () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    const svg = screen.getByRole('img');
+    const full = svg.getAttribute('viewBox');
+    expect(svg.getAttribute('data-full-viewbox')).toBe(full);
+    fireEvent.click(screen.getByLabelText('arenaPlanner.zoom_in'));
+    expect(svg.getAttribute('viewBox')).not.toBe(full);
+    expect(svg.getAttribute('data-full-viewbox')).toBe(full);
+    fireEvent.click(screen.getByText('125 %'));
+    expect(svg.getAttribute('viewBox')).toBe(full);
+    expect(screen.getByLabelText('arenaPlanner.zoom_out')).toBeDisabled();
+  });
 });

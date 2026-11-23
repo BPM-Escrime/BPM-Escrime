@@ -4382,7 +4382,17 @@
     "too_many": "{{requested}} arenenn goulennet, met ar takad na zal nemet {{max}}. Ne vez lakaet nemet ar maksimum.",
     "dims_option": "Kotennoù teknikel (plan ha ezporzhiadur)",
     "dims_hint": "Ouzhpenn a ra da blan ha d’an ezporzhiadurioù kotennoù ar sal, an arenenn, an dispakoù, ar bevennoù ha ar pezhioù.",
-    "handle_arena": "Arenenn (stardit evit lakaat e-kerzh)"
+    "handle_arena": "Arenenn (stardit evit lakaat e-kerzh)",
+    "zoom_in": "Zoum a-dost",
+    "zoom_out": "Zoum a-bell",
+    "zoom_reset": "Ment gwir (100 %)",
+    "zoom_hint": "Ctrl + rodig evit zoumañ, riklañ ar foñs evit fiñval",
+    "rooms_title": "Salioù",
+    "room_name": "Anv ar sal",
+    "room_default": "Sal",
+    "add_room": "Ouzhpennañ ur sal",
+    "remove_room": "Dilemel ar sal",
+    "item_text": "Testenn diskouezet"
   },
   "stripControl": {
     "title": "Merañ ar sal",

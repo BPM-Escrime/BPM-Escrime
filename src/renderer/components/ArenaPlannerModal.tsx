@@ -3,7 +3,7 @@
  * Outil à côté du QR Wi-Fi et de la télécommande TV : dimensions de la salle,
  * arènes (grille automatique ou maximum trouvé par « Optimiser »), tables,
  * prises, accessoires, issues de secours et zones bloquées à placer à la souris,
- * export PDF et PNG. La géométrie vient de shared/domain/arena.
+ * texte libre sur chaque élément, plusieurs salles, zoom, export PDF et PNG. La géométrie vient de shared/domain/arena.
  * Licensed under GPL-3.0
  */
 
@@ -29,7 +29,7 @@ import {
   type Point,
   type RoomItem,
 } from '@shared/domain/arena/arenaPlanner';
-import { ArenaPlanCanvas } from './arenaPlanner/ArenaPlanCanvas';
+import { ArenaPlanCanvas, KIND_LABEL_KEY } from './arenaPlanner/ArenaPlanCanvas';
 import { ArenaPlanHelp } from './arenaPlanner/ArenaPlanHelp';
 
 interface ArenaPlannerModalProps {
@@ -48,13 +48,37 @@ const TOOL_LABEL_KEY: Record<ItemKind, string> = {
   blocked: 'arenaPlanner.add_blocked',
 };
 
-const KIND_LABEL_KEY: Record<ItemKind, string> = {
-  table: 'arenaPlanner.kind_table',
-  outlet: 'arenaPlanner.kind_outlet',
-  accessory: 'arenaPlanner.kind_accessory',
-  exit: 'arenaPlanner.kind_exit',
-  blocked: 'arenaPlanner.kind_blocked',
-};
+/** Une salle du plan : dimensions, arènes et matériel propres. */
+interface RoomPlan {
+  id: string;
+  name: string;
+  width: string;
+  length: string;
+  arenas: string;
+  margin: string;
+  /** Collées (pas minimal) ou espacées (occupation maximale de la salle) */
+  spacing: ArenaSpacing;
+  /** Centrage horizontal du bloc d'arènes */
+  align: ArenaAlign;
+  items: RoomItem[];
+  /** Positions des arènes après un glisser à la souris ; null = positions calculées */
+  manual: { key: string; centers: Point[] } | null;
+}
+
+const newRoomPlan = (id: string, name: string): RoomPlan => ({
+  id,
+  name,
+  width: '20',
+  length: '20',
+  arenas: '1',
+  margin: '1',
+  spacing: 'packed',
+  align: 'left',
+  items: [],
+  manual: null,
+});
+
+type Updater<T> = T | ((prev: T) => T);
 
 const parseNumber = (value: string): number | null => {
   const n = Number(value.replace(',', '.'));
@@ -65,20 +89,42 @@ const fmt = (n: number) => (Math.round(n * 10) / 10).toString();
 
 export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose }) => {
   const { t } = useTranslation();
-  const [width, setWidth] = useState('20');
-  const [length, setLength] = useState('20');
-  const [arenas, setArenas] = useState('1');
-  const [margin, setMargin] = useState('1');
-  /** Collées (pas minimal) ou espacées (occupation maximale de la salle) */
-  const [spacing, setSpacing] = useState<ArenaSpacing>('packed');
-  /** Centrage horizontal du bloc d'arènes */
-  const [align, setAlign] = useState<ArenaAlign>('left');
-  const [items, setItems] = useState<RoomItem[]>([]);
+  const [rooms, setRooms] = useState<RoomPlan[]>(() => [
+    newRoomPlan('room-1', `${t('arenaPlanner.room_default')} 1`),
+  ]);
+  const [activeId, setActiveId] = useState('room-1');
+  const roomCounter = useRef(1);
+  const plan = rooms.find(r => r.id === activeId) ?? rooms[0];
+  /** Modifie un champ de la salle active (valeur ou fonction de la valeur précédente). */
+  const setField =
+    <K extends keyof RoomPlan>(key: K) =>
+    (value: Updater<RoomPlan[K]>) =>
+      setRooms(prev =>
+        prev.map(r =>
+          r.id === plan.id
+            ? {
+                ...r,
+                [key]:
+                  typeof value === 'function'
+                    ? (value as (p: RoomPlan[K]) => RoomPlan[K])(r[key])
+                    : value,
+              }
+            : r
+        )
+      );
+  const { width, length, arenas, margin, spacing, align, items, manual } = plan;
+  const setWidth = setField('width');
+  const setLength = setField('length');
+  const setArenas = setField('arenas');
+  const setMargin = setField('margin');
+  const setSpacing = setField('spacing');
+  const setAlign = setField('align');
+  const setItems = setField('items');
+  const setManual = setField('manual');
+  const setRoomName = setField('name');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snap, setSnap] = useState(true);
   const [showDims, setShowDims] = useState(false);
-  /** Positions des arènes après un glisser à la souris ; null = positions calculées */
-  const [manual, setManual] = useState<{ key: string; centers: Point[] } | null>(null);
   /** Les positions glissées ne valent que pour les dimensions et le nombre d'arènes qui les ont produites */
   const dimsKey = [width, length, arenas, margin, spacing, align].join('|');
   const manualCenters = manual && manual.key === dimsKey ? manual.centers : null;
@@ -170,6 +216,37 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     rotateItem(selectedItem.id, value);
   };
 
+  const addRoom = () => {
+    roomCounter.current += 1;
+    const id = `room-${roomCounter.current}`;
+    setRooms(prev => [
+      ...prev,
+      newRoomPlan(id, `${t('arenaPlanner.room_default')} ${prev.length + 1}`),
+    ]);
+    setActiveId(id);
+    setSelectedId(null);
+  };
+
+  const removeRoom = () => {
+    if (rooms.length < 2) return;
+    const index = rooms.findIndex(r => r.id === plan.id);
+    const rest = rooms.filter(r => r.id !== plan.id);
+    setRooms(rest);
+    setActiveId(rest[Math.max(0, index - 1)].id);
+    setSelectedId(null);
+  };
+
+  const selectRoom = (id: string) => {
+    setActiveId(id);
+    setSelectedId(null);
+  };
+
+  /** Texte affiché sur l'élément (table, zone…) ; retours à la ligne permis. */
+  const editLabel = (value: string) => {
+    if (!selectedItem) return;
+    setItems(prev => prev.map(i => (i.id === selectedItem.id ? { ...i, label: value } : i)));
+  };
+
   const removeItem = (id: string) => {
     setItems(prev => prev.filter(i => i.id !== id));
     setSelectedId(current => (current === id ? null : current));
@@ -217,7 +294,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
   const exportText = () => {
     if (!parsed || !maxLayout || !room) return null;
     return {
-      title: t('arenaPlanner.title'),
+      title: `${t('arenaPlanner.title')} — ${plan.name}`,
       summary: [
         t('arenaPlanner.summary_room', { width: fmt(parsed.w), length: fmt(parsed.l) }),
         t('arenaPlanner.summary_arenas_max', { count: centers.length, max: maxLayout.count }),
@@ -232,7 +309,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
       itemsTitle: t('arenaPlanner.items_title'),
       items: items.map(i =>
         t('arenaPlanner.item_line', {
-          label: i.label,
+          label: i.label.replace(/\n/g, ' ') || t(KIND_LABEL_KEY[i.kind]),
           x: fmt(i.x),
           y: fmt(i.y),
           width: fmt(i.widthM),
@@ -247,12 +324,19 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     const text = exportText();
     if (!svgRef.current || !text) return;
     setExportError('');
+    // Nom de fichier : salle active, caractères sûrs seulement
+    const slug = plan.name
+      .normalize('NFD')
+      .replace(/[^A-Za-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .toLowerCase();
+    const base = rooms.length > 1 && slug ? `plan-arenes-${slug}` : 'plan-arenes';
     try {
       const exporter = await import('./arenaPlanner/arenaPlanExport');
       if (kind === 'pdf') {
-        await exporter.exportArenaPlanPdf(svgRef.current, text, 'plan-arenes.pdf');
+        await exporter.exportArenaPlanPdf(svgRef.current, text, `${base}.pdf`);
       } else {
-        await exporter.exportArenaPlanPng(svgRef.current, 'plan-arenes.png');
+        await exporter.exportArenaPlanPng(svgRef.current, `${base}.png`);
       }
     } catch (error) {
       logger.error(LogCategory.BUSINESS, "Export du plan d'arène impossible", error as Error);
@@ -276,10 +360,44 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
     >
       <p className="arena-planner-lead">{t('arenaPlanner.hint')}</p>
 
+      <div className="arena-planner-rooms" role="group" aria-label={t('arenaPlanner.rooms_title')}>
+        <span className="form-label">{t('arenaPlanner.rooms_title')}</span>
+        {rooms.map(r => (
+          <Button
+            key={r.id}
+            type="button"
+            size="sm"
+            variant={r.id === plan.id ? 'primary' : 'secondary'}
+            aria-pressed={r.id === plan.id}
+            onClick={() => selectRoom(r.id)}
+          >
+            {r.name || t('arenaPlanner.room_default')}
+          </Button>
+        ))}
+        <Button type="button" size="sm" onClick={addRoom}>
+          {t('arenaPlanner.add_room')}
+        </Button>
+        <Button type="button" size="sm" onClick={removeRoom} disabled={rooms.length < 2}>
+          {t('arenaPlanner.remove_room')}
+        </Button>
+      </div>
+
       {!parsed || !maxLayout || !room ? <p role="alert">{t('arenaPlanner.invalid')}</p> : null}
 
       <div className="arena-planner-layout">
         <aside className="arena-planner-sidebar" aria-label={t('arenaPlanner.title')}>
+          <div className="arena-planner-field">
+            <label className="form-label" htmlFor="arena-room-name">
+              {t('arenaPlanner.room_name')}
+            </label>
+            <input
+              id="arena-room-name"
+              className="form-input"
+              type="text"
+              value={plan.name}
+              onChange={e => setRoomName(e.target.value)}
+            />
+          </div>
           <div className="arena-planner-field">
             <label className="form-label" htmlFor="arena-width">
               {t('arenaPlanner.width')}
@@ -424,6 +542,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
               <p className="arena-planner-hint">{t('arenaPlanner.tools_hint')}</p>
 
               <ArenaPlanCanvas
+                key={plan.id}
                 room={room}
                 centers={centers}
                 items={items}
@@ -453,7 +572,15 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose })
                 <h3 id="arena-inspector-title">{t('arenaPlanner.inspector_title')}</h3>
                 {selectedItem ? (
                   <div className="arena-planner-fields">
-                    <span>{selectedItem.label}</span>
+                    <label className="form-label arena-planner-text-field">
+                      {t('arenaPlanner.item_text')}
+                      <textarea
+                        className="form-input"
+                        rows={2}
+                        value={selectedItem.label}
+                        onChange={e => editLabel(e.target.value)}
+                      />
+                    </label>
                     <label className="form-label">
                       {t('arenaPlanner.pos_x')}
                       <input

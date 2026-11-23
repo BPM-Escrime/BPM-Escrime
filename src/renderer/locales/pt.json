@@ -4382,7 +4382,17 @@
     "too_many": "Pedidas {{requested}} arenas, mas a zona só comporta {{max}}. Só o máximo é colocado.",
     "dims_option": "Cotas técnicas (planta e exportação)",
     "dims_hint": "Acrescenta à planta e às exportações as cotas da sala, das arenas, dos espaçamentos, das margens e dos elementos.",
-    "handle_arena": "Arena (arrastar para mover)"
+    "handle_arena": "Arena (arrastar para mover)",
+    "zoom_in": "Ampliar",
+    "zoom_out": "Reduzir",
+    "zoom_reset": "Tamanho real (100 %)",
+    "zoom_hint": "Ctrl + roda para ampliar, arraste o fundo para deslocar",
+    "rooms_title": "Salas",
+    "room_name": "Nome da sala",
+    "room_default": "Sala",
+    "add_room": "Adicionar uma sala",
+    "remove_room": "Remover a sala",
+    "item_text": "Texto exibido"
   },
   "stripControl": {
     "title": "Controlo da sala",

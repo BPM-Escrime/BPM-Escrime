@@ -4382,7 +4382,17 @@
     "too_many": "{{requested}} Arenen angefragt, die Fläche fasst aber nur {{max}}. Es wird nur das Maximum platziert.",
     "dims_option": "Technische Bemaßung (Plan und Export)",
     "dims_hint": "Fügt dem Plan und den Exporten Maße der Halle, Arenen, Abstände, Ränder und Elemente hinzu.",
-    "handle_arena": "Arena (ziehen zum Verschieben)"
+    "handle_arena": "Arena (ziehen zum Verschieben)",
+    "zoom_in": "Vergrößern",
+    "zoom_out": "Verkleinern",
+    "zoom_reset": "Originalgröße (100 %)",
+    "zoom_hint": "Strg + Mausrad zum Zoomen, Hintergrund ziehen zum Verschieben",
+    "rooms_title": "Hallen",
+    "room_name": "Name der Halle",
+    "room_default": "Halle",
+    "add_room": "Halle hinzufügen",
+    "remove_room": "Halle entfernen",
+    "item_text": "Angezeigter Text"
   },
   "stripControl": {
     "title": "Hallensteuerung",
