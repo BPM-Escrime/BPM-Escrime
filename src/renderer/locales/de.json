@@ -4370,6 +4370,7 @@
     "hint_arenas": "Gewünschte Anzahl Arenen. „Optimieren“ findet das Maximum.",
     "arena_names": "Namen der Bahnen",
     "arena_name": "Bahn {{n}}",
+    "arena_rotate": "Arena {{n}} drehen",
     "hint_margin": "Abstand des Plans zur Innenseite der Wände.",
     "spacing": "Abstand",
     "spacing_packed": "Dicht (Minimum)",

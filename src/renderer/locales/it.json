@@ -4370,6 +4370,7 @@
     "hint_arenas": "Numero di arene desiderato. «Ottimizza» trova il massimo possibile.",
     "arena_names": "Nomi delle pedane",
     "arena_name": "Pedana {{n}}",
+    "arena_rotate": "Ruota l'arena {{n}}",
     "hint_margin": "Distanza della pianta dall’interno delle pareti.",
     "spacing": "Spaziatura",
     "spacing_packed": "Vicine (minimo)",

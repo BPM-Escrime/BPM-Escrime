@@ -4370,6 +4370,7 @@
     "hint_arenas": "Nombre d’arenes desitjat. «Optimitza» troba el màxim possible.",
     "arena_names": "Noms de les pistes",
     "arena_name": "Pista {{n}}",
+    "arena_rotate": "Gira l'arena {{n}}",
     "hint_margin": "Distància del plànol a l’interior de les parets.",
     "spacing": "Espaiat",
     "spacing_packed": "Junts (mínim)",
