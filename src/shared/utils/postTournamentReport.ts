@@ -14,6 +14,7 @@ import {
 } from '../types';
 import { getActiveLocale } from './localeFormat';
 import { defaultPlatform } from '../platform/platforms';
+import type { BpmClient } from '../api/client';
 import { escHtml } from './pdfExport/bookToc';
 
 interface MatchWithReferee {
@@ -457,15 +458,19 @@ export function buildReportExtras({
   return { ranking, rankingKind, matchCounts: { total, finished } };
 }
 
-/** Charge stats + matchs arbitrés, génère le rapport et l'enregistre en PDF */
+/**
+ * Charge stats + matchs arbitrés par le contrat (listFencerStats, listRefereeMatches, #1981),
+ * génère le rapport et l'enregistre en PDF
+ */
 export async function exportPostTournamentPDF(
   competition: Competition,
-  source: ReportSource
+  source: ReportSource,
+  client: BpmClient
 ): Promise<void> {
-  const api = window.electronAPI;
+  const competitionId = competition.id;
   const [fencerStats, matchesWithRefs] = await Promise.all([
-    api.db.getCompetitionFencerStats(competition.id),
-    api.db.getMatchesWithReferees(competition.id),
+    client.query('listFencerStats', { competitionId }),
+    client.query('listRefereeMatches', { competitionId }),
   ]);
   const logo = localStorage.getItem('bellepoule-logo') ?? undefined;
   const html = generatePostTournamentReportHTML(

@@ -28,6 +28,7 @@ import { remoteOperations } from './contractRemote';
 import { trainingOperations } from './contractTraining';
 import { devicesOperations } from './contractDevices';
 import { fileOperations } from './contractFiles';
+import { simulationOperations } from './contractSimulation';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
@@ -1434,6 +1435,8 @@ export const contract = {
   ...devicesOperations,
   // Fichiers de données (.bpm, .bpf, photos, .bpclub) en contenu, jamais sur le réseau (ADR-0021)
   ...fileOperations,
+  // Événements simulés du remplissage automatique : données d'essai, sans journal
+  ...simulationOperations,
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────

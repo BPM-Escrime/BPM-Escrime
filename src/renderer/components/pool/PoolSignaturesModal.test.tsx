@@ -14,6 +14,7 @@ vi.mock('../../hooks/useTranslation', () => ({
 }));
 import { PoolSignaturesModal } from './PoolSignaturesModal';
 import { Fencer, Gender, FencerStatus } from '../../../shared/types';
+import { fakeApiBridge } from '../../testUtils/apiBridge';
 
 const fencer = (id: string, last: string): Fencer => ({
   id,
@@ -32,7 +33,10 @@ describe('PoolSignaturesModal', () => {
     const getPoolSignatures = vi
       .fn()
       .mockResolvedValue([{ fencerId: '1', signatureData: 'data:image/png;base64,AAA' }]);
-    (window as unknown as { electronAPI: unknown }).electronAPI = { db: { getPoolSignatures } };
+    // Contrat d'API (#1981) : requête getPoolSignatures
+    (window as unknown as { electronAPI: unknown }).electronAPI = {
+      api: fakeApiBridge({ getPoolSignatures }),
+    };
     render(
       <PoolSignaturesModal
         poolId="p1"
@@ -41,8 +45,8 @@ describe('PoolSignaturesModal', () => {
         onClose={() => {}}
       />
     );
-    expect(getPoolSignatures).toHaveBeenCalledWith('p1');
     const img = await screen.findByAltText('DUPONT Prenom');
+    expect(getPoolSignatures).toHaveBeenCalledWith({ poolId: 'p1' });
     expect(img).toHaveAttribute('src', 'data:image/png;base64,AAA');
     expect(screen.getByText('poolView.not_signed')).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();

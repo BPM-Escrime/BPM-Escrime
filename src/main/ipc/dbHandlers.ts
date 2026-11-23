@@ -13,7 +13,6 @@ import { publishCompetitionEvent } from '../engine/api/events';
 export interface DbHandlersContext {
   db: DatabaseManager;
   remoteServers: Map<string, { server: RemoteScoreServer }>;
-  stopRemoteServer(competitionId: string): boolean;
 }
 
 /** Diffuse un événement de données aux fenêtres du renderer (bus main → renderer, #1298). */
@@ -24,28 +23,14 @@ export function emitCompetitionEvent(type: CompetitionEventType, competitionId?:
   }
 }
 
-export function registerDbHandlers({
-  db,
-  remoteServers,
-  stopRemoteServer,
-}: DbHandlersContext): void {
+export function registerDbHandlers({ db, remoteServers }: DbHandlersContext): void {
   // Competition handlers
   ipcMain.handle('db:createCompetition', async (_, data) => {
     return db.createCompetition(data);
   });
 
-  ipcMain.handle('db:getCompetition', async (_, id) => {
-    return db.getCompetition(id);
-  });
-
   ipcMain.handle('db:getAllCompetitions', async () => {
     return db.getAllCompetitions();
-  });
-
-  ipcMain.handle('db:deleteCompetition', async (_, id) => {
-    // Saisie distante encore active : l'arrêter, sinon elle survit à la compétition (#1009)
-    stopRemoteServer(id);
-    return db.deleteCompetition(id);
   });
 
   ipcMain.handle('db:updateCompetition', async (_, id, updates) => {
@@ -67,30 +52,10 @@ export function registerDbHandlers({
     return created;
   });
 
-  ipcMain.handle('db:getFencer', async (_, id) => {
-    return db.getFencer(id);
-  });
-
-  ipcMain.handle('db:getFencersByCompetition', async (_, competitionId) => {
-    return db.getFencersByCompetition(competitionId);
-  });
-
   ipcMain.handle('db:updateFencer', async (_, id, updates) => {
     const updated = db.updateFencer(id, updates);
     emitCompetitionEvent('fencers:changed');
     return updated;
-  });
-
-  ipcMain.handle('db:deleteFencer', async (_, id) => {
-    const deleted = db.deleteFencer(id);
-    emitCompetitionEvent('fencers:changed');
-    return deleted;
-  });
-
-  ipcMain.handle('db:deleteAllFencers', async (_, competitionId) => {
-    const deleted = db.deleteAllFencers(competitionId);
-    emitCompetitionEvent('fencers:changed', competitionId);
-    return deleted;
   });
 
   // Match handlers
@@ -98,14 +63,6 @@ export function registerDbHandlers({
     const created = db.createMatch(match, poolId);
     emitCompetitionEvent('matches:changed');
     return created;
-  });
-
-  ipcMain.handle('db:getMatch', async (_, id) => {
-    return db.getMatch(id);
-  });
-
-  ipcMain.handle('db:getMatchesByPool', async (_, poolId) => {
-    return db.getMatchesByPool(poolId);
   });
 
   ipcMain.handle('db:updateMatch', async (_, id, rawUpdates) => {
@@ -171,12 +128,6 @@ export function registerDbHandlers({
     }
   });
 
-  ipcMain.handle('db:upsertTableauMatch', async (_, params) => {
-    const result = db.upsertTableauMatch(params);
-    emitCompetitionEvent('matches:changed');
-    return result;
-  });
-
   ipcMain.handle(
     'db:upsertMultipleTableauMatches',
     async (_, competitionId: string, matches: any[]) => {
@@ -185,10 +136,6 @@ export function registerDbHandlers({
       return result;
     }
   );
-
-  ipcMain.handle('db:getTableauMatchesForExport', async (_, competitionId: string) => {
-    return db.getTableauMatchesForExport(competitionId);
-  });
 
   // Session State handlers
   // Révision périmée (état réécrit par le MCP, #1880) : { conflict: true }, rien n'est écrit
@@ -212,19 +159,9 @@ export function registerDbHandlers({
     }
   });
 
-  ipcMain.handle('db:clearSessionState', async (_, competitionId) => {
-    return db.clearSessionState(competitionId);
-  });
-
   // Pool handlers
   ipcMain.handle('db:updatePool', async (_, pool) => {
     return db.updatePool(pool);
-  });
-  ipcMain.handle('db:updatePoolReferee', async (_, poolId, refereeId) => {
-    return db.updatePoolReferee(poolId, refereeId);
-  });
-  ipcMain.handle('db:updatePoolReferees', async (_, poolId, refereeIds) => {
-    return db.updatePoolReferees(poolId, Array.isArray(refereeIds) ? refereeIds : []);
   });
   ipcMain.handle('db:createPool', async (_, phaseId, number, poolId) => {
     return db.createPool(phaseId, number, poolId);
@@ -238,76 +175,21 @@ export function registerDbHandlers({
   ipcMain.handle('db:syncPoolSnapshot', async (_, competitionId, snapshot) => {
     return db.syncPoolSnapshot(competitionId, snapshot);
   });
-  ipcMain.handle('db:getPoolFencers', async (_, poolId) => {
-    return db.getPoolFencers(poolId);
-  });
   ipcMain.handle('db:getPoolsByPhase', async (_, phaseId) => {
     return db.getPoolsByPhase(phaseId);
-  });
-  ipcMain.handle('db:getPoolSignatures', async (_, poolId: string) => {
-    return db.getPoolSignatures(poolId);
-  });
-  ipcMain.handle('db:getDEMatchSignaturesByMatchIds', async (_, matchIds: string[]) => {
-    return db.getDEMatchSignaturesByMatchIds(matchIds);
   });
 
   // Phase handlers
   ipcMain.handle('db:createPhase', async (_, competitionId, type, order, name) => {
     return db.createPhase(competitionId, type, order, name);
   });
-  ipcMain.handle('db:getPhase', async (_, id) => {
-    return db.getPhase(id);
-  });
   ipcMain.handle('db:getPhasesByCompetition', async (_, competitionId) => {
     return db.getPhasesByCompetition(competitionId);
   });
-  ipcMain.handle('db:updatePhase', async (_, id, updates) => {
-    return db.updatePhase(id, updates);
-  });
-  ipcMain.handle('db:deletePhase', async (_, id) => {
-    return db.deletePhase(id);
-  });
 
   // Referee handlers
-  ipcMain.handle('db:createReferee', async (_, competitionId, data) => {
-    return db.createReferee(competitionId, data);
-  });
-  ipcMain.handle('db:getReferee', async (_, id) => {
-    return db.getReferee(id);
-  });
-  ipcMain.handle('db:getRefereeComments', async (_, competitionId: string, refereeId?: string) => {
-    return db.getRefereeComments(competitionId, refereeId);
-  });
-
-  ipcMain.handle('db:getRefereesByCompetition', async (_, competitionId) => {
-    return db.getRefereesByCompetition(competitionId);
-  });
-  ipcMain.handle('db:updateReferee', async (_, id, updates) => {
-    return db.updateReferee(id, updates);
-  });
-  ipcMain.handle('db:deleteReferee', async (_, id) => {
-    return db.deleteReferee(id);
-  });
-  ipcMain.handle('db:getMatchesWithReferees', async (_, competitionId) => {
-    return db.getMatchesWithReferees(competitionId);
-  });
-  ipcMain.handle('db:getRefereeStats', async (_, competitionId) => {
-    return db.getRefereeStats(competitionId);
-  });
-  ipcMain.handle('db:getRemoteEvents', async (_, competitionId) => {
-    return db.getRemoteEvents(competitionId);
-  });
-  ipcMain.handle('db:getMatchTimings', async (_, competitionId) => {
-    return db.getMatchTimings(competitionId);
-  });
 
   // Touch / Card read handlers
-  ipcMain.handle('db:getTouches', async (_, matchId) => {
-    return db.getTouches(matchId);
-  });
-  ipcMain.handle('db:getCards', async (_, matchId) => {
-    return db.getCards(matchId);
-  });
   // Cartons de plusieurs matchs pour les feuilles imprimées (#1829)
   ipcMain.handle('db:getCardsByMatchIds', async (_, matchIds: unknown) => {
     if (!Array.isArray(matchIds)) return [];
@@ -317,38 +199,6 @@ export function registerDbHandlers({
   });
 
   // Statistiques combattants
-  ipcMain.handle('db:saveTouch', async (_, touch) => {
-    return db.saveTouch(touch);
-  });
-
-  ipcMain.handle('db:saveCard', async (_, card) => {
-    return db.saveCard(card);
-  });
-
-  ipcMain.handle('db:updateMatchTiming', async (_, timing) => {
-    return db.updateMatchTiming(timing.matchId, timing.startTime, timing.endTime, timing.duration);
-  });
-
-  ipcMain.handle('db:replaceSimulatedMatchEvents', async (_, matchId, events) => {
-    if (typeof matchId !== 'string' || !matchId) return false;
-    return db.replaceSimulatedMatchEvents(matchId, events ?? null);
-  });
-
-  ipcMain.handle('db:getFencerHistory', async (_, fencerId) => {
-    return db.getFencerHistory(fencerId);
-  });
-
-  ipcMain.handle('db:saveArenaExit', async (_, exit) => {
-    return db.saveArenaExit(exit);
-  });
-
-  ipcMain.handle('db:getFencerCompetitionStats', async (_, fencerId) => {
-    return db.getFencerCompetitionStats(fencerId);
-  });
-
-  ipcMain.handle('db:getCompetitionFencerStats', async (_, competitionId) => {
-    return db.getCompetitionFencerStats(competitionId);
-  });
 
   // Abandon snapshot handlers
   ipcMain.handle(
@@ -366,42 +216,7 @@ export function registerDbHandlers({
     db.deleteAbandonSnapshot(fencerId);
   });
 
-  ipcMain.handle('db:getScoreAuditLogByCompetition', async (_, competitionId) => {
-    return db.getScoreAuditLogByCompetition(competitionId);
-  });
-
-  ipcMain.handle('db:getMatchTimeline', async (_, matchId: string) => {
-    return db.getMatchTimeline(matchId);
-  });
-
-  ipcMain.handle('db:getCompetitionTimeline', async (_, competitionId: string) => {
-    return db.getCompetitionTimeline(competitionId);
-  });
-
   // ── Classement saisonnier Quest ───────────────────────────────────────────────
-
-  ipcMain.handle(
-    'db:addCompetitionToSeason',
-    async (_, payload: Parameters<typeof db.addCompetitionToSeason>[0]) => {
-      return db.addCompetitionToSeason(payload);
-    }
-  );
-
-  ipcMain.handle('db:getSeasonRanking', async () => {
-    return db.getSeasonRanking();
-  });
-
-  ipcMain.handle('db:getSeasonCompetitions', async () => {
-    return db.getSeasonCompetitions();
-  });
-
-  ipcMain.handle('db:removeCompetitionFromSeason', async (_, competitionId: string) => {
-    return db.removeCompetitionFromSeason(competitionId);
-  });
-
-  ipcMain.handle('db:resetSeason', async () => {
-    return db.resetSeason();
-  });
 
   // ── Équipes ───────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,7 @@
 /**
  * BPM - Escrime - Changement de piste d'une poule (#1037, #1501)
- * Appliqué immédiatement (saisie distante, liens, QR) et persisté en base.
+ * Appliqué immédiatement (saisie distante, liens, QR) ; écrit par le moteur (assignMatches).
+ * « local » : moteur absent (hors Electron), état de l'écran seul.
  * Licensed under GPL-3.0
  */
 import type { Dispatch, SetStateAction } from 'react';
@@ -25,6 +26,5 @@ export function usePoolStripChange<P extends Pool>(
     if (outcome !== 'local') return;
     const updated = { ...target, strip };
     setPools(prev => prev.map(p => (p.id === poolId ? updated : p)));
-    window.electronAPI?.db?.updatePool(updated);
   };
 }

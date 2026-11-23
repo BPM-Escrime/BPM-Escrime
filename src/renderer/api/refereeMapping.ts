@@ -3,6 +3,7 @@
  * Licensed under GPL-3.0
  */
 import type { Input, Output } from '../../shared/api/contract';
+import type { BpmClient } from '../../shared/api/client';
 import type { Gender, Referee } from '../../shared/types';
 
 type RefereeDTO = Output<'listReferees'>[number];
@@ -26,6 +27,10 @@ export function refereeFromDTO(d: RefereeDTO): Referee {
     updatedAt: new Date(0),
   };
 }
+
+/** Arbitres d'une épreuve lus par le contrat (listReferees), au format de l'écran */
+export const loadCompetitionReferees = (client: BpmClient, competitionId: string) =>
+  client.query('listReferees', { competitionId }).then(rows => rows.map(refereeFromDTO));
 
 /** Nom saisi d'un bloc (« Prénom Nom ») : le dernier mot est le nom, comme en base */
 export function splitRefereeName(name: string): { firstName: string; lastName: string } {
