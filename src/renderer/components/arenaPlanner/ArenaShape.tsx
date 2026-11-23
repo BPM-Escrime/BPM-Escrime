@@ -35,7 +35,55 @@ export interface ArenaShapeProps {
   grabTitle?: string;
   /** Rotation de l'arène autour de son centre, en degrés (sens horaire) */
   rotationDeg?: number;
+  /** Poignée ronde du plan : rotation à la souris (glisser) ; touche R : un pas */
+  onRotateGrab?: (e: React.PointerEvent<SVGElement>) => void;
+  onRotateStep?: () => void;
+  rotateTitle?: string;
 }
+
+const ROTATE_HANDLE_R_M = 0.4;
+const ROTATE_STEM_M = 1;
+
+/**
+ * Poignée de rotation, dans le groupe tourné : au-dessus de l'emprise, comme celle
+ * des éléments du plan ; glisser pour tourner, touche R pour un pas.
+ */
+const RotateHandle: React.FC<{
+  c: Point;
+  top: number;
+  title?: string;
+  onGrab: (e: React.PointerEvent<SVGElement>) => void;
+  onStep?: () => void;
+}> = ({ c, top, title, onGrab, onStep }) => (
+  <g
+    role="button"
+    tabIndex={0}
+    aria-label={title}
+    className="arena-planner-arena-rotate"
+    onPointerDown={onGrab}
+    onKeyDown={e => {
+      if (onStep && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        onStep();
+      }
+    }}
+  >
+    {title ? <title>{title}</title> : null}
+    <line
+      x1={c.x}
+      y1={c.y - top}
+      x2={c.x}
+      y2={c.y - top - ROTATE_STEM_M}
+      className="arena-planner-handle-stem"
+    />
+    <circle
+      cx={c.x}
+      cy={c.y - top - ROTATE_STEM_M}
+      r={ROTATE_HANDLE_R_M}
+      className="arena-planner-handle arena-planner-handle-rotate"
+    />
+  </g>
+);
 
 const Roles: React.FC<{ roles: PlanRole[]; rot: number }> = ({ roles, rot }) => (
   <>
@@ -92,6 +140,9 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
   onGrab,
   grabTitle,
   rotationDeg = 0,
+  onRotateGrab,
+  onRotateStep,
+  rotateTitle,
 }) => {
   const rot = Number.isFinite(rotationDeg) ? rotationDeg % 360 : 0;
   const turn = rot ? `rotate(${rot} ${center.x} ${center.y})` : undefined;
@@ -100,6 +151,16 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
     : { className: '' };
   const title = onGrab && grabTitle ? <title>{grabTitle}</title> : null;
   const fp = arenaFootprint(discipline);
+  const rotateHandle =
+    onRotateGrab && !compact ? (
+      <RotateHandle
+        c={center}
+        top={fp.halfY}
+        title={rotateTitle}
+        onGrab={onRotateGrab}
+        onStep={onRotateStep}
+      />
+    ) : null;
 
   if (discipline === 'fencing') {
     const g = computePisteGeometry(center);
@@ -151,6 +212,7 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
               <Roles roles={g.roles} rot={rot} />
             </>
           )}
+          {rotateHandle}
         </g>
         {compact ? null : <Name center={center} top={g.halfWidthM} name={name} />}
       </g>
@@ -171,6 +233,7 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
             {title}
           </rect>
           {compact ? null : <Roles roles={g.roles} rot={rot} />}
+          {rotateHandle}
         </g>
         {compact ? null : <Name center={center} top={g.halfDepthM} name={name} />}
       </g>
@@ -215,6 +278,7 @@ export const ArenaShape: React.FC<ArenaShapeProps> = ({
             <Roles roles={g.roles} rot={rot} />
           </>
         )}
+        {rotateHandle}
       </g>
       {compact ? null : <Name center={center} top={ARENA_ZONE_RADIUS_M} name={name} />}
     </g>

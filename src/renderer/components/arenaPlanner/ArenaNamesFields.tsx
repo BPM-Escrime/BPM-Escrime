@@ -50,7 +50,7 @@ export const ArenaNamesFields: React.FC<ArenaNamesFieldsProps> = ({
               aria-label={t('arenaPlanner.arena_rotate', { n: i + 1 })}
               onClick={() => onRotate(i)}
             >
-              {`${rotations?.[i] ?? 0}°`}
+              {`${Math.round(rotations?.[i] ?? 0)}°`}
             </Button>
           ) : null}
         </div>

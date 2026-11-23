@@ -37,7 +37,11 @@ import { ArenaNamesFields } from './arenaPlanner/ArenaNamesFields';
 import { withColor } from './arenaPlanner/ItemColorField';
 import { ItemInspector } from './arenaPlanner/ItemInspector';
 import { DisciplineField, disciplineKey } from './arenaPlanner/DisciplineField';
-import { arenaFootprint, nextArenaRotation } from '@shared/domain/arena/arenaDisciplines';
+import {
+  arenaFootprint,
+  nextArenaRotation,
+  snapArenaRotation,
+} from '@shared/domain/arena/arenaDisciplines';
 import { SitePlanCanvas, type SiteRoom } from './arenaPlanner/SitePlanCanvas';
 import {
   computeRoomLayout,
@@ -210,14 +214,20 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
     });
 
   /** Rotation d'une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle */
-  const rotateArena = (index: number) =>
+  const updateArenaRotation = (index: number, f: (current: number) => number) =>
     setField('arenaRotations')(prev => {
       const next = Array.from({ length: Math.max(prev?.length ?? 0, index + 1) }, (_, i) =>
         Number.isFinite(prev?.[i]) ? (prev?.[i] as number) : 0
       );
-      next[index] = nextArenaRotation(next[index], discipline);
+      next[index] = f(next[index]);
       return next;
     });
+  /** Bouton ↻ ou touche R : un pas (quart de tour en Sabre Laser) */
+  const rotateArena = (index: number) =>
+    updateArenaRotation(index, cur => nextArenaRotation(cur, discipline));
+  /** Poignée ronde du plan : rotation libre à la souris */
+  const setArenaRotation = (index: number, deg: number, snapDeg?: number) =>
+    updateArenaRotation(index, () => snapArenaRotation(deg, discipline, snapDeg));
 
   /** Menus « Équipement » / « Zone » : élément de base (table, zone bloquée…) ou du catalogue */
   const addFromMenu = (value: string, zone = false) => {
@@ -704,6 +714,8 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                 onSelect={setSelectedId}
                 onMove={moveItem}
                 onMoveArena={moveArena}
+                onRotateArena={setArenaRotation}
+                onStepArena={rotateArena}
                 onResize={resizeItem}
                 onRotate={rotateItem}
                 onDelete={removeItem}
