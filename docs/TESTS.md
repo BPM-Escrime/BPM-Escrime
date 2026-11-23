@@ -109,8 +109,8 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 139 | 1194 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 125 | 676 |
-| E2E Playwright (`e2e/`) | 16 | 46 |
+| `src/renderer/components/` | 126 | 677 |
+| E2E Playwright (`e2e/`) | 17 | 47 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
 | `src/renderer/contexts/` | 1 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 32 | 333 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **578** | **4455** |
+| **Total** | **580** | **4457** |
 
-Unitaires : 562 fichiers, 4409 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 563 fichiers, 4410 tests. E2E : 17 fichiers, 47 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3399,8 +3399,8 @@ Unitaires : 562 fichiers, 4409 tests. E2E : 16 fichiers, 46 tests (comptage stat
 - retirer le tableau d’un groupe laisse l’autre ; rejeu et reconstruction
 - placement de l’écran admis pour un groupe, identifiants préfixés
 - « toutes les places » par groupe : tableaux de classement préfixés, rejeu sans écart
-- reprise : tableau tiré à la racine avant les groupes, rangé dans le groupe de ses tireurs
-- sauvegarde du bloc par l’écran : les tableaux des groupes sont gardés
+- reprise : tableau tiré à la racine avant les groupes, déplacé dans le groupe de ses tireurs
+- affichage : état de l’écran, résultats, vue du tableau et page publique lisent tous les tableaux
 - nouveau tirage des poules : tableaux des groupes retirés
 
 </details>
@@ -5929,6 +5929,13 @@ Unitaires : 562 fichiers, 4409 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/CompetitionViewSplit.test.tsx</code> — 1 test</summary>
+
+- deux groupes tirés et joués, changement d’onglet, rechargement : les deux tableaux restent
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/Confetti.test.tsx</code> — 4 tests</summary>
 
 - **Confetti**
@@ -7448,6 +7455,13 @@ Unitaires : 562 fichiers, 4409 tests. E2E : 16 fichiers, 46 tests (comptage stat
 <summary><code>e2e/electron/remote-scoring.spec.ts</code> — 1 test</summary>
 
 - tablette (piste 1) et appareil Cyrano (piste 2) : scores par le moteur, affichés à l’écran
+
+</details>
+
+<details>
+<summary><code>e2e/electron/split-tableaux.spec.ts</code> — 1 test</summary>
+
+- tableaux séparés : deux tableaux joués, retrouvés après rechargement
 
 </details>
 
