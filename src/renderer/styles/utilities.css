@@ -1270,3 +1270,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Saisie d'heure 24 h (TimeInput24) */
+.time-input-24 {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.time-input-24 > select {
+  flex: 1;
+  min-width: 0;
+}
