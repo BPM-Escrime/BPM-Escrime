@@ -485,6 +485,7 @@
     "uncheck_all": "Uncheck all",
     "view": "View",
     "default": "Not specified",
+    "optional": "Optional",
     "save_and_add": "Save and add",
     "remove": "Remove",
     "move_up": "Move up",

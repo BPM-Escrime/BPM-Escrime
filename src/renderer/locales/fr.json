@@ -485,6 +485,7 @@
     "uncheck_all": "Tout dépointer",
     "view": "Voir",
     "default": "Non spécifié",
+    "optional": "Optionnel",
     "save_and_add": "Enregistrer et ajouter",
     "remove": "Retirer",
     "move_up": "Monter",

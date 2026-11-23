@@ -485,6 +485,7 @@
     "uncheck_all": "全部取消報到",
     "view": "查看",
     "default": "未指定",
+    "optional": "選填",
     "save_and_add": "儲存並新增",
     "remove": "移除",
     "move_up": "上移",

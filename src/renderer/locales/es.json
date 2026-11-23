@@ -485,6 +485,7 @@
     "uncheck_all": "Cancelar Todos",
     "view": "Ver",
     "default": "No Especificado",
+    "optional": "Opcional",
     "save_and_add": "Guardar y añadir",
     "remove": "Quitar",
     "move_up": "Subir",
