@@ -1,6 +1,6 @@
 # Interface d'arbitrage (tablette)
 
-> Version de référence : **1.0.3 build #1365** — source : `src/remote/referee.html`,
+> Version de référence : **3.0.0 build #2041** — source : `src/remote/referee.html`,
 > serveur : `src/main/remoteScoreServer.ts`.
 > Voir aussi : [SCENARIOS_MATCH.md](SCENARIOS_MATCH.md) (cas concrets pas à pas),
 > [../REMOTE_SCORE_GUIDE.md](../REMOTE_SCORE_GUIDE.md) (mise en place côté organisateur).

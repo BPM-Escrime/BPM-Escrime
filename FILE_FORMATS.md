@@ -1,6 +1,6 @@
 # File Format Specifications
 
-This document provides detailed specifications for all file formats supported by BPM - Escrime, including parsing rules, error handling, and best practices.
+This document provides detailed specifications for all file formats supported by BPM - Escrime (Base de Poules et Management), including parsing rules, error handling, and best practices.
 
 ## 📄 Table of Contents
 

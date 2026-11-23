@@ -1,6 +1,6 @@
 # Stack technique et dépendances
 
-> Relevé au **23 octobre 2026** — version **1.2.1**, build **#1450**
+> Relevé au **23 novembre 2026** — version **3.0.0**, build **#2041**
 > (`package.json` / `version.json`). Versions = versions résolues dans `package-lock.json`.
 
 ---

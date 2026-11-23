@@ -1,4 +1,4 @@
-# BPM - Escrime - Logiciel moderne de gestion de compétitions d'escrime
+# BPM - Escrime (Base de Poules et Management) - Logiciel moderne de gestion de compétitions d'escrime
 
 🤺 **Logiciel moderne de gestion de compétitions d'escrime** avec interface multilingue et temps réel
 

@@ -1,6 +1,6 @@
 # Agent IA — serveur MCP intégré (#1880)
 
-BPM - Escrime expose un serveur [MCP](https://modelcontextprotocol.io) dans le process main,
+BPM - Escrime (Base de Poules et Management) expose un serveur [MCP](https://modelcontextprotocol.io) dans le process main,
 **en lecture** et, sur autorisation, en **écriture** (administrative et sportive) : un agent (Claude Code avec le plugin `plugins/bpm-escrime`, ou tout client MCP)
 interroge la salle en langage naturel, prépare une journée, tire les poules, saisit des scores, construit le tableau et exporte les résultats.
 

@@ -2,7 +2,7 @@
   "name": "bpm-escrime",
   "productName": "BPM - Escrime",
   "version": "3.0.0",
-  "description": "Modern fencing tournament management software - Rewritten from the original software",
+  "description": "BPM - Escrime (Base de Poules et Management): modern fencing tournament management software",
   "main": "dist/main/main.js",
   "scripts": {
     "version:show": "node scripts/version.js show",
