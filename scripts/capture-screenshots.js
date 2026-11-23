@@ -167,7 +167,12 @@ async function main() {
 
     await click('button:has-text("Passer au tableau")');
     await win.waitForTimeout(1500);
-    await click('button:has-text("Oui")');
+    // Confirmation seulement si une poule reste incomplète (tableau généré directement sinon)
+    await win
+      .locator('button:has-text("Oui")')
+      .first()
+      .click({ timeout: 3000 })
+      .catch(() => {});
     await win.waitForTimeout(1500);
     await click('.tableau-fab-trigger');
     await click('.tableau-fab-item:has-text("Remplir auto")');
@@ -185,15 +190,23 @@ async function main() {
     await win.waitForTimeout(4000);
     await click('.rsm-fold[data-section="strips"] .rsm-fold-header').catch(() => {});
     await shot('10-saisie-distante');
-    await click('button:has-text("Expert")');
-    await win.waitForTimeout(800);
-    const cyrano = win.locator('.rsm-fold[data-section="cyrano"] .rsm-fold-header').first();
-    if ((await cyrano.getAttribute('aria-expanded')) !== 'true') await cyrano.click();
-    await click('.rsm-fold[data-section="cyrano"] button:has-text("Ajouter en lot")');
-    await win.waitForTimeout(800);
-    await win.locator('.rsm-fold[data-section="cyrano"]').scrollIntoViewIfNeeded();
-    await shot('17-appareils-piste');
-    await click('button:has-text("Basique")');
+    // Appareils de piste : déclarés sur la salle depuis #2117 (ADR-0023) ; capture sautée si
+    // l'ancien panneau Cyrano de la saisie distante n'est plus là
+    try {
+      await click('button:has-text("Expert")');
+      await win.waitForTimeout(800);
+      const cyrano = win.locator('.rsm-fold[data-section="cyrano"] .rsm-fold-header').first();
+      if ((await cyrano.getAttribute('aria-expanded', { timeout: 3000 })) !== 'true') {
+        await cyrano.click();
+      }
+      await click('.rsm-fold[data-section="cyrano"] button:has-text("Ajouter en lot")');
+      await win.waitForTimeout(800);
+      await win.locator('.rsm-fold[data-section="cyrano"]').scrollIntoViewIfNeeded();
+      await shot('17-appareils-piste');
+    } catch {
+      console.log('- 17-appareils-piste.png sautée (panneau Cyrano absent)');
+    }
+    await click('button:has-text("Basique")').catch(() => {});
 
     await phase('Historique');
     await shot('11-historique');
@@ -289,19 +302,29 @@ async function main() {
     await win.keyboard.press('Escape');
     await win.waitForTimeout(500);
 
-    // Mode Club : club de démonstration, membres et séance
+    // Mode Club : club de démonstration, membres et séance, par le contrat d'API (docs/adr/0022)
     await win.evaluate(async fencers => {
-      const club = window.electronAPI.club;
-      const c = await club.createClub({ name: 'Cercle d’escrime de la Ville', stripCount: 6 });
+      const call = async (name, input) => {
+        const r = await window.electronAPI.api.invoke(name, input);
+        if (!r.ok) throw new Error(`${name} : ${r.error.message}`);
+        return r.data;
+      };
+      const c = await call('createClub', { name: 'Cercle d’escrime de la Ville', stripCount: 6 });
       for (const [lastName, firstName] of fencers.slice(0, 12)) {
-        await club.createMember(c.id, { lastName, firstName, weapon: 'E' });
+        await call('registerClubMember', {
+          clubId: c.id,
+          details: { lastName, firstName, weapons: ['E'] },
+        });
       }
-      await club.createSession(c.id, {
-        date: '2026-11-18',
-        label: 'Entraînement épée adultes',
-        startTime: '19:30',
-        weapon: 'E',
-        stripCount: 6,
+      await call('planClubSession', {
+        clubId: c.id,
+        details: {
+          date: '2026-11-18',
+          label: 'Entraînement épée adultes',
+          startTime: '19:30',
+          weapon: 'E',
+          stripCount: 6,
+        },
       });
     }, FENCERS);
     await win.reload();
