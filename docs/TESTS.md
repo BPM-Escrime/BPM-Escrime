@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 136 | 1179 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 41 | 214 |
-| `src/renderer/components/` | 123 | 663 |
+| `src/renderer/components/` | 123 | 667 |
 | E2E Playwright (`e2e/`) | 16 | 46 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 30 | 297 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **571** | **4398** |
+| **Total** | **571** | **4402** |
 
-Unitaires : 555 fichiers, 4352 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5780,7 +5780,7 @@ Unitaires : 555 fichiers, 4352 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 11 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 15 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5794,6 +5794,10 @@ Unitaires : 555 fichiers, 4352 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - ne permet jamais plus d'arènes que le maximum de la zone
   - étire les arènes avec « Espacées » et les centre avec « Centré »
   - affiche les cotes techniques quand la case est cochée
+  - modifie le texte affiché sur une table, sur plusieurs lignes
+  - ajoute une deuxième salle indépendante, puis la supprime
+  - zoome et revient à la taille réelle sans changer la vue d'export
+  - vue d'ensemble : déplace une salle au clavier et l'ouvre avec Entrée
 
 </details>
 
