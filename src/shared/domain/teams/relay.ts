@@ -46,12 +46,21 @@ export const teamSizeOf = (settings?: Partial<TeamSettings> | null): number =>
  */
 export function relayMaxScore(weapon: Weapon, settings?: Partial<TeamSettings> | null): number {
   if (teamFormatOf(settings) === 'laser-arena') return getLaserArenaBoutCap().maxTouches;
-  return getTeamTargetRule(
+  return relayRuleOf(weapon, settings).stepSize;
+}
+
+/** Pas et cible cumulée du relais FIE (réglages de l'épreuve), comme l'arène équipe */
+export function relayRuleOf(
+  weapon: Weapon,
+  settings?: Partial<TeamSettings> | null
+): { stepSize: number; target: number } {
+  const rule = getTeamTargetRule(
     weapon,
     teamSizeOf(settings),
     settings?.laserTeamMode ?? 'touches',
     settings?.teamRelayStepSize ?? 5
-  ).stepSize;
+  );
+  return { stepSize: rule.stepSize, target: rule.target };
 }
 
 /** Titulaires d'une équipe, par ordre (`teamOrder`), limités à la taille d'équipe */
@@ -233,6 +242,39 @@ export function relayCap(
 export function relayLeader(relays: readonly RelayScore[], order: number): 'A' | 'B' | null {
   const { scoreA, scoreB } = relayCumulative(relays, order);
   return scoreA > scoreB ? 'A' : scoreB > scoreA ? 'B' : null;
+}
+
+/**
+ * Vainqueur d'un relais terminé : équipe en tête au cumul en relais FIE (comme l'arène),
+ * meilleur score de l'assaut en arène Sabre Laser ; null : égalité
+ */
+export function relayWinner(
+  relays: readonly RelayScore[],
+  order: number,
+  format: TeamFormat
+): 'A' | 'B' | null {
+  if (format === 'fie-relay') return relayLeader(relays, order);
+  const r = relays.find(x => x.order === order);
+  if (!r) return null;
+  return r.scoreA > r.scoreB ? 'A' : r.scoreB > r.scoreA ? 'B' : null;
+}
+
+/**
+ * Score d'un relais au-delà de ce qu'il peut porter : cumul au-delà du palier du relais en
+ * relais FIE (`min(ordre × pas, cible)`), score de l'assaut au-delà du plafond en arène
+ */
+export function relayScoreAboveMax(
+  relays: readonly RelayScore[],
+  order: number,
+  scoreA: number,
+  scoreB: number,
+  format: TeamFormat,
+  rule: { stepSize: number; target: number }
+): boolean {
+  const cap = relayCap(order, format, rule);
+  if (format === 'laser-arena') return scoreA > cap || scoreB > cap;
+  const before = relayCumulative(relays, order - 1);
+  return before.scoreA + scoreA > cap || before.scoreB + scoreB > cap;
 }
 
 /** Le relais `order` peut s'enregistrer : tous les précédents sont terminés */

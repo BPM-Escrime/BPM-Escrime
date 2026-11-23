@@ -120,7 +120,11 @@ finale. Équipes, rapières, tours de poules multiples et « tirer toutes les pl
 l'écran (erreur `unsupported_format`) pour `generate_pools` et `build_bracket` sans `composition`, et pour `assign_referees`.
 `record_score` accepte aussi les tours multiples (tour courant ; tour terminé figé : `round_closed`),
 les rapières et « toutes les places » (barrages, tableaux de classement listés par `list_matches`
-avec leur nom dans `bracket`) et les tableaux séparés après les poules (un tableau par groupe, identifiants préfixés `F:32-0`). Refusées : épreuves par équipes.
+avec leur nom dans `bracket`) et les tableaux séparés après les poules (un tableau par groupe, identifiants préfixés `F:32-0`). Refusées : épreuves par équipes, qui ont leurs outils
+([ADR-0024](adr/0024-tableaux-separes-equipes-moteur.md)) : `generate_team_pools`,
+`generate_team_tableau`, `record_relay_score` (score de chaque relais, dans l'ordre ; vainqueur
+de la rencontre et rencontre suivante du tableau calculés), `reopen_relay` (dernier relais
+terminé), `substitute_team_fencer` (remplaçant), même droit d'écriture sportive.
 
 ## Paramétrage du poste et salles
 
@@ -183,7 +187,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (56)
+## Référence des outils (60)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -322,7 +326,7 @@ Aucun argument.
 | `since` | integer |  | Dernière révision connue (0 : tout) |
 | `limit` | integer |  | Nombre maximum (1000) |
 
-### En écriture, sur autorisation (39)
+### En écriture, sur autorisation (43)
 
 ### `create_competition` — Créer une épreuve
 
@@ -805,6 +809,60 @@ Aucun argument.
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `replace` | boolean |  | Remplacer des poules déjà tirées dont aucun relais n’est joué |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `generate_team_tableau` — Tirer le tableau d’équipes
+
+*⚠️ écriture, destructif.* Épreuve par équipes : tire le tableau d’équipes sur le classement de poule (arène Sabre Laser : évitement de revanche au premier tour, 5↔6 et 7↔8) et crée les rencontres dont les deux équipes sont connues, avec leurs relais. Tour = nombre de rencontres du tour (taille / 2 au premier, 1 en finale) ; identifiants `${competitionId}-t${tour}-${position}`. Refus : épreuve individuelle (unsupported_format), moins de 2 équipes (invalid_composition), titulaires manquants (team_incomplete), rencontres de poule non terminées (pools_not_complete), tableau déjà créé sans « replace » (bracket_exists), relais du tableau déjà joués (bracket_has_scores). Journal : TeamTableauGenerated, puis un TeamMatchScheduled par rencontre.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `replace` | boolean |  | Remplacer un tableau d’équipes dont aucun relais n’est joué |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `record_relay_score` — Saisir le score d’un relais
+
+*écriture.* Épreuve par équipes : enregistre le score d’un relais (le score du relais, pas le cumul) et le termine. Le cumul, le vainqueur du relais et celui de la rencontre se calculent. Dernier relais : rencontre terminée ; égalité au tableau → « winner » requis (minute avec priorité), en poule → égalité. Au tableau, la rencontre suivante est créée dès que ses deux équipes sont connues. Refus : rencontre inconnue (match_not_found), relais déjà terminé ou précédents non terminés (relay_out_of_order), cumul au-delà du palier du relais FIE ou assaut au-delà de 5 en arène (score_above_max), égalité sans vainqueur au tableau (draw_needs_winner), vainqueur contraire au score (winner_contradicts_score). Journal : RelayScoreRecorded, puis TeamMatchDecided et TeamMatchScheduled selon le cas.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
+| `relay` | integer | oui | Ordre du relais dans la rencontre (dès 1) |
+| `scoreA` | integer | oui | Touches de l’équipe A dans ce relais |
+| `scoreB` | integer | oui | Touches de l’équipe B dans ce relais |
+| `winner` | `A`, `B` |  | Vainqueur de la rencontre en cas d’égalité au dernier relais (minute avec priorité) |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `reopen_relay` — Rouvrir le dernier relais
+
+*⚠️ écriture, destructif.* Épreuve par équipes : rouvre le dernier relais terminé d’une rencontre pour correction (son score est gardé comme score en cours). La rencontre repasse en cours ; au tableau, la rencontre suivante pas encore commencée est retirée. Refus : rencontre inconnue (match_not_found), aucun relais terminé (relay_out_of_order), rencontre suivante du tableau commencée (next_match_played). Journal : RelayReopened.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `substitute_team_fencer` — Faire entrer le remplaçant
+
+*écriture.* Épreuve par équipes : le remplaçant de l’équipe prend la place du tireur sortant dans les relais non terminés de la rencontre (o.99.5, o.99.6). Un seul remplaçant par équipe et par rencontre. Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). Journal : TeamFencerSubstituted.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
+| `teamId` | string | oui | Équipe du tireur sortant |
+| `outFencerId` | string | oui | Tireur sortant |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |

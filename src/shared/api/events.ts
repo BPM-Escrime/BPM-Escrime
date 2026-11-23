@@ -39,6 +39,11 @@ export const JOURNAL_EVENT = {
   splitRankingImported: 'SplitRankingImported',
   teamPoolsGenerated: 'TeamPoolsGenerated',
   teamMatchScheduled: 'TeamMatchScheduled',
+  teamTableauGenerated: 'TeamTableauGenerated',
+  relayScoreRecorded: 'RelayScoreRecorded',
+  relayReopened: 'RelayReopened',
+  teamMatchDecided: 'TeamMatchDecided',
+  teamFencerSubstituted: 'TeamFencerSubstituted',
 } as const;
 
 const member = <T extends string, P extends z.ZodType>(type: T, payload: P) =>
@@ -203,6 +208,46 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
       relays: z.array(
         z.object({ relayId: Id, order: z.number().int(), fencerAId: Id, fencerBId: Id })
       ),
+    })
+  ),
+  // Tableau d'équipes (lot E2) : placement complet du premier tour, exemptés compris ;
+  // tour = nombre de rencontres du tour (taille / 2 au premier, 1 en finale)
+  member(
+    JOURNAL_EVENT.teamTableauGenerated,
+    z.object({
+      size: z.number().int(),
+      slots: z.array(
+        z.object({
+          round: z.number().int(),
+          position: z.number().int(),
+          teamAId: Id.nullable(),
+          teamBId: Id.nullable(),
+          isBye: z.boolean(),
+        })
+      ),
+    })
+  ),
+  // Relais : le fait est le score du relais, pas le cumul (calculé)
+  member(
+    JOURNAL_EVENT.relayScoreRecorded,
+    z.object({
+      matchId: Id,
+      relayId: Id,
+      scoreA: z.number().int().min(0),
+      scoreB: z.number().int().min(0),
+    })
+  ),
+  member(JOURNAL_EVENT.relayReopened, z.object({ matchId: Id, relayId: Id })),
+  // Rencontre terminée ; vainqueur null : égalité admise en poule
+  member(JOURNAL_EVENT.teamMatchDecided, z.object({ matchId: Id, winnerTeamId: Id.nullable() })),
+  member(
+    JOURNAL_EVENT.teamFencerSubstituted,
+    z.object({
+      matchId: Id,
+      teamId: Id,
+      outFencerId: Id,
+      inFencerId: Id,
+      relayIds: z.array(Id),
     })
   ),
 ]);

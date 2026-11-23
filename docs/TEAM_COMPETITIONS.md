@@ -136,10 +136,18 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
 - Passage au moteur en cours ([ADR-0024](adr/0024-tableaux-separes-equipes-moteur.md)) :
   inscription des équipes, composition et tirage des poules existent comme commandes du
   contrat (`registerTeam`, `assignTeamFencer`, `generateTeamPools`, outil MCP
-  `generate_team_pools` ; lot E1), et `getCompetitionState` rend le bloc `teams`. L'écran
-  écrit encore les équipes, rencontres et relais par le préload (sans journal) jusqu'au
-  lot E3 ; relais, tableau et remplacement par commandes au lot E2. Le moteur fige la
-  composition dès qu'une rencontre existe ; l'écran ne la fige pas encore.
+  `generate_team_pools` ; lot E1), et `getCompetitionState` rend le bloc `teams`. Lot E2 :
+  tableau d'équipes, score de chaque relais, réouverture du dernier relais et remplaçant
+  par commandes (`generateTeamTableau`, `recordRelayScore`, `reopenRelay`,
+  `substituteTeamFencer` ; outils MCP `generate_team_tableau`, `record_relay_score`,
+  `reopen_relay`, `substitute_team_fencer`), journalisées et rejouées. L'écran écrit encore
+  les équipes, rencontres et relais par le préload (sans journal) jusqu'au lot E3, et crée
+  encore lui-même le tableau d'équipes à l'ouverture ; la tablette `/equipe{N}` et les
+  appareils de piste écrivent par la base jusqu'au lot E4. Le moteur fige la composition dès
+  qu'une rencontre existe ; l'écran ne la fige pas encore.
+- Moteur : une égalité au dernier relais est admise en poule (pas de vainqueur) ; au tableau,
+  le vainqueur est donné (`winner`, minute avec priorité). Un relais de poule peut être
+  rouvert après le tirage du tableau, qui garde son placement.
 
 **Format arène Sabre Laser (`teamFormat: 'laser-arena'`) uniquement :**
 

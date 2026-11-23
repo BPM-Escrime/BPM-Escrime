@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 272 |
-| `src/main/` | 142 | 1210 |
+| `src/main/` | 143 | 1222 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 127 | 682 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 33 | 356 |
+| `src/shared/domain/` | 34 | 367 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **585** | **4502** |
+| **Total** | **587** | **4525** |
 
-Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 570 fichiers, 4477 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3381,13 +3381,14 @@ Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/eventDay.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/engine/commands/eventDay.test.ts</code> — 5 tests</summary>
 
 - **opérations de la journée (#1714)**
   - importe les arbitres des épreuves puis synchronise toutes les épreuves (#1872)
   - rattacher importe et synchronise la journée, détacher non
   - vue d’ensemble : statut commun et conflits
   - occupé ailleurs : vide hors journée, sinon autres épreuves seulement
+  - réservation et affectation automatique : écrites par la commande (#2134)
 
 </details>
 
@@ -3607,13 +3608,14 @@ Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/station.test.ts</code> — 23 tests</summary>
+<summary><code>src/main/engine/commands/station.test.ts</code> — 24 tests</summary>
 
 - lit les valeurs par défaut, modifie puis relit
 - refuse une clé inconnue ou les dossiers de l’agent (schéma), une valeur invalide (dépôt)
 - résout le nombre de pistes : journée, sinon salle par défaut
 - reprise des réglages localStorage : « missing » ne remplace pas, « write » écrit
 - dossiers de l’agent : défauts du poste, retrait
+- dossier de sauvegarde : lu, puis remis au défaut (#2134)
 - onStationSettingsChanged : relaie les changements de paramètres, pas les autres
 - crée, renomme, désigne par défaut et supprime
 - refus du dépôt rendus en station\_refused, message gardé
@@ -3632,7 +3634,23 @@ Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage stat
 - sans port du poste : réglages indisponibles, droits des personnes fonctionnent
 - état, réglages, jeton, journal : par le port du serveur
 - **contrat du poste**
-  - 43 opérations, chacune avec son gestionnaire
+  - 45 opérations, chacune avec son gestionnaire
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/teamRelays.test.ts</code> — 10 tests</summary>
+
+- 9 relais : score de chaque relais, cumul calculé, vainqueur, journal, rejeu sans écart
+- refus : ordre des relais, relais terminé, palier, rencontre inconnue ; égalité en poule admise
+- épreuve individuelle refusée ; recordScore et generateTableau nomment la commande d’équipe
+- réouverture du dernier relais : score gardé, rencontre en cours, nouvel enregistrement
+- remplaçant : relais non terminés du tireur sortant ; un seul par équipe et par rencontre
+- placement, demi-finales, finale créée après les deux demi-finales, rejeu sans écart
+- remplacement du tableau tant qu’aucun relais n’est joué ; refus : titulaires manquants
+- 5 équipes sans poules : exemptés, rencontre du 2e tour formée d’emblée
+- relais écrit hors moteur (écran) sur une rencontre du journal : écart rendu
+- outils MCP des relais et du tableau d’équipes (écriture sportive)
 
 </details>
 
@@ -4379,12 +4397,11 @@ Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/dayStripService.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/remote/dayStripService.test.ts</code> — 3 tests</summary>
 
 - **dayStripService (#1878)**
   - tableau des pistes : occupée, libre avec proposition
   - affectation : piste hors salle ou réservée refusée, piste libre acceptée
-  - réservation : entrées invalides refusées, null retire la réservation
   - affectation automatique : la piste libre est prise sans clic
 
 </details>
@@ -4805,7 +4822,7 @@ Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remoteScoreServer.test.ts</code> — 66 tests</summary>
+<summary><code>src/main/remoteScoreServer.test.ts</code> — 67 tests</summary>
 
 - **RemoteScoreServer**
   - **démarrage du serveur**
@@ -4878,6 +4895,7 @@ Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage stat
     - appareil de piste maître en ligne : carton noir de la tablette refusé (#1829)
     - liste le carton noir de l'arène
     - annule : réintègre le combattant, rouvre le match avec son score et rend ses matchs jouables
+    - commande refusée : 409, rien d’écrit ni rouvert (#2134)
     - refuse l'annulation d'un carton noir en tableau
     - 404 pour une autre arène
   - **appel distant (#919)**
@@ -8870,7 +8888,7 @@ Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 12 tests</summary>
+<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 15 tests</summary>
 
 - **projectCompetition**
   - journal complet seulement s’il commence (après l’appel) par un tirage
@@ -8887,6 +8905,10 @@ Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage stat
   - épreuve séparée : journal complet dès le classement importé
 - **projectCompetition : épreuves par équipes (docs/adr/0024, lot E1)**
   - poules d’équipes et rencontres ; journal complet ; nouveau tirage remplace les rencontres de poule
+- **projectCompetition : relais et tableau d’équipes (docs/adr/0024, lot E2)**
+  - tableau tiré : journal complet ; scores des relais, rencontres décidées, finale formée
+  - relais rouvert : résultat et décision retirés, rencontre suivante retirée
+  - remplaçant : tireur changé dans les relais nommés ; nouveau tableau remplace le précédent
 
 </details>
 
@@ -9386,6 +9408,22 @@ Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage stat
   - palier progressif plafonné à la cible
   - relais terminé au palier ou au bout de 3 minutes
   - vainqueur au cumul, null si égalité
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/teams/teamTableau.test.ts</code> — 8 tests</summary>
+
+- **teamTableau : placement (docs/adr/0024, lot E2)**
+  - 4 équipes : tableau de 4, têtes de série 1-4 et 2-3
+  - 5 équipes : tableau de 8, trois exemptés ; deux exemptés voisins forment déjà une rencontre du 2e tour
+  - avancement : la finale n’est créée qu’une fois les deux demi-finales décidées
+  - case suivante du vainqueur ; finale sans suite
+  - classement : relais FIE par victoires ; arène par points avec évitement de revanche
+- **relay : score et vainqueur d’un relais (docs/adr/0024, lot E2)**
+  - palier du relais FIE : cumul plafonné à ordre × 5 ; arène : 5 par assaut
+  - vainqueur : meneur au cumul en relais FIE, score de l’assaut en arène
+  - issue : égalité tranchée par le vainqueur donné
 
 </details>
 
