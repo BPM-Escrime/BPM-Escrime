@@ -6,7 +6,12 @@
  */
 
 import React, { createContext, useCallback, useContext, useRef } from 'react';
-import { ROADMAP_VARIABLES, type RoadmapVariable } from '@shared/domain/roadmap/roadmap';
+import {
+  ROADMAP_VARIABLES,
+  type RoadmapInfo,
+  type RoadmapVariable,
+  type RoadmapVariables,
+} from '@shared/domain/roadmap/roadmap';
 import { useTranslation } from '../../hooks/useTranslation';
 import { TimeInput } from '../common/TimeInput';
 
@@ -49,6 +54,9 @@ export const FieldFocusProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
 const useFieldFocus = () => useContext(FieldFocusContext);
 
+/** Identifiant DOM d'un champ de l'essentiel (variable ou rubrique manquante → son champ) */
+export const infoFieldId = (key: keyof RoadmapInfo) => `roadmap-info-${key}`;
+
 interface TextFieldProps {
   label?: string;
   value: string;
@@ -60,6 +68,7 @@ interface TextFieldProps {
   className?: string;
   /** Champ sans libellé visible (tableaux) */
   ariaLabel?: string;
+  id?: string;
 }
 
 /** Hauteur de la zone de texte : nombre de lignes du contenu, bornée */
@@ -76,15 +85,17 @@ export const TextField: React.FC<TextFieldProps> = ({
   type = 'text',
   className,
   ariaLabel,
+  id,
 }) => {
   const focus = useFieldFocus();
   const onFocus = (e: React.FocusEvent<FieldEl>) =>
     focus?.register({ el: e.currentTarget, set: onChange });
   const control =
     type === 'time' ? (
-      <TimeInput className="roadmap-input" value={value} onChange={onChange} />
+      <TimeInput id={id} className="roadmap-input" value={value} onChange={onChange} />
     ) : multiline ? (
       <textarea
+        id={id}
         className="roadmap-input"
         value={value}
         rows={autoRows(value, rows)}
@@ -95,6 +106,7 @@ export const TextField: React.FC<TextFieldProps> = ({
       />
     ) : (
       <input
+        id={id}
         className="roadmap-input"
         type={type}
         value={value}
@@ -113,8 +125,8 @@ export const TextField: React.FC<TextFieldProps> = ({
   );
 };
 
-/** Pastilles cliquables : insèrent la variable dans le dernier champ actif */
-export const VariableChips: React.FC = () => {
+/** Pastilles cliquables : insèrent la variable dans le dernier champ actif ; survol → valeur */
+export const VariableChips: React.FC<{ vars: RoadmapVariables }> = ({ vars }) => {
   const { t } = useTranslation();
   const focus = useFieldFocus();
   const chip = (name: RoadmapVariable) => `{${name}}`;
@@ -129,8 +141,8 @@ export const VariableChips: React.FC = () => {
           <button
             key={v}
             type="button"
-            className="roadmap-chip"
-            title={t(`roadmap.var_${v}`)}
+            className={`roadmap-chip${vars[v] ? '' : ' is-missing'}`}
+            title={`${t(`roadmap.var_${v}`)} : ${vars[v] || t('roadmap.variable_empty')}`}
             // Garde le focus dans le champ : l'insertion lit sa sélection
             onMouseDown={e => e.preventDefault()}
             onClick={() => focus?.insert(chip(v))}

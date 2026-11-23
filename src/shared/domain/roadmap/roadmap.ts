@@ -85,6 +85,24 @@ export const ROADMAP_VARIABLES = [
 export type RoadmapVariable = (typeof ROADMAP_VARIABLES)[number];
 export type RoadmapVariables = Record<RoadmapVariable, string>;
 
+/** Champ de l'essentiel qui donne sa valeur à chaque variable */
+export const VARIABLE_SOURCE: Record<RoadmapVariable, keyof RoadmapInfo> = {
+  titre: 'title',
+  edition: 'edition',
+  date: 'date',
+  lieu: 'venue',
+  adresse: 'address',
+  ouverture: 'openTime',
+  scratch: 'scratchTime',
+  debut: 'startTime',
+  tarifs: 'fees',
+  // Calculées depuis la date
+  date_limite: 'date',
+  saison: 'date',
+  organisateur: 'organizer',
+  contact: 'contactName',
+};
+
 export const emptyInfo = (): RoadmapInfo => ({
   title: '',
   edition: '',
@@ -204,7 +222,7 @@ export interface TextPiece {
 }
 
 const VAR_RE = /\{([a-z_]+)\}/g;
-const isVariable = (name: string): name is RoadmapVariable =>
+export const isRoadmapVariable = (name: string): name is RoadmapVariable =>
   (ROADMAP_VARIABLES as readonly string[]).includes(name);
 
 /** Découpe le texte autour des variables connues ; les inconnues restent du texte */
@@ -213,7 +231,7 @@ export function splitVariables(text: string, vars: RoadmapVariables): TextPiece[
   let last = 0;
   for (const m of text.matchAll(VAR_RE)) {
     const name = m[1];
-    if (!isVariable(name)) continue;
+    if (!isRoadmapVariable(name)) continue;
     const at = m.index ?? 0;
     if (at > last) out.push({ text: text.slice(last, at) });
     const value = vars[name];

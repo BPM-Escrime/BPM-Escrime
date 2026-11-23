@@ -2,16 +2,18 @@
  * BPM - Escrime - Aperçu A4 de la feuille de route
  * Ce rendu est aussi le PDF : l'export reprend son HTML et les règles CSS
  * `.roadmap-doc` (roadmapPdf.ts). Variable sans valeur surlignée ; clic sur
- * une section → son éditeur.
+ * une section → son éditeur, sur une variable sans valeur → son champ.
  * Licensed under GPL-3.0
  */
 
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import {
   expandVariables,
+  isRoadmapVariable,
   parseBlocks,
   splitVariables,
   type RoadmapDoc,
+  type RoadmapVariable,
   type RoadmapVariables,
 } from '@shared/domain/roadmap/roadmap';
 
@@ -19,13 +21,15 @@ interface RoadmapPreviewProps {
   doc: RoadmapDoc;
   vars: RoadmapVariables;
   onPickSection?: (id: string) => void;
+  /** Clic sur une variable sans valeur → son champ de l'essentiel */
+  onPickVariable?: (name: RoadmapVariable) => void;
 }
 
 const Inline: React.FC<{ text: string; vars: RoadmapVariables }> = ({ text, vars }) => (
   <>
     {splitVariables(text, vars).map((p, i) =>
       p.missing ? (
-        <mark key={i} className="rm-missing">
+        <mark key={i} className="rm-missing" data-var={p.variable}>
           {p.text}
         </mark>
       ) : (
@@ -67,7 +71,7 @@ const Blocks: React.FC<{ text: string; vars: RoadmapVariables }> = ({ text, vars
 const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
 export const RoadmapPreview = forwardRef<HTMLDivElement | null, RoadmapPreviewProps>(
-  ({ doc, vars, onPickSection }, ref) => {
+  ({ doc, vars, onPickSection, onPickVariable }, ref) => {
     const root = useRef<HTMLDivElement>(null);
     useImperativeHandle(ref, () => root.current as HTMLDivElement);
     // Couleur des bandeaux : propriété CSS posée par le CSSOM (CSP sans style en ligne)
@@ -75,7 +79,12 @@ export const RoadmapPreview = forwardRef<HTMLDivElement | null, RoadmapPreviewPr
       root.current?.style.setProperty('--rm-accent', doc.accent);
     }, [doc.accent]);
 
-    const pick = (id: string) => (onPickSection ? () => onPickSection(id) : undefined);
+    // Variable manquante cliquée → son champ ; sinon la section
+    const pick = (id?: string) => (e: React.MouseEvent) => {
+      const name = (e.target as HTMLElement).closest('[data-var]')?.getAttribute('data-var');
+      if (name && isRoadmapVariable(name) && onPickVariable) onPickVariable(name);
+      else if (id) onPickSection?.(id);
+    };
 
     return (
       <div ref={root} className="roadmap-doc">
@@ -86,7 +95,7 @@ export const RoadmapPreview = forwardRef<HTMLDivElement | null, RoadmapPreviewPr
             ))}
           </div>
         )}
-        <div className="rm-titlebox">
+        <div className="rm-titlebox" onClick={pick()}>
           <div className="rm-title">
             <Inline text="{titre}" vars={vars} />
           </div>
