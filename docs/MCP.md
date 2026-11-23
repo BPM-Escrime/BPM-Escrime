@@ -25,7 +25,7 @@ interroge la salle en langage naturel, prépare une journée, tire les poules, s
 
 ## Plugin Claude Code
 
-Dans Claude Code : `/plugin install bpm-escrime --marketplace BellePoule-Modern/bellepoule-modern`
+Dans Claude Code : `/plugin install bpm-escrime --marketplace BPM-Escrime/BPM-Escrime`
 (depuis un clone : `claude --plugin-dir plugins/bpm-escrime`), puis `/plugin configure bpm-escrime`
 et `/reload-plugins`. Options (`userConfig`, #1947) :
 

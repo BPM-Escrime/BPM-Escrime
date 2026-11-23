@@ -7,7 +7,7 @@ BPM - Escrime (Base de Poules et Management) est publié en **deux versions macO
 | Puce **Apple** (M1, M2, M3, M4, M5… ; MacBook Neo) | `BPM-Escrime-<version>-mac-arm64.dmg` |
 | Processeur **Intel** | `BPM-Escrime-<version>-mac-x64.dmg` |
 
-`<version>` = `X.Y.Z` (stable) ou `X.Y.Z-dev.N` (pré-release de test). Téléchargement : [dernière version stable](https://github.com/BellePoule-Modern/bellepoule-modern/releases/latest).
+`<version>` = `X.Y.Z` (stable) ou `X.Y.Z-dev.N` (pré-release de test). Téléchargement : [dernière version stable](https://github.com/BPM-Escrime/BPM-Escrime/releases/latest).
 
 Version minimale : **macOS 12 (Monterey)**.
 
@@ -94,4 +94,4 @@ Les compétitions sont conservées : la base (`bellepoule.db`) est dans `~/Libra
 
 ## 5. Mises à jour
 
-La mise à jour intégrée télécharge un `.dmg` depuis GitHub. **Vérifier que le nom du fichier contient la bonne architecture** (`arm64` ou `x64`) avant de l'installer. En cas de doute, télécharger manuellement depuis la [page des releases](https://github.com/BellePoule-Modern/bellepoule-modern/releases/latest).
+La mise à jour intégrée télécharge un `.dmg` depuis GitHub. **Vérifier que le nom du fichier contient la bonne architecture** (`arm64` ou `x64`) avant de l'installer. En cas de doute, télécharger manuellement depuis la [page des releases](https://github.com/BPM-Escrime/BPM-Escrime/releases/latest).

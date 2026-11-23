@@ -132,7 +132,7 @@
 
           meta = {
             description = "Gestion de tournois d'escrime (poules, tableaux, scoring distant)";
-            homepage = "https://github.com/BellePoule-Modern/bellepoule-modern";
+            homepage = "https://github.com/BPM-Escrime/BPM-Escrime";
             license = lib.licenses.gpl3Plus;
             mainProgram = "bpm-escrime";
             platforms = systems;
