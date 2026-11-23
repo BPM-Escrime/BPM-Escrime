@@ -655,6 +655,7 @@
   'error.registration_closed': 'Inscripción cerrada',
   'error.registration_failed': 'Error en la inscripción',
   'error.reinstate_failed': 'Error en la reintegración',
+  'error.score_refused': 'Puntuación rechazada por el puesto del DT: {{detail}}',
   'error.results_fetch_failed': 'Error al obtener los resultados',
   'error.save_failed': 'Error al guardar',
   'error.score_save_failed': 'Error al guardar el resultado',

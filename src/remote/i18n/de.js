@@ -657,6 +657,7 @@
   'error.registration_closed': 'Anmeldung geschlossen',
   'error.registration_failed': 'Fehler bei der Anmeldung',
   'error.reinstate_failed': 'Fehler bei der Wiederaufnahme',
+  'error.score_refused': 'Ergebnis vom DT-Platz abgelehnt: {{detail}}',
   'error.results_fetch_failed': 'Fehler beim Abrufen der Ergebnisse',
   'error.save_failed': 'Fehler beim Speichern',
   'error.score_save_failed': 'Fehler beim Speichern des Ergebnisses',

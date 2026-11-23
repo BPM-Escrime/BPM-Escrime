@@ -652,6 +652,7 @@
   'error.registration_closed': 'Registration closed',
   'error.registration_failed': 'Registration failed',
   'error.reinstate_failed': 'Could not reinstate',
+  'error.score_refused': 'Score refused by the DT station: {{detail}}',
   'error.results_fetch_failed': 'Could not load the results',
   'error.save_failed': 'Save failed',
   'error.score_save_failed': 'Could not save the score',

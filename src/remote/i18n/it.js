@@ -648,6 +648,7 @@
   'error.registration_closed': 'Iscrizione chiusa',
   'error.registration_failed': "Errore durante l'iscrizione",
   'error.reinstate_failed': 'Errore durante il reintegro',
+  'error.score_refused': 'Punteggio rifiutato dalla postazione DT: {{detail}}',
   'error.results_fetch_failed': 'Errore durante il recupero dei risultati',
   'error.save_failed': 'Errore durante il salvataggio',
   'error.score_save_failed': 'Errore nel salvataggio del punteggio',

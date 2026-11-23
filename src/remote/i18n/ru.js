@@ -652,6 +652,7 @@
   'error.registration_closed': 'Регистрация закрыта',
   'error.registration_failed': 'Не удалось зарегистрироваться',
   'error.reinstate_failed': 'Не удалось восстановить',
+  'error.score_refused': 'Счёт отклонён постом DT: {{detail}}',
   'error.results_fetch_failed': 'Не удалось загрузить результаты',
   'error.save_failed': 'Не удалось сохранить',
   'error.score_save_failed': 'Не удалось сохранить счёт',

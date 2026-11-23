@@ -652,6 +652,7 @@
   'error.registration_closed': 'Inscripció tancada',
   'error.registration_failed': 'Error en la inscripció',
   'error.reinstate_failed': 'Error en la reintegració',
+  'error.score_refused': 'Puntuació rebutjada pel lloc del DT: {{detail}}',
   'error.results_fetch_failed': 'Error en obtenir els resultats',
   'error.save_failed': 'Error en desar',
   'error.score_save_failed': 'Error en desar el resultat',
