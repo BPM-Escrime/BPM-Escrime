@@ -106,11 +106,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 272 |
-| `src/main/` | 139 | 1194 |
+| `src/main/` | 140 | 1197 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 126 | 679 |
-| E2E Playwright (`e2e/`) | 17 | 47 |
+| `src/renderer/components/` | 126 | 680 |
+| E2E Playwright (`e2e/`) | 17 | 48 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
 | `src/renderer/contexts/` | 1 | 7 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 32 | 333 |
+| `src/shared/domain/` | 32 | 338 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **580** | **4459** |
+| **Total** | **581** | **4469** |
 
-Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 564 fichiers, 4421 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3544,6 +3544,18 @@ Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/splitOff.test.ts</code> — 6 tests</summary>
+
+- crée l’épreuve séparée en une commande, journalise les deux faits, rejoue sans écart
+- après l’extraction : le groupe n’a plus de tableau ici, l’épreuve séparée tire le sien
+- refus : sans tableaux séparés, groupe inconnu, déjà extrait, tableau tiré ; dryRun
+- échec au milieu : tout est annulé (ni épreuve, ni tireurs, ni marque, ni journal)
+- rebuildCompetitionState : marque et classement importé rendus d’après le journal
+- outil MCP split\_off\_group (écriture)
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/sport.test.ts</code> — 34 tests</summary>
 
 - poules → arbitres → scores → tableau → classement final → exports
@@ -3685,14 +3697,13 @@ Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/dbHandlers.test.ts</code> — 5 tests</summary>
+<summary><code>src/main/ipc/dbHandlers.test.ts</code> — 4 tests</summary>
 
 - **bus d’événements db (#1298)**
   - emitCompetitionEvent diffuse aux fenêtres
   - db:updateMatch et db:createMatch émettent matches:changed
   - db:updateMatch : motif de correction au journal, jamais écrit dans le match (#1996)
   - db:updateMatch : score déjà en base (écrit par recordScore) ni réécrit ni journalisé (#1980)
-  - db:addFencer émet fencers:changed pour la compétition
 
 </details>
 
@@ -3765,12 +3776,10 @@ Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/validation.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/ipc/validation.test.ts</code> — 2 tests</summary>
 
 - **validation IPC (#1774)**
   - validateUUID accepte un UUID, refuse le reste
-  - validateCompetitionData exige titre, date (Date) et arme
-  - validateFencerData exige nom/prénom, ref optionnelle positive
   - validateMatchData exige numéro et score max positifs
 
 </details>
@@ -5931,9 +5940,10 @@ Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/CompetitionViewSplit.test.tsx</code> — 1 test</summary>
+<summary><code>src/renderer/components/CompetitionViewSplit.test.tsx</code> — 2 tests</summary>
 
 - deux groupes tirés et joués, changement d’onglet, rechargement : les deux tableaux restent
+- groupe des femmes extrait en épreuve séparée par la commande (lot A3)
 
 </details>
 
@@ -7461,9 +7471,10 @@ Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage stat
 </details>
 
 <details>
-<summary><code>e2e/electron/split-tableaux.spec.ts</code> — 1 test</summary>
+<summary><code>e2e/electron/split-tableaux.spec.ts</code> — 2 tests</summary>
 
 - tableaux séparés : deux tableaux joués, retrouvés après rechargement
+- tableaux séparés : groupe extrait en épreuve séparée
 
 </details>
 
@@ -8823,7 +8834,7 @@ Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 9 tests</summary>
+<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 11 tests</summary>
 
 - **projectCompetition**
   - journal complet seulement s’il commence (après l’appel) par un tirage
@@ -8836,6 +8847,8 @@ Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage stat
   - un tableau par groupe ; décisions rangées dans leur tableau
   - nouveau tirage d’un groupe : ses décisions seules sont retirées
   - nouveau tirage des poules : tous les tableaux retirés
+  - groupe extrait (lot A3) : noté, plus de tableau pour lui ici
+  - épreuve séparée : journal complet dès le classement importé
 
 </details>
 
@@ -8895,7 +8908,7 @@ Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/ranking/splitGroups.test.ts</code> — 11 tests</summary>
+<summary><code>src/shared/domain/ranking/splitGroups.test.ts</code> — 14 tests</summary>
 
 - **splitCompetition**
   - propose un titre par défaut
@@ -8910,6 +8923,10 @@ Unitaires : 563 fichiers, 4412 tests. E2E : 17 fichiers, 47 tests (comptage stat
   - identifiants préfixés par le groupe, sans double préfixe
   - lecture de tous les tableaux : racine et groupes
   - reprise : groupe d’un tableau tiré à la racine, d’après ses tireurs
+- **extraction d’un groupe (docs/adr/0024, lot A3)**
+  - refus : sans tableaux séparés, groupe extrait, tableau tiré, groupe absent
+  - projection de départ : phase Classement, sans poules ni tableau
+  - classement importé : statistiques de l’épreuve d’origine, sinon rangs seuls
 
 </details>
 
