@@ -47,8 +47,12 @@ describe('getFallbackCompetitionSettings (défauts unifiés)', () => {
     });
   });
 
-  it('autres armes : 5 / 21 (comportement existant)', () => {
+  it('Sabre Laser : 25 / 25 (#2208) ; arme à la carte : 5 / 21 (comportement existant)', () => {
     expect(getFallbackCompetitionSettings(Weapon.LASER, Category.SENIOR)).toMatchObject({
+      defaultPoolMaxScore: 25,
+      defaultTableMaxScore: 25,
+    });
+    expect(getFallbackCompetitionSettings(Weapon.CUSTOM, Category.SENIOR)).toMatchObject({
       defaultPoolMaxScore: 5,
       defaultTableMaxScore: 21,
     });

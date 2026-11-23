@@ -48,10 +48,10 @@ describe('buildDefaultCompetitionSettings', () => {
     expect(s).toMatchObject({ laserTeamMode: 'touches', teamFormat: 'laser-arena' });
   });
 
-  it('Sabre Laser individuel : aucun réglage imposé', () => {
+  it('Sabre Laser individuel : score max 25 / 25 (provisoire, #2208)', () => {
     expect(
       buildDefaultCompetitionSettings({ weapon: Weapon.LASER, category: Category.SENIOR })
-    ).toBeUndefined();
+    ).toMatchObject({ defaultPoolMaxScore: 25, defaultTableMaxScore: 25, thirdPlaceMatch: false });
   });
 
   it('arme personnalisée : formule et réglages dérivés', () => {
