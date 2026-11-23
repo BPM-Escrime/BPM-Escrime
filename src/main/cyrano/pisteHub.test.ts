@@ -83,6 +83,8 @@ const mockDb = {
   getPoolCount: vi.fn().mockReturnValue(1),
   getMatch: vi.fn((id: string) => ({ id, scoreA: { value: 0 }, scoreB: { value: 0 } })),
   updateMatch: vi.fn(),
+  // Commandes du contrat (recordMatchEvents, #2175)
+  transaction: vi.fn((fn: () => unknown) => fn()),
   updateMatchTiming: vi.fn(),
   saveCard: vi.fn(),
   clearArenaEvents: vi.fn(),
@@ -407,7 +409,6 @@ describe('PisteHub — mode appareil maître (#1720)', () => {
         right: { id: short(ID.ef), score: 5, yellowCards: 1 },
         left: { id: short(ID.ab), score: 2, redCards: 2 },
       });
-      expect(mockDb.clearArenaEvents).toHaveBeenCalled();
       // Chrono de fin repris : dans le DISP et sur la tablette / l'écran d'arène
       expect(lastDisp()?.stopwatch).toBe('1:20');
       expect(updates[updates.length - 1]).toMatchObject({ time: 80, timerStatus: 'paused' });

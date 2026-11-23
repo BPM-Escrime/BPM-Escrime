@@ -23,6 +23,7 @@ function setup(opts: { weapon: Weapon; isTableau: boolean; max?: number }) {
     db: { getMatch: () => null },
     resolveDbMatchId: (m: { id: string }) => m.id,
     broadcastArenaUpdate: vi.fn(),
+    persistArenaState: vi.fn(),
     arenaSuddenDeath: new Map(),
     arenaOvertimeType: new Map(),
     io: { to: () => ({ emit }) },

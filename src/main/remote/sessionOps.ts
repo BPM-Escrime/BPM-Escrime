@@ -7,7 +7,6 @@ import { MatchStatus, type Score } from '../../shared/types';
 import type { ArenaMatch, RemoteScoreUpdate, RemoteSession } from '../../shared/types/remote';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { logger, LogCategory } from '../../shared/services/logger';
-import { emitCompetitionEvent } from '../ipc/dbHandlers';
 
 type S = RemoteScoreServer;
 
@@ -120,19 +119,17 @@ export async function updateMatchScore(
     isForfait: update.specialStatus === 'forfait' && update.winner !== 'B',
   };
 
-  const dbMatch = ctx.db.getMatch(matchId);
-  if (dbMatch) {
-    // Match en base de données : mise à jour directe
-    ctx.db.updateMatch(matchId, {
-      scoreA,
-      scoreB,
-      status: update.status === 'finished' ? MatchStatus.FINISHED : MatchStatus.IN_PROGRESS,
-    });
-    emitCompetitionEvent('matches:changed');
-  } else {
-    // Match en mémoire uniquement (poule non persistée) : mettre à jour via Socket.IO
-    const inMemory = ctx.sessionMatches.find(m => m.id === matchId);
-    if (!inMemory) {
+  // Score en cours : mémoire seulement (arène, session), plus d'écriture en base (#2175).
+  // La fin d'un match passe uniquement par recordScore (/finish) : un « finished » reçu ici
+  // (file hors-ligne rejouée) ne termine rien, et un match terminé n'est plus touché, sauf
+  // s'il est revenu sur une arène pour correction (PREV).
+  const backOnArena = [...ctx.arenas.values()].some(
+    a => a.currentMatch?.id === matchId && a.currentMatch.status !== 'finished'
+  );
+  if (ctx.sessionMatchScores.get(matchId)?.status === MatchStatus.FINISHED && !backOnArena) return;
+  {
+    const known = ctx.db.getMatch(matchId) ?? ctx.sessionMatches.find(m => m.id === matchId);
+    if (!known) {
       // Match d'entraînement (lobby) : seulement porté par l'arène, pas de liste de session.
       // Sans ce cas, la tablette mettait le score en file hors-ligne et affichait
       // « Échec – Réessayer » en permanence (#1500).
@@ -151,12 +148,8 @@ export async function updateMatchScore(
         break;
       }
     }
-    // Stocker dans sessionMatchScores pour cohérence
-    ctx.sessionMatchScores.set(matchId, {
-      scoreA,
-      scoreB,
-      status: update.status === 'finished' ? MatchStatus.FINISHED : MatchStatus.IN_PROGRESS,
-    });
+    // Stocker dans sessionMatchScores pour cohérence (toujours « en cours »)
+    ctx.sessionMatchScores.set(matchId, { scoreA, scoreB, status: MatchStatus.IN_PROGRESS });
   }
 }
 

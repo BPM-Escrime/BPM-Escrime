@@ -220,6 +220,12 @@ const IPC_REGISTER = new Set(['handle', 'on', 'handleOnce']);
 const DB_WRITE_RE =
   /^(create|update|delete|set|save|insert|upsert|remove|add|start|close|reopen|finish|record|clear|mark)[A-Z]/;
 
+/**
+ * Écritures hors du compteur, nommément : état technique de l'arène (match en cours, file,
+ * chrono) gardé pour reprendre après un redémarrage, pas une donnée de l'épreuve (#2175).
+ */
+const DB_WRITE_EXEMPT = new Set(['saveArenaState']);
+
 /** Le receveur d'un appel passe par `db` : ctx.db.x, deps.db.club.x, db.eventDays.x, this.db.x */
 function viaDb(expr) {
   let e = expr;
@@ -295,6 +301,7 @@ function analyze(file) {
       ts.isCallExpression(node) &&
       ts.isPropertyAccessExpression(node.expression) &&
       DB_WRITE_RE.test(node.expression.name.text) &&
+      !DB_WRITE_EXEMPT.has(node.expression.name.text) &&
       viaDb(node.expression.expression)
     ) {
       hits.directDbWrites.push(at(node));
