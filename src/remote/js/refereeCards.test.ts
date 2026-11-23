@@ -6,9 +6,16 @@ import { createRequire } from 'module';
 import fs from 'fs';
 import path from 'path';
 import { passivityWinner as sharedPassivityWinner } from '../../shared/domain/match/matchEndValidation';
+import {
+  CARD_REASON_LABELS,
+  createCard,
+  getReasonsByGroupForWeapon,
+} from '../../shared/utils/cardSystem';
+import { Card, CardGroup, CardReason, Weapon } from '../../shared/types';
 
 const req = createRequire(import.meta.url);
 const C = req('./refereeCards.js');
+const F = req('./refereeFaults.js');
 
 describe('refereeCards.js cartons', () => {
   it('modernYellowOrRed : rouge si déjà jaune ou rouge', () => {
@@ -27,9 +34,12 @@ describe('refereeCards.js cartons', () => {
     expect(C.cardFromGroup(2, h({ 2: 1 }))).toBe('red');
     expect(C.cardFromGroup(3, h({}))).toBe('red');
     expect(C.cardFromGroup(1, { isModern: false })).toBe('white');
-    expect(C.cardFromGroup(2, { isModern: true, standardCards: [] })).toBe('yellow');
-    expect(C.cardFromGroup(2, { isModern: true, standardCards: ['yellow'] })).toBe('red');
-    expect(C.cardFromGroup(1, { isModern: true, standardCards: [] })).toBe('red');
+    // Escrime olympique, numérotation FIE (#2207) : 1er groupe jaune puis rouge, 2e et 3e rouge
+    expect(C.cardFromGroup(1, { isModern: true, standardCards: [] })).toBe('yellow');
+    expect(C.cardFromGroup(1, { isModern: true, standardCards: ['yellow'] })).toBe('red');
+    expect(C.cardFromGroup(1, { isModern: true, standardCards: ['red'] })).toBe('red');
+    expect(C.cardFromGroup(2, { isModern: true, standardCards: [] })).toBe('red');
+    expect(C.cardFromGroup(3, { isModern: true, standardCards: [] })).toBe('red');
   });
 
   it('cardEffect : classique +3 / +5, blanc, 2e blanc -> jaune', () => {
@@ -133,6 +143,54 @@ describe('refereeCards.js passivité', () => {
           count++;
         }
     expect(count).toBe(scores.length * fencers.length * fencers.length);
+  });
+
+  it('cardFromGroup olympique : parité avec determineCardType (cardSystem.ts, #2207)', () => {
+    // Un motif FIE par groupe ; la récidive du 3e groupe (noir) passe par le bouton N
+    const reasonOf: Record<number, CardReason> = {
+      1: CardReason.FIE_BODY_CONTACT,
+      2: CardReason.FIE_UNARMED_ARM,
+      3: CardReason.FIE_UNFAIR_FIGHT,
+    };
+    // Toutes les suites de 1 à 4 fautes, sans récidive du 3e groupe
+    const sequences: number[][] = [[]];
+    for (let n = 0; n < 4; n++)
+      for (const s of sequences.filter(q => q.length === n))
+        for (const g of [1, 2, 3]) if (!(g === 3 && s.includes(3))) sequences.push([...s, g]);
+    let count = 0;
+    for (const weapon of [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE])
+      for (const seq of sequences.filter(q => q.length > 0)) {
+        const domain: Card[] = [];
+        const tablet: string[] = [];
+        for (const group of seq) {
+          const fromTablet = C.cardFromGroup(group, { isModern: true, standardCards: tablet });
+          const card = createCard('m', 'f', reasonOf[group], domain, weapon);
+          expect(fromTablet, `${weapon} ${seq.join('-')}`).toBe(card.type.toLowerCase());
+          expect(card.group).toBe(group);
+          tablet.push(fromTablet);
+          domain.push(card);
+          count++;
+        }
+      }
+    expect(count).toBeGreaterThan(100);
+  });
+
+  it('motifs olympiques de la tablette = motifs FIE du domaine, mêmes groupes (t.163, #2207)', () => {
+    type Fault = { reason: string; key: string; fr: string; weapons?: string[] };
+    type Group = { group: number; faults: Fault[] };
+    const tablet = (F.FAULT_REASONS_OLYMPIC as Group[]).flatMap(g =>
+      g.faults.map(f => ({ ...f, group: g.group }))
+    );
+    for (const weapon of [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE]) {
+      const domain = getReasonsByGroupForWeapon(weapon);
+      const forWeapon = tablet.filter(f => !f.weapons || f.weapons.includes(weapon));
+      for (const group of [1, 2, 3] as CardGroup[])
+        expect(forWeapon.filter(f => f.group === group).map(f => f.reason)).toEqual(domain[group]);
+    }
+    for (const f of tablet) {
+      expect(f.key).toBe(`referee.fault_${f.reason}`);
+      expect(f.fr).toBe(CARD_REASON_LABELS[f.reason as CardReason]);
+    }
   });
 
   it('referee.html charge le module et délègue', () => {

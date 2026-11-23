@@ -1067,6 +1067,12 @@ class RefereeAppBase {
     body.innerHTML = '';
     const reasons = this.isModernFencing ? FAULT_REASONS_OLYMPIC : FAULT_REASONS;
     const filteredReasons = reasons.filter(({ group }) => {
+      if (this.isModernFencing) {
+        // Numérotation FIE (#2207) : J = 1er groupe, R = 2e et 3e groupes
+        if (originalCardType === 'yellow') return group === 1;
+        if (originalCardType === 'red') return group === 2 || group === 3;
+        return true;
+      }
       if (originalCardType === 'white') return group === 1;
       if (originalCardType === 'yellow') return group === 2;
       if (originalCardType === 'red') return group === 3;
@@ -1086,7 +1092,10 @@ class RefereeAppBase {
       titleEl.textContent = `${window.T(labelKey)} → ${previewLabel}`;
       body.appendChild(titleEl);
 
-      faults.forEach(fault => {
+      // Motif propre à certaines armes (t.170 1.10 et 1.12) : masqué pour les autres
+      const forWeapon = f =>
+        !f.weapons || !['E', 'F', 'S'].includes(this.weapon) || f.weapons.includes(this.weapon);
+      faults.filter(forWeapon).forEach(fault => {
         const btn = document.createElement('button');
         btn.className = 'reason-btn';
         btn.textContent = window.T(fault.key);
@@ -1109,7 +1118,8 @@ class RefereeAppBase {
     const history = fencer === 'A' ? this.faultHistoryA : this.faultHistoryB;
     const prevCount = history[group] || 0;
 
-    const isRevalorisation = group === 1 && prevCount === 1;
+    // Blanc devenu jaune : Sabre Laser seulement (pas de blanc en escrime olympique)
+    const isRevalorisation = !this.isModernFencing && group === 1 && prevCount === 1;
     history[group] = prevCount + 1;
 
     document.getElementById('reason-selector-overlay').classList.remove('open');

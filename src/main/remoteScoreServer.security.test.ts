@@ -453,14 +453,22 @@ describe('RemoteScoreServer', () => {
           const { handlers } = connectSocket(cookie);
           handlers.team_fencer_card({ arenaId: 'arena1', side: 'A', reason: 'not_a_reason' });
           expect(state.fencerCards).toHaveLength(0);
+          // Motif du Sabre Laser refusé à l'épée (#2207)
           handlers.team_fencer_card({ arenaId: 'arena1', side: 'A', reason: 'early_start' });
-          handlers.team_fencer_card({ arenaId: 'arena1', side: 'A', reason: 'early_start' });
+          expect(state.fencerCards).toHaveLength(0);
+          handlers.team_fencer_card({ arenaId: 'arena1', side: 'A', reason: 'fie_body_contact' });
+          handlers.team_fencer_card({ arenaId: 'arena1', side: 'A', reason: 'fie_body_contact' });
           expect(state.fencerCards.map((c: any) => [c.fencerId, c.boutId])).toEqual([
             ['a2', 'b2'],
             ['a2', 'b2'],
           ]);
-          expect(state.fencerCards[0].type).toBe('WHITE');
-          expect(state.fencerCards[1].type).toBe('YELLOW'); // escalade depuis l'historique persisté
+          // 1er groupe FIE (t.165) : jaune, puis rouge depuis l'historique persisté
+          expect(state.fencerCards[0].type).toBe('YELLOW');
+          expect(state.fencerCards[1].type).toBe('RED');
+          expect(stored.map(c => [c.group, c.pointsAwarded])).toEqual([
+            [1, 0],
+            [1, 1],
+          ]);
           expect((mockDb as any).createTeamBoutCard).toHaveBeenCalledTimes(2);
         });
 
@@ -482,7 +490,8 @@ describe('RemoteScoreServer', () => {
           expect(pub.cap.maxTouches).toBe(10);
           expect(pub.boutComplete).toBe(false);
           expect(pub.target).toBe(45);
-          expect(pub.cardReasons).toContain('early_start');
+          expect(pub.cardReasons).toContain('fie_body_contact');
+          expect(pub.cardReasons).not.toContain('early_start');
         });
       });
 

@@ -338,7 +338,8 @@
           lastState.cardReasons.forEach(reason => {
             const opt = document.createElement('option');
             opt.value = reason;
-            opt.textContent = tk(`team.reason.${reason}`);
+            // Motifs FIE (épée, fleuret, sabre, #2207) : libellés de la tablette arbitre
+            opt.textContent = tk(reason.startsWith('fie_') ? `referee.fault_${reason}` : `team.reason.${reason}`);
             select.appendChild(opt);
           });
           const btn = document.createElement('button');
