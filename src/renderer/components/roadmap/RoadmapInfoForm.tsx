@@ -10,6 +10,7 @@ import { deadlineOf, suggestSchedule, type RoadmapInfo } from '@shared/domain/ro
 import { useTranslation } from '../../hooks/useTranslation';
 import { Button } from '../common/Button';
 import { TextField, infoFieldId } from './roadmapFields';
+import { PlaceSearchField } from '../common/PlaceSearchField';
 
 interface RoadmapInfoFormProps {
   info: RoadmapInfo;
@@ -62,12 +63,17 @@ export const RoadmapInfoForm: React.FC<RoadmapInfoFormProps> = ({
           onChange={set('date')}
         />
       </div>
-      <TextField
-        label={t('roadmap.field_venue')}
-        value={info.venue}
-        id={infoFieldId('venue')}
-        onChange={set('venue')}
-      />
+      <label className="roadmap-field">
+        <span className="roadmap-field-label">{t('roadmap.field_venue')}</span>
+        <PlaceSearchField
+          id={infoFieldId('venue')}
+          className="roadmap-input"
+          value={info.venue}
+          onChange={set('venue')}
+          // Lieu choisi : son adresse remplit le champ suivant
+          onPick={p => onChange({ venue: p.name, address: p.address || info.address })}
+        />
+      </label>
       <TextField
         label={t('roadmap.field_address')}
         value={info.address}

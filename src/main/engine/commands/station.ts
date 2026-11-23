@@ -15,6 +15,7 @@ import { portOf, refuse, type StationHandler } from './stationSupport';
 import { resolveSetting, type ResolvableKey } from './settings';
 import { eventDayHandlers } from './eventDay';
 import { privacyHandlers } from './privacy';
+import { normalizePlaceQuery } from '../../../shared/domain/places/placeSearch';
 
 /** Valeurs localStorage (clé historique → texte) converties en paramètres typés */
 export function legacyValuesToSettings(
@@ -56,6 +57,7 @@ type SettingsOps =
   | 'saveVenue'
   | 'deleteVenue'
   | 'setDefaultVenue'
+  | 'listPlaceSuggestions'
   | 'listScreenThemes'
   | 'saveScreenTheme'
   | 'deleteScreenTheme'
@@ -105,6 +107,13 @@ const settingsHandlers: { [N in SettingsOps]: StationHandler<N> } = {
   deleteVenue: (ctx, { venueId }) => withDevices(ctx, () => ctx.db.settings.deleteVenue(venueId)),
   setDefaultVenue: (ctx, { venueId }) =>
     withDevices(ctx, () => ctx.db.settings.setDefaultVenue(venueId)),
+  // ── Recherche de lieu (docs/adr/0026) : texte trop court ou poste sans service → rien ──
+  listPlaceSuggestions: async (ctx, { query, language }) => {
+    const q = normalizePlaceQuery(query);
+    const places = ctx.station?.places;
+    if (!places) return { suggestions: [], unavailable: true };
+    return q ? places.search(q, language) : { suggestions: [], unavailable: false };
+  },
   // ── Thèmes d'écrans ──
   listScreenThemes: ctx => portOf(ctx).themes.list(),
   saveScreenTheme: (ctx, { theme }) => portOf(ctx).themes.save(theme),

@@ -4659,5 +4659,11 @@
     "exported": "Dokument exportiert",
     "preview_hint": "A4-Vorschau: Klicken Sie auf einen Abschnitt, um ihn zu bearbeiten",
     "content_note": "Der vorausgefüllte Inhalt ist auf Französisch verfasst (FFE-Regeln). Der Entwurf wird auf diesem Gerät automatisch gespeichert."
+  },
+  "placeSearch": {
+    "loading": "Suche…",
+    "empty": "Kein Ort gefunden",
+    "offline": "Suche nicht verfügbar (keine Verbindung)",
+    "credit": "Daten © OpenStreetMap, IGN"
   }
 }

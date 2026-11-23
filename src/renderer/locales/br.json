@@ -4659,5 +4659,11 @@
     "exported": "Teuliad ezporzhet",
     "preview_hint": "Rakwel A4 : klikit war ur pezh evit kemm anezhi",
     "content_note": "An endalc'h rakleniet a zo skrivet e galleg (reolennoù FFE). Enrollet emgefreek an drafenn war ar rekkomp-mañ."
+  },
+  "placeSearch": {
+    "loading": "O klask…",
+    "empty": "Lec'h ebet kavet",
+    "offline": "Klask dihegerz (kevreadenn ebet)",
+    "credit": "Roadennoù © OpenStreetMap, IGN"
   }
 }

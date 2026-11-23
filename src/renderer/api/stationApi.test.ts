@@ -63,6 +63,7 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
   ],
   ['settings.setDefaultVenue', () => api.settings.setDefaultVenue('v1')],
   ['settings.deleteVenue', () => api.settings.deleteVenue('v1')],
+  ['settings.searchPlaces', () => api.settings.searchPlaces('gymnase', 'fr')],
   ['settings.getAgentFolders', () => api.settings.getAgentFolders()],
   ['settings.removeAgentFolder', () => api.settings.removeAgentFolder('/media/usb')],
   ['themes.list', () => api.themes.list()],

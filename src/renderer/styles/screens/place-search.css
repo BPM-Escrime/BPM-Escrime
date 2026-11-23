@@ -1,0 +1,55 @@
+/* Champ « Lieu » avec recherche sur Internet (docs/adr/0026) */
+.place-search {
+  position: relative;
+}
+
+.place-search > input {
+  width: 100%;
+}
+
+.place-search-list {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  max-height: 18rem;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+
+.place-search-list > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+
+.place-search-list > li.is-active,
+.place-search-list > li[role='option']:hover {
+  background: var(--color-surface-2);
+}
+
+.place-search-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.place-search-text small {
+  color: var(--color-text-muted);
+}
+
+.place-search-list > li.place-search-status,
+.place-search-list > li.place-search-credit {
+  cursor: default;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
