@@ -49,12 +49,36 @@ de `socketHandlers.ts` comptent dans le cliquet `directDbWrites`.
 - Carton « E » : `determineTeamCardEscalation` (`shared/domain/teams/teamCardEscalation.ts`,
   pur) rend blanc pour la première désignation tardive de la rencontre, jaune ensuite (cumul sur
   les 9 assauts). Ce n'est qu'une **suggestion** surlignée à l'écran (`TeamPoolView.tsx:480`) :
-  l'écran comme la tablette enregistrent le type choisi. Rouge et noir E sont manuels ; le
-  règlement Sabre Laser ne leur donne aucun effet en points.
+  l'écran comme la tablette enregistrent le type choisi. Rouge et noir E sont manuels, sans
+  effet en points dans le code ; aucun règlement ne les définit (Livret 2 XII : compétition par
+  équipe « A venir »).
 - Carton noir : la tablette refuse le noir E si `settings.blackCardEnabled` n'est pas vrai ;
   l'écran le propose toujours. Un noir individuel issu de l'escalade passe partout.
 - Les `CardGroup` / `CardReason` de Sabre Laser (groupes de pénalités du règlement FFE 2025-2026)
-  servent à toutes les armes (`WEAPON_CARD_CONFIGS`).
+  servent à toutes les armes (`WEAPON_CARD_CONFIGS`), escalade et points compris : c'est une
+  erreur pour l'escrime olympique (#2207), et le barème du Sabre Laser n'a pas de source dans les
+  règlements 2026-2027 (#2208, #2209). Voir « Deux règlements, deux barèmes ».
+
+**Deux règlements, deux barèmes** (amendement du 2026-11-23). Les cartons des épreuves par
+équipes relèvent de deux règlements distincts, qui ne se déduisent pas l'un de l'autre :
+
+|                                   | Escrime olympique (épée, fleuret, sabre)                                                      | Sabre Laser                                                                                            |
+| --------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Règlement                         | FIE, règlement technique et règles d'organisation (déc. 2025) ; FFE, règlement de l'arbitrage | ASL-FFE, Livrets 0, 1, 2 (2026-2027)                                                                   |
+| Format par équipes                | Relais FIE (o.99, t.41)                                                                       | Relais ou arène : **aucune règle fédérale** (Livret 2 XII « A venir ») ; conventions du logiciel       |
+| Jaune                             | Avertissement, 0 touche (t.162.1)                                                             | Points à l'adversaire : **barème à arbitrer** (#2208)                                                  |
+| Rouge                             | Une touche à l'adversaire (t.162.2)                                                           | Points à l'adversaire : **barème à arbitrer** (#2208)                                                  |
+| Blanc                             | N'existe pas                                                                                  | Existe (ex. matériel non conforme, Livret 2 V.3.2)                                                     |
+| Escalade par groupe               | t.165 à t.169                                                                                 | Non précisée en 2026-2027, sauf fautes particulières (V.3.2) ; à arbitrer (#2208, #2209)               |
+| Noir                              | Exclusion ; en équipe, rencontre perdue et équipe exclue (o.99.7.b)                           | Exclusion, points des adversaires conservés (VIII.7) ; en équipe : aucune règle                        |
+| Cartons P (non-combativité)       | t.124                                                                                         | Absents des livrets 2026-2027 (l'anti-jeu y est une faute du 1er groupe)                               |
+| Dépassement du palier d'un relais | Une touche, avec une pénalisation simultanée (t.41.1)                                         | Points : dernière touche en cible C (Livret 2 VIII.1, par analogie) ; touches : convention du logiciel |
+
+Le domaine (lot D) porte **une configuration par règlement** ; aucune valeur, aucune escalade
+ni aucun article ne passe d'une colonne à l'autre. Les règles FIE citées plus bas (§ 3, § 4,
+§ 5 bis, questions 1 et 2) valent pour le relais FIE des armes olympiques. Pour le Sabre Laser,
+ces sections s'appliquent une fois le barème et l'escalade tranchés (#2208, #2209) ; d'ici là,
+le moteur enregistre le carton (type, motif, groupe) sans calculer de points.
 
 **Cartons individuels hors équipes, pour comparaison** : ils ne sont pas non plus des faits du
 journal. Le contrat ne les lit que (`getMatchCards`, `getCardsByMatchIds`, droit `cards:read`,
@@ -137,7 +161,9 @@ individuel ne s'annule pas ainsi (§ 4).
 ### 2. La règle dans le domaine, pure
 
 - `src/shared/domain/penalties/cards.ts` reçoit `determineCardType` et les tables de
-  `cardSystem.ts` (motif → groupe, effet par arme). `createCard` y devient
+  `cardSystem.ts`, **séparées par règlement** : FIE pour les armes olympiques (motifs t.170,
+  escalade t.165 à t.169, jaune sans touche, pas de blanc ; #2207), ASL-FFE pour le Sabre Laser
+  (barème et escalade arbitrés dans #2208 et #2209). `createCard` y devient
   `buildCard({ id, at, … })` : identifiant et heure injectés. `cardSystem.ts` réexporte le temps
   de la migration des appelants.
 - `src/shared/domain/teams/teamCards.ts` : `relayCardFor(rencontre, côté, relais, motif |
@@ -149,7 +175,7 @@ cartons)`. Elles rendent le carton ou un code de refus. `teamCardEscalation.ts` 
 
 ### 3. Effet sur le score : aucun effet automatique
 
-Recommandation : le carton **n'écrit pas** de touche. Le score du relais reste le fait de
+Recommandation, pour les deux règlements : le carton **n'écrit pas** de touche ni de point. Le score du relais reste le fait de
 `recordRelayScore`, et il contient déjà la touche de pénalité, comptée par l'arbitre sur la
 tablette ou par l'appareil. Ajouter la touche à la commande du carton la compterait deux fois.
 `pointsAwarded` reste calculé par le domaine et affiché (feuille, tablette). C'est aussi le
@@ -159,7 +185,7 @@ Option écartée : la touche du rouge ajoutée au score en direct de l'arène pa
 demande que l'appareil et la tablette cessent de la compter, ce qui touche les protocoles Cyrano
 et OPP2.
 
-Conséquence de t.41.1 et t.162.2 : `recordRelayScore` accepte un relais au-delà de son palier
+Escrime olympique, conséquence de t.41.1 et t.162.2 : `recordRelayScore` accepte un relais au-delà de son palier
 d'autant de touches que de cartons rouges donnés dans ce relais (aujourd'hui `score_above_max`),
 et une rencontre gagnée par une touche de pénalisation.
 
@@ -323,10 +349,10 @@ un fait journalisé partout ou nulle part ([ADR-0005](0005-journal-un-fait-un-ch
 
 ## Questions tranchées (règlements relus le 2026-11-23)
 
-1. **Touche du carton rouge** : elle s'ajoute au score de l'adversaire (t.162.2) et figure déjà
+1. **Touche du carton rouge** (escrime olympique) : elle s'ajoute au score de l'adversaire (t.162.2) et figure déjà
    dans le score que donnent la tablette et l'appareil ; le carton n'écrit pas de touche (§ 3).
    Le relais peut dépasser son palier d'autant de rouges (t.41.1).
-2. **Noir individuel** : rencontre perdue et équipe exclue sans classement final (o.99.7.b),
+2. **Noir individuel** (relais FIE, escrime olympique) : rencontre perdue et équipe exclue sans classement final (o.99.7.b),
    tireur seul suspendu (t.160), pas de remplacement. Abandon sans remplaçant : `withdrawTeam`,
    l'équipe garde sa place (o.99.7.a) (§ 4).
 3. **Annulation** : oui, dès C1, par le Directoire technique seulement (t.164, t.172) (§ 1).
