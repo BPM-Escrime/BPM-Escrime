@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 84 | 965 |
+| `src/shared/utils/` | 83 | 908 |
 | `src/shared/services/` | 8 | 87 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 36 | 388 |
+| `src/shared/domain/` | 37 | 465 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **600** | **4629** |
+| **Total** | **600** | **4649** |
 
-Unitaires : 582 fichiers, 4579 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 582 fichiers, 4599 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -200,89 +200,6 @@ Unitaires : 582 fichiers, 4579 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - importe depuis un CSV valide
   - importe depuis du TSV
   - détecte automatiquement le type si non fourni
-
-</details>
-
-<details>
-<summary><code>src/shared/utils/cardSystem.test.ts</code> — 57 tests</summary>
-
-- **determineCardType - Système d'escalade FFE**
-  - **Groupe 1: Blanc → Jaune → Jaune**
-    - 1ère faute Groupe 1 = Carton BLANC (0 point)
-    - 2ème faute Groupe 1 = Carton JAUNE (+1 point)
-    - 3ème faute Groupe 1 = Carton JAUNE (+1 point)
-    - 4ème faute Groupe 1 = Carton JAUNE (+1 point, pas de Noir)
-  - **Groupe 2: Jaune → Rouge → Rouge**
-    - 1ère faute Groupe 2 = Carton JAUNE (+1 point)
-    - 2ème faute Groupe 2 = Carton ROUGE (+1 point)
-    - 3ème faute Groupe 2 = Carton ROUGE (+1 point, pas de Noir)
-  - **Groupe 3: Rouge → Exclusion**
-    - 1ère faute Groupe 3 = Carton ROUGE (+1 point)
-    - 2ème faute Groupe 3 = Carton NOIR (exclusion)
-  - **Groupe 4: Exclusion immédiate**
-    - Refus de combattre = Carton NOIR direct
-    - Tricherie = Carton NOIR direct
-    - Anti-sportif = Carton NOIR direct
-  - **Isolation entre groupes**
-    - Les cartons d'un groupe n'affectent pas les autres groupes
-- **createCard**
-  - crée un carton avec un ID unique
-  - associe correctement le match et le tireur
-  - définit le groupe correct pour chaque raison
-  - ajoute un timestamp
-- **getReasonsByGroup**
-  - retourne les 4 groupes
-  - Groupe 1 contient les bonnes raisons
-  - Groupe 4 contient les exclusions directes
-- **getCardsForFencer**
-  - filtre correctement les cartons par tireur
-  - retourne un tableau vide si pas de cartons
-- **isFencerExcluded**
-  - retourne true si carton noir reçu
-  - retourne false si pas de carton noir
-  - retourne false pour un tireur sans cartons
-- **Labels français**
-  - toutes les raisons ont un label
-  - tous les groupes ont un label
-  - les labels sont en français
-- **Dissociation par arme**
-  - **getWeaponCardConfig**
-    - retourne une config pour chaque arme
-    - chaque arme a une config indépendante (pas de référence partagée)
-  - **getAvailableReasons**
-    - retourne toutes les raisons pour le Sabre Laser
-    - retourne des raisons pour l'épée
-  - **getReasonsByGroupForWeapon**
-    - retourne les 4 groupes pour le Laser
-    - retourne les 4 groupes pour l'épée
-  - **determineCardType avec weapon param**
-    - comportement identique avec ou sans weapon (config actuelle identique)
-    - scoreImpact yellow reflète la config arme
-    - scoreImpact personnalisable par arme
-    - raison non applicable retourne BLANC (0 point)
-  - **createCard avec weapon param**
-    - crée un carton avec l'arme courante
-    - reste compatible sans weapon param
-- **Escrime olympique (%s) : cartons FIE** _(each)_
-  - jaune = avertissement, 0 point (t.162.1)
-  - 1er groupe : jaune, puis rouge (+1) à chaque nouvelle faute du groupe (t.165)
-  - 1er groupe : rouge d'emblée après un rouge du 2e groupe (t.165)
-  - 1er groupe : rouge d'emblée après un rouge du 3e groupe (t.165)
-  - 2e groupe : rouge dès la 1re faute, puis rouge (t.166)
-  - 2e groupe : rouge même après un jaune du 1er groupe
-  - 3e groupe : rouge, puis noir à la récidive (t.167)
-  - 3e groupe : rouge à la 1re faute même après des rouges du 1er ou du 2e groupe (t.167.1)
-  - 4e groupe : noir dès la 1re faute (t.169)
-  - aucun carton blanc, quel que soit le motif ou l’historique
-  - motifs du tableau t.170 seulement, ni motif du Sabre Laser
-  - chaque motif olympique a un libellé français
-- **Escrime olympique : motifs propres à une arme (t.170 1.10 et 1.12)**
-  - pointe sur la piste : fleuret et épée ; coquille et croisement : sabre
-  - motif hors liste (ancien motif du Sabre Laser) : groupe d'origine, escalade FIE, jamais de blanc
-- **Sabre Laser et arme à la carte inchangés**
-  - %s : motifs, groupes, barème _(each)_
-  - %s : escalade blanc → jaune, jaune → rouge, rouge → noir _(each)_
-  - getReasonsByGroup (sans arme) = groupes du Sabre Laser
 
 </details>
 
@@ -8218,7 +8135,7 @@ Unitaires : 582 fichiers, 4579 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - nextPassivityCard : rouge, noir, puis plus rien
   - passivityWinner : score, puis classement initial, puis tirage
   - passivityWinner : parité avec le module partagé (matchEndValidation.ts, #1829)
-  - cardFromGroup olympique : parité avec determineCardType (cardSystem.ts, #2207)
+  - cardFromGroup olympique : parité avec determineCardType (domain/penalties/cards.ts, #2207)
   - motifs olympiques de la tablette = motifs FIE du domaine, mêmes groupes (t.163, #2207)
   - referee.html charge le module et délègue
 
@@ -9112,6 +9029,87 @@ Unitaires : 582 fichiers, 4579 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/penalties/cards.test.ts</code> — 55 tests</summary>
+
+- **determineCardType - Système d'escalade FFE**
+  - **Groupe 1: Blanc → Jaune → Jaune**
+    - 1ère faute Groupe 1 = Carton BLANC (0 point)
+    - 2ème faute Groupe 1 = Carton JAUNE (+1 point)
+    - 3ème faute Groupe 1 = Carton JAUNE (+1 point)
+    - 4ème faute Groupe 1 = Carton JAUNE (+1 point, pas de Noir)
+  - **Groupe 2: Jaune → Rouge → Rouge**
+    - 1ère faute Groupe 2 = Carton JAUNE (+1 point)
+    - 2ème faute Groupe 2 = Carton ROUGE (+1 point)
+    - 3ème faute Groupe 2 = Carton ROUGE (+1 point, pas de Noir)
+  - **Groupe 3: Rouge → Exclusion**
+    - 1ère faute Groupe 3 = Carton ROUGE (+1 point)
+    - 2ème faute Groupe 3 = Carton NOIR (exclusion)
+  - **Groupe 4: Exclusion immédiate**
+    - Refus de combattre = Carton NOIR direct
+    - Tricherie = Carton NOIR direct
+    - Anti-sportif = Carton NOIR direct
+  - **Isolation entre groupes**
+    - Les cartons d'un groupe n'affectent pas les autres groupes
+- **buildCard**
+  - déterministe : identifiant et heure injectés, rien de tiré
+  - associe correctement le match et le tireur
+  - définit le groupe correct pour chaque raison
+  - carton sans groupe (appareil de piste) : ignoré par l’escalade du groupe
+- **getReasonsByGroupForWeapon (Sabre Laser)**
+  - retourne les 4 groupes
+  - Groupe 1 contient les bonnes raisons
+  - Groupe 4 contient les exclusions directes
+- **getCardsForFencer**
+  - filtre correctement les cartons par tireur
+  - retourne un tableau vide si pas de cartons
+- **isFencerExcluded**
+  - retourne true si carton noir reçu
+  - retourne false si pas de carton noir
+  - retourne false pour un tireur sans cartons
+- **Labels français**
+  - toutes les raisons ont un label
+  - les labels sont en français
+- **Dissociation par arme**
+  - **getWeaponCardConfig**
+    - retourne une config pour chaque arme
+    - chaque arme a une config indépendante (pas de référence partagée)
+  - **getAvailableReasons**
+    - retourne toutes les raisons pour le Sabre Laser
+    - retourne des raisons pour l'épée
+  - **getReasonsByGroupForWeapon**
+    - retourne les 4 groupes pour le Laser
+    - retourne les 4 groupes pour l'épée
+  - **determineCardType avec weapon param**
+    - comportement identique avec ou sans weapon (config actuelle identique)
+    - scoreImpact yellow reflète la config arme
+    - scoreImpact personnalisable par arme
+    - raison non applicable retourne BLANC (0 point)
+  - **buildCard avec weapon param**
+    - crée un carton avec l'arme courante
+    - reste compatible sans weapon param
+- **Escrime olympique (%s) : cartons FIE** _(each)_
+  - jaune = avertissement, 0 point (t.162.1)
+  - 1er groupe : jaune, puis rouge (+1) à chaque nouvelle faute du groupe (t.165)
+  - 1er groupe : rouge d'emblée après un rouge du 2e groupe (t.165)
+  - 1er groupe : rouge d'emblée après un rouge du 3e groupe (t.165)
+  - 2e groupe : rouge dès la 1re faute, puis rouge (t.166)
+  - 2e groupe : rouge même après un jaune du 1er groupe
+  - 3e groupe : rouge, puis noir à la récidive (t.167)
+  - 3e groupe : rouge à la 1re faute même après des rouges du 1er ou du 2e groupe (t.167.1)
+  - 4e groupe : noir dès la 1re faute (t.169)
+  - aucun carton blanc, quel que soit le motif ou l’historique
+  - motifs du tableau t.170 seulement, ni motif du Sabre Laser
+  - chaque motif olympique a un libellé français
+- **Escrime olympique : motifs propres à une arme (t.170 1.10 et 1.12)**
+  - pointe sur la piste : fleuret et épée ; coquille et croisement : sabre
+  - motif hors liste (ancien motif du Sabre Laser) : groupe d'origine, escalade FIE, jamais de blanc
+- **Sabre Laser et arme à la carte inchangés**
+  - %s : motifs, groupes, barème _(each)_
+  - %s : escalade blanc → jaune, jaune → rouge, rouge → noir _(each)_
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/places/placeSearch.test.ts</code> — 6 tests</summary>
 
 - **placeSearch**
@@ -9583,13 +9581,41 @@ Unitaires : 582 fichiers, 4579 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/teams/teamCardEscalation.test.ts</code> — 3 tests</summary>
+<summary><code>src/shared/domain/teams/teamCards.test.ts</code> — 25 tests</summary>
 
 - **determineTeamCardEscalation**
   - attribue un carton blanc à la première désignation tardive de la rencontre
   - attribue un carton jaune dès qu’un blanc a déjà été donné, même dans un autre assaut
+  - même fonction que teamCardEscalation.ts
 - **countTeamYellowCards**
   - compte uniquement les jaunes de l’équipe concernée
+- **teamCardFor**
+  - escalade E par équipe et par rencontre : blanc, puis jaune
+  - type donné par l’arbitre : retenu tel quel, noir toujours accepté (question 4)
+  - équipe hors rencontre refusée
+- **relayCardFor : motif, escalade sur la rencontre**
+  - tireur du côté dans le relais, carton rattaché au relais, id et heure injectés
+  - cumul sur toute la rencontre, tous relais confondus (t.159), tireur par tireur
+  - remplaçant : le tireur est celui porté par le relais
+  - Sabre Laser : escalade et barème inchangés
+  - noir de l’escalade : exclusion portée par le carton
+  - motif hors du règlement de l’arme refusé
+- **relayCardFor : type imposé par l’appareil**
+  - ni motif ni groupe ; points du barème de l’arme
+  - pas de blanc en escrime olympique ; type inconnu refusé
+- **relayCardFor : refus**
+  - relais inconnu
+  - rencontre terminée ou décidée
+  - relais hors ordre (§ 5)
+- **relayAcceptsCard (§ 5)**
+  - relais en cours
+  - dernier relais terminé tant que le suivant n’a pas commencé
+  - relais futur, inconnu, rencontre terminée
+- **newDeviceCards**
+  - compteurs de l’appareil sans rien d’enregistré : tout est nouveau, dans l’ordre
+  - pas de doublon : seul l’excédent de l’appareil est nouveau
+  - états successifs : rejouer le même état ne crée rien
+  - compteurs : format des arènes et cartons enregistrés (blanc et noir ignorés)
 
 </details>
 
