@@ -6,6 +6,8 @@
  */
 
 import { CommandError, type CommandContext } from '../engine/commands/context';
+import { invokeSync, toApiError } from '../engine/api/engine';
+import type { Input, OperationName, Output } from '../../shared/api/contract';
 import { McpToolError, type McpDeps } from './mcpTools';
 import type { McpWriteDeps } from './mcpWriteTools';
 
@@ -39,6 +41,24 @@ export function writeDomain(deps: McpWriteDeps): CommandContext {
     emitChange: emitChangeVia(deps.notify),
     actor: { source: 'mcp', author: 'agent' },
   };
+}
+
+/**
+ * Commande du contrat exécutée pour un outil MCP composé (import de journée, de tireurs,
+ * d'arbitres…) : même validation, même handler et même journal que l'écran (ADR-0005,
+ * #2134). Synchrone, donc utilisable dans une transaction englobante (tout ou rien).
+ */
+export function runContractCommand<N extends OperationName>(
+  deps: McpWriteDeps,
+  name: N,
+  input: Input<N>
+): Output<N> {
+  try {
+    return invokeSync(writeDomain(deps), name, input);
+  } catch (e) {
+    const err = toApiError(e);
+    throw new McpToolError(`${err.message} (${err.code})`);
+  }
 }
 
 const asToolError = (e: unknown): unknown =>
