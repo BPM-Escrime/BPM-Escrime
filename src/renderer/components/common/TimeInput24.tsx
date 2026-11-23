@@ -14,6 +14,8 @@ interface TimeInput24Props {
   disabled?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  /** Style des deux listes (écrans sans classes CSS) */
+  selectStyle?: React.CSSProperties;
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -37,6 +39,7 @@ export const TimeInput24: React.FC<TimeInput24Props> = ({
   disabled,
   className = 'form-input form-select',
   style,
+  selectStyle,
 }) => {
   const { t } = useTranslation();
   const [hh, mm] = splitTime(value);
@@ -54,6 +57,7 @@ export const TimeInput24: React.FC<TimeInput24Props> = ({
         value={hh}
         disabled={disabled}
         aria-label={t('time.hours')}
+        style={selectStyle}
         onChange={e => update(e.target.value, e.target.value ? mm : '')}
       >
         <option value="">--</option>
@@ -69,6 +73,7 @@ export const TimeInput24: React.FC<TimeInput24Props> = ({
         value={mm}
         disabled={disabled || !hh}
         aria-label={t('time.minutes')}
+        style={selectStyle}
         onChange={e => update(hh, e.target.value)}
       >
         <option value="">--</option>

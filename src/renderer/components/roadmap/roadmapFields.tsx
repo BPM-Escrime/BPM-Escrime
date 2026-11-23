@@ -8,6 +8,7 @@
 import React, { createContext, useCallback, useContext, useRef } from 'react';
 import { ROADMAP_VARIABLES, type RoadmapVariable } from '@shared/domain/roadmap/roadmap';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TimeInput24 } from '../common/TimeInput24';
 
 type FieldEl = HTMLInputElement | HTMLTextAreaElement;
 
@@ -79,27 +80,30 @@ export const TextField: React.FC<TextFieldProps> = ({
   const focus = useFieldFocus();
   const onFocus = (e: React.FocusEvent<FieldEl>) =>
     focus?.register({ el: e.currentTarget, set: onChange });
-  const control = multiline ? (
-    <textarea
-      className="roadmap-input"
-      value={value}
-      rows={autoRows(value, rows)}
-      placeholder={placeholder}
-      aria-label={label ? undefined : ariaLabel}
-      onFocus={onFocus}
-      onChange={e => onChange(e.target.value)}
-    />
-  ) : (
-    <input
-      className="roadmap-input"
-      type={type}
-      value={value}
-      placeholder={placeholder}
-      aria-label={label ? undefined : ariaLabel}
-      onFocus={type === 'text' || type === 'email' ? onFocus : undefined}
-      onChange={e => onChange(e.target.value)}
-    />
-  );
+  const control =
+    type === 'time' ? (
+      <TimeInput24 className="roadmap-input" value={value} onChange={onChange} />
+    ) : multiline ? (
+      <textarea
+        className="roadmap-input"
+        value={value}
+        rows={autoRows(value, rows)}
+        placeholder={placeholder}
+        aria-label={label ? undefined : ariaLabel}
+        onFocus={onFocus}
+        onChange={e => onChange(e.target.value)}
+      />
+    ) : (
+      <input
+        className="roadmap-input"
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        aria-label={label ? undefined : ariaLabel}
+        onFocus={type === 'text' || type === 'email' ? onFocus : undefined}
+        onChange={e => onChange(e.target.value)}
+      />
+    );
   if (!label) return control;
   return (
     <label className={`roadmap-field ${className ?? ''}`}>
