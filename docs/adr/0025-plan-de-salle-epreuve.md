@@ -39,6 +39,8 @@ commande y serait écrasée par la sauvegarde suivante.
 - Un plan n'est pas partagé entre épreuves : une journée à plusieurs épreuves redessine le plan
   sur chacune (copie possible plus tard).
 - `competitions.venue_id` (migration 47, ADR-0023) reste indépendant du plan.
+- Ajout compatible sans changer de version : un champ optionnel du plan (ex. `arenaNames`, noms
+  des arènes par salle) reste en version 1 ; un plan ancien sans ce champ se lit tel quel.
 
 ## Alternatives écartées
 

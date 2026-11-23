@@ -22,6 +22,12 @@ vi.mock('../hooks/useTranslation', () => ({
 vi.mock('../hooks/useFocusTrap', () => ({ useFocusTrap: () => ({ current: null }) }));
 import { ArenaPlannerModal } from './ArenaPlannerModal';
 
+/** Élément de base ajouté par le menu « Équipement » */
+const addKind = (kind: string) =>
+  fireEvent.change(screen.getByLabelText('arenaPlanner.add_equipment'), {
+    target: { value: `kind:${kind}` },
+  });
+
 describe('ArenaPlannerModal', () => {
   it('affiche que la salle tient pour une arène dans 20 × 20 m', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
@@ -44,7 +50,7 @@ describe('ArenaPlannerModal', () => {
 
   it('ajoute un élément et le déplace au clavier (flèches), retenu dans la salle', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
-    fireEvent.click(screen.getByText('arenaPlanner.add_table'));
+    addKind('table');
     const item = screen.getByRole('button', { name: /arenaPlanner\.kind_table 1/ });
     const before = item.querySelector('rect')!.getAttribute('x');
     fireEvent.keyDown(item, { key: 'ArrowRight', shiftKey: true });
@@ -54,7 +60,7 @@ describe('ArenaPlannerModal', () => {
 
   it("supprime l'élément sélectionné avec la touche Suppr", () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
-    fireEvent.click(screen.getByText('arenaPlanner.add_outlet'));
+    addKind('outlet');
     const item = screen.getByRole('button', { name: /arenaPlanner\.kind_outlet 1/ });
     fireEvent.keyDown(item, { key: 'Delete' });
     expect(screen.queryByRole('button', { name: /arenaPlanner\.kind_outlet 1/ })).toBeNull();
@@ -62,18 +68,36 @@ describe('ArenaPlannerModal', () => {
 
   it('ajoute une issue de secours collée au mur, sans alerte', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
-    fireEvent.click(screen.getByText('arenaPlanner.add_exit'));
+    addKind('exit');
     expect(screen.getByRole('button', { name: /arenaPlanner\.kind_exit 1/ })).toBeInTheDocument();
     expect(screen.queryByText('arenaPlanner.exit_wall')).toBeNull();
   });
 
   it('ajoute une zone bloquée et permet de changer sa largeur', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
-    fireEvent.click(screen.getByText('arenaPlanner.add_blocked'));
+    fireEvent.change(screen.getByLabelText('arenaPlanner.add_zone'), {
+      target: { value: 'kind:blocked' },
+    });
     const width = screen.getByLabelText('arenaPlanner.size_w') as HTMLInputElement;
     fireEvent.change(width, { target: { value: '3' } });
     const item = screen.getByRole('button', { name: /arenaPlanner\.kind_blocked 1/ });
     expect(item.querySelector('rect')!.getAttribute('width')).toBe('3');
+  });
+
+  it('ajoute une zone public nommée depuis le menu « Zone »', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.change(screen.getByLabelText('arenaPlanner.add_zone'), {
+      target: { value: 'public' },
+    });
+    expect(screen.getByRole('button', { name: /arenaPlanner\.zone_public/ })).toBeInTheDocument();
+  });
+
+  it('nomme une arène et affiche son nom sur le plan', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.change(screen.getByLabelText('arenaPlanner.arena_name n=1'), {
+      target: { value: 'Piste Rouge' },
+    });
+    expect(document.querySelector('.arena-planner-arena-name')).toHaveTextContent('Piste Rouge');
   });
 
   it("Optimiser affiche le maximum trouvé et règle le nombre d'arènes", () => {
@@ -133,7 +157,7 @@ describe('ArenaPlannerModal', () => {
 
   it('modifie le texte affiché sur une table, sur plusieurs lignes', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
-    fireEvent.click(screen.getByText('arenaPlanner.add_table'));
+    addKind('table');
     fireEvent.change(screen.getByLabelText('arenaPlanner.item_text'), {
       target: { value: 'Table DT\nRésultats' },
     });
@@ -144,7 +168,7 @@ describe('ArenaPlannerModal', () => {
 
   it('ajoute une deuxième salle indépendante, puis la supprime', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
-    fireEvent.click(screen.getByText('arenaPlanner.add_table'));
+    addKind('table');
     fireEvent.click(screen.getByText('arenaPlanner.add_room'));
     expect(screen.getByRole('button', { name: 'arenaPlanner.room_default 2' })).toHaveAttribute(
       'aria-pressed',

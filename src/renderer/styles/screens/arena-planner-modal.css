@@ -153,6 +153,19 @@
   fill: #111827;
 }
 
+.arena-planner-arena-name {
+  fill: var(--color-text);
+  font-size: 0.8px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.arena-planner-arena-names {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .arena-planner-role-label {
   fill: #ffffff;
   font-size: 0.45px;
