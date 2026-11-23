@@ -1,8 +1,8 @@
 /**
- * BellePoule Modern - Canal IPC `ftp:publish` : dépôt du fichier de résultats sur un serveur distant (#1331)
+ * BPM - Escrime - Canal IPC `ftp:publish` : dépôt du fichier de résultats sur un serveur distant (#1331)
  * Équivalent de l'ancien `FileUploader` (libcurl) : le fichier est déposé dans le dossier indiqué par l'URL.
  * - ftp:// et ftps:// : protocole FTP (basic-ftp)
- * - http:// et https:// : HTTP PUT vers `<dossier>/<fichier>`, comme l'ancien BellePoule avec escrime-info.com
+ * - http:// et https:// : HTTP PUT vers `<dossier>/<fichier>`, comme l'ancien BPM - Escrime avec escrime-info.com
  * Le renderer ne fait aucun appel réseau : l'envoi part du main.
  * Licensed under GPL-3.0
  */

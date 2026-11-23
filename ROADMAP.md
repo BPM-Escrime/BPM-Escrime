@@ -1,4 +1,4 @@
-# Roadmap BellePoule Modern
+# Roadmap BPM - Escrime
 
 > Mise à jour : 2026-10 — seuls les chantiers restants sont listés.
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Classement saisonnier Quest (multi-compétitions)
+ * BPM - Escrime - Classement saisonnier Quest (multi-compétitions)
  * Licensed under GPL-3.0
  */
 

@@ -1,5 +1,5 @@
 /**
- * Plugin Claude Code « bellepoule » (#1880, lot 4) : manifestes valides, serveur MCP local
+ * Plugin Claude Code « bpm-escrime » (#1880, lot 4) : manifestes valides, serveur MCP local
  * à jeton, et chaque outil cité par la skill ou les commandes existe vraiment.
  */
 import { describe, it, expect } from 'vitest';
@@ -8,15 +8,18 @@ import * as path from 'path';
 import { READ_TOOLS, WRITE_TOOLS } from './mcpServer';
 
 const ROOT = path.join(__dirname, '..', '..', '..');
-const PLUGIN = path.join(ROOT, 'plugins', 'bellepoule');
+const PLUGIN = path.join(ROOT, 'plugins', 'bpm-escrime');
 const readJson = (p: string) => JSON.parse(fs.readFileSync(p, 'utf-8'));
 
-describe('plugin bellepoule', () => {
+describe('plugin bpm-escrime', () => {
   it('manifestes : plugin, marketplace, serveur MCP local à jeton', () => {
-    expect(readJson(path.join(PLUGIN, '.claude-plugin', 'plugin.json')).name).toBe('bellepoule');
+    expect(readJson(path.join(PLUGIN, '.claude-plugin', 'plugin.json')).name).toBe('bpm-escrime');
     const market = readJson(path.join(ROOT, '.claude-plugin', 'marketplace.json'));
-    expect(market.plugins[0]).toMatchObject({ name: 'bellepoule', source: './plugins/bellepoule' });
-    const server = readJson(path.join(PLUGIN, '.mcp.json')).mcpServers.bellepoule;
+    expect(market.plugins[0]).toMatchObject({
+      name: 'bpm-escrime',
+      source: './plugins/bpm-escrime',
+    });
+    const server = readJson(path.join(PLUGIN, '.mcp.json')).mcpServers['bpm-escrime'];
     expect(server.type).toBe('http');
     expect(server.url).toMatch(/^http:\/\/127\.0\.0\.1:/);
     expect(server.url).toBe('http://127.0.0.1:${user_config.mcp_port}/mcp');
@@ -29,12 +32,12 @@ describe('plugin bellepoule', () => {
       type: 'string',
       sensitive: true,
       required: false,
-      default: '${BELLEPOULE_MCP_TOKEN:-}',
+      default: '${BPM_ESCRIME_MCP_TOKEN:-}',
     });
     expect(userConfig.mcp_port).toMatchObject({
       sensitive: false,
       required: false,
-      default: '${BELLEPOULE_MCP_PORT:-8067}',
+      default: '${BPM_ESCRIME_MCP_PORT:-8067}',
     });
   });
 
@@ -48,7 +51,7 @@ describe('plugin bellepoule', () => {
   it('outils cités dans la skill et les commandes : tous publiés', () => {
     const names = new Set([...READ_TOOLS, ...WRITE_TOOLS].map(t => t.name));
     const files = [
-      path.join(PLUGIN, 'skills', 'bellepoule', 'SKILL.md'),
+      path.join(PLUGIN, 'skills', 'bpm-escrime', 'SKILL.md'),
       ...fs.readdirSync(path.join(PLUGIN, 'commands')).map(f => path.join(PLUGIN, 'commands', f)),
     ];
     const cited = new Set<string>();

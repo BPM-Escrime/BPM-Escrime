@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Implémentations de PlatformServices (#1981 lot 4, ADR-0021)
+ * BPM - Escrime - Implémentations de PlatformServices (#1981 lot 4, ADR-0021)
  * ElectronPlatform : préload existant (dialogues, impression et PDF par le main), comportement
  * inchangé, aucun nouveau canal IPC. BrowserPlatform : lien Blob, <input type="file">, iframe et
  * window.print, window.open ; pas de PDF.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Undo/Redo History Hook
+ * BPM - Escrime - Undo/Redo History Hook
  * Gestion de l'historique des actions pour annulation/refaire
  * Licensed under GPL-3.0
  */

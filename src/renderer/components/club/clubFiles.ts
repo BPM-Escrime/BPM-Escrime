@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : fichiers de partage (JSON) et images.
+ * BPM - Escrime - Mode Club (#1872) : fichiers de partage (JSON) et images.
  * Licensed under GPL-3.0
  */
 

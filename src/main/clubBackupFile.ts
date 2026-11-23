@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : fichier de sauvegarde d'un club (.bpclub = ZIP).
+ * BPM - Escrime - Mode Club : fichier de sauvegarde d'un club (.bpclub = ZIP).
  * manifest.json (format, version, club) + tables/<table>.json (lignes brutes).
  * Licensed under GPL-3.0
  */
@@ -31,11 +31,11 @@ export async function decodeClubBackup(buffer: Buffer): Promise<unknown> {
   try {
     zip = await JSZip.loadAsync(buffer);
   } catch {
-    throw new Error("Ce fichier n'est pas une sauvegarde de club BellePoule");
+    throw new Error("Ce fichier n'est pas une sauvegarde de club BPM - Escrime");
   }
   const names = new Set(checkZipEntries(zip));
   const manifest = names.has('manifest.json') ? zip.file('manifest.json') : null;
-  if (!manifest) throw new Error("Ce fichier n'est pas une sauvegarde de club BellePoule");
+  if (!manifest) throw new Error("Ce fichier n'est pas une sauvegarde de club BPM - Escrime");
   const meta = JSON.parse(await manifest.async('string')) as Record<string, unknown>;
   const tables: Partial<Record<ClubBackupTable, ClubBackupRow[]>> = {};
   for (const table of CLUB_BACKUP_TABLES) {

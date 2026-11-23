@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglage de l'espace « Vue DT » de la saisie distante (#1981 lot 3, ADR-0020)
+ * BPM - Escrime - Réglage de l'espace « Vue DT » de la saisie distante (#1981 lot 3, ADR-0020)
  * Consultation de l'épreuve dans un navigateur du réseau de la salle, en lecture seule.
  * Passe par le contrat : getDtViewStatus, configureDtView (pas de canal IPC dédié).
  * Licensed under GPL-3.0

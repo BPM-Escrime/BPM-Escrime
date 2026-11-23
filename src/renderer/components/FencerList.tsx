@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fencer List Component
+ * BPM - Escrime - Fencer List Component
  * Licensed under GPL-3.0
  */
 

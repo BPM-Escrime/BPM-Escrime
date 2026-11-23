@@ -1,12 +1,12 @@
 # File Format Specifications
 
-This document provides detailed specifications for all file formats supported by BellePoule Modern, including parsing rules, error handling, and best practices.
+This document provides detailed specifications for all file formats supported by BPM - Escrime, including parsing rules, error handling, and best practices.
 
 ## 📄 Table of Contents
 
 1. [FFF File Format](#fff-file-format-ffe-federation-franaise-descrime)
 2. [CSV Import/Export Format](#csv-importexport-format)
-3. [XML BellePoule Format](#xml-bellepoule-format)
+3. [XML BPM - Escrime Format](#xml-bellepoule-format)
 4. [Common Errors and Solutions](#common-errors-and-solutions)
 
 ## 🇫🇷 FFF File Format (FFE - Fédération Française d'Escrime)
@@ -83,7 +83,7 @@ MARTIN,MARIE,22/07/1998,F,FRA,,87654321,PROVENCE,MARSEILLE CLUB,8
 
 ### Advanced Mixed Formats
 
-BellePoule Modern supports complex mixed formats where commas appear in name fields:
+BPM - Escrime supports complex mixed formats where commas appear in name fields:
 
 #### Format 1: Comma-separated personal info, semicolon-separated structured info
 ```
@@ -111,7 +111,7 @@ Format: NOM,PRENOM,DATE,SEXE,NATION	TAB	LIGUE	TAB	CLUB	TAB	LICENCE
 
 ### Results Export for the Federation (#1949)
 
-Shape of the files accepted by the federation extranet (Engarde, BellePoule 3). When the competition was created from the federation files (#1938), the original values stored in `settings.federal` are written back unchanged.
+Shape of the files accepted by the federation extranet (Engarde, BPM - Escrime 3). When the competition was created from the federation files (#1938), the original values stored in `settings.federal` are written back unchanged.
 
 **FFF** (Windows-1252, `exportResultsToFFF` / `exportTeamResultsToFFF`):
 
@@ -194,9 +194,9 @@ LastName,FirstName,Gender,BirthDate,Nationality,League,Club,License,Ranking,Emai
 DUPONT,Jean,M,15/03/1995,FRA,Île-de-France,Paris Escrime,12345678,12,jean.dupont@email.com,0612345678
 ```
 
-## 🏷️ XML BellePoule Format
+## 🏷️ XML BPM - Escrime Format
 
-XML format compatible with the original BellePoule software and other fencing tournament systems.
+XML format compatible with the original software and other fencing tournament systems.
 
 ### Document Structure
 
@@ -394,7 +394,7 @@ XML format compatible with the original BellePoule software and other fencing to
 LE-FLOCH,JEAN-BAPTISTE,15/03/1995,M,FRA,,12345678,ÎLE-DE-FRANCE,SAINT-CLOUD,12
 ```
 
-**Solution**: BellePoule Modern automatically detects mixed formats. If issues persist:
+**Solution**: BPM - Escrime automatically detects mixed formats. If issues persist:
 1. Use proper quoting: `"LE-FLOCH","JEAN-BAPTISTE"...`
 2. Or convert to standard format:
 ```

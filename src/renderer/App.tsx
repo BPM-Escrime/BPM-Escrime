@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Main App Component
+ * BPM - Escrime - Main App Component
  * Licensed under GPL-3.0
  */
 

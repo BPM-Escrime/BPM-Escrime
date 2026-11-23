@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : état des boutons de contrôle et du chrono (extrait de referee.html #1401)
+ * BPM - Escrime - Arbitre : état des boutons de contrôle et du chrono (extrait de referee.html #1401)
  * Fonctions pures : l'état est décrit, RefereeApp applique au DOM. Servi en /js/refereeControls.js (CSP 'self').
  * Licensed under GPL-3.0
  */

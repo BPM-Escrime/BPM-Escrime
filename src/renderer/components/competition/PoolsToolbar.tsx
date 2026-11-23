@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Barre d'outils de la vue Poules (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Barre d'outils de la vue Poules (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import React from 'react';

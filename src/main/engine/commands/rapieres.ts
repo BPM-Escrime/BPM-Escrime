@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Vagues du tournoi des rapières (#1118, #1980, docs/adr/0017)
+ * BPM - Escrime - Vagues du tournoi des rapières (#1118, #1980, docs/adr/0017)
  * launchRapieresWave : vague lancée par le DT (0 = aucune) ; endRapieresWaves : vagues
  * arrêtées avant leur terme (passage au classement), ou reprises. État des vagues dans
  * l'état de session (clé rapieres), journal RapieresWaveLaunched / RapieresWavesEnded.

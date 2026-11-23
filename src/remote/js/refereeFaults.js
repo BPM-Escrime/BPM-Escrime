@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : motifs de faute et constantes de cartons, extraits de referee.html (#1401)
+ * BPM - Escrime - Arbitre : motifs de faute et constantes de cartons, extraits de referee.html (#1401)
  * Script classique (constantes globales pour referee.html). Servi en /js/refereeFaults.js (CSP 'self').
  * Licensed under GPL-3.0
  */

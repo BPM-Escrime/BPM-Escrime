@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modale standard (#1157)
+ * BPM - Escrime - Modale standard (#1157)
  * Overlay + boîte de dialogue + en-tête (titre, bouton fermer) + corps + pied optionnel.
  * Focus piégé, Échap et clic sur l'overlay ferment. Styles : classes .modal* (design.css).
  * Licensed under GPL-3.0

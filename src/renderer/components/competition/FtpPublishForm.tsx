@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Formulaire du connecteur FTP (#1331)
+ * BPM - Escrime - Formulaire du connecteur FTP (#1331)
  * Mémorise l'URL et l'identifiant (jamais le mot de passe).
  * Licensed under GPL-3.0
  */
@@ -10,7 +10,7 @@ import type { FtpPublishConfig } from '../../hooks/useExport';
 import { Button } from '../common/Button';
 
 const STORAGE_KEY = 'bellepoule-ftp-config';
-// Adresse proposée par l'ancien BellePoule : elle part vers GREG (voir isGregUrl), sans identifiant
+// Adresse proposée par l'ancien BPM - Escrime : elle part vers GREG (voir isGregUrl), sans identifiant
 const DEFAULT_URL = 'escrime-info.com';
 // Exemple d'adresse, non traduisible
 const URL_EXAMPLE = 'ftp://serveur/dossier';

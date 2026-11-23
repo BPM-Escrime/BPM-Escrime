@@ -389,7 +389,7 @@ jobs:
           make_latest: true
           name: ${{ needs.version.outputs.title }}
           body: |
-            ## BellePoule Modern ${{ needs.version.outputs.version }}
+            ## BPM - Escrime ${{ needs.version.outputs.version }}
 
             **Version** : `${{ needs.version.outputs.version }}` • **Build** : `#${{ needs.version.outputs.build }}`
 
@@ -399,9 +399,9 @@ jobs:
 
             | Plateforme | Architecture | Fichier |
             |------------|--------------|---------|
-            | **Windows** | x64 | `BellePoule-Modern-${{ needs.version.outputs.version }}-win-x64-portable.exe` |
-            | **macOS** | x64 | `BellePoule-Modern-${{ needs.version.outputs.version }}-mac-x64.dmg` |
-            | **macOS** | ARM64 | `BellePoule-Modern-${{ needs.version.outputs.version }}-mac-arm64.dmg` (Apple Silicon) |
+            | **Windows** | x64 | `BPM-Escrime-${{ needs.version.outputs.version }}-win-x64-portable.exe` |
+            | **macOS** | x64 | `BPM-Escrime-${{ needs.version.outputs.version }}-mac-x64.dmg` |
+            | **macOS** | ARM64 | `BPM-Escrime-${{ needs.version.outputs.version }}-mac-arm64.dmg` (Apple Silicon) |
             | **Linux** | x64 | `…-linux-x86_64.AppImage`, `.deb`, `.rpm` |
             | **Linux** | ARM64 | `…-linux-arm64.AppImage`, `.deb` (Raspberry Pi…) |
 

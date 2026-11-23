@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Replay d'un match depuis le journal d'audit (#1074)
+ * BPM - Escrime - Replay d'un match depuis le journal d'audit (#1074)
  * Rejoue les événements un par un : score et cartons à chaque instant.
  * Licensed under GPL-3.0
  */

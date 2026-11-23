@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Import de tireurs et de classements (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Import de tireurs et de classements (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
@@ -99,8 +99,8 @@ export function useCompetitionImport({
   const handleOpenImportDialog = async (type: 'xml' | 'fff' | 'ranking' = 'fff') => {
     const configs = {
       xml: {
-        title: 'Importer un fichier XML BellePoule',
-        filters: [{ name: 'XML BellePoule', extensions: ['xml', 'cotcot'] }],
+        title: 'Importer un fichier XML BPM - Escrime',
+        filters: [{ name: 'XML BPM - Escrime', extensions: ['xml', 'cotcot'] }],
       },
       fff: {
         title: 'Importer une liste FFE (.fff, .csv, .txt, .xlsx)',

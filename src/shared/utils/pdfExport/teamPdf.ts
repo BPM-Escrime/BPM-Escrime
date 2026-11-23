@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - PDF Export Service
+ * BPM - Escrime - PDF Export Service
  * Export PDF des compétitions par équipes : poules, tableau, classement (#1087)
  * Licensed under GPL-3.0
  */
@@ -173,7 +173,7 @@ function wrapDocument(title: string, subtitle: string, badge: string, body: stri
   <div class="gold-bar"></div>
 ${body}
   <div class="doc-footer">
-    <span>BellePoule Modern</span>
+    <span>BPM - Escrime</span>
     <span>${now}</span>
   </div>
 </body>

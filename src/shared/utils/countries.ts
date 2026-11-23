@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Nationalités (code fédéral/CIO -> code ISO 3166-1 alpha-2)
+ * BPM - Escrime - Nationalités (code fédéral/CIO -> code ISO 3166-1 alpha-2)
  * Licensed under GPL-3.0
  *
  * Le code à 3 lettres (FRA, GER…) est celui stocké dans Fencer.nationality ;

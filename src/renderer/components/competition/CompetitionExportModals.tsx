@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modales de planification et d'export de la compétition (extrait de
+ * BPM - Escrime - Modales de planification et d'export de la compétition (extrait de
  * CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

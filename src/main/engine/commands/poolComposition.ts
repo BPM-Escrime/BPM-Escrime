@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Composition des poules en cours d'épreuve (#1980, docs/adr/0017)
+ * BPM - Escrime - Composition des poules en cours d'épreuve (#1980, docs/adr/0017)
  * addPoolFencer : tireur ajouté à une poule lancée, un match contre chaque tireur présent.
  * Règle : shared/domain/pools/poolComposition (addFencerToPool), partagée avec l'écran.
  * Écritures dans la transaction de runCommand : tables, état de session, PoolFencerAdded.

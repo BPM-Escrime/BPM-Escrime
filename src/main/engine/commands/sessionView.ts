@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Couche domaine : lecture des poules, classements et tableau (#1880)
+ * BPM - Escrime - Couche domaine : lecture des poules, classements et tableau (#1880)
  * Source : état de session (session_state, écrit par l'écran et par le domaine),
  * repli sur les tables de poules si l'état de session n'a pas de poules.
  * Licensed under GPL-3.0

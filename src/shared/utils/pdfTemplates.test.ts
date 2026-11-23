@@ -1,6 +1,6 @@
 /**
  * Tests unitaires - Modèles PDF simples (intégrité des données)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

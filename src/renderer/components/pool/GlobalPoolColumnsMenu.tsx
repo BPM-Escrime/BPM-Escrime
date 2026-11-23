@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Global Pool Columns Menu
+ * BPM - Escrime - Global Pool Columns Menu
  * Bouton global pour choisir les colonnes affichées dans toutes les poules.
  * Applique le choix à l'ensemble des poules et efface les réglages propres à chaque poule.
  * Licensed under GPL-3.0

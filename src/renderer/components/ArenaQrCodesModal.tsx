@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - QR Codes des pistes (saisie distante)
+ * BPM - Escrime - QR Codes des pistes (saisie distante)
  * Export PDF ou impression des QR Codes Arbitres et/ou Matchs, N par feuille (#1039).
  * Licensed under GPL-3.0
  */

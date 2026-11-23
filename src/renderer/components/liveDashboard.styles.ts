@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Styles statiques de LiveDashboard
+ * BPM - Escrime - Styles statiques de LiveDashboard
  * Constantes au niveau module (références stables) pour les styles répétés.
  * Licensed under GPL-3.0
  */

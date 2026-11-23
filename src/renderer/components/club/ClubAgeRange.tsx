@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : choix des catégories d'âge (M9 … V4).
+ * BPM - Escrime - Mode Club (#1872) : choix des catégories d'âge (M9 … V4).
  * Plage de début / fin (séance, pointage, statistiques), catégorie seule (filtre de liste),
  * ou cartes activables (public visé par un exercice ; aucune case = commun à tous).
  * Licensed under GPL-3.0

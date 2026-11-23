@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Envoi de webhooks depuis le processus principal (#1269)
+ * BPM - Escrime - Envoi de webhooks depuis le processus principal (#1269)
  * Le renderer ne peut pas appeler un hôte externe (CSP connect-src) : test et notifications
  * passent par ici. Corps compatible Discord (`content`) et Slack (`text`), champs d'origine conservés.
  * Licensed under GPL-3.0
@@ -21,8 +21,8 @@ export function buildWebhookBody(payload: Record<string, unknown>): Record<strin
   const text = typeof payload.text === 'string' && payload.text ? payload.text : undefined;
   const content =
     typeof payload.content === 'string' && payload.content ? payload.content : undefined;
-  const message = content ?? text ?? 'BellePoule Modern';
-  return { username: 'BellePoule', ...payload, content: message, text: message };
+  const message = content ?? text ?? 'BPM - Escrime';
+  return { username: 'BPM - Escrime', ...payload, content: message, text: message };
 }
 
 export async function postWebhook(

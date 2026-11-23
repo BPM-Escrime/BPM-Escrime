@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Theme Hook
+ * BPM - Escrime - Theme Hook
  * Licensed under GPL-3.0
  */
 

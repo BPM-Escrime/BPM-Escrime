@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Identité d'une personne pour le dédoublonnage (#1880, RGPD #1882)
+ * BPM - Escrime - Identité d'une personne pour le dédoublonnage (#1880, RGPD #1882)
  * Source unique : imports de l'écran (arbitres), outils MCP (tireurs, arbitres), RGPD.
  * Licensed under GPL-3.0
  */

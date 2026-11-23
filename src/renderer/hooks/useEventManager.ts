@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Event Manager Hook
+ * BPM - Escrime - Event Manager Hook
  * Proper cleanup of event listeners and timers
  * Licensed under GPL-3.0
  */

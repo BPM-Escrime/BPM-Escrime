@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : membres pré-enregistrés, séances libres,
+ * BPM - Escrime - Mode Club (#1872) : membres pré-enregistrés, séances libres,
  * combats sur pistes et statistiques par période.
  * Licensed under GPL-3.0
  */

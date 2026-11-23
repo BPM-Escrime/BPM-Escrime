@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Formatage du chrono au centième de seconde (#1416)
+ * BPM - Escrime - Formatage du chrono au centième de seconde (#1416)
  * Partagé arbitre / écran d'arène / vue publique. Servi en /js/timerFormat.js (CSP 'self').
  * Licensed under GPL-3.0
  */

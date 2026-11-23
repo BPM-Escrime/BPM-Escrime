@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Requêtes HTTP de l'updater via `net` (pile réseau Chromium)
+ * BPM - Escrime - Requêtes HTTP de l'updater via `net` (pile réseau Chromium)
  * Licensed under GPL-3.0
  *
  * Contrairement au module Node `https`, `net.request` suit le proxy de la session
@@ -10,7 +10,7 @@ import fs from 'fs';
 import { net } from 'electron';
 import { toTrustedDownloadUrl } from './updateIntegrity';
 
-const USER_AGENT = 'BellePoule-Modern';
+const USER_AGENT = 'BPM-Escrime';
 
 function headerValue(v: string | string[] | undefined): string {
   return Array.isArray(v) ? (v[0] ?? '') : (v ?? '');

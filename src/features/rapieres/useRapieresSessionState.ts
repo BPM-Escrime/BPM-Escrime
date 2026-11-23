@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - État de session du tournoi des rapières (#1241)
+ * BPM - Escrime - État de session du tournoi des rapières (#1241)
  * Composition des équipes, vagues (state session) et fenêtre d'équipe, sortis de CompetitionView.
  * Licensed under GPL-3.0
  */

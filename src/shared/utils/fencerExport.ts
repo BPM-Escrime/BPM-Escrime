@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Export des tireurs aux formats TXT et FFF
+ * BPM - Escrime - Export des tireurs aux formats TXT et FFF
  * Licensed under GPL-3.0
  */
 
@@ -37,12 +37,12 @@ function competitionHeaderLines(
   const organizer = fffField(competition.organizer) || fffField(competition.title);
   const shortName = fffField(competition.shortTitle) || fffField(competition.title);
   return [
-    // Résultats (#1949) : forme des fichiers acceptés par l'extranet (Engarde, BellePoule 3)
+    // Résultats (#1949) : forme des fichiers acceptés par l'extranet (Engarde, BPM - Escrime 3)
     results ? `FFF;WIN;competition;${organizer};${results}` : `FFF;WIN;COMPETITION;${organizer}`,
     [
       formatDateFFFShort(competition.date),
       weaponToFFF(competition.weapon),
-      // Sexe en majuscule, comme Engarde et BellePoule 3 (#1949)
+      // Sexe en majuscule, comme Engarde et BPM - Escrime 3 (#1949)
       genderToFFF(competition.gender),
       categoryToFFF(competition.category),
       fffField(competition.title),
@@ -268,7 +268,7 @@ export function exportResultsToFFF(
     .sort((a, b) => (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER));
 
   for (const { rank, fencer, eliminatedAt } of sorted) {
-    // Partie 2 (FIE) : non fournie par BellePoule, vide
+    // Partie 2 (FIE) : non fournie par BPM - Escrime, vide
     // Partie 4 : rang final et statut (T = tableau, P = poules)
     const status = eliminatedAt?.startsWith('Poules') ? 'P' : 'T';
     lines.push(

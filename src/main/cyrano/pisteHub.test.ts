@@ -50,7 +50,7 @@ import { CyranoPisteDriver } from './driver';
 import { buildCyrano, parseCyrano, type CyranoFencer, type CyranoMessage } from './codec';
 import type { ArenaUpdate } from '../../shared/types/remote';
 
-// UUID réels (format BellePoule) ; les 8 premiers caractères suffisent à l'appareil
+// UUID réels (format BPM - Escrime) ; les 8 premiers caractères suffisent à l'appareil
 const ID = {
   ef: '7ca21969-e092-4bdc-a987-eac9844968b7',
   ab: '08f01fd6-ae32-4aac-930b-f23c2dc97543',

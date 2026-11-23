@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Assistant de planning
+ * BPM - Escrime - Assistant de planning
  * Expose le moteur d'optimisation TournamentFlowManager (jusque-là inutilisé côté UI)
  * pour aider l'organisateur à répartir les matchs restants sur les pistes disponibles.
  * Licensed under GPL-3.0

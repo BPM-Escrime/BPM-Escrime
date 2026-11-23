@@ -1,6 +1,6 @@
 /**
  * Tests unitaires - performanceService
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';

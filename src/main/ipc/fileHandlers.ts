@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handlers IPC `file:*` (écriture au chemin choisi, impression, tableur,
+ * BPM - Escrime - Handlers IPC `file:*` (écriture au chemin choisi, impression, tableur,
  * fichiers fédéraux) et `dialog:*` (boîtes de dialogue natives) — extraits de main.ts, #1341.
  * Les fichiers de données (.bpm, .bpf, photos) passent par le contrat en contenu (ADR-0021).
  * Licensed under GPL-3.0

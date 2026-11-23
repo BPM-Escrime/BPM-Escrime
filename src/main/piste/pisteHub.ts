@@ -1,12 +1,12 @@
 /**
- * BellePoule Modern - PisteHub : raccordement appareils de piste ↔ arènes (#1720, #1829)
+ * BPM - Escrime - PisteHub : raccordement appareils de piste ↔ arènes (#1720, #1829)
  * Indépendant du protocole : consomme les `PisteInput` d'un `PisteDriver` (Cyrano, OPP2 — #1960)
  * et lui envoie des `PisteCommand`. Chaque entrée d'appareil passe d'abord l'`ArenaInputGate`
  * (n° de séquence par source) avant d'atteindre l'arène.
  * Mode appareil maître : score, cartons et chrono viennent de l'appareil ; les tablettes
  * et écrans d'arène suivent en miroir. Les entrées de l'appareil passent par le même
  * chemin que la tablette (`arena_control`, pseudo-socket `cyrano:<piste>`).
- * Sens BellePoule → appareil : affichage au changement de match, après une correction de
+ * Sens BPM - Escrime → appareil : affichage au changement de match, après une correction de
  * score faite sur la tablette, et quand l'appareil au repos n'affiche pas le bon match.
  * Sabre laser et armes personnalisées : affichage seul (décision n°5) — noms et score
  * envoyés, commandes de l'appareil ignorées.

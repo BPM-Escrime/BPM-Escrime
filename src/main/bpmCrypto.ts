@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Archives .bpm chiffrées par mot de passe (RGPD, #1882)
+ * BPM - Escrime - Archives .bpm chiffrées par mot de passe (RGPD, #1882)
  * Format : en-tête `BPMENC1\n`, longueur (uint32 BE) + en-tête JSON (kdf, sel, iv),
  * puis base SQLite chiffrée AES-256-GCM (étiquette de 16 octets en fin de fichier).
  * Clé dérivée du mot de passe par scrypt (N = 2^15, r = 8, p = 1).

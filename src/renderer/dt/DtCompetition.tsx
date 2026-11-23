@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Vue DT d'une épreuve, en lecture seule (#1981 lot 3, docs/adr/0020)
+ * BPM - Escrime - Vue DT d'une épreuve, en lecture seule (#1981 lot 3, docs/adr/0020)
  * getCompetition + getCompetitionState ; relecture sur signal (onCompetitionEvents, ADR-0010).
  * Licensed under GPL-3.0
  */

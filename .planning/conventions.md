@@ -1,4 +1,4 @@
-# Conventions - BellePoule Modern
+# Conventions - BPM - Escrime
 
 ## Code Style
 

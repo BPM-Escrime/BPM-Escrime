@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : sauvegardes locales de la configuration d'un club (#1872).
+ * BPM - Escrime - Mode Club : sauvegardes locales de la configuration d'un club (#1872).
  * Deux sauvegardes par club, dans `<userData>/club-backups/<clubId>/` (format .bpclub).
  * Une nouvelle sauvegarde supprime la plus ancienne ; la restauration remplace les données du club.
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Boîte d'impression intégrée : réglages et conversion (#1214, étape 1)
+ * BPM - Escrime - Boîte d'impression intégrée : réglages et conversion (#1214, étape 1)
  * Validation des réglages venant du renderer, plages de pages « 1-3, 5 », options Electron.
  * Licensed under GPL-3.0
  */

@@ -122,9 +122,9 @@ Budget de taille vérifié par `npm run check:bundle-size`.
 
 | OS | Cibles | Nom |
 |---|---|---|
-| Windows | NSIS (installeur), portable | `BellePoule Modern-<ver>-setup.exe`, `-portable.exe` |
-| macOS | DMG + ZIP, x64 et arm64 | `BellePoule Modern-<ver>-<arch>.dmg` |
-| Linux | AppImage, deb, rpm | `BellePoule Modern-<ver>-<arch>.AppImage` |
+| Windows | NSIS (installeur), portable | `BPM - Escrime-<ver>-setup.exe`, `-portable.exe` |
+| macOS | DMG + ZIP, x64 et arm64 | `BPM - Escrime-<ver>-<arch>.dmg` |
+| Linux | AppImage, deb, rpm | `BPM - Escrime-<ver>-<arch>.AppImage` |
 
 `asarUnpack` : `dist/remote/**`, `better-sqlite3-multiple-ciphers`, `tesseract.js`.
 `extraResources` : `resources/`, `version.json`.

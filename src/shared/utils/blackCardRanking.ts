@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Classement final et carton noir (#1418)
+ * BPM - Escrime - Classement final et carton noir (#1418)
  *
  * Un tireur exclu avec carton noir perd son classement (rang « - », NULL à l'export XML) et passe
  * en bas de la liste ; les tireurs classés derrière remontent d'une place. Si des ex aequo se

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tooltip Component
+ * BPM - Escrime - Tooltip Component
  * UX Improvement: Contextual help without clutter
  * Licensed under GPL-3.0
  */

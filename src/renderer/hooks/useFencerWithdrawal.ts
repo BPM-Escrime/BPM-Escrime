@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Retrait et réintégration d'un tireur à l'écran (#1980, docs/adr/0016)
+ * BPM - Escrime - Retrait et réintégration d'un tireur à l'écran (#1980, docs/adr/0016)
  * Appel, poule, tableau : withdrawFencer / reinstateFencer, règle appliquée par le moteur
  * (matchs perdus, instantané, journal). L'écran relit tireurs et session après la réponse ;
  * succès affiché seulement alors. Format que le moteur ne pilote pas : saisie locale.

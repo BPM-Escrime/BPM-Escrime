@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Competition Session Hook
+ * BPM - Escrime - Competition Session Hook
  * Gestion de la sauvegarde et restauration de l'état de session
  * Licensed under GPL-3.0
  */

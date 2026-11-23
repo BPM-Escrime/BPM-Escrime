@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pagination Hook
+ * BPM - Escrime - Pagination Hook
  * Hook générique de pagination côté client.
  * Licensed under GPL-3.0
  */

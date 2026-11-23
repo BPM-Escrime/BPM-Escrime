@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - TableauPendingSection
+ * BPM - Escrime - TableauPendingSection
  * Section repliable d'un round dans la vue "Matchs en attente"
  * Licensed under GPL-3.0
  */

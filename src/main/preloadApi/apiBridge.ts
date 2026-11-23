@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pont du contrat d'API dans le préload (#1981)
+ * BPM - Escrime - Pont du contrat d'API dans le préload (#1981)
  * Transport brut (nom d'opération + entrée) : la validation est faite côté main par le moteur.
  * Licensed under GPL-3.0
  */

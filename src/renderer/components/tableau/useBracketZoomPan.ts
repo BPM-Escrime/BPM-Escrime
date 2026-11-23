@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Zoom et déplacement (pan) de la vue bracket de TableauView (#1241)
+ * BPM - Escrime - Zoom et déplacement (pan) de la vue bracket de TableauView (#1241)
  * Sort l'état de zoom/pan et les gestionnaires de souris / molette de TableauView.
  * Licensed under GPL-3.0
  */

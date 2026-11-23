@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Outils MCP générés depuis le contrat d'API (#1981)
+ * BPM - Escrime - Outils MCP générés depuis le contrat d'API (#1981)
  * Toute opération du contrat marquée `mcp` devient un outil : commande → écriture (proposée
  * seulement si « Autoriser l'écriture » est coché), requête → lecture. Schéma JSON tiré du
  * schéma zod ; mêmes validation et erreurs que l'IPC.

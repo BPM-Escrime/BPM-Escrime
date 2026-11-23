@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - PDF Export Service
+ * BPM - Escrime - PDF Export Service
  * Export PDF complet d'une compétition (appel, poules, classements, tableaux, résultats)
  * Licensed under GPL-3.0
  */

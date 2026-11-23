@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réservation des pistes d'une journée (#1878) : règles pures.
+ * BPM - Escrime - Réservation des pistes d'une journée (#1878) : règles pures.
  * Licensed under GPL-3.0
  */
 import type { StripCandidate, StripRule } from '../types/eventDay';

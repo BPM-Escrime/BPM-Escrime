@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Retrait et réintégration d'un tireur (#1980, docs/adr/0016)
+ * BPM - Escrime - Retrait et réintégration d'un tireur (#1980, docs/adr/0016)
  * Règle unique, appliquée par le moteur (withdrawFencer, reinstateFencer, recordScore avec
  * statut spécial) : effet sur les matchs selon la phase, statut et motif, instantané qui
  * permet l'annulation. Fonctions pures : l'heure est injectée.

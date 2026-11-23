@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern — Confetti Animation
+ * BPM - Escrime — Confetti Animation
  * Triggered on pool completion and tournament winner
  * Licensed under GPL-3.0
  */

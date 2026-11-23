@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : choisir des exercices de la bibliothèque
+ * BPM - Escrime - Mode Club (#1872) : choisir des exercices de la bibliothèque
  * pour le plan de séance (famille, recherche, sélection multiple).
  * Licensed under GPL-3.0
  */

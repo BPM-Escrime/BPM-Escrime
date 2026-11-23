@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests unitaires - AnalyticsService (agrégation via electronAPI mocké)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, vi, afterEach } from 'vitest';

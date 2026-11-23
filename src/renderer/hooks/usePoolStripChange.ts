@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Changement de piste d'une poule (#1037, #1501)
+ * BPM - Escrime - Changement de piste d'une poule (#1037, #1501)
  * Appliqué immédiatement (saisie distante, liens, QR) et persisté en base.
  * Licensed under GPL-3.0
  */

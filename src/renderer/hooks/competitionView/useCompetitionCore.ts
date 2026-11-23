@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - État de base de la compétition : réglages, tireurs, poules, vue des poules
+ * BPM - Escrime - État de base de la compétition : réglages, tireurs, poules, vue des poules
  * Licensed under GPL-3.0
  */
 

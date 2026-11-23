@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Rapport de diagnostic (fichier JSON, sans port réseau) (#1326)
+ * BPM - Escrime - Rapport de diagnostic (fichier JSON, sans port réseau) (#1326)
  * Liste blanche de champs techniques : aucun nom de tireur, mot de passe, jeton ni chemin de données.
  * Licensed under GPL-3.0
  */
@@ -59,8 +59,8 @@ export function buildDiagnosticReport(input: DiagnosticInput): DiagnosticReport 
   };
 }
 
-/** Nom de fichier sûr, horodaté à la seconde : bellepoule-diagnostic-20261030T192800.json */
+/** Nom de fichier sûr, horodaté à la seconde : bpm-escrime-diagnostic-20261030T192800.json */
 export function diagnosticFileName(generatedAt: string): string {
   const stamp = generatedAt.replace(/\.\d{3}Z$/, '').replace(/[-:]/g, '');
-  return `bellepoule-diagnostic-${stamp}.json`;
+  return `bpm-escrime-diagnostic-${stamp}.json`;
 }

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - État du tableau d'élimination : taille, annulation, colonnes, arbitres, connecteurs
+ * BPM - Escrime - État du tableau d'élimination : taille, annulation, colonnes, arbitres, connecteurs
  * Licensed under GPL-3.0
  */
 

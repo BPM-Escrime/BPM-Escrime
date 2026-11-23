@@ -33,7 +33,7 @@ describe('buildDiagnosticReport (#1326)', () => {
       // champs parasites : ne doivent jamais sortir dans le rapport
       password: 'secret',
       token: 'jeton',
-      dataPath: '/home/user/.config/bellepoule',
+      dataPath: '/home/user/.config/bpm-escrime',
       fencerName: 'DUPONT Jean',
     } as DiagnosticInput);
     expect(Object.keys(report).sort()).toEqual([
@@ -43,7 +43,7 @@ describe('buildDiagnosticReport (#1326)', () => {
       'schemaVersion',
       'system',
     ]);
-    expect(JSON.stringify(report)).not.toMatch(/secret|jeton|bellepoule|DUPONT/);
+    expect(JSON.stringify(report)).not.toMatch(/secret|jeton|bpm-escrime|DUPONT/);
   });
 
   it('sérialise la date en ISO et conserve les versions', () => {
@@ -65,7 +65,7 @@ describe('buildDiagnosticReport (#1326)', () => {
 describe('diagnosticFileName (#1326)', () => {
   it('produit un nom de fichier horodaté sans caractères interdits', () => {
     expect(diagnosticFileName('2026-10-30T19:28:00.000Z')).toBe(
-      'bellepoule-diagnostic-20261030T192800.json'
+      'bpm-escrime-diagnostic-20261030T192800.json'
     );
   });
 });
@@ -80,7 +80,7 @@ describe('exportDiagnosticReport (#1326)', () => {
       writeFile,
     });
     expect(result).toEqual({ success: true });
-    expect(chooseSavePath).toHaveBeenCalledWith('bellepoule-diagnostic-20261030T192800.json');
+    expect(chooseSavePath).toHaveBeenCalledWith('bpm-escrime-diagnostic-20261030T192800.json');
     const [path, content] = writeFile.mock.calls[0] as unknown as [string, string];
     expect(path).toBe('/tmp/rapport.json');
     expect(JSON.parse(content).app.build).toBe(1521);

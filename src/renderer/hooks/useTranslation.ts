@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Internationalization Hook
+ * BPM - Escrime - Internationalization Hook
  * DEPRECATED: Use ../contexts/TranslationContext.tsx instead
  * This file is kept for backwards compatibility
  */

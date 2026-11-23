@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Compétition couplée : création d'une compétition séparée
+ * BPM - Escrime - Compétition couplée : création d'une compétition séparée
  * Après les poules, un groupe (ex : les filles) est extrait dans une compétition à part
  * qui démarre directement au classement après poules.
  * Licensed under GPL-3.0

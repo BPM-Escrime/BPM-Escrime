@@ -1,6 +1,6 @@
 /**
  * Tests - export / import JSON des paramètres (logos inclus)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';
@@ -97,7 +97,7 @@ describe('settingsTransfer', () => {
 
   it('nom de fichier daté', () => {
     expect(settingsExportFileName(new Date('2026-11-06T10:00:00Z'))).toBe(
-      'bellepoule-parametres-2026-11-06.json'
+      'bpm-escrime-parametres-2026-11-06.json'
     );
   });
 });

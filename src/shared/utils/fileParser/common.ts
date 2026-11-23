@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File Parser - Types et helpers partagés
+ * BPM - Escrime - File Parser - Types et helpers partagés
  * Licensed under GPL-3.0
  */
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Publication GREG automatique toutes les 15 s (#1328)
+ * BPM - Escrime - Publication GREG automatique toutes les 15 s (#1328)
  * Licensed under GPL-3.0
  */
 import { useCallback, useEffect, useRef, useState } from 'react';

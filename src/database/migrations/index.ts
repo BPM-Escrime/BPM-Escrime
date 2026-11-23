@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Système de migrations DB versionnées
+ * BPM - Escrime - Système de migrations DB versionnées
  * Chaque migration est appliquée une seule fois, dans l'ordre croissant.
  */
 

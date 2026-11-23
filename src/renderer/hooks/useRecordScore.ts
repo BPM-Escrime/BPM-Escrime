@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Saisie d'un score à l'écran par la commande recordScore (#1980, ADR-0005)
+ * BPM - Escrime - Saisie d'un score à l'écran par la commande recordScore (#1980, ADR-0005)
  * Un fait, un chemin : écran, tablettes, appareils de piste et MCP écrivent le score par le
  * moteur (session, base et journal dans une transaction) ; l'écran relit la session
  * (session:changed). Les formats que le moteur ne pilote pas restent saisis localement.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Canal IPC `diagnostic:exportReport` : export du rapport de diagnostic (#1326)
+ * BPM - Escrime - Canal IPC `diagnostic:exportReport` : export du rapport de diagnostic (#1326)
  * Le fichier est écrit par le main après un « Enregistrer sous » natif, comme les PDF d'impression.
  * Licensed under GPL-3.0
  */

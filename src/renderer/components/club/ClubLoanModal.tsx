@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (inventaire) : prêter un matériel à un tireur, ou
+ * BPM - Escrime - Mode Club (inventaire) : prêter un matériel à un tireur, ou
  * enregistrer son retour (état au retour, remarque).
  * Licensed under GPL-3.0
  */

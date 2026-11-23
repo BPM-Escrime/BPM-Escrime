@@ -1,4 +1,4 @@
-# Vision - BellePoule Modern
+# Vision - BPM - Escrime
 
 ## Mission
 
@@ -14,7 +14,7 @@ Les logiciels existants de gestion de compétitions d'escrime sont :
 
 ## Solution
 
-BellePoule Modern offre :
+BPM - Escrime offre :
 - **Open Source** : Gratuit, GPL-3.0, contributions bienvenues
 - **Sabre Laser natif** : Zones A/B/C, cartons FFE, Quest, mort subite
 - **Mobile-first** : PWA optimisée tablette, mode hors-ligne

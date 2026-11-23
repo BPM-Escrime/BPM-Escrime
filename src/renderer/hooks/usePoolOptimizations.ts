@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Optimized Pool Hooks
+ * BPM - Escrime - Optimized Pool Hooks
  * Memoized calculations for pool performance
  * Licensed under GPL-3.0
  */

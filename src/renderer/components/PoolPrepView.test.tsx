@@ -246,7 +246,7 @@ describe('PoolPrepView — pastille du critère prioritaire (#1440)', () => {
     expect(pills.filter(p => p.classList.contains('conflict'))).toHaveLength(2);
   });
 
-  it('doublon inévitable (quota BellePoule) : pas d’alerte', () => {
+  it('doublon inévitable (quota BPM - Escrime) : pas d’alerte', () => {
     // 1 poule : Club1 ×2 ≤ ⌈2/1⌉
     const base = [1, 2, 3, 4].map(fencer);
     const { container } = render(view(base, [pool(base)]));

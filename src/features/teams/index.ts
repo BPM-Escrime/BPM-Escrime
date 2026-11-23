@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Team Competition Index
+ * BPM - Escrime - Team Competition Index
  * Feature 22: Main entry point
  * Licensed under GPL-3.0
  */

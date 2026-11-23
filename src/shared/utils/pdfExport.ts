@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - PDF Export Service
+ * BPM - Escrime - PDF Export Service
  * Génération PDF via Electron printToPDF (sans menus ni chrome applicatif)
  * Licensed under GPL-3.0
  *

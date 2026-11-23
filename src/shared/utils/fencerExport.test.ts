@@ -1,6 +1,6 @@
 /**
  * Tests unitaires - Export des tireurs (TXT / FFF)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

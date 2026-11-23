@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Window Size Presets
+ * BPM - Escrime - Window Size Presets
  * Bouton à menu déroulant pour redimensionner les cartes des poules affichées (#1034).
  * Licensed under GPL-3.0
  */

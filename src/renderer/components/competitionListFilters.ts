@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Filtres et tri de la liste des compétitions (#1534)
+ * BPM - Escrime - Filtres et tri de la liste des compétitions (#1534)
  * Licensed under GPL-3.0
  */
 

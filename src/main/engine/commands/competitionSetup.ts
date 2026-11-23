@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Création, réglages et suppression d'une épreuve (#1981, docs/adr/0018)
+ * BPM - Escrime - Création, réglages et suppression d'une épreuve (#1981, docs/adr/0018)
  * createCompetition, updateCompetitionDetails, updateCompetitionSettings, deleteCompetition :
  * commandes d'intention à la place de db.createCompetition / updateCompetition /
  * deleteCompetition. Pas de journal (docs/adr/0018).

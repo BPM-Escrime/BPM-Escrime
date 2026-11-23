@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - QR code de l'URL du lobby (télécommande)
+ * BPM - Escrime - QR code de l'URL du lobby (télécommande)
  * Licensed under GPL-3.0
  */
 

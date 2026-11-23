@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Adaptateur IPC du contrat d'API (#1981)
+ * BPM - Escrime - Adaptateur IPC du contrat d'API (#1981)
  * Trois canaux pour toutes les opérations : api:invoke (commande, requête), api:subscribe /
  * api:unsubscribe (abonnements, événements sur api:event). Réponse en enveloppe ApiEnvelope.
  * Licensed under GPL-3.0

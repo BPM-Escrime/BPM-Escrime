@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types des événements de match (touches, cartons, timing, sorties)
+ * BPM - Escrime - Types des événements de match (touches, cartons, timing, sorties)
  * Licensed under GPL-3.0
  */
 

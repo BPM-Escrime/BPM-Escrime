@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Electron DB Abstraction Hook
+ * BPM - Escrime - Electron DB Abstraction Hook
  * Centralise tous les appels window.electronAPI.db.* avec gestion d'erreurs uniforme.
  * Licensed under GPL-3.0
  */

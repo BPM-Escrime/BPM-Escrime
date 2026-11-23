@@ -1,8 +1,8 @@
 {
-  "name": "bellepoule-modern",
-  "productName": "BellePoule Modern",
+  "name": "bpm-escrime",
+  "productName": "BPM - Escrime",
   "version": "3.0.0",
-  "description": "Modern fencing tournament management software - Rewritten from the original BellePoule",
+  "description": "Modern fencing tournament management software - Rewritten from the original software",
   "main": "dist/main/main.js",
   "scripts": {
     "version:show": "node scripts/version.js show",
@@ -60,10 +60,10 @@
     "escrime",
     "tournament",
     "competition",
-    "bellepoule"
+    "bpm-escrime"
   ],
   "author": {
-    "name": "BellePoule Modern Contributors",
+    "name": "BPM - Escrime Contributors",
     "email": "yann.deboeuf@gmail.com"
   },
   "license": "GPL-3.0",
@@ -72,8 +72,8 @@
     "url": "https://github.com/BellePoule-Modern/bellepoule-modern"
   },
   "build": {
-    "appId": "com.bellepoule.modern",
-    "productName": "BellePoule Modern",
+    "appId": "com.bpm-escrime.modern",
+    "productName": "BPM - Escrime",
     "directories": {
       "output": "release"
     },
@@ -111,7 +111,7 @@
         "portable"
       ],
       "icon": "resources/icons/icon.ico",
-      "artifactName": "BellePoule-Modern-${version}-win-${arch}.${ext}"
+      "artifactName": "BPM-Escrime-${version}-win-${arch}.${ext}"
     },
     "mac": {
       "target": [
@@ -138,9 +138,9 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "extendInfo": {
-        "NSCameraUsageDescription": "BellePoule Modern utilise la caméra pour la photo des tireurs."
+        "NSCameraUsageDescription": "BPM - Escrime utilise la caméra pour la photo des tireurs."
       },
-      "artifactName": "BellePoule-Modern-${version}-mac-${arch}.${ext}"
+      "artifactName": "BPM-Escrime-${version}-mac-${arch}.${ext}"
     },
     "linux": {
       "target": [
@@ -150,17 +150,17 @@
       ],
       "icon": "resources/icons",
       "category": "Sports",
-      "artifactName": "BellePoule-Modern-${version}-linux-${arch}.${ext}"
+      "artifactName": "BPM-Escrime-${version}-linux-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "artifactName": "BellePoule-Modern-${version}-win-${arch}-setup.${ext}"
+      "artifactName": "BPM-Escrime-${version}-win-${arch}-setup.${ext}"
     },
     "portable": {
-      "artifactName": "BellePoule-Modern-${version}-win-${arch}-portable.${ext}",
-      "unpackDirName": "BellePouleModernPortable"
+      "artifactName": "BPM-Escrime-${version}-win-${arch}-portable.${ext}",
+      "unpackDirName": "BPMEscrimePortable"
     }
   },
   "dependencies": {

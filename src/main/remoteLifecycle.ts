@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Cycle de vie du serveur distant : démarrage, rechargement à chaud,
+ * BPM - Escrime - Cycle de vie du serveur distant : démarrage, rechargement à chaud,
  * interfaces réseau (ex-canaux IPC remote:startServer, reloadServer… #1341, migrés vers le
  * contrat d'API par remotePort.ts, #1981 lot 2, docs/adr/0022). Aussi utilisé par le MCP (#1880).
  * Licensed under GPL-3.0

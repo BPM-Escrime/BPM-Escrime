@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Port du serveur d'entraînement (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Port du serveur d'entraînement (#1981 lot 2, docs/adr/0022)
  * Branche sur le CommandContext ce que les opérations de l'entraînement ne peuvent pas faire
  * seules : registre des serveurs et ports (remoteRegistry), certificat TLS, synthèse vocale du
  * poste (<userData>/tts-config.json), fenêtre principale, écrans de démo. Remplace les canaux

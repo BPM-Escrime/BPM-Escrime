@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Message d'erreur d'une réponse IPC du process principal (#1159) :
+ * BPM - Escrime - Message d'erreur d'une réponse IPC du process principal (#1159) :
  * le code stable `error` (ex. `remote_not_started`) est traduit (`errors.<code>`,
  * paramètres = champs de la réponse) ; un texte libre est rendu tel quel.
  * Licensed under GPL-3.0

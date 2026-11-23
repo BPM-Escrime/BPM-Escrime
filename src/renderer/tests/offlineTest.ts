@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Offline Integration Test
+ * BPM - Escrime - Offline Integration Test
  * Test the offline-first architecture functionality
  * Licensed under GPL-3.0
  */

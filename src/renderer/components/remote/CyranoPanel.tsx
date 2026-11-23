@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Appareils de piste de la saisie distante (#1720, #1960, docs/adr/0023)
+ * BPM - Escrime - Appareils de piste de la saisie distante (#1720, #1960, docs/adr/0023)
  * Salle de l'épreuve, appareils déclarés sur la salle (lecture seule : ils se déclarent dans
  * Paramètres → Salles et pistes), état de liaison, piste passée en manuel pour l'épreuve
  * (`settings.manualStrips`), démarrage des pilotes Cyrano (UDP) et OPP2 (MQTT), secours, journal.

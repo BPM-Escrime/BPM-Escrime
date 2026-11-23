@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Compétition couplée : groupes du tableau et séparation en compétition
+ * BPM - Escrime - Compétition couplée : groupes du tableau et séparation en compétition
  * distincte (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglage de l'espace « Vue DT » (#1981 lot 3, docs/adr/0020)
+ * BPM - Escrime - Réglage de l'espace « Vue DT » (#1981 lot 3, docs/adr/0020)
  * configureDtView, getDtViewStatus : l'écran du poste serveur ouvre ou ferme l'accès en
  * lecture seule au contrat sur le réseau de la salle. Mot de passe jamais renvoyé ni journalisé.
  * Licensed under GPL-3.0

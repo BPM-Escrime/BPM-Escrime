@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Commandes et requêtes du Mode Club (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Commandes et requêtes du Mode Club (#1981 lot 2, docs/adr/0022)
  * Reprise telle quelle de l'ancien ipc/clubHandlers.ts : mêmes dépôts (`db.club`,
  * `db.clubInventory`), mêmes statistiques. Pas de journal : ce ne sont pas des faits de l'épreuve.
  * Tablettes, synchro et sauvegardes : clubStation.ts (ports du CommandContext).

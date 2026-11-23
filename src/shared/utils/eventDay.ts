@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Journée multi-épreuves (#1714) : règles pures
+ * BPM - Escrime - Journée multi-épreuves (#1714) : règles pures
  * (armes d'arbitrage, statut commun, conflits sur toute la journée).
  * Licensed under GPL-3.0
  */

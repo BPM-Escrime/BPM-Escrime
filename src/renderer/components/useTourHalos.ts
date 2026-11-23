@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Halos pulsés des parcours guidés (compétition #1305, Mode Club #1872)
+ * BPM - Escrime - Halos pulsés des parcours guidés (compétition #1305, Mode Club #1872)
  * Licensed under GPL-3.0
  */
 import { useEffect } from 'react';

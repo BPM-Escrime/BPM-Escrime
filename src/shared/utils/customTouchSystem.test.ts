@@ -1,6 +1,6 @@
 /**
  * Tests unitaires - Système de touches personnalisé (arme CUSTOM)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

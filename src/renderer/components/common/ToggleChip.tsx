@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Carte / bouton activable (remplace les cases à cocher, #1872).
+ * BPM - Escrime - Carte / bouton activable (remplace les cases à cocher, #1872).
  * Bouton à bascule (aria-pressed) : bleu quand sélectionné.
  * Licensed under GPL-3.0
  */

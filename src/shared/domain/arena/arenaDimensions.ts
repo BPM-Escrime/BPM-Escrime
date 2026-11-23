@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Cotes techniques du plan d'arène (#2075)
+ * BPM - Escrime - Cotes techniques du plan d'arène (#2075)
  * Calcule les lignes de cotes (salle, arènes, espacements, marges, éléments)
  * affichées sur le plan et reprises dans les exports PDF et PNG. Géométrie pure :
  * les lignes sont données en mètres, le dessin est fait par l'interface.

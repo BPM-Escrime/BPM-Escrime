@@ -19,8 +19,8 @@ describe('parseCliArgs', () => {
     expect(parseCliArgs(['electron', '.', '--headless']).headless).toBe(true);
   });
 
-  it('BELLEPOULE_HEADLESS=1', () => {
-    expect(parseCliArgs(['electron', '.'], { BELLEPOULE_HEADLESS: '1' }).headless).toBe(true);
+  it('BPM_ESCRIME_HEADLESS=1', () => {
+    expect(parseCliArgs(['electron', '.'], { BPM_ESCRIME_HEADLESS: '1' }).headless).toBe(true);
   });
 
   it('arguments inconnus ignorés', () => {

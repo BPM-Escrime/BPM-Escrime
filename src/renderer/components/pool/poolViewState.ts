@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - États regroupés de PoolView (#1241)
+ * BPM - Escrime - États regroupés de PoolView (#1241)
  * Chaque groupe remplace une série de useState liés par un seul reducer
  * (useStateGroup) : les setters gardent leur nom, les appels ne changent pas.
  * Licensed under GPL-3.0

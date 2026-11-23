@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - useAutoFitHeight
+ * BPM - Escrime - useAutoFitHeight
  * Agrandit une modale redimensionnable quand son contenu déborde
  * (ex. égalité à départager, panneau abandon/forfait) (#1826).
  * Ne réduit jamais la taille choisie par l'utilisateur.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglages du serveur MCP (#1880) : <userData>/mcp-settings.json
+ * BPM - Escrime - Réglages du serveur MCP (#1880) : <userData>/mcp-settings.json
  * (activé, port) et jeton d'accès chiffré par safeStorage (<userData>/mcp-token.bin).
  * Désactivé par défaut.
  * Licensed under GPL-3.0

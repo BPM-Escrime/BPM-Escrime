@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Lecture des fichiers de l'extranet dans « Nouvelle compétition » (#1938)
+ * BPM - Escrime - Lecture des fichiers de l'extranet dans « Nouvelle compétition » (#1938)
  * Licensed under GPL-3.0
  *
  * Choix (dialogue natif) ou dépôt du .zip de l'extranet, d'un .xml, d'un .fff ou d'un .txt

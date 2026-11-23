@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - useDebounce
+ * BPM - Escrime - useDebounce
  * Diffère une valeur pour éviter les recalculs à chaque frappe
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : bilan de séance.
+ * BPM - Escrime - Mode Club (#1872) : bilan de séance.
  * Note 1-5, ce qui a marché, à améliorer, et une remarque par tireur présent
  * (retrouvée ensuite dans sa fiche statistique).
  * Licensed under GPL-3.0

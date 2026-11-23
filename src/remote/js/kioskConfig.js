@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : réglages locaux et compte à rebours de la note d'organisation
+ * BPM - Escrime - Kiosque : réglages locaux et compte à rebours de la note d'organisation
  * (extrait de kiosk.html #1401). Stockage et horloge injectés. Servi en /js/kioskConfig.js (CSP 'self').
  * Licensed under GPL-3.0
  */

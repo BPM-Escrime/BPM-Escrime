@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Auto Updater
+ * BPM - Escrime - Auto Updater
  * Système de mise à jour automatique simplifié
  * Licensed under GPL-3.0
  */

@@ -58,7 +58,7 @@ function releaseMeta({ version, build }, channel) {
   if (!CHANNELS.includes(channel)) throw new Error(`Canal inconnu "${channel}" (dev|rc|stable)`);
   // rc = pré-release d'une branche de maintenance hotfix/* (docs/VERSIONING.md)
   const fullVersion = channel === 'stable' ? version : `${version}-${channel}.${build}`;
-  const title = `${TITLE_ICONS[channel]} BellePoule Modern ${fullVersion} (Build #${build})`;
+  const title = `${TITLE_ICONS[channel]} BPM - Escrime ${fullVersion} (Build #${build})`;
   return { version, build, channel, fullVersion, tag: `v${fullVersion}`, title };
 }
 

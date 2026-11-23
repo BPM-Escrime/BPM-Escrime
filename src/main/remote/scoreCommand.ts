@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fin de match distante par la commande recordScore (#1980, ADR-0005)
+ * BPM - Escrime - Fin de match distante par la commande recordScore (#1980, ADR-0005)
  * Tablettes et appareils de piste (Cyrano, OPP2) écrivent le score par le moteur : mêmes
  * contrôles que l'écran et le MCP, état de session, base et journal dans une transaction.
  * L'écran ouvert relit la session (session:changed). Formats que le moteur ne pilote pas

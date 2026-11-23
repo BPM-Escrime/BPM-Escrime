@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Team Calculations
+ * BPM - Escrime - Team Calculations
  * Feature 22: Utility functions for team events
  * Licensed under GPL-3.0
  */

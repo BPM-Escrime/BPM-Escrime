@@ -2,7 +2,7 @@
 
 ## Overview
 
-Le système de flux de tournoi de BellePoule Modern optimise automatiquement la planification des matchs, équilibre l'utilisation des pistes et minimise les temps d'attente pour les tireurs.
+Le système de flux de tournoi de BPM - Escrime optimise automatiquement la planification des matchs, équilibre l'utilisation des pistes et minimise les temps d'attente pour les tireurs.
 
 ## Fonctionnalités principales
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Consultation des signatures d'une poule (#1826)
+ * BPM - Escrime - Consultation des signatures d'une poule (#1826)
  * Lecture seule : nom des tireurs et signature enregistrée sur la tablette.
  * L'édition se fait uniquement sur la feuille de poule distante, verrouillée une fois tout signé.
  * Licensed under GPL-3.0

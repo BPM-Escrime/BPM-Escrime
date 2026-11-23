@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : import des équipes (#1211)
+ * BPM - Escrime - Tournoi des rapières : import des équipes (#1211)
  * Export d'inscriptions (CSV « ; » ou XLSX converti en CSV par le processus principal),
  * une ligne par équipe : colonnes D/E (nom/prénom tireur 1), Q (naissance tireur 1),
  * T/U (nom/prénom tireur 2), V (naissance tireur 2), Y (nom d'équipe),

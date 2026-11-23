@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - État vide unique (#1535)
+ * BPM - Escrime - État vide unique (#1535)
  * Icône, titre, texte, action principale optionnelle : classes .empty-state* (design.css).
  * Licensed under GPL-3.0
  */

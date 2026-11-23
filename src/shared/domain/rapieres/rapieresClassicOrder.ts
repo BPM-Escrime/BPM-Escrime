@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : ordre « classique » des combats (#1816)
+ * BPM - Escrime - Tournoi des rapières : ordre « classique » des combats (#1816)
  * Tables fournies par l'organisation pour les poules de 10 à 15 équipes : une ligne par
  * tour (= vague), paires « A-B » 1-indexées dans l'ordre de la poule. Les autres tailles
  * gardent l'ordre standard (vagues calculées).

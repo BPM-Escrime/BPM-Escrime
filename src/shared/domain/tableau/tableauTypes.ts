@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types et utilitaires partagés du tableau d'élimination directe
+ * BPM - Escrime - Types et utilitaires partagés du tableau d'élimination directe
  * Séparé de TableauView pour permettre le lazy-loading du composant.
  */
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : lancement d'un combat par scan webcam.
+ * BPM - Escrime - Mode Club (#1872) : lancement d'un combat par scan webcam.
  * Séquence : QR de la piste (`BPC1:A:n`) puis cartes des deux tireurs (`BPC1:M:code`),
  * dans n'importe quel ordre. Logique pure : la vue résout les codes en membres.
  * Licensed under GPL-3.0

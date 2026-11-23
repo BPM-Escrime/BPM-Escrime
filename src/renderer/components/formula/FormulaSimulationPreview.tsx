@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Aperçu temps réel de la simulation de formule
+ * BPM - Escrime - Aperçu temps réel de la simulation de formule
  */
 
 import React, { memo } from 'react';

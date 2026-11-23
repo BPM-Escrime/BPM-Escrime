@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tiebreaker Animation Component
+ * BPM - Escrime - Tiebreaker Animation Component
  * Animated 3D coin flip to determine winner after sudden death overtime
  * Licensed under GPL-3.0
  */

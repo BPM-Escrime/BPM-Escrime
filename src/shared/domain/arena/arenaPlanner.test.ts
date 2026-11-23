@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tests du planificateur d'arène Sabre Laser (#2075)
+ * BPM - Escrime - Tests du planificateur d'arène Sabre Laser (#2075)
  * Licensed under GPL-3.0
  */
 

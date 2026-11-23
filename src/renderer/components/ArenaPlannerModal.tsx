@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Planificateur de placement d'arène Sabre Laser (#2075)
+ * BPM - Escrime - Planificateur de placement d'arène Sabre Laser (#2075)
  * Outil à côté du QR Wi-Fi et de la télécommande TV : dimensions de la salle,
  * arènes (grille automatique ou maximum trouvé par « Optimiser »), tables,
  * prises, accessoires, issues de secours et zones bloquées à placer à la souris,

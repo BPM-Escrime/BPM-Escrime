@@ -1,10 +1,10 @@
-# BellePoule Modern - Logiciel moderne de gestion de compétitions d'escrime
+# BPM - Escrime - Logiciel moderne de gestion de compétitions d'escrime
 
 🤺 **Logiciel moderne de gestion de compétitions d'escrime** avec interface multilingue et temps réel
 
 ---
 
-☕ **Ce projet est gratuit et open source.** Si BellePoule Modern vous est utile, vous pouvez soutenir son développement :
+☕ **Ce projet est gratuit et open source.** Si BPM - Escrime vous est utile, vous pouvez soutenir son développement :
 
 **[👉 Buy Me a Coffee — klinnex](https://buymeacoffee.com/klinnex)**
 
@@ -290,10 +290,10 @@ Liste complète et versions : [docs/STACK_TECHNIQUE.md](docs/STACK_TECHNIQUE.md)
 
 | Plateforme | Fichiers |
 |---|---|
-| **Windows** x64 | `BellePoule-Modern-<version>-win-x64-setup.exe` (installeur), `-portable.exe` |
-| **macOS** x64 / arm64 | `BellePoule-Modern-<version>-mac-<arch>.dmg` — quelle version ? → [docs/MAC_VERSION.md](docs/MAC_VERSION.md) |
-| **Linux** x64 | `BellePoule-Modern-<version>-linux-x86_64.AppImage` / `.deb` / `.rpm` |
-| **Linux** arm64 | `BellePoule-Modern-<version>-linux-arm64.AppImage` / `.deb` (Raspberry Pi…) |
+| **Windows** x64 | `BPM-Escrime-<version>-win-x64-setup.exe` (installeur), `-portable.exe` |
+| **macOS** x64 / arm64 | `BPM-Escrime-<version>-mac-<arch>.dmg` — quelle version ? → [docs/MAC_VERSION.md](docs/MAC_VERSION.md) |
+| **Linux** x64 | `BPM-Escrime-<version>-linux-x86_64.AppImage` / `.deb` / `.rpm` |
+| **Linux** arm64 | `BPM-Escrime-<version>-linux-arm64.AppImage` / `.deb` (Raspberry Pi…) |
 
 ### 🧪 **Version de Développement** (Tests)
 
@@ -317,13 +317,13 @@ Mêmes formats, publiés en pré-release à chaque push sur `dev`.
 3. Glisser l'application dans le dossier Applications
 4. Accepter les permissions demandées
 
-Apple Silicon (M1+, MacBook Neo) : prendre le `.dmg` **arm64** ; Intel : **x64** (guide : [docs/MAC_VERSION.md](docs/MAC_VERSION.md)) (natif, sans Rosetta). App signée ad-hoc, non notarisée : au 1er lancement, si macOS affiche « endommagé », exécuter `xattr -cr "/Applications/BellePoule Modern.app"` (guide : [docs/MAC_VERSION.md](docs/MAC_VERSION.md)).
+Apple Silicon (M1+, MacBook Neo) : prendre le `.dmg` **arm64** ; Intel : **x64** (guide : [docs/MAC_VERSION.md](docs/MAC_VERSION.md)) (natif, sans Rosetta). App signée ad-hoc, non notarisée : au 1er lancement, si macOS affiche « endommagé », exécuter `xattr -cr "/Applications/BPM - Escrime.app"` (guide : [docs/MAC_VERSION.md](docs/MAC_VERSION.md)).
 
 #### **Linux**
 
 1. Télécharger le fichier `.AppImage` (ou `.deb` / `.rpm`)
-2. Rendre le fichier exécutable : `chmod +x BellePoule.Modern-*.AppImage`
-3. Lancer avec : `./BellePoule.Modern-*.AppImage`
+2. Rendre le fichier exécutable : `chmod +x BPM - Escrime.Modern-*.AppImage`
+3. Lancer avec : `./BPM - Escrime.Modern-*.AppImage`
 
 Ubuntu 24.04+ : le sandbox Chromium peut être indisponible (restriction AppArmor des user namespaces). Détails et risques : [docs/SECURITE_ELECTRON.md](docs/SECURITE_ELECTRON.md#sandbox-chromium-sous-linux-ubuntu-2404-1715).
 
@@ -335,7 +335,7 @@ Ubuntu 24.04+ : le sandbox Chromium peut être indisponible (restriction AppArmo
 git clone https://github.com/BellePoule-Modern/bellepoule-modern.git
 
 # Installation des dépendances (Node.js 22 requis)
-cd bellepoule-modern
+cd bpm-escrime
 npm install          # recompile better-sqlite3-multiple-ciphers pour Electron (postinstall)
 
 # Construire et lancer
@@ -360,7 +360,7 @@ Pour vérifier la version installée :
 
 - **Menu** : `Aide > À propos`
 - **Raccourci** : `F1`
-- **Ligne de commande** : `BellePoule.Modern.exe --version`
+- **Ligne de commande** : `BPM - Escrime.Modern.exe --version`
 
 La version s'affiche sous la forme `X.Y.Z` (stable) ou `X.Y.Z-dev.N` (dev) — règles : [docs/VERSIONING.md](docs/VERSIONING.md)
 
@@ -379,7 +379,7 @@ Ce projet utilise **GitHub Actions** pour créer automatiquement :
 
 - 🧪 **Builds multi-plateformes** à chaque `push` sur `dev`
 - 🧪 **Pré-release `vX.Y.Z-dev.N`** à chaque build (5 dernières conservées)
-- 🧪 **Executables `BellePoule-Modern-X.Y.Z-dev.N-…`** pour identification facile
+- 🧪 **Executables `BPM-Escrime-X.Y.Z-dev.N-…`** pour identification facile
 - 🧪 **Tests des nouvelles fonctionnalités** avant merge sur main
 
 ### **Liens directs**
@@ -425,7 +425,7 @@ Ce logiciel est distribué sous **GPL-3.0 License**.
 ## 🏆 **Crédits**
 
 - **Développement principal** : Yann Deboeuf & contributeurs
-- **Inspiration** : BellePoule original par Cyprien Piriou
+- **Inspiration** : original software par Cyprien Piriou
 - **Technologies** : Electron, React, TypeScript, SQLite
 - **Hébergement** : GitHub (builds automatiques)
 

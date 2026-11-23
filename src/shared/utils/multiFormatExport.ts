@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Multi-Format Export Utilities
+ * BPM - Escrime - Multi-Format Export Utilities
  * Licensed under GPL-3.0
  */
 
@@ -177,7 +177,7 @@ export function exportResultsHTML(
   </div>
 
   <div class="footer">
-    <p>Généré par BellePoule Modern le ${new Date().toLocaleString(getActiveLocale())}</p>
+    <p>Généré par BPM - Escrime le ${new Date().toLocaleString(getActiveLocale())}</p>
   </div>
 </body>
 </html>`;
@@ -345,7 +345,7 @@ export function federalLicenceAttributes(license?: string): string {
 }
 
 /**
- * Export results as BellePoule XML format (CompetitionIndividuelle/CompetitionParEquipes spec).
+ * Export results as BPM - Escrime XML format (CompetitionIndividuelle/CompetitionParEquipes spec).
  * Structure : racine → Tireurs → Equipes → Arbitres → Phases (TourDePoules, PhaseDeTableaux, ClassementGeneral).
  */
 export function exportResultsXMLFFE(

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Planificateur de placement d'arène Sabre Laser (#2075)
+ * BPM - Escrime - Planificateur de placement d'arène Sabre Laser (#2075)
  * Géométrie pure, en mètres, d'après le schéma « Placement et zone
  * d'évolution » du Règlement national Sabre Laser, Livret 2 (p. 13) :
  * - zone de combat A et limite de sortie D : Ø 8 m ;

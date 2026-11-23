@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : choix des personnes à importer depuis un
+ * BPM - Escrime - Mode Club (#1872) : choix des personnes à importer depuis un
  * fichier FFE (.fff / CSV / TXT / XML). Nouveaux et membres à compléter cochés par défaut ;
  * déjà présents et doublons du fichier non importables.
  * Licensed under GPL-3.0

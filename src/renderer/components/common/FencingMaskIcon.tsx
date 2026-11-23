@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Masque d'escrime (tireurs, barre de la compétition, #1817)
+ * BPM - Escrime - Masque d'escrime (tireurs, barre de la compétition, #1817)
  * Trait façon lucide : coque grillagée + bavette, occupe toute la largeur du cadre 24×24.
  * Licensed under GPL-3.0
  */

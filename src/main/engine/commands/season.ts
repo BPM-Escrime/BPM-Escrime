@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Classement de saison (#1981, docs/adr/0018)
+ * BPM - Escrime - Classement de saison (#1981, docs/adr/0018)
  * includeInSeason, excludeFromSeason, resetSeason ; requête getSeasonRanking. Le moteur calcule
  * lui-même le classement Quest de l'épreuve versée (poules du tour courant), au lieu de le
  * recevoir de l'écran. Pas de journal.

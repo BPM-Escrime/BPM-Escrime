@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Serveur distant : cycle de vie, session, pistes et synchro d'affichage
+ * BPM - Escrime - Serveur distant : cycle de vie, session, pistes et synchro d'affichage
  * (#1981 lot 2, docs/adr/0022). Reprise des anciens canaux IPC remote:* (remoteServerHandlers,
  * remoteMatchHandlers, remoteSessionHandlers). Le serveur lui-même (registre, ports, certificat)
  * passe par le port `ctx.remote.admin` branché par main.ts ; pas de journal.

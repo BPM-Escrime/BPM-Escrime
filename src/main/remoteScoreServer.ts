@@ -1,5 +1,5 @@
 ﻿/**
- * BellePoule Modern - Remote Score Entry Server
+ * BPM - Escrime - Remote Score Entry Server
  * Web server for referees to enter scores remotely
  * Licensed under GPL-3.0
  */

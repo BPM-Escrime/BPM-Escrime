@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handler IPC `file:previewPdf` : aperçu avant impression (#1214)
+ * BPM - Escrime - Handler IPC `file:previewPdf` : aperçu avant impression (#1214)
  * Même rendu que l'export PDF, affiché dans la visionneuse PDF de Chromium (fenêtre fille
  * modale sans preload ni Node) ; l'impression et l'enregistrement se font depuis la visionneuse.
  * Repli : lecteur PDF externe de l'OS.
@@ -36,7 +36,7 @@ export interface PdfPreviewDeps {
 export async function previewPdf(
   deps: PdfPreviewDeps,
   html: string,
-  title = 'BellePoule Modern'
+  title = 'BPM - Escrime'
 ): Promise<PdfPreviewResult> {
   // Dossier privé (mkdtemp, 0700) + création exclusive 0600 : pas de fichier prévisible dans le tmp partagé
   let dir: string | undefined;

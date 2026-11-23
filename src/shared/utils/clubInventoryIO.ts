@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (inventaire) : format d'échange CSV / Excel.
+ * BPM - Escrime - Mode Club (inventaire) : format d'échange CSV / Excel.
  * En-têtes et libellés en français fixes (indépendants de la langue de l'interface) ;
  * à l'import, codes internes et libellés français sont tous acceptés.
  * Licensed under GPL-3.0

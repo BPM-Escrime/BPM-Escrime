@@ -1,6 +1,6 @@
 # Captures d'écran
 
-Aperçu des principaux écrans et menus de BellePoule Modern, sur une compétition de démonstration (épée senior, 18 tireurs, 3 poules, tableau de 32), une journée à deux épreuves et un club de démonstration.
+Aperçu des principaux écrans et menus de BPM - Escrime, sur une compétition de démonstration (épée senior, 18 tireurs, 3 poules, tableau de 32), une journée à deux épreuves et un club de démonstration.
 
 > Captures générées automatiquement : `npm run build && npm run docs:screenshots` (sous Linux sans écran : `xvfb-run -a npm run docs:screenshots`). Script : [`scripts/capture-screenshots.js`](../scripts/capture-screenshots.js).
 

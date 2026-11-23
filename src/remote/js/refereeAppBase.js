@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tablette arbitre : RefereeAppBase (1re moitié de RefereeApp : init, socket, affichage, chrono).
+ * BPM - Escrime - Tablette arbitre : RefereeAppBase (1re moitié de RefereeApp : init, socket, affichage, chrono).
  * Extrait de referee.html (#1600) ; RefereeApp (/js/refereeApp.js) en hérite et doit être chargé après.
  * Script classique chargé en <script src="/js/refereeAppBase.js"> (CSP : pas de script inline).
  * Licensed under GPL-3.0

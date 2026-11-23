@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Groupe d'états locaux liés dans un seul reducer (#1241)
+ * BPM - Escrime - Groupe d'états locaux liés dans un seul reducer (#1241)
  * Généralisation de useModalFlags à des valeurs de tout type : un seul état,
  * setters stables `setXxx` compatibles React.Dispatch<SetStateAction<T>> (valeur ou fonction).
  * Licensed under GPL-3.0

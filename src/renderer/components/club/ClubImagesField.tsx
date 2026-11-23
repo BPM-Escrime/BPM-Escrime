@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : images d'un exercice (schémas, photos), 3 max.
+ * BPM - Escrime - Mode Club (#1872) : images d'un exercice (schémas, photos), 3 max.
  * Licensed under GPL-3.0
  */
 import React, { useRef } from 'react';

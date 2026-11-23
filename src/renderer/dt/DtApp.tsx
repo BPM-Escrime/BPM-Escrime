@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Vue DT : accès (espace fermé, connexion), puis épreuve en lecture seule
+ * BPM - Escrime - Vue DT : accès (espace fermé, connexion), puis épreuve en lecture seule
  * (#1981 lot 3, docs/adr/0020). Le jeton voyage dans le cookie HttpOnly bp_dt_token.
  * Licensed under GPL-3.0
  */
@@ -37,7 +37,7 @@ export const DtApp: React.FC = () => {
   }, []);
   useEffect(refresh, [refresh]);
   useEffect(() => {
-    document.title = `${t('dtView.title')} – BellePoule`;
+    document.title = `${t('dtView.title')} – BPM - Escrime`;
   }, [t]);
 
   if (failed) return <p className="dt-message">{t('dtView.unreachable')}</p>;

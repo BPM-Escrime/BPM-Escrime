@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Lancement des poules par le moteur (#1980, docs/adr/0017, palier « tirage »)
+ * BPM - Escrime - Lancement des poules par le moteur (#1980, docs/adr/0017, palier « tirage »)
  * La préparation reste à l'écran (tirages, ajustements, ordre des matchs) ; au lancement, la
  * composition retenue part au moteur (generatePools), qui l'écrit avec PoolsGenerated au
  * journal. L'écran relit l'état. Hors moteur : lancement local historique.

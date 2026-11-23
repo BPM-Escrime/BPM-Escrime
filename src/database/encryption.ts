@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Chiffrement au repos de la base (SQLCipher, #1882)
+ * BPM - Escrime - Chiffrement au repos de la base (SQLCipher, #1882)
  * Licensed under GPL-3.0
  *
  * - Moteur : better-sqlite3-multiple-ciphers en mode `cipher='sqlcipher'` (format SQLCipher 4).

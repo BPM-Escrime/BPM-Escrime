@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Serveur d'entraînement : appels de l'écran au contrat d'API (#1981 lot 2,
+ * BPM - Escrime - Serveur d'entraînement : appels de l'écran au contrat d'API (#1981 lot 2,
  * docs/adr/0022). Traduit les appels de l'écran (arguments positionnels, mêmes noms que l'ancien
  * groupe `training` de window.electronAPI) en opérations du contrat (shared/api/contractTraining.ts)
  * et rend la réponse sous l'ancienne enveloppe `{ success, error?, … }` (même règle que

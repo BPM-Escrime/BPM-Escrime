@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosk Display Component
+ * BPM - Escrime - Kiosk Display Component
  * Affichage grand écran public avec menu auto-masquant
  * Vues : Poules / Classement provisoire / Tableau d'élimination
  * Licensed under GPL-3.0

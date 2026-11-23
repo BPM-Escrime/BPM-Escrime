@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Lecture de version.json (version, build, canal) (#1326)
+ * BPM - Escrime - Lecture de version.json (version, build, canal) (#1326)
  * Partagée par l'IPC `app:getVersionInfo` et le rapport de diagnostic.
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Penalty Store
+ * BPM - Escrime - Penalty Store
  * Feature 23: Card management system
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Inscription des arbitres (#1981, docs/adr/0018)
+ * BPM - Escrime - Inscription des arbitres (#1981, docs/adr/0018)
  * registerReferees, updateRefereeDetails, setRefereeAvailability, unregisterReferee : commandes
  * d'intention à la place des écritures de table de l'écran. Pas de journal (docs/adr/0018).
  * Licensed under GPL-3.0

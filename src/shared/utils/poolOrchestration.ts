@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Orchestration des poules, fonctions pures (#1880, lot 3)
+ * BPM - Escrime - Orchestration des poules, fonctions pures (#1880, lot 3)
  * Source unique de l'écran (usePoolManagement) et de la couche domaine (MCP) :
  * tirage des poules, scores d'un match, classements.
  * Licensed under GPL-3.0
@@ -60,7 +60,7 @@ export function buildPools(fencers: Fencer[], options: BuildPoolsOptions): Pool[
   const poolCount =
     options.poolCount ??
     calculateOptimalPoolCount(fencers.length, options.minPerPool ?? 5, options.maxPerPool ?? 7);
-  // Tirage unique écran / moteur (#1979, lot 4) : critères de l'épreuve, défaut BellePoule
+  // Tirage unique écran / moteur (#1979, lot 4) : critères de l'épreuve, défaut BPM - Escrime
   return drawPools(fencers, {
     poolCount,
     poolMaxScore: options.poolMaxScore,

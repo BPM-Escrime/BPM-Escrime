@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Choix de l'asset de mise à jour + remplacement en place
+ * BPM - Escrime - Choix de l'asset de mise à jour + remplacement en place
  * Licensed under GPL-3.0
  *
  * Mode d'installation détecté au lancement :
@@ -176,9 +176,7 @@ export function portableSideBySidePath(
   const dir = path.win32.dirname(currentExe);
   const raw = path.win32.basename(path.posix.basename(assetName || ''));
   const safe = raw.replace(/[^\w.\-() ]/g, '_');
-  const base = safe.toLowerCase().endsWith('.exe')
-    ? safe.slice(0, -4)
-    : 'BellePoule-Modern-portable';
+  const base = safe.toLowerCase().endsWith('.exe') ? safe.slice(0, -4) : 'BPM-Escrime-portable';
   const same = (p: string) => p.toLowerCase() === currentExe.toLowerCase();
   let candidate = path.win32.join(dir, `${base}.exe`);
   for (let n = 2; same(candidate) || exists(candidate); n++) {

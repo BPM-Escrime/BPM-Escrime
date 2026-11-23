@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Compétitions et onglets ouverts : création, ouverture, import .bpm,
+ * BPM - Escrime - Compétitions et onglets ouverts : création, ouverture, import .bpm,
  * export, fermeture d'onglet, suppression. Extrait d'App.tsx (#1897).
  * Licensed under GPL-3.0
  */

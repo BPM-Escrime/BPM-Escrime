@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Correction d'un résultat de poule après le tirage du tableau (#1996)
+ * BPM - Escrime - Correction d'un résultat de poule après le tirage du tableau (#1996)
  * Mesure d'impact (classement, têtes de série, qualifiés, matchs joués) avant application.
  * Licensed under GPL-3.0
  */

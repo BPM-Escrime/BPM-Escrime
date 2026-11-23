@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Barrière d'entrée des arènes (#1829, manque n°1)
+ * BPM - Escrime - Barrière d'entrée des arènes (#1829, manque n°1)
  * Une arène peut recevoir des entrées de plusieurs sources : tablette arbitre, appareil de
  * piste (un ou plusieurs pilotes). Pour les appareils, chaque entrée porte un numéro de
  * séquence croissant par piste : une entrée dont le numéro n'est pas supérieur au dernier

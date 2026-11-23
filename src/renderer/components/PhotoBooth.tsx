@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Photo Booth Component
+ * BPM - Escrime - Photo Booth Component
  * Webcam selfie capture for fencers
  * Licensed under GPL-3.0
  */

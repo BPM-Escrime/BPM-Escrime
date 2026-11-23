@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pavé numérique tactile réutilisable
+ * BPM - Escrime - Pavé numérique tactile réutilisable
  * Conçu pour la saisie de score sur tablette (grandes cibles tactiles).
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Événements du journal d'une épreuve (#1980, docs/adr/0007)
+ * BPM - Escrime - Événements du journal d'une épreuve (#1980, docs/adr/0007)
  * Un événement est un fait accompli, nommé au passé ; sa charge porte des identifiants,
  * jamais de nom (RGPD). Types et charges sont déclarés ICI, une fois, en union zod :
  * le moteur écrit ces types, le contrat les expose, les clients les lisent.

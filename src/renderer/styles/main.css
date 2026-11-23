@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Main Styles
+ * BPM - Escrime - Main Styles
  * Composants partagés (.btn, .form-input, .card, .modal, .table, .badge, .tab, .phase-*) :
  * design.css (importé après) est la source unique — ne garder ici que les propriétés
  * qu'il ne définit pas (contrôlé par stylesheets.test.ts, #1098).

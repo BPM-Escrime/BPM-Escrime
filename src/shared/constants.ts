@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Application Constants
+ * BPM - Escrime - Application Constants
  * Centralized configuration values
  * Licensed under GPL-3.0
  */

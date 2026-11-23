@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Appareils de piste (#2117, docs/adr/0023) : déclaration sur la piste de
+ * BPM - Escrime - Appareils de piste (#2117, docs/adr/0023) : déclaration sur la piste de
  * la salle, salle d'une épreuve, appareils effectifs, pilotes Cyrano et OPP2. Reprise des
  * anciens canaux IPC cyrano:* et opp2:* (ipc/cyranoHandlers.ts, ipc/opp2Handlers.ts).
  * Règles pures : shared/domain/stripDevices. Les pilotes passent par le port `ctx.devices`

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Lobby du mode entraînement (#1500) : occupation des pistes.
+ * BPM - Escrime - Lobby du mode entraînement (#1500) : occupation des pistes.
  * Une piste est occupée par un seul client (identifiant aléatoire propre à l'onglet) ;
  * elle se libère à la demande (retour lobby, fermeture de page) ou après 3 minutes
  * sans activité du client. Logique pure : l'horloge est injectée.

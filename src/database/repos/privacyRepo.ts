@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - RGPD : droits des personnes et durée de conservation (#1882).
+ * BPM - Escrime - RGPD : droits des personnes et durée de conservation (#1882).
  * Recherche d'une personne (tireurs de toutes les compétitions + membres du Mode Club),
  * export de ses données (accès / portabilité), anonymisation, effacement, purge des
  * compétitions et membres inactifs au-delà de la durée de conservation.

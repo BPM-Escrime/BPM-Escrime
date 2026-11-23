@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Forfait DNS / DNF (#1256)
+ * BPM - Escrime - Forfait DNS / DNF (#1256)
  * DNS (Did Not Start) : forfait ou sortie médicale déclaré à l'appel pour un tireur n'ayant commencé
  * aucun match de poule. Tout autre forfait / sortie médicale en poules reste un DNF.
  * Le statut ABANDONED est affiché « Médical » (MED).

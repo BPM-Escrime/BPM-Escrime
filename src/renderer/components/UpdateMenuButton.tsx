@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bouton d'état des mises à jour dans l'en-tête.
+ * BPM - Escrime - Bouton d'état des mises à jour dans l'en-tête.
  * « À jour » (clic : revérifier) / « Mise à jour dispo » clignotant (clic : bannière).
  * Licensed under GPL-3.0
  */

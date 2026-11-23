@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Actions du menu natif pour la vue compétition (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Actions du menu natif pour la vue compétition (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import type { Dispatch, SetStateAction } from 'react';

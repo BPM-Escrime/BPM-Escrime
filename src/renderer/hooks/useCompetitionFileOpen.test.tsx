@@ -65,7 +65,7 @@ describe('useCompetitionFileOpen', () => {
     const { hook, onOpened, openBinaryFile } = setup();
     await act(() => hook.result.current.openFile());
     expect(openBinaryFile).toHaveBeenCalledWith({
-      filters: [{ name: 'BellePoule', extensions: ['bpm', 'db'] }],
+      filters: [{ name: 'BPM - Escrime', extensions: ['bpm', 'db'] }],
     });
     expect(hook.result.current.pending).toEqual({ fileName: 'secret.bpm', content: 'QlBN' });
     expect(onOpened).not.toHaveBeenCalled();

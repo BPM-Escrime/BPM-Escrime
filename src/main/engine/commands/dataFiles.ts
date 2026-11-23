@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fichiers de données du poste par le contrat (#1981, docs/adr/0021 et 0022)
+ * BPM - Escrime - Fichiers de données du poste par le contrat (#1981, docs/adr/0021 et 0022)
  * Reprise des anciens canaux IPC file:exportCompetition, file:exportFencersArchive,
  * file:importFencersArchive, file:exportPhotos, file:importPhotos, privacy:exportEncryptedBpm,
  * privacy:openEncryptedBpm, club:importPhotos, club:exportBackup, club:importBackup : contenu
@@ -197,7 +197,10 @@ const openCompetitionFile: FileHandler<'openCompetitionFile'> = async (
     data.length < SQLITE_MAGIC.length ||
     !data.subarray(0, SQLITE_MAGIC.length).equals(SQLITE_MAGIC)
   ) {
-    throw new CommandError('invalid_file', "Ce fichier n'est pas une sauvegarde BellePoule (.bpm)");
+    throw new CommandError(
+      'invalid_file',
+      "Ce fichier n'est pas une sauvegarde BPM - Escrime (.bpm)"
+    );
   }
   const competitionIds = await withTempFile(ctx, 'open', async tmp => {
     await fs.promises.writeFile(tmp, data);

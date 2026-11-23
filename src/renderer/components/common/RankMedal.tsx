@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Médaille de classement (#1532)
+ * BPM - Escrime - Médaille de classement (#1532)
  * Icône lucide colorée (or / argent / bronze) à la place des emojis de médaille ; rien au-delà du 3e rang.
  * Décorative (aria-hidden) : le rang reste affiché en texte à côté.
  * Licensed under GPL-3.0

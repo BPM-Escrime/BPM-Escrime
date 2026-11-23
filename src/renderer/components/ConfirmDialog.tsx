@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Confirm Dialog Component
+ * BPM - Escrime - Confirm Dialog Component
  * Remplace window.confirm() / window.prompt() natifs (focus Electron, prompt non supporté)
  * Licensed under GPL-3.0
  */

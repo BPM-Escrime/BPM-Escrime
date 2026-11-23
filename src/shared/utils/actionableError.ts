@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Erreurs actionnables (#1535)
+ * BPM - Escrime - Erreurs actionnables (#1535)
  * Classe une erreur (code Node, message SQLite/réseau) et produit un message
  * « ce qui a échoué — cause probable et étape suivante » pour les toasts.
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - React Entry Point
+ * BPM - Escrime - React Entry Point
  * Licensed under GPL-3.0
  */
 

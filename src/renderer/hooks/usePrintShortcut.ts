@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Raccourci Ctrl+P / Cmd+P (impression) conditionnel (#1241)
+ * BPM - Escrime - Raccourci Ctrl+P / Cmd+P (impression) conditionnel (#1241)
  * Licensed under GPL-3.0
  */
 import { useEffect } from 'react';

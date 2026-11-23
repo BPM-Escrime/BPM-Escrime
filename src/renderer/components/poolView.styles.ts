@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Styles statiques de PoolView
+ * BPM - Escrime - Styles statiques de PoolView
  * Constantes de style définies au niveau module (références stables, pas de
  * recréation à chaque rendu) + fabriques pour les variantes dynamiques.
  * Licensed under GPL-3.0

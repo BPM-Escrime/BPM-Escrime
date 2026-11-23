@@ -1,6 +1,6 @@
 /**
  * Tests - recherche dans la liste des compétitions (#1534)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Compétitions en plusieurs tours de poules (#1051)
+ * BPM - Escrime - Compétitions en plusieurs tours de poules (#1051)
  * Qualifiés pour le tour suivant, tirage seedé sur le tour précédent, classement final.
  * Licensed under GPL-3.0
  */

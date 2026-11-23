@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (inventaire) : prêt groupé. Une fiche par matériel
+ * BPM - Escrime - Mode Club (inventaire) : prêt groupé. Une fiche par matériel
  * sélectionné, même emprunteur, même échéance. Les fiches sans disponibilité sont ignorées.
  * Licensed under GPL-3.0
  */

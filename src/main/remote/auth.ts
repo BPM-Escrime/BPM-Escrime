@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Authentification et limitation de débit du serveur distant
+ * BPM - Escrime - Authentification et limitation de débit du serveur distant
  * (extraites de remoteScoreServer.ts, #1065) : cookies, mots de passe scrypt,
  * jetons de session, blocage progressif des connexions, fenêtres d'une minute.
  * Licensed under GPL-3.0

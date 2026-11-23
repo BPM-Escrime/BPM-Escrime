@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modales / menus de la vue compétition, gérés par useModalFlags (#1241)
+ * BPM - Escrime - Modales / menus de la vue compétition, gérés par useModalFlags (#1241)
  * Licensed under GPL-3.0
  */
 import type { ModalFlags } from '../../hooks/useModalFlags';

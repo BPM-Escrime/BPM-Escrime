@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - FFE Connect Modal
+ * BPM - Escrime - FFE Connect Modal
  * Import participants from FFE Connect API
  * Licensed under GPL-3.0
  */

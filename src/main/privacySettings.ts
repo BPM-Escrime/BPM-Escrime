@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglages RGPD persistés côté main (#1882)
+ * BPM - Escrime - Réglages RGPD persistés côté main (#1882)
  * Fichier `<userData>/privacy-settings.json` : affichage des noms sur le réseau,
  * durées de conservation, action et purge automatique au démarrage.
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - TableauArenaModal
+ * BPM - Escrime - TableauArenaModal
  * Modal d'assignation d'un match du tableau à une piste
  * Licensed under GPL-3.0
  */

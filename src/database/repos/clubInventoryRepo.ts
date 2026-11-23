@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : inventaire du matériel et prêts aux tireurs.
+ * BPM - Escrime - Mode Club : inventaire du matériel et prêts aux tireurs.
  * Licensed under GPL-3.0
  */
 import { v4 as uuidv4 } from 'uuid';

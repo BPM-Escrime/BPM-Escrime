@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Styles statiques de RefereeManager
+ * BPM - Escrime - Styles statiques de RefereeManager
  * Constantes au niveau module (références stables) pour les styles répétés.
  * Licensed under GPL-3.0
  */

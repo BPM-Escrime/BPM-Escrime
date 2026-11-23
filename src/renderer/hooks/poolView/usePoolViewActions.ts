@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Actions de la vue de poule : validation des scores, statuts spéciaux, impression, remplissage automatique
+ * BPM - Escrime - Actions de la vue de poule : validation des scores, statuts spéciaux, impression, remplissage automatique
  * Licensed under GPL-3.0
  */
 

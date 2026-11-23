@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournament Templates
+ * BPM - Escrime - Tournament Templates
  * Predefined competition configurations
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Poules composées par le DT (#1980, docs/adr/0017, palier « tirage »)
+ * BPM - Escrime - Poules composées par le DT (#1980, docs/adr/0017, palier « tirage »)
  * La préparation des poules (tirage, ajustements, ordre des matchs) se fait à l'écran ; au
  * lancement, la composition retenue est envoyée au moteur (generatePools). Cette fonction
  * pure en fait des poules complètes, identifiants conservés, après contrôle.

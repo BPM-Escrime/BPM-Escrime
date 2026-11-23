@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : ajout / modification d'une équipe (#1118)
+ * BPM - Escrime - Tournoi des rapières : ajout / modification d'une équipe (#1118)
  * Nom d'équipe, niveau, et les deux tireurs avec leur catégorie d'âge.
  * Licensed under GPL-3.0
  */

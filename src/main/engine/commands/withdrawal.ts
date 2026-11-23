@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Retrait et réintégration d'un tireur (#1980, docs/adr/0016)
+ * BPM - Escrime - Retrait et réintégration d'un tireur (#1980, docs/adr/0016)
  * withdrawFencer : abandon, forfait, exclusion (carton noir) ; reinstateFencer : annulation.
  * Règle : shared/domain/fencers/withdrawal (planWithdrawal, planReinstatement). Écritures dans
  * la transaction de runCommand : statut, instantané (fencer_abandons), matchs (base et état

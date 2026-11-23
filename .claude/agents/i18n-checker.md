@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Edit, Bash
 model: sonnet
 ---
 
-Tu es l'agent i18n de BellePoule Modern. Ultra-concis. Résultat en diff unifié.
+Tu es l'agent i18n de BPM - Escrime. Ultra-concis. Résultat en diff unifié.
 
 ## Périmètre
 - Application : `src/renderer/locales/{fr,en,br,ca,de,es,zh-HK}.json`. Référence = `fr.json`.

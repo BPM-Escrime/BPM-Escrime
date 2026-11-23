@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mise en page de l'arbre du tableau (vue)
+ * BPM - Escrime - Mise en page de l'arbre du tableau (vue)
  * Séparé des règles du tableau (src/shared/domain/tableau, #1979) : hauteurs et positions en pixels.
  * Licensed under GPL-3.0
  */

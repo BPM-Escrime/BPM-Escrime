@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Logo : les 4 armes (épée, fleuret, sabre, sabre laser)
+ * BPM - Escrime - Logo : les 4 armes (épée, fleuret, sabre, sabre laser)
  * rayonnant depuis un anneau central (la piste). Garde de couleur propre à chaque arme.
  * Licensed under GPL-3.0
  */
@@ -7,7 +7,7 @@
 import React, { useId } from 'react';
 
 /** Nom de marque : identique dans toutes les langues. */
-const BRAND_NAME = 'BellePoule Modern';
+const BRAND_NAME = 'BPM - Escrime';
 
 interface BrandLogoProps {
   size?: number;

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Styles statiques de CompetitionView (extrait, #1599)
+ * BPM - Escrime - Styles statiques de CompetitionView (extrait, #1599)
  * Licensed under GPL-3.0
  */
 import type React from 'react';

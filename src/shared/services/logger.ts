@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Professional Logger Service
+ * BPM - Escrime - Professional Logger Service
  * Centralized logging with levels and categories
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Densité d'affichage (#1541) : attribut data-density sur <html>
+ * BPM - Escrime - Densité d'affichage (#1541) : attribut data-density sur <html>
  * (tokens.css), persistée en local. Trois niveaux : confort, standard, compact.
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Composants et thème communs aux pages distantes (#1538)
+ * BPM - Escrime - Composants et thème communs aux pages distantes (#1538)
  * Bouton, carte, badge de statut de match, barre de score, en-tête, pied de page, thème
  * clair/sombre. Les couleurs viennent de /tokens.css (aucune valeur en dur). Servi en
  * /js/ui.js (CSP 'self'). Toute donnée dynamique passe par escHtml (/common.js).

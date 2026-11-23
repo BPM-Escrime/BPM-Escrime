@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Référence des outils MCP générée depuis leurs schémas (#1880)
+ * BPM - Escrime - Référence des outils MCP générée depuis leurs schémas (#1880)
  * Section de docs/MCP.md entre les marqueurs ci-dessous ; le reste du fichier est rédigé
  * à la main. Vérifiée par mcpDoc.test.ts (CI), régénérée par `npm run docs:mcp`.
  * Licensed under GPL-3.0

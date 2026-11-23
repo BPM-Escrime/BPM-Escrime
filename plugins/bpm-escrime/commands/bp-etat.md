@@ -1,9 +1,9 @@
 ---
-description: État de la salle BellePoule Modern — retards, conflits d'arbitres, pistes libres, tablettes
+description: État de la salle BPM - Escrime — retards, conflits d'arbitres, pistes libres, tablettes
 argument-hint: [journée ou épreuve]
 ---
 
-Fais le point sur la salle avec le serveur MCP `bellepoule` (lecture seule) :
+Fais le point sur la salle avec le serveur MCP `bpm-escrime` (lecture seule) :
 
 1. `list_competitions`, puis pour chaque épreuve du jour `get_pool_ranking` (avancement des poules : matchs joués / total) ou `get_bracket` si les poules sont finies.
 2. S'il y a une journée multi-épreuves : `day_overview` (conflits d'arbitres) et `strip_occupation` (pistes libres, réservées, occupées).

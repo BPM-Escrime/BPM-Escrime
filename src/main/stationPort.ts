@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Port du poste (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Port du poste (#1981 lot 2, docs/adr/0022)
  * Branche sur le CommandContext ce que les opérations du poste ne peuvent pas faire seules :
  * thèmes d'écrans (<userData>/themes.json), réglages RGPD (<userData>/privacy-settings.json),
  * serveur MCP, pistes de la journée en temps réel (serveurs distants des épreuves), dossiers

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - DT Call Notification
+ * BPM - Escrime - DT Call Notification
  * Persistent alert panel shown when a referee requests DT intervention
  * Licensed under GPL-3.0
  */

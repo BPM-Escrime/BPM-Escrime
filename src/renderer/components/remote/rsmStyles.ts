@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Styles statiques de RemoteScoreManager
+ * BPM - Escrime - Styles statiques de RemoteScoreManager
  * Licensed under GPL-3.0
  */
 import type React from 'react';

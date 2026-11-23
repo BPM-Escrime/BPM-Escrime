@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Matchs proposés aux tablettes arbitre : jouabilité et ordre
+ * BPM - Escrime - Matchs proposés aux tablettes arbitre : jouabilité et ordre
  * d'enchaînement des matchs de poule (extrait de remoteScoreServer).
  * Licensed under GPL-3.0
  */

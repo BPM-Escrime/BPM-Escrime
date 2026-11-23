@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Competition View Component (Refactored)
+ * BPM - Escrime - Competition View Component (Refactored)
  * Licensed under GPL-3.0
  */
 

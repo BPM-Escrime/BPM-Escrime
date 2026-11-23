@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File Parser - Classements FFE (import de classement)
+ * BPM - Escrime - File Parser - Classements FFE (import de classement)
  * Licensed under GPL-3.0
  */
 

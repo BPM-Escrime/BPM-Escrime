@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Affectation automatique des arbitres d'une épreuve (#1959)
+ * BPM - Escrime - Affectation automatique des arbitres d'une épreuve (#1959)
  *
  * Construit les créneaux (une poule = un créneau ; un match de tableau = un créneau,
  * tour par tour) et résout chaque tour par appariement optimal (refereeMatching).

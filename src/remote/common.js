@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Utilitaires partagés par les pages distantes (#1147)
+ * BPM - Escrime - Utilitaires partagés par les pages distantes (#1147)
  *
  * Chargé avant les scripts de page (`<script src="/common.js"></script>`).
  * - escHtml(v)  : échappe &, <, >, ", ' et ` (null/undefined → '', 0 → '0')

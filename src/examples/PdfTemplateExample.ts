@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - PDF Template Integration Example
+ * BPM - Escrime - PDF Template Integration Example
  * Example d'intégration du système de templates PDF
  * Licensed under GPL-3.0
  */
@@ -68,7 +68,7 @@ export class PdfTemplateExample {
       },
       branding: {
         organizationName: "Club d'Escrime Modern",
-        footerText: 'club-escrime.fr - Généré avec BellePoule Modern',
+        footerText: 'club-escrime.fr - Généré avec BPM - Escrime',
       },
     };
   }

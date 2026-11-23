@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : catégories d'âge des membres (M9 … V4),
+ * BPM - Escrime - Mode Club (#1872) : catégories d'âge des membres (M9 … V4),
  * plages de catégories (séances, pointage, exercices, statistiques) et séances récurrentes.
  * Licensed under GPL-3.0
  */

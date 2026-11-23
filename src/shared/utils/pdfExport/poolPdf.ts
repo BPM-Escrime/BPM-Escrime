@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - PDF Export Service
+ * BPM - Escrime - PDF Export Service
  * Export PDF des poules (grille, matchs, statistiques)
  * Licensed under GPL-3.0
  */
@@ -374,7 +374,7 @@ export function generatePoolHTML(
     cards: poolCardsSectionHTML(pool),
     footer: `
   <div class="doc-footer">
-    <span>BellePoule Modern</span>
+    <span>BPM - Escrime</span>
     <span>${now}</span>
   </div>`,
     'ocr-marks': `

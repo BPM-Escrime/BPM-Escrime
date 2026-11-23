@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Couche domaine (#1880) : logique métier du process main partagée
+ * BPM - Escrime - Couche domaine (#1880) : logique métier du process main partagée
  * par le serveur MCP, le mode --headless et, à terme, les handlers IPC de l'écran.
  * Licensed under GPL-3.0
  */

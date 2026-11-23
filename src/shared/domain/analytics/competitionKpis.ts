@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Indicateurs du tableau analytique (#1817)
+ * BPM - Escrime - Indicateurs du tableau analytique (#1817)
  * Fonctions pures : indice moyen, KPI par tireur, progression au classement,
  * indicateurs d'organisation (avancement, débit, attente, pistes, connexions).
  * Licensed under GPL-3.0

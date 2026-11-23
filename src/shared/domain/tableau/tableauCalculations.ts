@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fonctions pures de calcul du tableau d'élimination directe
+ * BPM - Escrime - Fonctions pures de calcul du tableau d'élimination directe
  * Extraites de TableauView pour alléger le composant (aucune dépendance React).
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Rejeu du journal d'une épreuve (#1980, docs/adr/0017, étape 5)
+ * BPM - Escrime - Rejeu du journal d'une épreuve (#1980, docs/adr/0017, étape 5)
  * projectCompetition : fonction pure qui rejoue les événements et rend les faits rejouables
  * (statuts, tours de poules, résultats des matchs, tableau). Les dérivés (classements, tableaux
  * de classement, classement final, poules terminées) n'y sont pas : ils se recalculent.

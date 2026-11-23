@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File Parser - Détection du format par le contenu
+ * BPM - Escrime - File Parser - Détection du format par le contenu
  * Licensed under GPL-3.0
  */
 

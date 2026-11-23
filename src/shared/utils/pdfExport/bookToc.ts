@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Dossier de compétition : page de garde + sommaire (#1325)
+ * BPM - Escrime - Dossier de compétition : page de garde + sommaire (#1325)
  * Licensed under GPL-3.0
  */
 

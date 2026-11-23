@@ -19,7 +19,7 @@ describe('webhook (#1269)', () => {
   });
 
   it('message par défaut si le corps est sans texte', () => {
-    expect(buildWebhookBody({ event: 'x' }).content).toBe('BellePoule Modern');
+    expect(buildWebhookBody({ event: 'x' }).content).toBe('BPM - Escrime');
   });
 
   it('refuse une URL non sécurisée sans requête', async () => {

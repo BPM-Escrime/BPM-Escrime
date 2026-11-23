@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : identification des tireurs par leur carte de club
+ * BPM - Escrime - Mode Club (#1872) : identification des tireurs par leur carte de club
  * depuis la tablette arbitre (serveur d'entraînement relié à une séance ouverte).
  * GET /api/club/identify?arena=N (scan proposé ? combat déjà sur la piste ?), POST /api/club/identify (cartes A et B lues).
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types internes du serveur distant
+ * BPM - Escrime - Types internes du serveur distant
  * (extraits de remoteScoreServer.ts, #1065).
  * Licensed under GPL-3.0
  */

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests unitaires - OfflineStorageManager (IndexedDB via fake-indexeddb)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import 'fake-indexeddb/auto';

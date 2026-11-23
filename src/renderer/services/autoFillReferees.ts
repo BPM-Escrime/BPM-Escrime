@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitres du remplissage automatique (scores de test, statistiques)
+ * BPM - Escrime - Arbitres du remplissage automatique (scores de test, statistiques)
  * Même moteur que l'affectation réelle (#1979, docs/adr/0014) : une poule = un arbitre,
  * un match de tableau = un arbitre par tour, neutralité par défaut ; un arbitre peut
  * enchaîner plusieurs créneaux (reuseReferees).

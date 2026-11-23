@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (inventaire) : colonnes affichables du tableau du matériel.
+ * BPM - Escrime - Mode Club (inventaire) : colonnes affichables du tableau du matériel.
  * Le nom est toujours affiché ; le choix est mémorisé sur le poste (localStorage).
  * Licensed under GPL-3.0
  */

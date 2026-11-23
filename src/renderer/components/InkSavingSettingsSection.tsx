@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Paramètres → Documents → Économie d'encre
+ * BPM - Escrime - Paramètres → Documents → Économie d'encre
  * Réglage du poste : fonds retirés et textes en noir sur toute impression et tout PDF.
  * Licensed under GPL-3.0
  */

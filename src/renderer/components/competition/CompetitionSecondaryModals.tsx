@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modales d'analyse, de partage et d'affichage public (extrait de
+ * BPM - Escrime - Modales d'analyse, de partage et d'affichage public (extrait de
  * CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

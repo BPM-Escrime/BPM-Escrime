@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modèle d'import de tireurs (CSV / Excel)
+ * BPM - Escrime - Modèle d'import de tireurs (CSV / Excel)
  * Licensed under GPL-3.0
  */
 

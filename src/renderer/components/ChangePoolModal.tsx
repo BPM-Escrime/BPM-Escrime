@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Change Pool Modal Component
+ * BPM - Escrime - Change Pool Modal Component
  * Allows moving a fencer from one pool to another
  * Licensed under GPL-3.0
  */

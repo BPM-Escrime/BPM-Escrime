@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglages de session en cours (pistes, photos, cartons, thèmes, kiosque) (#1240)
+ * BPM - Escrime - Réglages de session en cours (pistes, photos, cartons, thèmes, kiosque) (#1240)
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Événements du menu natif et des fichiers pour l'App (#1897)
+ * BPM - Escrime - Événements du menu natif et des fichiers pour l'App (#1897)
  * Extrait d'App.tsx : un seul abonnement au montage, désabonnement ciblé (#1894).
  * Les handlers sont lus via une ref : toujours la dernière version, sans réabonnement.
  * Licensed under GPL-3.0

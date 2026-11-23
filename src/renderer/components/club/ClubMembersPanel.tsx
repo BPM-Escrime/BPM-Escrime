@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : annuaire des membres (ajout, archivage, effacement, nouveau code carte) et impression des cartes.
+ * BPM - Escrime - Mode Club (#1872) : annuaire des membres (ajout, archivage, effacement, nouveau code carte) et impression des cartes.
  * Licensed under GPL-3.0
  */
 

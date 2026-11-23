@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Laser Sabre "arena" team format
+ * BPM - Escrime - Laser Sabre "arena" team format
  * Règlement épreuve par équipe Sabre Laser (ASL-FFE, 2026) : assauts
  * indépendants plafonnés à 5 touches valides ou 3 minutes, score d'une
  * rencontre = total des points marqués sur les 9 (ou N²) assauts.

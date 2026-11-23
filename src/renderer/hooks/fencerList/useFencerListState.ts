@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Liste d'appel : tri, colonnes, filtrage, imports/exports et actions sur les tireurs
+ * BPM - Escrime - Liste d'appel : tri, colonnes, filtrage, imports/exports et actions sur les tireurs
  * Licensed under GPL-3.0
  */
 

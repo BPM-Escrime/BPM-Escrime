@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Update Notification Component
+ * BPM - Escrime - Update Notification Component
  * Affichage des notifications de mise à jour dans l'interface
  * Licensed under GPL-3.0
  */

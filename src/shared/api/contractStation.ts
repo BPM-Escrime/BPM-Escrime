@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Opérations du poste (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Opérations du poste (#1981 lot 2, docs/adr/0022)
  * Réglages du poste et salles, thèmes d'écrans, journée multi-épreuves (arbitres partagés,
  * pistes en temps réel), RGPD (droits des personnes, conservation) et agent MCP.
  * Ce ne sont pas des faits de l'épreuve : aucun journal. Droit `station:admin`, jamais servi

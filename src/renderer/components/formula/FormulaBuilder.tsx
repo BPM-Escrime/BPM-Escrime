@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Constructeur de formule visuel
+ * BPM - Escrime - Constructeur de formule visuel
  * Composant principal du créateur de formule à la carte.
  */
 

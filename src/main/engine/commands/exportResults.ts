@@ -1,6 +1,6 @@
 /**
- * BellePoule Modern - Couche domaine : export des résultats depuis le main (#1880, lot 3)
- * XML BellePoule/FFE, FFF (Windows-1252), CSV du classement après poules, HTML et PDF.
+ * BPM - Escrime - Couche domaine : export des résultats depuis le main (#1880, lot 3)
+ * XML BPM - Escrime/FFE, FFF (Windows-1252), CSV du classement après poules, HTML et PDF.
  * Mêmes générateurs que l'écran ; le PDF passe par une fenêtre cachée (injectée).
  * Licensed under GPL-3.0
  */

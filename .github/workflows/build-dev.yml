@@ -495,9 +495,9 @@ jobs:
 
           | Plateforme | Architecture | Fichier |
           |------------|--------------|---------|
-          | **Windows** | x64 | \`BellePoule-Modern-${FULL_VERSION}-win-x64-portable.exe\` |
-          | **macOS** | x64 | \`BellePoule-Modern-${FULL_VERSION}-mac-x64.dmg\` |
-          | **macOS** | ARM64 | \`BellePoule-Modern-${FULL_VERSION}-mac-arm64.dmg\` (Apple Silicon) |
+          | **Windows** | x64 | \`BPM-Escrime-${FULL_VERSION}-win-x64-portable.exe\` |
+          | **macOS** | x64 | \`BPM-Escrime-${FULL_VERSION}-mac-x64.dmg\` |
+          | **macOS** | ARM64 | \`BPM-Escrime-${FULL_VERSION}-mac-arm64.dmg\` (Apple Silicon) |
           | **Linux** | x64 | \`…-linux-x86_64.AppImage\`, \`.deb\`, \`.rpm\` |
           | **Linux** | ARM64 | \`…-linux-arm64.AppImage\`, \`.deb\` (Raspberry Pi…) |
 

@@ -48,7 +48,7 @@ afterEach(cleanup);
 
 describe('McpSettingsSection', () => {
   it('configuration du client : URL locale et jeton porteur', () => {
-    expect(JSON.parse(mcpClientConfig(status)).mcpServers.bellepoule).toEqual({
+    expect(JSON.parse(mcpClientConfig(status)).mcpServers['bpm-escrime']).toEqual({
       type: 'http',
       url: 'http://127.0.0.1:8067/mcp',
       headers: { Authorization: 'Bearer jeton-secret' },

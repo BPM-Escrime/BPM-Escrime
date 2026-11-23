@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Couche domaine : orchestration sportive (#1880, lot 3)
+ * BPM - Escrime - Couche domaine : orchestration sportive (#1880, lot 3)
  * Poules, arbitres de poule, scores, tableau, export des résultats, dans le main.
  * Mêmes fonctions pures que l'écran (poolOrchestration, tableauCalculations) ; l'état de
  * session est réécrit puis l'écran ouvert le relit (competition:event « session:changed »).

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Commandes et requêtes du poste (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Commandes et requêtes du poste (#1981 lot 2, docs/adr/0022)
  * Réglages et salles, thèmes d'écrans, agent MCP : reprise de l'ancien ipc/settingsHandlers.ts,
  * themesHandlers.ts et mcpHandlers.ts. Journée multi-épreuves : eventDay.ts ; RGPD : privacy.ts.
  * Pas de journal : ce ne sont pas des faits de l'épreuve. Ce qui dépend d'Electron ou du

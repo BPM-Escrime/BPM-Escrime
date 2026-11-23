@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : export PDF d'un classement (#1118)
+ * BPM - Escrime - Tournoi des rapières : export PDF d'un classement (#1118)
  * Licensed under GPL-3.0
  */
 
@@ -77,7 +77,7 @@ export function generateRapieresRankingHTML(table: RapieresPdfTable): string {
       .join('')}</tbody>
   </table>
   <div class="doc-footer">
-    <span>BellePoule Modern</span>
+    <span>BPM - Escrime</span>
     <span>${now}</span>
   </div>
 </body>

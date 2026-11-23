@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Affectation d'un écran connecté (rôle + arène)
+ * BPM - Escrime - Affectation d'un écran connecté (rôle + arène)
  * Partagé entre la télécommande TV (XiaomiRemotePanel) et la section « Écrans connectés »
  * de la saisie distante (ConnectedScreensPanel).
  * Licensed under GPL-3.0

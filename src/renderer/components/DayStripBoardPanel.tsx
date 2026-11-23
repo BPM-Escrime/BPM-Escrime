@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pistes d'une journée en temps réel (#1878) : occupation lue sur les
+ * BPM - Escrime - Pistes d'une journée en temps réel (#1878) : occupation lue sur les
  * saisies distantes des épreuves, pistes libérées proposées au travail en attente (un clic ou
  * affectation automatique), réservation par piste (épreuves et phases autorisées).
  * Licensed under GPL-3.0

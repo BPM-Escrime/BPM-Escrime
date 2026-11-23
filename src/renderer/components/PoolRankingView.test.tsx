@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - PoolRankingView : rang affiché des exclus (#1440)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

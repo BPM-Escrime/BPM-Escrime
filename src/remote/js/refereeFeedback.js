@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : retour sonore optionnel (#1539) et menu d'options sur téléphone (#1808)
+ * BPM - Escrime - Arbitre : retour sonore optionnel (#1539) et menu d'options sur téléphone (#1808)
  * - Son : bip court à chaque touche, désactivé par défaut, activable par #btn-sound
  *   (préférence locale `bp_ref_sound`). Distinct de la voix (#btn-tts-toggle, annonces du chrono).
  * - Le bouton « Annuler la touche » temporaire est retiré (#1808) : doublon du bouton « Annuler »

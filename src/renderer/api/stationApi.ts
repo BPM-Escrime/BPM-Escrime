@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Poste : appels de l'écran au contrat d'API (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Poste : appels de l'écran au contrat d'API (#1981 lot 2, docs/adr/0022)
  * Un seul endroit traduit les appels de l'écran (arguments positionnels, mêmes noms que les
  * anciens groupes settings, themes, eventDay, privacy et mcp de window.electronAPI) en
  * opérations du contrat (entrées nommées, shared/api/contractStation.ts). Hors Electron, le

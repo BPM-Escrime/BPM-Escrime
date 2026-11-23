@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Migration 47 : appareils de piste déclarés sur la salle
+ * BPM - Escrime - Migration 47 : appareils de piste déclarés sur la salle
  * (docs/adr/0023, docs/adr/0019 décision 2). SQL seul (le moteur de migration n'exécute que du
  * SQL) ; la liste des conflits est relue après coup par `stripDeviceDiagnostics`.
  * - `competitions.venue_id` : salle propre de l'épreuve ;

@@ -1,8 +1,8 @@
-# BellePoule Modern - Agent Instructions
+# BPM - Escrime - Agent Instructions
 
 ## Project Overview
 
-BellePoule Modern is an Electron desktop application for fencing tournament management. It uses React 19 + TypeScript 6 for the frontend, SQLite via better-sqlite3 for data storage, and Webpack 5 for bundling.
+BPM - Escrime is an Electron desktop application for fencing tournament management. It uses React 19 + TypeScript 6 for the frontend, SQLite via better-sqlite3 for data storage, and Webpack 5 for bundling.
 
 **Version:** v1.0.3 Build #1365  
 **Last Updated:** October 2026  

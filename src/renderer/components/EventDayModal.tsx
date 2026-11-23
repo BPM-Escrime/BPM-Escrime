@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Journée multi-épreuves (#1714) : épreuves d'une même salle,
+ * BPM - Escrime - Journée multi-épreuves (#1714) : épreuves d'une même salle,
  * pistes de la salle, groupe d'arbitres partagé (armes, statut commun, conflits).
  * Licensed under GPL-3.0
  */

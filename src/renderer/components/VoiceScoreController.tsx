@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Voice Control Feature
+ * BPM - Escrime - Voice Control Feature
  * Hands-free score entry using voice recognition
  * Licensed under GPL-3.0
  */

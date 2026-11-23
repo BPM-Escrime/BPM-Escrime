@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - État du serveur de saisie distante : session, réseau, pistes, thèmes et synchronisation
+ * BPM - Escrime - État du serveur de saisie distante : session, réseau, pistes, thèmes et synchronisation
  * Licensed under GPL-3.0
  */
 

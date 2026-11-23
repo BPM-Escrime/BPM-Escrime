@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Export PDF des données d'une personne (droit d'accès RGPD, #1882)
+ * BPM - Escrime - Export PDF des données d'une personne (droit d'accès RGPD, #1882)
  * HTML imprimé en PDF par le main (file.printHtmlToPDF). Toute valeur est échappée.
  * Le détail exhaustif (toutes les tables) reste dans l'export JSON.
  * Licensed under GPL-3.0

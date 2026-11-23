@@ -11,7 +11,7 @@ import {
   type RawFirewallData,
 } from './firewallCheck';
 
-const EXE = 'C:\\Program Files\\BellePoule\\BellePoule.exe';
+const EXE = 'C:\\Program Files\\BPM - Escrime\\BPM - Escrime.exe';
 
 function raw(overrides: Partial<RawFirewallData> = {}): RawFirewallData {
   return {
@@ -27,7 +27,7 @@ function raw(overrides: Partial<RawFirewallData> = {}): RawFirewallData {
 }
 
 const portRule = (over: Partial<RawFirewallData['rules'][number]> = {}) => ({
-  Name: 'BellePoule remote',
+  Name: 'BPM - Escrime remote',
   Action: 'Allow',
   Profile: 'Private',
   Protocol: 'TCP',

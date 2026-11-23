@@ -1,6 +1,6 @@
 /**
- * BellePoule Modern - Type Definitions
- * Based on the original BellePoule C++ codebase
+ * BPM - Escrime - Type Definitions
+ * Based on the original C++ codebase
  * Licensed under GPL-3.0
  */
 

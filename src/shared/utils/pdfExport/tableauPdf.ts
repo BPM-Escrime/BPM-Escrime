@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - PDF Export Service
+ * BPM - Escrime - PDF Export Service
  * Export PDF du tableau d'élimination directe (feuilles d'arbitrage)
  * Licensed under GPL-3.0
  */
@@ -267,7 +267,7 @@ export function generateTableauHTML(
       ? ''
       : `
   <div class="doc-footer">
-    <span>BellePoule Modern</span>
+    <span>BPM - Escrime</span>
     <span>${now}</span>
   </div>`,
   };

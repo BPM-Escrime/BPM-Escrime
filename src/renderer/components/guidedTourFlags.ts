@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Parcours guidé (logique pure)
+ * BPM - Escrime - Parcours guidé (logique pure)
  * Licensed under GPL-3.0
  */
 
@@ -29,7 +29,7 @@ export const TOUR_STEPS: TourStepId[] = [
 ];
 
 export const TOUR_STORAGE_KEY = 'bellepoule-guided-tour';
-export const TOUR_RESTART_EVENT = 'bellepoule:restart-tour';
+export const TOUR_RESTART_EVENT = 'bpm-escrime:restart-tour';
 
 export type TourFlag = 'active' | 'done';
 

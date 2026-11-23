@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Serveur d'entraînement : cycle de vie, session, thème, historique, écrans
+ * BPM - Escrime - Serveur d'entraînement : cycle de vie, session, thème, historique, écrans
  * de démo et avis à l'écran (#1981 lot 2, docs/adr/0022). Reprise des anciens canaux IPC
  * training:* (ipc/trainingHandlers.ts). Le serveur lui-même (registre, ports, certificat, fenêtre
  * principale) passe par le port `ctx.training` branché par main.ts ; pas de journal.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Enhanced Toast Component
+ * BPM - Escrime - Enhanced Toast Component
  * User-friendly notifications for errors and success
  * Licensed under GPL-3.0
  */

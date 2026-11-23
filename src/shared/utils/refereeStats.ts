@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Statistiques des arbitres
+ * BPM - Escrime - Statistiques des arbitres
  * Comptage des matchs arbitrés (poules + tableau) par arbitre
  * Licensed under GPL-3.0
  */

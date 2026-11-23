@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : gabarits HTML des vues poules / classement / historique d'entraînement
+ * BPM - Escrime - Kiosque : gabarits HTML des vues poules / classement / historique d'entraînement
  * (extrait de kiosk.html #1401). Fonctions pures : chaîne HTML en sortie, escHtml et tk injectés.
  * Servi en /js/kioskRender.js (CSP 'self').
  * Licensed under GPL-3.0

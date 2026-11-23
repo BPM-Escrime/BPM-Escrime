@@ -1,6 +1,6 @@
 /**
  * Tests unitaires - teamCardEscalation
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

@@ -1,6 +1,6 @@
 # Development Guide
 
-This comprehensive guide is for contributors who want to develop, extend, or maintain BellePoule Modern.
+This comprehensive guide is for contributors who want to develop, extend, or maintain BPM - Escrime.
 
 ## 📋 Table of Contents
 
@@ -15,7 +15,7 @@ This comprehensive guide is for contributors who want to develop, extend, or mai
 
 ## 🏗️ Architecture Overview
 
-BellePoule Modern is built using modern web technologies wrapped in an Electron desktop application.
+BPM - Escrime is built using modern web technologies wrapped in an Electron desktop application.
 
 ### Technology Stack
 
@@ -137,7 +137,7 @@ Full list: [docs/STACK_TECHNIQUE.md](docs/STACK_TECHNIQUE.md). Detailed architec
 
 ```bash
 git clone https://github.com/BellePoule-Modern/bellepoule-modern.git
-cd bellepoule-modern
+cd bpm-escrime
 ```
 
 #### 2. Install Dependencies
@@ -894,8 +894,8 @@ Règles complètes (SemVer, canaux, tags, nommage) : [docs/VERSIONING.md](docs/V
 
 1. **Fork and Branch**
    ```bash
-   git clone https://github.com/your-username/bellepoule-modern.git
-   cd bellepoule-modern
+   git clone https://github.com/your-username/bpm-escrime.git
+   cd bpm-escrime
    git checkout -b feature/your-feature-name
    ```
 
@@ -1264,4 +1264,4 @@ version number; never edit an existing migration.
    - Resizable text
    - Color-blind friendly design
 
-This development guide provides comprehensive information for contributing to BellePoule Modern. For specific questions or issues, please refer to the GitHub discussions or create an issue.
+This development guide provides comprehensive information for contributing to BPM - Escrime. For specific questions or issues, please refer to the GitHub discussions or create an issue.

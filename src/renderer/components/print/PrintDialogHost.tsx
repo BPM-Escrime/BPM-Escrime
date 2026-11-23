@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Hôte de la boîte d'impression intégrée (#1214)
+ * BPM - Escrime - Hôte de la boîte d'impression intégrée (#1214)
  * Enregistre auprès du preload le gestionnaire des demandes `file.printHtml` : chaque bouton
  * « Imprimer » ouvre la boîte (chargée à la demande) et reçoit son résultat.
  * Licensed under GPL-3.0

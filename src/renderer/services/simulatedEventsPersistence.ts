@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Persistance des événements simulés du remplissage automatique
+ * BPM - Escrime - Persistance des événements simulés du remplissage automatique
  * (durée, touches par zone, cartons) pour alimenter l'analytique.
  * Licensed under GPL-3.0
  */

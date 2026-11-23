@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Toast Notification System (unified)
+ * BPM - Escrime - Toast Notification System (unified)
  * Licensed under GPL-3.0
  */
 

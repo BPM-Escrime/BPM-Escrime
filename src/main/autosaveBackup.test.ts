@@ -33,7 +33,7 @@ describe('runBackupAutosave', () => {
     const userData = makeTmp();
     const docs = makeTmp();
     await runBackupAutosave(fakeDb([]), userData, docs);
-    const target = path.join(docs, 'BellePoule', AUTOSAVE_FILE_NAME);
+    const target = path.join(docs, 'BPM - Escrime', AUTOSAVE_FILE_NAME);
     expect(fs.readFileSync(target, 'utf8')).toBe('GLOBAL');
     expect(fs.existsSync(`${target}.tmp`)).toBe(false);
   });

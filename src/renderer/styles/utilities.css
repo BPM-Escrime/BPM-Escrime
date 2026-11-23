@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern — utilitaires CSS (sous-ensemble de la syntaxe Tailwind)
+ * BPM - Escrime — utilitaires CSS (sous-ensemble de la syntaxe Tailwind)
  * Tailwind n'est pas installé : seules les classes réellement utilisées par
  * les composants sont définies ici, adossées aux tokens de design.css
  * (couleurs neutres → --color-*, bleu → --color-primary) pour rester

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handlers IPC `db:*` (extraits de main.ts, #1155).
+ * BPM - Escrime - Handlers IPC `db:*` (extraits de main.ts, #1155).
  * Licensed under GPL-3.0
  */
 import { BrowserWindow, ipcMain } from 'electron';

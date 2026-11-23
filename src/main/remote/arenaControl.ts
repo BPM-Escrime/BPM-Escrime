@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Actions arbitre (événement arena_control) (#1240)
+ * BPM - Escrime - Actions arbitre (événement arena_control) (#1240)
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */

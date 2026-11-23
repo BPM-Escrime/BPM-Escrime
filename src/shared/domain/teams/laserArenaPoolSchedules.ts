@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Laser Sabre "arena" team format
+ * BPM - Escrime - Laser Sabre "arena" team format
  * Calendriers de poule figés du règlement (section "Déroulement de la
  * compétition") pour 8 et 12 équipes : 3 poules A/B/C de 4 (12 équipes,
  * 4 arènes) ou 2 poules A/B de 4 (8 équipes, 3 arènes), avec désignation

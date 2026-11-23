@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types minimaux de l'API Web Speech (absente de lib.dom)
+ * BPM - Escrime - Types minimaux de l'API Web Speech (absente de lib.dom)
  * Licensed under GPL-3.0
  */
 

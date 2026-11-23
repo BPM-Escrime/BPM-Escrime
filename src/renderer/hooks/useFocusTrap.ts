@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - useFocusTrap
+ * BPM - Escrime - useFocusTrap
  * Piège le focus clavier dans une modal et restaure le focus à la fermeture.
  * Ferme sur Échap via onClose.
  * Licensed under GPL-3.0

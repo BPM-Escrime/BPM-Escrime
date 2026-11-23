@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Team Competition Types
+ * BPM - Escrime - Team Competition Types
  * Feature 22: Team event support
  * Licensed under GPL-3.0
  */

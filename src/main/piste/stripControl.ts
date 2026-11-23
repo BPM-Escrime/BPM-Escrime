@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pilotage des appareils de la salle hors compétition (#2117, docs/adr/0023)
+ * BPM - Escrime - Pilotage des appareils de la salle hors compétition (#2117, docs/adr/0023)
  * Envoie un affichage libre (arme, noms, nationalités ; vide = remise à blanc) à une piste du
  * pilote, hors PisteHub, et suit son accusé de réception :
  * - Cyrano n'acquitte pas un DISP : le pilote envoie un HELLO derrière, l'INFO qui répond (ou

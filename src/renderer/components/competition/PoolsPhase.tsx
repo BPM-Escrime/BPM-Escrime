@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Phase « Poules » de la compétition (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Phase « Poules » de la compétition (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import React, { Suspense } from 'react';

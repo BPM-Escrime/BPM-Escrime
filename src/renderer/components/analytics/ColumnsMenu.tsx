@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bouton « Colonnes » : afficher / masquer des colonnes (#1817)
+ * BPM - Escrime - Bouton « Colonnes » : afficher / masquer des colonnes (#1817)
  * Le choix est mémorisé par tableau (localStorage).
  * Licensed under GPL-3.0
  */

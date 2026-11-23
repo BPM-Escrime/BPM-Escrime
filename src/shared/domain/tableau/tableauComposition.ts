@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tableau généré par l'écran, écrit par le moteur (#1980, docs/adr/0017,
+ * BPM - Escrime - Tableau généré par l'écran, écrit par le moteur (#1980, docs/adr/0017,
  * palier « tableau »). L'écran calcule le tableau (planTableau, classement d'entrée de la
  * vue : groupes, rapières, formule) ; le moteur reçoit le placement complet et le contrôle.
  * Fonction pure : identifiants, rangs de sortie de poules et exemptions conservés.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Intervalle de pistes (piste de départ / piste de fin)
+ * BPM - Escrime - Intervalle de pistes (piste de départ / piste de fin)
  * Les numéros de pistes réellement utilisés ne commencent pas forcément à 1
  * (ex. pistes 5 à 8 pour la compétition féminine) — issue #1501.
  * Licensed under GPL-3.0

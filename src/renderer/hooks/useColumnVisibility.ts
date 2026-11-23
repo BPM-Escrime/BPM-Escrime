@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { logger, LogCategory } from '@shared/services/logger';
 
-const STORAGE_KEY = 'bellepoule_column_visibility';
+const STORAGE_KEY = 'bpm_escrime_column_visibility';
 
 export type ColumnId =
   | 'victories'

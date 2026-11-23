@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Raccourcis de navigation entre phases (#1533)
+ * BPM - Escrime - Raccourcis de navigation entre phases (#1533)
  * Ctrl+1 … Ctrl+8 : aller à la phase n (position dans la barre) ;
  * Ctrl+← / Ctrl+→ : phase précédente / suivante parmi les phases accessibles.
  * Ignoré quand le focus est dans un champ de saisie. Licensed under GPL-3.0

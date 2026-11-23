@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - API preload du paramétrage du poste (#1880).
+ * BPM - Escrime - API preload du paramétrage du poste (#1880).
  * Licensed under GPL-3.0
  */
 /** Dossiers où l'agent (MCP) lit et écrit ; `folders` vide = `defaults` */

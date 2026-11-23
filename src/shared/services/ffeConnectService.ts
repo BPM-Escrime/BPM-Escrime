@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - FFE Connect Service
+ * BPM - Escrime - FFE Connect Service
  * Import participants from Fédération Française d'Escrime API
  * Licensed under GPL-3.0
  */

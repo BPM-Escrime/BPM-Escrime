@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Command Palette (Ctrl+K)
+ * BPM - Escrime - Command Palette (Ctrl+K)
  * Licensed under GPL-3.0
  */
 

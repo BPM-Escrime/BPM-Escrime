@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pool View Component
+ * BPM - Escrime - Pool View Component
  * With classic grid view and match list view
  * Licensed under GPL-3.0
  */

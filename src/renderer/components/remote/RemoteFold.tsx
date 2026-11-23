@@ -18,7 +18,7 @@ export type RemoteSectionId =
   | 'cyrano'
   | 'screens';
 
-export const REMOTE_FOLDS_STORAGE_KEY = 'bellepoule_remote_collapsed_sections';
+export const REMOTE_FOLDS_STORAGE_KEY = 'bpm_escrime_remote_collapsed_sections';
 
 const SECTION_LABEL_KEYS: Record<RemoteSectionId, string> = {
   strips: 'rsm.section_strips',

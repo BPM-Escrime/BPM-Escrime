@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Paramètres → Salles et pistes (#1880)
+ * BPM - Escrime - Paramètres → Salles et pistes (#1880)
  * Salles déclarées une fois (nom, nombre de pistes), reprises par les journées, le Mode Club,
  * le serveur d'arbitrage et Cyrano. Une salle est « par défaut ».
  * Licensed under GPL-3.0

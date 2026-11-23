@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : contrat de prêt de matériel imprimable
+ * BPM - Escrime - Mode Club (#1872) : contrat de prêt de matériel imprimable
  * (qui prête, à qui, quoi, quand, retour prévu, état, zones de signature).
  * Licensed under GPL-3.0
  */

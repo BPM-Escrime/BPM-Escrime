@@ -1,6 +1,6 @@
 /**
  * Tests - poolSpecialStatus (#1418)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

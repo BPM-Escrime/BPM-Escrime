@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - E2E sur l'application Electron réelle (#2045)
+ * BPM - Escrime - E2E sur l'application Electron réelle (#2045)
  * Les parcours qui écrivent en base (créer, supprimer une épreuve, poules, scores) ne
  * peuvent pas tourner dans le navigateur : sans process principal, window.electronAPI
  * n'existe pas. Chaque test lance l'application construite (dist/) avec un profil

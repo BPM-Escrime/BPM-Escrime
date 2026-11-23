@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fencer Photo Management
+ * BPM - Escrime - Fencer Photo Management
  * Component for uploading and displaying fencer photos
  * Licensed under GPL-3.0
  */

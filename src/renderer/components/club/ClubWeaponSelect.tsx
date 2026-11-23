@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : choix de l'arme (club, séance, maître d'armes).
+ * BPM - Escrime - Mode Club (#1872) : choix de l'arme (club, séance, maître d'armes).
  * L'arme de la séance fixe les règles de la saisie distante (score, durée, cartons) ;
  * l'escrime artistique (« A ») n'a pas de saisie distante.
  * Licensed under GPL-3.0

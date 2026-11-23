@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - CoachMark Component
+ * BPM - Escrime - CoachMark Component
  * Licensed under GPL-3.0
  */
 

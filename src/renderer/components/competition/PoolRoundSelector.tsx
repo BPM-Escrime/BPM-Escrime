@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Sélecteur de tour de poules (#1051) (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Sélecteur de tour de poules (#1051) (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import React from 'react';

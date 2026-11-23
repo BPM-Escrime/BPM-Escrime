@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - JS/CSS communs des pages distantes, dont `/i18n.js` (#1213)
+ * BPM - Escrime - JS/CSS communs des pages distantes, dont `/i18n.js` (#1213)
  * Traductions découpées par langue (`src/remote/i18n/<langue>.js`) + moteur (`src/remote/i18n.js`),
  * concaténés en un seul script : les pages chargent toujours `/i18n.js`.
  * Licensed under GPL-3.0

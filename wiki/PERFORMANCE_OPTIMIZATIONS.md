@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides comprehensive information about performance optimizations implemented in BellePoule Modern v2.1, focusing on memory management, React performance, algorithm efficiency, and CSS optimizations.
+This document provides comprehensive information about performance optimizations implemented in BPM - Escrime v2.1, focusing on memory management, React performance, algorithm efficiency, and CSS optimizations.
 
 ## Table of Contents
 
@@ -286,7 +286,7 @@ if (performance.memory) {
 
 ## Conclusion
 
-These optimizations represent a significant improvement in BellePoule Modern's performance, particularly for large competitions and extended usage sessions. The improvements focus on:
+These optimizations represent a significant improvement in BPM - Escrime's performance, particularly for large competitions and extended usage sessions. The improvements focus on:
 
 1. **Memory Efficiency**: Preventing leaks and optimizing usage
 2. **React Performance**: Reducing unnecessary re-renders

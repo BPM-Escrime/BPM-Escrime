@@ -1,4 +1,4 @@
-# Contribuer à BellePoule Modern
+# Contribuer à BPM - Escrime
 
 Merci de votre intérêt pour le projet !
 

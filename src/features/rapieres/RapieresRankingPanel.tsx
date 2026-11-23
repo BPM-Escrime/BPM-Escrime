@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : classements filtrés (#1118)
+ * BPM - Escrime - Tournoi des rapières : classements filtrés (#1118)
  * Filtres cumulables sur les équipes (catégorie d'âge, niveau, sexe — #1441). Export PDF.
  * Utilisé après les poules (classement intermédiaire) et dans les résultats (final).
  * Licensed under GPL-3.0
@@ -30,7 +30,7 @@ import {
 } from './rapieresPdf';
 import { Button } from '../../renderer/components/common/Button';
 
-const HIDDEN_KEY = 'bellepoule_rapieres_ranking_hidden_columns';
+const HIDDEN_KEY = 'bpm_escrime_rapieres_ranking_hidden_columns';
 
 /** Colonnes du classement d'équipes (#1441 : une ligne par équipe, colonne « Poule » optionnelle) */
 const COLUMNS: { id: string; kind: RapieresColumnKind }[] = [

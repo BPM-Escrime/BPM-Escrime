@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Épreuves entre l'écran et le contrat (#1981, docs/adr/0018)
+ * BPM - Escrime - Épreuves entre l'écran et le contrat (#1981, docs/adr/0018)
  * Le contrat transporte les dates en ISO 8601 et ne joint ni tireurs ni arbitres.
  * Licensed under GPL-3.0
  */

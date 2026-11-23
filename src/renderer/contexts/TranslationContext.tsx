@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Translation Context
+ * BPM - Escrime - Translation Context
  * Global translation state using React Context
  * Licensed under GPL-3.0
  */
@@ -54,7 +54,7 @@ const TranslationContext = createContext<TranslationContextValue | undefined>(un
 const getFallbackTranslations = (language: Language): Translations => {
   const fallbackTranslations: Record<Language, Translations> = {
     fr: {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: 'Nouvelle compétition' },
       settings: { title: 'Paramètres' },
       messages: {
@@ -63,7 +63,7 @@ const getFallbackTranslations = (language: Language): Translations => {
       },
     },
     en: {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: 'New competition' },
       settings: { title: 'Settings' },
       messages: {
@@ -72,7 +72,7 @@ const getFallbackTranslations = (language: Language): Translations => {
       },
     },
     br: {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: 'Nevezompetañ' },
       settings: { title: 'Arventennoù' },
       messages: {
@@ -81,7 +81,7 @@ const getFallbackTranslations = (language: Language): Translations => {
       },
     },
     ca: {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: 'Nova Competició' },
       settings: { title: 'Configuració' },
       messages: {
@@ -90,7 +90,7 @@ const getFallbackTranslations = (language: Language): Translations => {
       },
     },
     de: {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: 'Neuer Wettbewerb' },
       settings: { title: 'Einstellungen' },
       messages: {
@@ -99,7 +99,7 @@ const getFallbackTranslations = (language: Language): Translations => {
       },
     },
     es: {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: 'Nueva Competición' },
       settings: { title: 'Ajustes' },
       messages: {
@@ -108,7 +108,7 @@ const getFallbackTranslations = (language: Language): Translations => {
       },
     },
     pt: {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: 'Nova competição' },
       settings: { title: 'Definições' },
       messages: {
@@ -117,7 +117,7 @@ const getFallbackTranslations = (language: Language): Translations => {
       },
     },
     it: {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: 'Nuova competizione' },
       settings: { title: 'Impostazioni' },
       messages: {
@@ -126,7 +126,7 @@ const getFallbackTranslations = (language: Language): Translations => {
       },
     },
     ru: {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: 'Новое соревнование' },
       settings: { title: 'Настройки' },
       messages: {
@@ -135,7 +135,7 @@ const getFallbackTranslations = (language: Language): Translations => {
       },
     },
     'zh-HK': {
-      app: { title: 'BellePoule Modern' },
+      app: { title: 'BPM - Escrime' },
       menu: { new_competition: '新增比賽' },
       settings: { title: '設定' },
       messages: {

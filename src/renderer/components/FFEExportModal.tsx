@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - FFE Export Modal
+ * BPM - Escrime - FFE Export Modal
  * Export direct des résultats vers l'API FFE Connect
  * Licensed under GPL-3.0
  */

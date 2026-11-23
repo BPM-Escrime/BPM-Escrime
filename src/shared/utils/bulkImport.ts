@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bulk Import Utilities
+ * BPM - Escrime - Bulk Import Utilities
  * CSV and Excel import for fencers
  * Licensed under GPL-3.0
  */

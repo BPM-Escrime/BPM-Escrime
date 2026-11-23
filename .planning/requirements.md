@@ -1,4 +1,4 @@
-# Requirements - BellePoule Modern
+# Requirements - BPM - Escrime
 
 ## V1 - Core (LIVRÉ ✅)
 

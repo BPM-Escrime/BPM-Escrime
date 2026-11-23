@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Libellé du bouton « copier l'URL » (icône lucide + texte)
+ * BPM - Escrime - Libellé du bouton « copier l'URL » (icône lucide + texte)
  * Licensed under GPL-3.0
  */
 

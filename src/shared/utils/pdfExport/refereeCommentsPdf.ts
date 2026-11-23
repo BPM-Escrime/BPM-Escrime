@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Compte rendu PDF des commentaires de formation des arbitres (#989)
+ * BPM - Escrime - Compte rendu PDF des commentaires de formation des arbitres (#989)
  * Une page par arbitre commenté, mise en forme proche des feuilles de poule/tableau.
  * Licensed under GPL-3.0
  */
@@ -65,7 +65,7 @@ export function generateRefereeCommentsHTML(
       <tbody>${rows}</tbody>
     </table>
     <div class="doc-footer">
-      <span>BellePoule Modern</span>
+      <span>BPM - Escrime</span>
       <span>${now}</span>
     </div>
   </section>`;

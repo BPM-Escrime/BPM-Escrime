@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Carte « Statistiques de l'arme » (onglet Performances)
+ * BPM - Escrime - Carte « Statistiques de l'arme » (onglet Performances)
  * Armes olympiques : écart moyen au score, cartons par match, abandons / exclusions /
  * forfaits, matchs au temps limite (#1817). Tournoi des rapières : mêmes indicateurs
  * que l'épée. Autres armes : indicateurs historiques.

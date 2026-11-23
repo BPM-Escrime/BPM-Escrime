@@ -1,6 +1,6 @@
 /**
  * Tests unitaires - Modèles de tournoi (templates)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

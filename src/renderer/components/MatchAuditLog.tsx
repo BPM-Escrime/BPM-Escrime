@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Journal de match (audit log)
+ * BPM - Escrime - Journal de match (audit log)
  * Licensed under GPL-3.0
  */
 

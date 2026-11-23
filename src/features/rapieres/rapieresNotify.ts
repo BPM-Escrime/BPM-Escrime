@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : notification de l'écran
+ * BPM - Escrime - Tournoi des rapières : notification de l'écran
  * Injectée dans les hooks (lot 5 de #1979) : ils n'importent pas le Toast du renderer.
  * Licensed under GPL-3.0
  */

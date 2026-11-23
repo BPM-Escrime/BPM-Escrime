@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Plan de salle interactif du planificateur d'arène (#2075)
+ * BPM - Escrime - Plan de salle interactif du planificateur d'arène (#2075)
  * Dessin SVG à l'échelle : grille de 1 m, cotes de la salle, arènes et éléments
  * déplaçables, redimensionnables (poignée de coin) et tournables (poignée
  * ronde) à la souris, aimantation 0,5 m (15° pour la rotation), ou au clavier.

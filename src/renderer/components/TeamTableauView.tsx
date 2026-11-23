@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tableau équipes (élimination directe)
+ * BPM - Escrime - Tableau équipes (élimination directe)
  * Composant présentationnel : reconstruit l'arbre à partir de round/position
  * (pas d'arbre séparé à persister) et réutilise TeamPoolView pour la saisie
  * de score de chaque match réel (mêmes règles arme-aware : cible progressive,

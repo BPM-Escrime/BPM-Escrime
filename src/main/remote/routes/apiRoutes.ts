@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Routes du serveur distant (extraites de remoteScoreServer.ts, #1065).
+ * BPM - Escrime - Routes du serveur distant (extraites de remoteScoreServer.ts, #1065).
  * Licensed under GPL-3.0
  */
 

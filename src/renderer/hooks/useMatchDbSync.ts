@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Persistance des matchs de poule / tableau en base (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Persistance des matchs de poule / tableau en base (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import { useEffect, useRef } from 'react';

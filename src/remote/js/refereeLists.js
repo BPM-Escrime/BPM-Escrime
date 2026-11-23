@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : liste des prochains matchs (extrait de referee.html #1401)
+ * BPM - Escrime - Arbitre : liste des prochains matchs (extrait de referee.html #1401)
  * Filtrage, fusion et gabarit HTML (escHtml et T injectés : toute donnée dynamique est
  * échappée). Servi en /js/refereeLists.js (CSP 'self').
  * Licensed under GPL-3.0

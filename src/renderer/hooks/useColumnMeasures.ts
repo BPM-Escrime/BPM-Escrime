@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mesure des colonnes du tableau pour les connecteurs SVG (#1241)
+ * BPM - Escrime - Mesure des colonnes du tableau pour les connecteurs SVG (#1241)
  * Licensed under GPL-3.0
  */
 import { useLayoutEffect, useRef, useState, type DependencyList } from 'react';

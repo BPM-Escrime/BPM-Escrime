@@ -48,7 +48,7 @@ EFP1.1 ajoute le carton P (champ 12 de chaque zone tireur, 0 à 5) et le chrono 
 | `codec.ts`       | `parseCyrano(raw)` / `buildCyrano(msg)` : 3 zones, champs de fin omis, `\|` et `%` retirés des valeurs (pas d'échappement dans le protocole), troncature aux longueurs maximales de la spécification, carton P omis en EFP1.                                                                                                                                                                     |
 | `names.ts`       | `transliterate` (alphabet latin seul), `formatCyranoName(nom, prénom, 10 \| 12 \| 15 \| 20)` → `MARTIN P`, `formatCyranoNat` (3 caractères), `pickCyranoNat(tireur, 'country' \| 'club' \| 'region' \| 'auto')`.                                                                                                                                                                                 |
 | `disp.ts`        | `buildDisp(match)` : descripteur neutre (phase, poule/tableau, n° de match, tireurs droit/gauche) → champs d'un `DISP`. Laser et CUSTOM : arme non transmise. `EMPTY_DISP` = « aucun match disponible ».                                                                                                                                                                                         |
-| `deviceState.ts` | Champs propres au protocole, utilisés par le pilote : Id tireur tronqué à **8 caractères** (`cyranoFencerId` ; les UUID BellePoule en font 36, la correspondance par préfixe est faite par `piste/pisteState.ts`), chrono `m:ss` / `m:ss.cc` → secondes (`parseCyranoStopwatch`), carton P du champ 12 ↔ compteurs jaune / rouge / noir P (`cyranoPCardCounts`, `cyranoPCardField` : 0 / 2 / 4). |
+| `deviceState.ts` | Champs propres au protocole, utilisés par le pilote : Id tireur tronqué à **8 caractères** (`cyranoFencerId` ; les UUID BPM - Escrime en font 36, la correspondance par préfixe est faite par `piste/pisteState.ts`), chrono `m:ss` / `m:ss.cc` → secondes (`parseCyranoStopwatch`), carton P du champ 12 ↔ compteurs jaune / rouge / noir P (`cyranoPCardCounts`, `cyranoPCardField` : 0 / 2 / 4). |
 | `driver.ts`      | `CyranoPisteDriver` : pilote du modèle commun (§ 2 septies). INFO / NEXT / PREV → `PisteInput` (`cyranoToPisteState` : états, statuts, carton P 0-5 → jaune / rouge / noir P, chrono en secondes, priorité, type, relais ; n° de séquence attribué à la réception) ; `PisteCommand` → DISP / DISP vide / ACK / NAK (`pisteDisplayToDisp`, chrono `m:ss`).                                        |
 | `server.ts`      | `CyranoServer` : socket `dgram`, table des pistes (`setPistes`), liste blanche d'IP, HELLO toutes les 15 s, version du protocole par piste (`auto` = celle de la dernière trame reçue), supervision, journal borné des trames, événements `info` / `next` / `prev` / `status` / `unknown`, envois `sendDisp` / `sendAck` / `sendNak`.                                                            |
 
@@ -387,15 +387,15 @@ elles sont traitées dans l'ordre, la dernière fait foi (`splitCyranoFrames`).
 Constaté en salle (12 SG32) : IP fixe `192.168.1.(100 + piste)`, écoute sur **50101**, INFO émis
 depuis 50101 en **diffusion** vers `192.168.1.255:50100` toutes les 2 à 4 s (aucune IP de serveur
 à régler sur l'appareil). Côté poste : port UDP 50100, IP dans `192.168.1.0/24` hors 101 à 112,
-profil `Saint-George`, numéro de piste BellePoule = numéro de l'appareil. La télécommande n'agit que
+profil `Saint-George`, numéro de piste BPM - Escrime = numéro de l'appareil. La télécommande n'agit que
 si elle est appairée à l'appareil (socle de charge) ; BEGIN fait passer de `W` à `H` (spéc. § 4).
 
 ### Pare-feu
 
-Le port UDP 50100 doit être ouvert **en entrée** sur le poste BellePoule :
+Le port UDP 50100 doit être ouvert **en entrée** sur le poste BPM - Escrime :
 
-- Windows : accepter l'invite du pare-feu au premier lancement, ou ajouter une règle entrante UDP 50100 pour BellePoule Modern.
-- macOS : Réglages Système → Réseau → Coupe-feu → autoriser BellePoule Modern.
+- Windows : accepter l'invite du pare-feu au premier lancement, ou ajouter une règle entrante UDP 50100 pour BPM - Escrime.
+- macOS : Réglages Système → Réseau → Coupe-feu → autoriser BPM - Escrime.
 - Linux : par exemple `sudo ufw allow 50100/udp`.
 
 ### 2 nonies. Conformité à la spécification Cyrano 1.1
@@ -630,4 +630,4 @@ imprimées, **cartons P à part** (t.124.3.e, § 2 sexies) ; reprise du chrono a
 pour la FFE (carton noir, annexe 14 : Résultats → Export → « Rapport FFE (carton noir) »).
 
 Questions encore ouvertes : rattachement des sous-arènes (`arena3s2`) à un appareil ;
-second poste BellePoule en secours (maître / esclave, cf. Fencing Fox).
+second poste BPM - Escrime en secours (maître / esclave, cf. Fencing Fox).

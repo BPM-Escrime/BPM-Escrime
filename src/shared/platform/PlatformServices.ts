@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fonctions propres au poste, hors données de l'épreuve (#1981 lot 4, ADR-0021)
+ * BPM - Escrime - Fonctions propres au poste, hors données de l'épreuve (#1981 lot 4, ADR-0021)
  * Le code raisonne en contenu, jamais en chemin : la même demande marche dans Electron (dialogues
  * natifs, impression et PDF par le main) et dans un navigateur (téléchargement, window.print).
  * Partagé par l'écran (usePlatform) et les exports PDF de src/shared/utils (defaultPlatform).

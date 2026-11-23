@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Minimap du tableau (#1542)
+ * BPM - Escrime - Minimap du tableau (#1542)
  * Aperçu réduit du bracket avec rectangle de la zone visible ; un clic / glisser recentre la vue.
  * Licensed under GPL-3.0
  */

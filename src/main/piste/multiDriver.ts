@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Plusieurs protocoles d'appareils de piste en même temps (#1960)
+ * BPM - Escrime - Plusieurs protocoles d'appareils de piste en même temps (#1960)
  * Présente au PisteHub un seul `PisteDriver` regroupant plusieurs pilotes (Cyrano, OPP2…) :
  * chaque piste appartient au premier pilote qui la déclare ; les commandes lui sont routées.
  * Les entrées gardent leur source (pilote d'origine) : la barrière d'arène suit chaque pilote.

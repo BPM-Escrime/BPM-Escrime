@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - ChangePoolModal
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

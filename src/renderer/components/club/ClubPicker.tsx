@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : plusieurs clubs. Choix / création d'un club
+ * BPM - Escrime - Mode Club (#1872) : plusieurs clubs. Choix / création d'un club
  * (onglet Club) et section « Clubs » de l'accueil (Général), visible dès qu'un club existe.
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Service Worker
+ * BPM - Escrime - Service Worker
  * Offline-First Architecture with caching strategies
  * Licensed under GPL-3.0
  */
@@ -164,7 +164,7 @@ async function networkFirstWithOfflineFallback(request) {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Hors ligne - BellePoule Modern</title>
+            <title>Hors ligne - BPM - Escrime</title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
@@ -177,7 +177,7 @@ async function networkFirstWithOfflineFallback(request) {
             <div class="offline-icon">📡</div>
             <h1>Mode Hors Ligne</h1>
             <p class="message">
-              BellePoule Modern fonctionne actuellement en mode hors ligne.<br>
+              BPM - Escrime fonctionne actuellement en mode hors ligne.<br>
               Les données seront synchronisées dès que la connexion sera rétablie.
             </p>
           </body>

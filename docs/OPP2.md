@@ -15,7 +15,7 @@ Appareil OPP2 ──MQTT──▶ broker intégré ──▶ Opp2PisteDriver ─
 | Fichier                   | Rôle                                                                                                                                                                                                                                                  |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mqttPacket.ts`           | Codec MQTT 3.1.1 (CONNECT … DISCONNECT), découpage du flux TCP, jokers `+` / `#`.                                                                                                                                                                     |
-| `mqttBroker.ts`           | Broker intégré, dans le processus main : messages retenus, dernière volonté, QoS 0 / 1 (QoS 2 accepté en entrée), keepalive. Sessions toujours propres. Crochets `authenticate` / `authorizePublish`. BellePoule s'y branche sans socket (`Opp2Bus`). |
+| `mqttBroker.ts`           | Broker intégré, dans le processus main : messages retenus, dernière volonté, QoS 0 / 1 (QoS 2 accepté en entrée), keepalive. Sessions toujours propres. Crochets `authenticate` / `authorizePublish`. BPM - Escrime s'y branche sans socket (`Opp2Bus`). |
 | `mqttClient.ts`           | Client MQTT minimal : appareil simulé des tests, futur raccordement à un broker externe.                                                                                                                                                              |
 | `codec.ts`                | Sujets `openpiste/{piste}/{rôle}/{message}`, construction des messages `software/*`.                                                                                                                                                                  |
 | `driver.ts`               | `Opp2PisteDriver` : implémente `PisteDriver`.                                                                                                                                                                                                         |
@@ -33,7 +33,7 @@ Pas de dépendance npm ajoutée.
 | `display` : chrono d'un match rappelé                                         | → appareil | `software/clock` (toujours `running: false`)                                             |
 | `clear`                                                                       | → appareil | `software/fencers` vide                                                                  |
 | `ack` / `nak`                                                                 | → appareil | `software/control` `ACK` / `NAK`                                                         |
-| Présence de BellePoule                                                        | → tous     | `software/connection` (retenu) au démarrage, `online: false` à l'arrêt                   |
+| Présence de BPM - Escrime                                                        | → tous     | `software/connection` (retenu) au démarrage, `online: false` à l'arrêt                   |
 | `state` : état F / H / P / W / E                                              | ← appareil | `apparatus/state`                                                                        |
 | `state` : scores, statuts, cartons, priorité                                  | ← appareil | `apparatus/score` (`black_card` → exclusion, `DNS` → abandon)                            |
 | `state` : chrono                                                              | ← appareil | `apparatus/clock`                                                                        |
@@ -58,7 +58,7 @@ Pas de dépendance npm ajoutée.
 - Reprise après coupure : au démarrage du pilote, les messages retenus de l'appareil (`state`,
   `score`, `clock`…) sont relus ; au retour en ligne, le PisteHub renvoie le match courant.
 - Télécommande : `remote/control` `BEGIN` / `HALT` / `RESET` / `VALIDATE` sont destinés à
-  l'appareil et ignorés par BellePoule.
+  l'appareil et ignorés par BPM - Escrime.
 - Messages sans équivalent dans le modèle commun, ignorés : `blade_contact`, `video_review`,
   `scoresheet/*`.
 
@@ -72,7 +72,7 @@ passer une piste en manuel (`manualStrips`). Droit `remote:admin`, jamais sur le
 | Opération                                                                | Rôle                                                                                             |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | `startOpp2Broker({ port?, competitionId? })`                             | Démarre le broker (port 1883 par défaut) et le pilote ; appareils de la salle chargés.           |
-| `stopOpp2Broker`                                                         | Annonce le départ de BellePoule, arrête le broker.                                               |
+| `stopOpp2Broker`                                                         | Annonce le départ de BPM - Escrime, arrête le broker.                                               |
 | `getOpp2Status`                                                          | Broker, clients connectés, pistes (liaison, appareil, firmware), pistes vues mais non déclarées. |
 | `listStripDeviceRoutes`, `setStripDeviceOptions`, `runStripDeviceAction` | Communs avec Cyrano : épreuve suivie par piste, options d'affichage, secours.                    |
 

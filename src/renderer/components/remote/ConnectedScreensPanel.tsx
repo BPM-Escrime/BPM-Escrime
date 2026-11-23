@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écrans connectés au serveur distant + envoi du mode kiosque (#1241)
+ * BPM - Escrime - Écrans connectés au serveur distant + envoi du mode kiosque (#1241)
  * Extrait de RemoteScoreManager : liste, renommage et modale kiosk gérés localement.
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Remote Score Entry Types
+ * BPM - Escrime - Remote Score Entry Types
  * Licensed under GPL-3.0
  */
 

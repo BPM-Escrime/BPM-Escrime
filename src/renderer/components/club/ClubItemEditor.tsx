@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (inventaire) : fiche d'un matériel (achat, garantie,
+ * BPM - Escrime - Mode Club (inventaire) : fiche d'un matériel (achat, garantie,
  * état, emplacement, numéro de série, quantité).
  * Licensed under GPL-3.0
  */

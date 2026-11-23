@@ -1,4 +1,4 @@
-# BellePoule Modern — Saisie distante (guide organisateur)
+# BPM - Escrime — Saisie distante (guide organisateur)
 
 > Version **1.0.3**, build **#1365**.
 > Côté arbitre : [docs/ARBITRAGE.md](docs/ARBITRAGE.md) · cas pratiques :

@@ -1,6 +1,6 @@
 /**
  * Tests - états du stepper de phases (#1533)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

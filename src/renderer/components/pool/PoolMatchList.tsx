@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pool Match List Sub-component
+ * BPM - Escrime - Pool Match List Sub-component
  * Licensed under GPL-3.0
  */
 

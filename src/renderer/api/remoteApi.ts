@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Serveur distant : appels de l'écran au contrat d'API (#1981 lot 2,
+ * BPM - Escrime - Serveur distant : appels de l'écran au contrat d'API (#1981 lot 2,
  * docs/adr/0022). Un seul endroit traduit les appels de l'écran (arguments positionnels, mêmes
  * noms que l'ancien groupe `remote` de window.electronAPI) en opérations du contrat (entrées
  * nommées, shared/api/contractRemote.ts) et rend la réponse sous l'ancienne enveloppe

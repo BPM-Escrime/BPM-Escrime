@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - TableauToolbar
+ * BPM - Escrime - TableauToolbar
  * Barre d'outils du tableau à élimination directe
  * Licensed under GPL-3.0
  */

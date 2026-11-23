@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Edit Fencer Modal Component
+ * BPM - Escrime - Edit Fencer Modal Component
  * Licensed under GPL-3.0
  */
 

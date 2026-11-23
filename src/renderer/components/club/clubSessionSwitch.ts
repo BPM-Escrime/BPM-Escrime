@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : plusieurs séances ouvertes en même temps.
+ * BPM - Escrime - Mode Club (#1872) : plusieurs séances ouvertes en même temps.
  * Séance affichée parmi les ouvertes, ouverture d'une séance prévue ou passée sans
  * fermer les autres (fermeture seulement sur décision explicite).
  * Licensed under GPL-3.0

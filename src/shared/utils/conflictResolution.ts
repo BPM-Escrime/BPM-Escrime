@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Conflict Resolution Utilities
+ * BPM - Escrime - Conflict Resolution Utilities
  * Handles resolution of conflicting data when syncing offline actions
  * Licensed under GPL-3.0
  */

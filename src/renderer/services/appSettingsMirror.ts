@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Miroir des réglages du poste vers la base (#1880)
+ * BPM - Escrime - Miroir des réglages du poste vers la base (#1880)
  * Langue, thème, logo, HTTPS et interface du serveur distant vivent encore dans
  * localStorage côté écran ; ils sont recopiés dans app_settings pour le mode --headless
  * et le MCP. Reprise au démarrage (clés absentes de la base), puis à chaque écriture.
@@ -14,7 +14,7 @@ const SCREEN_FIRST = ['bellepoule-language', 'bellepoule-theme'];
 let installed = false;
 /** Stockage suivi (localStorage de la fenêtre) */
 let mirrored: Storage | null = null;
-const PATCHED = Symbol.for('bellepoule.appSettingsMirror');
+const PATCHED = Symbol.for('bpm-escrime.appSettingsMirror');
 
 function send(values: Record<string, string | null>, mode: 'missing' | 'write'): void {
   if (!stationAvailable()) return;

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Diagnostic pare-feu Windows de la saisie distante (affiché uniquement sous Windows)
+ * BPM - Escrime - Diagnostic pare-feu Windows de la saisie distante (affiché uniquement sous Windows)
  * Licensed under GPL-3.0
  */
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bibliothèque de logos (plusieurs logos, un seul actif)
+ * BPM - Escrime - Bibliothèque de logos (plusieurs logos, un seul actif)
  * Le logo actif reste stocké sous `bellepoule-logo` (+ logo.dat côté main) :
  * PDF, kiosque et écrans distants n'ont pas à connaître la bibliothèque.
  * Licensed under GPL-3.0
