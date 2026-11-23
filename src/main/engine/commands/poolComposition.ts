@@ -22,9 +22,9 @@ import {
   isLaser,
   sessionPoolHistory,
   sessionPools,
-  sessionTableau,
   writeSession,
 } from './sport';
+import { allTableauMatches } from '../../../shared/domain/ranking/splitGroups';
 
 export interface AddPoolFencerInput {
   competitionId: string;
@@ -37,7 +37,7 @@ export function addPoolFencer(ctx: CommandContext, input: AddPoolFencerInput) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
   assertScoreSupported(comp);
   const session = readSession(ctx, comp.id);
-  if (sessionTableau(session).length > 0) {
+  if (allTableauMatches(session).length > 0) {
     throw new CommandError('bracket_exists', 'Tableau déjà tiré : poules figées');
   }
   const pools = sessionPools(session);

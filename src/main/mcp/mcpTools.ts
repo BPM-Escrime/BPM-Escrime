@@ -168,13 +168,34 @@ export const MCP_TOOLS: McpTool[] = [
   {
     name: 'get_bracket',
     title: 'Tableau d’élimination directe',
-    description: 'Matchs du tableau : tour, tireurs, score, vainqueur (exempts inclus).',
-    inputSchema: { type: 'object', properties: competitionArg, required: ['competitionId'] },
+    description:
+      'Matchs du tableau : tour, tireurs, score, vainqueur (exempts inclus). Tableaux séparés après les poules : tous les tableaux, chaque match avec son groupe, ou celui de « group ».',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ...competitionArg,
+        group: {
+          type: 'string',
+          description:
+            'Tableaux séparés après les poules : groupe du tableau (« F », « M ») ; facultatif',
+        },
+      },
+      required: ['competitionId'],
+    },
     annotations: { readOnlyHint: true },
     run: (deps, args) => {
       const id = str(args, 'competitionId');
       competitionOrThrow(deps, id);
-      return deps.db.getTableauMatchesForExport(id);
+      const only = typeof args.group === 'string' && args.group ? args.group : null;
+      // Identifiant en base : « épreuve-match » ; match d'un groupe préfixé « F:32-0 » (ADR-0024)
+      return deps.db
+        .getTableauMatchesForExport(id)
+        .map(m => {
+          const matchId = m.id.startsWith(`${id}-`) ? m.id.slice(id.length + 1) : m.id;
+          const group = /^([^:]+):/.exec(matchId)?.[1] ?? null;
+          return { ...m, group };
+        })
+        .filter(m => only === null || m.group === only);
     },
   },
   {

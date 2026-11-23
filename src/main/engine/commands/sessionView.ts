@@ -8,6 +8,7 @@ import type { Fencer, Pool, PoolRanking } from '../../../shared/types';
 import { calculatePoolRanking } from '../../../shared/utils/poolCalculations';
 import type { CommandContext } from './context';
 import { getCompetitionOrThrow, phaseName } from './competitions';
+import { tableauSlots } from './groupTableaux';
 
 /** Tireur réduit à l'identité utile à un agent */
 export interface FencerRef {
@@ -164,25 +165,31 @@ export function bracketMatchView(m: RawTableauMatch): BracketMatchView {
   };
 }
 
-/** Tableau d'élimination directe (état de session) */
+/**
+ * Tableau d'élimination directe (état de session). Tableaux séparés après les poules
+ * (docs/adr/0024) : tous les tableaux, ou celui du groupe « group ».
+ */
 export function getBracket(
   ctx: CommandContext,
   competitionId: string,
-  round?: number
+  round?: number,
+  group?: string
 ): { phase: string | null; size: number; matches: BracketMatchView[]; finalResults: RankingRow[] } {
-  getCompetitionOrThrow(ctx, competitionId);
+  const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
-  const raw = Array.isArray(session.tableauMatches)
-    ? (session.tableauMatches as RawTableauMatch[])
-    : [];
+  const slots = tableauSlots(comp, session).filter(s => group === undefined || s.group === group);
+  const raw = slots.flatMap(s => s.matches) as unknown as RawTableauMatch[];
   const size = raw.reduce((max, m) => Math.max(max, Number(m.round) || 0), 0);
-  const final = Array.isArray(session.finalResults)
-    ? (session.finalResults as Array<{ rank: number; fencer: Partial<Fencer> }>).map(r => ({
-        ...rankingRow({}),
-        rank: r.rank,
-        fencer: fencerRef(r.fencer),
-      }))
-    : [];
+  const final = (
+    slots.flatMap(s => s.finalResults) as unknown as Array<{
+      rank: number;
+      fencer: Partial<Fencer>;
+    }>
+  ).map(r => ({
+    ...rankingRow({}),
+    rank: r.rank,
+    fencer: fencerRef(r.fencer),
+  }));
   return {
     phase: phaseName(session.currentPhase),
     size,

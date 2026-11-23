@@ -748,6 +748,8 @@
   'results.round_semis': 'Semi-finals',
   'results.round_quarters': 'Quarter-finals',
   'results.round_n': 'Table of {{n}}',
+  'results.group_F': 'Women',
+  'results.group_M': 'Men',
   'results.final_rank': 'Final rank',
   'results.pool_rank': 'Rank after pools',
   'results.match_won': 'Won',

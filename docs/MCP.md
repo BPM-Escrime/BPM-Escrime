@@ -73,7 +73,7 @@ il n'est pas limité aux dossiers de l'agent.
 | `get_competition` | `competitionId` | Détail, réglages, phases, nombre de tireurs et de poules |
 | `list_fencers` | `competitionId` | Tireurs : nom, club, statut de pointage, classement |
 | `get_pool_ranking` | `competitionId`, `poolId?` | Classement de chaque poule, matchs joués / total |
-| `get_bracket` | `competitionId` | Matchs du tableau : tour, tireurs, score, vainqueur |
+| `get_bracket` | `competitionId`, `group?` | Matchs du tableau : tour, tireurs, score, vainqueur ; tableaux séparés : groupe de chaque match, filtre `group` |
 | `list_referees` | `competitionId` | Arbitres : nom, club, catégorie, statut |
 | `day_overview` | `dayId?` | Journées ; avec `dayId` : arbitres partagés, conflits |
 | `strip_occupation` | `dayId` | Pistes de la journée : occupée, libre, réservée |
@@ -120,7 +120,7 @@ finale. Équipes, rapières, tours de poules multiples et « tirer toutes les pl
 l'écran (erreur `unsupported_format`) pour `generate_pools` et `build_bracket` sans `composition`, et pour `assign_referees`.
 `record_score` accepte aussi les tours multiples (tour courant ; tour terminé figé : `round_closed`),
 les rapières et « toutes les places » (barrages, tableaux de classement listés par `list_matches`
-avec leur nom dans `bracket`). Refusés : épreuves par équipes, tableaux séparés après les poules.
+avec leur nom dans `bracket`) et les tableaux séparés après les poules (un tableau par groupe, identifiants préfixés `F:32-0`). Refusées : épreuves par équipes.
 
 ## Paramétrage du poste et salles
 
@@ -222,11 +222,12 @@ Aucun argument.
 
 ### `get_bracket` — Tableau d’élimination directe
 
-*lecture.* Matchs du tableau : tour, tireurs, score, vainqueur (exempts inclus).
+*lecture.* Matchs du tableau : tour, tireurs, score, vainqueur (exempts inclus). Tableaux séparés après les poules : tous les tableaux, chaque match avec son groupe, ou celui de « group ».
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `group` | string |  | Tableaux séparés après les poules : groupe du tableau (« F », « M ») ; facultatif |
 
 ### `list_referees` — Arbitres d’une épreuve
 

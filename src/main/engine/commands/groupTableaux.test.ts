@@ -1,7 +1,8 @@
 /**
- * Tableaux séparés après les poules par le moteur (docs/adr/0024, lot A1) : un tableau par
- * groupe, joué par les commandes et rejoué sans écart ; reprise d'une épreuve en cours ;
- * épreuves sans groupes inchangées. Base SQLite réelle.
+ * Tableaux séparés après les poules par le moteur (docs/adr/0024, lots A1 et A2) : un tableau
+ * par groupe, joué par les commandes et rejoué sans écart ; reprise d'une épreuve en cours
+ * (tableau de la racine déplacé dans son groupe) ; lecteurs de l'affichage ; épreuves sans
+ * groupes inchangées. Base SQLite réelle.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseManager } from '../../../database';
@@ -11,10 +12,16 @@ import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCo
 import { planTableau } from '../../../shared/domain/tableau/tableauCalculations';
 import { projectCompetition } from '../../../shared/domain/journal/projectCompetition';
 import { compareWithState, stateView } from '../../../shared/domain/journal/compareWithState';
-import { splitRankingByGender } from '../../../shared/domain/ranking/splitGroups';
+import {
+  allTableauMatches,
+  splitRankingByGender,
+} from '../../../shared/domain/ranking/splitGroups';
+import { publicFinalResults, publicTableauRounds } from '../../remote/routes/resultsRoutes';
+import { getBracket } from './sessionView';
+import { MCP_TOOLS } from '../../mcp/mcpTools';
 import type { PoolRanking } from '../../../shared/types';
 import type { CommandContext } from './context';
-import { listMatches } from './sport';
+import { listMatches, resultsData } from './sport';
 import { invoke } from '../api/engine';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
@@ -279,13 +286,21 @@ d('tableaux séparés après les poules (docs/adr/0024, lot A1)', () => {
     expect(replay(comp.id).divergences).toEqual([]);
   });
 
-  it('reprise : tableau tiré à la racine avant les groupes, rangé dans le groupe de ses tireurs', async () => {
+  it('reprise : tableau tiré à la racine avant les groupes, déplacé dans le groupe de ses tireurs', async () => {
     const comp = await poolsPlayed(4);
-    // Tableau des filles tiré par l'écran avant ce lot : à la racine, sans préfixe
+    // Tableau des filles tiré par l'écran avant le lot A1 : à la racine, sans préfixe
     const s = session(comp.id);
     const ranking = splitRankingByGender(s.overallRanking as PoolRanking[]).get('F')!;
     const { matches } = planTableau(ranking, { playAllPositions: false, thirdPlaceMatch: false });
     db.saveSessionState(comp.id, { ...s, tableauMatches: matches, currentPhase: 5 });
+
+    // Lu par l'écran comme le tableau du groupe F, avant toute écriture
+    const read = await call('getCompetitionState', { competitionId: comp.id });
+    expect(read.state.tableauMatches).toEqual([]);
+    expect(Object.keys(read.state.groupTableaux)).toEqual(['F']);
+    expect(read.state.groupTableaux.F.tableauMatches.map((m: { id: string }) => m.id)).toEqual(
+      matches.map(m => m.id)
+    );
 
     const ready = listMatches(ctx, comp.id, { state: 'ready' }).filter(m => m.kind === 'bracket');
     expect(ready.length).toBeGreaterThan(0);
@@ -296,30 +311,71 @@ d('tableaux séparés après les poules (docs/adr/0024, lot A1)', () => {
       scoreA: 15,
       scoreB: 3,
     });
-    // Identifiants inchangés, tableau resté à la racine (l'écran l'y écrit jusqu'au lot A2)
+    // Première réécriture (lot A2) : tableau déplacé dans son groupe, identifiants inchangés
     let after = session(comp.id);
+    expect(after.tableauMatches).toEqual([]);
+    expect(Object.keys(after.groupTableaux)).toEqual(['F']);
+    expect(after.groupTableaux.F.tableauMatches.map((m: { id: string }) => m.id)).toEqual(
+      matches.map(m => m.id)
+    );
     expect(
-      after.tableauMatches.find((m: { id: string }) => m.id === ready[0].matchId).winner
+      after.groupTableaux.F.tableauMatches.find((m: { id: string }) => m.id === ready[0].matchId)
+        .winner
     ).toBeTruthy();
-    expect(after.groupTableaux ?? {}).toEqual({});
-    // Le groupe F est déjà tiré ; le tableau des garçons se tire à côté
+    // Le groupe F est tiré ; le tableau des garçons se tire à côté
     await call('generateTableau', { competitionId: comp.id, group: 'M' });
     after = session(comp.id);
-    expect(after.tableauMatches.length).toBe(matches.length);
-    expect(Object.keys(after.groupTableaux)).toEqual(['M']);
-    // Tirage du groupe F par le moteur : remplace le tableau repris, la racine se vide
-    await call('generateTableau', { competitionId: comp.id, group: 'F', replace: true });
-    after = session(comp.id);
-    expect(after.tableauMatches).toEqual([]);
     expect(Object.keys(after.groupTableaux).sort()).toEqual(['F', 'M']);
+    expect(after.groupTableaux.F.tableauMatches).toHaveLength(matches.length);
+    // Le reste du tableau repris se joue par les commandes, groupe par groupe
+    await playAll(comp.id, 'bracket', 'M');
+    await playAll(comp.id, 'bracket');
+    after = session(comp.id);
+    expect(after.groupTableaux.F.finalResults).toHaveLength(4);
+    expect(after.groupTableaux.M.finalResults).toHaveLength(4);
+    expect(after.currentPhase).toBe(6);
   });
 
-  it('sauvegarde du bloc par l’écran : les tableaux des groupes sont gardés', async () => {
-    const comp = await poolsPlayed(3);
+  it('affichage : état de l’écran, résultats, vue du tableau et page publique lisent tous les tableaux', async () => {
+    const comp = await poolsPlayed(4);
     await call('generateTableau', { competitionId: comp.id, group: 'F' });
-    const { groupTableaux: _g, ...screen } = session(comp.id);
-    expect(db.saveSessionStateChecked(comp.id, screen)).toBe(true);
-    expect(Object.keys(session(comp.id).groupTableaux)).toEqual(['F']);
+    await call('generateTableau', { competitionId: comp.id, group: 'M' });
+    await playAll(comp.id, 'bracket');
+
+    const read = await call('getCompetitionState', { competitionId: comp.id });
+    expect(Object.keys(read.state.groupTableaux).sort()).toEqual(['F', 'M']);
+    expect(read.state.tableauMatches).toEqual([]);
+
+    const data = resultsData(ctx, comp.id);
+    const all = session(comp.id).groupTableaux;
+    expect(data.tableauMatches).toHaveLength(
+      all.F.tableauMatches.length + all.M.tableauMatches.length
+    );
+    expect(data.finalResults).toHaveLength(8);
+    expect(data.finalResults.filter(r => r.rank === 1)).toHaveLength(2);
+
+    const bracket = getBracket(ctx, comp.id);
+    expect(bracket.matches).toHaveLength(data.tableauMatches.length);
+    expect(bracket.finalResults).toHaveLength(8);
+    const onlyF = getBracket(ctx, comp.id, undefined, 'F');
+    expect(onlyF.matches.every(m => m.id.startsWith('F:'))).toBe(true);
+    expect(onlyF.finalResults).toHaveLength(4);
+
+    const rounds = publicTableauRounds(allTableauMatches(session(comp.id)) as never);
+    expect(new Set(rounds.map(r => r.group))).toEqual(new Set(['F', 'M']));
+    expect(rounds.filter(r => r.round === 2)).toHaveLength(2);
+    // Outil MCP get_bracket : groupe de chaque match, filtre « group »
+    const tool = MCP_TOOLS.find(t => t.name === 'get_bracket')!;
+    const deps = { db } as never;
+    const mcpAll = tool.run(deps, { competitionId: comp.id }) as Array<{ group: string | null }>;
+    expect(new Set(mcpAll.map(m => m.group))).toEqual(new Set(['F', 'M']));
+    const mcpM = tool.run(deps, { competitionId: comp.id, group: 'M' }) as Array<{ id: string }>;
+    expect(mcpM).toHaveLength(all.M.tableauMatches.length);
+    expect(mcpM.every(m => m.id.startsWith(`${comp.id}-M:`))).toBe(true);
+
+    const podium = publicFinalResults(session(comp.id) as never);
+    expect(podium).toHaveLength(8);
+    expect(podium.map(r => r.group)).toEqual(['F', 'F', 'F', 'F', 'M', 'M', 'M', 'M']);
   });
 
   it('nouveau tirage des poules : tableaux des groupes retirés', async () => {

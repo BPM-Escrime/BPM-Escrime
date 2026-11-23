@@ -245,23 +245,12 @@ export class DatabaseManager {
    */
   public saveSessionStateChecked(competitionId: string, state: unknown): boolean {
     const incoming = (state as { revision?: unknown } | null)?.revision;
-    const stored = this.sessions.getSessionState(competitionId) as {
-      revision?: unknown;
-      groupTableaux?: unknown;
-    } | null;
     if (typeof incoming === 'number') {
-      if (typeof stored?.revision === 'number' && stored.revision !== incoming) return false;
+      const stored = (this.sessions.getSessionState(competitionId) as { revision?: unknown } | null)
+        ?.revision;
+      if (typeof stored === 'number' && stored !== incoming) return false;
     }
-    // Tableaux des groupes écrits par le moteur (docs/adr/0024) : l'écran ne les connaît pas
-    // encore (lot A2) ; sa sauvegarde du bloc ne les efface pas
-    const next =
-      stored?.groupTableaux &&
-      state &&
-      typeof state === 'object' &&
-      !('groupTableaux' in (state as object))
-        ? { ...(state as object), groupTableaux: stored.groupTableaux }
-        : state;
-    this.sessions.saveSessionState(competitionId, next);
+    this.sessions.saveSessionState(competitionId, state);
     return true;
   }
 

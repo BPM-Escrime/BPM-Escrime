@@ -281,6 +281,17 @@
           return tk('results.round_n', { n: round });
         }
 
+        // Tableaux séparés après les poules (docs/adr/0024) : libellé du groupe
+        function groupLabel(group) {
+          if (!group) return '';
+          const key = 'results.group_' + group;
+          const label = tk(key);
+          return label === key ? group : label;
+        }
+        function roundTitle(r) {
+          return roundLabel(r.round) + (r.group ? ' — ' + groupLabel(r.group) : '');
+        }
+
         // Participants : poules, tableau et classement final (#1858)
         function participants(data) {
           const map = new Map();
@@ -352,7 +363,7 @@
                   : esc(tk('results.match_lost'));
               rows.push(
                 '<tr><td>' +
-                  esc(roundLabel(r.round)) +
+                  esc(roundTitle(r)) +
                   '</td><td>' +
                   fullName(opp) +
                   '</td>' +
@@ -375,7 +386,11 @@
           let html = '<h2 class="section-title">' + esc(tk('results.tableau_title')) + '</h2>';
           for (const r of data.tableau) {
             html +=
-              cardOpen('round-' + r.round, roundLabel(r.round), 'round-title') +
+              cardOpen(
+                'round-' + (r.group ? r.group + '-' : '') + r.round,
+                roundTitle(r),
+                'round-title'
+              ) +
               '<table class="bout"><colgroup><col class="side" /><col class="mid" /><col class="side" /></colgroup><tbody>';
             for (const m of r.matches) {
               const cls = id => (m.finished && m.winnerId === id ? 'win' : '');
@@ -413,8 +428,13 @@
             '<h2 class="section-title">' +
             esc(tk('results.final_title')) +
             '</h2><div class="pool"><table><tbody>';
+          let group = null;
           for (const r of data.finalResults) {
             const hl = selectedId && r.fencer && r.fencer.id === selectedId;
+            if (r.group && r.group !== group) {
+              group = r.group;
+              html += '<tr><th colspan="2">' + esc(groupLabel(group)) + '</th></tr>';
+            }
             html +=
               '<tr' +
               (hl ? ' class="hl"' : '') +

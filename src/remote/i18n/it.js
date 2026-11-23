@@ -743,6 +743,8 @@
   'results.round_semis': 'Semifinali',
   'results.round_quarters': 'Quarti di finale',
   'results.round_n': 'Tabellone da {{n}}',
+  'results.group_F': 'Femminile',
+  'results.group_M': 'Maschile',
   'results.final_rank': 'Posizione finale',
   'results.pool_rank': 'Posizione dopo i gironi',
   'results.match_won': 'Vittoria',
