@@ -182,8 +182,8 @@ export function useCompetitionCore(ctx: Ctx) {
     setPendingSplitOffGroup,
     splitOffInProgress,
     setSplitOffInProgress,
-    splitTableauStates,
-    setSplitTableauStates,
+    groupTableaux,
+    setGroupTableaux,
   } = useStateGroup(CV_SPLIT_INIT);
 
   // Hooks personnalisés
@@ -384,8 +384,8 @@ export function useCompetitionCore(ctx: Ctx) {
     setPendingSplitOffGroup,
     splitOffInProgress,
     setSplitOffInProgress,
-    splitTableauStates,
-    setSplitTableauStates,
+    groupTableaux,
+    setGroupTableaux,
     fencers,
     loadFencers,
     addFencer,

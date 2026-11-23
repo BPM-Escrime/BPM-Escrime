@@ -95,7 +95,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     setTableauMatches,
     setConsolationBrackets,
     setFinalResults,
-    splitTableauStates,
+    groupTableaux,
     isLaserSabre,
   } = ctx;
   const { showToast } = useToast();
@@ -114,7 +114,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     overallRanking,
     tableauMatches,
     consolationBrackets,
-    splitTableauStates,
+    groupTableaux,
     isLaserSabre,
     setTableauMatches,
     setConsolationBrackets,

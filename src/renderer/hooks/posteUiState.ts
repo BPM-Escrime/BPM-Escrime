@@ -1,6 +1,6 @@
 /**
  * BPM - Escrime - État d'interface du poste, par épreuve (#1980, docs/adr/0017)
- * Onglet affiché, bornes de taille de la préparation des poules, pistes de la saisie distante :
+ * Onglet affiché, groupe du tableau affiché (tableaux séparés), bornes de taille de la préparation des poules, pistes de la saisie distante :
  * propres à ce poste, gardés dans le navigateur (localStorage), plus dans l'état partagé de
  * l'épreuve. Lecture tolérante : stockage absent, illisible ou bloqué → rien.
  * Licensed under GPL-3.0
@@ -13,6 +13,8 @@ export interface PosteUiState {
   maxFencersPerPool?: number;
   remoteArenaCount?: number;
   remoteStripStart?: number;
+  /** Tableaux séparés après les poules : groupe affiché (docs/adr/0024) */
+  splitGroup?: string;
 }
 
 const key = (competitionId: string) => `bellepoule-ui-${competitionId}`;

@@ -16,7 +16,7 @@ import { inferPoolsLaunched } from '../components/poolLaunchState';
 import type { useRapieresSessionState } from '../../features/rapieres/useRapieresSessionState';
 import { useCompetitionSession, phaseFromNumber, phaseNumber } from './useCompetitionSession';
 import { readPosteUiState, tabToRestore, writePosteUiState } from './posteUiState';
-import type { Phase } from './useCompetitionSession';
+import type { Phase, SessionState } from './useCompetitionSession';
 import type { usePoolManagement } from './usePoolManagement';
 
 type Setter<T> = Dispatch<SetStateAction<T>>;
@@ -24,8 +24,13 @@ type PoolManagement = ReturnType<typeof usePoolManagement>;
 
 interface UseCompetitionRestoreParams {
   competitionId: string;
-  /** Exceptions de l'étape 4c (tableaux séparés, équipes) : l'écran écrit encore l'état */
+  /** Exception de l'étape 4c (équipes, docs/adr/0024) : l'écran écrit encore l'état */
   persistLocally?: boolean;
+  /**
+   * Tableaux séparés après les poules (docs/adr/0024) : l'état relu range un tableau par
+   * groupe ; l'écran affiche celui du groupe choisi (useSplitGroups), pas la racine
+   */
+  onGroupTableaux?: (state: Partial<SessionState>) => void;
   currentPhase: Phase;
   setCurrentPhase: Setter<Phase>;
   currentPoolRound: number;
@@ -66,6 +71,7 @@ interface UseCompetitionRestoreParams {
 export function useCompetitionRestore({
   competitionId,
   persistLocally,
+  onGroupTableaux,
   currentPhase,
   setCurrentPhase,
   currentPoolRound,
@@ -162,7 +168,8 @@ export function useCompetitionRestore({
       }
       if (
         ['tableau', 'results', 'remote', 'ranking'].includes(restoredPhase ?? '') ||
-        (restoredState.tableauMatches && restoredState.tableauMatches.length > 0)
+        (restoredState.tableauMatches && restoredState.tableauMatches.length > 0) ||
+        Object.values(restoredState.groupTableaux ?? {}).some(g => g.tableauMatches.length > 0)
       ) {
         setRankingValidated(true);
       }
@@ -171,10 +178,13 @@ export function useCompetitionRestore({
       if (restoredState.poolHistory) setPoolHistory(restoredState.poolHistory || []);
       if (restoredState.appelHistory) setAppelHistory(restoredState.appelHistory);
       if (restoredState.overallRanking) setOverallRanking(restoredState.overallRanking);
-      if (restoredState.tableauMatches) setTableauMatches(restoredState.tableauMatches);
-      if (restoredState.finalResults) setFinalResults(restoredState.finalResults);
-      if (restoredState.consolationBrackets?.length)
-        setConsolationBrackets(restoredState.consolationBrackets);
+      if (onGroupTableaux) onGroupTableaux(restoredState);
+      else {
+        if (restoredState.tableauMatches) setTableauMatches(restoredState.tableauMatches);
+        if (restoredState.finalResults) setFinalResults(restoredState.finalResults);
+        if (restoredState.consolationBrackets?.length)
+          setConsolationBrackets(restoredState.consolationBrackets);
+      }
       // Préparation des poules et pistes : réglages du poste d'abord (docs/adr/0017)
       if (!restoredState.reloaded) {
         const min = poste.minFencersPerPool ?? restoredState.poolPrepParams?.minFencersPerPool;

@@ -58,8 +58,8 @@ interface UsePoolCorrectionParams {
   overallRanking: PoolRanking[];
   tableauMatches: TableauMatch[];
   consolationBrackets: ConsolationBracket[];
-  /** Tableaux des groupes de répartition (formule à groupes) */
-  splitTableauStates?: Record<string, { matches: TableauMatch[] } | undefined>;
+  /** Tableaux séparés après les poules : tableaux de tous les groupes (docs/adr/0024) */
+  groupTableaux?: Record<string, { tableauMatches: TableauMatch[] } | undefined>;
   isLaserSabre: boolean;
   setTableauMatches: Dispatch<SetStateAction<TableauMatch[]>>;
   setConsolationBrackets: Dispatch<SetStateAction<ConsolationBracket[]>>;
@@ -77,7 +77,7 @@ export function usePoolCorrection({
   overallRanking,
   tableauMatches,
   consolationBrackets,
-  splitTableauStates,
+  groupTableaux,
   isLaserSabre,
   setTableauMatches,
   setConsolationBrackets,
@@ -91,8 +91,8 @@ export function usePoolCorrection({
     () => consolationBrackets.flatMap(b => b.matches),
     [consolationBrackets]
   );
-  const splitMatchCount = Object.values(splitTableauStates ?? {}).reduce(
-    (n, s) => n + (s?.matches.length ?? 0),
+  const splitMatchCount = Object.values(groupTableaux ?? {}).reduce(
+    (n, s) => n + (s?.tableauMatches.length ?? 0),
     0
   );
   const frozen = arePoolsFrozenByTableau(

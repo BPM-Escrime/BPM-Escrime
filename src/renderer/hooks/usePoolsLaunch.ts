@@ -106,7 +106,9 @@ export function useTableauGenerate(
     async (
       matches: TableauMatch[],
       thirdPlaceMatch: boolean,
-      rapieresTableauMode?: RapieresTableauMode
+      rapieresTableauMode?: RapieresTableauMode,
+      /** Tableaux séparés après les poules : groupe du tableau (docs/adr/0024) */
+      group?: string
     ): Promise<RecordScoreOutcome> => {
       if (!competitionId || matches.length === 0) return 'local';
       try {
@@ -117,6 +119,7 @@ export function useTableauGenerate(
           thirdPlaceMatch,
           replace: true,
           ...(rapieresTableauMode ? { rapieresTableauMode } : {}),
+          ...(group ? { group } : {}),
         });
         return 'recorded';
       } catch (e) {
