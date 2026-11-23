@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 272 |
-| `src/main/` | 143 | 1222 |
+| `src/main/` | 144 | 1228 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 127 | 682 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 34 | 367 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **587** | **4525** |
+| **Total** | **588** | **4531** |
 
-Unitaires : 570 fichiers, 4477 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 571 fichiers, 4483 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3433,13 +3433,14 @@ Unitaires : 570 fichiers, 4477 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/refereeing.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/engine/commands/refereeing.test.ts</code> — 7 tests</summary>
 
 - fusionne côté moteur sans toucher aux autres réglages de l’épreuve
 - dryRun : rien d’écrit
 - neutralité de nation lue dans les réglages : arbitre français écarté
 - par le contrat : sortie validée, outil MCP « assign\_referees »
 - arbitre non neutre accepté et signalé ; null retire l’arbitre
+- arbitre d’un match (#2151) : ce match seulement, en session et en base
 - poule ou arbitre inconnus : erreurs codées
 
 </details>
@@ -4267,6 +4268,16 @@ Unitaires : 570 fichiers, 4477 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/remote/arenaControl.changeReferee.test.ts</code> — 3 tests</summary>
+
+- **arena\_control change\_referee (#2151)**
+  - commande acceptée : arène et session en mémoire suivent, base laissée au moteur
+  - commande refusée : rien ne change
+  - entraînement : pas d’épreuve, l’arène seule change
+
+</details>
+
+<details>
 <summary><code>src/main/remote/arenaControl.clock.test.ts</code> — 2 tests</summary>
 
 - **arena\_control chrono (#1829)**
@@ -4669,7 +4680,7 @@ Unitaires : 570 fichiers, 4477 tests. E2E : 17 fichiers, 48 tests (comptage stat
 
 - tablette : session, journal (identifiant de l’arbitre), audit (nom, adresse)
 - appareil de piste : match de tableau par son identifiant composite
-- épreuve par équipes, match inconnu, sans épreuve : chemin historique
+- match inconnu, sans épreuve : chemin historique provisoire ; règle : refus (#2151)
 - contrôle sans écriture (appareil de piste) : refus motivé, rien au journal
 - carton noir de la tablette : score et exclusion en une commande, annulation par le moteur
 - **sessionMatchId**
@@ -4822,7 +4833,7 @@ Unitaires : 570 fichiers, 4477 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remoteScoreServer.test.ts</code> — 67 tests</summary>
+<summary><code>src/main/remoteScoreServer.test.ts</code> — 69 tests</summary>
 
 - **RemoteScoreServer**
   - **démarrage du serveur**
@@ -4891,6 +4902,8 @@ Unitaires : 570 fichiers, 4477 tests. E2E : 17 fichiers, 48 tests (comptage stat
     - match en file d'attente : arbitre porté
   - **annulation carton noir depuis la tablette**
     - égalité finale : le tireur prioritaire tiré (coin\_flip) gagne (#1442)
+    - score refusé par le moteur : 409, rien d’écrit ni terminé (#2151)
+    - feuille de poule : score refusé → 409, égalité sans vainqueur comprise (#2151)
     - vainqueur et bornes via les règles partagées (#1829)
     - appareil de piste maître en ligne : carton noir de la tablette refusé (#1829)
     - liste le carton noir de l'arène

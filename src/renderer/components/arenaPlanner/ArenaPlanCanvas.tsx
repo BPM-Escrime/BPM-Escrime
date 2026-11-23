@@ -54,6 +54,26 @@ type DragState =
   | { mode: 'resize'; id: string; cx: number; cy: number; rot: number }
   | { mode: 'rotate'; id: string; cx: number; cy: number };
 
+/** Couleur par défaut d'un élément : reprend arena-planner-modal.css (type, puis zone) */
+const KIND_COLOR: Record<RoomItem['kind'], string> = {
+  table: '#93c5fd',
+  outlet: '#fbbf24',
+  accessory: '#c4b5fd',
+  exit: '#86efac',
+  blocked: '#9ca3af',
+};
+const ZONE_COLOR: Record<NonNullable<RoomItem['zone']>, string> = {
+  fencers: '#86efac',
+  public: '#c4b5fd',
+  dt: '#fdba74',
+};
+export const defaultItemColor = (item: RoomItem): string =>
+  item.zone ? ZONE_COLOR[item.zone] : KIND_COLOR[item.kind];
+
+/** Couleur choisie par l'utilisateur, prioritaire sur la feuille de style */
+export const itemStyle = (item: RoomItem): React.CSSProperties | undefined =>
+  item.color ? { fill: item.color } : undefined;
+
 /** Classes CSS d'un élément : type, puis type de zone (couleur) */
 export const itemClass = (item: RoomItem): string =>
   item.zone ? `${ITEM_CLASS[item.kind]} arena-planner-zone-${item.zone}` : ITEM_CLASS[item.kind];
@@ -395,6 +415,7 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
                 width={item.widthM}
                 height={item.heightM}
                 className={classes}
+                style={itemStyle(item)}
               />
               <ItemLabel text={item.label} cx={cx} cy={cy} />
               {selected ? (
