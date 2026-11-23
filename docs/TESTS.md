@@ -105,14 +105,14 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 22 | 271 |
-| `src/main/` | 135 | 1169 |
+| `src/database/` | 22 | 272 |
+| `src/main/` | 136 | 1179 |
 | `src/renderer/services/` | 11 | 57 |
-| `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 123 | 661 |
-| E2E Playwright (`e2e/`) | 15 | 44 |
+| `src/renderer/hooks/` | 41 | 214 |
+| `src/renderer/components/` | 123 | 662 |
+| E2E Playwright (`e2e/`) | 16 | 46 |
 | `src/remote/` | 60 | 414 |
-| `src/renderer/api/` | 9 | 39 |
+| `src/renderer/api/` | 10 | 45 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
@@ -120,10 +120,10 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 30 | 286 |
-| `src/shared/platform/` | 1 | 8 |
-| **Total** | **566** | **4358** |
+| `src/shared/platform/` | 2 | 12 |
+| **Total** | **571** | **4386** |
 
-Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2392,11 +2392,12 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/database/databaseEncryption.test.ts</code> — 2 tests</summary>
+<summary><code>src/database/databaseEncryption.test.ts</code> — 3 tests</summary>
 
 - **DatabaseManager chiffré (#1882)**
   - migration en clair puis ouverture chiffrée avec migrations
   - export / sauvegarde auto depuis une base chiffrée : copie en clair lisible
+  - fusion d’un .bpm en clair dans une base chiffrée (ouverture d’une sauvegarde)
 
 </details>
 
@@ -3329,6 +3330,21 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/dataFiles.test.ts</code> — 9 tests</summary>
+
+- getCompetitionFile rend une base SQLite autonome, rouverte par openCompetitionFile
+- archive chiffrée : mot de passe requis, faux, puis bon ; mot de passe trop court refusé
+- toute la base chiffrée (competitionId nul) ; fichier qui n’est pas une sauvegarde : invalid\_file
+- contenu qui n’est pas du base64 : invalid\_input
+- export puis réimport : mise à jour par licence, ajout sinon ; statut jamais importé
+- archive invalide : invalid\_file ; épreuve inconnue : competition\_not\_found
+- export puis import : photo appliquée au tireur de même licence
+- sauvegarde .bpclub rechargée ; club déjà présent : club\_exists, sauf replace
+- photos du club par licence
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/devices.test.ts</code> — 9 tests</summary>
 
 - setStripDevice : piste créée au besoin, appareil relu, retiré par null ; pilotes rechargés
@@ -3661,11 +3677,13 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/fileHandlers.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/ipc/fileHandlers.test.ts</code> — 4 tests</summary>
 
 - **registerFileHandlers (#1341)**
   - enregistre les canaux file:\* et dialog:\*
   - refuse d’écrire un chemin non autorisé par une boîte de dialogue (#1146)
+  - écrit des octets (fichier de données rendu par le contrat, ADR-0021) ou du texte
+  - dialog:openFile binaire : octets bruts, option retirée du dialogue natif
 
 </details>
 
@@ -3719,11 +3737,10 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/privacyHandlers.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/ipc/privacyHandlers.test.ts</code> — 1 test</summary>
 
-- **handlers privacy:\* restants**
-  - ne déclare plus que les canaux à dialogue natif ou chemin de fichier
-  - archive chiffrée : mot de passe trop court, aucun fichier en attente
+- **RGPD côté main**
+  - archive chiffrée du menu : nom et contenu base64 envoyés à l’écran, aucun canal ipcMain
 
 </details>
 
@@ -5223,11 +5240,12 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useAppMenuHandlers.test.tsx</code> — 3 tests</summary>
+<summary><code>src/renderer/hooks/useAppMenuHandlers.test.tsx</code> — 4 tests</summary>
 
 - **useAppMenuHandlers**
   - relaie les événements vers les derniers handlers, sans réabonnement
   - .bpm ouvert : recharge, toast, ouvre la compétition unique
+  - archive chiffrée choisie par le menu : nom et contenu relayés à l’invite
   - démontage : tous les désabonnements appelés
 
 </details>
@@ -5303,6 +5321,16 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
   - filtre par type : matches:changed n'active pas fencers:changed
   - se désabonne au démontage
   - ne plante pas hors Electron (client sans transport)
+
+</details>
+
+<details>
+<summary><code>src/renderer/hooks/useCompetitionFileOpen.test.tsx</code> — 3 tests</summary>
+
+- **useCompetitionFileOpen**
+  - sauvegarde en clair : fusion directe, épreuves annoncées
+  - archive chiffrée : invite, mot de passe faux puis bon
+  - archive du menu : invite ouverte par requestPassword, annulation
 
 </details>
 
@@ -6144,11 +6172,12 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/PrivacySettingsSection.test.tsx</code> — 2 tests</summary>
+<summary><code>src/renderer/components/PrivacySettingsSection.test.tsx</code> — 3 tests</summary>
 
 - **PrivacySettingsSection**
   - trouve une personne et l’anonymise après confirmation
   - archive chiffrée : refuse des mots de passe différents
+  - export JSON d’une personne : getPersonData puis « Enregistrer sous »
 
 </details>
 
@@ -6584,7 +6613,7 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
   - l'en-tête n'a plus de crayon d'édition de l'identité (#1872)
   - importe un fichier FFE .fff
   - importe un tableau CSV du club (colonne Nom)
-  - nombre de pistes enregistré, import des photos ZIP
+  - nombre de pistes enregistré, import des photos ZIP (contenu par le contrat)
 
 </details>
 
@@ -7335,6 +7364,14 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
 <summary><code>e2e/electron/dt-view.spec.ts</code> — 1 test</summary>
 
 - vue DT : connexion par mot de passe, épreuve suivie en lecture seule
+
+</details>
+
+<details>
+<summary><code>e2e/electron/files.spec.ts</code> — 2 tests</summary>
+
+- archive de tireurs .bpf : export puis réimport dans une autre épreuve
+- sauvegarde .bpm : export depuis l’accueil, suppression, réouverture
 
 </details>
 
@@ -8368,6 +8405,20 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/api/filesApi.test.ts</code> — 6 tests</summary>
+
+- **filesApi : entrées du contrat**
+  - %s _(each)_
+  - toutes les opérations des fichiers de données sont appelées par l’écran
+  - pas de mot de passe vide envoyé à l’ouverture
+- **enregistrer et ouvrir par la plateforme**
+  - saveDataFile : octets décodés du base64, nom proposé par le contrat
+  - openDataFile : octets encodés en base64 ; annulé → null
+  - saveCompetitionFile : contenu par le contrat puis « Enregistrer sous » .bpm
+
+</details>
+
+<details>
 <summary><code>src/renderer/api/remoteApi.test.ts</code> — 8 tests</summary>
 
 - **remoteApi : entrées du contrat**
@@ -9122,7 +9173,16 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
 ### `src/shared/platform/`
 
 <details>
-<summary><code>src/shared/platform/platforms.test.ts</code> — 8 tests</summary>
+<summary><code>src/shared/platform/binary.test.ts</code> — 2 tests</summary>
+
+- **base64**
+  - aller-retour exact sur tous les octets, identique à Buffer
+  - contenu de plus d’un bloc (découpage sans dépassement de pile)
+
+</details>
+
+<details>
+<summary><code>src/shared/platform/platforms.test.ts</code> — 10 tests</summary>
 
 - **ElectronPlatform**
   - dialogue natif puis écriture du contenu au chemin choisi
@@ -9136,5 +9196,8 @@ Unitaires : 551 fichiers, 4314 tests. E2E : 15 fichiers, 44 tests (comptage stat
   - Electron : impression et PDF, cause du main gardée en détail
   - navigateur : choix de fichier lu en texte, annulation, pas de PDF, lien dans un onglet
   - navigateur : impression par une iframe retirée ensuite
+- **fichiers binaires (fichiers de données du contrat, ADR-0021)**
+  - Electron : octets écrits tels quels ; ouverture binaire par le dialogue natif
+  - navigateur : téléchargement en octets bruts, fichier lu en octets
 
 </details>
