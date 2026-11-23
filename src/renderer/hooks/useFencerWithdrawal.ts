@@ -2,7 +2,7 @@
  * BPM - Escrime - Retrait et réintégration d'un tireur à l'écran (#1980, docs/adr/0016)
  * Appel, poule, tableau : withdrawFencer / reinstateFencer, règle appliquée par le moteur
  * (matchs perdus, instantané, journal). L'écran relit tireurs et session après la réponse ;
- * succès affiché seulement alors. Format que le moteur ne pilote pas : saisie locale.
+ * succès affiché seulement alors. Tous les formats, équipes comprises (docs/adr/0024, §3).
  * Licensed under GPL-3.0
  */
 import { useCallback } from 'react';
@@ -11,8 +11,8 @@ import { useToast } from '../components/Toast';
 import { useTranslation } from './useTranslation';
 import type { RecordScoreOutcome } from '../components/tableau/tableauViewShared';
 
-/** Pas de moteur (hors Electron) ou format laissé à l'écran (équipes, tableaux séparés) */
-const LOCAL_CODES = new Set(['unavailable', 'unsupported_format']);
+/** Pas de moteur (hors Electron) : statut tenu en mémoire seulement */
+const LOCAL_CODES = new Set(['unavailable']);
 
 export type WithdrawalReason = 'abandon' | 'forfait' | 'exclusion';
 
@@ -23,11 +23,7 @@ export interface WithdrawInput {
   matchId?: string;
 }
 
-export function useFencerWithdrawal(
-  competitionId: string | undefined,
-  /** Sauvegarde en attente de l'écran écrite avant la commande (rien de perdu au rechargement) */
-  flushSession: () => Promise<void>
-) {
+export function useFencerWithdrawal(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   const { t } = useTranslation();
@@ -46,7 +42,6 @@ export function useFencerWithdrawal(
     async (input: WithdrawInput): Promise<RecordScoreOutcome> => {
       if (!competitionId) return 'local';
       try {
-        await flushSession();
         const res = await client.call('withdrawFencer', { competitionId, ...input });
         if (res.forfeitedMatchIds.length > 0) {
           showToast(
@@ -62,21 +57,20 @@ export function useFencerWithdrawal(
         return fail(e, 'fencerList.withdraw_failed');
       }
     },
-    [client, competitionId, flushSession, showToast, t, fail]
+    [client, competitionId, showToast, t, fail]
   );
 
   const reinstate = useCallback(
     async (fencerId: string): Promise<RecordScoreOutcome> => {
       if (!competitionId) return 'local';
       try {
-        await flushSession();
         await client.call('reinstateFencer', { competitionId, fencerId });
         return 'recorded';
       } catch (e) {
         return fail(e, 'fencerList.reinstate_failed');
       }
     },
-    [client, competitionId, flushSession, fail]
+    [client, competitionId, fail]
   );
 
   return { withdraw, reinstate };

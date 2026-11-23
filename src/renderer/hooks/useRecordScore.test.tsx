@@ -14,11 +14,10 @@ vi.mock('../components/Toast', () => ({ useToast: () => ({ showToast }) }));
 vi.mock('./useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 let call: ReturnType<typeof vi.fn>;
-const flush = vi.fn(async () => {});
 
 const setup = (competitionId: string | undefined = 'c1') => {
   const client = { call } as unknown as BpmClient;
-  return renderHook(() => useRecordScore(competitionId, flush), {
+  return renderHook(() => useRecordScore(competitionId), {
     wrapper: ({ children }) => <BpmClientProvider client={client}>{children}</BpmClientProvider>,
   }).result;
 };
@@ -26,23 +25,20 @@ const setup = (competitionId: string | undefined = 'c1') => {
 beforeEach(() => {
   call = vi.fn(async () => ({ dryRun: false, kind: 'pool', revision: 1 }));
   showToast.mockClear();
-  flush.mockClear();
 });
 
 describe('useRecordScore', () => {
-  it('écrit par la commande après la sauvegarde en attente', async () => {
+  it('écrit par la commande', async () => {
     const r = setup();
     const input = { matchId: 'm1', scoreA: 5, scoreB: 3 };
     expect(await r.current(input)).toBe('recorded');
-    expect(flush).toHaveBeenCalled();
     expect(call).toHaveBeenCalledWith('recordScore', { competitionId: 'c1', ...input });
-    expect(flush.mock.invocationCallOrder[0]).toBeLessThan(call.mock.invocationCallOrder[0]);
   });
 
-  it('format hors moteur : saisie locale, sans message', async () => {
+  it('épreuve par équipes (unsupported_format) : refus affiché, plus de saisie locale', async () => {
     call.mockRejectedValueOnce(new ApiError('unsupported_format', 'équipes'));
-    expect(await setup().current({ matchId: 'm1', scoreA: 5, scoreB: 3 })).toBe('local');
-    expect(showToast).not.toHaveBeenCalled();
+    expect(await setup().current({ matchId: 'm1', scoreA: 5, scoreB: 3 })).toBe('refused');
+    expect(showToast).toHaveBeenCalledWith('scoreAudit.record_failed', 'error');
   });
 
   it('score refusé : message, rien d’appliqué', async () => {

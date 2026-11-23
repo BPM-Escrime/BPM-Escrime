@@ -2851,7 +2851,6 @@
     "none": "Nessuno schermidore disponibile",
     "adding": "Aggiunta…",
     "add": "Aggiungi lo schermidore",
-    "sync_failed": "Schermidore aggiunto, ma la sincronizzazione con il database non è riuscita",
     "add_error": "Errore durante l'aggiunta: {{msg}}",
     "unknown_error": "Errore sconosciuto"
   },

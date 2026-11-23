@@ -1,8 +1,8 @@
 /**
  * BPM - Escrime - Création des tireurs, équipes et arbitres lus dans les fichiers
  * de l'extranet, juste après la création de la compétition (#1938)
- * Tireurs et arbitres par le contrat (registerFencers, registerReferees, docs/adr/0018) ;
- * équipes encore écrites par l'écran (épreuves par équipes hors moteur, #2100).
+ * Tireurs, équipes et arbitres par le contrat (registerFencers, registerTeam,
+ * assignTeamFencer, registerReferees : docs/adr/0018, 0024).
  * Licensed under GPL-3.0
  */
 import type { BpmClient } from '../../shared/api/client';
@@ -75,18 +75,29 @@ export async function applyFederalImport(
     counts.fencers++;
   });
 
-  // Équipes : modèle de relais hors moteur, écrit par l'écran en attendant l'ADR de #2100
-  const db = window.electronAPI?.db;
-  for (const team of db ? payload.teams : []) {
+  // Équipes par les commandes d'inscription (registerTeam, assignTeamFencer, docs/adr/0024) :
+  // titulaires dans l'ordre du fichier, puis remplaçants
+  for (const team of payload.teams) {
     try {
-      const { id } = await db!.createTeam(competitionId, team.name, team.club || team.name);
+      const { team: row } = await client.call('registerTeam', {
+        competitionId,
+        name: team.name,
+        ...(team.club ? { club: team.club } : {}),
+      });
+      if (!row) continue;
       counts.teams++;
       let order = 0;
       for (const key of team.members) {
         const fencer = created.get(key);
         if (!fencer) continue;
         order++;
-        await db!.upsertTeamFencer(id, fencer.id, order, order > starters);
+        await client.call('assignTeamFencer', {
+          competitionId,
+          teamId: row.id,
+          fencerId: fencer.id,
+          teamOrder: order,
+          isReserve: order > starters,
+        });
       }
     } catch (err) {
       logger.error(LogCategory.UI, 'Federal import: team not created', err as Error);

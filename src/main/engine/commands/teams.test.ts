@@ -40,11 +40,9 @@ const call = (op: string, input: Record<string, unknown>) =>
   invoke(ctx, op as never, input as never) as Promise<any>;
 const events = (id: string) => db.eventLog.getSince(id);
 const revision = (id: string) => db.eventLog.getRevision(id);
-/** État de l'épreuve, écran des équipes ouvert (il écrit son bloc, persistLocally) */
-const stateOf = async (id: string) => {
-  if (!db.getSessionState(id)) db.saveSessionState(id, { currentPhase: 10 } as never);
-  return (await call('getCompetitionState', { competitionId: id })).state;
-};
+/** État de l'épreuve : l'écran n'écrit plus rien, le bloc « teams » vient des tables (lot N) */
+const stateOf = async (id: string) =>
+  (await call('getCompetitionState', { competitionId: id })).state;
 
 function competition(weapon: Weapon, team = true, settings: Record<string, unknown> = {}) {
   return db.createCompetition({
@@ -234,9 +232,11 @@ d('generateTeamPools : poules d’équipes tirées par le moteur (docs/adr/0024,
     const rebuild = await call('rebuildCompetitionState', { competitionId: comp.id, dryRun: true });
     expect(rebuild.divergences).toEqual([]);
 
-    // Bloc « teams » de getCompetitionState ; jamais ouverte : pas d'état (comme l'individuel)
-    expect((await call('getCompetitionState', { competitionId: comp.id })).state).toBeNull();
+    // Bloc « teams » de getCompetitionState, sans écriture de l'écran (lot N) ; phase déduite
+    // des tables : poules d'équipes tirées
+    expect(db.getSessionState(comp.id)).toBeNull();
     const state = await stateOf(comp.id);
+    expect(state.currentPhase).toBe(11);
     expect(state.teams).toMatchObject({ format: 'fie-relay', teamSize: 3 });
     expect(state.teams.teams.map((t: { id: string }) => t.id)).toEqual([a, b, c]);
     expect(state.teams.poolMatches).toHaveLength(3);

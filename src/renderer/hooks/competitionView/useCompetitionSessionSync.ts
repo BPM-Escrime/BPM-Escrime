@@ -12,7 +12,7 @@ import {
   poolsMatchFencers,
   scoredMatchesLost,
 } from '../../components/poolLaunchState';
-import { persistPools } from '../../components/poolPersistence';
+import { writePoolDraft } from '../posteUiState';
 import type { PoolPrepDraft } from '../../components/PoolPrepView';
 import { useSplitGroups } from '../useSplitGroups';
 import { useCompetitionNavigation } from '../useCompetitionNavigation';
@@ -40,7 +40,6 @@ import {
 } from '../../../shared/domain/fencers/withdrawal';
 import { useCompetitionReferees } from '../useCompetitionReferees';
 import { useRapieresCompetition } from '../../../features/rapieres/useRapieresCompetition';
-import { useMatchDbSync } from '../useMatchDbSync';
 import { useRapieresTeams } from '../../../features/rapieres/useRapieresTeams';
 import { useRapieresViewProps } from '../../../features/rapieres/useRapieresViewProps';
 import type { CompetitionViewProps } from '../../components/competition/competitionViewTypes';
@@ -67,9 +66,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setCurrentPoolRound,
     pools,
     setPools,
-    poolHistory,
     setPoolHistory,
-    appelHistory,
     setAppelHistory,
     overallRanking,
     setOverallRanking,
@@ -79,7 +76,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setFinalResults,
     consolationBrackets,
     setConsolationBrackets,
-    skipPoolPhase,
     setSkipPoolPhase,
     setRankingValidated,
     remoteArenaCount,
@@ -108,7 +104,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     updateMatchFromRemote,
     handleBlackCardCancelled,
     updateFencer,
-    effectiveSettings,
     isLaserSabre,
     exports,
     setImportData,
@@ -187,50 +182,36 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setSplitOffInProgress,
   });
 
-  // Étape 4c (docs/adr/0017) : seul le moteur écrit l'état, sauf exception documentée
-  // (épreuves par équipes, jusqu'aux lots E de l'ADR-0024)
-  const persistLocally = !!competition.isTeamEvent;
-  const { isLoaded, flushPendingSave } = useCompetitionRestore({
+  // Étape 4c (docs/adr/0017, 0024) : seul le moteur écrit l'état, tous formats ; l'écran relit
+  const { isLoaded } = useCompetitionRestore({
     competitionId: competition.id,
-    persistLocally,
     onGroupTableaux: splitCriteria ? applyGroupTableaux : undefined,
     currentPhase,
     setCurrentPhase,
-    currentPoolRound,
     setCurrentPoolRound,
     pools,
     setPools,
-    poolHistory,
     setPoolHistory,
-    appelHistory,
     setAppelHistory,
-    overallRanking,
     setOverallRanking,
-    tableauMatches,
     setTableauMatches,
-    finalResults,
     setFinalResults,
-    consolationBrackets,
     setConsolationBrackets,
-    skipPoolPhase,
     setSkipPoolPhase,
     setRankingValidated,
     remoteArenaCount,
     setRemoteArenaCount,
     remoteStripStart,
     setRemoteStripStart,
-    isRapieres,
-    rapieresState,
     setRapieresState,
     minFencersPerPool,
     maxFencersPerPool,
     setMinFencersPerPool,
     setMaxFencersPerPool,
-    poolsLaunched,
     setPoolsLaunched,
   });
 
-  // Saisie locale historique : format que le moteur ne pilote pas, ou hors Electron
+  // Hors Electron (pas de moteur) : état tenu en mémoire seulement, rien d'écrit
   const { handleFencerForfeit: localForfeit } = ctx;
   const localWithdraw = useCallback(
     (fencerId: string, reason: WithdrawalReason, blackCard = false) => {
@@ -243,22 +224,21 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     [localForfeit, updateFencer, pools]
   );
   const localReinstate = (fencerId: string) => {
-    void ctx.handleUndoAbandon(fencerId);
     updateFencer(fencerId, { status: FencerStatus.CHECKED_IN, exclusionReason: null });
   };
 
   // Un fait, un chemin (#1980, ADR-0005) : scores saisis à l'écran par recordScore
-  const recordScreenScore = useRecordScore(competition.id, flushPendingSave);
-  const fencerWithdrawal = useFencerWithdrawal(competition.id, flushPendingSave);
-  const launchPools = usePoolsLaunch(competition.id, flushPendingSave);
-  const addPoolFencer = usePoolFencerAdd(competition.id, flushPendingSave);
-  const generateTableauCommand = useTableauGenerate(competition.id, flushPendingSave);
-  const rapieresWaves = useRapieresWaves(competition.id, flushPendingSave);
-  const clearScore = useScoreClear(competition.id, flushPendingSave);
-  const assignMatches = useAssignMatches(competition.id, flushPendingSave);
+  const recordScreenScore = useRecordScore(competition.id);
+  const fencerWithdrawal = useFencerWithdrawal(competition.id);
+  const launchPools = usePoolsLaunch(competition.id);
+  const addPoolFencer = usePoolFencerAdd(competition.id);
+  const generateTableauCommand = useTableauGenerate(competition.id);
+  const rapieresWaves = useRapieresWaves(competition.id);
+  const clearScore = useScoreClear(competition.id);
+  const assignMatches = useAssignMatches(competition.id);
   // Tableaux séparés (docs/adr/0024) : retirer « le tableau » sans groupe retire celui de
   // chaque groupe qui en a un (classement après poules corrigé : tous sont à refaire)
-  const engineCompetitionCommand = useCompetitionCommand(competition.id, flushPendingSave);
+  const engineCompetitionCommand = useCompetitionCommand(competition.id);
   const runCompetitionCommand: typeof engineCompetitionCommand = useCallback(
     async (name, input) => {
       if (!splitCriteria || name !== 'clearTableau' || (input as { group?: string }).group) {
@@ -349,16 +329,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     withdraw: fencerWithdrawal.withdraw,
   });
 
-  // Sync scores/statuts de poule et matchs de tableau vers la DB (#1599)
-  useMatchDbSync({
-    competitionId: competition.id,
-    pools,
-    tableauMatches,
-    isLoaded,
-    tableMaxScore: effectiveSettings?.defaultTableMaxScore,
-    persistLocally,
-  });
-
   // Menu natif
   useCompetitionMenu({
     competitionId: competition.id,
@@ -374,12 +344,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setShowPropertiesModal: modals.setShowPropertiesModal,
     setShowAddFencerModal: modals.setShowAddFencerModal,
   });
-
-  // Persister les poules générées dans les tables DB (pools, pool_fencers, matches)
-  const persistPoolsToDB = useCallback(
-    (generatedPools: Pool[]) => persistPools(competition.id, generatedPools),
-    [competition.id]
-  );
 
   // Handlers
   // Pointage : commande checkIn du contrat, seul chemin d'écriture (#1980, ADR-0005)
@@ -481,11 +445,9 @@ export function useCompetitionSessionSync(ctx: Ctx) {
         setPoolsLaunched(false);
         setRelaunchPending(true);
       }
-      // Tirage écrit en base dès la préparation : relu au rechargement avant « Lancer »
-      // (repli DB de useCompetitionRestore, la session n'est écrite qu'au lancement par le
-      // moteur). Pas d'opération du contrat pour des poules non lancées : écriture de l'écran
-      // gardée (poolPersistence), à reprendre avec l'ADR de #2100
-      await persistPoolsToDB(newPools);
+      // Tirage non lancé : travail du poste, relu au rechargement avant « Lancer »
+      // (useCompetitionRestore). Rien en base avant le lancement (generatePools, docs/adr/0024)
+      writePoolDraft(competition.id, newPools);
       // Fermer l'inscription distante dès que les poules sont générées
       if (isRemoteActive) {
         void remote.setRegistrationEnabled(competition.id, false);
@@ -565,7 +527,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     handleNextPoolRound,
   } = useCompetitionNavigation({
     competition,
-    flushSession: flushPendingSave,
     onUpdate,
     setCurrentPhase,
     fencers,
@@ -650,7 +611,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setPoolPrepDraft,
     isLoaded,
     fireWebhookNotif,
-    persistPoolsToDB,
     handleCheckInFencer,
     confirmScoresLoss,
     checkinUnchanged,

@@ -468,7 +468,7 @@ arène hors 8/12, tireur déjà dans une autre équipe), `team_incomplete`, `tea
 `team_fencers`, `team_matches`, `team_bouts` sont la projection, écrite dans la transaction de la
 commande. `getCompetitionState` rend le bloc `teams` (format, taille d'équipe, équipes et
 composition, rencontres de poule et de tableau avec leurs relais, classement de poule dérivé),
-`null` pour une épreuve individuelle ; épreuve jamais ouverte à l'écran : état `null`, comme sur dev (l'écran des équipes écrit encore son bloc, `persistLocally`, jusqu'au lot E3). Rejeu : `projectCompetition`
+`null` pour une épreuve individuelle ; épreuve par équipes : état rendu dès sa création, sans bloc de session (lot N), phase déduite des tables (équipes, poules, tableau). Rejeu : `projectCompetition`
 rend `teams` (poules, rencontres et relais) ; journal complet dès `TeamPoolsGenerated` ;
 `compareWithState` reçoit la vue des tables (`teamStateView`) et signale `team_pool`,
 `team_match_missing`, `team_match`, `team_match_unexpected` ; `rebuildCompetitionState` les rend
@@ -502,6 +502,25 @@ contrôlé en simulation (`dryRun`) avant l'ACK : refus du moteur → NAK. Refus
 événement socket `team_arena_error` (`{ error: 'score_refused', code, detail }`). Après chaque
 commande, l'arène relit la rencontre. Plus aucune écriture des relais par la base
 (`updateTeamBout`, `reopenTeamBout`, recalcul de la rencontre retirés).
+
+Lot N fait (nettoyage) : l'écran n'écrit plus rien de l'épreuve, tous formats. Retirés :
+`persistLocally`, la sauvegarde de l'écran (`useCompetitionSession`, `useCompetitionRestore`,
+`flushPendingSave`), `useMatchDbSync`, `poolPersistence`, `syncPoolSnapshot`, les instantanés
+d'abandon de l'écran (`usePoolManagement`), le statut écrit par `useFencerManagement`, les replis
+« local » sur `unsupported_format` ; canaux `db:saveSessionState`, `db:saveSessionStateSync`,
+`db:updateFencer`, `db:createMatch`, `db:updateMatch`, `db:upsertMultipleTableauMatches`,
+`db:createPool`, `db:clearPoolsForPhase`, `db:addFencerToPool`, `db:syncPoolSnapshot`,
+`db:updatePool`, `db:createPhase`, `db:saveAbandonSnapshot`, `db:getAbandonSnapshot`,
+`db:deleteAbandonSnapshot`, `db:createTeam`, `db:upsertTeamFencer`. Seul repli « local » restant :
+l'absence de moteur (`unavailable`, hors Electron) : affichage en mémoire, rien d'écrit.
+`withdrawFencer` / `reinstateFencer` acceptent une épreuve par équipes (statut et motif,
+`FencerWithdrawn` avec `forfeitedMatchIds: []`, sans instantané ni effet sur les rencontres).
+Import fédéral : équipes par `registerTeam` et `assignTeamFencer`. Tirage de la préparation des
+poules (avant « Lancer ») : travail du poste (`posteUiState`, `readPoolDraft`), plus écrit en
+base ; un tirage écrit par une version précédente est relu (lecture seule). Restent en `db.*` :
+lectures (`getSessionState`, `getPhasesByCompetition`, `getPoolsByPhase`) et cartons d'équipe
+(hors ADR-0024). Rejeu par format (deux groupes, épreuve séparée, relais FIE, arène Sabre Laser) :
+`src/main/engine/commands/replayFormats.test.ts`.
 
 **Étape 5 commencée** : `projectCompetition(events)` (`src/shared/domain/journal`) rejoue le
 journal et rend les faits rejouables : statuts des tireurs nommés par le journal, tours de poules

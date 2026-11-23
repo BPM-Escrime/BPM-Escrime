@@ -2851,7 +2851,6 @@
     "none": "C'hoarier ebet da gaout",
     "adding": "Oc'h ouzhpennañ…",
     "add": "Ouzhpennañ ar c'hoarier",
-    "sync_failed": "Ouzhpennet eo ar c'hoarier, met c'hwitet eo ar c'hempredañ gant an diaz",
     "add_error": "Fazi en ur ouzhpennañ : {{msg}}",
     "unknown_error": "Fazi dianav"
   },

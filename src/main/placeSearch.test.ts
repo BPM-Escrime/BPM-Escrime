@@ -35,4 +35,15 @@ describe('createPlaceSearch', () => {
     await search('gymnase', 'fr');
     expect(fetchImpl).toHaveBeenCalledTimes(4);
   });
+
+  it('en-têtes valides pour fetch (ASCII) : sinon tout appel échoue, « pas de connexion »', async () => {
+    const fetchImpl = vi.fn((_url: string, init?: RequestInit) => {
+      new Headers(init?.headers);
+      return json(feature({ name: 'Salle' }));
+    });
+    const r = await createPlaceSearch(fetchImpl as unknown as typeof fetch)('salle', 'fr');
+    expect(r.unavailable).toBe(false);
+    const headers = (fetchImpl.mock.calls[0][1]?.headers ?? {}) as Record<string, string>;
+    for (const v of Object.values(headers)) expect(v).toMatch(/^[\x20-\x7e]*$/);
+  });
 });
