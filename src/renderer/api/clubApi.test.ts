@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { contract, type OperationName } from '../../shared/api/contract';
+import { fileOperations } from '../../shared/api/contractFiles';
 import type { ApiBridge } from '../../shared/api/client';
 import { IpcClient } from './IpcClient';
 import { createClubApi } from './clubApi';
@@ -195,8 +196,9 @@ describe('createClubApi : entrées du contrat', () => {
     }
     api.onSynced(() => undefined);
     used.add('onClubSynced');
-    const declared = (Object.keys(contract) as OperationName[]).filter(n =>
-      contract[n].permission.startsWith('club:')
+    // Fichiers de données : appelés par filesApi (filesApi.test.ts)
+    const declared = (Object.keys(contract) as OperationName[]).filter(
+      n => contract[n].permission.startsWith('club:') && !(n in fileOperations)
     );
     expect(declared.filter(n => !used.has(n))).toEqual([]);
   });

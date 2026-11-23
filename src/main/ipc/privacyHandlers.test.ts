@@ -1,48 +1,34 @@
 /**
- * Handlers IPC `privacy:*` restants (RGPD, #1882) : archives .bpm chiffrées.
- * Les droits des personnes et la conservation sont testés par le contrat
- * (engine/commands/privacy.test.ts).
+ * RGPD côté main (#1882) : plus aucun canal `privacy:*` en ipcMain. Fichier → Ouvrir sur une
+ * archive chiffrée envoie à l'écran son nom et son contenu ; l'ouverture (mot de passe) passe
+ * par le contrat (openCompetitionFile, engine/commands/dataFiles.test.ts).
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import * as fs from 'fs';
 import * as os from 'os';
+import * as path from 'path';
 
-type Handler = (...args: unknown[]) => unknown;
-const handlers = new Map<string, Handler>();
-vi.mock('electron', () => ({
-  app: { getPath: () => os.tmpdir() },
-  dialog: { showSaveDialog: vi.fn(async () => ({ canceled: true })) },
-  ipcMain: { handle: (ch: string, fn: Handler) => handlers.set(ch, fn) },
-}));
+const handle = vi.fn();
+vi.mock('electron', () => ({ ipcMain: { handle } }));
 
 import { createPrivacyHandlers } from './privacyHandlers';
-import type { DatabaseManager } from '../../database';
 
-describe('handlers privacy:* restants', () => {
-  beforeEach(() => {
-    handlers.clear();
-    createPrivacyHandlers({
-      db: {} as unknown as DatabaseManager,
-      getMainWindow: () => null,
-    }).register();
-  });
-
-  it('ne déclare plus que les canaux à dialogue natif ou chemin de fichier', () => {
-    expect([...handlers.keys()].sort()).toEqual([
-      'privacy:cancelEncryptedBpm',
-      'privacy:exportEncryptedBpm',
-      'privacy:exportPerson',
-      'privacy:openEncryptedBpm',
-    ]);
-  });
-
-  it('archive chiffrée : mot de passe trop court, aucun fichier en attente', async () => {
-    expect(await handlers.get('privacy:exportEncryptedBpm')!({}, null, 'court')).toEqual({
-      success: false,
-      error: 'password_too_short',
+describe('RGPD côté main', () => {
+  it('archive chiffrée du menu : nom et contenu base64 envoyés à l’écran, aucun canal ipcMain', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-privacy-'));
+    const file = path.join(dir, 'secret.bpm');
+    fs.writeFileSync(file, Buffer.from('BPMENC1\nxyz'));
+    const send = vi.fn();
+    const { requestEncryptedOpen } = createPrivacyHandlers({
+      getMainWindow: () => ({ webContents: { send } }) as never,
     });
-    expect(await handlers.get('privacy:openEncryptedBpm')!({}, 'motdepasse')).toEqual({
-      success: false,
-      error: 'no_pending_file',
-    });
+    await requestEncryptedOpen(file);
+    expect(send).toHaveBeenCalledWith(
+      'privacy:encrypted-bpm',
+      'secret.bpm',
+      Buffer.from('BPMENC1\nxyz').toString('base64')
+    );
+    expect(handle).not.toHaveBeenCalled();
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });

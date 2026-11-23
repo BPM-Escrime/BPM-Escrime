@@ -22,10 +22,9 @@ import {
   MatchTiming,
 } from '../types';
 import type { MatchSignatureRequest, ArenaUpdate } from './remote';
-import type { ClubAPI } from './club';
 import type { PrivacyAPI } from './privacy';
 import type { McpScreenEvent } from './mcp';
-export type { ClubAPI, ClubMemberReport } from './club';
+export type { ClubMemberReport } from './club';
 
 // Re-export Pool for preload
 export type { Pool, PoolSnapshot } from '../types';
@@ -249,6 +248,8 @@ export interface FileSaveOptions {
 export interface FileOpenResult {
   filePath: string;
   content?: string;
+  /** Octets du fichier, quand le dialogue a été ouvert avec `binary` (ADR-0021) */
+  bytes?: Uint8Array;
 }
 
 export interface FileSaveResult {
@@ -269,6 +270,8 @@ export interface DialogOpenOptions {
     extensions: string[];
   }>;
   properties?: Array<'openFile' | 'openDirectory' | 'multiSelections'>;
+  /** Lit les octets du fichier (`bytes`) au lieu du texte (ADR-0021) */
+  binary?: boolean;
 }
 
 export interface DialogSaveOptions {
@@ -789,17 +792,12 @@ export interface DatabaseAPI {
 export interface FileAPI {
   export: (filepath: string) => Promise<FileSaveResult>;
   import: (filepath: string) => Promise<FileOpenResult>;
-  /** Ouvre le dialogue « Ouvrir » (.bpm/.db/.cotcot) — même flux que Fichier › Ouvrir */
-  openDialog: () => Promise<void>;
   /** Décode des fichiers glissés-déposés (.zip de l'extranet, .xml, .fff, .txt) (#1938) */
   unpackFederalFiles: (
     inputs: Array<{ name: string; bytes: Uint8Array }>
   ) => Promise<FederalTextFile[]>;
-  /** Exporte une compétition seule (état d'avancement compris) dans un .bpm nommé d'après elle */
-  exportCompetition: (
-    competitionId: string
-  ) => Promise<{ success: boolean; canceled?: boolean; path?: string; error?: string }>;
-  writeContent: (filepath: string, content: string) => Promise<void>;
+  /** Écrit un texte (UTF-8) ou des octets au chemin choisi par le dialogue natif */
+  writeContent: (filepath: string, content: string | Uint8Array) => Promise<void>;
   /** Classeur .xlsx écrit par le main (une feuille) */
   writeSpreadsheet: (
     filepath: string,
@@ -817,16 +815,6 @@ export interface FileAPI {
     html: string,
     title?: string
   ) => Promise<{ success: boolean; path?: string; error?: string }>;
-  exportPhotos: (competitionId: string, filepath: string) => Promise<{ count: number }>;
-  importPhotos: (
-    competitionId: string,
-    filepath: string
-  ) => Promise<{ matched: number; total: number }>;
-  exportFencersArchive: (competitionId: string, filepath: string) => Promise<{ count: number }>;
-  importFencersArchive: (
-    competitionId: string,
-    filepath: string
-  ) => Promise<{ added: number; updated: number }>;
 }
 
 /** Fichiers de l'extranet fédéral décodés (#1938) */
@@ -1052,7 +1040,6 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   ftp: FtpAPI;
   crypto: CryptoAPI;
   settings: SettingsAPI;
-  club: ClubAPI;
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void;
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) => () => void;
   /** Bus d'événements de données main → renderer (#1298) */

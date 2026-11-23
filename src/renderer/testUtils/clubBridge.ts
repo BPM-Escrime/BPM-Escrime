@@ -4,7 +4,7 @@
  * contrat reçoit son entrée nommée et la rend en arguments positionnels à la méthode
  * correspondante : les tests vérifient les appels de l'écran, le contrat lui-même étant
  * couvert par src/main/engine/commands/club.test.ts.
- * Photos ZIP et sauvegardes .bpclub restent sur window.electronAPI.club (ADR-0021).
+ * Photos ZIP et sauvegardes .bpclub : opérations du contrat en contenu base64 (contractFiles.ts).
  * Licensed under GPL-3.0
  */
 import type { ApiBridge } from '../../shared/api/client';
@@ -105,6 +105,10 @@ const MAPPING: Record<string, [method: string, args: (i: Input) => unknown[]]> =
   listClubBackups: ['backupList', i => [i.clubId]],
   createClubBackup: ['backupCreate', i => [i.clubId]],
   restoreClubBackup: ['backupRestore', i => [i.clubId, i.backupId]],
+  // Fichiers du club (contenu base64, ADR-0021)
+  importClubPhotos: ['importPhotos', i => [i.clubId, i.content]],
+  getClubBackupFile: ['exportBackup', i => [i.clubId]],
+  importClubBackup: ['importBackup', i => [i.content, i.replace]],
 };
 
 /** Retire les `undefined` de queue : `f('c1')` et non `f('c1', undefined)` */
@@ -128,21 +132,13 @@ export function clubHandlers(mocks: ClubMocks): ApiHandlers {
 }
 
 /**
- * `window.electronAPI` d'un test du Mode Club : pont du contrat + fichiers du club.
+ * `window.electronAPI` d'un test du Mode Club : pont du contrat.
  * `extra` ajoute d'autres opérations du contrat ou des groupes de l'API Electron.
  */
 export function clubElectron(
   mocks: ClubMocks,
   extra: { api?: ApiHandlers; [group: string]: unknown } = {}
-): { api: ApiBridge; club: Record<string, unknown>; [group: string]: unknown } {
+): { api: ApiBridge; [group: string]: unknown } {
   const { api: extraApi, ...rest } = extra;
-  return {
-    ...rest,
-    api: fakeApiBridge({ ...clubHandlers(mocks), ...extraApi }),
-    club: {
-      importPhotos: mocks.importPhotos,
-      exportBackup: mocks.exportBackup,
-      importBackup: mocks.importBackup,
-    },
-  };
+  return { ...rest, api: fakeApiBridge({ ...clubHandlers(mocks), ...extraApi }) };
 }

@@ -88,4 +88,22 @@ describe.skipIf(!nativeOk)('DatabaseManager chiffré (#1882)', () => {
     }
     fs.rmSync(dir, { recursive: true, force: true });
   });
+
+  it('fusion d’un .bpm en clair dans une base chiffrée (ouverture d’une sauvegarde)', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-merge-'));
+    const src = new DatabaseManager(path.join(dir, 'src.db'));
+    await src.open();
+    const c = src.createCompetition({ title: 'SAUVEE' } as never);
+    const bpm = path.join(dir, 'c.bpm');
+    await src.exportCompetitionToFile(c.id, bpm);
+    src.close();
+
+    const file = path.join(dir, 'bellepoule.db');
+    const db = new DatabaseManager(file);
+    await db.open(file, { encryptionKey: Buffer.alloc(32, 9) });
+    expect(await db.mergeFromFile(bpm)).toEqual([c.id]);
+    expect(db.getAllCompetitions().map(x => x.title)).toContain('SAUVEE');
+    db.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
 });

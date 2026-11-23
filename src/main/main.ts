@@ -26,7 +26,6 @@ import { createMainWindow } from './mainWindow';
 import { createSplashWindow, saveLanguageToFile, splashConfirmPromise } from './splash';
 import { createTrainingPort } from './trainingPort';
 import { dayStripServer } from './remote/stripHandover';
-import { registerClubHandlers } from './ipc/clubHandlers';
 import { createClubStation } from './clubPort';
 import { createStationPort } from './stationPort';
 import { applyStoredPrivacySettings, createPrivacyHandlers } from './ipc/privacyHandlers';
@@ -98,11 +97,8 @@ const createWindow = (initialLang?: string): void =>
     buildMenu: lang => buildMenu(lang),
   });
 
-// RGPD (#1882) : droits des personnes, conservation, archives .bpm chiffrées
-const privacyHandlers = createPrivacyHandlers({
-  db,
-  getMainWindow: () => mainWindow,
-});
+// RGPD (#1882) : archive .bpm chiffrée choisie par Fichier → Ouvrir, ouverte par le contrat
+const privacyHandlers = createPrivacyHandlers({ getMainWindow: () => mainWindow });
 const menuActions = createMenuActions({
   db,
   getMainWindow: () => mainWindow,
@@ -110,7 +106,7 @@ const menuActions = createMenuActions({
   // Dossier de sauvegarde par défaut (Paramètres → Sauvegarde)
   getBackupDir: () => resolveBackupDir(app.getPath('userData'), app.getPath('documents')).dir,
 });
-const { handleOpenFile, exportCompetitionDialog, setCurrentCompetitionId } = menuActions;
+const { setCurrentCompetitionId } = menuActions;
 const buildMenu = (language?: string): void =>
   createMenu(
     {
@@ -190,21 +186,7 @@ registerApiHandlers({
     return devicesPort;
   },
 });
-registerClubHandlers({ db });
-privacyHandlers.register();
 registerFileHandlers({ db, getMainWindow: () => mainWindow });
-
-// File handlers
-ipcMain.handle('file:openDialog', async () => {
-  await handleOpenFile();
-});
-
-ipcMain.handle('file:exportCompetition', async (_, competitionId: string) => {
-  if (!competitionId || typeof competitionId !== 'string') {
-    return { success: false, error: 'invalid_competition_id' };
-  }
-  return exportCompetitionDialog(competitionId);
-});
 
 ipcMain.on('app:current-competition', (_, competitionId: unknown) => {
   setCurrentCompetitionId(typeof competitionId === 'string' ? competitionId : null);

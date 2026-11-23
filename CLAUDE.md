@@ -273,9 +273,10 @@ Database (src/database/)
    - `updater.*` – Auto-update control
    - `crypto.*` – safeStorage protect/unprotect
    - appareils de piste Cyrano et OPP2 (déclaration sur la salle, salle de l'épreuve, pistes manuelles, start/stop, statuts, journal) : plus de groupes `cyrano.*` / `opp2.*`, opérations du contrat `devicesOperations` (`contractDevices.ts`, droit `remote:admin`, ADR-0023), écran `useDevicesApi` (`src/renderer/api/devicesApi.ts`)
-   - `club.*` – Mode Club : membres, séances, pointage, combats libres, stats par période (#1872)
+   - Mode Club : plus de groupe `club.*`, opérations du contrat (`contractClub.ts`, ADR-0022) ; photos ZIP et sauvegardes `.bpclub` par les fichiers de données
+   - fichiers de données (.bpm en clair ou chiffré, .bpf, photos ZIP, .bpclub) : opérations du contrat `fileOperations` (`contractFiles.ts`, contenu base64, jamais de chemin), écran `useFilesApi` / `saveDataFile` / `openDataFile` (`src/renderer/api/filesApi.ts`) et `usePlatform()` (ADR-0021)
    - `settings.addAgentFolder` – Dossier de l'agent choisi par dialogue natif (#1880) ; réglages du poste, salles, thèmes, journée multi-épreuves et agent MCP : contrat d'API (`contractStation.ts`, ADR-0022)
-   - `privacy.*` – RGPD, restent en IPC : export JSON d'une personne, .bpm chiffrés (dialogue natif, chemin de fichier) ; droits des personnes et conservation par le contrat (#1882, docs/RGPD.md)
+   - `privacy.onEncryptedBpmRequest` – seul reste du RGPD : archive chiffrée choisie par Fichier → Ouvrir (nom + contenu), ouverte par le contrat ; export JSON d'une personne (`getPersonData`), archives chiffrées et droits des personnes par le contrat (#1882, docs/RGPD.md)
    - `notifyLanguageChanged(lang)` – Rebuild native menu when UI language changes
 
 ## TypeScript Configuration

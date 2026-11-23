@@ -218,8 +218,12 @@ async function main() {
 
     await click('button:has-text("Passer au tableau")');
     await win.waitForTimeout(1500);
-    // Confirmation éventuelle (selon la version de l'écran)
-    await click('button:has-text("Oui")').catch(() => {});
+    // Confirmation seulement si une poule reste incomplète (tableau généré directement sinon)
+    await win
+      .locator('button:has-text("Oui")')
+      .first()
+      .click({ timeout: 3000 })
+      .catch(() => {});
     await win.waitForTimeout(1500);
     await click('.tableau-fab-trigger');
     await click('.tableau-fab-item:has-text("Remplir auto")');
@@ -377,19 +381,29 @@ async function main() {
     await win.keyboard.press('Escape');
     await win.waitForTimeout(500);
 
-    // Mode Club : club de démonstration, membres et séance
+    // Mode Club : club de démonstration, membres et séance, par le contrat d'API (docs/adr/0022)
     await win.evaluate(async fencers => {
-      const club = window.electronAPI.club;
-      const c = await club.createClub({ name: 'Cercle d’escrime de la Ville', stripCount: 6 });
+      const call = async (name, input) => {
+        const r = await window.electronAPI.api.invoke(name, input);
+        if (!r.ok) throw new Error(`${name} : ${r.error.message}`);
+        return r.data;
+      };
+      const c = await call('createClub', { name: 'Cercle d’escrime de la Ville', stripCount: 6 });
       for (const [lastName, firstName] of fencers.slice(0, 12)) {
-        await club.createMember(c.id, { lastName, firstName, weapon: 'E' });
+        await call('registerClubMember', {
+          clubId: c.id,
+          details: { lastName, firstName, weapons: ['E'] },
+        });
       }
-      await club.createSession(c.id, {
-        date: '2026-11-18',
-        label: 'Entraînement épée adultes',
-        startTime: '19:30',
-        weapon: 'E',
-        stripCount: 6,
+      await call('planClubSession', {
+        clubId: c.id,
+        details: {
+          date: '2026-11-18',
+          label: 'Entraînement épée adultes',
+          startTime: '19:30',
+          weapon: 'E',
+          stripCount: 6,
+        },
       });
     }, FENCERS);
     await win.reload();

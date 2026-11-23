@@ -42,9 +42,10 @@ describe('useAppMenuHandlers', () => {
   beforeEach(() => {
     listeners.clear();
     offs.length = 0;
-    (window as unknown as { electronAPI: unknown }).electronAPI = Object.fromEntries(
-      NAMES.map(n => [n, on(n)])
-    );
+    (window as unknown as { electronAPI: unknown }).electronAPI = {
+      ...Object.fromEntries(NAMES.map(n => [n, on(n)])),
+      privacy: { onEncryptedBpmRequest: on('onEncryptedBpmRequest') },
+    };
   });
 
   it('relaie les événements vers les derniers handlers, sans réabonnement', () => {
@@ -74,9 +75,16 @@ describe('useAppMenuHandlers', () => {
     expect(h.openImportedCompetition).toHaveBeenCalledWith('c1');
   });
 
+  it('archive chiffrée choisie par le menu : nom et contenu relayés à l’invite', () => {
+    const onEncryptedFile = vi.fn();
+    renderHook(() => useAppMenuHandlers(handlers({ onEncryptedFile })));
+    listeners.get('onEncryptedBpmRequest')!('secret.bpm', 'QlBN');
+    expect(onEncryptedFile).toHaveBeenCalledWith('secret.bpm', 'QlBN');
+  });
+
   it('démontage : tous les désabonnements appelés', () => {
     const { unmount } = renderHook(() => useAppMenuHandlers(handlers()));
     unmount();
-    expect(offs.sort()).toEqual([...NAMES].sort());
+    expect(offs.sort()).toEqual([...NAMES, 'onEncryptedBpmRequest'].sort());
   });
 });

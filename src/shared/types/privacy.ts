@@ -83,24 +83,12 @@ export interface RetentionPurgeResult {
 }
 
 /**
- * Canaux IPC du RGPD restés hors contrat (dialogue natif ou chemin de fichier, ADR-0021) :
- * droits des personnes, conservation et réglages passent par le contrat d'API (docs/adr/0022).
+ * Seul avis du RGPD resté dans le préload : Fichier → Ouvrir (menu natif, ADR-0021) a choisi une
+ * archive .bpm chiffrée. L'écran demande le mot de passe puis l'ouvre par le contrat
+ * (openCompetitionFile, contenu + mot de passe). Export JSON d'une personne (getPersonData) et
+ * archives chiffrées (getEncryptedCompetitionFile) passent par le contrat d'API.
  */
 export interface PrivacyAPI {
-  /** Boîte d'enregistrement puis export JSON des données de la personne */
-  exportPerson: (
-    ref: PrivacyPersonRef,
-    defaultName?: string
-  ) => Promise<{ success: boolean; canceled?: boolean; path?: string; error?: string }>;
-  /** Exporte une compétition (ou toute la base si null) dans un .bpm chiffré par mot de passe */
-  exportEncryptedBpm: (
-    competitionId: string | null,
-    password: string
-  ) => Promise<{ success: boolean; canceled?: boolean; path?: string; error?: string }>;
-  /** Mot de passe de l'archive chiffrée en attente d'ouverture (Fichier → Ouvrir) */
-  openEncryptedBpm: (
-    password: string
-  ) => Promise<{ success: boolean; ids?: string[]; error?: string }>;
-  cancelEncryptedBpm: () => Promise<void>;
-  onEncryptedBpmRequest: (callback: (fileName: string) => void) => () => void;
+  /** Nom du fichier et contenu base64 de l'archive chiffrée choisie par le menu */
+  onEncryptedBpmRequest: (callback: (fileName: string, content: string) => void) => () => void;
 }

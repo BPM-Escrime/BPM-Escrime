@@ -64,6 +64,13 @@ import {
 } from '../commands/remoteClients';
 import { onTrainingActivity, trainingHandlers } from '../commands/training';
 import { devicesHandlers } from '../commands/devices';
+import {
+  applyFencerPhotos,
+  dataFileHandlers,
+  decodeFencersArchive,
+  decodePhotosZip,
+  importArchiveFencers,
+} from '../commands/dataFiles';
 import { devicesControlHandlers, onStripControlChanged } from '../commands/devicesControl';
 import { competitionStats } from '../commands/competitionStats';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
@@ -253,6 +260,21 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   onTrainingActivity,
   // Appareils de piste (docs/adr/0023) : salle, pilotes Cyrano et OPP2 ; sans journal
   ...devicesHandlers,
+  // Fichiers de données (ADR-0021) : contenu base64, jamais de chemin ; sans journal
+  ...dataFileHandlers,
+  // Imports dans une épreuve : décodage (asynchrone) puis écriture par runCommand (ADR-0006)
+  importFencersArchive: async (ctx, { competitionId, content }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    const fencers = await decodeFencersArchive(content);
+    return runCommand(ctx, competitionId, {}, c => importArchiveFencers(c, competitionId, fencers))
+      .result;
+  },
+  importFencerPhotos: async (ctx, { competitionId, content }) => {
+    getCompetitionOrThrow(ctx, competitionId);
+    const photos = await decodePhotosZip(content);
+    return runCommand(ctx, competitionId, {}, c => applyFencerPhotos(c, competitionId, photos))
+      .result;
+  },
   ...devicesControlHandlers,
   onStripControlChanged,
 };

@@ -16,6 +16,8 @@ import { translateStatic } from '../contexts/TranslationContext';
 import { useBpmClient } from '../api/BpmClientContext';
 import { loadCompetition } from '../api/competitionMapping';
 import { useRemoteApi } from '../api/remoteApi';
+import { saveCompetitionFile, useFilesApi } from '../api/filesApi';
+import { usePlatform } from '../platform/PlatformContext';
 
 interface CompetitionTabsParams
   extends
@@ -53,6 +55,8 @@ export function useCompetitionTabs({
   // Création et suppression par les commandes du contrat (docs/adr/0018)
   const client = useBpmClient();
   const remote = useRemoteApi();
+  const files = useFilesApi();
+  const platform = usePlatform();
   const handleCreateCompetition = useCallback(
     async (data: Partial<Competition>, imported?: FederalCreationPayload) => {
       try {
@@ -200,16 +204,15 @@ export function useCompetitionTabs({
   const handleExportCompetition = useCallback(
     async (id: string) => {
       try {
-        const res = await runOperation('export', async () =>
-          window.electronAPI?.file?.exportCompetition?.(id)
-        );
-        if (res?.success) showToast('Compétition exportée', 'success');
+        // Contenu par le contrat, enregistré par la plateforme (ADR-0021)
+        const saved = await runOperation('export', () => saveCompetitionFile(files, platform, id));
+        if (saved) showToast('Compétition exportée', 'success');
       } catch (error) {
         logger.error(LogCategory.UI, 'Failed to export competition', error as Error);
         showActionableError('messages.export_competition_failed', error);
       }
     },
-    [showToast, showActionableError, runOperation]
+    [showToast, showActionableError, runOperation, files, platform]
   );
 
   const handleTabClose = useCallback(

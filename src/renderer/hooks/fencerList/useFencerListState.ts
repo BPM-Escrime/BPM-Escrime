@@ -18,6 +18,7 @@ import { useToast } from '../../components/Toast';
 import { useDebounce } from '../useDebounce';
 import { SortableCol, COLUMNS, FencerListProps } from '../../components/fencerListShared';
 import { usePlatform } from '../../platform/PlatformContext';
+import { DATA_FILE_FILTERS, openDataFile, saveDataFile, useFilesApi } from '../../api/filesApi';
 
 /** Colonnes masquées de la liste d'appel (#1504) */
 const HIDDEN_COLS_KEY = 'bellepoule-fencer-hidden-cols';
@@ -53,6 +54,7 @@ export function useFencerListState(ctx: Ctx) {
 
   const { t } = useTranslation();
   const platform = usePlatform();
+  const files = useFilesApi();
   const { confirm } = useConfirm();
   const { runOperation } = useOperation();
   const { showToast } = useToast();
@@ -307,82 +309,69 @@ export function useFencerListState(ctx: Ctx) {
     setTimeout(() => setPhotoMessage(null), 4000);
   };
 
+  // Fichiers de données : contenu par le contrat, dialogue par la plateforme (ADR-0021)
   const handleExportPhotos = async () => {
     if (!competitionId) return;
-    const result = await window.electronAPI.dialog.saveFile({
-      title: t('dialogs.exportPhotos'),
-      defaultPath: 'photos-tireurs.zip',
-      filters: [{ name: 'Archive ZIP', extensions: ['zip'] }],
-    });
-    if (result && !result.canceled && result.filePath) {
-      try {
-        const { count } = await runOperation('export', () =>
-          window.electronAPI.file.exportPhotos(competitionId, result.filePath!)
-        );
-        showPhotoMessage(t('fencerList.photos_exported', { count }));
-      } catch (err) {
-        showPhotoMessage(actionableMessage(t, t('fencerList.export_error'), err));
-      }
+    try {
+      const file = await runOperation('export', () => files.photosArchive(competitionId));
+      const saved = await saveDataFile(platform, file, {
+        title: t('dialogs.exportPhotos'),
+        filters: DATA_FILE_FILTERS.zip,
+      });
+      if (saved) showPhotoMessage(t('fencerList.photos_exported', { count: file.count }));
+    } catch (err) {
+      showPhotoMessage(actionableMessage(t, t('fencerList.export_error'), err));
     }
   };
 
   const handleImportPhotos = async () => {
     if (!competitionId) return;
-    const result = await window.electronAPI.dialog.openFile({
-      title: t('dialogs.importPhotos'),
-      filters: [{ name: 'Archive ZIP', extensions: ['zip'] }],
-    });
-    if (result && result.filePath) {
-      try {
-        const { matched, total } = await runOperation('import', () =>
-          window.electronAPI.file.importPhotos(competitionId, result.filePath)
-        );
-        showPhotoMessage(
-          t('fencerList.photos_imported', { count: total, matched: String(matched) })
-        );
-      } catch (err) {
-        showPhotoMessage(actionableMessage(t, t('fencerList.import_error'), err));
-      }
+    try {
+      const picked = await openDataFile(platform, {
+        title: t('dialogs.importPhotos'),
+        filters: DATA_FILE_FILTERS.zip,
+      });
+      if (!picked) return;
+      const { matched, total } = await runOperation('import', () =>
+        files.importPhotos(competitionId, picked.content)
+      );
+      showPhotoMessage(t('fencerList.photos_imported', { count: total, matched: String(matched) }));
+    } catch (err) {
+      showPhotoMessage(actionableMessage(t, t('fencerList.import_error'), err));
     }
   };
 
   const handleExportFencersArchive = async () => {
     if (!competitionId) return;
-    const result = await window.electronAPI.dialog.saveFile({
-      title: t('dialogs.exportFencersArchive'),
-      defaultPath: 'tireurs.bpf',
-      filters: [{ name: 'BellePoule Fencers', extensions: ['bpf'] }],
-    });
-    if (result && !result.canceled && result.filePath) {
-      try {
-        const { count } = await runOperation('export', () =>
-          window.electronAPI.file.exportFencersArchive(competitionId, result.filePath!)
-        );
-        showPhotoMessage(t('fencerList.bpf_exported', { count }));
-      } catch (err) {
-        showPhotoMessage(actionableMessage(t, t('fencerList.bpf_export_error'), err));
-      }
+    try {
+      const file = await runOperation('export', () => files.fencersArchive(competitionId));
+      const saved = await saveDataFile(platform, file, {
+        title: t('dialogs.exportFencersArchive'),
+        filters: DATA_FILE_FILTERS.bpf,
+      });
+      if (saved) showPhotoMessage(t('fencerList.bpf_exported', { count: file.count }));
+    } catch (err) {
+      showPhotoMessage(actionableMessage(t, t('fencerList.bpf_export_error'), err));
     }
   };
 
   const handleImportFencersArchive = async () => {
     if (!competitionId) return;
-    const result = await window.electronAPI.dialog.openFile({
-      title: t('fencerList.import_bpf'),
-      filters: [{ name: 'BellePoule Fencers', extensions: ['bpf'] }],
-    });
-    if (result && result.filePath) {
-      try {
-        const { added, updated } = await runOperation('import', () =>
-          window.electronAPI.file.importFencersArchive(competitionId, result.filePath)
-        );
-        showPhotoMessage(
-          t('fencerList.bpf_imported', { added: String(added), updated: String(updated) })
-        );
-        if (onFencersImported) onFencersImported();
-      } catch (err) {
-        showPhotoMessage(actionableMessage(t, t('fencerList.bpf_import_error'), err));
-      }
+    try {
+      const picked = await openDataFile(platform, {
+        title: t('fencerList.import_bpf'),
+        filters: DATA_FILE_FILTERS.bpf,
+      });
+      if (!picked) return;
+      const { added, updated } = await runOperation('import', () =>
+        files.importFencersArchive(competitionId, picked.content)
+      );
+      showPhotoMessage(
+        t('fencerList.bpf_imported', { added: String(added), updated: String(updated) })
+      );
+      if (onFencersImported) onFencersImported();
+    } catch (err) {
+      showPhotoMessage(actionableMessage(t, t('fencerList.bpf_import_error'), err));
     }
   };
 

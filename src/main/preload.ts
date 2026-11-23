@@ -127,18 +127,12 @@ const electronApi = {
     },
   },
 
-  // RGPD (#1882) : le reste (droits des personnes, conservation, réglages) passe par le contrat
-  // d'API (docs/adr/0022) ; ici ce qui ouvre un dialogue natif ou répond à une invite du main
+  // RGPD (#1882) : Fichier → Ouvrir a choisi une archive chiffrée ; l'écran demande le mot de
+  // passe et l'ouvre par le contrat (openCompetitionFile, ADR-0021). Le reste : contrat d'API.
   privacy: {
-    exportPerson: (ref: unknown, defaultName?: string) =>
-      ipcRenderer.invoke('privacy:exportPerson', ref, defaultName),
-    exportEncryptedBpm: (competitionId: string | null, password: string) =>
-      ipcRenderer.invoke('privacy:exportEncryptedBpm', competitionId, password),
-    openEncryptedBpm: (password: string) =>
-      ipcRenderer.invoke('privacy:openEncryptedBpm', password),
-    cancelEncryptedBpm: () => ipcRenderer.invoke('privacy:cancelEncryptedBpm'),
-    onEncryptedBpmRequest: (callback: (fileName: string) => void) => {
-      const handler = (_: IpcRendererEvent, fileName: string) => callback(fileName);
+    onEncryptedBpmRequest: (callback: (fileName: string, content: string) => void) => {
+      const handler = (_: IpcRendererEvent, fileName: string, content: string) =>
+        callback(fileName, content);
       ipcRenderer.on('privacy:encrypted-bpm', handler);
       return () => ipcRenderer.removeListener('privacy:encrypted-bpm', handler);
     },
@@ -192,19 +186,6 @@ const electronApi = {
   settings: {
     addAgentFolder: () => ipcRenderer.invoke('settings:addAgentFolder'),
   },
-  // Mode Club (#1872) : fichiers seulement (photos ZIP, sauvegardes .bpclub, docs/adr/0021) ;
-  // le reste passe par le contrat d'API (docs/adr/0022)
-  club: {
-    importPhotos: (clubId: string, filepath: string) => {
-      if (!filepath || typeof filepath !== 'string') throw new Error('Filepath is required');
-      return ipcRenderer.invoke('club:importPhotos', clubId, filepath);
-    },
-    exportBackup: (clubId: string, filePath: string) =>
-      ipcRenderer.invoke('club:exportBackup', clubId, filePath),
-    importBackup: (filePath: string, replace?: boolean) =>
-      ipcRenderer.invoke('club:importBackup', filePath, replace),
-  },
-
   // Remote event listeners (for real-time updates)
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) =>
     subscribe('update:available', callback),

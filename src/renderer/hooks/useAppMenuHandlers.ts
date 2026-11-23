@@ -19,6 +19,26 @@ export interface AppMenuHandlers {
   /** Ouvre une compétition importée avec son état sauvegardé (#1117) */
   openImportedCompetition: (competitionId: string) => Promise<void> | void;
   showToast: (message: string, type?: ToastType) => void;
+  /** Fichier → Ouvrir a choisi une archive chiffrée : invite du mot de passe (ADR-0021) */
+  onEncryptedFile?: (fileName: string, content: string) => void;
+}
+
+/** Après l'ouverture d'un .bpm : liste rechargée, avis, épreuve seule ouverte (#1117) */
+export async function announceOpenedCompetitions(
+  handlers: Pick<AppMenuHandlers, 'reloadCompetitions' | 'openImportedCompetition' | 'showToast'>,
+  competitionIds: string[] | undefined
+): Promise<void> {
+  await handlers.reloadCompetitions();
+  if (competitionIds?.length) {
+    handlers.showToast(
+      competitionIds.length === 1
+        ? 'Compétition importée'
+        : `${competitionIds.length} compétitions importées`,
+      'success'
+    );
+  }
+  // Une seule compétition : l'ouvrir avec son état sauvegardé (#1117)
+  if (competitionIds?.length === 1) await handlers.openImportedCompetition(competitionIds[0]);
 }
 
 export function useAppMenuHandlers(handlers: AppMenuHandlers): void {
@@ -35,18 +55,11 @@ export function useAppMenuHandlers(handlers: AppMenuHandlers): void {
       api.onShowAbout(() => h().onAbout()),
       api.onFileOpened(async (filepath: string, competitionIds?: string[]) => {
         logger.debug(LogCategory.UI, 'Fichier .BPM ouvert', { filepath, competitionIds });
-        await h().reloadCompetitions();
-        if (competitionIds?.length) {
-          h().showToast(
-            competitionIds.length === 1
-              ? 'Compétition importée'
-              : `${competitionIds.length} compétitions importées`,
-            'success'
-          );
-        }
-        // Une seule compétition : l'ouvrir avec son état sauvegardé (#1117)
-        if (competitionIds?.length === 1) await h().openImportedCompetition(competitionIds[0]);
+        await announceOpenedCompetitions(h(), competitionIds);
       }),
+      api.privacy?.onEncryptedBpmRequest?.((fileName, content) =>
+        h().onEncryptedFile?.(fileName, content)
+      ),
       api.onFileSaved(async (filepath: string) => {
         logger.debug(LogCategory.UI, 'Fichier sauvegardé', { filepath });
       }),

@@ -42,6 +42,8 @@ import { AgeCategoryFilter } from './ClubAgeRange';
 import { FencerPhoto } from '../FencerPhoto';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useClubApi } from '../../api/clubApi';
+import { openDataFile, useFilesApi } from '../../api/filesApi';
+import { usePlatform } from '../../platform/PlatformContext';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
 import { ToggleChip } from '../common/ToggleChip';
@@ -70,6 +72,8 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
   const { showToast } = useToast();
   const { confirm } = useConfirm();
   const api = useClubApi();
+  const files = useFilesApi();
+  const platform = usePlatform();
 
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [showArchived, setShowArchived] = useState(false);
@@ -213,15 +217,14 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
 
   /** Photos par licence depuis un ZIP, comme dans la liste des tireurs */
   const importPhotos = async () => {
-    const result = await window.electronAPI?.dialog?.openFile({
-      title: t('dialogs.importPhotos'),
-      filters: [{ name: 'ZIP', extensions: ['zip'] }],
-    });
-    const files = window.electronAPI?.club;
-    if (!result?.filePath || !files) return;
     await run(async () => {
-      // Chemin de fichier : fonction du poste hors contrat (docs/adr/0021)
-      const { matched, total } = await files.importPhotos(clubId, result.filePath);
+      // Contenu par le contrat, fichier choisi par la plateforme (docs/adr/0021)
+      const picked = await openDataFile(platform, {
+        title: t('dialogs.importPhotos'),
+        filters: [{ name: 'ZIP', extensions: ['zip'] }],
+      });
+      if (!picked) return;
+      const { matched, total } = await files.club.importPhotos(clubId, picked.content);
       showToast(
         t('fencerList.photos_imported', { count: total, matched: String(matched) }),
         'success'

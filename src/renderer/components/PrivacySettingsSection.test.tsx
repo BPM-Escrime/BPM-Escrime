@@ -27,7 +27,9 @@ const person = {
 };
 
 let privacy: Record<string, ReturnType<typeof vi.fn>>;
-let exportEncryptedBpm: ReturnType<typeof vi.fn>;
+let encrypted: ReturnType<typeof vi.fn<(input: Record<string, unknown>) => unknown>>;
+let saveFile: ReturnType<typeof vi.fn>;
+let writeContent: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   privacy = {
@@ -41,13 +43,19 @@ beforeEach(() => {
     findPersons: vi.fn(async () => [person]),
     anonymizePerson: vi.fn(async () => ({ fencers: 1, members: 1, pseudonym: 'Anonyme X' })),
   };
-  // L'archive chiffrée (dialogue natif, chemin de fichier) reste en IPC : window.electronAPI.privacy
-  exportEncryptedBpm = vi.fn(async () => ({ success: true }));
+  // Archive chiffrée par le contrat (contenu base64), enregistrée par la plateforme (ADR-0021)
+  encrypted = vi.fn((_input: Record<string, unknown>): unknown => ({
+    fileName: 'competition.bpm',
+    content: 'QlBN',
+  }));
+  saveFile = vi.fn(async () => ({ filePath: '/tmp/competition.bpm', success: true }));
+  writeContent = vi.fn(async () => undefined);
   (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron(
     { privacy },
     {
-      privacy: { exportEncryptedBpm },
-      db: { getAllCompetitions: vi.fn(async () => []) },
+      api: { getEncryptedCompetitionFile: encrypted, listCompetitions: () => [] },
+      dialog: { saveFile },
+      file: { writeContent },
     }
   );
 });
@@ -83,9 +91,32 @@ describe('PrivacySettingsSection', () => {
     fireEvent.change(p2, { target: { value: 'motdepasse2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Exporter chiffré' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Les mots de passe diffèrent.');
-    expect(exportEncryptedBpm).not.toHaveBeenCalled();
+    expect(encrypted).not.toHaveBeenCalled();
     fireEvent.change(p2, { target: { value: 'motdepasse1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Exporter chiffré' }));
-    await waitFor(() => expect(exportEncryptedBpm).toHaveBeenCalledWith(null, 'motdepasse1'));
+    await waitFor(() =>
+      expect(encrypted).toHaveBeenCalledWith({ competitionId: null, password: 'motdepasse1' })
+    );
+    await waitFor(() =>
+      expect(writeContent).toHaveBeenCalledWith(
+        '/tmp/competition.bpm',
+        new Uint8Array([66, 80, 77])
+      )
+    );
+  });
+
+  it('export JSON d’une personne : getPersonData puis « Enregistrer sous »', async () => {
+    privacy.getPersonData = vi.fn(async () => ({ competitions: [{ id: 'c1' }], club: [] }));
+    wrap('privacy_person');
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'lef' } });
+    await screen.findByText(/LEFEVRE Zoé/);
+    fireEvent.click(screen.getByRole('button', { name: 'Exporter (JSON)' }));
+    await waitFor(() => expect(writeContent).toHaveBeenCalled());
+    expect(privacy.getPersonData).toHaveBeenCalledWith({ fencerIds: ['f1'], memberIds: ['m1'] });
+    expect(saveFile.mock.calls[0][0]).toMatchObject({ defaultPath: 'LEFEVRE_Zoé.json' });
+    expect(JSON.parse(writeContent.mock.calls[0][1])).toEqual({
+      competitions: [{ id: 'c1' }],
+      club: [],
+    });
   });
 });

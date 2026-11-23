@@ -2532,7 +2532,7 @@
     "last_page": "Darrera pàgina",
     "per_page": "{{n}} / pàgina",
     "open_file": "Obrir…",
-    "open_file_title": "Obrir un fitxer .bpm, .db o .cotcot",
+    "open_file_title": "Obrir un fitxer .bpm o .db",
     "export": "Exportar (.bpm)",
     "export_title": "Exporta una competició en un fitxer .bpm",
     "export_pick_title": "Tria la competició a exportar",

@@ -15,10 +15,11 @@ export interface SaveFileRequest {
   /** Nom proposé (le navigateur l'utilise tel quel) */
   suggestedName: string;
   filters: FileFilter[];
-  content: string;
+  /** Texte (écrit en UTF-8) ou octets d'un fichier de données rendu par le contrat */
+  content: string | Uint8Array;
   /** Titre du dialogue (Electron seulement) */
   title?: string;
-  /** Type MIME du téléchargement (navigateur) ; texte brut par défaut */
+  /** Type MIME du téléchargement (navigateur) ; texte brut, ou octets bruts, par défaut */
   mimeType?: string;
 }
 
@@ -32,6 +33,13 @@ export interface OpenedFile {
   /** Nom du fichier, sans dossier */
   name: string;
   content: string;
+}
+
+/** Fichier binaire choisi (archive, sauvegarde .bpm) : octets bruts, sans décodage */
+export interface OpenedBinaryFile {
+  /** Nom du fichier, sans dossier */
+  name: string;
+  bytes: Uint8Array;
 }
 
 export interface ExportPdfRequest {
@@ -52,6 +60,8 @@ export interface PlatformServices {
   saveFile(request: SaveFileRequest): Promise<boolean>;
   /** Choix d'un fichier texte ; null si annulé */
   openFile(request: OpenFileRequest): Promise<OpenedFile | null>;
+  /** Choix d'un fichier binaire (octets bruts) ; null si annulé */
+  openBinaryFile(request: OpenFileRequest): Promise<OpenedBinaryFile | null>;
   /** Imprime un document HTML complet ; erreur si l'impression échoue (annulation : pas d'erreur) */
   print(html: string): Promise<void>;
   /**

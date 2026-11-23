@@ -14,6 +14,8 @@ import type { Phase } from '../../hooks/useCompetitionSession';
 import type { useExport } from '../../hooks/useExport';
 import { useOperation } from '../common/OperationProgress';
 import { useToast } from '../Toast';
+import { saveCompetitionFile, useFilesApi } from '../../api/filesApi';
+import { usePlatform } from '../../platform/PlatformContext';
 import type { CompetitionModalFlags } from './modalFlags';
 
 const PlanningAssistant = React.lazy(() => import('./PlanningAssistant'));
@@ -57,6 +59,8 @@ const CompetitionExportModals: React.FC<CompetitionExportModalsProps> = ({
 }) => {
   const { showToast, showActionableError } = useToast();
   const { runOperation } = useOperation();
+  const files = useFilesApi();
+  const platform = usePlatform();
   const {
     exportFencersList,
     exportPoolsPDF,
@@ -114,16 +118,14 @@ const CompetitionExportModals: React.FC<CompetitionExportModalsProps> = ({
               setCurrentPhase('results');
               modals.setShowExportCenter(false);
             }}
-            onExportCompetition={
-              window.electronAPI?.file?.exportCompetition
-                ? () => {
-                    const exporting = window.electronAPI.file.exportCompetition(competition.id);
-                    void runOperation('export', () => exporting)
-                      .then(r => r?.success && showToast('Compétition exportée', 'success'))
-                      .catch(err => showActionableError('messages.export_competition_failed', err));
-                  }
-                : undefined
-            }
+            onExportCompetition={() => {
+              // Contenu par le contrat, enregistré par la plateforme (ADR-0021)
+              void runOperation('export', () =>
+                saveCompetitionFile(files, platform, competition.id)
+              )
+                .then(saved => saved && showToast('Compétition exportée', 'success'))
+                .catch(err => showActionableError('messages.export_competition_failed', err));
+            }}
             onExportFFE={() => {
               modals.setShowFFEExport(true);
               modals.setShowExportCenter(false);

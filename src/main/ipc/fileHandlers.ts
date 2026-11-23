@@ -1,49 +1,18 @@
 /**
- * BellePoule Modern - Handlers IPC `file:*` (export/import, ZIP photos, archive .bpf)
- * et `dialog:*` (boîtes de dialogue natives) — extraits de main.ts, #1341.
+ * BellePoule Modern - Handlers IPC `file:*` (écriture au chemin choisi, impression, tableur,
+ * fichiers fédéraux) et `dialog:*` (boîtes de dialogue natives) — extraits de main.ts, #1341.
+ * Les fichiers de données (.bpm, .bpf, photos) passent par le contrat en contenu (ADR-0021).
  * Licensed under GPL-3.0
  */
 import { app, dialog, ipcMain, type BrowserWindow } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import JSZip from 'jszip';
 import type { DatabaseManager } from '../../database';
-import {
-  assertAuthorizedPath,
-  authorizePath,
-  checkZipEntries,
-  readBoundedFile,
-  validateImportedFencers,
-} from '../pathAuthorization';
+import { assertAuthorizedPath, authorizePath, readBoundedFile } from '../pathAuthorization';
+import { MAX_DATA_FILE_BYTES } from '../../shared/api/contractFiles';
 import { readImportText, rowsToXlsx } from '../xlsxToCsv';
 import { FEDERAL_MAX_INPUTS, unpackFederalFiles, type FederalInput } from '../federalFiles';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
-
-/**
- * Photos d'un ZIP choisi par l'utilisateur (chemin autorisé) : fichiers .jpg/.jpeg/.png
- * nommés par licence → { license, photo data URL }. Partagé compétition / Mode Club.
- */
-export async function readPhotosZip(
-  filepath: string
-): Promise<{ license: string; photo: string }[]> {
-  filepath = assertAuthorizedPath(filepath, 'read', ['.zip']);
-  const buffer = await readBoundedFile(filepath);
-  const zip = await JSZip.loadAsync(buffer);
-  const safeNames = checkZipEntries(zip);
-
-  const photos: { license: string; photo: string }[] = [];
-
-  for (const filename of safeNames) {
-    const file = zip.files[filename];
-    const ext = path.extname(filename).toLowerCase();
-    if (!['.jpg', '.jpeg', '.png'].includes(ext)) continue;
-    const basename = path.basename(filename, ext);
-    const data = await file.async('base64');
-    const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
-    photos.push({ license: basename, photo: `data:${mimeType};base64,${data}` });
-  }
-  return photos;
-}
 
 export interface FileHandlersContext {
   db: DatabaseManager;
@@ -59,31 +28,18 @@ export function registerFileHandlers({ db, getMainWindow }: FileHandlersContext)
     await db.importFromFile(assertAuthorizedPath(filepath, 'read'));
   });
 
-  // Écriture atomique asynchrone (temp + rename) — ne bloque pas le main thread
-  async function writeFileAtomic(filepath: string, content: Buffer | string): Promise<void> {
-    const tmpPath = filepath + '.tmp';
-    try {
-      await fs.promises.writeFile(tmpPath, content);
-      try {
-        await fs.promises.rename(tmpPath, filepath);
-      } catch {
-        await fs.promises.writeFile(filepath, content);
-        await fs.promises.unlink(tmpPath).catch(() => {});
-      }
-    } catch {
-      await fs.promises.writeFile(filepath, content);
-    }
-  }
-
   // File content write handler
-  ipcMain.handle('file:writeContent', async (_, filepath: string, content: string) => {
+  ipcMain.handle('file:writeContent', async (_, filepath: string, content: unknown) => {
     // Chemin issu d'une boîte de dialogue native uniquement (#1146)
     const resolved = assertAuthorizedPath(filepath, 'write');
     const appDir = path.resolve(app.getAppPath());
     if (resolved.startsWith(appDir)) {
       throw new Error('Writing inside app directory is not allowed');
     }
-    await fs.promises.writeFile(resolved, content, 'utf-8');
+    // Texte (UTF-8) ou octets d'un fichier de données rendu par le contrat (ADR-0021)
+    if (content instanceof Uint8Array) await fs.promises.writeFile(resolved, content);
+    else if (typeof content === 'string') await fs.promises.writeFile(resolved, content, 'utf-8');
+    else throw new Error('Contenu invalide');
   });
 
   // Tableur Excel (.xlsx) écrit depuis une grille de valeurs (Mode Club : inventaire)
@@ -113,78 +69,21 @@ export function registerFileHandlers({ db, getMainWindow }: FileHandlersContext)
     }
   );
 
-  // Photo ZIP export handler
-  ipcMain.handle('file:exportPhotos', async (_, competitionId: string, filepath: string) => {
-    filepath = assertAuthorizedPath(filepath, 'write');
-    const photos = db.getFencerPhotos(competitionId);
-    const zip = new JSZip();
-
-    for (const { id, license, lastName, firstName, photo } of photos) {
-      const base64 = photo.replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(base64, 'base64');
-      const filename = license
-        ? license
-        : `${lastName}_${firstName}_${id.slice(0, 8)}`.replace(/[^a-zA-Z0-9_\-]/g, '_');
-      zip.file(`${filename}.jpg`, buffer);
-    }
-
-    const content = await zip.generateAsync({ type: 'nodebuffer' });
-    await writeFileAtomic(filepath, content);
-
-    return { count: photos.length };
-  });
-
-  // Photo ZIP import handler
-  ipcMain.handle('file:importPhotos', async (_, competitionId: string, filepath: string) => {
-    const photos = await readPhotosZip(filepath);
-    return db.updateFencerPhotosByLicense(competitionId, photos);
-  });
-
-  // Fencer archive (.bpf) export handler
-  ipcMain.handle(
-    'file:exportFencersArchive',
-    async (_, competitionId: string, filepath: string) => {
-      filepath = assertAuthorizedPath(filepath, 'write');
-      const fencers = db.getFencersByCompetition(competitionId);
-      const competition = db.getCompetition(competitionId);
-      const zip = new JSZip();
-      zip.file(
-        'meta.json',
-        JSON.stringify({
-          version: '1',
-          competitionName: competition?.title ?? '',
-          exportDate: new Date().toISOString(),
-          count: fencers.length,
-        })
-      );
-      zip.file('fencers.json', JSON.stringify(fencers));
-      const content = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
-      await writeFileAtomic(filepath, content);
-      return { count: fencers.length };
-    }
-  );
-
-  // Fencer archive (.bpf) import handler
-  ipcMain.handle(
-    'file:importFencersArchive',
-    async (_, competitionId: string, filepath: string) => {
-      filepath = assertAuthorizedPath(filepath, 'read', ['.bpf']);
-      const buffer = await readBoundedFile(filepath);
-      const zip = await JSZip.loadAsync(buffer);
-      checkZipEntries(zip);
-      const fencersFile = zip.file('fencers.json');
-      if (!fencersFile) throw new Error('Format .bpf invalide : fencers.json manquant');
-      const fencers = validateImportedFencers(JSON.parse(await fencersFile.async('string')));
-      return db.upsertFencersByLicense(competitionId, fencers);
-    }
-  );
-
   // Dialog handlers
-  ipcMain.handle('dialog:openFile', async (_, options) => {
+  ipcMain.handle('dialog:openFile', async (_, raw) => {
+    const { binary, ...options } = (raw ?? {}) as Electron.OpenDialogOptions & {
+      binary?: unknown;
+    };
     const result = await dialog.showOpenDialog(getMainWindow()!, options);
 
     if (!result.canceled && result.filePaths.length > 0) {
       const filePath = result.filePaths[0];
+      // Fichier de données (ADR-0021) : octets bornés, rendus au contrat par l'écran
+      if (binary === true)
+        return {
+          filePath,
+          bytes: new Uint8Array(await readBoundedFile(filePath, MAX_DATA_FILE_BYTES)),
+        };
       authorizePath(filePath, 'read');
       try {
         const content = await readImportText(filePath);

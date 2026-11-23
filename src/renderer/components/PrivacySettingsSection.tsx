@@ -11,6 +11,8 @@ import { useConfirm } from './ConfirmDialog';
 import { useToast } from './Toast';
 import { usePlatform } from '../platform/PlatformContext';
 import { stationAvailable, useStationApi } from '../api/stationApi';
+import { useBpmClient } from '../api/BpmClientContext';
+import { DATA_FILE_FILTERS, saveDataFile, useFilesApi } from '../api/filesApi';
 import { Button } from './common/Button';
 import { HINT, BOLD, SMALL_BTN, TOGGLE_LABEL } from './settingsModal.styles';
 import type {
@@ -261,9 +263,16 @@ const PersonItem: React.FC = () => {
 
   const exportJson = (p: PrivacyPerson) =>
     run(async () => {
-      // Boîte d'enregistrement du main : reste en IPC (chemin de fichier, ADR-0021)
-      const r = await window.electronAPI.privacy.exportPerson(refOf(p), nameOf(p));
-      if (r.success) showToast(t('privacy.exported'), 'success');
+      // Données par le contrat (getPersonData), fichier enregistré par la plateforme (ADR-0021)
+      const data = await api.getPersonData(refOf(p));
+      if (data.competitions.length === 0 && data.club.length === 0) return;
+      const saved = await platform.saveFile({
+        suggestedName: `${nameOf(p).replace(/[^\p{L}\p{N}]+/gu, '_') || 'donnees-personnelles'}.json`,
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+        content: JSON.stringify(data, null, 2),
+        mimeType: 'application/json',
+      });
+      if (saved) showToast(t('privacy.exported'), 'success');
     });
 
   const exportPdf = (p: PrivacyPerson) =>
@@ -375,6 +384,9 @@ const PersonItem: React.FC = () => {
 const BpmItem: React.FC = () => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const client = useBpmClient();
+  const files = useFilesApi();
+  const platform = usePlatform();
   const [competitions, setCompetitions] = useState<Array<{ id: string; title: string }>>([]);
   const [scope, setScope] = useState('');
   const [password, setPassword] = useState('');
@@ -382,26 +394,27 @@ const BpmItem: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    window.electronAPI?.db
-      ?.getAllCompetitions?.()
+    client
+      .query('listCompetitions', {})
       .then(list => setCompetitions(list.map(c => ({ id: c.id, title: c.title }))))
       .catch(() => {
-        // hors Electron
+        // base fermée
       });
-  }, []);
+  }, [client]);
 
   const exportBpm = async () => {
     if (password.length < MIN_PASSWORD) return setError(t('privacy.bpm_too_short'));
     if (password !== password2) return setError(t('privacy.bpm_mismatch'));
     setError(null);
     try {
-      const r = await window.electronAPI.privacy.exportEncryptedBpm(scope || null, password);
-      if (r.success) {
+      // Archive chiffrée par le contrat (le mot de passe ne quitte pas le poste), enregistrée
+      // par la plateforme (ADR-0021)
+      const file = await files.encryptedCompetitionFile(scope || null, password);
+      const saved = await saveDataFile(platform, file, { filters: DATA_FILE_FILTERS.bpm });
+      if (saved) {
         showToast(t('privacy.bpm_saved'), 'success');
         setPassword('');
         setPassword2('');
-      } else if (!r.canceled) {
-        showToast(t('privacy.error'), 'error');
       }
     } catch {
       showToast(t('privacy.error'), 'error');

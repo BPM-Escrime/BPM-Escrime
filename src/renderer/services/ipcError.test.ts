@@ -43,7 +43,8 @@ describe('ipcErrorText (#1159)', () => {
       for (const m of src.matchAll(/\berror: '([a-z_]+)'/g)) codes.add(m[1]);
     }
     const errors = (fr as unknown as { errors: Record<string, string> }).errors;
-    expect(codes.size).toBeGreaterThan(10);
+    // Garde-fou de l'expression : les fichiers de données sont passés au contrat (ADR-0021)
+    expect(codes.size).toBeGreaterThan(3);
     expect([...codes].filter(c => !(c in errors))).toEqual([]);
   });
 });

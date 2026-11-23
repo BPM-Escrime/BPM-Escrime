@@ -176,3 +176,50 @@ describe('ouvrir, imprimer, PDF, liens (ADR-0021)', () => {
     expect(document.querySelector('iframe')).toBeNull();
   });
 });
+
+describe('fichiers binaires (fichiers de données du contrat, ADR-0021)', () => {
+  it('Electron : octets écrits tels quels ; ouverture binaire par le dialogue natif', async () => {
+    const api = fakeElectron({ filePath: '/tmp/a.bpm', success: true });
+    const openFile = vi
+      .fn()
+      .mockResolvedValueOnce({ filePath: '/x/a.bpf', bytes: new Uint8Array([1, 2]) })
+      .mockResolvedValueOnce(null);
+    const p = new ElectronPlatform(
+      () => ({ ...api, dialog: { ...api.dialog, openFile } }) as never
+    );
+    const bytes = new Uint8Array([0, 255]);
+    await p.saveFile({ suggestedName: 'a.bpm', filters: [], content: bytes });
+    expect(api.file.writeContent).toHaveBeenCalledWith('/tmp/a.bpm', bytes);
+    const filters = [{ name: 'BPF', extensions: ['bpf'] }];
+    await expect(p.openBinaryFile({ filters })).resolves.toEqual({
+      name: 'a.bpf',
+      bytes: new Uint8Array([1, 2]),
+    });
+    expect(openFile).toHaveBeenCalledWith({ filters, properties: ['openFile'], binary: true });
+    await expect(p.openBinaryFile({ filters })).resolves.toBeNull();
+  });
+
+  it('navigateur : téléchargement en octets bruts, fichier lu en octets', async () => {
+    const created = vi.fn((_b: Blob) => 'blob:x');
+    Object.assign(URL, { createObjectURL: created, revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const p = new BrowserPlatform();
+    await p.saveFile({ suggestedName: 'a.zip', filters: [], content: new Uint8Array([80, 75]) });
+    const blob = created.mock.calls[0][0];
+    expect(blob.type).toBe('application/octet-stream');
+    expect(new Uint8Array(await blob.arrayBuffer())).toEqual(new Uint8Array([80, 75]));
+
+    const inputs: HTMLInputElement[] = [];
+    vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function (
+      this: HTMLInputElement
+    ) {
+      inputs.push(this);
+    });
+    const opened = p.openBinaryFile({ filters: [{ name: 'ZIP', extensions: ['zip'] }] });
+    Object.defineProperty(inputs[0], 'files', {
+      value: [new File([new Uint8Array([9, 8])], 'p.zip')],
+    });
+    inputs[0].dispatchEvent(new Event('change'));
+    await expect(opened).resolves.toEqual({ name: 'p.zip', bytes: new Uint8Array([9, 8]) });
+  });
+});

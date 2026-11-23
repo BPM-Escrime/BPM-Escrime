@@ -16,7 +16,7 @@ export interface MenuActionsContext {
   db: DatabaseManager;
   getMainWindow(): BrowserWindow | null;
   /** Archive .bpm chiffrée (RGPD, #1882) : le renderer demande le mot de passe */
-  onEncryptedBpm?: (filepath: string) => void;
+  onEncryptedBpm?: (filepath: string) => Promise<void> | void;
   /** Dossier de sauvegarde par défaut (Paramètres → Sauvegarde) */
   getBackupDir?: () => string;
 }
@@ -67,7 +67,7 @@ export function createMenuActions({
           return;
         }
         if (onEncryptedBpm && (await isEncryptedBpm(filepath))) {
-          onEncryptedBpm(filepath);
+          await onEncryptedBpm(filepath);
           return;
         }
         // Fusion dans la base active, état d'avancement compris (#1117)
@@ -170,6 +170,11 @@ export function createMenuActions({
 
   async function handleImport(format: string): Promise<void> {
     const L = getL();
+    // Archive .bpf (binaire) : l'écran choisit le fichier et l'importe par le contrat (ADR-0021)
+    if (format === 'fencers-bpf') {
+      getMainWindow()?.webContents.send('menu:import', format, '', '');
+      return;
+    }
     let filters: Electron.FileFilter[];
     let title = L.importTitle;
 
@@ -186,10 +191,6 @@ export function createMenuActions({
         title = L.importRankingTitle;
         filters = [{ name: L.filterRanking, extensions: ['fff', 'csv', 'txt', 'xlsx'] }];
         break;
-      case 'fencers-bpf':
-        title = L.importBpfTitle;
-        filters = [{ name: 'BellePoule Fencers', extensions: ['bpf'] }];
-        break;
       default:
         filters = [{ name: L.filterAll, extensions: ['*'] }];
     }
@@ -203,14 +204,8 @@ export function createMenuActions({
     if (!result.canceled && result.filePaths.length > 0) {
       const filepath = result.filePaths[0];
       try {
-        if (format === 'fencers-bpf') {
-          // Fichier binaire : envoyer uniquement le chemin, le renderer appellera importFencersArchive
-          authorizePath(filepath, 'read');
-          getMainWindow()?.webContents.send('menu:import', format, filepath, '');
-        } else {
-          const content = await readImportText(filepath);
-          getMainWindow()?.webContents.send('menu:import', format, filepath, content);
-        }
+        const content = await readImportText(filepath);
+        getMainWindow()?.webContents.send('menu:import', format, filepath, content);
       } catch (error) {
         dialog.showErrorBox(L.importErrTitle, `${L.importReadErr} ${error}`);
       }

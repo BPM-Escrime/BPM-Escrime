@@ -532,26 +532,6 @@ export interface ClubItemBrandDef {
   updatedAt: string;
 }
 
-/**
- * Mode Club : fonctions du poste portant un chemin de fichier (#1872, docs/adr/0021). Tout le
- * reste (membres, séances, combats, inventaire, synchro…) est dans le contrat d'API :
- * shared/api/contractClub.ts (docs/adr/0022).
- */
-export interface ClubAPI {
-  /** Photos d'un ZIP (fichiers nommés par licence, comme en compétition) */
-  importPhotos: (clubId: string, filepath: string) => Promise<{ matched: number; total: number }>;
-  /** Sauvegarde complète du club dans un fichier .bpclub (chemin choisi par dialogue) */
-  exportBackup: (clubId: string, filePath: string) => Promise<{ clubName: string }>;
-  /**
-   * Recharge une sauvegarde .bpclub. Club déjà présent : erreur « CLUB_EXISTS »,
-   * sauf replace (données du club remplacées)
-   */
-  importBackup: (
-    filePath: string,
-    replace?: boolean
-  ) => Promise<{ clubId: string; clubName: string; replaced: boolean; rows: number }>;
-}
-
 export type ClubSyncState = 'off' | 'synced' | 'conflict' | 'error';
 
 export interface ClubBackupEntry {

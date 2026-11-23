@@ -55,6 +55,7 @@ export const ERRORS = {
   already_withdrawn: e('conflict', 'Tireur déjà retiré'),
   referee_busy: e('conflict', 'Arbitre déjà occupé sur ce créneau'),
   file_exists: e('conflict', 'Fichier déjà présent'),
+  club_exists: e('conflict', 'Club de la sauvegarde déjà présent sur le poste'),
   competition_open: e(
     'conflict',
     'Épreuve ouverte ou servie aux tablettes : à fermer avant l’anonymisation ou l’effacement'
@@ -109,6 +110,9 @@ export const ERRORS = {
   invalid_url: e('rule', 'URL refusée (https vers un hôte public requis)'),
   remote_refused: e('rule', 'Serveur distant : demande refusée (message pour l’opérateur)'),
   weak_password: e('rule', 'Mot de passe trop court'),
+  password_required: e('rule', 'Archive chiffrée : mot de passe requis'),
+  wrong_password: e('rule', 'Mot de passe faux ou archive altérée'),
+  invalid_file: e('rule', 'Fichier illisible ou au format inattendu'),
   club_refused: e('rule', 'Mode Club : demande refusée (message pour l’opérateur)'),
   device_refused: e(
     'rule',

@@ -2532,7 +2532,7 @@
     "last_page": "Ultima pagina",
     "per_page": "{{n}} / pagina",
     "open_file": "Apri…",
-    "open_file_title": "Apri un file .bpm, .db o .cotcot",
+    "open_file_title": "Apri un file .bpm o .db",
     "export": "Esporta (.bpm)",
     "export_title": "Esporta una competizione in un file .bpm",
     "export_pick_title": "Scegli la competizione da esportare",

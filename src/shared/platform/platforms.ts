@@ -8,6 +8,7 @@
 import type { ElectronAPI } from '../types/preload';
 import type {
   ExportPdfRequest,
+  OpenedBinaryFile,
   OpenedFile,
   OpenFileRequest,
   PlatformServices,
@@ -49,6 +50,17 @@ export class ElectronPlatform implements PlatformServices {
     });
     if (!result?.filePath) return null;
     return { name: baseName(result.filePath), content: result.content ?? '' };
+  }
+
+  async openBinaryFile(request: OpenFileRequest): Promise<OpenedBinaryFile | null> {
+    const result = await this.api().dialog.openFile({
+      ...(request.title ? { title: request.title } : {}),
+      filters: request.filters,
+      properties: ['openFile'],
+      binary: true,
+    });
+    if (!result?.filePath || !result.bytes) return null;
+    return { name: baseName(result.filePath), bytes: result.bytes };
   }
 
   async print(html: string): Promise<void> {
@@ -94,8 +106,9 @@ export class BrowserPlatform implements PlatformServices {
   constructor(private readonly doc: Document = document) {}
 
   async saveFile(request: SaveFileRequest): Promise<boolean> {
-    const blob = new Blob([request.content], {
-      type: request.mimeType ?? 'text/plain;charset=utf-8',
+    const binary = typeof request.content !== 'string';
+    const blob = new Blob([request.content as BlobPart], {
+      type: request.mimeType ?? (binary ? 'application/octet-stream' : 'text/plain;charset=utf-8'),
     });
     const url = URL.createObjectURL(blob);
     try {
@@ -114,6 +127,18 @@ export class BrowserPlatform implements PlatformServices {
   }
 
   openFile(request: OpenFileRequest): Promise<OpenedFile | null> {
+    return this.pick(request, async file => ({ name: file.name, content: await file.text() }));
+  }
+
+  openBinaryFile(request: OpenFileRequest): Promise<OpenedBinaryFile | null> {
+    return this.pick(request, async file => ({
+      name: file.name,
+      bytes: new Uint8Array(await file.arrayBuffer()),
+    }));
+  }
+
+  /** Choix d'un fichier par <input type="file"> ; null si annulé */
+  private pick<T>(request: OpenFileRequest, read: (file: File) => Promise<T>): Promise<T | null> {
     return new Promise((resolve, reject) => {
       const input = this.doc.createElement('input');
       input.type = 'file';
@@ -125,7 +150,7 @@ export class BrowserPlatform implements PlatformServices {
       input.addEventListener('change', () => {
         const file = input.files?.[0];
         if (!file) return resolve(null);
-        file.text().then(content => resolve({ name: file.name, content }), reject);
+        read(file).then(resolve, reject);
       });
       // Fenêtre fermée sans choix (navigateurs récents)
       input.addEventListener('cancel', () => resolve(null));
@@ -176,6 +201,7 @@ export const defaultPlatform: PlatformServices = {
   },
   saveFile: request => detectPlatform().saveFile(request),
   openFile: request => detectPlatform().openFile(request),
+  openBinaryFile: request => detectPlatform().openBinaryFile(request),
   print: html => detectPlatform().print(html),
   exportPdf: async (html, request) => {
     const p = detectPlatform();
