@@ -98,8 +98,16 @@ reprendront par une ADR à part.
   FFE sous 48 h avec la feuille ; à partir de M15, le noir P à égalité vise le moins bon
   classement initial **dans le tableau en cours**.
 - FFE Sabre Laser, Livret 0 (organisation 2026-2027) : le dossier de résultats joint le rapport
-  de carton noir. Le Livret 2 (combat sportif, carton E) n'est pas dans le dossier des règlements
-  relus : les règles du carton E restent celles du code actuel.
+  de carton noir.
+- FFE Sabre Laser, Livret 2 (combat sportif 2026-2027, relu le 2026-11-23) :
+  - XII « Compétition par équipe » : **« A venir. »** Aucune règle fédérale ne fixe la rencontre
+    par équipes ni le carton E (désignation tardive) : ce sont des conventions du logiciel ;
+  - carton noir (faute du 4e groupe, par exemple refus d'un défi) : « exclu de la compétition et
+    donc du classement général », les points acquis par ses adversaires sont conservés (VIII.7) ;
+    aucune disposition ne permet de désactiver le carton noir ;
+  - combats en 15 points (3 min), score pouvant atteindre 19, et un carton donnant des points à
+    l'adversaire peut le faire gagner (III, VIII.1, IX.1) ; en mort subite, les points de
+    pénalité comptent et un carton qui fait dépasser 15 termine le combat (VII.4).
 - Protocole Cyrano 1.1 : l'appareil envoie par tireur des **compteurs** (jaune 0-1, rouge 0-9,
   carton P 0-5), sans carton noir individuel ni motif ni groupe.
 
@@ -112,7 +120,7 @@ nom en snake_case :
 
 | Commande        | Entrée                                                                                                          | Règle                                                                                                                                                                                                                   |
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `giveTeamCard`  | `{ competitionId, matchId, teamId, type?, dryRun?, expectedRevision?, commandId? }`                             | Arène Sabre Laser seulement. `type` absent : celui de `determineTeamCardEscalation`. Noir refusé sans `blackCardEnabled`. L'équipe doit être de la rencontre. Motif fixe `late_designation`                             |
+| `giveTeamCard`  | `{ competitionId, matchId, teamId, type?, dryRun?, expectedRevision?, commandId? }`                             | Arène Sabre Laser seulement. `type` absent : celui de `determineTeamCardEscalation`. Noir toujours accepté (§ Questions, 4). L'équipe doit être de la rencontre. Motif fixe `late_designation`                          |
 | `giveRelayCard` | `{ competitionId, matchId, relayId, side: 'A' \| 'B', reason?, type?, dryRun?, expectedRevision?, commandId? }` | Exactement un de `reason` (écran, tablette, MCP : type calculé par l'escalade sur la rencontre) ou `type` (appareil de piste, qui n'a pas de motif). Le tireur est celui du côté dans le relais. Rencontre non terminée |
 
 Recommandation : **deux commandes** plutôt qu'une `giveCard` à cible variable. Les entrées, les
@@ -133,8 +141,8 @@ individuel ne s'annule pas ainsi (§ 4).
   `buildCard({ id, at, … })` : identifiant et heure injectés. `cardSystem.ts` réexporte le temps
   de la migration des appelants.
 - `src/shared/domain/teams/teamCards.ts` : `relayCardFor(rencontre, côté, relais, motif |
-type, cartons de la rencontre, arme)` et `teamCardFor(rencontre, équipe, type?, cartons,
-blackCardEnabled)`. Elles rendent le carton ou un code de refus. `teamCardEscalation.ts` y est
+type, cartons de la rencontre, arme)` et `teamCardFor(rencontre, équipe, type?,
+cartons)`. Elles rendent le carton ou un code de refus. `teamCardEscalation.ts` y est
   absorbé.
 - `newDeviceCards(enregistrés, montrés)` : cartons montrés par l'appareil et pas encore
   enregistrés (compte par type, même fusion que `fencerMeetingCards`).
@@ -174,7 +182,8 @@ reason: 'abandon' }`, même événement `TeamWithdrawn`. La rencontre est perdue
 - **Noir P** (t.124) : ce n'est pas une exclusion. La rencontre est décidée pour l'équipe au
   meilleur score, ou à égalité au meilleur classement initial (FFE à partir de M15 : du tableau
   en cours) ; la perdante est classée comme ayant perdu (§ 5 bis).
-- **Noir E** : traçabilité, aucun effet (règles du code actuel, Livret 2 non relu).
+- **Noir E** : traçabilité, aucun effet (convention du logiciel : le Livret 2 renvoie la
+  compétition par équipe à plus tard).
 - Annulation d'un noir individuel : seulement par le Directoire technique, en réintégrant le
   tireur (`reinstateFencer`) et l'équipe ; le carton reste au dossier.
 
@@ -282,8 +291,7 @@ On ajoute ([ADR-0009](0009-codes-erreur.md), dans la PR de la commande, puis `np
 - `relay_not_found` (`not_found`) : relais inconnu dans la rencontre ;
 - `team_not_in_match` (`not_found`) : équipe étrangère à la rencontre (la tablette l'accepte
   aujourd'hui) ;
-- `match_finished` (`rule`) : rencontre terminée, carton refusé ;
-- `black_card_disabled` (`rule`) : carton noir désactivé sur l'épreuve.
+- `match_finished` (`rule`) : rencontre terminée, carton refusé.
 
 ### 12. Lots
 
@@ -322,15 +330,21 @@ un fait journalisé partout ou nulle part ([ADR-0005](0005-journal-un-fait-un-ch
    tireur seul suspendu (t.160), pas de remplacement. Abandon sans remplaçant : `withdrawTeam`,
    l'équipe garde sa place (o.99.7.a) (§ 4).
 3. **Annulation** : oui, dès C1, par le Directoire technique seulement (t.164, t.172) (§ 1).
-4. **Noir E et `blackCardEnabled`** : appliqué partout, écran compris, pour la cohérence ; le
-   Livret 2 Sabre Laser, absent du dossier relu, reste à vérifier.
-5. **Escalade E** : imposée sans `type`, suggérée avec `type` (comportement actuel), même
-   réserve sur le Livret 2.
+4. **Noir et `blackCardEnabled`** : aucun règlement ne permet de désactiver le carton noir
+   (FIE t.167 à t.169, Livret 2 VIII.7). `blackCardEnabled` reste un réglage d'**affichage** de
+   la tablette (bouton masqué contre les appuis involontaires) ; le moteur accepte toujours un
+   carton noir, quelle que soit la source. Pas de code `black_card_disabled`. La tablette, qui
+   refuse aujourd'hui le noir E sans ce réglage, s'aligne (#2186).
+5. **Escalade E** : le Livret 2 ne règle pas la compétition par équipe (« A venir ») ; on garde
+   le comportement actuel (imposée sans `type`, suggérée avec `type`), convention du logiciel à
+   revoir quand la FFE publiera ces règles.
 6. **Cartons de l'appareil** : enregistrés à chaque état reçu, par différence des compteurs
    Cyrano (jaune, rouge, P). Sans motif, ils n'ont pas de groupe : la feuille de rencontre les
    marque « groupe à compléter » (t.163 exige le groupe) et le Directoire technique le complète.
 7. **Cartons individuels hors équipes** : ADR suivante, même forme (`giveMatchCard`,
-   `MatchCardGiven`) ; t.163 vaut aussi pour eux.
+   `MatchCardGiven`) ; t.163 vaut aussi pour eux. Elle tiendra compte d'un écart entre règlements
+   pour le carton noir : en escrime, résultats de l'exclu annulés (o.74.3, o.79.2) ; au Sabre
+   Laser, points de ses adversaires conservés (Livret 2 VIII.7).
 8. **Épreuves en cours** : aucune règle sportive ne s'applique ; la comparaison partielle du § 10
    suffit.
 
