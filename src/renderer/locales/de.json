@@ -2765,6 +2765,10 @@
   },
   "competitionNav": {
     "back": "Zurück",
+    "organization": "Organisation",
+    "organization_intro": "Veranstaltung vorbereiten: Halle und Infos für die Fechter.",
+    "organization_arena_desc": "Bahnen und Arenen in der Halle anordnen",
+    "organization_roadmap_desc": "Zeitplan, Ort und Hinweise der Veranstaltung",
     "quest": "Quest-Runde",
     "generate": "Pools vorbereiten",
     "planning": "Planung",

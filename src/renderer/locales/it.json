@@ -2765,6 +2765,10 @@
   },
   "competitionNav": {
     "back": "Indietro",
+    "organization": "Organizzazione",
+    "organization_intro": "Preparare la gara: sala e informazioni per gli schermidori.",
+    "organization_arena_desc": "Disporre pedane e arene nella sala",
+    "organization_roadmap_desc": "Orari, luogo e istruzioni della gara",
     "quest": "Turno Quest",
     "generate": "Prepara i gironi",
     "planning": "Pianificazione",

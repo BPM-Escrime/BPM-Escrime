@@ -15,6 +15,7 @@ import {
   CalendarClock,
   Check,
   Lock,
+  Settings,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Icon } from '../common/Icon';
@@ -89,6 +90,8 @@ interface CompetitionNavProps {
   consolationBrackets?: Array<{ matches: TableauMatchItem[] }>;
   playAllPositions?: boolean;
   onOpenPlanningAssistant?: () => void;
+  /** Engrenage avant l'appel : page Organisation (plan de salle, feuille de route) */
+  onOpenOrganization?: () => void;
   /** Compétition par équipes : l'appel mène à la composition des équipes (#1085) */
   isTeamEvent?: boolean;
   /** Compétition chargée : le parcours guidé (#1305) peut se proposer */
@@ -119,6 +122,7 @@ const CompetitionNavComponent: React.FC<CompetitionNavProps> = ({
   consolationBrackets = [],
   playAllPositions = false,
   onOpenPlanningAssistant,
+  onOpenOrganization,
   isTeamEvent = false,
   tourReady = false,
   remoteActive = false,
@@ -173,6 +177,21 @@ const CompetitionNavComponent: React.FC<CompetitionNavProps> = ({
       )}
       {/* Navigation */}
       <div className="phase-nav" role="navigation" aria-label={competition.title}>
+        {onOpenOrganization && (
+          <>
+            <button
+              type="button"
+              className="phase-nav-org"
+              data-testid="open-organization"
+              onClick={onOpenOrganization}
+              title={t('competitionNav.organization')}
+              aria-label={t('competitionNav.organization')}
+            >
+              <Settings size={16} aria-hidden="true" />
+            </button>
+            <div className="phase-step-connector" />
+          </>
+        )}
         {phases.map((phase, index) => (
           <React.Fragment key={phase.id}>
             <div

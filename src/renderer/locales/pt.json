@@ -2765,6 +2765,10 @@
   },
   "competitionNav": {
     "back": "Voltar",
+    "organization": "Organização",
+    "organization_intro": "Preparar a prova: sala e informações para os atiradores.",
+    "organization_arena_desc": "Dispor as pistas e arenas na sala",
+    "organization_roadmap_desc": "Horários, local e instruções da prova",
     "quest": "Ronda Quest",
     "generate": "Preparar poules",
     "planning": "Planeamento",

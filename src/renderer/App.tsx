@@ -377,6 +377,8 @@ const AppContent: React.FC = () => {
                     setRemoteArenaCount(count);
                   }}
                   onOpenCompetition={handleOpenCompetitionById}
+                  onOpenArenaPlanner={() => setShowArenaPlanner(true)}
+                  onOpenRoadmap={() => setShowRoadmap(true)}
                 />
               </Suspense>
             </CompetitionErrorBoundary>

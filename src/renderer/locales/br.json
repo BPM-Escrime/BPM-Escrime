@@ -2765,6 +2765,10 @@
   },
   "competitionNav": {
     "back": "Distreiñ",
+    "organization": "Aozadur",
+    "organization_intro": "Prientiñ an abadenn : sal ha titouroù d'ar c'hlezeidi.",
+    "organization_arena_desc": "Lakaat ar roudennoù hag an arenaoù er sal",
+    "organization_roadmap_desc": "Eurioù, lec'h ha kemennoù an abadenn",
     "quest": "Tro Quest",
     "generate": "Prientiñ ar poulennoù",
     "planning": "Steuñv",

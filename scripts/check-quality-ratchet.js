@@ -54,6 +54,10 @@
  *   - ipcChannels : canaux `ipcMain.handle` / `ipcMain.on` / `ipcMain.handleOnce` de src/main.
  *                  Une nouvelle écriture passe par `api:invoke` (contrat), pas par un nouveau
  *                  canal `db:*` / `club:*` (docs/adr/0005, 0018)
+ *   - directDbWrites : appels d'écriture en base (`…db….createX(`, `updateX`, `setX`, `deleteX`…)
+ *                  dans src/main/remote et src/main/mcp : le serveur distant et les outils MCP
+ *                  écrivent par une commande du contrat (`invokeCommandSync`, `runContractCommand`),
+ *                  pas par le dépôt (docs/adr/0005, 0006 ; #2134, #2151)
  *
  * Plafond de longueur (#1155) : aucun fichier source de src/ (hors tests) ne dépasse
  * MAX_LINES lignes. Les fichiers déjà au-dessus sont listés dans `lineExceptions`
@@ -92,6 +96,7 @@ const COUNTERS = [
   'electronApiCalls',
   'electronApiUses',
   'ipcChannels',
+  'directDbWrites',
 ];
 /**
  * Un bouton a un nom accessible s'il a du texte visible (directement ou dans un élément
@@ -211,6 +216,25 @@ function moduleSpecifier(node) {
 /** Enregistrement d'un canal IPC dans le process principal */
 const IPC_REGISTER = new Set(['handle', 'on', 'handleOnce']);
 
+/** Méthode d'écriture d'un dépôt (même liste que scripts/adr-review-report.js) */
+const DB_WRITE_RE =
+  /^(create|update|delete|set|save|insert|upsert|remove|add|start|close|reopen|finish|record|clear|mark)[A-Z]/;
+
+/** Le receveur d'un appel passe par `db` : ctx.db.x, deps.db.club.x, db.eventDays.x, this.db.x */
+function viaDb(expr) {
+  let e = expr;
+  while (e) {
+    if (ts.isIdentifier(e)) return e.text === 'db';
+    if (ts.isPropertyAccessExpression(e)) {
+      if (e.name.text === 'db') return true;
+      e = e.expression;
+    } else if (ts.isNonNullExpression(e) || ts.isParenthesizedExpression(e)) {
+      e = e.expression;
+    } else return false;
+  }
+  return false;
+}
+
 /** `window.electronAPI` (ou `window?.electronAPI`) */
 const isWindowElectronApi = node =>
   ts.isPropertyAccessExpression(node) &&
@@ -226,6 +250,8 @@ function analyze(file) {
   for (const key of COUNTERS) hits[key] = [];
   const renderer = isRenderer(file);
   const main = file.startsWith(path.join(SRC, 'main') + path.sep);
+  // Serveur distant et outils MCP : écritures par les commandes (#2134, #2151)
+  const commandOnly = inDir(file, 'main', 'remote') || inDir(file, 'main', 'mcp');
   // Couches (#1979) : un fichier compte une fois par compteur
   const lowerLayer = inDir(file, 'main') || inDir(file, 'shared') || inDir(file, 'database');
   const interfaceLayer = renderer && !inDir(file, 'renderer', 'api');
@@ -263,6 +289,15 @@ function analyze(file) {
       IPC_REGISTER.has(node.expression.name.text)
     ) {
       hits.ipcChannels.push(at(node));
+    }
+    if (
+      commandOnly &&
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      DB_WRITE_RE.test(node.expression.name.text) &&
+      viaDb(node.expression.expression)
+    ) {
+      hits.directDbWrites.push(at(node));
     }
     if (node.kind === ts.SyntaxKind.AnyKeyword) hits.any.push(at(node));
     if (

@@ -5,7 +5,7 @@
 
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { Fencer, Gender, type Pool } from '../../shared/types';
 import FencerList from './FencerList';
 import ResultsView from './ResultsView';
@@ -40,6 +40,7 @@ import RapieresRankingPanel from '../../features/rapieres/RapieresRankingPanel';
 import { ScoreAuditLog } from './ScoreAuditLog';
 import CompetitionHeader from './competition/CompetitionHeader';
 import CompetitionNav from './competition/CompetitionNav';
+import OrganizationModal from './competition/OrganizationModal';
 import CompetitionExportModals from './competition/CompetitionExportModals';
 import CompetitionSecondaryModals from './competition/CompetitionSecondaryModals';
 import RefereesPhase from './competition/RefereesPhase';
@@ -68,6 +69,8 @@ const TeamManagerView = React.lazy(() =>
 
 const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewProps) => {
   const client = useBpmClient();
+  // Page Organisation (engrenage avant l'appel)
+  const [showOrganization, setShowOrganization] = useState(false);
   const competitionCore = useCompetitionCore({ ...props });
   const competitionSessionSync = useCompetitionSessionSync({ ...props, ...competitionCore });
   const competitionPhaseFlow = useCompetitionPhaseFlow({
@@ -285,6 +288,14 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
 
   return (
     <div style={CV_STYLES.root}>
+      {showOrganization && (
+        <OrganizationModal
+          t={t}
+          onClose={() => setShowOrganization(false)}
+          onOpenArenaPlanner={props.onOpenArenaPlanner}
+          onOpenRoadmap={props.onOpenRoadmap}
+        />
+      )}
       <CompetitionHeader
         competition={competition}
         language={language}
@@ -332,6 +343,11 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         consolationBrackets={consolationBrackets}
         playAllPositions={playAllPositions}
         onOpenPlanningAssistant={() => modals.setShowPlanningAssistant(true)}
+        onOpenOrganization={
+          props.onOpenArenaPlanner || props.onOpenRoadmap
+            ? () => setShowOrganization(true)
+            : undefined
+        }
         isTeamEvent={isTeamEvent}
         tourReady={isLoaded}
         remoteActive={isRemoteActive}

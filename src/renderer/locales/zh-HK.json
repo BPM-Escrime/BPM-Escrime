@@ -2765,6 +2765,10 @@
   },
   "competitionNav": {
     "back": "返回",
+    "organization": "籌備",
+    "organization_intro": "籌備賽事：場館及給劍手的資訊。",
+    "organization_arena_desc": "在場館內佈置劍道及比賽場",
+    "organization_roadmap_desc": "賽事時間、地點及指示",
     "quest": "Quest 回合",
     "generate": "準備小組",
     "planning": "賽程",
