@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 36 | 387 |
+| `src/shared/domain/` | 36 | 388 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **600** | **4609** |
+| **Total** | **600** | **4610** |
 
-Unitaires : 582 fichiers, 4559 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 582 fichiers, 4560 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -9583,7 +9583,7 @@ Unitaires : 582 fichiers, 4559 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/teams/teamTableau.test.ts</code> — 9 tests</summary>
+<summary><code>src/shared/domain/teams/teamTableau.test.ts</code> — 10 tests</summary>
 
 - **teamTableau : placement (docs/adr/0024, lot E2)**
   - 4 équipes : tableau de 4, têtes de série 1-4 et 2-3
@@ -9593,6 +9593,7 @@ Unitaires : 582 fichiers, 4559 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - classement : relais FIE par victoires ; arène par points avec évitement de revanche
 - **relay : score et vainqueur d’un relais (docs/adr/0024, lot E2)**
   - palier du relais FIE : cumul plafonné à ordre × 5 ; arène : 5 par assaut
+  - Sabre Laser en touches, arme à la carte : pas de dépassement (t.41.1 est FIE, #2208)
   - Sabre Laser en points : dernière touche jusqu’à 5 points au-delà du palier − 1 (#2188)
   - vainqueur : meneur au cumul en relais FIE, score de l’assaut en arène
   - issue : égalité tranchée par le vainqueur donné
