@@ -120,6 +120,10 @@ describe('ArenaPlannerModal', () => {
 
   it('tourne une arène librement par sa poignée ronde du plan, touche R : quart de tour', () => {
     const { container } = render(<ArenaPlannerModal onClose={() => {}} />);
+    // Poignées masquées tant que l'arène n'est pas sélectionnée
+    expect(container.querySelector('.arena-planner-arena-rotate')).toBeNull();
+    fireEvent.pointerDown(container.querySelector('.arena-planner-zone')!);
+    expect(container.querySelector('.arena-planner-handle-move')).not.toBeNull();
     const handle = container.querySelector<SVGGElement>('.arena-planner-arena-rotate')!;
     const turned = () =>
       container.querySelector('.arena-planner-guard-red')!.parentElement!.getAttribute('transform');
@@ -128,7 +132,19 @@ describe('ArenaPlannerModal', () => {
     fireEvent.keyDown(handle, { key: 'R' });
     expect(turned()).toMatch(/^rotate\(180 /);
     // Poignée dans le groupe tourné : elle suit l'arène
-    expect(handle.parentElement!.getAttribute('transform')).toMatch(/^rotate\(180 /);
+    expect(handle.closest('g[transform]')!.getAttribute('transform')).toMatch(/^rotate\(180 /);
+  });
+
+  it('clic sur une arène : carré de déplacement (flèches), Échap désélectionne', () => {
+    const { container } = render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.pointerDown(container.querySelector('.arena-planner-zone')!);
+    const move = container.querySelector('.arena-planner-handle-move')!;
+    const before = Number(container.querySelector('.arena-planner-zone')!.getAttribute('cx'));
+    fireEvent.keyDown(move, { key: 'ArrowRight', shiftKey: true });
+    const after = Number(container.querySelector('.arena-planner-zone')!.getAttribute('cx'));
+    expect(after).toBeGreaterThan(before);
+    fireEvent.keyDown(container.querySelector('.arena-planner-handle-move')!, { key: 'Escape' });
+    expect(container.querySelector('.arena-planner-handle-move')).toBeNull();
   });
 
   it("change la couleur d'une zone puis revient à la couleur par défaut", () => {
