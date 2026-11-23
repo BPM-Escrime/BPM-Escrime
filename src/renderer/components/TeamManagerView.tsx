@@ -30,7 +30,7 @@ import {
   teamFormatOf,
 } from '../../shared/domain/teams/relay';
 import { rankTeamsForTableau } from '../../shared/domain/teams/teamTableau';
-import { createCard } from '../../shared/utils/cardSystem';
+import { buildCard } from '../../shared/domain/penalties/cards';
 import TeamPoolView, { CardTarget, RelayHandlers } from './TeamPoolView';
 import TeamTableauView from './TeamTableauView';
 import BookSectionsModal from './BookSectionsModal';
@@ -375,13 +375,15 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
       .filter(([boutId]) => match?.bouts.some(b => b.id === boutId))
       .flatMap(([, cards]) => cards)
       .filter(c => c.fencerId === cardTarget.fencerId);
-    const card = createCard(
+    const card = buildCard({
+      id: crypto.randomUUID(),
+      at: new Date(),
       matchId,
-      cardTarget.fencerId,
-      selectedReason,
+      fencerId: cardTarget.fencerId,
+      reason: selectedReason,
       previousCards,
-      competition.weapon
-    );
+      weapon: competition.weapon,
+    });
     const boutId = cardTarget.boutId;
     setBoutCards(prev => ({ ...prev, [boutId]: [...(prev[boutId] ?? []), card] }));
     setCardTarget(null);

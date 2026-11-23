@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { determineCardType, isFencerExcluded } from '../../shared/utils/cardSystem';
+import { determineCardType, isFencerExcluded } from '../../shared/domain/penalties/cards';
 import { Card, CardGroup, CardReason } from '../../shared/types';
 import { CardType } from '../../shared/domain/penalties/penalty.types';
 import {

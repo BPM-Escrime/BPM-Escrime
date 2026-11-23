@@ -19,7 +19,8 @@ import {
 import { TeamTargetRule, getRelayCap } from '../../shared/domain/teams/teamCalculations';
 import { LaserArenaBoutCap } from '../../shared/domain/teams/laserArenaCalculations';
 import { determineTeamCardEscalation } from '../../shared/domain/teams/teamCardEscalation';
-import { CARD_REASON_LABELS, getAvailableReasons } from '../../shared/utils/cardSystem';
+import { CARD_REASON_LABELS } from '../../shared/utils/cardSystem';
+import { getAvailableReasons } from '../../shared/domain/penalties/cards';
 import { useConfirm } from './ConfirmDialog';
 import { useTranslation } from '../contexts/TranslationContext';
 import { Check, Flag, Radio, Swords, Undo2, UserRoundCog } from 'lucide-react';

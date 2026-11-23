@@ -15,7 +15,7 @@ import {
   relayCapFor,
   relayCumul,
 } from '../../shared/domain/teams/teamRelayLive';
-import { getAvailableReasons } from '../../shared/utils/cardSystem';
+import { getAvailableReasons } from '../../shared/domain/penalties/cards';
 import type { TeamArenaCard, TeamArenaState } from './types';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { runTeamCommand, type TeamCommandOutcome, type TeamSource } from './teamCommand';

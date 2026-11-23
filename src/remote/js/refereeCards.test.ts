@@ -6,11 +6,8 @@ import { createRequire } from 'module';
 import fs from 'fs';
 import path from 'path';
 import { passivityWinner as sharedPassivityWinner } from '../../shared/domain/match/matchEndValidation';
-import {
-  CARD_REASON_LABELS,
-  createCard,
-  getReasonsByGroupForWeapon,
-} from '../../shared/utils/cardSystem';
+import { CARD_REASON_LABELS } from '../../shared/utils/cardSystem';
+import { buildCard, getReasonsByGroupForWeapon } from '../../shared/domain/penalties/cards';
 import { Card, CardGroup, CardReason, Weapon } from '../../shared/types';
 
 const req = createRequire(import.meta.url);
@@ -145,7 +142,7 @@ describe('refereeCards.js passivité', () => {
     expect(count).toBe(scores.length * fencers.length * fencers.length);
   });
 
-  it('cardFromGroup olympique : parité avec determineCardType (cardSystem.ts, #2207)', () => {
+  it('cardFromGroup olympique : parité avec determineCardType (domain/penalties/cards.ts, #2207)', () => {
     // Un motif FIE par groupe ; la récidive du 3e groupe (noir) passe par le bouton N
     const reasonOf: Record<number, CardReason> = {
       1: CardReason.FIE_BODY_CONTACT,
@@ -164,7 +161,15 @@ describe('refereeCards.js passivité', () => {
         const tablet: string[] = [];
         for (const group of seq) {
           const fromTablet = C.cardFromGroup(group, { isModern: true, standardCards: tablet });
-          const card = createCard('m', 'f', reasonOf[group], domain, weapon);
+          const card = buildCard({
+            id: `c${count}`,
+            at: new Date(0),
+            matchId: 'm',
+            fencerId: 'f',
+            reason: reasonOf[group],
+            previousCards: domain,
+            weapon,
+          });
           expect(fromTablet, `${weapon} ${seq.join('-')}`).toBe(card.type.toLowerCase());
           expect(card.group).toBe(group);
           tablet.push(fromTablet);
