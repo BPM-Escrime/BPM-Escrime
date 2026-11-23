@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 149 | 1260 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 131 | 703 |
+| `src/renderer/components/` | 132 | 707 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 36 | 385 |
+| `src/shared/domain/` | 36 | 386 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **599** | **4603** |
+| **Total** | **600** | **4608** |
 
-Unitaires : 581 fichiers, 4553 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 582 fichiers, 4558 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5921,7 +5921,7 @@ Unitaires : 581 fichiers, 4553 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 22 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 23 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5935,6 +5935,7 @@ Unitaires : 581 fichiers, 4553 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - nomme une arène et affiche son nom sur le plan
   - tourne une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle
   - tourne une arène librement par sa poignée ronde du plan, touche R : quart de tour
+  - clic sur une arène : carré de déplacement (flèches), Échap désélectionne
   - change la couleur d'une zone puis revient à la couleur par défaut
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
   - ne permet jamais plus d'arènes que le maximum de la zone
@@ -7389,6 +7390,17 @@ Unitaires : 581 fichiers, 4553 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - échappe le XML et retire les caractères interdits
   - parties du paquet, texte résolu, bandeau coloré, section masquée absente
   - fichier zip relisible
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/roadmap/roadmapFields.test.tsx</code> — 3 tests</summary>
+
+- **VariableChips**
+  - sans champ actif : clic → champ source
+  - champ actif : clic → insertion ; clic droit → champ source
+- **TextField**
+  - affiche les variables alimentées à côté du libellé
 
 </details>
 
@@ -9290,13 +9302,15 @@ Unitaires : 581 fichiers, 4553 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/roadmap/roadmap.test.ts</code> — 16 tests</summary>
+<summary><code>src/shared/domain/roadmap/roadmap.test.ts</code> — 17 tests</summary>
 
 - **roadmap : dates et horaires**
   - saison sportive à partir du 1er septembre
   - date limite : N jours avant, change de mois
   - ouverture et scratch suggérés depuis le début
   - heure à la française
+- **roadmap : champs → variables**
+  - chaque champ annonce les variables qu’il alimente
 - **roadmap : variables**
   - valeurs dérivées
   - remplace les connues, signale les vides, laisse les inconnues
