@@ -25,33 +25,11 @@ export function emitCompetitionEvent(type: CompetitionEventType, competitionId?:
 
 export function registerDbHandlers({ db, remoteServers }: DbHandlersContext): void {
   // Competition handlers
-  ipcMain.handle('db:createCompetition', async (_, data) => {
-    return db.createCompetition(data);
-  });
-
   ipcMain.handle('db:getAllCompetitions', async () => {
     return db.getAllCompetitions();
   });
 
-  ipcMain.handle('db:updateCompetition', async (_, id, updates) => {
-    const result = db.updateCompetition(id, updates);
-    // Propager le paramètre carton noir aux tablettes si une session distante est active
-    const blackCard = updates?.settings?.blackCardEnabled;
-    if (blackCard !== undefined) {
-      remoteServers.get(id)?.server.updateBlackCardEnabled(blackCard === true);
-    }
-    // Score max / chronos / repos modifiés : tablettes à jour sans relancer la session (#1134)
-    if (updates?.settings) remoteServers.get(id)?.server.refreshCompetitionSettings();
-    return result;
-  });
-
   // Fencer handlers
-  ipcMain.handle('db:addFencer', async (_, competitionId, fencer) => {
-    const created = db.addFencer(competitionId, fencer);
-    emitCompetitionEvent('fencers:changed', competitionId);
-    return created;
-  });
-
   ipcMain.handle('db:updateFencer', async (_, id, updates) => {
     const updated = db.updateFencer(id, updates);
     emitCompetitionEvent('fencers:changed');

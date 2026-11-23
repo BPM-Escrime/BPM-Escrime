@@ -183,7 +183,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (54)
+## Référence des outils (55)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -322,7 +322,7 @@ Aucun argument.
 | `since` | integer |  | Dernière révision connue (0 : tout) |
 | `limit` | integer |  | Nombre maximum (1000) |
 
-### En écriture, sur autorisation (37)
+### En écriture, sur autorisation (38)
 
 ### `create_competition` — Créer une épreuve
 
@@ -781,6 +781,19 @@ Aucun argument.
 | `refereeId` | string / null | oui | Identifiant de l’arbitre (list_referees), ou null |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `split_off_group` — Extraire un groupe en épreuve séparée
+
+*écriture.* Tableaux séparés après les poules : extrait un groupe (« F », « M ») dans une épreuve séparée. Dans une seule transaction : crée l’épreuve (mêmes réglages, sans le mode couplé), y copie les tireurs du groupe (pointés, rang après poules), y écrit le classement après poules du groupe (phase Classement), puis note l’épreuve séparée sur l’épreuve d’origine (le groupe n’y a plus de tableau). Refus : épreuve sans tableaux séparés (invalid_input), groupe absent du classement ou déjà extrait (split_group_not_found), tableau du groupe déjà tiré (bracket_exists).
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `group` | string | oui | Groupe à extraire (« F », « M ») |
+| `title` | string | oui | Titre de l’épreuve séparée |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve d’origine : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
 
 <!-- outils-mcp:fin -->

@@ -83,12 +83,4 @@ describe('bus d’événements db (#1298)', () => {
     expect(db.updateMatch).not.toHaveBeenCalled();
     expect(db.logScoreChange).not.toHaveBeenCalled();
   });
-
-  it('db:addFencer émet fencers:changed pour la compétition', async () => {
-    await handlers.get('db:addFencer')!({}, 'c1', {});
-    expect(send).toHaveBeenCalledWith('competition:event', {
-      type: 'fencers:changed',
-      competitionId: 'c1',
-    });
-  });
 });

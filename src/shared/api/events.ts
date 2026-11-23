@@ -35,6 +35,8 @@ export const JOURNAL_EVENT = {
   poolsSkipped: 'PoolsSkipped',
   tableauCleared: 'TableauCleared',
   rapieresTeamsUpdated: 'RapieresTeamsUpdated',
+  groupSplitOff: 'GroupSplitOff',
+  splitRankingImported: 'SplitRankingImported',
 } as const;
 
 const member = <T extends string, P extends z.ZodType>(type: T, payload: P) =>
@@ -163,6 +165,20 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
   member(
     JOURNAL_EVENT.fencerReinstated,
     z.object({ fencerId: Id, restoredStatus: z.string(), restoredMatchIds: z.array(Id) })
+  ),
+  // Tableaux séparés (docs/adr/0024) : groupe extrait dans une épreuve séparée (épreuve
+  // d'origine), puis classement importé, premier fait de l'épreuve séparée ; même commandId
+  member(
+    JOURNAL_EVENT.groupSplitOff,
+    z.object({ group: Group, targetCompetitionId: Id, fencerIds: z.array(Id) })
+  ),
+  member(
+    JOURNAL_EVENT.splitRankingImported,
+    z.object({
+      sourceCompetitionId: Id,
+      group: Group,
+      ranking: z.array(z.object({ fencerId: Id, sourceFencerId: Id, rank: z.number().int() })),
+    })
   ),
 ]);
 export type JournalEventBody = z.infer<typeof JournalEventBodySchema>;

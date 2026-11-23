@@ -8,12 +8,10 @@ import type { SettingsAPI } from './settingsApi';
 import {
   Card,
   Competition,
-  Fencer,
   Match,
   Pool,
   PoolSnapshot,
   Score,
-  CompetitionSettings,
   Phase,
   FencerCompetitionStats,
 } from '../types';
@@ -36,39 +34,6 @@ export interface TtsConfig {
 // ============================================================================
 // Database API Types
 // ============================================================================
-
-export interface CompetitionCreateData {
-  title: string;
-  date: Date;
-  weapon: string;
-  gender: string;
-  category: string;
-  settings?: Partial<CompetitionSettings>;
-}
-
-export interface CompetitionUpdateData {
-  title?: string;
-  date?: Date;
-  location?: string;
-  organizer?: string;
-  settings?: Partial<CompetitionSettings>;
-}
-
-export interface FencerCreateData {
-  ref?: number;
-  lastName: string;
-  firstName: string;
-  birthDate?: Date;
-  gender: string;
-  nationality: string;
-  region?: string;
-  department?: string;
-  club?: string;
-  license?: string;
-  ranking?: number;
-  status?: string;
-  photo?: string;
-}
 
 export interface FencerUpdateData {
   lastName?: string;
@@ -405,12 +370,9 @@ export interface TVCommand {
 type CardRef = { matchId: string; fencerId: string; cardType: string };
 export interface DatabaseAPI {
   // Competitions
-  createCompetition: (data: CompetitionCreateData) => Promise<Competition>;
   getAllCompetitions: () => Promise<Competition[]>;
-  updateCompetition: (id: string, updates: CompetitionUpdateData) => Promise<void>;
 
   // Fencers
-  addFencer: (competitionId: string, fencer: FencerCreateData) => Promise<Fencer>;
   updateFencer: (id: string, updates: FencerUpdateData) => Promise<void>;
 
   // Matches

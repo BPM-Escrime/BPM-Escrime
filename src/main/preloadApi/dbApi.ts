@@ -4,10 +4,7 @@
  */
 import { ipcRenderer } from 'electron';
 import type {
-  CompetitionCreateData,
-  CompetitionUpdateData,
   DatabaseAPI,
-  FencerCreateData,
   FencerUpdateData,
   MatchCreateData,
   MatchSnapshot,
@@ -16,31 +13,13 @@ import type {
   PoolSnapshot,
   SessionState,
 } from '../../shared/types/preload';
-import {
-  validateUUID,
-  validateCompetitionData,
-  validateFencerData,
-  validateMatchData,
-} from '../ipc/validation';
+import { validateUUID, validateMatchData } from '../ipc/validation';
 
 export const dbApi = {
   // Competitions
-  createCompetition: (data: CompetitionCreateData) => {
-    validateCompetitionData(data);
-    return ipcRenderer.invoke('db:createCompetition', data);
-  },
   getAllCompetitions: () => ipcRenderer.invoke('db:getAllCompetitions'),
-  updateCompetition: (id: string, updates: CompetitionUpdateData) => {
-    validateUUID(id, 'competition ID');
-    return ipcRenderer.invoke('db:updateCompetition', id, updates);
-  },
 
   // Fencers
-  addFencer: (competitionId: string, fencer: FencerCreateData) => {
-    validateUUID(competitionId, 'competition ID');
-    validateFencerData(fencer);
-    return ipcRenderer.invoke('db:addFencer', competitionId, fencer);
-  },
   updateFencer: (id: string, updates: FencerUpdateData) => {
     validateUUID(id, 'fencer ID');
     return ipcRenderer.invoke('db:updateFencer', id, updates);

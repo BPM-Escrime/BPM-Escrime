@@ -30,6 +30,7 @@ import { trainingOperations } from './contractTraining';
 import { devicesOperations } from './contractDevices';
 import { fileOperations } from './contractFiles';
 import { simulationOperations } from './contractSimulation';
+import { splitOperations } from './contractSplit';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { ArenaPlanSchema } from './arenaPlanSchema';
@@ -1467,6 +1468,8 @@ export const contract = {
   ...fileOperations,
   // Événements simulés du remplissage automatique : données d'essai, sans journal
   ...simulationOperations,
+  // Tableaux séparés : extraction d'un groupe en épreuve séparée (docs/adr/0024)
+  ...splitOperations,
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────
