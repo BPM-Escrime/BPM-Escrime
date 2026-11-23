@@ -8,7 +8,6 @@ import { ArenaMatch } from '../../shared/types/remote';
 import { sanitizeAnnouncement } from './announcement';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { getSharedMainWindow } from '../mainWindowRef';
-import { emitCompetitionEvent } from '../ipc/dbHandlers';
 import { recordRemoteEvent } from './remoteEvents';
 import {
   addsCard,
@@ -18,6 +17,7 @@ import {
   isDeviceSocket,
 } from './cyranoLock';
 import { notifyScreen } from './remoteActivity';
+import { assignMatchRefereeByCommand } from './scoreCommand';
 
 type S = RemoteScoreServer;
 
@@ -539,8 +539,18 @@ export function handleArenaControl(
     case 'change_referee': {
       if (!data.matchId || !data.refereeId || !arena.currentMatch) break;
       if (arena.currentMatch.id !== data.matchId) break;
-      ctx.db.updateMatch(data.matchId, { refereeId: data.refereeId });
-      emitCompetitionEvent('matches:changed', ctx.session?.competitionId);
+      // Commande assignReferee sur le match (docs/adr/0014, #2151) : session et base par le
+      // moteur ; refusée (arbitre ou match inconnu) : rien n'est changé
+      if (
+        !ctx.isTrainingMode &&
+        !assignMatchRefereeByCommand(
+          ctx.db,
+          ctx.session?.competitionId,
+          data.matchId,
+          data.refereeId
+        )
+      )
+        break;
       // Mettre à jour sessionMatches en mémoire
       const idx = ctx.sessionMatches.findIndex(m => m.id === data.matchId);
       if (idx >= 0)

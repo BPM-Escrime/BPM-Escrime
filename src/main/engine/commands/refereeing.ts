@@ -16,7 +16,14 @@ import {
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { readSession } from './sessionView';
-import { assertSupported, emitSession, sessionPools, writeSession } from './sport';
+import {
+  assertScoreSupported,
+  assertSupported,
+  emitSession,
+  sessionPools,
+  sessionTableau,
+  writeSession,
+} from './sport';
 
 export function setRefereeingSettings(
   ctx: CommandContext,
@@ -139,29 +146,124 @@ export function assignPoolReferees(
   return out;
 }
 
+/** Arbitre de l'épreuve, null pour « sans arbitre » ; refus s'il est inconnu */
+function refereeOrNull(ctx: CommandContext, competitionId: string, refereeId: string | null) {
+  if (refereeId === null) return null;
+  const ref = ctx.db.getRefereesByCompetition(competitionId).find(r => r.id === refereeId);
+  if (!ref) throw new CommandError('referee_not_found', `Arbitre ${refereeId} introuvable`);
+  return ref;
+}
+
+const refereeName = (ref: Referee | null) =>
+  ref ? `${ref.firstName} ${ref.lastName}`.trim() : null;
+
 /**
- * Arbitre d'une poule choisi à la main (docs/adr/0014) : il remplace l'arbitre principal
- * et passe sur les matchs de la poule. La neutralité est contrôlée et signalée sans
- * bloquer : le DT tranche. refereeId null : poule sans arbitre.
+ * Arbitre d'un match choisi à la main (docs/adr/0014 : `assignReferee` sur `matchId`) :
+ * match de poule ou du tableau principal, ce match seulement. Tablette (« changer
+ * d'arbitre ») et écran passent par ici (#2151). Neutralité signalée sans bloquer.
+ */
+function assignMatchReferee(
+  ctx: CommandContext,
+  competitionId: string,
+  input: { matchId: string; refereeId: string | null; dryRun?: boolean }
+) {
+  const comp = getCompetitionOrThrow(ctx, competitionId);
+  assertScoreSupported(comp);
+  const session = readSession(ctx, competitionId);
+  const ref = refereeOrNull(ctx, competitionId, input.refereeId);
+  const pools = sessionPools(session);
+  const pool = pools.find(p => p.matches.some(m => m.id === input.matchId));
+  const tableau = sessionTableau(session);
+  const tMatch = pool ? undefined : tableau.find(m => m.id === input.matchId);
+  const match = pool?.matches.find(m => m.id === input.matchId) ?? tMatch;
+  if (!match) {
+    throw new CommandError(
+      'match_not_found',
+      `Match introuvable : ${input.matchId} (list_matches)`
+    );
+  }
+  const fencers = [match.fencerA, match.fencerB].filter((f): f is NonNullable<typeof f> => !!f);
+  const conflicts = ref
+    ? neutralityConflicts(
+        ref,
+        {
+          id: match.id,
+          clubs: fencers.map(f => f.club),
+          nationalities: fencers.map(f => f.nationality),
+          regions: fencers.map(f => f.region),
+        },
+        resolveRefereeing(comp.settings?.refereeing).neutrality
+      )
+    : [];
+  const name = refereeName(ref);
+  const out = {
+    dryRun: !!input.dryRun,
+    poolNumber: pool?.number ?? null,
+    matchId: match.id,
+    referee: name,
+    conflicts,
+    warnings: conflicts.length
+      ? [`Match ${match.id} : ${name} n’est pas neutre (${conflicts.join(', ')})`]
+      : [],
+  };
+  if (input.dryRun) return out;
+  // Ligne en base : identifiant brut, ou composite pour un match de tableau
+  const dbId = [match.id, `${competitionId}-${match.id}`].find(id => ctx.db.getMatch(id));
+  const brief = ref ? { id: ref.id, firstName: ref.firstName, lastName: ref.lastName } : null;
+  ctx.db.transaction(() => {
+    if (dbId) ctx.db.updateMatch(dbId, { refereeId: ref?.id ?? null });
+    if (pool) {
+      writeSession(ctx, competitionId, {
+        pools: pools.map(p =>
+          p.id !== pool.id
+            ? p
+            : {
+                ...p,
+                matches: p.matches.map(m =>
+                  m.id === match.id ? { ...m, referee: ref ?? undefined } : m
+                ),
+              }
+        ),
+      });
+    } else {
+      writeSession(ctx, competitionId, {
+        tableauMatches: tableau.map(m =>
+          m.id !== match.id
+            ? m
+            : {
+                ...m,
+                referee: brief,
+                referees: brief ? [brief, ...(m.referees ?? []).slice(1)] : [],
+              }
+        ),
+      });
+    }
+  });
+  emitSession(ctx, competitionId);
+  return out;
+}
+
+/**
+ * Arbitre choisi à la main (docs/adr/0014) : pour un match (`matchId`, voir
+ * assignMatchReferee) ou pour une poule (`poolNumber`) : il remplace l'arbitre principal et
+ * passe sur les matchs de la poule. La neutralité est contrôlée et signalée sans bloquer :
+ * le DT tranche. refereeId null : sans arbitre.
  */
 export function assignPoolReferee(
   ctx: CommandContext,
   competitionId: string,
-  input: { poolNumber: number; refereeId: string | null; dryRun?: boolean }
+  input: { poolNumber?: number; matchId?: string; refereeId: string | null; dryRun?: boolean }
 ) {
+  if (input.matchId !== undefined) {
+    return assignMatchReferee(ctx, competitionId, { ...input, matchId: input.matchId });
+  }
   const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
   assertSupported(comp, session);
   const pools = sessionPools(session);
   const pool = pools.find(p => p.number === input.poolNumber);
   if (!pool) throw new CommandError('pool_not_found', `Poule ${input.poolNumber} introuvable`);
-  const ref =
-    input.refereeId === null
-      ? null
-      : ctx.db.getRefereesByCompetition(competitionId).find(r => r.id === input.refereeId);
-  if (ref === undefined) {
-    throw new CommandError('referee_not_found', `Arbitre ${input.refereeId} introuvable`);
-  }
+  const ref = refereeOrNull(ctx, competitionId, input.refereeId);
   const conflicts = ref
     ? neutralityConflicts(
         ref,
@@ -174,13 +276,14 @@ export function assignPoolReferee(
         resolveRefereeing(comp.settings?.refereeing).neutrality
       )
     : [];
-  const name = ref ? `${ref.firstName} ${ref.lastName}`.trim() : null;
+  const name = refereeName(ref);
   const warnings = conflicts.length
     ? [`Poule ${pool.number} : ${name} n’est pas neutre (${conflicts.join(', ')})`]
     : [];
   const out = {
     dryRun: !!input.dryRun,
     poolNumber: pool.number,
+    matchId: null,
     referee: name,
     conflicts,
     warnings,

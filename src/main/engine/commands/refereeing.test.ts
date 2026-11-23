@@ -134,6 +134,31 @@ d('assignReferee (à la main)', () => {
     expect(cleared.matches.every(m => !m.referee)).toBe(true);
   });
 
+  it('arbitre d’un match (#2151) : ce match seulement, en session et en base', async () => {
+    const comp = setup();
+    const r = referee(comp.id, 'Anne CLUB', 'A');
+    type S = { pools: { number: number; matches: { id: string; referee?: { id: string } }[] }[] };
+    const [first, second] = (db.getSessionState(comp.id) as S).pools[0].matches;
+    const res = (await invoke(ctx, 'assignReferee', {
+      competitionId: comp.id,
+      matchId: first.id,
+      refereeId: r.id,
+    })) as { poolNumber: number | null; matchId: string; conflicts: string[] };
+    expect(res).toMatchObject({ poolNumber: 1, matchId: first.id });
+    expect(res.conflicts).toEqual(['club']);
+    const after = (db.getSessionState(comp.id) as S).pools[0].matches;
+    expect(after.find(m => m.id === first.id)?.referee?.id).toBe(r.id);
+    expect(after.find(m => m.id === second.id)?.referee).toBeUndefined();
+    expect(db.getMatch(first.id)?.referee?.id).toBe(r.id);
+    // Ni poule ni match, ou les deux : refus du contrat
+    await expect(
+      invoke(ctx, 'assignReferee', { competitionId: comp.id, refereeId: r.id })
+    ).rejects.toMatchObject({ code: 'invalid_input' });
+    await expect(
+      invoke(ctx, 'assignReferee', { competitionId: comp.id, matchId: 'zz', refereeId: r.id })
+    ).rejects.toMatchObject({ code: 'match_not_found' });
+  });
+
   it('poule ou arbitre inconnus : erreurs codées', () => {
     const comp = setup();
     expect(() => assignPoolReferee(ctx, comp.id, { poolNumber: 9, refereeId: null })).toThrow(

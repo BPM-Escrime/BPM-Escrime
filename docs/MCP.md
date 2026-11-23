@@ -770,14 +770,15 @@ Aucun argument.
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
 
-### `assign_referee` — Arbitre d’une poule (à la main)
+### `assign_referee` — Arbitre à la main (poule ou match)
 
-*écriture, idempotent.* Arbitre d’une poule choisi à la main : il remplace l’arbitre principal et passe sur les matchs de la poule. Un arbitre non neutre est accepté et signalé (« conflicts »). « refereeId: null » retire l’arbitre.
+*écriture, idempotent.* Arbitre choisi à la main (docs/adr/0014), pour une poule (« poolNumber » : il remplace l’arbitre principal et passe sur les matchs de la poule) ou pour un match (« matchId » : poule ou tableau, ce match seulement). Un arbitre non neutre est accepté et signalé (« conflicts »). « refereeId: null » retire l’arbitre.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
-| `poolNumber` | integer | oui | Numéro de la poule |
+| `poolNumber` | integer |  | Numéro de la poule |
+| `matchId` | string |  | Match de poule ou de tableau (list_matches) |
 | `refereeId` | string / null | oui | Identifiant de l’arbitre (list_referees), ou null |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
