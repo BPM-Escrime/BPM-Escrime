@@ -320,6 +320,82 @@ export function createRoomItem(
   return { id, kind, label, x, y, rotationDeg: 0, ...size };
 }
 
+/**
+ * Équipements courants d'une salle d'armes ou d'un gymnase, proposés par le menu
+ * déroulant du planificateur. Chaque équipement reprend un type d'élément (contrôles :
+ * hors salle, zone de sécurité ; « blocked » = emprise au sol que les arènes évitent)
+ * avec une taille par défaut en mètres, modifiable ensuite.
+ */
+export interface RoomEquipment {
+  id: string;
+  kind: RoomItem['kind'];
+  widthM: number;
+  heightM: number;
+}
+
+export const ROOM_EQUIPMENT: readonly RoomEquipment[] = [
+  { id: 'locker_room', kind: 'blocked', widthM: 6, heightM: 4 },
+  { id: 'showers', kind: 'blocked', widthM: 4, heightM: 3 },
+  { id: 'toilets', kind: 'blocked', widthM: 3, heightM: 3 },
+  { id: 'first_aid', kind: 'blocked', widthM: 4, heightM: 3 },
+  { id: 'warmup', kind: 'blocked', widthM: 8, heightM: 6 },
+  { id: 'bleachers', kind: 'blocked', widthM: 10, heightM: 3 },
+  { id: 'storage', kind: 'blocked', widthM: 4, heightM: 3 },
+  { id: 'refreshments', kind: 'blocked', widthM: 4, heightM: 2 },
+  { id: 'pillar', kind: 'blocked', widthM: 0.5, heightM: 0.5 },
+  { id: 'stairs', kind: 'blocked', widthM: 3, heightM: 2 },
+  { id: 'dt_table', kind: 'table', widthM: 3, heightM: 0.8 },
+  { id: 'reception', kind: 'table', widthM: 3, heightM: 0.8 },
+  { id: 'armoury', kind: 'table', widthM: 2, heightM: 0.8 },
+  { id: 'scoring_table', kind: 'table', widthM: 1.5, heightM: 0.8 },
+  { id: 'weapon_rack', kind: 'accessory', widthM: 2, heightM: 0.5 },
+  { id: 'benches', kind: 'accessory', widthM: 2, heightM: 0.4 },
+  { id: 'podium', kind: 'accessory', widthM: 3, heightM: 1.5 },
+  { id: 'scoreboard', kind: 'accessory', widthM: 2, heightM: 0.3 },
+  { id: 'sound_system', kind: 'accessory', widthM: 1, heightM: 0.6 },
+  { id: 'fire_extinguisher', kind: 'accessory', widthM: 0.4, heightM: 0.4 },
+  { id: 'defibrillator', kind: 'accessory', widthM: 0.4, heightM: 0.4 },
+  { id: 'electrical_panel', kind: 'outlet', widthM: 1, heightM: 0.3 },
+];
+
+/** Élément créé depuis un équipement du catalogue, taille bornée à la salle. */
+export function createEquipmentItem(
+  equipment: RoomEquipment,
+  id: string,
+  label: string,
+  room: RoomSize
+): RoomItem {
+  const widthM = Math.max(MIN_ITEM_SIZE_M, Math.min(equipment.widthM, room.widthM));
+  const heightM = Math.max(MIN_ITEM_SIZE_M, Math.min(equipment.heightM, room.lengthM));
+  const x = Math.min(0.5, Math.max(0, room.widthM - widthM));
+  const y = Math.min(0.5, Math.max(0, room.lengthM - heightM));
+  return { id, kind: equipment.kind, label, x, y, rotationDeg: 0, widthM, heightM };
+}
+
+/**
+ * Première place libre (balayage par pas de 0,5 m, ligne par ligne) : dans la salle, hors des
+ * zones de sécurité des arènes et sans chevaucher les autres éléments. Aucune place : inchangé.
+ */
+export function placeOnFreeSpot(
+  item: RoomItem,
+  others: RoomItem[],
+  room: RoomSize,
+  arenaCenters: Point[],
+  stepM = 0.5
+): RoomItem {
+  const free = (candidate: RoomItem) =>
+    checkRoomItems(room, arenaCenters, [candidate]).length === 0 &&
+    !others.some(o => polygonsOverlap(itemCorners(candidate), itemCorners(o)));
+  if (free(item)) return item;
+  for (let y = 0; y + item.heightM <= room.lengthM + EPS; y += stepM) {
+    for (let x = 0; x + item.widthM <= room.widthM + EPS; x += stepM) {
+      const candidate = { ...item, x: round6(x), y: round6(y) };
+      if (free(candidate)) return candidate;
+    }
+  }
+  return item;
+}
+
 /** Déplace un élément en le gardant entièrement dans la salle (élément tourné compris). */
 export function moveRoomItem(item: RoomItem, x: number, y: number, room: RoomSize): RoomItem {
   const b = itemBounds(item);
