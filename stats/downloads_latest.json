@@ -1,243 +1,243 @@
 {
-  "date": "2026-11-22T14:23:10Z",
+  "date": "2026-11-23T17:48:15Z",
   "releases": [
     {
-      "tag": "v3.0.0-dev.2016",
-      "name": "🧪 BellePoule Modern 3.0.0-dev.2016 (Build #2016)",
-      "published_at": "2026-11-22T14:19:42Z",
+      "tag": "v3.0.0-dev.2072",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2072 (Build #2072)",
+      "published_at": "2026-11-23T17:34:58Z",
       "total_downloads": 0,
       "assets": [
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-linux-amd64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2072-linux-amd64.deb",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-linux-arm64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2072-linux-arm64.AppImage",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-linux-arm64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2072-linux-arm64.deb",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-linux-x86_64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2072-linux-x86_64.AppImage",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-linux-x86_64.rpm",
+          "name": "BPM-Escrime-3.0.0-dev.2072-linux-x86_64.rpm",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-mac-arm64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2072-mac-arm64.dmg",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-mac-arm64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2072-mac-arm64.zip",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-mac-x64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2072-mac-x64.dmg",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-mac-x64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2072-mac-x64.zip",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2016-win-x64-portable.exe",
+          "name": "BPM-Escrime-3.0.0-dev.2072-win-x64-portable.exe",
           "downloads": 0
         }
       ]
     },
     {
-      "tag": "v3.0.0-dev.2015",
-      "name": "🧪 BellePoule Modern 3.0.0-dev.2015 (Build #2015)",
-      "published_at": "2026-11-22T14:03:36Z",
-      "total_downloads": 0,
+      "tag": "v3.0.0-dev.2071",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2071 (Build #2071)",
+      "published_at": "2026-11-23T17:12:49Z",
+      "total_downloads": 10,
       "assets": [
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-linux-amd64.deb",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-linux-amd64.deb",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-linux-arm64.AppImage",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-linux-arm64.AppImage",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-linux-arm64.deb",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-linux-arm64.deb",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-linux-x86_64.AppImage",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-linux-x86_64.AppImage",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-linux-x86_64.rpm",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-linux-x86_64.rpm",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-mac-arm64.dmg",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-mac-arm64.dmg",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-mac-arm64.zip",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-mac-arm64.zip",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-mac-x64.dmg",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-mac-x64.dmg",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-mac-x64.zip",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-mac-x64.zip",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2015-win-x64-portable.exe",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2071-win-x64-portable.exe",
+          "downloads": 1
         }
       ]
     },
     {
-      "tag": "v3.0.0-dev.2014",
-      "name": "🧪 BellePoule Modern 3.0.0-dev.2014 (Build #2014)",
-      "published_at": "2026-11-22T13:51:17Z",
-      "total_downloads": 0,
+      "tag": "v3.0.0-dev.2070",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2070 (Build #2070)",
+      "published_at": "2026-11-23T16:58:56Z",
+      "total_downloads": 8,
       "assets": [
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-linux-amd64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2070-linux-amd64.deb",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2070-linux-arm64.AppImage",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2070-linux-arm64.deb",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2070-linux-x86_64.AppImage",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2070-linux-x86_64.rpm",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2070-mac-arm64.dmg",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2070-mac-arm64.zip",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2070-mac-x64.dmg",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-linux-arm64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2070-mac-x64.zip",
           "downloads": 0
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-linux-arm64.deb",
-          "downloads": 0
-        },
-        {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-linux-x86_64.AppImage",
-          "downloads": 0
-        },
-        {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-linux-x86_64.rpm",
-          "downloads": 0
-        },
-        {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-mac-arm64.dmg",
-          "downloads": 0
-        },
-        {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-mac-arm64.zip",
-          "downloads": 0
-        },
-        {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-mac-x64.dmg",
-          "downloads": 0
-        },
-        {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-mac-x64.zip",
-          "downloads": 0
-        },
-        {
-          "name": "BellePoule-Modern-3.0.0-dev.2014-win-x64-portable.exe",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2070-win-x64-portable.exe",
+          "downloads": 1
         }
       ]
     },
     {
-      "tag": "v3.0.0-dev.2013",
-      "name": "🧪 BellePoule Modern 3.0.0-dev.2013 (Build #2013)",
-      "published_at": "2026-11-22T13:39:41Z",
+      "tag": "v3.0.0-dev.2068",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2068 (Build #2068)",
+      "published_at": "2026-11-23T16:16:53Z",
       "total_downloads": 11,
       "assets": [
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-linux-amd64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2068-linux-amd64.deb",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-linux-arm64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2068-linux-arm64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-linux-arm64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2068-linux-arm64.deb",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-linux-x86_64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2068-linux-x86_64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-linux-x86_64.rpm",
+          "name": "BPM-Escrime-3.0.0-dev.2068-linux-x86_64.rpm",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-mac-arm64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2068-mac-arm64.dmg",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-mac-arm64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2068-mac-arm64.zip",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-mac-x64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2068-mac-x64.dmg",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-mac-x64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2068-mac-x64.zip",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2013-win-x64-portable.exe",
+          "name": "BPM-Escrime-3.0.0-dev.2068-win-x64-portable.exe",
           "downloads": 2
         }
       ]
     },
     {
-      "tag": "v3.0.0-dev.2012",
-      "name": "🧪 BellePoule Modern 3.0.0-dev.2012 (Build #2012)",
-      "published_at": "2026-11-22T13:28:21Z",
-      "total_downloads": 4,
+      "tag": "v3.0.0-dev.2067",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2067 (Build #2067)",
+      "published_at": "2026-11-23T15:58:53Z",
+      "total_downloads": 11,
       "assets": [
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-linux-amd64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2067-linux-amd64.deb",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-linux-arm64.AppImage",
-          "downloads": 0
-        },
-        {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-linux-arm64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2067-linux-arm64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-linux-x86_64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2067-linux-arm64.deb",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-linux-x86_64.rpm",
+          "name": "BPM-Escrime-3.0.0-dev.2067-linux-x86_64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-mac-arm64.dmg",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2067-linux-x86_64.rpm",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-mac-arm64.zip",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2067-mac-arm64.dmg",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-mac-x64.dmg",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2067-mac-arm64.zip",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-mac-x64.zip",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2067-mac-x64.dmg",
+          "downloads": 1
         },
         {
-          "name": "BellePoule-Modern-3.0.0-dev.2012-win-x64-portable.exe",
-          "downloads": 0
+          "name": "BPM-Escrime-3.0.0-dev.2067-mac-x64.zip",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2067-win-x64-portable.exe",
+          "downloads": 2
         }
       ]
     },
@@ -245,47 +245,47 @@
       "tag": "v2.0.0",
       "name": "🚀 BellePoule Modern 2.0.0 (Build #1964)",
       "published_at": "2026-11-20T07:01:22Z",
-      "total_downloads": 73,
+      "total_downloads": 98,
       "assets": [
         {
           "name": "BellePoule-Modern-2.0.0-linux-amd64.deb",
-          "downloads": 11
+          "downloads": 13
         },
         {
           "name": "BellePoule-Modern-2.0.0-linux-arm64.AppImage",
-          "downloads": 2
+          "downloads": 4
         },
         {
           "name": "BellePoule-Modern-2.0.0-linux-arm64.deb",
-          "downloads": 10
+          "downloads": 12
         },
         {
           "name": "BellePoule-Modern-2.0.0-linux-x86_64.AppImage",
-          "downloads": 2
+          "downloads": 4
         },
         {
           "name": "BellePoule-Modern-2.0.0-linux-x86_64.rpm",
-          "downloads": 11
+          "downloads": 13
         },
         {
           "name": "BellePoule-Modern-2.0.0-mac-arm64.dmg",
-          "downloads": 11
+          "downloads": 13
         },
         {
           "name": "BellePoule-Modern-2.0.0-mac-arm64.zip",
-          "downloads": 1
+          "downloads": 3
         },
         {
           "name": "BellePoule-Modern-2.0.0-mac-x64.dmg",
-          "downloads": 11
+          "downloads": 13
         },
         {
           "name": "BellePoule-Modern-2.0.0-mac-x64.zip",
-          "downloads": 1
+          "downloads": 3
         },
         {
           "name": "BellePoule-Modern-2.0.0-win-x64-portable.exe",
-          "downloads": 13
+          "downloads": 20
         }
       ]
     },
@@ -293,27 +293,27 @@
       "tag": "v1.2.0",
       "name": "🚀 BellePoule Modern 1.2.0 (Build #1446)",
       "published_at": "2026-10-22T07:52:34Z",
-      "total_downloads": 51,
+      "total_downloads": 56,
       "assets": [
         {
           "name": "BellePoule-Modern-1.2.0-linux-arm64.AppImage",
-          "downloads": 6
+          "downloads": 7
         },
         {
           "name": "BellePoule-Modern-1.2.0-linux-x86_64.AppImage",
-          "downloads": 11
+          "downloads": 12
         },
         {
           "name": "BellePoule-Modern-1.2.0-mac-arm64.dmg",
-          "downloads": 8
+          "downloads": 9
         },
         {
           "name": "BellePoule-Modern-1.2.0-mac-x64.dmg",
-          "downloads": 6
+          "downloads": 7
         },
         {
           "name": "BellePoule-Modern-1.2.0-win-x64-portable.exe",
-          "downloads": 20
+          "downloads": 21
         }
       ]
     },
@@ -321,27 +321,27 @@
       "tag": "v1.1.0",
       "name": "🚀 BellePoule Modern 1.1.0 (Build #1376)",
       "published_at": "2026-10-12T10:35:59Z",
-      "total_downloads": 14,
+      "total_downloads": 19,
       "assets": [
         {
           "name": "BellePoule-Modern-1.1.0-linux-arm64.AppImage",
-          "downloads": 2
+          "downloads": 3
         },
         {
           "name": "BellePoule-Modern-1.1.0-linux-x86_64.AppImage",
-          "downloads": 4
+          "downloads": 5
         },
         {
           "name": "BellePoule-Modern-1.1.0-mac-arm64.dmg",
-          "downloads": 3
+          "downloads": 4
         },
         {
           "name": "BellePoule-Modern-1.1.0-mac-x64.dmg",
-          "downloads": 2
+          "downloads": 3
         },
         {
           "name": "BellePoule-Modern-1.1.0-win-x64-portable.exe",
-          "downloads": 3
+          "downloads": 4
         }
       ]
     }
