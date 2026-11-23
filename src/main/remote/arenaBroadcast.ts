@@ -4,7 +4,6 @@
  * Licensed under GPL-3.0
  */
 import type { Arena, ArenaUpdate } from '../../shared/types/remote';
-import { getSharedMainWindow } from '../mainWindowRef';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
 import { needsLeftHandedSwap } from '../../shared/utils/handedness';
