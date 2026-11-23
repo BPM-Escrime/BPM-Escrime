@@ -9,6 +9,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { RoomItem } from '@shared/domain/arena/arenaPlanner';
+import type { ArenaDiscipline } from '@shared/domain/arena/arenaDisciplines';
 import { defaultItemColor, KIND_LABEL_KEY } from './ArenaPlanCanvas';
 
 /** Pastille : aplat (élément, zone), anneau pointillé (sécurité), traits (mise en garde), point (rôles) */
@@ -25,12 +26,29 @@ export interface LegendEntry {
 }
 
 /** Couleurs de arena-planner-modal.css (l'export n'a pas accès à la feuille de style) */
-const ARENA_ENTRIES: { key: string; swatch: LegendSwatch }[] = [
-  { key: 'legend_zone', swatch: { shape: 'fill', fill: '#fde047', stroke: '#dc2626' } },
-  { key: 'legend_safety', swatch: { shape: 'ring', stroke: '#2e7d32' } },
-  { key: 'legend_guard', swatch: { shape: 'lines', stroke: '#dc2626', stroke2: '#2e7d32' } },
-  { key: 'legend_roles', swatch: { shape: 'dot', fill: '#111827' } },
-];
+const ROLES: LegendSwatch = { shape: 'dot', fill: '#111827' };
+const GUARD: LegendSwatch = { shape: 'lines', stroke: '#dc2626', stroke2: '#2e7d32' };
+const SAFETY_RECT: LegendSwatch = { shape: 'fill', fill: '#ffffff', stroke: '#2e7d32' };
+const ARENA_ENTRIES: Record<ArenaDiscipline, { key: string; swatch: LegendSwatch }[]> = {
+  laser: [
+    { key: 'legend_zone', swatch: { shape: 'fill', fill: '#fde047', stroke: '#dc2626' } },
+    { key: 'legend_safety', swatch: { shape: 'ring', stroke: '#2e7d32' } },
+    { key: 'legend_guard', swatch: GUARD },
+    { key: 'legend_roles', swatch: ROLES },
+  ],
+  fencing: [
+    { key: 'legend_piste', swatch: { shape: 'fill', fill: '#bfdbfe', stroke: '#1e3a8a' } },
+    { key: 'legend_runoff', swatch: { shape: 'fill', fill: '#e5e7eb', stroke: '#1e3a8a' } },
+    { key: 'legend_piste_lines', swatch: GUARD },
+    { key: 'legend_piste_safety', swatch: SAFETY_RECT },
+    { key: 'legend_piste_roles', swatch: ROLES },
+  ],
+  artistic: [
+    { key: 'legend_stage', swatch: { shape: 'fill', fill: '#fde68a', stroke: '#92400e' } },
+    { key: 'legend_stage_safety', swatch: SAFETY_RECT },
+    { key: 'legend_stage_roles', swatch: ROLES },
+  ],
+};
 
 /** Libellé d'un élément dans la légende : zone, sinon texte (couleur libre), sinon type */
 const itemLegendLabel = (item: RoomItem, t: (k: string) => string): string => {
@@ -41,12 +59,18 @@ const itemLegendLabel = (item: RoomItem, t: (k: string) => string): string => {
 };
 
 /** Entrées de la légende : arène, puis une par couple (libellé, couleur) des éléments posés. */
-export const buildLegendEntries = (items: RoomItem[], t: (k: string) => string): LegendEntry[] => {
-  const entries: LegendEntry[] = ARENA_ENTRIES.map(e => ({
-    key: e.key,
-    label: t(`arenaPlanner.${e.key}`),
-    swatch: e.swatch,
-  }));
+export const buildLegendEntries = (
+  items: RoomItem[],
+  t: (k: string) => string,
+  disciplines: ArenaDiscipline[] = ['laser']
+): LegendEntry[] => {
+  const entries: LegendEntry[] = [...new Set(disciplines)].flatMap(d =>
+    ARENA_ENTRIES[d].map(e => ({
+      key: `${d}:${e.key}`,
+      label: t(`arenaPlanner.${e.key}`),
+      swatch: e.swatch,
+    }))
+  );
   const seen = new Set<string>();
   for (const item of items) {
     const fill = item.color ?? defaultItemColor(item);

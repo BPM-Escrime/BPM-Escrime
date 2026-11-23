@@ -185,6 +185,24 @@ describe('ArenaPlannerModal', () => {
     expect(screen.getByLabelText('arenaPlanner.legend_pdf')).toBeChecked();
   });
 
+  it('passe en escrime (pistes) puis en escrime artistique (scènes), légende adaptée', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    expect(document.querySelectorAll('.arena-planner-piste')).toHaveLength(0);
+    fireEvent.change(screen.getByLabelText('arenaPlanner.discipline'), {
+      target: { value: 'fencing' },
+    });
+    expect(document.querySelectorAll('.arena-planner-piste')).toHaveLength(1);
+    expect(screen.getByLabelText('arenaPlanner.arenas_fencing')).toBeTruthy();
+    expect(screen.getByText('arenaPlanner.legend_piste')).toBeTruthy();
+    expect(screen.queryByText('arenaPlanner.legend_zone')).toBeNull();
+    fireEvent.change(screen.getByLabelText('arenaPlanner.discipline'), {
+      target: { value: 'artistic' },
+    });
+    expect(document.querySelectorAll('.arena-planner-piste')).toHaveLength(0);
+    expect(document.querySelectorAll('.arena-planner-stage')).toHaveLength(1);
+    expect(screen.getByText('arenaPlanner.legend_stage_roles')).toBeTruthy();
+  });
+
   it('modifie le texte affiché sur une table, sur plusieurs lignes', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
     addKind('table');

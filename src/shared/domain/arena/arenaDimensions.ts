@@ -6,7 +6,13 @@
  * Licensed under GPL-3.0
  */
 
-import { ARENA_SAFETY_RADIUS_M, type Point, type RoomItem, type RoomSize } from './arenaPlanner';
+import {
+  LASER_FOOTPRINT,
+  type ArenaFootprint,
+  type Point,
+  type RoomItem,
+  type RoomSize,
+} from './arenaPlanner';
 
 /** Ligne de cote : h = horizontale (de x=from à x=to, à y=at), v = verticale (de y=from à y=to, à x=at) */
 export interface DimensionLine {
@@ -33,8 +39,9 @@ export interface TechnicalDimensions {
 
 /** Décalage des cotes par rapport aux bords (en mètres) */
 const ROOM_OFFSET_M = 1.3;
-const ARENA_OFFSET_M = ARENA_SAFETY_RADIUS_M + 0.8;
-const SPACING_OFFSET_M = ARENA_SAFETY_RADIUS_M + 1.5;
+/** Cotes d'arène et d'espacement : 0,8 m et 1,5 m au-delà de l'emprise de sécurité */
+const ARENA_GAP_M = 0.8;
+const SPACING_GAP_M = 1.5;
 const ALIGN_EPS = 1e-6;
 
 const label = (m: number) => `${Math.round(m * 100) / 100} m`;
@@ -43,7 +50,8 @@ const label = (m: number) => `${Math.round(m * 100) / 100} m`;
 export function technicalDimensions(
   room: RoomSize,
   centers: Point[],
-  items: RoomItem[]
+  items: RoomItem[],
+  fp: ArenaFootprint = LASER_FOOTPRINT
 ): TechnicalDimensions {
   const lines: DimensionLine[] = [];
   const texts: DimensionText[] = [];
@@ -71,14 +79,14 @@ export function technicalDimensions(
       orientation: 'h',
       from: 0,
       to: c.x,
-      at: c.y + ARENA_OFFSET_M,
+      at: c.y + fp.halfY + ARENA_GAP_M,
       label: label(c.x),
     });
     lines.push({
       orientation: 'v',
       from: 0,
       to: c.y,
-      at: c.x - ARENA_OFFSET_M,
+      at: c.x - fp.halfX - ARENA_GAP_M,
       label: label(c.y),
     });
   });
@@ -97,7 +105,7 @@ export function technicalDimensions(
         orientation: 'h',
         from: a.x,
         to: n.x,
-        at: a.y - SPACING_OFFSET_M,
+        at: a.y - fp.halfY - SPACING_GAP_M,
         label: label(n.x - a.x),
       });
     }
@@ -107,7 +115,7 @@ export function technicalDimensions(
         orientation: 'v',
         from: a.y,
         to: n.y,
-        at: a.x + SPACING_OFFSET_M,
+        at: a.x + fp.halfX + SPACING_GAP_M,
         label: label(n.y - a.y),
       });
     }
