@@ -60,7 +60,7 @@ const FAULT_REASONS = [
 
 // Olympique (épée, fleuret, sabre) : pas de carton blanc (#1026). key traduite, fr enregistré (#1213).
 // Groupes et motifs du tableau t.170 du règlement technique FIE, numérotation FIE portée sur la
-// feuille (t.163) ; reason = CardReason du domaine (src/shared/utils/cardSystem.ts), parité testée
+// feuille (t.163) ; reason = CardReason du domaine (src/shared/domain/penalties/cards.ts), parité testée
 // (#2207). Le 4e groupe (noir direct) passe par le bouton N. weapons : motif propre à ces armes.
 const FAULT_REASONS_OLYMPIC = [
   {

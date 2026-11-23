@@ -59,6 +59,8 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `fencer_not_in_pool` | not_found | Tireur absent de cette poule |
 | `split_group_not_found` | not_found | Groupe de tableaux séparés inconnu ou extrait |
 | `team_not_found` | not_found | Équipe introuvable dans l’épreuve |
+| `team_not_in_match` | not_found | Équipe étrangère à cette rencontre |
+| `relay_not_found` | not_found | Relais inconnu dans cette rencontre |
 | `withdrawal_not_found` | not_found | Aucun retrait à annuler pour ce tireur |
 | `dir_not_found` | not_found | Dossier introuvable |
 | `venue_not_found` | not_found | Salle introuvable |
@@ -102,6 +104,7 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `invalid_composition` | rule | Composition invalide |
 | `team_incomplete` | rule | Équipe sans tous ses titulaires au tirage |
 | `relay_out_of_order` | rule | Relais hors ordre : précédents non terminés ou déjà terminé |
+| `match_finished` | rule | Rencontre terminée : carton refusé |
 | `no_reserve` | rule | Équipe sans remplaçant |
 | `reserve_used` | rule | Remplaçant déjà entré dans la rencontre |
 | `no_later_relay` | rule | Plus aucun relais à tirer pour ce tireur dans la rencontre |

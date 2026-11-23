@@ -5,7 +5,8 @@
  */
 import type { Socket } from 'socket.io';
 import { CardReason } from '../../shared/types';
-import { createCard, getAvailableReasons } from '../../shared/utils/cardSystem';
+import { randomUUID } from 'crypto';
+import { buildCard, getAvailableReasons } from '../../shared/domain/penalties/cards';
 import { normalizeIp, isLoopbackAddress } from './network';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { logger, LogCategory } from '../../shared/services/logger';
@@ -415,7 +416,15 @@ export function setupSocketHandlers(ctx: SocketHandlersContext): void {
           .getTeamBoutCards(state.matchId)
           .map(c => c.card)
           .filter(c => c.fencerId === fencerId);
-        const card = createCard(state.matchId, fencerId, data.reason, previous, state.weapon);
+        const card = buildCard({
+          id: randomUUID(),
+          at: new Date(),
+          matchId: state.matchId,
+          fencerId,
+          reason: data.reason,
+          previousCards: previous,
+          weapon: state.weapon,
+        });
         ctx.db.createTeamBoutCard(bout.id, card);
         state.fencerCards.push({
           id: card.id,
