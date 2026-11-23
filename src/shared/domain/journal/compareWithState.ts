@@ -34,7 +34,9 @@ export type DivergenceKind =
   | 'team_pool'
   | 'team_match_missing'
   | 'team_match'
-  | 'team_match_unexpected';
+  | 'team_match_unexpected'
+  | 'team_relay'
+  | 'team_match_result';
 
 export interface Divergence {
   kind: DivergenceKind;
@@ -57,7 +59,19 @@ export interface TeamStateView {
     pool: number | null;
     round: number | null;
     position: number | null;
-    relays: Array<{ id: string; order: number; fencerAId: string; fencerBId: string }>;
+    /** Rencontre terminée et son vainqueur (lot E2) */
+    finished: boolean;
+    winnerId: string | null;
+    relays: Array<{
+      id: string;
+      order: number;
+      fencerAId: string;
+      fencerBId: string;
+      /** Score du relais (le fait) ; comparé quand le relais est terminé */
+      scoreA: number;
+      scoreB: number;
+      finished: boolean;
+    }>;
   }>;
 }
 
@@ -321,6 +335,7 @@ function compareTeams(
       m.relays.map(r => r.id)
     );
     if (!same(expected, actual)) out.push({ kind: 'team_match', id: mf.matchId, expected, actual });
+    compareTeamResults(fact!, mf.matchId, m, out);
   }
   // Journal complet : toute rencontre des tables vient du journal
   if (complete) {
@@ -328,6 +343,37 @@ function compareTeams(
     for (const m of state.matches) {
       if (!known.has(m.id)) out.push({ kind: 'team_match_unexpected', id: m.id });
     }
+  }
+}
+
+/**
+ * Résultats d'une rencontre du journal (lot E2) : relais terminés et leur score, rencontre
+ * terminée et son vainqueur. Un relais en cours (touches de l'arène ou de l'écran) n'est pas un
+ * fait : seul son statut « non terminé » est comparé.
+ */
+function compareTeamResults(
+  fact: TeamsFact,
+  matchId: string,
+  m: TeamStateView['matches'][number],
+  out: Divergence[]
+): void {
+  for (const r of m.relays) {
+    const result = fact.relayResults[r.id];
+    const expected = result
+      ? { finished: true, scoreA: result.scoreA, scoreB: result.scoreB }
+      : { finished: false };
+    const actual = r.finished
+      ? { finished: true, scoreA: r.scoreA, scoreB: r.scoreB }
+      : { finished: false };
+    if (!same(expected, actual)) out.push({ kind: 'team_relay', id: r.id, expected, actual });
+  }
+  const expected =
+    matchId in fact.decisions
+      ? { finished: true, winnerId: fact.decisions[matchId] }
+      : { finished: false, winnerId: null };
+  const actual = { finished: m.finished, winnerId: m.finished ? m.winnerId : null };
+  if (!same(expected, actual)) {
+    out.push({ kind: 'team_match_result', id: matchId, expected, actual });
   }
 }
 

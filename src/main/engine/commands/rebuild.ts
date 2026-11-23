@@ -40,10 +40,10 @@ import {
   stateView,
   type Divergence,
 } from '../../../shared/domain/journal/compareWithState';
-import type { StoredJournalEvent } from '../../../database/repos/eventLogRepo';
 import type { CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { readSession } from './sessionView';
+import { readJournal } from './eventLog';
 import { teamStateView } from './teams';
 import {
   allTableauxDone,
@@ -64,17 +64,8 @@ import {
   writeSession,
 } from './sport';
 
-const PAGE = 1000;
-
-/** Journal complet de l'épreuve, par pages */
-export function readJournal(ctx: CommandContext, competitionId: string): StoredJournalEvent[] {
-  const all: StoredJournalEvent[] = [];
-  for (;;) {
-    const page = ctx.db.eventLog.getSince(competitionId, all[all.length - 1]?.revision ?? 0, PAGE);
-    all.push(...page);
-    if (page.length < PAGE) return all;
-  }
-}
+/** Journal complet de l'épreuve, par pages (eventLog) */
+export { readJournal };
 
 function statusesOf(ctx: CommandContext, competitionId: string): Record<string, string> {
   return Object.fromEntries(

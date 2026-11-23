@@ -100,7 +100,7 @@ const TeamSchema = z.object({ id: z.string(), name: z.string(), club: z.string()
 
 // ─── Opérations ─────────────────────────────────────────────────────────────
 
-export const teamOperations = {
+export const teamSetupOperations = {
   registerTeam: command({
     description:
       'Épreuve par équipes : inscrit une équipe (nom, club ; club = nom par défaut). Inscription (docs/adr/0018), sans journal. ' +
@@ -205,3 +205,142 @@ export const teamOperations = {
     },
   }),
 };
+
+// ─── Relais et tableau d'équipes (lot E2) ───────────────────────────────────
+
+const MatchId = Id.describe('Identifiant de la rencontre (getCompetitionState, bloc « teams »)');
+const TeamSide = z.enum(['A', 'B']);
+
+export const teamRelayOperations = {
+  generateTeamTableau: command({
+    description:
+      'Épreuve par équipes : tire le tableau d’équipes sur le classement de poule (arène Sabre Laser : évitement de revanche au premier tour, 5↔6 et 7↔8) et crée les rencontres dont les deux équipes sont connues, avec leurs relais. ' +
+      'Tour = nombre de rencontres du tour (taille / 2 au premier, 1 en finale) ; identifiants `${competitionId}-t${tour}-${position}`. ' +
+      'Refus : épreuve individuelle (unsupported_format), moins de 2 équipes (invalid_composition), titulaires manquants (team_incomplete), rencontres de poule non terminées (pools_not_complete), tableau déjà créé sans « replace » (bracket_exists), relais du tableau déjà joués (bracket_has_scores). ' +
+      'Journal : TeamTableauGenerated, puis un TeamMatchScheduled par rencontre.',
+    input: z.object({
+      competitionId: CompetitionId,
+      replace: z
+        .boolean()
+        .optional()
+        .describe('Remplacer un tableau d’équipes dont aucun relais n’est joué'),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      size: z.number().int(),
+      slots: z.array(
+        z.object({
+          round: z.number().int(),
+          position: z.number().int(),
+          teamAId: z.string().nullable(),
+          teamBId: z.string().nullable(),
+          isBye: z.boolean(),
+        })
+      ),
+      matchIds: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'score:write',
+    mcp: {
+      name: 'generate_team_tableau',
+      title: 'Tirer le tableau d’équipes',
+      destructive: true,
+    },
+  }),
+
+  recordRelayScore: command({
+    description:
+      'Épreuve par équipes : enregistre le score d’un relais (le score du relais, pas le cumul) et le termine. Le cumul, le vainqueur du relais et celui de la rencontre se calculent. ' +
+      'Dernier relais : rencontre terminée ; égalité au tableau → « winner » requis (minute avec priorité), en poule → égalité. Au tableau, la rencontre suivante est créée dès que ses deux équipes sont connues. ' +
+      'Refus : rencontre inconnue (match_not_found), relais déjà terminé ou précédents non terminés (relay_out_of_order), cumul au-delà du palier du relais FIE ou assaut au-delà de 5 en arène (score_above_max), égalité sans vainqueur au tableau (draw_needs_winner), vainqueur contraire au score (winner_contradicts_score). ' +
+      'Journal : RelayScoreRecorded, puis TeamMatchDecided et TeamMatchScheduled selon le cas.',
+    input: z.object({
+      competitionId: CompetitionId,
+      matchId: MatchId,
+      relay: z.number().int().min(1).describe('Ordre du relais dans la rencontre (dès 1)'),
+      scoreA: z.number().int().min(0).describe('Touches de l’équipe A dans ce relais'),
+      scoreB: z.number().int().min(0).describe('Touches de l’équipe B dans ce relais'),
+      winner: TeamSide.optional().describe(
+        'Vainqueur de la rencontre en cas d’égalité au dernier relais (minute avec priorité)'
+      ),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      matchId: z.string(),
+      relayId: z.string(),
+      /** Cumul de la rencontre après ce relais */
+      scoreA: z.number().int(),
+      scoreB: z.number().int(),
+      matchFinished: z.boolean(),
+      winnerTeamId: z.string().nullable(),
+      /** Rencontres du tableau créées à la suite */
+      scheduledMatchIds: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'score:write',
+    mcp: { name: 'record_relay_score', title: 'Saisir le score d’un relais' },
+  }),
+
+  reopenRelay: command({
+    description:
+      'Épreuve par équipes : rouvre le dernier relais terminé d’une rencontre pour correction (son score est gardé comme score en cours). La rencontre repasse en cours ; au tableau, la rencontre suivante pas encore commencée est retirée. ' +
+      'Refus : rencontre inconnue (match_not_found), aucun relais terminé (relay_out_of_order), rencontre suivante du tableau commencée (next_match_played). ' +
+      'Journal : RelayReopened.',
+    input: z.object({
+      competitionId: CompetitionId,
+      matchId: MatchId,
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      matchId: z.string(),
+      relayId: z.string(),
+      relay: z.number().int(),
+      /** Score du relais rouvert, repris comme score en cours */
+      scoreA: z.number().int(),
+      scoreB: z.number().int(),
+      removedMatchIds: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'score:write',
+    mcp: { name: 'reopen_relay', title: 'Rouvrir le dernier relais', destructive: true },
+  }),
+
+  substituteTeamFencer: command({
+    description:
+      'Épreuve par équipes : le remplaçant de l’équipe prend la place du tireur sortant dans les relais non terminés de la rencontre (o.99.5, o.99.6). Un seul remplaçant par équipe et par rencontre. ' +
+      'Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). ' +
+      'Journal : TeamFencerSubstituted.',
+    input: z.object({
+      competitionId: CompetitionId,
+      matchId: MatchId,
+      teamId: Id.describe('Équipe du tireur sortant'),
+      outFencerId: Id.describe('Tireur sortant'),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      matchId: z.string(),
+      teamId: z.string(),
+      outFencerId: z.string(),
+      inFencerId: z.string(),
+      relayIds: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'score:write',
+    mcp: { name: 'substitute_team_fencer', title: 'Faire entrer le remplaçant' },
+  }),
+};
+
+/** Opérations des épreuves par équipes : inscription, poules (E1), relais et tableau (E2) */
+export const teamOperations = { ...teamSetupOperations, ...teamRelayOperations };

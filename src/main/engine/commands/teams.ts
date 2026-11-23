@@ -11,7 +11,7 @@
  */
 import type { z } from 'zod';
 import type { Competition } from '../../../shared/types';
-import type { teamOperations, TeamsStateDTO } from '../../../shared/api/contractTeams';
+import type { teamSetupOperations, TeamsStateDTO } from '../../../shared/api/contractTeams';
 import type { TeamMatchRow, TeamRow } from '../../../shared/domain/teams/team.types';
 import type { TeamStateView } from '../../../shared/domain/journal/compareWithState';
 import {
@@ -27,14 +27,14 @@ import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { EVENT, recordEvents } from './eventLog';
 
-type Ops = typeof teamOperations;
+type Ops = typeof teamSetupOperations;
 export type TeamsHandler<N extends keyof Ops> = (
   ctx: CommandContext,
   input: z.output<Ops[N]['input']>
 ) => z.output<Ops[N]['output']>;
 
 /** Épreuve par équipes, sinon refus */
-function teamCompetitionOrThrow(ctx: CommandContext, competitionId: string): Competition {
+export function teamCompetitionOrThrow(ctx: CommandContext, competitionId: string): Competition {
   const comp = getCompetitionOrThrow(ctx, competitionId);
   if (!comp.isTeamEvent) {
     throw new CommandError(
@@ -64,7 +64,7 @@ function assertBeforeDraw(ctx: CommandContext, competitionId: string): void {
 }
 
 /** L'écran relit l'état de l'épreuve, dont le bloc « teams » */
-const changed = (ctx: CommandContext, competitionId: string) =>
+export const changed = (ctx: CommandContext, competitionId: string) =>
   ctx.emitChange?.({ scope: 'session', competitionIds: [competitionId] });
 
 // ─── Inscription (sans journal, docs/adr/0018) ──────────────────────────────
@@ -322,11 +322,16 @@ export function teamStateView(ctx: CommandContext, comp: Competition): TeamState
       pool: m.poolNumber,
       round: m.round,
       position: m.position,
+      finished: m.status === 'finished',
+      winnerId: m.winnerId,
       relays: m.bouts.map(b => ({
         id: b.id,
         order: b.boutOrder,
         fencerAId: b.fencerAId,
         fencerBId: b.fencerBId,
+        scoreA: b.scoreA,
+        scoreB: b.scoreB,
+        finished: b.status === 'finished',
       })),
     })),
   };

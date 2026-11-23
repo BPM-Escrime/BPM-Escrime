@@ -9,6 +9,7 @@
 import { JOURNAL_EVENT, type JournalEventBody } from '../../api/events';
 import { FencerStatus } from '../../types';
 import { WITHDRAWAL_STATUS } from '../fencers/withdrawal';
+import { projectTeamEvent } from './projectTeams';
 
 /**
  * Résultat d'un match selon le journal. Les scores ne sont connus que pour un score saisi sans
@@ -77,6 +78,20 @@ export interface TeamsFact {
   pools: Array<{ number: number; teamIds: string[] }>;
   /** Rencontres, dans l'ordre du journal */
   matches: TeamMatchFact[];
+  /** Tableau tiré (TeamTableauGenerated, lot E2) ; null : pas de tableau au journal */
+  tableau: { size: number; slots: TeamTableauSlotFact[] } | null;
+  /** Score de chaque relais terminé (le fait), par relais */
+  relayResults: Record<string, { matchId: string; scoreA: number; scoreB: number }>;
+  /** Rencontres terminées : vainqueur (null : égalité en poule), par rencontre */
+  decisions: Record<string, string | null>;
+}
+
+export interface TeamTableauSlotFact {
+  round: number;
+  position: number;
+  teamAId: string | null;
+  teamBId: string | null;
+  isBye: boolean;
 }
 
 export interface CompetitionFacts {
@@ -130,6 +145,7 @@ const FACT_EVENTS: ReadonlySet<string> = new Set([
   JOURNAL_EVENT.splitRankingImported,
   JOURNAL_EVENT.tableauGenerated,
   JOURNAL_EVENT.teamPoolsGenerated,
+  JOURNAL_EVENT.teamTableauGenerated,
 ]);
 const CHECK_IN_EVENTS: ReadonlySet<string> = new Set([
   JOURNAL_EVENT.fencerCheckedIn,
@@ -365,22 +381,16 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
         };
         break;
       }
+      // Épreuves par équipes (docs/adr/0024) : rejeu propre aux rencontres et aux relais
       case JOURNAL_EVENT.teamPoolsGenerated:
-        // Nouveau tirage : il remplace les poules et leurs rencontres
-        facts.teams = {
-          pools: event.payload.pools.map(p => ({ number: p.number, teamIds: [...p.teamIds] })),
-          matches: (facts.teams?.matches ?? []).filter(m => m.pool === null),
-        };
+      case JOURNAL_EVENT.teamMatchScheduled:
+      case JOURNAL_EVENT.teamTableauGenerated:
+      case JOURNAL_EVENT.relayScoreRecorded:
+      case JOURNAL_EVENT.relayReopened:
+      case JOURNAL_EVENT.teamMatchDecided:
+      case JOURNAL_EVENT.teamFencerSubstituted:
+        facts.teams = projectTeamEvent(facts.teams, event);
         break;
-      case JOURNAL_EVENT.teamMatchScheduled: {
-        const p = event.payload;
-        const teams = (facts.teams ??= { pools: [], matches: [] });
-        teams.matches = [
-          ...teams.matches.filter(m => m.matchId !== p.matchId),
-          { ...p, relays: p.relays.map(r => ({ ...r })) },
-        ];
-        break;
-      }
       case JOURNAL_EVENT.rapieresWaveLaunched:
         facts.rapieres = { ended: false, ...facts.rapieres, wave: event.payload.wave };
         break;

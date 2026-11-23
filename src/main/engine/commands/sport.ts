@@ -513,7 +513,13 @@ export interface RecordScoreInput {
 export function recordScore(ctx: CommandContext, competitionId: string, input: RecordScoreInput) {
   const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
-  assertScoreSupported(comp);
+  // Épreuve par équipes : le relais a sa commande (docs/adr/0024)
+  if (comp.isTeamEvent) {
+    throw new CommandError(
+      'unsupported_format',
+      'Épreuve par équipes : score d’un relais par recordRelayScore'
+    );
+  }
   const pools = sessionPools(session);
   const poolIndex = pools.findIndex(p => p.matches?.some(m => m.id === input.matchId));
   if (poolIndex >= 0) return recordPoolScore(ctx, comp, session, pools, poolIndex, input);
@@ -884,6 +890,13 @@ export function buildBracket(
 ) {
   const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
+  // Épreuve par équipes : le tableau d'équipes a sa commande (docs/adr/0024)
+  if (comp.isTeamEvent) {
+    throw new CommandError(
+      'unsupported_format',
+      'Épreuve par équipes : tableau d’équipes par generateTeamTableau'
+    );
+  }
   if (options.composition) assertScoreSupported(comp);
   else assertSupported(comp, session);
   const group = assertTableauGroup(comp, session, options.group);
