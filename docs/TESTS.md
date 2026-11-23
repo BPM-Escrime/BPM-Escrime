@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 272 |
-| `src/main/` | 141 | 1201 |
+| `src/main/` | 142 | 1210 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 126 | 680 |
+| `src/renderer/components/` | 127 | 682 |
 | E2E Playwright (`e2e/`) | 17 | 48 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 32 | 338 |
+| `src/shared/domain/` | 33 | 356 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **582** | **4473** |
+| **Total** | **585** | **4502** |
 
-Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 568 fichiers, 4454 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3637,6 +3637,21 @@ Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/teams.test.ts</code> — 9 tests</summary>
+
+- inscrit, compose et supprime sans journal
+- refus : épreuve individuelle, équipe inconnue, tireur d’une autre épreuve ou d’une autre équipe
+- relais FIE : poule unique, rencontres et relais déterministes, journal, rejeu sans écart
+- composition figée après le tirage ; nouveau tirage par « replace » tant qu’aucun relais n’est joué
+- arène Sabre Laser : calendrier figé de 8 équipes, plafond 5 ; refus hors 8 ou 12
+- refus : titulaires manquants, moins de 2 équipes, épreuve individuelle ; generatePools nomme la commande d’équipe
+- écarts : relais retiré ou rencontre hors journal signalés
+- outil MCP generate\_team\_pools (écriture sportive)
+- rencontres de l’écran (UUID) lues dans le bloc « teams », journal incomplet sans écart
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/training.test.ts</code> — 15 tests</summary>
 
 - **serveur d’entraînement**
@@ -5954,6 +5969,14 @@ Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage stat
 
 - deux groupes tirés et joués, changement d’onglet, rechargement : les deux tableaux restent
 - groupe des femmes extrait en épreuve séparée par la commande (lot A3)
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/CompetitionViewTeams.test.tsx</code> — 2 tests</summary>
+
+- épreuve neuve : pas d’état du moteur avant l’ouverture ; l’écran écrit son bloc
+- rechargement après composition et poule de l’écran : tout est retrouvé, rien n’est réécrit
 
 </details>
 
@@ -8735,7 +8758,7 @@ Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 52 tests</summary>
+<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 54 tests</summary>
 
 - **computeArenaGeometry**
   - place les lignes de mise en garde à 2 m du centre, soit 4 m entre elles
@@ -8800,6 +8823,9 @@ Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage stat
   - place libre : inchangé
   - place occupée : décalé à côté, sans chevauchement
   - zone de sécurité d’une arène évitée
+- **ROOM\_ZONES**
+  - donne à chaque zone son type (couleur sur le plan), emprise évitée par les arènes
+  - laisse sans type de zone un équipement du catalogue
 
 </details>
 
@@ -8844,7 +8870,7 @@ Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 11 tests</summary>
+<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 12 tests</summary>
 
 - **projectCompetition**
   - journal complet seulement s’il commence (après l’appel) par un tirage
@@ -8859,6 +8885,8 @@ Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage stat
   - nouveau tirage des poules : tous les tableaux retirés
   - groupe extrait (lot A3) : noté, plus de tableau pour lui ici
   - épreuve séparée : journal complet dès le classement importé
+- **projectCompetition : épreuves par équipes (docs/adr/0024, lot E1)**
+  - poules d’équipes et rencontres ; journal complet ; nouveau tirage remplace les rencontres de poule
 
 </details>
 
@@ -9268,6 +9296,32 @@ Unitaires : 565 fichiers, 4425 tests. E2E : 17 fichiers, 48 tests (comptage stat
   - chaque équipe rencontre toutes les autres de sa poule exactement une fois
 - **resolveLaserArenaSchedule — 8 équipes**
   - génère exactement 6 rencontres par poule pour 2 poules de 4
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/teams/relay.test.ts</code> — 15 tests</summary>
+
+- **relay : identifiants déterministes (docs/adr/0024)**
+  - rencontre de poule, de tableau, relais
+- **relay : titulaires et ordre des relais**
+  - titulaires triés par teamOrder, remplaçant exclu
+  - ordre FIE à 3 titulaires en épée : 3-6, 1-5, 2-4, 1-6, 3-4, 2-5, 1-4, 2-6, 3-5
+  - Sabre Laser : ordre diagonal, N² relais
+  - titulaires manquants : pas de relais
+  - score maximal d’un relais : palier FIE, plafond de l’arène
+- **relay : tirage des poules d’équipes**
+  - relais FIE : poule unique tous contre tous, identifiants déterministes
+  - arène Sabre Laser : calendrier figé de 8 équipes, deux poules
+  - refus : moins de 2 équipes, arène hors 8 ou 12, titulaires manquants
+- **relay : score du relais, cumul, ordre, issue**
+  - cumul calculé à partir du score de chaque relais
+  - palier : min(ordre × pas, cible) en FIE, plafond de l’assaut en arène
+  - un relais ne s’enregistre que si les précédents sont terminés
+  - fin de rencontre : tous les relais terminés ; égalité tranchée par l’appelant
+- **relay : remplaçant (o.99.5, o.99.6)**
+  - prend la place du sortant dans les relais non tirés
+  - refus : sans remplaçant, remplaçant déjà utilisé, plus de relais, absent
 
 </details>
 
