@@ -3,7 +3,13 @@
  * État d'interface du poste (docs/adr/0017) : stockage tolérant, onglet borné par la phase.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { readPosteUiState, tabToRestore, writePosteUiState } from './posteUiState';
+import {
+  readPoolDraft,
+  readPosteUiState,
+  tabToRestore,
+  writePoolDraft,
+  writePosteUiState,
+} from './posteUiState';
 import type { Phase } from './useCompetitionSession';
 
 const ORDER: Record<string, number> = {
@@ -37,5 +43,21 @@ describe('posteUiState', () => {
     expect(tabToRestore('tableau', 'pools', order)).toBe('pools');
     expect(tabToRestore('remote', 'checkin', order)).toBe('remote');
     expect(tabToRestore(undefined, 'ranking', order)).toBe('ranking');
+  });
+
+  it('épreuve par équipes : onglets jamais verrouillés, rouverts tels quels (lot N)', () => {
+    expect(tabToRestore('teams', 'checkin', order)).toBe('teams');
+    expect(tabToRestore('teamranking', 'checkin', order)).toBe('teamranking');
+  });
+
+  it('tirage non lancé gardé par le poste, effacé au lancement ; stockage illisible : rien', () => {
+    expect(readPoolDraft('c1')).toBeNull();
+    writePoolDraft('c1', [{ id: 'p1' }]);
+    expect(readPoolDraft('c1')).toEqual([{ id: 'p1' }]);
+    expect(readPoolDraft('c2')).toBeNull();
+    writePoolDraft('c1', null);
+    expect(readPoolDraft('c1')).toBeNull();
+    localStorage.setItem('bellepoule-pooldraft-c1', '{oops');
+    expect(readPoolDraft('c1')).toBeNull();
   });
 });

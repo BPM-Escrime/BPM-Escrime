@@ -55,6 +55,7 @@ import RankingPhase from './competition/RankingPhase';
 import { rankingTableauNavAction } from './competition/competitionDerived';
 import { useBpmClient } from '../api/BpmClientContext';
 import { persistCompetitionUpdate } from '../api/competitionUpdate';
+import { writePoolDraft } from '../hooks/posteUiState';
 
 const RemoteScoreManager = React.lazy(() => import('./RemoteScoreManager'));
 const MatchAuditLog = React.lazy(() =>
@@ -151,7 +152,6 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     resetRapieresWaves,
     setPools,
     setSkipPoolPhase,
-    persistPoolsToDB,
     handleSkipToRanking,
     setPoolPrepLaunch,
     setMinFencersPerPool,
@@ -457,6 +457,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
               // poules, vagues des rapières et phase relues dans l'état de l'épreuve
               const outcome = await launchPools(confirmedPools);
               if (outcome === 'refused') return;
+              // Tirage lancé : la préparation gardée par le poste n'a plus lieu d'être
+              writePoolDraft(competition.id, null);
               setRelaunchPending(false);
               setPoolPrepDraft(null);
               if (outcome === 'recorded') {
@@ -468,9 +470,6 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
               setPools(confirmedPools);
               setSkipPoolPhase(false);
               setCurrentPhase('pools');
-              // Format hors moteur (équipes, #2100) : poules et pistes écrites par l'écran pour
-              // que les saisies (tablette, UI) alimentent l'historique (#907)
-              await persistPoolsToDB(confirmedPools);
             }}
             onSkipPools={handleSkipToRanking}
             onLaunchActionChange={setPoolPrepLaunch}

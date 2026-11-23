@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Fencer, Pool, PoolSnapshot } from '../../shared/types';
+import { Fencer, Pool } from '../../shared/types';
 import { addFencerToPool } from '../../shared/domain/pools/poolComposition';
 import type { RecordScoreOutcome } from './tableau/tableauViewShared';
 import { logger, LogCategory } from '@shared/services/logger';
@@ -27,7 +27,7 @@ interface AddFencerToPoolModalProps {
   assignedFencerIds?: ReadonlySet<string>;
   onConfirm: (updatedPool: Pool) => void;
   onClose: () => void;
-  /** Ajout par la commande addPoolFencer (docs/adr/0017) ; « local » : ajout historique */
+  /** Ajout par la commande addPoolFencer (docs/adr/0017) ; « local » : moteur absent */
   onAddByCommand?: (fencerId: string) => Promise<RecordScoreOutcome>;
 }
 
@@ -42,21 +42,6 @@ export function buildPoolWithAddedFencer(pool: Pool, fencer: Fencer, maxScore: n
     newId: () => crypto.randomUUID(),
     now: new Date(),
   });
-}
-
-function toSnapshot(pool: Pool): PoolSnapshot {
-  return {
-    id: pool.id,
-    number: pool.number,
-    fencerIds: pool.fencers.map(f => f.id),
-    matches: pool.matches.map(m => ({
-      id: m.id,
-      number: m.number,
-      fencerAId: m.fencerA?.id ?? null,
-      fencerBId: m.fencerB?.id ?? null,
-      maxScore: m.maxScore,
-    })),
-  };
 }
 
 const AddFencerToPoolModalComponent: React.FC<AddFencerToPoolModalProps> = ({
@@ -112,15 +97,8 @@ const AddFencerToPoolModalComponent: React.FC<AddFencerToPoolModalProps> = ({
         if (outcome === 'recorded') return onClose();
         if (outcome === 'refused') return;
       }
-      const updatedPool = buildPoolWithAddedFencer(pool, selectedFencer, maxScore);
-      // Synchro DB auto-réparante (crée poule/lignes manquantes) : non bloquante
-      try {
-        await window.electronAPI.db.syncPoolSnapshot(competitionId, toSnapshot(updatedPool));
-      } catch (err) {
-        logger.error(LogCategory.DATABASE, 'syncPoolSnapshot failed', err as Error);
-        showToast(t('addFencerPool.sync_failed'), 'warning');
-      }
-      onConfirm(updatedPool);
+      // Moteur absent (hors Electron) : ajout à l'affichage seulement, rien d'écrit
+      onConfirm(buildPoolWithAddedFencer(pool, selectedFencer, maxScore));
     } catch (err) {
       showToast(
         t('addFencerPool.add_error', {

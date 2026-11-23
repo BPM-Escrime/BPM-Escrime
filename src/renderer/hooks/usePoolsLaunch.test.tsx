@@ -32,9 +32,8 @@ const pools = [
 ] as unknown as Pool[];
 
 let call: ReturnType<typeof vi.fn>;
-const flush = vi.fn(async () => {});
 const setup = () =>
-  renderHook(() => usePoolsLaunch('c1', flush), {
+  renderHook(() => usePoolsLaunch('c1'), {
     wrapper: ({ children }) => (
       <BpmClientProvider client={{ call } as unknown as BpmClient}>{children}</BpmClientProvider>
     ),
@@ -65,7 +64,6 @@ describe('usePoolsLaunch', () => {
       composition: poolComposition(pools),
       replace: true,
     });
-    expect(flush).toHaveBeenCalled();
   });
 
   it('hors moteur : local ; refus : message', async () => {
@@ -79,7 +77,7 @@ describe('usePoolsLaunch', () => {
 
 describe('useRapieresWaves', () => {
   const waves = () =>
-    renderHook(() => useRapieresWaves('c1', flush), {
+    renderHook(() => useRapieresWaves('c1'), {
       wrapper: ({ children }) => (
         <BpmClientProvider client={{ call } as unknown as BpmClient}>{children}</BpmClientProvider>
       ),
@@ -100,7 +98,7 @@ describe('useRapieresWaves', () => {
 
 describe('useScoreClear', () => {
   const clear = () =>
-    renderHook(() => useScoreClear('c1', flush), {
+    renderHook(() => useScoreClear('c1'), {
       wrapper: ({ children }) => (
         <BpmClientProvider client={{ call } as unknown as BpmClient}>{children}</BpmClientProvider>
       ),

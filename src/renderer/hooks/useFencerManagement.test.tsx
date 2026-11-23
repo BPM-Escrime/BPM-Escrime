@@ -105,7 +105,7 @@ describe('updateFencer', () => {
     expect(onUpdate.mock.calls[0][0].fencers[0].lastName).toBe('Neuf');
   });
 
-  it('classement par setFencerRankings, statut écrit directement (formats hors moteur)', async () => {
+  it('classement par setFencerRankings ; statut à l’affichage seulement (commandes, ADR-0024)', async () => {
     const r = setup();
     await act(async () => {
       await r.current.updateFencer('1', { ranking: 4, status: FencerStatus.ELIMINATED });
@@ -114,7 +114,8 @@ describe('updateFencer', () => {
       competitionId: 'c1',
       rankings: [{ fencerId: '1', ranking: 4 }],
     });
-    expect(db.updateFencer).toHaveBeenCalledWith('1', { status: FencerStatus.ELIMINATED });
+    expect(db.updateFencer).not.toHaveBeenCalled();
+    expect(r.current.fencers[0].status).toBe(FencerStatus.ELIMINATED);
   });
 });
 
@@ -130,7 +131,8 @@ describe('setFencersStatus', () => {
     await act(async () => {
       await r.current.setFencersStatus(['1', '3'], FencerStatus.ELIMINATED);
     });
-    expect(db.updateFencer).toHaveBeenCalledTimes(2);
+    // Affichage seulement : le statut s'écrit par les commandes (docs/adr/0024, §3)
+    expect(db.updateFencer).not.toHaveBeenCalled();
     expect(r.current.fencers.map(f => f.status)).toEqual([
       FencerStatus.ELIMINATED,
       FencerStatus.NOT_CHECKED_IN,
@@ -155,8 +157,7 @@ describe('updateFencers', () => {
         '2': { ranking: 1 },
       });
     });
-    expect(db.updateFencer).toHaveBeenCalledWith('1', { status: FencerStatus.ELIMINATED });
-    expect(db.updateFencer).toHaveBeenCalledWith('2', { ranking: 1 });
+    expect(db.updateFencer).not.toHaveBeenCalled();
     expect(r.current.fencers[0].status).toBe(FencerStatus.ELIMINATED);
     expect(r.current.fencers[1].ranking).toBe(1);
     expect(onUpdate).toHaveBeenCalledTimes(1);

@@ -1,9 +1,10 @@
 /**
- * BPM - Escrime - Persistance et restauration de l'état de la compétition (extrait de
- * CompetitionView, #1599)
+ * BPM - Escrime - Restauration de l'état de la compétition à l'écran (extrait de
+ * CompetitionView, #1599). L'état de l'épreuve est écrit par le moteur seul (docs/adr/0017,
+ * 0024) ; l'écran le relit et garde l'état de son poste (posteUiState).
  * Licensed under GPL-3.0
  */
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Pool, PoolRanking } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
@@ -15,7 +16,7 @@ import type {
 import { inferPoolsLaunched } from '../components/poolLaunchState';
 import type { useRapieresSessionState } from '../../features/rapieres/useRapieresSessionState';
 import { useCompetitionSession, phaseFromNumber, phaseNumber } from './useCompetitionSession';
-import { readPosteUiState, tabToRestore, writePosteUiState } from './posteUiState';
+import { readPoolDraft, readPosteUiState, tabToRestore, writePosteUiState } from './posteUiState';
 import type { Phase, SessionState } from './useCompetitionSession';
 import type { usePoolManagement } from './usePoolManagement';
 
@@ -24,8 +25,6 @@ type PoolManagement = ReturnType<typeof usePoolManagement>;
 
 interface UseCompetitionRestoreParams {
   competitionId: string;
-  /** Exception de l'étape 4c (équipes, docs/adr/0024) : l'écran écrit encore l'état */
-  persistLocally?: boolean;
   /**
    * Tableaux séparés après les poules (docs/adr/0024) : l'état relu range un tableau par
    * groupe ; l'écran affiche celui du groupe choisi (useSplitGroups), pas la racine
@@ -33,109 +32,59 @@ interface UseCompetitionRestoreParams {
   onGroupTableaux?: (state: Partial<SessionState>) => void;
   currentPhase: Phase;
   setCurrentPhase: Setter<Phase>;
-  currentPoolRound: number;
   setCurrentPoolRound: PoolManagement['setCurrentPoolRound'];
   pools: Pool[];
   setPools: Setter<Pool[]>;
-  poolHistory: Pool[][];
   setPoolHistory: PoolManagement['setPoolHistory'];
-  appelHistory: PoolManagement['appelHistory'];
   setAppelHistory: PoolManagement['setAppelHistory'];
-  overallRanking: PoolRanking[];
   setOverallRanking: Setter<PoolRanking[]>;
-  tableauMatches: TableauMatch[];
   setTableauMatches: Setter<TableauMatch[]>;
-  finalResults: FinalResult[];
   setFinalResults: Setter<FinalResult[]>;
-  consolationBrackets: ConsolationBracket[];
   setConsolationBrackets: Setter<ConsolationBracket[]>;
-  skipPoolPhase: boolean;
   setSkipPoolPhase: Setter<boolean>;
   setRankingValidated: Setter<boolean>;
   remoteArenaCount: number;
   setRemoteArenaCount: Setter<number>;
   remoteStripStart: number;
   setRemoteStripStart: Setter<number>;
-  isRapieres: boolean;
-  rapieresState: ReturnType<typeof useRapieresSessionState>['rapieresState'];
   setRapieresState: ReturnType<typeof useRapieresSessionState>['setRapieresState'];
   minFencersPerPool: number;
   maxFencersPerPool: number;
   setMinFencersPerPool: Setter<number>;
   setMaxFencersPerPool: Setter<number>;
-  poolsLaunched: boolean;
   setPoolsLaunched: Setter<boolean>;
 }
 
-/** Sauvegarde la session (phase, poules, tableau…) et la restaure au chargement. */
+/** Relit l'état de l'épreuve (phase, poules, tableau…) et l'applique à l'écran. */
 export function useCompetitionRestore({
   competitionId,
-  persistLocally,
   onGroupTableaux,
   currentPhase,
   setCurrentPhase,
-  currentPoolRound,
   setCurrentPoolRound,
   pools,
   setPools,
-  poolHistory,
   setPoolHistory,
-  appelHistory,
   setAppelHistory,
-  overallRanking,
   setOverallRanking,
-  tableauMatches,
   setTableauMatches,
-  finalResults,
   setFinalResults,
-  consolationBrackets,
   setConsolationBrackets,
-  skipPoolPhase,
   setSkipPoolPhase,
   setRankingValidated,
   remoteArenaCount,
   setRemoteArenaCount,
   remoteStripStart,
   setRemoteStripStart,
-  isRapieres,
-  rapieresState,
   setRapieresState,
   minFencersPerPool,
   maxFencersPerPool,
   setMinFencersPerPool,
   setMaxFencersPerPool,
-  poolsLaunched,
   setPoolsLaunched,
 }: UseCompetitionRestoreParams) {
-  const poolPrepParams = useMemo(
-    () => ({
-      poolCount: pools.length,
-      minFencersPerPool,
-      maxFencersPerPool,
-    }),
-    [pools.length, minFencersPerPool, maxFencersPerPool]
-  );
-
-  // Session state persistence
-  const { isLoaded, restoredState, flushPendingSave } = useCompetitionSession({
-    competitionId: competitionId,
-    persistLocally,
-    currentPhase,
-    currentPoolRound,
-    pools,
-    poolHistory,
-    appelHistory,
-    overallRanking,
-    tableauMatches,
-    finalResults,
-    consolationBrackets,
-    skipPoolPhase,
-    remoteArenaCount,
-    remoteStripStart,
-    rapieres: isRapieres ? rapieresState : undefined,
-    poolPrepParams,
-    poolsLaunched,
-  });
+  // État de l'épreuve relu (getCompetitionState), écrit par le moteur seul
+  const { isLoaded, restoredState } = useCompetitionSession({ competitionId });
 
   // Synchroniser le nombre d'arènes avec le nombre de poules.
   // Ne se déclenche que lorsque le nombre de poules change : un nombre de pistes choisi par
@@ -226,13 +175,18 @@ export function useCompetitionRestore({
     remoteStripStart,
   ]);
 
-  // Fallback DB : si session state n'a pas de poules, essayer de les charger depuis la DB.
-  // Guard: ne pas déclencher si restoredState a déjà des poules (elles seront appliquées par
-  // l'effet [restoredState, isLoaded] dans le même cycle de rendu, évitant la race condition
-  // où l'IPC SQLite répond avant le prochain rendu React et écrase la session state).
+  // Préparation non lancée : tirage du poste (posteUiState), sinon celui qu'une version
+  // précédente écrivait en base (lecture seule). Guard : pas si l'état relu a déjà des poules
+  // (appliquées par l'effet [restoredState, isLoaded] dans le même cycle de rendu).
   useEffect(() => {
     if (!isLoaded || pools.length > 0) return;
     if (restoredState?.pools && restoredState.pools.length > 0) return;
+    const draft = readPoolDraft<Pool>(competitionId);
+    if (draft) {
+      setPools(draft);
+      return;
+    }
+    if (!window.electronAPI?.db) return;
     let cancelled = false;
     window.electronAPI.db
       .getPhasesByCompetition(competitionId)
@@ -256,5 +210,5 @@ export function useCompetitionRestore({
     };
   }, [isLoaded, pools.length, competitionId, restoredState]);
 
-  return { isLoaded, restoredState, flushPendingSave };
+  return { isLoaded, restoredState };
 }

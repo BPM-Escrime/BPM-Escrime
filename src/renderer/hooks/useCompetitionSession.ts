@@ -1,14 +1,12 @@
 /**
- * BPM - Escrime - Competition Session Hook
- * Gestion de la sauvegarde et restauration de l'état de session
+ * BPM - Escrime - État de l'épreuve relu par l'écran (docs/adr/0017, 0024)
+ * Seul le moteur écrit l'état (session_state, tables des équipes) ; l'écran le lit au
+ * chargement par getCompetitionState, puis le relit sur les signaux de l'épreuve. L'état propre
+ * au poste (onglet, groupe affiché, préparation) est dans posteUiState.
  * Licensed under GPL-3.0
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import {
-  DEFAULT_POOL_SIZE_MAX,
-  DEFAULT_POOL_SIZE_MIN,
-} from '../../shared/domain/formula/formulaDraft';
 import { Fencer, Pool, PoolRanking } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
 import type { CompetitionStateDTO } from '../../shared/api/contract';
@@ -110,32 +108,6 @@ export interface SessionState {
 
 interface UseCompetitionSessionProps {
   competitionId: string;
-  /**
-   * L'écran écrit encore l'état de l'épreuve (étape 4c de l'ADR-0017 : non, sauf exceptions
-   * documentées — épreuves par équipes, docs/adr/0024). Ailleurs, seul le
-   * moteur écrit l'état ; l'écran le relit.
-   */
-  persistLocally?: boolean;
-  currentPhase: Phase;
-  currentPoolRound: number;
-  pools: Pool[];
-  poolHistory: Pool[][];
-  /** Appel figé de chaque tour de poules terminé (#1051) */
-  appelHistory?: Fencer[][];
-  overallRanking: PoolRanking[];
-  tableauMatches: TableauMatch[];
-  finalResults: FinalResult[];
-  consolationBrackets: ConsolationBracket[];
-  skipPoolPhase: boolean;
-  poolsLaunched?: boolean;
-  remoteArenaCount: number;
-  remoteStripStart?: number;
-  rapieres?: RapieresSession | RapieresLegacyState;
-  poolPrepParams: {
-    poolCount: number;
-    minFencersPerPool: number;
-    maxFencersPerPool: number;
-  };
 }
 
 /** État lu : projection du moteur et ses révisions */
@@ -148,72 +120,14 @@ interface FetchedState {
 export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [restoredState, setRestoredState] = useState<Partial<SessionState> | null>(null);
-  const propsRef = useRef(props);
-  const isLoadedRef = useRef(false);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reloadingRef = useRef(false);
-  // Révision chargée : une sauvegarde sur un état réécrit depuis par le MCP est refusée
+  // Révision du bloc chargé : une relecture sur signal ne l'applique que s'il a changé
   const revisionRef = useRef(0);
   // Révision du journal de l'état chargé (getCompetitionState, docs/adr/0017)
   const journalRevisionRef = useRef(0);
   const reloadInFlightRef = useRef<Promise<void> | null>(null);
   const reloadPendingRef = useRef(0);
   const client = useBpmClient();
-  const restoreRef = useRef<() => Promise<void>>(async () => undefined);
-  propsRef.current = props;
-  isLoadedRef.current = isLoaded;
 
-  // Sauvegarder l'état - lit depuis propsRef pour rester stable (pas de re-création à chaque render)
-  const saveState = useCallback(async () => {
-    if (!window.electronAPI?.db?.saveSessionState || !isLoadedRef.current) return;
-    // Relecture en cours après une écriture du domaine : l'état affiché est périmé
-    if (reloadingRef.current) return;
-    const p = propsRef.current;
-
-    const state: SessionState = {
-      currentPhase: PHASE_NUMBERS[p.currentPhase],
-      pools: p.pools,
-      poolHistory: p.poolHistory,
-      appelHistory: p.appelHistory,
-      overallRanking: p.overallRanking,
-      tableauMatches: p.tableauMatches,
-      finalResults: p.finalResults,
-      consolationBrackets: p.consolationBrackets,
-      currentPoolRound: p.currentPoolRound,
-      skipPoolPhase: p.skipPoolPhase,
-      poolsLaunched: p.poolsLaunched,
-      remoteArenaCount: p.remoteArenaCount,
-      remoteStripStart: p.remoteStripStart,
-      ...(p.rapieres ? { rapieres: p.rapieres } : {}),
-      poolPrepParams: {
-        poolCount: p.poolPrepParams?.poolCount || 0,
-        minFencersPerPool: p.poolPrepParams?.minFencersPerPool || DEFAULT_POOL_SIZE_MIN,
-        maxFencersPerPool: p.poolPrepParams?.maxFencersPerPool || DEFAULT_POOL_SIZE_MAX,
-      },
-      uiState: {
-        currentPhase: p.currentPhase,
-        currentPoolRound: p.currentPoolRound,
-        pools: p.pools.length,
-      },
-    };
-
-    try {
-      state.revision = revisionRef.current;
-      const result = await window.electronAPI.db.saveSessionState(p.competitionId, state);
-      if (result && result.conflict) {
-        // État réécrit hors écran entre-temps : on relit plutôt que d'écraser
-        logger.warn(LogCategory.UI, 'Session state changed elsewhere: reloading');
-        reloadingRef.current = true;
-        void restoreRef.current().finally(() => {
-          reloadingRef.current = false;
-        });
-      }
-    } catch (e) {
-      logger.error(LogCategory.UI, 'Failed to save session state', e as Error);
-    }
-  }, []); // stable - lit les props depuis propsRef
-
-  // Restaurer l'état
   /**
    * État de l'épreuve tenu par le moteur (getCompetitionState, docs/adr/0017) avec sa révision
    * de journal ; hors moteur (navigateur, tests sans pont), lecture directe du bloc.
@@ -242,8 +156,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
 
   // Restaurer l'état
   // `onlyIfChanged` (relecture sur signal) : l'état n'est appliqué que si le moteur a réécrit le
-  // bloc (révision de session changée) ; sinon la saisie locale en attente est conservée
-  // (un pointage avance le journal sans toucher au bloc).
+  // bloc (révision de session changée) ; un pointage avance le journal sans toucher au bloc.
   const restoreState = useCallback(
     async (onlyIfChanged = false) => {
       try {
@@ -254,11 +167,6 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
           revisionRef.current = fetched.sessionRevision;
         }
         const state = fetched?.state;
-        if (state && onlyIfChanged && saveTimerRef.current) {
-          // Bloc réécrit par le moteur : la sauvegarde en attente, faite sur l'ancien, est annulée
-          clearTimeout(saveTimerRef.current);
-          saveTimerRef.current = null;
-        }
         if (state) {
           setRestoredState({
             // Relecture sur signal : l'onglet affiché reste celui du poste (docs/adr/0017)
@@ -296,50 +204,10 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
     [fetchState]
   );
 
-  restoreRef.current = restoreState;
-
   // Restaurer au chargement
   useEffect(() => {
     restoreState();
   }, [restoreState]);
-
-  // Sauvegarde synchrone avant fermeture fenêtre (saveState async non awaitable dans beforeunload)
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = null;
-      }
-      if (!window.electronAPI?.db?.saveSessionStateSync || !isLoadedRef.current) return;
-      const p = propsRef.current;
-      if (!p.persistLocally) return;
-      window.electronAPI.db.saveSessionStateSync(p.competitionId, {
-        revision: revisionRef.current,
-        currentPhase: PHASE_NUMBERS[p.currentPhase],
-        pools: p.pools,
-        poolHistory: p.poolHistory,
-        appelHistory: p.appelHistory,
-        overallRanking: p.overallRanking,
-        tableauMatches: p.tableauMatches,
-        finalResults: p.finalResults,
-        consolationBrackets: p.consolationBrackets,
-        currentPoolRound: p.currentPoolRound,
-        skipPoolPhase: p.skipPoolPhase,
-        poolsLaunched: p.poolsLaunched,
-        remoteArenaCount: p.remoteArenaCount,
-        remoteStripStart: p.remoteStripStart,
-        ...(p.rapieres ? { rapieres: p.rapieres } : {}),
-        poolPrepParams: p.poolPrepParams,
-        uiState: {
-          currentPhase: p.currentPhase,
-          currentPoolRound: p.currentPoolRound,
-          pools: p.pools.length,
-        },
-      });
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
 
   /**
    * Relecture coalescée (docs/adr/0017, étape 4a) : une relecture à la fois ; un signal reçu
@@ -393,57 +261,10 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
     }
   }, [client, props.competitionId, requestReload]);
 
-  // Sauvegarder à chaque changement - debounced 500ms pour éviter les écritures en rafale
-  useEffect(() => {
-    // Étape 4c (docs/adr/0017) : l'écran n'écrit plus l'état, sauf exceptions documentées
-    if (!isLoaded || !props.persistLocally) return;
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      saveTimerRef.current = null;
-      saveState();
-    }, 500);
-    return () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = null;
-        saveState(); // fire immédiatement sur unmount
-      }
-    };
-  }, [
-    isLoaded,
-    props.currentPhase,
-    props.currentPoolRound,
-    props.pools,
-    props.poolHistory,
-    props.appelHistory,
-    props.overallRanking,
-    props.tableauMatches,
-    props.finalResults,
-    props.consolationBrackets,
-    props.skipPoolPhase,
-    props.poolsLaunched,
-    props.remoteArenaCount,
-    props.remoteStripStart,
-    props.rapieres,
-    props.poolPrepParams,
-    props.persistLocally,
-    saveState,
-  ]);
-
-  /** Écrit tout de suite une sauvegarde en attente (avant une commande du moteur, #1980) */
-  const flushPendingSave = useCallback(async () => {
-    if (!saveTimerRef.current) return;
-    clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = null;
-    await saveState();
-  }, [saveState]);
-
   return {
     isLoaded,
     restoredState,
     restoreState,
-    saveState,
-    flushPendingSave,
   };
 };
 
