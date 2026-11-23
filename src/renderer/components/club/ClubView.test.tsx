@@ -163,9 +163,12 @@ describe('ClubView', () => {
     expect(screen.getByRole('button', { name: 'Martin Anne' })).toBeDisabled();
   });
 
-  it('nombre de pistes enregistré, import des photos ZIP', async () => {
+  it('nombre de pistes enregistré, import des photos ZIP (contenu par le contrat)', async () => {
+    const openFile = vi
+      .fn()
+      .mockResolvedValue({ filePath: '/tmp/photos.zip', bytes: new Uint8Array([80, 75]) });
     (window as unknown as { electronAPI: Record<string, unknown> }).electronAPI.dialog = {
-      openFile: vi.fn().mockResolvedValue({ filePath: '/tmp/photos.zip' }),
+      openFile,
     };
     render(<ClubView clubId="c1" onSelectClub={vi.fn()} />);
     await screen.findByText('MARTIN');
@@ -177,6 +180,7 @@ describe('ClubView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Membres' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Importer' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Importer photos (.zip)' }));
-    await waitFor(() => expect(api.importPhotos).toHaveBeenCalledWith('c1', '/tmp/photos.zip'));
+    await waitFor(() => expect(api.importPhotos).toHaveBeenCalledWith('c1', 'UEs='));
+    expect(openFile.mock.calls[0][0]).toMatchObject({ binary: true });
   });
 });

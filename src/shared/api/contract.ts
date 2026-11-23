@@ -27,6 +27,7 @@ import { stationOperations } from './contractStation';
 import { remoteOperations } from './contractRemote';
 import { trainingOperations } from './contractTraining';
 import { devicesOperations } from './contractDevices';
+import { fileOperations } from './contractFiles';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
@@ -1431,6 +1432,8 @@ export const contract = {
   ...trainingOperations,
   // Appareils de piste : salle, pilotes Cyrano et OPP2, jamais sur le réseau (docs/adr/0023)
   ...devicesOperations,
+  // Fichiers de données (.bpm, .bpf, photos, .bpclub) en contenu, jamais sur le réseau (ADR-0021)
+  ...fileOperations,
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────

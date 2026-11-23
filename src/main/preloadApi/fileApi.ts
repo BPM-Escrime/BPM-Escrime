@@ -19,19 +19,16 @@ export const fileApi = {
     }
     return ipcRenderer.invoke('file:import', filepath);
   },
-  openDialog: () => ipcRenderer.invoke('file:openDialog'),
   unpackFederalFiles: (inputs: Array<{ name: string; bytes: Uint8Array }>) => {
     if (!Array.isArray(inputs) || inputs.length === 0) throw new Error('Files are required');
     return ipcRenderer.invoke('file:unpackFederalFiles', inputs);
   },
-  exportCompetition: (competitionId: string) =>
-    ipcRenderer.invoke('file:exportCompetition', competitionId),
-  writeContent: (filepath: string, content: string) => {
+  writeContent: (filepath: string, content: string | Uint8Array) => {
     if (!filepath || typeof filepath !== 'string') {
       throw new Error('Filepath is required and must be a string');
     }
-    if (typeof content !== 'string') {
-      throw new Error('Content must be a string');
+    if (typeof content !== 'string' && !(content instanceof Uint8Array)) {
+      throw new Error('Content must be a string or bytes');
     }
     return ipcRenderer.invoke('file:writeContent', filepath, content);
   },
@@ -75,41 +72,5 @@ export const fileApi = {
       throw new Error('HTML content is required');
     }
     return ipcRenderer.invoke('file:countHtmlPages', html);
-  },
-  exportPhotos: (competitionId: string, filepath: string) => {
-    if (!competitionId || typeof competitionId !== 'string') {
-      throw new Error('Competition ID is required and must be a string');
-    }
-    if (!filepath || typeof filepath !== 'string') {
-      throw new Error('Filepath is required and must be a string');
-    }
-    return ipcRenderer.invoke('file:exportPhotos', competitionId, filepath);
-  },
-  importPhotos: (competitionId: string, filepath: string) => {
-    if (!competitionId || typeof competitionId !== 'string') {
-      throw new Error('Competition ID is required and must be a string');
-    }
-    if (!filepath || typeof filepath !== 'string') {
-      throw new Error('Filepath is required and must be a string');
-    }
-    return ipcRenderer.invoke('file:importPhotos', competitionId, filepath);
-  },
-  exportFencersArchive: (competitionId: string, filepath: string) => {
-    if (!competitionId || typeof competitionId !== 'string') {
-      throw new Error('Competition ID is required and must be a string');
-    }
-    if (!filepath || typeof filepath !== 'string') {
-      throw new Error('Filepath is required and must be a string');
-    }
-    return ipcRenderer.invoke('file:exportFencersArchive', competitionId, filepath);
-  },
-  importFencersArchive: (competitionId: string, filepath: string) => {
-    if (!competitionId || typeof competitionId !== 'string') {
-      throw new Error('Competition ID is required and must be a string');
-    }
-    if (!filepath || typeof filepath !== 'string') {
-      throw new Error('Filepath is required and must be a string');
-    }
-    return ipcRenderer.invoke('file:importFencersArchive', competitionId, filepath);
   },
 } satisfies FileAPI;

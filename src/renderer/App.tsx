@@ -20,6 +20,7 @@ const AboutModal = React.lazy(() => import('./components/AboutModal'));
 const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
 const DTCallNotification = React.lazy(() => import('./components/DTCallNotification'));
 const PrivacyPrompts = React.lazy(() => import('./components/PrivacyPrompts'));
+const EncryptedBpmPrompt = React.lazy(() => import('./components/EncryptedBpmPrompt'));
 const UpdateNotification = React.lazy(() => import('./components/UpdateNotification'));
 const KeyboardShortcutsHelp = React.lazy(() => import('./components/KeyboardShortcutsHelp'));
 const WikiModal = React.lazy(() => import('./components/WikiModal'));
@@ -46,7 +47,8 @@ import { executeSlashCommand, SHOW_SHORTCUTS_EVENT } from './services/slashComma
 import { saveActiveSection } from './components/settingsModal.helpers';
 import { ErrorBoundary, CompetitionErrorBoundary } from './components/ErrorBoundary';
 import { useAppState } from './hooks/useAppState';
-import { useAppMenuHandlers } from './hooks/useAppMenuHandlers';
+import { announceOpenedCompetitions, useAppMenuHandlers } from './hooks/useAppMenuHandlers';
+import { useCompetitionFileOpen } from './hooks/useCompetitionFileOpen';
 import { useTrainingSession } from './hooks/useTrainingSession';
 import { useClubTab } from './hooks/useClubTab';
 import { useCompetitionTabs } from './hooks/useCompetitionTabs';
@@ -126,6 +128,21 @@ const AppContent: React.FC = () => {
   // Accueil sans compétition : l'état vide porte déjà le CTA principal
   const isEmptyHome = view === 'home' && !isLoading && competitions.length === 0;
 
+  // Sauvegarde .bpm ouverte par l'accueil : fichier par la plateforme, fusion par le contrat
+  const announceOpened = useCallback(
+    (ids: string[]) =>
+      announceOpenedCompetitions(
+        {
+          reloadCompetitions: loadCompetitions,
+          openImportedCompetition: id => openImportedCompetitionRef.current(id),
+          showToast,
+        },
+        ids
+      ),
+    [loadCompetitions, showToast]
+  );
+  const bpmOpen = useCompetitionFileOpen(announceOpened);
+
   // Menu natif et fichiers (.bpm ouvert, sauvegarde) : hook dédié (#1897)
   useAppMenuHandlers({
     onNewCompetition: () => setShowNewCompetitionModal(true),
@@ -135,6 +152,7 @@ const AppContent: React.FC = () => {
     reloadCompetitions: loadCompetitions,
     openImportedCompetition: id => openImportedCompetitionRef.current(id),
     showToast,
+    onEncryptedFile: bpmOpen.requestPassword,
   });
 
   // Effets globaux : chargement initial, Ctrl+K, molette des champs numériques, logo (#1897)
@@ -232,6 +250,15 @@ const AppContent: React.FC = () => {
       <Suspense fallback={null}>
         <PrivacyPrompts />
       </Suspense>
+      {bpmOpen.pending && (
+        <Suspense fallback={null}>
+          <EncryptedBpmPrompt
+            fileName={bpmOpen.pending.fileName}
+            onSubmit={bpmOpen.submitPassword}
+            onCancel={bpmOpen.cancel}
+          />
+        </Suspense>
+      )}
       <div className="app">
         <AppHeader
           isEmptyHome={isEmptyHome}
@@ -305,10 +332,10 @@ const AppContent: React.FC = () => {
                   onExport={handleExportCompetition}
                   onNewCompetition={() => setShowNewCompetitionModal(true)}
                   onStartDemo={trainingAvailable() ? handleStartDemo : undefined}
-                  onOpenFile={
-                    window.electronAPI?.file?.openDialog
-                      ? () => void window.electronAPI.file.openDialog()
-                      : undefined
+                  onOpenFile={() =>
+                    void bpmOpen
+                      .openFile()
+                      .catch(err => showActionableError('messages.import_failed', err))
                   }
                 />
                 <Suspense fallback={null}>

@@ -12,10 +12,11 @@ import type { Phase } from './useCompetitionSession';
 import type { useExport } from './useExport';
 import { useMenuEvents } from './useMenuEvents';
 import { useTranslation } from './useTranslation';
+import { DATA_FILE_FILTERS, openDataFile, saveDataFile, useFilesApi } from '../api/filesApi';
+import { usePlatform } from '../platform/PlatformContext';
 
 interface UseCompetitionMenuParams {
   competitionId: string;
-  competitionTitle: string;
   currentPhase: Phase;
   fencers: Fencer[];
   hasPools: boolean;
@@ -32,7 +33,6 @@ interface UseCompetitionMenuParams {
 /** Branche les commandes du menu natif (propriétés, exports, imports) sur la compétition. */
 export function useCompetitionMenu({
   competitionId,
-  competitionTitle,
   currentPhase,
   fencers,
   hasPools,
@@ -48,6 +48,8 @@ export function useCompetitionMenu({
   const { showToast, showActionableError } = useToast();
   const { runOperation } = useOperation();
   const { t } = useTranslation();
+  const files = useFilesApi();
+  const platform = usePlatform();
   const { exportFencersList, exportRanking, exportResults } = exports;
 
   useMenuEvents({
@@ -55,45 +57,46 @@ export function useCompetitionMenu({
     onShowProperties: () => setShowPropertiesModal(true),
     onShowAddFencer: () => setShowAddFencerModal(true),
     onExportFencers: format => exportFencersList(fencers, format),
+    // Fichiers de données : contenu par le contrat, dialogue par la plateforme (ADR-0021)
     onExportFencersBpf: async () => {
-      const result = await window.electronAPI.dialog.saveFile({
+      const file = await runOperation('export', () => files.fencersArchive(competitionId));
+      const saved = await saveDataFile(platform, file, {
         title: t('dialogs.exportFencersArchive'),
-        defaultPath: `tireurs-${competitionTitle}.bpf`,
-        filters: [{ name: 'BellePoule Fencers', extensions: ['bpf'] }],
+        filters: DATA_FILE_FILTERS.bpf,
       });
-      if (result && !result.canceled && result.filePath) {
-        const { count } = await runOperation('export', () =>
-          window.electronAPI.file.exportFencersArchive(competitionId, result.filePath!)
-        );
-        showToast(
-          `${count} tireur${count !== 1 ? 's' : ''} exporté${count !== 1 ? 's' : ''} (.bpf)`,
-          'success'
-        );
-      }
+      if (!saved) return;
+      const { count } = file;
+      showToast(
+        `${count} tireur${count !== 1 ? 's' : ''} exporté${count !== 1 ? 's' : ''} (.bpf)`,
+        'success'
+      );
     },
     onExportPhotos: async () => {
-      const result = await window.electronAPI.dialog.saveFile({
+      const file = await runOperation('export', () => files.photosArchive(competitionId));
+      const saved = await saveDataFile(platform, file, {
         title: t('dialogs.exportPhotos'),
-        defaultPath: `photos-${competitionTitle}.zip`,
-        filters: [{ name: 'Archive ZIP', extensions: ['zip'] }],
+        filters: DATA_FILE_FILTERS.zip,
       });
-      if (result && !result.canceled && result.filePath) {
-        const { count } = await runOperation('export', () =>
-          window.electronAPI.file.exportPhotos(competitionId, result.filePath!)
-        );
-        showToast(
-          `${count} photo${count !== 1 ? 's' : ''} exportée${count !== 1 ? 's' : ''}`,
-          'success'
-        );
-      }
+      if (!saved) return;
+      const { count } = file;
+      showToast(
+        `${count} photo${count !== 1 ? 's' : ''} exportée${count !== 1 ? 's' : ''}`,
+        'success'
+      );
     },
     onExportRanking: format => exportRanking(overallRanking, format, isLaserSabre),
     onExportResults: format => exportResults(finalResults, format),
     onImport: async (format, filepath, content) => {
       if (format === 'fencers-bpf') {
+        // Le menu ne lit plus l'archive : l'écran la choisit et l'importe par le contrat
         try {
+          const picked = await openDataFile(platform, {
+            title: t('fencerList.import_bpf'),
+            filters: DATA_FILE_FILTERS.bpf,
+          });
+          if (!picked) return;
           await runOperation('import', () =>
-            window.electronAPI.file.importFencersArchive(competitionId, filepath)
+            files.importFencersArchive(competitionId, picked.content)
           );
           loadFencers();
         } catch (err) {

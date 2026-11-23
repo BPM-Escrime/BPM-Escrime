@@ -1,8 +1,12 @@
 /**
  * BellePoule Modern - Mode Club : sauvegarde d'un club (.bpclub) et chargement sur un
- * autre poste (boîtes de dialogue + appels IPC).
+ * autre poste. Contenu par le contrat (getClubBackupFile, importClubBackup), dialogues par la
+ * plateforme (ADR-0021).
  * Licensed under GPL-3.0
  */
+import { ApiError } from '../../../shared/api/client';
+import { defaultPlatform } from '../../platform/PlatformContext';
+import { filesApi, openDataFile, saveDataFile } from '../../api/filesApi';
 
 type TFn = (key: string, params?: Record<string, string | number>) => string;
 
@@ -21,36 +25,41 @@ export function backupFileName(clubName: string, date = new Date()): string {
 const filters = (t: TFn) => [{ name: t('clubs.backup_file'), extensions: ['bpclub'] }];
 
 /** Sauvegarde le club ; false si annulé */
-export async function exportClubBackup(clubId: string, clubName: string, t: TFn): Promise<boolean> {
-  const api = window.electronAPI;
-  if (!api?.dialog?.saveFile || !api.club) return false;
-  const r = await api.dialog.saveFile({
-    title: t('clubs.backup_export'),
-    defaultPath: backupFileName(clubName),
-    filters: filters(t),
-  });
-  if (!r || r.canceled || !r.filePath) return false;
-  await api.club.exportBackup(clubId, r.filePath);
-  return true;
+export async function exportClubBackup(
+  clubId: string,
+  clubName: string,
+  t: TFn,
+  api = filesApi,
+  platform = defaultPlatform
+): Promise<boolean> {
+  const { content } = await api.club.backupFile(clubId);
+  return saveDataFile(
+    platform,
+    { fileName: backupFileName(clubName), content },
+    { title: t('clubs.backup_export'), filters: filters(t) }
+  );
 }
 
 /**
- * Charge une sauvegarde ; si le club existe déjà, demande confirmation avant de remplacer.
- * Renvoie le club chargé, ou null si annulé.
+ * Charge une sauvegarde ; si le club existe déjà (club_exists), demande confirmation avant de
+ * remplacer. Renvoie le club chargé, ou null si annulé.
  */
 export async function importClubBackup(
   t: TFn,
-  confirmReplace: () => Promise<boolean>
+  confirmReplace: () => Promise<boolean>,
+  api = filesApi,
+  platform = defaultPlatform
 ): Promise<{ clubId: string; clubName: string; replaced: boolean } | null> {
-  const api = window.electronAPI;
-  if (!api?.dialog?.openFile || !api.club) return null;
-  const r = await api.dialog.openFile({ title: t('clubs.backup_import'), filters: filters(t) });
-  if (!r?.filePath) return null;
+  const picked = await openDataFile(platform, {
+    title: t('clubs.backup_import'),
+    filters: filters(t),
+  });
+  if (!picked) return null;
   try {
-    return await api.club.importBackup(r.filePath, false);
+    return await api.club.importBackup(picked.content, false);
   } catch (e) {
-    if (!String(e instanceof Error ? e.message : e).includes('CLUB_EXISTS')) throw e;
+    if (!(e instanceof ApiError) || e.code !== 'club_exists') throw e;
     if (!(await confirmReplace())) return null;
-    return api.club.importBackup(r.filePath, true);
+    return api.club.importBackup(picked.content, true);
   }
 }

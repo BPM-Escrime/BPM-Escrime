@@ -10,6 +10,7 @@ import * as path from 'path';
 import { DatabaseManager } from '../../../database';
 import { hasNodeSqlite } from '../../../database/testing/nodeSqliteDatabase';
 import { contract, type OperationName } from '../../../shared/api/contract';
+import { fileOperations } from '../../../shared/api/contractFiles';
 import { ApiError } from '../../../shared/api/client';
 import { Category, FencerStatus, Gender, Weapon } from '../../../shared/types';
 import type { McpStatus } from '../../../shared/types/mcp';
@@ -509,8 +510,9 @@ d('Poste : agent MCP', () => {
 });
 
 describe('contrat du poste', () => {
+  // Fichiers de données (contractFiles.ts) : dataFiles.test.ts
   const ops = (Object.keys(contract) as OperationName[]).filter(
-    n => contract[n].permission === 'station:admin'
+    n => contract[n].permission === 'station:admin' && !(n in fileOperations)
   );
 
   it('43 opérations, chacune avec son gestionnaire', () => {

@@ -70,8 +70,38 @@ interface PlatformServices {
 - Tests : chaque implémentation a ses tests (préload simulé, DOM de jsdom). Les écrans se testent
   avec un faux `PlatformServices`, comme avec `fakeApiBridge`.
 - La vue DT (ADR-0020) peut proposer « Imprimer » et « Exporter » sans code propre.
-- Reste à faire : les exports de données par le contrat (requêtes qui rendent un contenu), dans
-  la suite du lot 2.
+- Les exports et imports de données passent par le contrat (voir « Fichiers de données »
+  ci-dessous).
+
+## Fichiers de données (complément, #1981)
+
+- Les fichiers de données (sauvegarde `.bpm` d'une épreuve, en clair ou chiffrée, archive de
+  tireurs `.bpf`, photos ZIP, sauvegarde de club `.bpclub`) sont des opérations du contrat
+  déclarées dans `src/shared/api/contractFiles.ts` : une requête rend `{ fileName, content }`,
+  une commande reçoit `content`. Le **contenu binaire voyage en base64** (chaîne bornée par zod,
+  100 Mio au plus) : même forme par IPC, JSON (MCP) et Socket.IO.
+- `PlatformServices.saveFile` accepte `content: string | Uint8Array` : un texte est écrit en
+  UTF-8, des octets tels quels (canal existant `file:writeContent`, navigateur : `Blob` en
+  `application/octet-stream`). Le choix d'un fichier binaire est une méthode à part,
+  `openBinaryFile(request) → { name, bytes } | null` (Electron : `dialog:openFile` avec
+  `binary: true`, octets bornés ; navigateur : `File.arrayBuffer()`), plutôt qu'un drapeau
+  `binary` de `openFile` : le type de retour reste exact. Conversion octets ↔ base64 :
+  `src/shared/platform/binary.ts` ; enregistrement et choix : `saveDataFile` / `openDataFile`
+  (`src/renderer/api/filesApi.ts`).
+- Ce sont des fonctions du poste : droits `station:admin`, `club:read`, `club:write`, jamais
+  servies sur le réseau, sans journal, sans outil MCP. Les copies en clair d'une base passent par
+  un fichier temporaire du dossier de la base, supprimé aussitôt.
+- Un import qui écrit dans une épreuve (`importFencersArchive`, `importFencerPhotos`) décode
+  d'abord l'archive (asynchrone, hors transaction), puis écrit par `runCommand`
+  ([ADR-0006](0006-expected-revision.md)) : l'écriture reste synchrone et atomique.
+- Archive chiffrée : `getEncryptedCompetitionFile` reçoit le mot de passe et rend le contenu
+  chiffré ; `openCompetitionFile` reçoit contenu et mot de passe (refus `password_required`,
+  `wrong_password`). Le mot de passe n'est jamais journalisé ni logué. Fichier → Ouvrir (menu
+  natif) envoie à l'écran le nom et le contenu d'une archive chiffrée ; l'écran demande le mot de
+  passe et l'ouvre par le contrat. Plus aucun canal `privacy:*` ni `club:*` en `ipcMain`.
+- Restent sur le préload : le menu natif (Fichier → Ouvrir d'un `.bpm` en clair, Enregistrer
+  sous, `file:export` / `file:import` de toute la base), les fichiers lus en texte par le main
+  (tableur `.xlsx`, fichiers fédéraux) et l'écriture d'un tableur (`file:writeSpreadsheet`).
 
 ## Alternatives écartées
 

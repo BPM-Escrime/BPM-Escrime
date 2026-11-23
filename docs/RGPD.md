@@ -110,7 +110,11 @@ exporte une compétition (ou toute la base) chiffrée par mot de passe :
 
 - AES-256-GCM, clé dérivée par scrypt (N = 2^15, r = 8, p = 1), sel et IV aléatoires,
   en-tête authentifié (`src/main/bpmCrypto.ts`) ; mot de passe de 8 caractères minimum ;
-- **Fichier → Ouvrir** détecte une archive chiffrée et demande le mot de passe ;
+- **Fichier → Ouvrir** (ou « Ouvrir » de l'accueil) détecte une archive chiffrée et demande
+  le mot de passe ; l'ouverture passe par le contrat (`openCompetitionFile`, contenu + mot de
+  passe, refus `password_required` / `wrong_password`) ;
+- export par le contrat (`getEncryptedCompetitionFile`) : le main chiffre en mémoire et rend le
+  contenu chiffré, enregistré par l'écran ; le mot de passe n'est ni journalisé ni logué ;
 - mot de passe perdu = archive illisible (aucune récupération) ;
 - la copie en clair intermédiaire est créée sous `userData` puis supprimée : le dossier choisi
   (éventuellement synchronisé) ne reçoit que le fichier chiffré.
@@ -193,10 +197,12 @@ exports déjà diffusés et les sauvegardes, à leur prochaine rotation.
 | `src/main/dbKey.ts` | Clé de la base, stockée chiffrée par safeStorage (`db-key.bin`) |
 | `src/database/repos/privacyRepo.ts` | Recherche, export, anonymisation, effacement, conservation, purge d'une compétition |
 | `src/main/engine/commands/privacy.ts` | Opérations du contrat (ADR-0022) : `listPrivacyPersons`, `getPersonData`, `anonymizePerson`, `erasePerson`, `getPrivacySettings`, `updatePrivacySettings`, `listRetentionCandidates`, `applyRetention` ; refus `competition_open` |
-| `src/main/ipc/privacyHandlers.ts` | Canaux `privacy:*` restants (dialogue natif, chemin de fichier) : export JSON d'une personne, archives `.bpm` chiffrées ; purge automatique au démarrage |
+| `src/main/ipc/privacyHandlers.ts` | Purge automatique au démarrage ; archive chiffrée choisie par Fichier → Ouvrir envoyée à l'écran (plus aucun canal `privacy:*`) |
+| `src/main/engine/commands/dataFiles.ts` | Archives `.bpm` chiffrées par le contrat (`getEncryptedCompetitionFile`, `openCompetitionFile`, ADR-0021) |
 | `src/main/privacySettings.ts` | Réglages `<userData>/privacy-settings.json` |
 | `src/main/remote/publicDto.ts` | Filtrage et abréviation des noms sur le réseau |
 | `src/main/bpmCrypto.ts` | Archives `.bpm` chiffrées |
 | `src/renderer/components/PrivacySettingsSection.tsx` | Paramètres → Confidentialité |
-| `src/renderer/components/PrivacyPrompts.tsx` | Mot de passe d'archive, rappel de conservation |
+| `src/renderer/components/PrivacyPrompts.tsx` | Rappel de conservation |
+| `src/renderer/components/EncryptedBpmPrompt.tsx` | Mot de passe d'une archive chiffrée (`useCompetitionFileOpen`) |
 | `src/shared/utils/personalDataPdf.ts` | Export PDF par personne |

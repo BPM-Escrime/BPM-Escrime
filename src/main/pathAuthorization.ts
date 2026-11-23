@@ -148,15 +148,18 @@ export function checkZipEntries(zip: ZipLike): string[] {
   return safe;
 }
 
-/** Lit un fichier ZIP en refusant les archives trop grosses (taille contrôlée avant lecture) */
-export async function readBoundedFile(filepath: string): Promise<Buffer> {
+/** Lit un fichier en refusant les fichiers trop gros (taille contrôlée avant lecture) */
+export async function readBoundedFile(
+  filepath: string,
+  maxBytes: number = ZIP_LIMITS.maxFileBytes
+): Promise<Buffer> {
   // Un seul descripteur pour la taille et la lecture : le fichier ne peut pas être
   // remplacé entre les deux (CodeQL js/file-system-race)
   const fh = await fs.promises.open(filepath, 'r');
   try {
     const st = await fh.stat();
-    if (st.size > ZIP_LIMITS.maxFileBytes) {
-      throw new Error(`Fichier trop volumineux (max ${ZIP_LIMITS.maxFileBytes} octets)`);
+    if (st.size > maxBytes) {
+      throw new Error(`Fichier trop volumineux (max ${maxBytes} octets)`);
     }
     return await fh.readFile();
   } finally {

@@ -315,7 +315,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   // Menu natif
   useCompetitionMenu({
     competitionId: competition.id,
-    competitionTitle: competition.title,
     currentPhase,
     fencers,
     hasPools: pools.length > 0,
