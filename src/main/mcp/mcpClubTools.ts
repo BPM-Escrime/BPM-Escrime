@@ -1,8 +1,8 @@
 /**
  * BPM - Escrime - Outils MCP : séances du Mode Club (#1872, #1880)
  * Lister, lire, préparer, ouvrir, fermer et rouvrir les séances d'un club, pointer les
- * membres, compléter le bilan. Mêmes dépôts que l'écran (`db.club`) ; fermer la séance
- * la délie du serveur d'entraînement, comme le fait `club:closeSession`.
+ * membres, compléter le bilan. Écritures par les commandes du contrat, comme l'écran
+ * (ADR-0005, #2134) ; fermer la séance la délie du serveur d'entraînement.
  * Données personnelles minimales : noms seulement (ni licence, ni date de naissance).
  * Outils d'écriture proposés seulement si « Autoriser l'écriture » est coché.
  * Licensed under GPL-3.0
@@ -13,7 +13,7 @@ import { Weapon } from '../../shared/types';
 import { linkedClubSession, setLinkedClubSession } from '../remote/clubArena';
 import { McpToolError, type McpDeps, type McpTool } from './mcpTools';
 import { dryRunOf, type McpWriteTool } from './mcpWriteTools';
-import { optBool, optInt, optPick, optStr, reqStr } from './mcpDomain';
+import { optBool, optInt, optPick, optStr, reqStr, runContractCommand } from './mcpDomain';
 
 type Args = Record<string, unknown>;
 
@@ -28,11 +28,6 @@ const sessionIdProp = {
 const dryRunProp = {
   dryRun: { type: 'boolean', description: 'Décrit le résultat sans rien écrire' },
 };
-
-/** Erreur du dépôt (séance ou membre inconnu, date invalide…) → résultat `isError` */
-function asToolError(e: unknown): never {
-  throw new McpToolError(e instanceof Error ? e.message : 'Séance invalide');
-}
 
 function clubSessionOrThrow(deps: McpDeps, id: string): ClubSession {
   const s = deps.db.club.getSession(id);
@@ -229,7 +224,7 @@ export const MCP_CLUB_TOOLS: McpWriteTool[] = [
         date: parseDate(args, 'date', true)!,
         label: optStr(args, 'label', 120),
         weapon: optPick(args, 'weapon', WEAPONS),
-        stripCount: optInt(args, 'stripCount', 1, 100),
+        stripCount: optInt(args, 'stripCount', 1, 99),
         coachIds: parseCoachIds(args),
         objectives: optStr(args, 'objectives', 4000),
         planned: optBool(args, 'planned'),
@@ -238,11 +233,10 @@ export const MCP_CLUB_TOOLS: McpWriteTool[] = [
       };
       if (!deps.db.club.getClub(clubId)) throw new McpToolError(`Club inconnu : ${clubId}`);
       if (dryRunOf(args)) return { dryRun: true, wouldCreate: { clubId, ...input } };
-      try {
-        return sessionSummary(deps, deps.db.club.createSession(clubId, input));
-      } catch (e) {
-        asToolError(e);
-      }
+      return sessionSummary(
+        deps,
+        runContractCommand(deps, 'planClubSession', { clubId, details: input })
+      );
     },
   },
   {
@@ -262,7 +256,10 @@ export const MCP_CLUB_TOOLS: McpWriteTool[] = [
         throw new McpToolError(`Séance non préparée (statut ${s.status}) : ouverture impossible`);
       }
       if (dryRunOf(args)) return { dryRun: true, wouldOpen: s.id };
-      return sessionSummary(deps, deps.db.club.startSession(s.id) ?? s);
+      return sessionSummary(
+        deps,
+        runContractCommand(deps, 'startClubSession', { sessionId: s.id }) ?? s
+      );
     },
   },
   {
@@ -282,8 +279,12 @@ export const MCP_CLUB_TOOLS: McpWriteTool[] = [
         throw new McpToolError(`Séance non ouverte (statut ${s.status}) : fermeture impossible`);
       }
       if (dryRunOf(args)) return { dryRun: true, wouldClose: s.id };
+      // Port du serveur d'entraînement absent du contexte MCP : déliée ici, puis la commande
       if (linkedClubSession() === s.id) setLinkedClubSession(null);
-      return sessionSummary(deps, deps.db.club.closeSession(s.id) ?? s);
+      return sessionSummary(
+        deps,
+        runContractCommand(deps, 'closeClubSession', { sessionId: s.id }) ?? s
+      );
     },
   },
   {
@@ -302,7 +303,10 @@ export const MCP_CLUB_TOOLS: McpWriteTool[] = [
         throw new McpToolError(`Séance non fermée (statut ${s.status}) : réouverture impossible`);
       }
       if (dryRunOf(args)) return { dryRun: true, wouldReopen: s.id };
-      return sessionSummary(deps, deps.db.club.reopenSession(s.id) ?? s);
+      return sessionSummary(
+        deps,
+        runContractCommand(deps, 'reopenClubSession', { sessionId: s.id }) ?? s
+      );
     },
   },
   {
@@ -341,7 +345,7 @@ export const MCP_CLUB_TOOLS: McpWriteTool[] = [
         date: parseDate(args, 'date', false),
         label: optStr(args, 'label', 120),
         weapon: optPick(args, 'weapon', WEAPONS),
-        stripCount: optInt(args, 'stripCount', 1, 100),
+        stripCount: optInt(args, 'stripCount', 1, 99),
         coachIds: parseCoachIds(args),
         objectives: optStr(args, 'objectives', 4000),
         notes: optStr(args, 'notes', 8000),
@@ -354,11 +358,13 @@ export const MCP_CLUB_TOOLS: McpWriteTool[] = [
         throw new McpToolError('Aucun champ à modifier');
       }
       if (dryRunOf(args)) return { dryRun: true, sessionId: s.id, wouldUpdate: updates };
-      try {
-        return sessionSummary(deps, deps.db.club.updateSession(s.id, updates) ?? s);
-      } catch (e) {
-        asToolError(e);
-      }
+      return sessionSummary(
+        deps,
+        runContractCommand(deps, 'updateClubSessionDetails', {
+          sessionId: s.id,
+          details: updates,
+        }) ?? s
+      );
     },
   },
   {
@@ -387,11 +393,14 @@ export const MCP_CLUB_TOOLS: McpWriteTool[] = [
       const present = optBool(args, 'present');
       if (present === undefined) throw new McpToolError('Argument « present » requis');
       if (dryRunOf(args)) return { dryRun: true, sessionId: s.id, memberIds, present };
-      try {
-        for (const id of memberIds) deps.db.club.setAttendance(s.id, id, present);
-      } catch (e) {
-        asToolError(e);
-      }
+      // Une commande par membre, en une transaction : tout ou rien
+      const run = () => {
+        for (const memberId of memberIds) {
+          runContractCommand(deps, 'setClubAttendance', { sessionId: s.id, memberId, present });
+        }
+      };
+      if (typeof deps.db.transaction === 'function') deps.db.transaction(run);
+      else run();
       const after = clubSessionOrThrow(deps, s.id);
       return { ...sessionSummary(deps, after), changed: memberIds.length };
     },
