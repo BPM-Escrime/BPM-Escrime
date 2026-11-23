@@ -21,6 +21,23 @@ const setup = () => {
   return { onCreate, onClose, container };
 };
 
+/**
+ * Fichier choisi par le dialogue (plateforme Electron), décodé par la requête
+ * listFederalFiles du contrat (#2134)
+ */
+function mockFederalFiles(fileName: string, files: Array<{ name: string; content: string }>) {
+  (window as unknown as { electronAPI: unknown }).electronAPI = {
+    dialog: {
+      openFile: vi.fn().mockResolvedValue({ filePath: fileName, bytes: new Uint8Array([1]) }),
+    },
+    api: {
+      invoke: vi.fn(async (name: string) =>
+        name === 'listFederalFiles' ? { ok: true, data: files } : { ok: true, data: null }
+      ),
+    },
+  };
+}
+
 describe('NewCompetitionModal', () => {
   it('crée une compétition avec le titre saisi', () => {
     const { onCreate, container } = setup();
@@ -69,14 +86,7 @@ describe('NewCompetitionModal', () => {
         )
         .join('') +
       '</Tireurs><Arbitres/><Equipes/></BaseCompetitionParEquipes>';
-    (window as unknown as { electronAPI: unknown }).electronAPI = {
-      dialog: {
-        openFederalFiles: vi.fn().mockResolvedValue({
-          names: ['EXEMPLE_equ.zip'],
-          files: [{ name: 'EngardeSDSENIOR.xml', content: xml }],
-        }),
-      },
-    };
+    mockFederalFiles('EXEMPLE_equ.zip', [{ name: 'EngardeSDSENIOR.xml', content: xml }]);
     const { onCreate, container } = setup();
     fireEvent.click(screen.getByText('federalImport.choose'));
     await waitFor(() => expect(screen.getByTestId('federal-import-panel')).toBeInTheDocument());
@@ -110,14 +120,7 @@ describe('NewCompetitionModal', () => {
       '<BaseCompetitionIndividuelle Date="20.06.2027" Annee="2026 - 2027" TitreLong="Circuit national" Categorie="SENIOR" Domaine="N" Sexe="M" Arme="E" ID="123456" Championnat="FFE"><Tireurs>' +
       '<Tireur Nom="NOM1" Prenom="P1" Licence="900001" Sexe="M" Club="CLUB"/>' +
       '</Tireurs><Arbitres/></BaseCompetitionIndividuelle>';
-    (window as unknown as { electronAPI: unknown }).electronAPI = {
-      dialog: {
-        openFederalFiles: vi.fn().mockResolvedValue({
-          names: ['EXEMPLE.xml'],
-          files: [{ name: 'EXEMPLE.xml', content: xml }],
-        }),
-      },
-    };
+    mockFederalFiles('EXEMPLE.xml', [{ name: 'EXEMPLE.xml', content: xml }]);
     const { onCreate, container } = setup();
     fireEvent.click(screen.getByText('federalImport.choose'));
     await waitFor(() =>

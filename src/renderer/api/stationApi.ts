@@ -83,6 +83,11 @@ export function createStationApi(client: BpmClient) {
         c('setDayStripRule', { dayId, strip, rule }),
       setAutoAssign: (dayId: string, on: boolean) => c('setDayAutoAssign', { dayId, on }),
     },
+    /** Dossier de sauvegarde (#2134) ; le choix passe par le sélecteur natif (backup:chooseDir) */
+    backup: {
+      getDir: () => q('getBackupDir', {}),
+      resetDir: () => c('resetBackupDir', {}),
+    },
     /** RGPD (#1882) : droits des personnes, conservation, noms sur le réseau */
     privacy: {
       getSettings: () => q('getPrivacySettings', {}),

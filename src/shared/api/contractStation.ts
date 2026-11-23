@@ -36,6 +36,7 @@ import type {
   RetentionPurgeResult,
 } from '../types/privacy';
 import type { McpLogEntry, McpStatus } from '../types/mcp';
+import type { BackupDirDTO } from '../types/systemSettings';
 
 const Short = z.string().max(200);
 const Nothing = z.void();
@@ -198,6 +199,20 @@ export const stationOperations = {
       'Reprend les réglages de localStorage (clés historiques) : « missing » seulement les clés absentes de la base, « write » écriture courante. Renvoie les clés écrites.',
     input: z.object({ values: LegacyValuesSchema, mode: z.enum(['missing', 'write']) }),
     output: z.array(z.string()),
+    permission: 'station:admin',
+  }),
+  // ── Dossier de sauvegarde (#2134) : choix par le sélecteur natif (backup:chooseDir) ──
+  getBackupDir: query({
+    description:
+      'Dossier des sauvegardes automatiques et de « Enregistrer » ; isDefault : pas de réglage, <Documents>/BPM - Escrime.',
+    input: z.object({}),
+    output: z.custom<BackupDirDTO>(),
+    permission: 'station:admin',
+  }),
+  resetBackupDir: command({
+    description: 'Revient au dossier de sauvegarde par défaut ; renvoie le dossier effectif.',
+    input: z.object({}),
+    output: z.custom<BackupDirDTO>(),
     permission: 'station:admin',
   }),
   listAgentFolders: query({

@@ -85,6 +85,21 @@ export const fileOperations = {
     permission: 'station:admin',
   }),
 
+  // ── Extranet fédéral (#1938) ──
+  listFederalFiles: query({
+    description:
+      'Fichiers de l’extranet fédéral (.zip d’une épreuve, .xml / .cotcot / .fff / .txt isolés) décodés en texte : nom et contenu de chaque fichier, pour l’analyse partagée de « Nouvelle compétition ». 5 fichiers au plus. Archive ou fichier invalide : invalid_file.',
+    input: z.strictObject({
+      // 5 : FEDERAL_MAX_INPUTS (src/main/federalFiles.ts)
+      files: z
+        .array(z.strictObject({ name: z.string().min(1).max(260), content: FileContent }))
+        .min(1)
+        .max(5),
+    }),
+    output: z.custom<Array<{ name: string; content: string }>>(),
+    permission: 'station:admin',
+  }),
+
   // ── Mode Club ──
   importClubPhotos: command({
     description:

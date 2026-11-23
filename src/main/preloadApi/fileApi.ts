@@ -19,10 +19,6 @@ export const fileApi = {
     }
     return ipcRenderer.invoke('file:import', filepath);
   },
-  unpackFederalFiles: (inputs: Array<{ name: string; bytes: Uint8Array }>) => {
-    if (!Array.isArray(inputs) || inputs.length === 0) throw new Error('Files are required');
-    return ipcRenderer.invoke('file:unpackFederalFiles', inputs);
-  },
   writeContent: (filepath: string, content: string | Uint8Array) => {
     if (!filepath || typeof filepath !== 'string') {
       throw new Error('Filepath is required and must be a string');

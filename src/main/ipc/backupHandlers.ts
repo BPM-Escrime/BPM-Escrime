@@ -1,5 +1,6 @@
 /**
- * BPM - Escrime - Handlers IPC `backup:*` : dossiers de sauvegarde
+ * BPM - Escrime - Handlers IPC `backup:*` : sélecteur natif des dossiers de sauvegarde
+ * (lecture et remise à zéro : getBackupDir / resetBackupDir du contrat, #2134)
  * (Paramètres → Sauvegarde ; dossier dédié d'une compétition).
  * Le chemin ne vient que du sélecteur natif de dossier.
  * Licensed under GPL-3.0
@@ -24,16 +25,9 @@ async function pickDirectory(): Promise<string | null> {
 }
 
 export function registerBackupHandlers(): void {
-  ipcMain.handle('backup:get', async () => getBackupDirInfo());
-
   ipcMain.handle('backup:chooseDir', async () => {
     const chosen = await pickDirectory();
     if (chosen) writeBackupSettings(app.getPath('userData'), { dir: chosen });
-    return getBackupDirInfo();
-  });
-
-  ipcMain.handle('backup:resetDir', async () => {
-    writeBackupSettings(app.getPath('userData'), {});
     return getBackupDirInfo();
   });
 

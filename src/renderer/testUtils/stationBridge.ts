@@ -11,7 +11,7 @@ import { fakeApiBridge, type ApiHandlers } from './apiBridge';
 
 /** Méthodes de l'écran simulées (vi.fn) : groupe → méthode → fonction */
 export type StationMocks = Partial<
-  Record<'settings' | 'themes' | 'eventDay' | 'privacy' | 'mcp', Record<string, unknown>>
+  Record<'settings' | 'themes' | 'eventDay' | 'backup' | 'privacy' | 'mcp', Record<string, unknown>>
 >;
 
 type Input = Record<string, unknown>;
@@ -55,6 +55,8 @@ const MAPPING: Record<
   assignDayStrip: ['eventDay', 'assignStrip', i => [i.dayId, i.strip, i.key]],
   setDayStripRule: ['eventDay', 'setStripRule', i => [i.dayId, i.strip, i.rule]],
   setDayAutoAssign: ['eventDay', 'setAutoAssign', i => [i.dayId, i.on]],
+  getBackupDir: ['backup', 'getDir', () => []],
+  resetBackupDir: ['backup', 'resetDir', () => []],
   getPrivacySettings: ['privacy', 'getSettings', () => []],
   updatePrivacySettings: ['privacy', 'setSettings', i => [i]],
   listPrivacyPersons: ['privacy', 'findPersons', i => [i.query]],

@@ -11,8 +11,10 @@ import type { DatabaseManager } from '../../database';
 import { assertAuthorizedPath, authorizePath, readBoundedFile } from '../pathAuthorization';
 import { MAX_DATA_FILE_BYTES } from '../../shared/api/contractFiles';
 import { readImportText, rowsToXlsx } from '../xlsxToCsv';
-import { FEDERAL_MAX_INPUTS, unpackFederalFiles, type FederalInput } from '../federalFiles';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
+
+/** Fichiers lus d'un seul choix multiple du dialogue (binaire) */
+const MAX_OPEN_FILES = 5;
 
 export interface FileHandlersContext {
   db: DatabaseManager;
@@ -79,11 +81,17 @@ export function registerFileHandlers({ db, getMainWindow }: FileHandlersContext)
     if (!result.canceled && result.filePaths.length > 0) {
       const filePath = result.filePaths[0];
       // Fichier de données (ADR-0021) : octets bornés, rendus au contrat par l'écran
-      if (binary === true)
-        return {
-          filePath,
-          bytes: new Uint8Array(await readBoundedFile(filePath, MAX_DATA_FILE_BYTES)),
-        };
+      if (binary === true) {
+        const files: Array<{ filePath: string; bytes: Uint8Array }> = [];
+        // Plusieurs fichiers (extranet fédéral, #2134) : MAX_OPEN_FILES au plus
+        for (const p of result.filePaths.slice(0, MAX_OPEN_FILES)) {
+          files.push({
+            filePath: p,
+            bytes: new Uint8Array(await readBoundedFile(p, MAX_DATA_FILE_BYTES)),
+          });
+        }
+        return { filePath, bytes: files[0].bytes, ...(files.length > 1 ? { files } : {}) };
+      }
       authorizePath(filePath, 'read');
       try {
         const content = await readImportText(filePath);
@@ -95,44 +103,6 @@ export function registerFileHandlers({ db, getMainWindow }: FileHandlersContext)
     }
 
     return null;
-  });
-
-  // Fichiers de l'extranet fédéral (#1938) : .zip, ou .xml / .fff / .txt isolés
-  ipcMain.handle('dialog:openFederalFiles', async () => {
-    const result = await dialog.showOpenDialog(getMainWindow()!, {
-      properties: ['openFile', 'multiSelections'],
-      filters: [
-        {
-          name: 'FFE / FIE (.zip, .xml, .fff, .txt)',
-          extensions: ['zip', 'xml', 'cotcot', 'fff', 'txt', 'csv'],
-        },
-        { name: '*', extensions: ['*'] },
-      ],
-    });
-    if (result.canceled || result.filePaths.length === 0) return null;
-    const inputs: FederalInput[] = [];
-    for (const filePath of result.filePaths.slice(0, FEDERAL_MAX_INPUTS)) {
-      inputs.push({ name: path.basename(filePath), bytes: await readBoundedFile(filePath) });
-    }
-    return {
-      names: inputs.map(i => i.name),
-      files: await unpackFederalFiles(inputs),
-    };
-  });
-
-  // Même lecture pour des fichiers glissés-déposés (contenu transmis par le renderer)
-  ipcMain.handle('file:unpackFederalFiles', async (_, raw: unknown) => {
-    if (!Array.isArray(raw) || raw.length === 0 || raw.length > FEDERAL_MAX_INPUTS) {
-      throw new Error('Fichiers invalides');
-    }
-    const inputs = raw.map((item: unknown): FederalInput => {
-      const { name, bytes } = (item ?? {}) as { name?: unknown; bytes?: unknown };
-      if (typeof name !== 'string' || !(bytes instanceof Uint8Array)) {
-        throw new Error('Fichier invalide');
-      }
-      return { name, bytes };
-    });
-    return unpackFederalFiles(inputs);
   });
 
   ipcMain.handle('dialog:saveFile', async (_, options) => {
