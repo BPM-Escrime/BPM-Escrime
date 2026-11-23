@@ -25,8 +25,10 @@ describe('getDefaultMaxScores (#1826)', () => {
     }
   });
 
-  it('hors olympique : comportement historique', () => {
-    expect(getDefaultMaxScores(Weapon.LASER, Category.SENIOR)).toEqual({ pool: 21, table: 0 });
+  it('Sabre Laser : 25 / 25 (#2208) ; arme à la carte : comportement historique', () => {
+    expect(getDefaultMaxScores(Weapon.LASER, Category.SENIOR)).toEqual({ pool: 25, table: 25 });
+    expect(getDefaultMaxScores(Weapon.LASER, Category.U9)).toEqual({ pool: 25, table: 25 });
+    expect(getDefaultMaxScores(Weapon.CUSTOM, Category.SENIOR)).toEqual({ pool: 21, table: 0 });
     expect(isOlympicWeapon(Weapon.CUSTOM)).toBe(false);
     expect(isOlympicWeapon(undefined)).toBe(false);
   });

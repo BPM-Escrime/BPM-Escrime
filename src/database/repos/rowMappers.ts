@@ -17,6 +17,7 @@ import {
 } from '../../shared/types';
 import { safeJsonParse } from './dbUtils';
 import { getFallbackCompetitionSettings } from '../../shared/utils/defaultCompetitionSettings';
+import { readLaserMaxScores } from '../../shared/domain/formula/laserMaxScores';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
 
 /** Ligne SQLite brute (colonnes snake_case) : chaque lecture est convertie explicitement (#1775) */
@@ -54,7 +55,8 @@ export function parseCompetitionRow(row: SqlRow): Competition {
       currentPhaseIndex: row.current_phase_index as number,
       isTeamEvent: row.is_team_event === 1,
       status: row.status as Competition['status'],
-      settings,
+      // Sabre Laser individuel créé avec l'ancien repli 5 / 21 : lu 25 / 25 (#2208)
+      settings: readLaserMaxScores(row.weapon as string, row.is_team_event === 1, settings),
       fencers: [],
       ...(row.fencer_count != null ? { fencerCount: Number(row.fencer_count) } : {}),
       referees: [],

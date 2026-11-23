@@ -190,13 +190,13 @@ describe('relayCardFor : motif, escalade sur la rencontre', () => {
     expect(r.ok && r.card.fencerId).toBe('reserve-a');
   });
 
-  it('Sabre Laser : escalade et barème inchangés', () => {
+  it('Sabre Laser : escalade inchangée, jaune +3 (provisoire, #2208)', () => {
     const meetingCards = [prior('a1', CardType.WHITE, CardGroup.GROUP_1)];
     const r = relayCardFor(
       input({ weapon: Weapon.LASER, given: { reason: CardReason.EARLY_START }, meetingCards })
     );
     expect(r.ok && r.card.type).toBe(CardType.YELLOW);
-    expect(r.ok && r.card.pointsAwarded).toBe(1);
+    expect(r.ok && r.card.pointsAwarded).toBe(3);
   });
 
   it('noir de l’escalade : exclusion portée par le carton', () => {
@@ -237,7 +237,7 @@ describe('relayCardFor : type imposé par l’appareil', () => {
     const y = relayCardFor(input({ given: { type: CardType.YELLOW } }));
     expect(y.ok && y.card.pointsAwarded).toBe(0);
     const laser = relayCardFor(input({ weapon: Weapon.LASER, given: { type: CardType.YELLOW } }));
-    expect(laser.ok && laser.card.pointsAwarded).toBe(1);
+    expect(laser.ok && laser.card.pointsAwarded).toBe(3);
   });
 
   it('pas de blanc en escrime olympique ; type inconnu refusé', () => {

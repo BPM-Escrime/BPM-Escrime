@@ -604,10 +604,11 @@ describe('Escrime olympique : motifs propres à une arme (t.170 1.10 et 1.12)', 
 });
 
 // ============================================================================
-// Sabre Laser et arme à la carte : non-régression (#2207, hors périmètre : #2208, #2209)
+// Sabre Laser et arme à la carte : escalade inchangée (#2209) ; barème Sabre Laser provisoire
+// jaune +3 / rouge +5 (#2208), arme à la carte inchangée
 // ============================================================================
 
-describe('Sabre Laser et arme à la carte inchangés', () => {
+describe('Sabre Laser et arme à la carte', () => {
   const LASER_GROUPS: Record<string, CardGroup> = {
     early_start: CardGroup.GROUP_1,
     late_stop: CardGroup.GROUP_1,
@@ -632,7 +633,11 @@ describe('Sabre Laser et arme à la carte inchangés', () => {
     const config = getWeaponCardConfig(weapon);
     expect(config.availableReasons).toEqual(Object.keys(LASER_GROUPS));
     expect(config.reasonToGroup).toEqual(LASER_GROUPS);
-    expect(config.scoreImpact).toEqual({ white: 0, yellow: 1, red: 1, black: 0 });
+    expect(config.scoreImpact).toEqual(
+      weapon === Weapon.LASER
+        ? { white: 0, yellow: 3, red: 5, black: 0 }
+        : { white: 0, yellow: 1, red: 1, black: 0 }
+    );
     expect(config.escalation).toBeUndefined();
   });
 
@@ -644,17 +649,19 @@ describe('Sabre Laser et arme à la carte inchangés', () => {
         for (const r of reasons) cards.push(createCard('m1', 'f1', r, cards, weapon));
         return cards.map(c => `${c.type.toLowerCase()}:${c.pointsAwarded}`);
       };
+      // Sabre Laser : jaune +3, rouge +5 (provisoire, #2208) ; sinon +1 / +1
+      const [y, r] = weapon === Weapon.LASER ? [3, 5] : [1, 1];
       expect(seq([CardReason.EARLY_START, CardReason.LATE_STOP, CardReason.BODY_CONTACT])).toEqual([
         'white:0',
-        'yellow:1',
-        'yellow:1',
+        `yellow:${y}`,
+        `yellow:${y}`,
       ]);
       expect(seq([CardReason.ESTOC, CardReason.HEAVY_HIT, CardReason.ESTOC])).toEqual([
-        'yellow:1',
-        'red:1',
-        'red:1',
+        `yellow:${y}`,
+        `red:${r}`,
+        `red:${r}`,
       ]);
-      expect(seq([CardReason.BRUTALITY, CardReason.DANGEROUS])).toEqual(['red:1', 'black:0']);
+      expect(seq([CardReason.BRUTALITY, CardReason.DANGEROUS])).toEqual([`red:${r}`, 'black:0']);
       expect(seq([CardReason.CHEATING])).toEqual(['black:0']);
     }
   );

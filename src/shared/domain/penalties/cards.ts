@@ -1,6 +1,6 @@
 /**
  * BPM - Escrime - Cartons individuels, règles pures (docs/adr/0028 lot D, 0002). Deux règlements :
- * FIE pour épée, fleuret, sabre (#2207) ; Sabre Laser et arme à la carte inchangés (#2208).
+ * FIE pour épée, fleuret, sabre (#2207) ; Sabre Laser, barème provisoire (#2208).
  * Licensed under GPL-3.0
  */
 
@@ -32,6 +32,9 @@ const LASER_REASON_TO_GROUP: Partial<Record<CardReason, CardGroup>> = {
 const LASER_REASONS = Object.keys(LASER_REASON_TO_GROUP) as CardReason[];
 
 const CLASSICAL_SCORE_IMPACT = { white: 0, yellow: 1, red: 1, black: 0 };
+
+// Provisoire (#2208) : barème de la tablette (docs/ARBITRAGE.md § 3.4), parité testée
+const LASER_SCORE_IMPACT = { white: 0, yellow: 3, red: 5, black: 0 };
 
 // Escrime olympique (FIE) : tableau t.170 du règlement technique FIE, motifs rangés dans leur groupe
 const FIE_REASON_TO_GROUP: Partial<Record<CardReason, CardGroup>> = {
@@ -103,7 +106,7 @@ export const WEAPON_CARD_CONFIGS: Record<Weapon, WeaponCardConfig> = {
   [Weapon.LASER]: {
     availableReasons: LASER_REASONS,
     reasonToGroup: LASER_REASON_TO_GROUP,
-    scoreImpact: { white: 0, yellow: 1, red: 1, black: 0 },
+    scoreImpact: LASER_SCORE_IMPACT,
   },
   [Weapon.CUSTOM]: {
     availableReasons: LASER_REASONS,
@@ -186,7 +189,7 @@ function fieCardType(
   }
 }
 
-// Sabre Laser et arme à la carte, inchangé (#2208) : [1re faute du groupe, récidive]
+// Sabre Laser et arme à la carte, inchangé (#2209) : [1re faute du groupe, récidive]
 const LASER_STEPS: Record<CardGroup, [CardType, CardType]> = {
   [CardGroup.GROUP_1]: [CardType.WHITE, CardType.YELLOW],
   [CardGroup.GROUP_2]: [CardType.YELLOW, CardType.RED],
