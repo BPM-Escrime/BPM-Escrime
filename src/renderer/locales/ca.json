@@ -4382,7 +4382,20 @@
     "too_many": "Demanades {{requested}} arenes, però la zona només n’admet {{max}}. Només es col·loca el màxim.",
     "dims_option": "Cotes tècniques (plànol i exportació)",
     "dims_hint": "Afegeix al plànol i a les exportacions les cotes de la sala, les arenes, els espais, els marges i els elements.",
-    "handle_arena": "Arena (arrossega per moure)"
+    "handle_arena": "Arena (arrossega per moure)",
+    "zoom_in": "Amplia",
+    "zoom_out": "Redueix",
+    "zoom_reset": "Mida real (100 %)",
+    "zoom_hint": "Ctrl + roda per ampliar, arrossega el fons per desplaçar-te",
+    "rooms_title": "Sales",
+    "room_name": "Nom de la sala",
+    "room_default": "Sala",
+    "add_room": "Afegeix una sala",
+    "remove_room": "Suprimeix la sala",
+    "item_text": "Text mostrat",
+    "overview": "Vista general",
+    "overview_hint": "Arrossega una sala per moure-la (fletxes del teclat); doble clic o Retorn per obrir-la.",
+    "overview_room_line": "{{name}}: {{width}} × {{length}} m, {{count}} arena/es"
   },
   "stripControl": {
     "title": "Control de la sala",
