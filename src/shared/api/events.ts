@@ -13,6 +13,10 @@ const Id = z.string();
 /** Groupe d'un tableau séparé après les poules (aujourd'hui le sexe : « F », « M ») */
 const Group = z.string();
 const SpecialStatus = z.enum(['abandon', 'forfait', 'exclusion']);
+/** Carton E (arène Sabre Laser), table team_match_cards */
+const TeamCardType = z.enum(['white', 'yellow', 'red', 'black']);
+/** Carton individuel (CardType) */
+const RelayCardType = z.enum(['WHITE', 'YELLOW', 'RED', 'BLACK']);
 
 /** Types d'événements écrits par le moteur */
 export const JOURNAL_EVENT = {
@@ -44,6 +48,11 @@ export const JOURNAL_EVENT = {
   relayReopened: 'RelayReopened',
   teamMatchDecided: 'TeamMatchDecided',
   teamFencerSubstituted: 'TeamFencerSubstituted',
+  teamCardGiven: 'TeamCardGiven',
+  relayCardGiven: 'RelayCardGiven',
+  teamCardCancelled: 'TeamCardCancelled',
+  relayCardCancelled: 'RelayCardCancelled',
+  teamWithdrawn: 'TeamWithdrawn',
 } as const;
 
 const member = <T extends string, P extends z.ZodType>(type: T, payload: P) =>
@@ -249,6 +258,32 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
       inFencerId: Id,
       relayIds: z.array(Id),
     })
+  ),
+  // Cartons des épreuves par équipes (docs/adr/0028) : identifiants et codes seulement ;
+  // groupe, points et exclusion se recalculent du motif et de l'arme
+  member(
+    JOURNAL_EVENT.teamCardGiven,
+    z.object({ matchId: Id, teamId: Id, cardId: Id, type: TeamCardType })
+  ),
+  member(
+    JOURNAL_EVENT.relayCardGiven,
+    z.object({
+      matchId: Id,
+      relayId: Id,
+      fencerId: Id,
+      cardId: Id,
+      type: RelayCardType,
+      /** Code CardReason ; null : carton imposé par l'appareil de piste, sans motif */
+      reason: z.string().nullable(),
+    })
+  ),
+  member(JOURNAL_EVENT.teamCardCancelled, z.object({ matchId: Id, cardId: Id })),
+  member(JOURNAL_EVENT.relayCardCancelled, z.object({ matchId: Id, relayId: Id, cardId: Id })),
+  // Équipe retirée (o.99.7.a, abandon) ou exclue (o.99.7.b, noir individuel) ; la rencontre
+  // perdue est décidée par TeamMatchDecided dans la même commande
+  member(
+    JOURNAL_EVENT.teamWithdrawn,
+    z.object({ teamId: Id, matchId: Id, reason: z.enum(['exclusion', 'abandon']) })
   ),
 ]);
 export type JournalEventBody = z.infer<typeof JournalEventBodySchema>;

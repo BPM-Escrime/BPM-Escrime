@@ -92,6 +92,11 @@ export interface RelayCardMeeting {
   /** Rencontre terminée ou décidée (tous relais tirés, noir P, exclusion…) */
   finished: boolean;
   relays: readonly RelayCardSlot[];
+  /**
+   * Rencontre suivante d'une des deux équipes déjà commencée (fourni par l'appelant) : le
+   * dernier relais d'une rencontre terminée ne reçoit plus de carton
+   */
+  nextMatchStarted?: boolean;
 }
 
 /** Carton déjà enregistré dans la rencontre, tous tireurs et relais confondus */
@@ -131,17 +136,23 @@ export type RelayCardRefusal = CardRefusal<
 /**
  * Relais qui peut recevoir un carton (ADR-0028 § 5) : le relais en cours (premier non terminé),
  * ou le dernier relais terminé tant que le suivant n'a pas commencé (carton signalé juste
- * après le END de l'appareil).
+ * après le END de l'appareil). Rencontre tirée jusqu'au bout : son dernier relais reçoit
+ * encore un carton tant que la rencontre suivante de l'équipe n'a pas commencé (décision du
+ * mainteneur, #2213 point 1).
  */
 export function relayAcceptsCard(
   relays: readonly RelayCardSlot[],
-  relayId: string
+  relayId: string,
+  nextMatchStarted = false
 ): 'ok' | 'relay_not_found' | 'match_finished' | 'relay_out_of_order' {
   const target = relays.find(r => r.relayId === relayId);
   if (!target) return 'relay_not_found';
   const sorted = [...relays].sort((a, b) => a.order - b.order);
   const current = sorted.find(r => !r.finished);
-  if (!current) return 'match_finished';
+  if (!current) {
+    const last = sorted[sorted.length - 1];
+    return last.relayId === target.relayId && !nextMatchStarted ? 'ok' : 'match_finished';
+  }
   if (target.relayId === current.relayId) return 'ok';
   const lastFinished = sorted.filter(r => r.finished && r.order < current.order).pop();
   if (lastFinished?.relayId === target.relayId && !current.started) return 'ok';
@@ -156,15 +167,19 @@ function typeAllowed(type: CardType, weapon: Weapon): boolean {
 
 /**
  * Carton d'un tireur dans un relais. Refus : relais inconnu (`relay_not_found`), rencontre
- * terminée (`match_finished`), relais ni en cours ni juste terminé (`relay_out_of_order`), motif
+ * décidée avant son dernier relais, ou terminée et rencontre suivante commencée
+ * (`match_finished`), relais ni en cours ni juste terminé (`relay_out_of_order`), motif
  * hors du règlement de l'arme ou type impossible (`invalid_input`).
  */
 export function relayCardFor(
   input: RelayCardInput
 ): { ok: true; card: RelayCard } | RelayCardRefusal {
   const { id, at, meeting, relayId, side, given, meetingCards, weapon } = input;
-  if (meeting.finished) return { ok: false, code: 'match_finished' };
-  const accepts = relayAcceptsCard(meeting.relays, relayId);
+  // Rencontre décidée avant son dernier relais (exclusion, abandon) : plus de carton
+  if (meeting.finished && meeting.relays.some(r => !r.finished)) {
+    return { ok: false, code: 'match_finished' };
+  }
+  const accepts = relayAcceptsCard(meeting.relays, relayId, meeting.nextMatchStarted);
   if (accepts !== 'ok') return { ok: false, code: accepts };
   const relay = meeting.relays.find(r => r.relayId === relayId)!;
   const fencerId = side === 'A' ? relay.fencerAId : relay.fencerBId;
@@ -201,6 +216,19 @@ export function relayCardFor(
       resultingExclusion: given.type === CardType.BLACK,
     },
   };
+}
+
+/**
+ * Touches de pénalisation reçues par chaque équipe dans un relais : un carton rouge donne une
+ * touche à l'adversaire (t.162.2). Elles autorisent le dépassement du palier (t.41.1).
+ */
+export function relayPenaltyTouches(
+  relay: { fencerAId: string; fencerBId: string },
+  cards: ReadonlyArray<{ fencerId: string; type: string }>
+): { A: number; B: number } {
+  const reds = (fencerId: string) =>
+    cards.filter(c => c.fencerId === fencerId && c.type === CardType.RED).length;
+  return { A: reds(relay.fencerBId), B: reds(relay.fencerAId) };
 }
 
 // ─── Cartons de l'appareil de piste ─────────────────────────────────────────

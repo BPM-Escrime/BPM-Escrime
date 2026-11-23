@@ -36,7 +36,8 @@ export type DivergenceKind =
   | 'team_match'
   | 'team_match_unexpected'
   | 'team_relay'
-  | 'team_match_result';
+  | 'team_match_result'
+  | 'team_cards';
 
 export interface Divergence {
   kind: DivergenceKind;
@@ -71,6 +72,17 @@ export interface TeamStateView {
       scoreA: number;
       scoreB: number;
       finished: boolean;
+    }>;
+    /**
+     * Cartons des tables (team_match_cards, team_bout_cards), docs/adr/0028 ; undefined : non
+     * comparés
+     */
+    cards?: Array<{
+      id: string;
+      type: string;
+      teamId?: string;
+      relayId?: string;
+      fencerId?: string;
     }>;
   }>;
 }
@@ -336,6 +348,7 @@ function compareTeams(
     );
     if (!same(expected, actual)) out.push({ kind: 'team_match', id: mf.matchId, expected, actual });
     compareTeamResults(fact!, mf.matchId, m, out);
+    compareTeamCards(fact!, mf, m, out);
   }
   // Journal complet : toute rencontre des tables vient du journal
   if (complete) {
@@ -375,6 +388,34 @@ function compareTeamResults(
   if (!same(expected, actual)) {
     out.push({ kind: 'team_match_result', id: matchId, expected, actual });
   }
+}
+
+/**
+ * Cartons d'une rencontre (docs/adr/0028 § 10) : identifiant, type, équipe ou relais et tireur.
+ * Épreuve antérieure au lot C1 : une rencontre sans carton au journal, créée avant le premier
+ * carton du journal, garde ses cartons des tables sans écart (repris tels quels).
+ */
+function compareTeamCards(
+  fact: TeamsFact,
+  mf: TeamsFact['matches'][number],
+  m: TeamStateView['matches'][number],
+  out: Divergence[]
+): void {
+  if (!m.cards) return;
+  const journaled = (fact.cardMatchIds ?? []).includes(mf.matchId) || !!mf.afterCards;
+  if (!journaled && m.cards.length > 0) return;
+  const key = (c: { type: string; teamId?: string; relayId?: string; fencerId?: string }) => [
+    c.type,
+    c.teamId ?? null,
+    c.relayId ?? null,
+    c.fencerId ?? null,
+  ];
+  const expected = (fact.cards ?? [])
+    .filter(c => c.matchId === mf.matchId)
+    .map(c => [c.cardId, ...key(c)])
+    .sort();
+  const actual = m.cards.map(c => [c.id, ...key(c)]).sort();
+  if (!same(expected, actual)) out.push({ kind: 'team_cards', id: mf.matchId, expected, actual });
 }
 
 /** Placement du tableau (unique ou d'un groupe) comparé au tirage du journal */

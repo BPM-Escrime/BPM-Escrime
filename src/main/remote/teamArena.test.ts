@@ -125,7 +125,7 @@ d('Arène équipe des tablettes par les commandes (docs/adr/0024, lot E4)', () =
 
   it('relais au-delà du palier : refusé par le moteur, motif rendu à la tablette, rien d’écrit', async () => {
     const { handlers, relay, errors } = await setup();
-    relay(7, 2); // relais 1 : palier 5, une touche de plus au plus (t.41.1)
+    relay(7, 2); // relais 1 : palier 5, au-delà seulement d'autant que de rouges (t.41.1)
     expect(errors()).toEqual([
       [
         'team_arena_error',

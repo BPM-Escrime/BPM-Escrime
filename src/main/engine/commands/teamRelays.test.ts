@@ -207,7 +207,7 @@ d('recordRelayScore : rencontre FIE complète par les commandes (docs/adr/0024, 
     });
     await reject('recordRelayScore', rec(2, 1, 1)).toMatchObject({ code: 'relay_out_of_order' });
     await reject('recordRelayScore', rec(1, 7, 0)).toMatchObject({ code: 'score_above_max' });
-    // t.41.1 : une seule équipe au-delà du palier, d'une touche au plus
+    // t.41.1 : au-delà du palier seulement avec un carton rouge dans le relais
     await reject('recordRelayScore', rec(1, 6, 6)).toMatchObject({ code: 'score_above_max' });
     await call('recordRelayScore', rec(1, 5, 2));
     await reject('recordRelayScore', rec(1, 5, 2)).toMatchObject({ code: 'relay_out_of_order' });

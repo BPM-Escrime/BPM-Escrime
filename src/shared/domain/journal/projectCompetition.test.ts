@@ -258,6 +258,10 @@ describe('projectCompetition : épreuves par équipes (docs/adr/0024, lot E1)', 
       tableau: null,
       relayResults: {},
       decisions: {},
+      cards: [],
+      cardMatchIds: [],
+      cardsJournaled: false,
+      withdrawn: {},
     });
     const redrawn = projectCompetition([
       ...first,
