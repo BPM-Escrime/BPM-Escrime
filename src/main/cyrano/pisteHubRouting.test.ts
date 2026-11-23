@@ -237,4 +237,54 @@ describe('PisteHub — pistes partagées entre épreuves (#1878)', () => {
     // Champ Compe obligatoire (spéc. § 3) : l'épreuve, même seule
     expect(lastDisp().compe).toBe('comp-epee');
   });
+
+  describe('piste passée en manuel par une épreuve (docs/adr/0023)', () => {
+    let manual: Record<string, number[]>;
+
+    beforeEach(() => {
+      manual = {};
+      hub.detach();
+      hub = new PisteHub(new CyranoPisteDriver(cyrano), () => [fleuret, epee], {
+        manualStrips: id => manual[id] ?? [],
+      });
+      hub.attach();
+      for (const s of [fleuret, epee]) s.cyranoHook = (id, u) => hub.onArenaUpdate(id, u, s);
+    });
+
+    it('l’épreuve en manuel ne reçoit ni DISP ni scores ; l’autre épreuve garde l’appareil', async () => {
+      manual['comp-fleuret'] = [1];
+      await startEvent(fleuret, 'comp-fleuret', 'pool-f', 1, ID.a1, ID.a2);
+      await startEvent(epee, 'comp-epee', 'pool-e', 1, ID.b1, ID.b2);
+      // Les deux épreuves ont la piste 1 : celle qui ne l'a pas passée en manuel la prend
+      expect(hub.getRoutes()).toEqual({ '1': 'comp-epee' });
+      expect(disps.some(d => d.msg.weapon === 'F')).toBe(false);
+      expect(lastDisp().msg).toMatchObject({ weapon: 'E', right: { id: short(ID.b1) } });
+      device(frame('H', ID.b1, ID.b2, 2, 1));
+      expect(epee.getArena('arena1')?.currentMatch).toMatchObject({ scoreA: 2, scoreB: 1 });
+      expect(fleuret.getArena('arena1')?.currentMatch).toMatchObject({ scoreA: 0, scoreB: 0 });
+    });
+
+    it('seule épreuve sur la piste : mode manuel, scores ignorés, fin refusée', async () => {
+      manual['comp-fleuret'] = [1];
+      await startEvent(fleuret, 'comp-fleuret', 'pool-f', 1, ID.a1, ID.a2);
+      await startEvent(epee, 'comp-epee', 'pool-e', 2, ID.b1, ID.b2);
+      expect(disps).toHaveLength(0);
+      device(frame('H', ID.a1, ID.a2, 2, 1));
+      expect(fleuret.getArena('arena1')?.currentMatch).toMatchObject({ scoreA: 0, scoreB: 0 });
+      device(frame('E', ID.a1, ID.a2, 5, 1));
+      expect(acks).toBe(0);
+      expect(fleuret.getArena('arena1')?.status).not.toBe('finished');
+      expect(fleuret.getArena('arena1')?.cyrano).toMatchObject({ mode: 'manual' });
+    });
+
+    it('retour en appareil : le match courant est renvoyé', async () => {
+      manual['comp-fleuret'] = [1];
+      await startEvent(fleuret, 'comp-fleuret', 'pool-f', 1, ID.a1, ID.a2);
+      device(frame('W', ID.a1, ID.a2));
+      expect(disps).toHaveLength(0);
+      manual['comp-fleuret'] = [];
+      hub.refreshManualStrips();
+      expect(lastDisp().msg).toMatchObject({ weapon: 'F', right: { id: short(ID.a1) } });
+    });
+  });
 });

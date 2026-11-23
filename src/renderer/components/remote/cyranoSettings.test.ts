@@ -8,44 +8,52 @@ import {
   writeHost,
   writePort,
 } from './cyranoSettings';
+import type { DevicesApi } from '../../api/devicesApi';
 
-describe('réglages Cyrano (#1829)', () => {
-  let api: Record<string, ReturnType<typeof vi.fn>>;
-  beforeEach(() => {
-    localStorage.clear();
-    api = {
-      start: vi.fn().mockResolvedValue({ success: true, port: 50101 }),
-      setPistes: vi.fn().mockResolvedValue(undefined),
-      setOptions: vi.fn().mockResolvedValue(undefined),
-      loadPistes: vi.fn().mockResolvedValue([]),
-    };
-    (window as unknown as { electronAPI: unknown }).electronAPI = { cyrano: api };
-  });
+/** Pilotes simulés : appareils effectifs de l'épreuve (salle, docs/adr/0023) */
+function fakeApi(protocols: string[]) {
+  const api = {
+    getCompetitionDevices: vi.fn().mockResolvedValue({
+      devices: protocols.map((protocol, i) => ({ strip: i + 1, device: { protocol } })),
+    }),
+    cyrano: { start: vi.fn().mockResolvedValue({ port: 50101 }) },
+    opp2: { start: vi.fn().mockResolvedValue({ port: 1883 }) },
+    setOptions: vi.fn().mockResolvedValue(undefined),
+  };
+  return api as typeof api & DevicesApi;
+}
+
+describe('réglages des pilotes (#1829, docs/adr/0023)', () => {
+  beforeEach(() => localStorage.clear());
 
   it('démarrage automatique désactivé par défaut', async () => {
-    api.loadPistes.mockResolvedValue([{ piste: '1', ip: '10.0.0.1' }]);
-    expect(await autoStartCyrano('c1')).toBe(false);
-    expect(api.start).not.toHaveBeenCalled();
+    const api = fakeApi(['cyrano']);
+    expect(await autoStartCyrano('c1', api)).toBe(false);
+    expect(api.cyrano.start).not.toHaveBeenCalled();
   });
 
-  it('démarrage automatique : port, interface, pistes complètes et options', async () => {
+  it('démarrage automatique : port, interface, épreuve et options ; OPP2 si la salle en déclare', async () => {
     writeAutoStart(true);
     writePort(50101);
     writeHost('192.168.1.10');
-    api.loadPistes.mockResolvedValue([
-      { piste: '1', ip: '10.0.0.1' },
-      { piste: '', ip: '10.0.0.2' },
-    ]);
-    expect(await autoStartCyrano('c1')).toBe(true);
-    expect(api.loadPistes).toHaveBeenCalledWith('c1');
-    expect(api.start).toHaveBeenCalledWith({ port: 50101, host: '192.168.1.10' });
-    expect(api.setPistes).toHaveBeenCalledWith([{ piste: '1', ip: '10.0.0.1' }]);
+    const api = fakeApi(['cyrano', 'opp2']);
+    expect(await autoStartCyrano('c1', api)).toBe(true);
+    expect(api.getCompetitionDevices).toHaveBeenCalledWith('c1');
+    expect(api.cyrano.start).toHaveBeenCalledWith({
+      port: 50101,
+      host: '192.168.1.10',
+      competitionId: 'c1',
+    });
+    expect(api.opp2.start).toHaveBeenCalledWith({ port: 1883, competitionId: 'c1' });
     expect(api.setOptions).toHaveBeenCalledWith(readOptions());
   });
 
-  it('démarrage automatique sans piste : rien', async () => {
+  it('démarrage automatique sans appareil dans la salle : rien', async () => {
     writeAutoStart(true);
-    expect(await autoStartCyrano('c1')).toBe(false);
+    const api = fakeApi([]);
+    expect(await autoStartCyrano('c1', api)).toBe(false);
+    expect(api.cyrano.start).not.toHaveBeenCalled();
+    expect(api.opp2.start).not.toHaveBeenCalled();
   });
 
   it('journal exportable : une trame par ligne', () => {

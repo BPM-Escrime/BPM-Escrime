@@ -36,6 +36,13 @@ const agentFolders = (ctx: CommandContext) => ({
   defaults: ctx.station?.defaultAgentFolders() ?? [],
 });
 
+/** Écriture d'une salle, puis tables des pilotes relues (appareils déclarés sur la salle) */
+function withDevices<T>(ctx: CommandContext, write: () => T): T {
+  const result = refuse(write);
+  ctx.devices?.reload();
+  return result;
+}
+
 type SettingsOps =
   | 'getStationSettings'
   | 'updateStationSettings'
@@ -89,9 +96,11 @@ const settingsHandlers: { [N in SettingsOps]: StationHandler<N> } = {
     }),
   // ── Salles ──
   listVenues: ctx => refuse(() => ctx.db.settings.listVenues()),
-  saveVenue: (ctx, input) => refuse(() => ctx.db.settings.upsertVenue(input)),
-  deleteVenue: (ctx, { venueId }) => refuse(() => ctx.db.settings.deleteVenue(venueId)),
-  setDefaultVenue: (ctx, { venueId }) => refuse(() => ctx.db.settings.setDefaultVenue(venueId)),
+  // Appareils de piste déclarés sur la salle (docs/adr/0023) : pilotes rechargés
+  saveVenue: (ctx, input) => withDevices(ctx, () => ctx.db.settings.upsertVenue(input)),
+  deleteVenue: (ctx, { venueId }) => withDevices(ctx, () => ctx.db.settings.deleteVenue(venueId)),
+  setDefaultVenue: (ctx, { venueId }) =>
+    withDevices(ctx, () => ctx.db.settings.setDefaultVenue(venueId)),
   // ── Thèmes d'écrans ──
   listScreenThemes: ctx => portOf(ctx).themes.list(),
   saveScreenTheme: (ctx, { theme }) => portOf(ctx).themes.save(theme),

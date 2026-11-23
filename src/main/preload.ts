@@ -234,35 +234,6 @@ const electronApi = {
     },
   },
 
-  // Cyrano scoring machine integration (#1720)
-  cyrano: {
-    start: (options?: { port?: number; host?: string; compe?: string }) =>
-      ipcRenderer.invoke('cyrano:start', options),
-    stop: () => ipcRenderer.invoke('cyrano:stop'),
-    isRunning: () => ipcRenderer.invoke('cyrano:isRunning'),
-    setPistes: (pistes: unknown[]) => ipcRenderer.invoke('cyrano:setPistes', pistes),
-    getStatus: () => ipcRenderer.invoke('cyrano:getStatus'),
-    getLog: () => ipcRenderer.invoke('cyrano:getLog'),
-    setOptions: (options: unknown) => ipcRenderer.invoke('cyrano:setOptions', options),
-    pisteAction: (piste: string, action: string) =>
-      ipcRenderer.invoke('cyrano:pisteAction', piste, action),
-    loadPistes: (competitionId: string) => ipcRenderer.invoke('cyrano:loadPistes', competitionId),
-    savePistes: (competitionId: string, pistes: unknown[]) =>
-      ipcRenderer.invoke('cyrano:savePistes', competitionId, pistes),
-    getPistesScope: (competitionId: string) =>
-      ipcRenderer.invoke('cyrano:getPistesScope', competitionId),
-    getRoutes: () => ipcRenderer.invoke('cyrano:getRoutes'),
-  },
-
-  // Appareils de piste OPP2 : broker MQTT intégré (#1960)
-  opp2: {
-    start: (options?: { port?: number }) => ipcRenderer.invoke('opp2:start', options),
-    stop: () => ipcRenderer.invoke('opp2:stop'),
-    isRunning: () => ipcRenderer.invoke('opp2:isRunning'),
-    setPistes: (pistes: unknown[]) => ipcRenderer.invoke('opp2:setPistes', pistes),
-    getStatus: () => ipcRenderer.invoke('opp2:getStatus'),
-  },
-
   // Language injected before renderer loads (avoids race with localStorage read)
   initialLanguage: (() => {
     const arg = process.argv.find(a => a.startsWith('--initial-lang='));

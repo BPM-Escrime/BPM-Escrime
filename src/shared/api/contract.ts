@@ -26,6 +26,7 @@ import { clubOperations } from './contractClub';
 import { stationOperations } from './contractStation';
 import { remoteOperations } from './contractRemote';
 import { trainingOperations } from './contractTraining';
+import { devicesOperations } from './contractDevices';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
@@ -1428,6 +1429,8 @@ export const contract = {
   ...remoteOperations,
   // Serveur d'entraînement : pilotage et avis, jamais sur le réseau (docs/adr/0022)
   ...trainingOperations,
+  // Appareils de piste : salle, pilotes Cyrano et OPP2, jamais sur le réseau (docs/adr/0023)
+  ...devicesOperations,
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────

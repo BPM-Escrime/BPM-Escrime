@@ -1035,68 +1035,6 @@ export interface PrintDialogAPI {
 /** Types d'événements du bus de données main → renderer (#1298) */
 export type CompetitionEventType = 'fencers:changed' | 'matches:changed' | McpScreenEvent;
 
-// ============================================================================
-// Cyrano API (#1720)
-// ============================================================================
-
-export interface CyranoPisteConfigDTO {
-  piste: string;
-  ip: string;
-  port?: number;
-  arena?: number;
-  protocol?: 'EFP1' | 'EFP1.1' | 'auto';
-  /** Mode de la piste (#1829) : appareil maître, afficheur, ou manuel. Défaut : maître */
-  mode?: 'master' | 'display' | 'manual';
-}
-
-export interface CyranoPisteStatusDTO extends CyranoPisteConfigDTO {
-  status: 'online' | 'stale' | 'offline' | 'never';
-  lastSeen: number | null;
-  detectedProtocol: 'EFP1' | 'EFP1.1' | null;
-  /** BAD MATCH : l'appareil affiche d'autres tireurs que le match de l'arène (#1720) */
-  alert?: { kind: 'bad_match'; since: number; arena: string; device: string } | null;
-}
-
-export interface CyranoStatusDTO {
-  running: boolean;
-  port: number;
-  pistes: CyranoPisteStatusDTO[];
-}
-
-export interface CyranoAPI {
-  start: (options?: {
-    port?: number;
-    host?: string;
-    compe?: string;
-  }) => Promise<{ success: boolean; port?: number; error?: string }>;
-  stop: () => Promise<void>;
-  isRunning: () => Promise<boolean>;
-  setPistes: (pistes: CyranoPisteConfigDTO[]) => Promise<void>;
-  getStatus: () => Promise<CyranoStatusDTO>;
-  getLog: () => Promise<CyranoFrameLogDTO[]>;
-  setOptions: (options: {
-    nameLength?: 10 | 12 | 15 | 20;
-    natSource?: 'country' | 'club' | 'region' | 'auto';
-    international?: boolean;
-  }) => Promise<void>;
-  /** Actions de secours par piste (#1829) */
-  pisteAction: (piste: string, action: 'ack' | 'next' | 'prev' | 'resync') => Promise<boolean>;
-  /** Table des pistes enregistrée en base, par compétition (#1829) */
-  loadPistes: (competitionId: string) => Promise<CyranoPisteConfigDTO[]>;
-  savePistes: (competitionId: string, pistes: CyranoPisteConfigDTO[]) => Promise<boolean>;
-  /** Épreuve d'une journée : table des pistes partagée par la salle (#1878), sinon null */
-  getPistesScope: (competitionId: string) => Promise<{ dayId: string; dayName: string } | null>;
-  /** Épreuve suivie par chaque piste (identifiant de compétition), #1878 */
-  getRoutes: () => Promise<Record<string, string | null>>;
-}
-
-/** Trame du journal Cyrano (#1829) */
-export type CyranoFrameLogDTO = { ts: number; dir: 'in' | 'out'; ip: string; port: number } & {
-  piste: string | null;
-  raw: string;
-  rejected?: 'unknown_ip' | 'malformed';
-};
-
 export interface ElectronAPI extends MenuAPI, UtilityAPI {
   /** Contrat d'API (#1981) */
   api: import('../api/client').ApiBridge;
@@ -1115,8 +1053,6 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   crypto: CryptoAPI;
   settings: SettingsAPI;
   club: ClubAPI;
-  cyrano: CyranoAPI;
-  opp2: import('./opp2Preload').Opp2API;
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void;
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) => () => void;
   /** Bus d'événements de données main → renderer (#1298) */

@@ -1,17 +1,21 @@
 /**
- * BellePoule Modern - Réglages Cyrano mémorisés (#1720, #1829)
- * Table des pistes, port, interface d'écoute, options, démarrage automatique ;
- * démarrage du serveur depuis ces réglages (panneau ou séance de saisie distante).
+ * BellePoule Modern - Réglages des pilotes d'appareils mémorisés sur le poste (#1720, #1829,
+ * #1960) : port et interface d'écoute Cyrano, port du broker OPP2, options d'affichage,
+ * démarrage automatique ; démarrage des pilotes par le contrat (panneau ou séance de saisie
+ * distante). Les appareils eux-mêmes sont déclarés sur la salle (docs/adr/0023).
  * Licensed under GPL-3.0
  */
-import type { CyranoFrameLogDTO, CyranoPisteConfigDTO } from '../../../shared/types/preload';
+import { ApiError } from '../../../shared/api/client';
+import type { CyranoFrameLog } from '../../../shared/types/stripDevice';
+import { devicesApi, type DevicesApi } from '../../api/devicesApi';
 
-export const PISTES_KEY = 'bellepoule-cyrano-pistes';
 export const PORT_KEY = 'bellepoule-cyrano-port';
 export const HOST_KEY = 'bellepoule-cyrano-host';
 export const OPTIONS_KEY = 'bellepoule-cyrano-options';
 export const AUTOSTART_KEY = 'bellepoule-cyrano-autostart';
+export const OPP2_PORT_KEY = 'bellepoule-opp2-port';
 export const DEFAULT_PORT = 50100;
+export const OPP2_DEFAULT_PORT = 1883;
 
 export interface CyranoOptions {
   nameLength: 10 | 12 | 15 | 20;
@@ -41,51 +45,12 @@ function write(key: string, value: string): void {
   }
 }
 
-export function readPistes(): CyranoPisteConfigDTO[] {
-  try {
-    const parsed = JSON.parse(read(PISTES_KEY) ?? '[]');
-    return Array.isArray(parsed) ? (parsed as CyranoPisteConfigDTO[]) : [];
-  } catch {
-    return [];
-  }
-}
-/** Ancienne liste des pistes (localStorage), lue une seule fois pour migrer vers la base (#1829) */
-export function readLegacyPistes(): CyranoPisteConfigDTO[] {
-  return readPistes();
-}
-export function clearLegacyPistes(): void {
-  try {
-    localStorage.removeItem(PISTES_KEY);
-  } catch {
-    /* stockage indisponible */
-  }
-}
-
-/** Table des pistes de la compétition, enregistrée en base (#1829) */
-export async function loadPistesFor(competitionId: string | null): Promise<CyranoPisteConfigDTO[]> {
-  const api = window.electronAPI?.cyrano;
-  if (!api?.loadPistes || !competitionId) return [];
-  try {
-    return (await api.loadPistes(competitionId)) as CyranoPisteConfigDTO[];
-  } catch {
-    return [];
-  }
-}
-export async function savePistesFor(
-  competitionId: string | null,
-  pistes: CyranoPisteConfigDTO[]
-): Promise<void> {
-  const api = window.electronAPI?.cyrano;
-  if (!api?.savePistes || !competitionId) return;
-  try {
-    await api.savePistes(competitionId, pistes);
-  } catch {
-    /* échec d'écriture : la liste reste affichée, enregistrée à la prochaine modification */
-  }
-}
-
 export const readPort = (): number => parseInt(read(PORT_KEY) ?? '', 10) || DEFAULT_PORT;
 export const writePort = (p: number) => write(PORT_KEY, String(p));
+
+export const readOpp2Port = (): number =>
+  parseInt(read(OPP2_PORT_KEY) ?? '', 10) || OPP2_DEFAULT_PORT;
+export const writeOpp2Port = (p: number) => write(OPP2_PORT_KEY, String(p));
 
 /** Interface d'écoute : adresse IP locale, vide = toutes les interfaces */
 export const readHost = (): string => read(HOST_KEY) ?? '';
@@ -104,31 +69,61 @@ export const writeOptions = (o: CyranoOptions) => write(OPTIONS_KEY, JSON.string
 export const readAutoStart = (): boolean => read(AUTOSTART_KEY) === 'true';
 export const writeAutoStart = (v: boolean) => write(AUTOSTART_KEY, String(v));
 
-/** Pistes complètes (identifiant + IP) envoyées au serveur */
-export const usablePistes = (p: CyranoPisteConfigDTO[]) => p.filter(r => r.piste && r.ip);
+/** Refus du contrat → message pour l'écran (code du catalogue ou texte) */
+export const errorText = (e: unknown): string =>
+  e instanceof ApiError ? e.message || e.code : e instanceof Error ? e.message : String(e);
 
 /**
- * Démarre le serveur Cyrano avec les réglages mémorisés : port, interface, pistes, options.
- * Déjà démarré : pistes et options renvoyées quand même.
+ * Démarre le serveur Cyrano avec les réglages mémorisés (port, interface, options) ; le moteur
+ * charge les appareils Cyrano de la salle de l'épreuve. Déjà démarré : options renvoyées.
  */
 export async function startCyranoFromSaved(
-  competitionId: string | null
+  competitionId: string | null,
+  api: DevicesApi = devicesApi
 ): Promise<{ success: boolean; error?: string }> {
-  const api = window.electronAPI?.cyrano;
-  if (!api) return { success: false, error: 'electronAPI.cyrano indisponible' };
-  const res = await api.start({ port: readPort(), host: readHost() });
-  if (!res.success) return { success: false, error: res.error ?? 'start_failed' };
-  await api.setPistes(usablePistes(await loadPistesFor(competitionId)));
-  await api.setOptions(readOptions());
-  return { success: true };
+  try {
+    await api.cyrano.start({
+      port: readPort(),
+      host: readHost(),
+      ...(competitionId ? { competitionId } : {}),
+    });
+    await api.setOptions(readOptions());
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: errorText(e) };
+  }
 }
 
-/** Démarrage automatique (#1829) : seulement si activé et au moins une piste déclarée */
-export async function autoStartCyrano(competitionId: string | null): Promise<boolean> {
-  if (!readAutoStart()) return false;
-  if (usablePistes(await loadPistesFor(competitionId)).length === 0) return false;
+/** Démarre le broker OPP2 sur le port mémorisé ; appareils OPP2 de la salle chargés */
+export async function startOpp2FromSaved(
+  competitionId: string | null,
+  api: DevicesApi = devicesApi
+): Promise<{ success: boolean; error?: string }> {
   try {
-    return (await startCyranoFromSaved(competitionId)).success;
+    await api.opp2.start({ port: readOpp2Port(), ...(competitionId ? { competitionId } : {}) });
+    await api.setOptions(readOptions());
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: errorText(e) };
+  }
+}
+
+/**
+ * Démarrage automatique avec la séance (#1829) : seulement si activé ; chaque pilote démarre
+ * si la salle de l'épreuve déclare au moins un appareil de son protocole.
+ */
+export async function autoStartCyrano(
+  competitionId: string | null,
+  api: DevicesApi = devicesApi
+): Promise<boolean> {
+  if (!readAutoStart() || !competitionId) return false;
+  try {
+    const { devices } = await api.getCompetitionDevices(competitionId);
+    const has = (protocol: string) => devices.some(d => d.device.protocol === protocol);
+    let started = false;
+    if (has('cyrano')) started = (await startCyranoFromSaved(competitionId, api)).success;
+    if (has('opp2')) started = (await startOpp2FromSaved(competitionId, api)).success || started;
+    return started;
   } catch {
     return false;
   }
@@ -139,7 +134,7 @@ export async function autoStartCyrano(competitionId: string | null): Promise<boo
  * `horodatage ISO <TAB> sens <TAB> ip:port <TAB> piste <TAB> trame [<TAB> rejet]`.
  * La trame brute reste en dernière colonne utile, pour être rejouée.
  */
-export function formatCyranoLog(entries: CyranoFrameLogDTO[]): string {
+export function formatCyranoLog(entries: CyranoFrameLog[]): string {
   return entries
     .map(e =>
       [

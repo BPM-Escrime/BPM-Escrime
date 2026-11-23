@@ -4,6 +4,7 @@
  */
 
 import { Migration } from './index';
+import { STRIP_DEVICES_MIGRATION, stripDeviceDiagnostics } from './stripDevices';
 
 export const ALL_MIGRATIONS: Migration[] = [
   {
@@ -1275,5 +1276,15 @@ export const ALL_MIGRATIONS: Migration[] = [
         `CREATE INDEX IF NOT EXISTS idx_competition_events_command ON competition_events (competition_id, command_id)`
       );
     },
+  },
+  {
+    version: 47,
+    description:
+      'Appareils de piste déclarés sur la salle : competitions.venue_id, venue_strips.device_config, reprise de cyrano_pistes (docs/adr/0023, docs/adr/0019)',
+    up(db) {
+      for (const sql of STRIP_DEVICES_MIGRATION) db.run(sql);
+    },
+    // Lignes de cyrano_pistes non reprises ou en conflit : journal de diagnostic
+    diagnose: stripDeviceDiagnostics,
   },
 ];

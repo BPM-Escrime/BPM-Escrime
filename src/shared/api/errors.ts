@@ -41,6 +41,7 @@ export const ERRORS = {
   match_not_found: e('not_found', 'Match introuvable'),
   withdrawal_not_found: e('not_found', 'Aucun retrait à annuler pour ce tireur'),
   dir_not_found: e('not_found', 'Dossier introuvable'),
+  venue_not_found: e('not_found', 'Salle introuvable'),
 
   // ── conflict ──
   revision_conflict: e('conflict', 'Révision attendue périmée : relire le journal puis renvoyer'),
@@ -109,6 +110,10 @@ export const ERRORS = {
   remote_refused: e('rule', 'Serveur distant : demande refusée (message pour l’opérateur)'),
   weak_password: e('rule', 'Mot de passe trop court'),
   club_refused: e('rule', 'Mode Club : demande refusée (message pour l’opérateur)'),
+  device_refused: e(
+    'rule',
+    'Appareils de piste (Cyrano, OPP2) : demande refusée (message pour l’opérateur)'
+  ),
   station_refused: e(
     'rule',
     'Réglages du poste, salles, journée, RGPD ou agent : demande refusée (message pour l’opérateur)'

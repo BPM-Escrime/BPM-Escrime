@@ -10,6 +10,11 @@ export interface Migration {
   version: number;
   description: string;
   up(db: { run(sql: string): void }): void;
+  /**
+   * Après `up` : constats à verser au journal de diagnostic (reprise partielle, conflits), en
+   * lecture seule. Facultatif ; ignoré par les tests qui appliquent `up` seul.
+   */
+  diagnose?(db: { all<T>(sql: string): T[] }): string[];
 }
 
 export class MigrationManager {
@@ -31,12 +36,29 @@ export class MigrationManager {
       );
       migration.up(dbWrapper);
       this.recordMigration(migration.version, migration.description);
+      this.report(migration);
     }
 
     if (pending.length > 0) {
       logger.info(LogCategory.DATABASE, `[DB] ${pending.length} migration(s) appliquée(s)`);
     }
     return pending.length;
+  }
+
+  /** Constats de la migration (diagnose) versés au journal ; un échec de lecture n'arrête rien */
+  private report(migration: Migration): void {
+    if (!migration.diagnose) return;
+    try {
+      const all = <T>(sql: string) => this.db.prepare(sql).all() as T[];
+      for (const line of migration.diagnose({ all })) {
+        logger.warn(LogCategory.DATABASE, `[DB] Migration v${migration.version} : ${line}`);
+      }
+    } catch (e) {
+      logger.warn(
+        LogCategory.DATABASE,
+        `[DB] Migration v${migration.version} : diagnostic impossible (${String(e)})`
+      );
+    }
   }
 
   private ensureMigrationsTable(): void {

@@ -20,6 +20,13 @@ import type { CustomTheme, FirewallDiagnosis } from '../../../shared/types/remot
 import type { RemoteServerInfo, TtsConfig } from '../../../shared/types/preload';
 import type { TrainingServerInfo } from '../../../shared/types/training';
 import type { TrainingTheme } from '../../../shared/utils/trainingThemes';
+import type {
+  CyranoFrameLog,
+  CyranoStatus,
+  Opp2Status,
+  StripDeviceAction,
+  StripDeviceOptions,
+} from '../../../shared/types/stripDevice';
 import type { RemoteScoreServer } from '../../remoteScoreServer';
 
 /** Écriture faite hors de l'écran : l'écran ouvert recharge les données concernées */
@@ -76,6 +83,11 @@ export interface CommandContext {
    * fenêtre principale, écrans de démo ; branché par main.ts (docs/adr/0022). Absent : tests, MCP.
    */
   training?: TrainingPort;
+  /**
+   * Pilotes des appareils de piste (Cyrano, OPP2) et PisteHub : branchés par main.ts
+   * (docs/adr/0023). Absent : tests, MCP ; le pilotage refuse alors par « unavailable ».
+   */
+  devices?: DevicesPort;
 }
 
 /** Ce que les opérations du serveur distant appellent sur un RemoteScoreServer */
@@ -195,6 +207,36 @@ export interface TrainingPort {
   applyTheme(theme: TrainingTheme): void;
   /** Ouvre les fenêtres de la démo sur le serveur démarré ; renvoie leur nombre */
   openDemoScreens(strips: number): number;
+}
+
+/**
+ * Pilotes des appareils de piste vus par les opérations du contrat (docs/adr/0023). Les tables
+ * des pilotes ne sont jamais envoyées par l'écran : `reload` relit les appareils des salles des
+ * épreuves suivies. Branché par main.ts (devicesPort.ts).
+ */
+export interface DevicesPort {
+  /** Relit les appareils des salles ; `focus` : épreuve suivie en plus (panneau de l'écran) */
+  reload(focus?: string): void;
+  cyrano: {
+    running(): boolean;
+    /** Démarre le serveur UDP ; refuse par CommandError (interface invalide, port pris) */
+    start(options: { port?: number; host?: string }): Promise<number>;
+    stop(): Promise<void>;
+    status(): CyranoStatus;
+    log(): CyranoFrameLog[];
+  };
+  opp2: {
+    running(): boolean;
+    /** Démarre le broker MQTT et le pilote ; refuse par CommandError */
+    start(options: { port?: number }): Promise<number>;
+    stop(): Promise<void>;
+    status(): Opp2Status;
+  };
+  /** Épreuve suivie par chaque piste du pilote */
+  routes(): Record<string, string | null>;
+  setOptions(options: StripDeviceOptions): void;
+  /** Action de secours ; false si elle ne s'applique pas */
+  action(piste: string, action: StripDeviceAction): boolean;
 }
 
 /** Services du poste (réglages, thèmes, RGPD, agent, journée) : ce qui dépasse la base */
