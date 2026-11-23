@@ -7,7 +7,11 @@ import fs from 'fs';
 import path from 'path';
 import { passivityWinner as sharedPassivityWinner } from '../../shared/domain/match/matchEndValidation';
 import { CARD_REASON_LABELS } from '../../shared/utils/cardSystem';
-import { buildCard, getReasonsByGroupForWeapon } from '../../shared/domain/penalties/cards';
+import {
+  buildCard,
+  getReasonsByGroupForWeapon,
+  getWeaponCardConfig,
+} from '../../shared/domain/penalties/cards';
 import { Card, CardGroup, CardReason, Weapon } from '../../shared/types';
 
 const req = createRequire(import.meta.url);
@@ -178,6 +182,28 @@ describe('refereeCards.js passivité', () => {
         }
       }
     expect(count).toBeGreaterThan(100);
+  });
+
+  it('Sabre Laser : points des cartons, parité tablette / domaine (provisoire, #2208)', () => {
+    const impact = getWeaponCardConfig(Weapon.LASER).scoreImpact;
+    for (const type of ['white', 'yellow', 'red'] as const) {
+      const tablet = C.cardEffect({ cardType: type, isModern: false, whiteCount: 0 });
+      expect(tablet.opponentPoints, type).toBe(impact[type]);
+    }
+    expect(impact).toEqual({ white: 0, yellow: 3, red: 5, black: 0 });
+    // Carton construit par le domaine : mêmes points que la tablette
+    const red = buildCard({
+      id: 'c',
+      at: new Date(0),
+      matchId: 'm',
+      fencerId: 'f',
+      reason: CardReason.BRUTALITY,
+      previousCards: [],
+      weapon: Weapon.LASER,
+    });
+    expect(red.pointsAwarded).toBe(
+      C.cardEffect({ cardType: 'red', isModern: false, whiteCount: 0 }).opponentPoints
+    );
   });
 
   it('motifs olympiques de la tablette = motifs FIE du domaine, mêmes groupes (t.163, #2207)', () => {
