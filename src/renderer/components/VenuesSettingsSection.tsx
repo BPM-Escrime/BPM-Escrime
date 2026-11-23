@@ -22,7 +22,7 @@ interface Draft {
   id?: string;
   name: string;
   stripCount: number;
-  /** Libellés et appareils Cyrano saisis, par numéro de piste (pistes non touchées absentes) */
+  /** Libellés et appareils (Cyrano ou OPP2) saisis, par numéro de piste (pistes non touchées absentes) */
   edits: Record<number, StripEdit>;
 }
 

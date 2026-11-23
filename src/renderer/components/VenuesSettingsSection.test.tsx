@@ -105,19 +105,19 @@ describe('VenuesSettingsSection', () => {
     );
   });
 
-  it('enregistre libellé et appareil Cyrano d’une piste', async () => {
+  it('enregistre libellé et appareil d’une piste', async () => {
     wrap();
     fireEvent.click(await screen.findByRole('button', { name: 'Modifier Gymnase Nord' }));
     fireEvent.change(screen.getByLabelText('Libellé de la piste 2'), {
       target: { value: 'Piste rouge' },
     });
-    fireEvent.change(screen.getByLabelText("Adresse IP de l'appareil Cyrano de la piste 2"), {
+    fireEvent.change(screen.getByLabelText("Adresse IP de l'appareil de la piste 2"), {
       target: { value: '192.168.1.20' },
     });
-    fireEvent.change(screen.getByLabelText("Port de l'appareil Cyrano de la piste 2"), {
+    fireEvent.change(screen.getByLabelText("Port de l'appareil de la piste 2"), {
       target: { value: '50100' },
     });
-    fireEvent.change(screen.getByLabelText("Mode de l'appareil Cyrano de la piste 2"), {
+    fireEvent.change(screen.getByLabelText("Mode de l'appareil de la piste 2"), {
       target: { value: 'display' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
@@ -172,7 +172,7 @@ describe('VenuesSettingsSection', () => {
   it('refuse une adresse IPv4 invalide sans enregistrer', async () => {
     wrap();
     fireEvent.click(await screen.findByRole('button', { name: 'Modifier Gymnase Nord' }));
-    fireEvent.change(screen.getByLabelText("Adresse IP de l'appareil Cyrano de la piste 1"), {
+    fireEvent.change(screen.getByLabelText("Adresse IP de l'appareil de la piste 1"), {
       target: { value: '300.1.1.1' },
     });
     expect(await screen.findByRole('alert')).toHaveTextContent(
