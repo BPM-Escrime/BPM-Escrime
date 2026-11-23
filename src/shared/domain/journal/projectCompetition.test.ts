@@ -219,3 +219,49 @@ describe('tableaux séparés après les poules (docs/adr/0024)', () => {
     expect(facts.importedRanking).toEqual({ sourceCompetitionId: 'c1', group: 'F', ranking });
   });
 });
+
+describe('projectCompetition : épreuves par équipes (docs/adr/0024, lot E1)', () => {
+  const scheduled = (matchId: string, teamAId: string, teamBId: string) =>
+    ev('TeamMatchScheduled', {
+      matchId,
+      teamAId,
+      teamBId,
+      pool: 1,
+      round: null,
+      position: null,
+      relays: [
+        { relayId: `${matchId}-r1`, order: 1, fencerAId: `${teamAId}1`, fencerBId: `${teamBId}1` },
+      ],
+    });
+
+  it('poules d’équipes et rencontres ; journal complet ; nouveau tirage remplace les rencontres de poule', () => {
+    const first = [
+      ev('FencerCheckedIn', { fencerId: 'A1' }),
+      ev('TeamPoolsGenerated', { pools: [{ number: 1, teamIds: ['A', 'B'] }] }),
+      scheduled('c-p1-1', 'A', 'B'),
+    ];
+    const facts = projectCompetition(first);
+    expect(facts.complete).toBe(true);
+    expect(facts.teams).toEqual({
+      pools: [{ number: 1, teamIds: ['A', 'B'] }],
+      matches: [
+        {
+          matchId: 'c-p1-1',
+          teamAId: 'A',
+          teamBId: 'B',
+          pool: 1,
+          round: null,
+          position: null,
+          relays: [{ relayId: 'c-p1-1-r1', order: 1, fencerAId: 'A1', fencerBId: 'B1' }],
+        },
+      ],
+    });
+    const redrawn = projectCompetition([
+      ...first,
+      ev('TeamPoolsGenerated', { pools: [{ number: 1, teamIds: ['A', 'C'] }] }),
+      scheduled('c-p1-1', 'A', 'C'),
+    ]);
+    expect(redrawn.teams?.matches.map(m => [m.matchId, m.teamBId])).toEqual([['c-p1-1', 'C']]);
+    expect(projectCompetition([]).teams).toBeNull();
+  });
+});

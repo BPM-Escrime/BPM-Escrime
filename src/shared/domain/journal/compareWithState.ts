@@ -6,7 +6,13 @@
  */
 import { MatchStatus, type Match, type Pool, type PoolRanking } from '../../types';
 import type { ConsolationBracket, TableauMatch } from '../tableau/tableauTypes';
-import type { CompetitionFacts, MatchFact, PoolFact, TableauFact } from './projectCompetition';
+import type {
+  CompetitionFacts,
+  MatchFact,
+  PoolFact,
+  TableauFact,
+  TeamsFact,
+} from './projectCompetition';
 import { sessionGroupTableaux } from '../ranking/splitGroups';
 
 export type DivergenceKind =
@@ -24,7 +30,11 @@ export type DivergenceKind =
   | 'bracket_result_unknown'
   | 'rapieres'
   | 'split_off'
-  | 'imported_ranking';
+  | 'imported_ranking'
+  | 'team_pool'
+  | 'team_match_missing'
+  | 'team_match'
+  | 'team_match_unexpected';
 
 export interface Divergence {
   kind: DivergenceKind;
@@ -32,6 +42,23 @@ export interface Divergence {
   id: string;
   expected?: unknown;
   actual?: unknown;
+}
+
+/**
+ * Épreuve par équipes : rencontres et relais lus dans les tables (team_matches, team_bouts),
+ * projection écrite par le seul moteur (docs/adr/0024)
+ */
+export interface TeamStateView {
+  matches: Array<{
+    id: string;
+    teamAId: string;
+    teamBId: string;
+    /** Poule ; null au tableau */
+    pool: number | null;
+    round: number | null;
+    position: number | null;
+    relays: Array<{ id: string; order: number; fencerAId: string; fencerBId: string }>;
+  }>;
 }
 
 /** Projection du moteur utile à la comparaison (session_state) */
@@ -54,6 +81,8 @@ export interface CompetitionStateView {
    * Groupes extraits (réglage splitOffCompetitionIds de l'épreuve) ; undefined : non comparés
    */
   splitOffCompetitionIds?: Partial<Record<string, string>>;
+  /** Épreuve par équipes : tables des rencontres ; undefined : non comparées */
+  teams?: TeamStateView;
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -228,6 +257,8 @@ export function compareWithState(
     }
   }
 
+  if (state.teams) compareTeams(facts.teams, state.teams, facts.complete, out);
+
   if (facts.rapieres) {
     const actual = {
       wave: state.rapieres?.launchedWave ?? 0,
@@ -238,6 +269,66 @@ export function compareWithState(
     }
   }
   return out;
+}
+
+/** Rencontres d'équipes et leurs relais comparés au journal (docs/adr/0024) */
+function compareTeams(
+  fact: TeamsFact | null,
+  state: TeamStateView,
+  complete: boolean,
+  out: Divergence[]
+): void {
+  for (const pool of fact?.pools ?? []) {
+    const actual = [
+      ...new Set(
+        state.matches.filter(m => m.pool === pool.number).flatMap(m => [m.teamAId, m.teamBId])
+      ),
+    ].sort();
+    if (!same([...pool.teamIds].sort(), actual)) {
+      out.push({ kind: 'team_pool', id: String(pool.number), expected: pool.teamIds, actual });
+    }
+  }
+  const shape = (
+    m: {
+      teamAId: string;
+      teamBId: string;
+      pool: number | null;
+      round: number | null;
+      position: number | null;
+      relays: Array<{ order: number; fencerAId: string; fencerBId: string }>;
+    },
+    ids: string[]
+  ) => ({
+    teamAId: m.teamAId,
+    teamBId: m.teamBId,
+    pool: m.pool,
+    round: m.round,
+    position: m.position,
+    relays: m.relays.map((r, i) => [ids[i], r.order, r.fencerAId, r.fencerBId]),
+  });
+  for (const mf of fact?.matches ?? []) {
+    const m = state.matches.find(x => x.id === mf.matchId);
+    if (!m) {
+      out.push({ kind: 'team_match_missing', id: mf.matchId });
+      continue;
+    }
+    const expected = shape(
+      mf,
+      mf.relays.map(r => r.relayId)
+    );
+    const actual = shape(
+      m,
+      m.relays.map(r => r.id)
+    );
+    if (!same(expected, actual)) out.push({ kind: 'team_match', id: mf.matchId, expected, actual });
+  }
+  // Journal complet : toute rencontre des tables vient du journal
+  if (complete) {
+    const known = new Set((fact?.matches ?? []).map(m => m.matchId));
+    for (const m of state.matches) {
+      if (!known.has(m.id)) out.push({ kind: 'team_match_unexpected', id: m.id });
+    }
+  }
 }
 
 /** Placement du tableau (unique ou d'un groupe) comparé au tirage du journal */

@@ -6,6 +6,7 @@
  */
 import type { CompetitionStateDTO } from '../../../shared/api/contract';
 import type { Competition } from '../../../shared/types';
+import type { TeamsStateDTO } from '../../../shared/api/contractTeams';
 import { sessionGroupTableaux } from '../../../shared/domain/ranking/splitGroups';
 import { groupTableauxView } from './groupTableaux';
 
@@ -18,8 +19,13 @@ const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
  */
 export function competitionState(
   session: Record<string, unknown>,
-  comp?: Competition
+  comp?: Competition,
+  /** Épreuve par équipes : bloc lu dans les tables des équipes (docs/adr/0024) */
+  teams?: TeamsStateDTO | null
 ): CompetitionStateDTO | null {
+  // Jamais ouverte : pas d'état, épreuve par équipes comprise. L'écran des équipes écrit encore
+  // le bloc lui-même (persistLocally) : un état par défaut déclencherait sa restauration
+  // (phase, onglet) à la première ouverture (docs/adr/0024, jusqu'au lot E3)
   if (Object.keys(session).length === 0) return null;
   const groups = comp ? groupTableauxView(comp, session) : null;
   // Tableau repris lu dans son groupe : la racine ne le montre plus
@@ -57,5 +63,7 @@ export function competitionState(
       : session.groupTableaux && Object.keys(sessionGroupTableaux(session)).length > 0
         ? { groupTableaux: sessionGroupTableaux(session) }
         : {}),
+    // Épreuve par équipes (docs/adr/0024) : équipes, rencontres, relais ; null : individuelle
+    ...(teams !== undefined ? { teams } : {}),
   };
 }

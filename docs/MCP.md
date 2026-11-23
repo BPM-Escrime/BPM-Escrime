@@ -183,7 +183,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (55)
+## Référence des outils (56)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -322,7 +322,7 @@ Aucun argument.
 | `since` | integer |  | Dernière révision connue (0 : tout) |
 | `limit` | integer |  | Nombre maximum (1000) |
 
-### En écriture, sur autorisation (38)
+### En écriture, sur autorisation (39)
 
 ### `create_competition` — Créer une épreuve
 
@@ -794,6 +794,18 @@ Aucun argument.
 | `title` | string | oui | Titre de l’épreuve séparée |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve d’origine : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `generate_team_pools` — Tirer les poules d’équipes
+
+*⚠️ écriture, destructif.* Épreuve par équipes : tire les poules d’équipes et crée leurs rencontres, chacune avec ses relais fixés (titulaires par ordre, ordre FIE des relais à 3 en épée, fleuret, sabre). Relais FIE : poule unique, tous contre tous. Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes seulement. Refus : épreuve individuelle (unsupported_format), moins de 2 équipes ou arène hors 8/12 (invalid_composition), titulaires manquants (team_incomplete), poules déjà tirées sans « replace » (draw_done), relais déjà joués (pools_have_scores), tableau d’équipes créé (bracket_exists). Journal : TeamPoolsGenerated, puis un TeamMatchScheduled par rencontre.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `replace` | boolean |  | Remplacer des poules déjà tirées dont aucun relais n’est joué |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
 
 <!-- outils-mcp:fin -->

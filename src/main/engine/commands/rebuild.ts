@@ -44,6 +44,7 @@ import type { StoredJournalEvent } from '../../../database/repos/eventLogRepo';
 import type { CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { readSession } from './sessionView';
+import { teamStateView } from './teams';
 import {
   allTableauxDone,
   cloneSlot,
@@ -85,10 +86,13 @@ function statusesOf(ctx: CommandContext, competitionId: string): Record<string, 
 function diagnose(ctx: CommandContext, competitionId: string) {
   const facts = projectCompetition(readJournal(ctx, competitionId));
   const session = readSession(ctx, competitionId);
-  const settings = ctx.db.getCompetition(competitionId)?.settings ?? {};
+  const comp = ctx.db.getCompetition(competitionId);
+  const settings = comp?.settings ?? {};
+  // Épreuve par équipes : rencontres et relais lus dans leurs tables (docs/adr/0024)
+  const teams = comp?.isTeamEvent ? { teams: teamStateView(ctx, comp) } : {};
   const divergences = compareWithState(
     facts,
-    stateView(session, settings),
+    { ...stateView(session, settings), ...teams },
     statusesOf(ctx, competitionId)
   );
   return { facts, session, divergences };
@@ -183,7 +187,8 @@ export function rebuildCompetitionState(
   input: { competitionId: string; dryRun?: boolean }
 ) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
-  assertScoreSupported(comp);
+  // Épreuve par équipes (docs/adr/0024, lot E1) : écarts des rencontres rendus, sans correction
+  if (!comp.isTeamEvent) assertScoreSupported(comp);
   const { facts, session, divergences } = diagnose(ctx, comp.id);
   const report = (remaining: Divergence[], repaired: Divergence[], dryRun: boolean) => ({
     dryRun,
@@ -193,7 +198,9 @@ export function rebuildCompetitionState(
     repaired: repaired.map(brief),
     remaining,
   });
-  if (input.dryRun || divergences.length === 0) return report(divergences, [], !!input.dryRun);
+  if (input.dryRun || divergences.length === 0 || comp.isTeamEvent) {
+    return report(divergences, [], !!input.dryRun);
+  }
 
   const plan = planRepair(comp, session, facts, divergences);
   if (plan.repaired.length === 0) return report(divergences, [], false);

@@ -88,6 +88,106 @@ export class TeamRepo {
     ]);
   }
 
+  // ─── Écritures du moteur (docs/adr/0024) : identifiants et heure fournis ────
+
+  /** Équipe et son épreuve ; null : inconnue */
+  public getTeam(teamId: string): { id: string; competitionId: string; name: string } | null {
+    if (!this.sql.db) return null;
+    const row = this.sql.queryOne<SqlRow>(
+      'SELECT id, competition_id, name FROM teams WHERE id = ?',
+      [teamId]
+    );
+    return row
+      ? {
+          id: row.id as string,
+          competitionId: row.competition_id as string,
+          name: row.name as string,
+        }
+      : null;
+  }
+
+  /** Équipe de l'épreuve où figure déjà le tireur ; null : aucune */
+  public teamOfFencer(competitionId: string, fencerId: string): string | null {
+    if (!this.sql.db) return null;
+    const row = this.sql.queryOne<SqlRow>(
+      `SELECT t.id FROM team_fencers tf JOIN teams t ON tf.team_id = t.id
+       WHERE t.competition_id = ? AND tf.fencer_id = ?`,
+      [competitionId, fencerId]
+    );
+    return row ? (row.id as string) : null;
+  }
+
+  /** Rencontres de l'épreuve, poules et tableau (poolsOnly : poules seules) */
+  public countTeamMatches(competitionId: string, poolsOnly = false): number {
+    if (!this.sql.db) return 0;
+    const pools = poolsOnly ? ' AND table_id IS NULL' : '';
+    const row = this.sql.queryOne<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM team_matches WHERE competition_id = ?${pools}`,
+      [competitionId]
+    );
+    return Number(row?.n ?? 0);
+  }
+
+  /** Relais commencés ou terminés des rencontres de poule de l'épreuve */
+  public countPlayedPoolRelays(competitionId: string): number {
+    if (!this.sql.db) return 0;
+    const row = this.sql.queryOne<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM team_bouts b JOIN team_matches m ON b.match_id = m.id
+       WHERE m.competition_id = ? AND m.table_id IS NULL
+         AND (b.status <> 'not_started' OR b.score_a > 0 OR b.score_b > 0)`,
+      [competitionId]
+    );
+    return Number(row?.n ?? 0);
+  }
+
+  /** Rencontres de poule retirées, avec leurs relais et cartons (nouveau tirage) */
+  public deleteTeamPoolMatches(competitionId: string): void {
+    if (!this.sql.db) return;
+    const ids = 'SELECT id FROM team_matches WHERE competition_id = ? AND table_id IS NULL';
+    this.sql.run(`DELETE FROM team_bout_cards WHERE match_id IN (${ids})`, [competitionId]);
+    this.sql.run(`DELETE FROM team_match_cards WHERE match_id IN (${ids})`, [competitionId]);
+    this.sql.run(`DELETE FROM team_bouts WHERE match_id IN (${ids})`, [competitionId]);
+    this.sql.run('DELETE FROM team_matches WHERE competition_id = ? AND table_id IS NULL', [
+      competitionId,
+    ]);
+  }
+
+  /** Rencontre de poule à l'identifiant donné ; createdAt fixe son rang dans la poule */
+  public insertTeamPoolMatch(m: {
+    id: string;
+    competitionId: string;
+    poolNumber: number;
+    round: number | null;
+    teamAId: string;
+    teamBId: string;
+    createdAt: string;
+  }): void {
+    if (!this.sql.db) throw new Error('Database not open');
+    this.sql.run(
+      `INSERT INTO team_matches (id, competition_id, pool_number, round, team_a_id, team_b_id, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'not_started', ?, ?)`,
+      [m.id, m.competitionId, m.poolNumber, m.round, m.teamAId, m.teamBId, m.createdAt, m.createdAt]
+    );
+  }
+
+  /** Relais à l'identifiant donné */
+  public insertTeamBout(b: {
+    id: string;
+    matchId: string;
+    order: number;
+    fencerAId: string;
+    fencerBId: string;
+    maxScore: number;
+    createdAt: string;
+  }): void {
+    if (!this.sql.db) throw new Error('Database not open');
+    this.sql.run(
+      `INSERT INTO team_bouts (id, match_id, bout_order, fencer_a_id, fencer_b_id, max_score, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'not_started', ?, ?)`,
+      [b.id, b.matchId, b.order, b.fencerAId, b.fencerBId, b.maxScore, b.createdAt, b.createdAt]
+    );
+  }
+
   // `round` : calendrier de poule figé (format arène Sabre Laser, 8/12 équipes)
   // — optionnel, reste `NULL` pour la génération round-robin générique existante.
   public createTeamMatch(
