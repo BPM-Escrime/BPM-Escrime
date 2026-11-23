@@ -173,6 +173,18 @@ describe('ArenaPlannerModal', () => {
     expect(document.querySelectorAll('.arena-planner-dimline').length).toBeGreaterThan(0);
   });
 
+  it('affiche la légende avec un repère par élément posé, et la masque sur demande', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    const legend = () => screen.queryByRole('region', { name: 'arenaPlanner.legend_title' });
+    expect(legend()).not.toBeNull();
+    expect(legend()!.querySelectorAll('li')).toHaveLength(4);
+    addKind('table');
+    expect(legend()!.textContent).toContain('arenaPlanner.kind_table');
+    fireEvent.click(screen.getByLabelText('arenaPlanner.legend_show'));
+    expect(legend()).toBeNull();
+    expect(screen.getByLabelText('arenaPlanner.legend_pdf')).toBeChecked();
+  });
+
   it('modifie le texte affiché sur une table, sur plusieurs lignes', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
     addKind('table');

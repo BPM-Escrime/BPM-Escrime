@@ -4447,7 +4447,10 @@
     "props_title": "Room properties",
     "props_summary": "{{width}} × {{length}} m · {{count}} arena(s)",
     "group_dimensions": "Dimensions",
-    "group_arenas": "Arenas"
+    "group_arenas": "Arenas",
+    "legend_title": "Legend",
+    "legend_show": "Show legend",
+    "legend_pdf": "Include legend in PDF export"
   },
   "stripControl": {
     "title": "Strip control",

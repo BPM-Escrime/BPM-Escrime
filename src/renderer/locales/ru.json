@@ -4447,7 +4447,10 @@
     "props_title": "Параметры зала",
     "props_summary": "{{width}} × {{length}} м · арен: {{count}}",
     "group_dimensions": "Размеры",
-    "group_arenas": "Арены"
+    "group_arenas": "Арены",
+    "legend_title": "Легенда",
+    "legend_show": "Показать легенду",
+    "legend_pdf": "Легенда в экспорте PDF"
   },
   "stripControl": {
     "title": "Управление залом",

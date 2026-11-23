@@ -4447,7 +4447,10 @@
     "props_title": "Perzhioù ar sal",
     "props_summary": "{{width}} × {{length}} m · {{count}} tachenn",
     "group_dimensions": "Mentoù",
-    "group_arenas": "Tachennoù"
+    "group_arenas": "Tachennoù",
+    "legend_title": "Alc'hwez",
+    "legend_show": "Diskouez an alc'hwez",
+    "legend_pdf": "Alc'hwez en ezporzh PDF"
   },
   "stripControl": {
     "title": "Merañ ar sal",

@@ -272,10 +272,33 @@
   align-items: end;
 }
 
+.arena-planner-legend-box {
+  margin: 0.6rem 0 0.2rem;
+}
+
+.arena-planner-legend-title {
+  font-size: 0.95rem;
+  margin: 0 0 0.3rem;
+}
+
 .arena-planner-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
   font-size: 0.85rem;
-  margin: 0.6rem 0 0.2rem 1rem;
-  list-style: disc;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arena-planner-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.arena-planner-legend-swatch {
+  flex: none;
 }
 
 .arena-planner-help {

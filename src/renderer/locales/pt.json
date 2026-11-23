@@ -4447,7 +4447,10 @@
     "props_title": "Propriedades da sala",
     "props_summary": "{{width}} × {{length}} m · {{count}} arena(s)",
     "group_dimensions": "Dimensões",
-    "group_arenas": "Arenas"
+    "group_arenas": "Arenas",
+    "legend_title": "Legenda",
+    "legend_show": "Mostrar a legenda",
+    "legend_pdf": "Legenda na exportação PDF"
   },
   "stripControl": {
     "title": "Controlo da sala",

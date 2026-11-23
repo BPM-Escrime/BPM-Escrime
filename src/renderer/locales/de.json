@@ -4447,7 +4447,10 @@
     "props_title": "Halleneigenschaften",
     "props_summary": "{{width}} × {{length}} m · {{count}} Arena(en)",
     "group_dimensions": "Abmessungen",
-    "group_arenas": "Arenen"
+    "group_arenas": "Arenen",
+    "legend_title": "Legende",
+    "legend_show": "Legende anzeigen",
+    "legend_pdf": "Legende im PDF-Export"
   },
   "stripControl": {
     "title": "Hallensteuerung",
