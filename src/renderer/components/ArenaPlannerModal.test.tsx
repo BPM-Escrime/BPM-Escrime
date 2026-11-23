@@ -95,6 +95,35 @@ describe('ArenaPlannerModal', () => {
     expect(screen.getAllByRole('img')[0].querySelectorAll('.arena-planner-safety')).toHaveLength(4);
   });
 
+  it('étire les arènes avec « Espacées » et les centre avec « Centré »', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    fireEvent.change(screen.getByLabelText('arenaPlanner.width'), { target: { value: '40' } });
+    fireEvent.change(screen.getByLabelText('arenaPlanner.length'), { target: { value: '40' } });
+    fireEvent.change(screen.getByLabelText('arenaPlanner.arenas'), { target: { value: '2' } });
+    const arenaCentres = () =>
+      Array.from(screen.getAllByRole('img')[0].querySelectorAll('.arena-planner-safety')).map(
+        el => ({
+          x: Number(el.getAttribute('cx')),
+          y: Number(el.getAttribute('cy')),
+        })
+      );
+    const dist = () => {
+      const [a, b] = arenaCentres();
+      return Math.hypot(b.x - a.x, b.y - a.y);
+    };
+    const packedDist = dist();
+    fireEvent.change(screen.getByLabelText('arenaPlanner.spacing'), {
+      target: { value: 'spread' },
+    });
+    expect(dist()).toBeGreaterThan(packedDist);
+    fireEvent.change(screen.getByLabelText('arenaPlanner.align'), {
+      target: { value: 'center' },
+    });
+    // Cercles de sécurité de Ø 12 m (rayon 6 m) : marges gauche et droite égales dans une salle de 40 m
+    const xs = arenaCentres().map(c => c.x);
+    expect(Math.min(...xs) - 6).toBeCloseTo(40 - (Math.max(...xs) + 6), 3);
+  });
+
   it('affiche les cotes techniques quand la case est cochée', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
     expect(document.querySelectorAll('.arena-planner-dimline')).toHaveLength(0);

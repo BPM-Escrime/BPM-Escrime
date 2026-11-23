@@ -6,6 +6,8 @@
 import { describe, expect, it } from 'vitest';
 import { technicalDimensions } from './arenaDimensions';
 import {
+  alignArenaCenters,
+  spreadArenaCenters,
   ARENA_GUARD_OFFSET_M,
   ARENA_SAFETY_RADIUS_M,
   checkRoomItems,
@@ -329,5 +331,103 @@ describe('moveArenaWithPush', () => {
   it("borne l'arène déplacée à la marge de la salle", () => {
     const r = moveArenaWithPush([{ x: 10, y: 10 }], 0, { x: -50, y: 10 }, room, 1, []);
     expect(r.centers[0].x).toBe(7);
+  });
+});
+
+describe('alignArenaCenters', () => {
+  const room = { widthM: 40, lengthM: 20 };
+  // Bloc de 2 arènes collées : x de 1+6=7 à 7+12=19 → bord gauche (x - 6) = 1, bord droit = 25
+  const packed = [
+    { x: 7, y: 7 },
+    { x: 19, y: 7 },
+  ];
+
+  it('colle à gauche à la marge', () => {
+    const out = alignArenaCenters(packed, room, 1, 'left');
+    close(out[0].x - ARENA_SAFETY_RADIUS_M, 1);
+  });
+
+  it('colle à droite à la marge', () => {
+    const out = alignArenaCenters(packed, room, 1, 'right');
+    close(out[1].x + ARENA_SAFETY_RADIUS_M, 40 - 1);
+  });
+
+  it('centre le bloc dans la salle', () => {
+    const out = alignArenaCenters(packed, room, 1, 'center');
+    const left = out[0].x - ARENA_SAFETY_RADIUS_M;
+    const right = room.widthM - (out[1].x + ARENA_SAFETY_RADIUS_M);
+    close(left, right);
+  });
+
+  it('ne change pas les écarts entre arènes', () => {
+    const out = alignArenaCenters(packed, room, 1, 'right');
+    close(out[1].x - out[0].x, 12);
+  });
+
+  it('se rapproche de la position initiale si une zone bloquée gêne', () => {
+    const blocked: RoomItem = {
+      id: 'b',
+      kind: 'blocked',
+      label: 'Zone',
+      x: 30,
+      y: 0,
+      widthM: 9,
+      heightM: 20,
+    };
+    const out = alignArenaCenters(packed, room, 1, 'right', [blocked]);
+    // Le décalage à droite toucherait la zone : le bloc reste décalé par rapport à l'idéal
+    expect(out[1].x).toBeLessThan(40 - 1 - ARENA_SAFETY_RADIUS_M + 1e-9);
+    expect(out[0].x).toBeGreaterThanOrEqual(7);
+  });
+
+  it('gère une liste vide', () => {
+    expect(alignArenaCenters([], room, 1, 'center')).toEqual([]);
+  });
+});
+
+describe('spreadArenaCenters', () => {
+  it('étire la grille pour occuper toute la salle, marges comprises', () => {
+    const room = { widthM: 40, lengthM: 40 };
+    const centers = spreadArenaCenters(room, 4, 1);
+    expect(centers).not.toBeNull();
+    const xs = centers!.map(c => c.x);
+    const ys = centers!.map(c => c.y);
+    // Premier centre à la marge + rayon, dernier à la largeur - marge - rayon
+    close(Math.min(...xs), 1 + ARENA_SAFETY_RADIUS_M);
+    close(Math.max(...xs), 40 - 1 - ARENA_SAFETY_RADIUS_M);
+    close(Math.min(...ys), 1 + ARENA_SAFETY_RADIUS_M);
+    close(Math.max(...ys), 40 - 1 - ARENA_SAFETY_RADIUS_M);
+  });
+
+  it('garde au moins 2 × rayon entre arènes voisines', () => {
+    const centers = spreadArenaCenters({ widthM: 50, lengthM: 30 }, 3, 1)!;
+    for (let i = 0; i < centers.length; i++) {
+      for (let j = i + 1; j < centers.length; j++) {
+        expect(
+          Math.hypot(centers[i].x - centers[j].x, centers[i].y - centers[j].y)
+        ).toBeGreaterThanOrEqual(2 * ARENA_SAFETY_RADIUS_M - 1e-6);
+      }
+    }
+  });
+
+  it('renvoie null si la salle est trop petite', () => {
+    expect(spreadArenaCenters({ widthM: 12, lengthM: 12 }, 1, 1)).toBeNull();
+  });
+
+  it('renvoie null si une arène tombe sur une zone bloquée', () => {
+    const blocked: RoomItem = {
+      id: 'b',
+      kind: 'blocked',
+      label: 'Zone',
+      x: 0,
+      y: 0,
+      widthM: 40,
+      heightM: 40,
+    };
+    expect(spreadArenaCenters({ widthM: 40, lengthM: 40 }, 1, 1, [blocked])).toBeNull();
+  });
+
+  it('gère zéro arène', () => {
+    expect(spreadArenaCenters({ widthM: 20, lengthM: 20 }, 0, 1)).toEqual([]);
   });
 });

@@ -537,3 +537,100 @@ export function moveArenaWithPush(
 
   return { centers: next, items: moved };
 }
+
+/** Centrage horizontal du bloc d'arènes dans la salle. */
+export type ArenaAlign = 'left' | 'center' | 'right';
+/**
+ * Espacement : « packed » = arènes collées au pas minimal (2 × rayon de sécurité) ;
+ * « spread » = arènes étirées pour occuper toute la salle (espace libre réparti).
+ */
+export type ArenaSpacing = 'packed' | 'spread';
+
+/** Pas de recherche du centrage quand une zone bloquée empêche le décalage idéal. */
+const ALIGN_SEARCH_STEP_M = 0.1;
+
+/**
+ * Translate horizontalement le bloc d'arènes pour le coller à gauche, le centrer
+ * ou le coller à droite (marge au mur respectée). Si le décalage idéal touche une
+ * zone bloquée, on se rapproche de la position d'origine pas à pas ; sans
+ * décalage valide, les centres d'origine sont rendus inchangés.
+ */
+export function alignArenaCenters(
+  centers: Point[],
+  room: RoomSize,
+  marginM: number,
+  align: ArenaAlign,
+  blocked: RoomItem[] = []
+): Point[] {
+  if (centers.length === 0) return [];
+  const r = ARENA_SAFETY_RADIUS_M;
+  const minX = Math.min(...centers.map(c => c.x)) - r;
+  const maxX = Math.max(...centers.map(c => c.x)) + r;
+  const blockWidth = maxX - minX;
+  const freeLeft = marginM;
+  const freeRight = room.widthM - marginM;
+  let targetStart: number;
+  if (align === 'left') targetStart = freeLeft;
+  else if (align === 'right') targetStart = freeRight - blockWidth;
+  else targetStart = (room.widthM - blockWidth) / 2;
+  const ideal = targetStart - minX;
+  const fits = (dx: number) =>
+    centers
+      .map(c => ({ x: c.x + dx, y: c.y }))
+      .every(c => isValidCenter(c, room, marginM, blocked));
+  // Décalages candidats, du plus proche de l'idéal vers 0 (position d'origine)
+  const candidates: number[] = [];
+  for (let k = 0; ; k++) {
+    const magnitude = Math.abs(ideal) - k * ALIGN_SEARCH_STEP_M;
+    if (magnitude <= 0) {
+      candidates.push(0);
+      break;
+    }
+    candidates.push(Math.sign(ideal) * magnitude);
+  }
+  const dx = candidates.find(fits) ?? 0;
+  return centers.map(c => ({ x: c.x + dx, y: c.y }));
+}
+
+/**
+ * Répartit `count` arènes sur toute la salle : grille qui tient dans la salle
+ * (moins de cases vides), étirée pour occuper toute la place disponible entre
+ * les marges. Renvoie null si la salle est trop petite ou si une arène tombe
+ * sur une zone bloquée.
+ */
+export function spreadArenaCenters(
+  room: RoomSize,
+  count: number,
+  marginM: number,
+  blocked: RoomItem[] = []
+): Point[] | null {
+  const n = Math.max(0, Math.floor(count));
+  if (n === 0) return [];
+  const pitch = 2 * ARENA_SAFETY_RADIUS_M;
+  // Disposition qui tient dans la salle avec le moins de cases vides (à égalité, moins de colonnes)
+  let best: { columns: number; rows: number; waste: number } | null = null;
+  for (let columns = 1; columns <= n; columns++) {
+    const rows = Math.ceil(n / columns);
+    const fits =
+      columns * pitch + 2 * marginM <= room.widthM && rows * pitch + 2 * marginM <= room.lengthM;
+    const waste = columns * rows - n;
+    if (fits && (!best || waste < best.waste)) best = { columns, rows, waste };
+  }
+  if (!best) return null;
+  const r = ARENA_SAFETY_RADIUS_M;
+  const availW = room.widthM - 2 * marginM - 2 * r;
+  const availL = room.lengthM - 2 * marginM - 2 * r;
+  const pitchX = best.columns > 1 ? availW / (best.columns - 1) : 0;
+  const pitchY = best.rows > 1 ? availL / (best.rows - 1) : 0;
+  const centers: Point[] = [];
+  for (let i = 0; i < n; i++) {
+    const col = i % best.columns;
+    const row = Math.floor(i / best.columns);
+    centers.push({
+      x: marginM + r + col * pitchX,
+      y: marginM + r + row * pitchY,
+    });
+  }
+  if (!centers.every(c => isValidCenter(c, room, marginM, blocked))) return null;
+  return centers;
+}
