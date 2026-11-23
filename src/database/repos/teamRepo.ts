@@ -315,47 +315,6 @@ export class TeamRepo {
     );
   }
 
-  // `round` : calendrier de poule figé (format arène Sabre Laser, 8/12 équipes)
-  // — optionnel, reste `NULL` pour la génération round-robin générique existante.
-  public createTeamMatch(
-    competitionId: string,
-    poolNumber: number,
-    teamAId: string,
-    teamBId: string,
-    round?: number
-  ): { id: string } {
-    if (!this.sql.db) throw new Error('Database not open');
-    const { v4: gen } = require('uuid');
-    const matchId = gen();
-    const now = new Date().toISOString();
-    this.sql.run(
-      `INSERT INTO team_matches (id, competition_id, pool_number, round, team_a_id, team_b_id, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'not_started', ?, ?)`,
-      [matchId, competitionId, poolNumber, round ?? null, teamAId, teamBId, now, now]
-    );
-    return { id: matchId };
-  }
-
-  public createTeamTableauMatch(
-    competitionId: string,
-    tableId: string,
-    round: number,
-    position: number,
-    teamAId: string,
-    teamBId: string
-  ): { id: string } {
-    if (!this.sql.db) throw new Error('Database not open');
-    const { v4: gen } = require('uuid');
-    const matchId = gen();
-    const now = new Date().toISOString();
-    this.sql.run(
-      `INSERT INTO team_matches (id, competition_id, pool_number, team_a_id, team_b_id, status, table_id, round, position, created_at, updated_at)
-       VALUES (?, ?, 0, ?, ?, 'not_started', ?, ?, ?, ?, ?)`,
-      [matchId, competitionId, teamAId, teamBId, tableId, round, position, now, now]
-    );
-    return { id: matchId };
-  }
-
   public getTeamTableauMatches(
     competitionId: string,
     tableId: string
@@ -477,64 +436,6 @@ export class TeamRepo {
     });
   }
 
-  public createTeamBout(
-    matchId: string,
-    boutOrder: number,
-    fencerAId: string,
-    fencerBId: string,
-    maxScore: number
-  ): { id: string } {
-    if (!this.sql.db) throw new Error('Database not open');
-    const { v4: gen } = require('uuid');
-    const id = gen();
-    const now = new Date().toISOString();
-    this.sql.run(
-      `INSERT INTO team_bouts (id, match_id, bout_order, fencer_a_id, fencer_b_id, max_score, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'not_started', ?, ?)`,
-      [id, matchId, boutOrder, fencerAId, fencerBId, maxScore, now, now]
-    );
-    return { id };
-  }
-
-  public updateTeamBout(
-    boutId: string,
-    scoreA: number,
-    scoreB: number,
-    status: string,
-    winnerId: string | null
-  ): void {
-    if (!this.sql.db) return;
-    const now = new Date().toISOString();
-    this.sql.run(
-      `UPDATE team_bouts SET score_a = ?, score_b = ?, status = ?, winner_id = ?, updated_at = ? WHERE id = ?`,
-      [scoreA, scoreB, status, winnerId, now, boutId]
-    );
-    // Recompute match bouts score if bout finished
-    if (status === 'finished') {
-      const bout = this.sql.queryOne<SqlRow>('SELECT match_id FROM team_bouts WHERE id = ?', [
-        boutId,
-      ]);
-      if (bout) this.recomputeTeamMatchScore(bout.match_id as string);
-    }
-  }
-
-  /**
-   * Rappel d'un relais terminé pour correction (#1829) : relais « en cours », vainqueur effacé,
-   * puis rencontre recalculée (statut, vainqueur, scores, relais courant) — y compris quand la
-   * rencontre était terminée.
-   */
-  public reopenTeamBout(boutId: string): void {
-    if (!this.sql.db) return;
-    this.sql.run(
-      `UPDATE team_bouts SET status = 'in_progress', winner_id = NULL, updated_at = ? WHERE id = ?`,
-      [new Date().toISOString(), boutId]
-    );
-    const bout = this.sql.queryOne<SqlRow>('SELECT match_id FROM team_bouts WHERE id = ?', [
-      boutId,
-    ]);
-    if (bout) this.recomputeTeamMatchScore(bout.match_id as string);
-  }
-
   /** Remplaçant (#1829) : tireur d'un côté d'un relais pas encore tiré. */
   public setTeamBoutFencer(
     boutId: string,
@@ -550,38 +451,6 @@ export class TeamRepo {
       at,
       boutId,
     ]);
-  }
-
-  private recomputeTeamMatchScore(matchId: string): void {
-    const match = this.sql.queryOne<SqlRow>(
-      'SELECT team_a_id, team_b_id FROM team_matches WHERE id = ?',
-      [matchId]
-    );
-    if (!match) return;
-
-    const allBouts = this.sql.queryAll<SqlRow>(
-      'SELECT status, score_a, score_b FROM team_bouts WHERE match_id = ? ORDER BY bout_order',
-      [matchId]
-    );
-    // Score équipe = total des touches cumulées sur tous les relais (règle FIE),
-    // pas le nombre d'assauts individuellement gagnés.
-    const scoreA = allBouts.reduce((sum, b) => sum + Number(b.score_a), 0);
-    const scoreB = allBouts.reduce((sum, b) => sum + Number(b.score_b), 0);
-    const finishedCount = allBouts.filter(b => b.status === 'finished').length;
-    const allFinished = allBouts.length > 0 && finishedCount === allBouts.length;
-    const newStatus = allFinished ? 'finished' : finishedCount > 0 ? 'in_progress' : 'not_started';
-    const winnerId = allFinished
-      ? scoreA > scoreB
-        ? match.team_a_id
-        : scoreB > scoreA
-          ? match.team_b_id
-          : null
-      : null;
-    const now = new Date().toISOString();
-    this.sql.run(
-      `UPDATE team_matches SET score_bouts_a = ?, score_bouts_b = ?, status = ?, winner_id = ?, current_bout_index = ?, updated_at = ? WHERE id = ?`,
-      [scoreA, scoreB, newStatus, winnerId, finishedCount, now, matchId]
-    );
   }
 
   // ── Cartons d'équipe "E" (format arène Sabre Laser) ─────────────────────────

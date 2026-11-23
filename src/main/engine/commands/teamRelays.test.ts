@@ -15,6 +15,7 @@ import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import type { CommandContext } from './context';
 import { teamStateView } from './teams';
 import { invoke } from '../api/engine';
+import { writeLegacyRelay } from '../../../database/testing/legacyTeamWrites';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -535,16 +536,16 @@ d('generateTeamTableau : tableau d’équipes jusqu’à la finale (docs/adr/002
 });
 
 d('Écarts et non-régression (docs/adr/0024, lot E2)', () => {
-  it('relais écrit hors moteur (écran) sur une rencontre du journal : écart rendu', async () => {
+  it('relais écrit hors moteur (version antérieure) sur une rencontre du journal : écart rendu', async () => {
     const comp = competition(Weapon.EPEE);
     await teamsRegistered(comp.id, ['A', 'B']);
     await call('generateTeamPools', { competitionId: comp.id });
     const id = `${comp.id}-p1-1`;
-    // Touches en cours (écran, arène) : pas un fait, pas d'écart
-    db.updateTeamBout(`${id}-r1`, 2, 1, 'in_progress', null);
+    // Touches en cours (ancien écran) : pas un fait, pas d'écart
+    writeLegacyRelay(db, id, `${id}-r1`, { scoreA: 2, scoreB: 1, status: 'in_progress' });
     expect(divergences(comp.id)).toEqual([]);
-    // Fin de relais par la base (chemin de l'écran et de l'arène, lots E3 et E4)
-    db.updateTeamBout(`${id}-r1`, 5, 1, 'finished', null);
+    // Fin de relais par la base (ancien chemin de l'écran et de l'arène, avant E3 et E4)
+    writeLegacyRelay(db, id, `${id}-r1`, { scoreA: 5, scoreB: 1, status: 'finished' });
     expect(divergences(comp.id)).toEqual([
       {
         kind: 'team_relay',
@@ -553,7 +554,6 @@ d('Écarts et non-régression (docs/adr/0024, lot E2)', () => {
         actual: { finished: true, scoreA: 5, scoreB: 1 },
       },
     ]);
-    // Le chemin de la base reste en service : rencontre recalculée par la base
     expect(db.getTeamMatchesByCompetition(comp.id)[0]).toMatchObject({
       scoreBoutsA: 5,
       scoreBoutsB: 1,

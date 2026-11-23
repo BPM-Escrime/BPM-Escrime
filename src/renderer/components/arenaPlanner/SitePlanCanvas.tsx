@@ -8,13 +8,9 @@
 
 import React, { useRef, useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
-import {
-  ARENA_SAFETY_RADIUS_M,
-  ARENA_ZONE_RADIUS_M,
-  snapToStep,
-  type Point,
-  type RoomItem,
-} from '@shared/domain/arena/arenaPlanner';
+import type { ArenaDiscipline } from '@shared/domain/arena/arenaDisciplines';
+import { ArenaShape } from './ArenaShape';
+import { snapToStep, type Point, type RoomItem } from '@shared/domain/arena/arenaPlanner';
 import { itemClass, itemStyle } from './ArenaPlanCanvas';
 import { PlanZoomBar, usePlanZoom, type PlanBox } from './planZoom';
 
@@ -31,6 +27,7 @@ export interface SiteRoom {
   lengthM: number;
   centers: Point[];
   items: RoomItem[];
+  discipline?: ArenaDiscipline;
 }
 
 export interface SitePlanCanvasProps {
@@ -172,18 +169,7 @@ export const SitePlanCanvas: React.FC<SitePlanCanvasProps> = ({
               />
               {room.centers.map((c, i) => (
                 <g key={`a${i}`} pointerEvents="none">
-                  <circle
-                    cx={c.x}
-                    cy={c.y}
-                    r={ARENA_SAFETY_RADIUS_M}
-                    className="arena-planner-safety"
-                  />
-                  <circle
-                    cx={c.x}
-                    cy={c.y}
-                    r={ARENA_ZONE_RADIUS_M}
-                    className="arena-planner-zone"
-                  />
+                  <ArenaShape discipline={room.discipline ?? 'laser'} center={c} compact />
                 </g>
               ))}
               {room.items.map(item => {

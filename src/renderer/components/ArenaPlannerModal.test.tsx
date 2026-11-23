@@ -173,6 +173,36 @@ describe('ArenaPlannerModal', () => {
     expect(document.querySelectorAll('.arena-planner-dimline').length).toBeGreaterThan(0);
   });
 
+  it('affiche la légende avec un repère par élément posé, et la masque sur demande', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    const legend = () => screen.queryByRole('region', { name: 'arenaPlanner.legend_title' });
+    expect(legend()).not.toBeNull();
+    expect(legend()!.querySelectorAll('li')).toHaveLength(4);
+    addKind('table');
+    expect(legend()!.textContent).toContain('arenaPlanner.kind_table');
+    fireEvent.click(screen.getByLabelText('arenaPlanner.legend_show'));
+    expect(legend()).toBeNull();
+    expect(screen.getByLabelText('arenaPlanner.legend_pdf')).toBeChecked();
+  });
+
+  it('passe en escrime (pistes) puis en escrime artistique (scènes), légende adaptée', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    expect(document.querySelectorAll('.arena-planner-piste')).toHaveLength(0);
+    fireEvent.change(screen.getByLabelText('arenaPlanner.discipline'), {
+      target: { value: 'fencing' },
+    });
+    expect(document.querySelectorAll('.arena-planner-piste')).toHaveLength(1);
+    expect(screen.getByLabelText('arenaPlanner.arenas_fencing')).toBeTruthy();
+    expect(screen.getByText('arenaPlanner.legend_piste')).toBeTruthy();
+    expect(screen.queryByText('arenaPlanner.legend_zone')).toBeNull();
+    fireEvent.change(screen.getByLabelText('arenaPlanner.discipline'), {
+      target: { value: 'artistic' },
+    });
+    expect(document.querySelectorAll('.arena-planner-piste')).toHaveLength(0);
+    expect(document.querySelectorAll('.arena-planner-stage')).toHaveLength(1);
+    expect(screen.getByText('arenaPlanner.legend_stage_roles')).toBeTruthy();
+  });
+
   it('modifie le texte affiché sur une table, sur plusieurs lignes', () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
     addKind('table');
