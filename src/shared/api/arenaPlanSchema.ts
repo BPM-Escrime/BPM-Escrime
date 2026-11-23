@@ -14,6 +14,11 @@ const RoomItemSchema = z.object({
   kind: z.enum(['table', 'outlet', 'accessory', 'exit', 'blocked']),
   /** Type de zone (couleur), ajout compatible — ADR-0025 */
   zone: z.enum(['fencers', 'public', 'dt']).optional(),
+  /** Couleur choisie (#rrggbb), ajout compatible — ADR-0025 */
+  color: z
+    .string()
+    .regex(/^#[0-9a-f]{6}$/i)
+    .optional(),
   label: z.string().max(200),
   x: Coord,
   y: Coord,

@@ -46,10 +46,23 @@ vi.mock('http', () => ({
 // Réintégration par la commande reinstateFencer (docs/adr/0016) : simulée ici, la base de
 // test n'a pas de journal (#2134 : plus d'écriture directe en repli)
 const reinstateByCommand = vi.hoisted(() => vi.fn(() => true));
-vi.mock('./remote/scoreCommand', async orig => ({
-  ...(await orig<typeof import('./remote/scoreCommand')>()),
-  reinstateByCommand,
-}));
+// Contrôle du score par le moteur (#2151) : remplaçable par test, réel sinon
+const scoreCheck = vi.hoisted(() => ({ refuse: null as null | { code: string; message: string } }));
+vi.mock('./remote/scoreCommand', async orig => {
+  const real = await orig<typeof import('./remote/scoreCommand')>();
+  return {
+    ...real,
+    reinstateByCommand,
+    checkFinishedScore: (...args: Parameters<typeof real.checkFinishedScore>) =>
+      scoreCheck.refuse
+        ? { kind: 'refused' as const, ...scoreCheck.refuse }
+        : real.checkFinishedScore(...args),
+    recordFinishedScore: (...args: Parameters<typeof real.recordFinishedScore>) =>
+      scoreCheck.refuse
+        ? { kind: 'refused' as const, ...scoreCheck.refuse }
+        : real.recordFinishedScore(...args),
+  };
+});
 
 import { createServer } from 'http';
 import { RemoteScoreServer } from './remoteScoreServer';
@@ -965,6 +978,58 @@ describe('RemoteScoreServer', () => {
       const saved = (server as any).sessionMatchScores.get('m1');
       expect(saved.scoreB.isVictory).toBe(true);
       expect(saved.scoreA.isVictory).toBe(false);
+    });
+
+    it('score refusé par le moteur : 409, rien d’écrit ni terminé (#2151)', async () => {
+      scoreCheck.refuse = { code: 'bracket_exists', message: 'Tableau déjà construit' };
+      try {
+        mockDb.getMatch.mockReturnValue({ id: 'm1', poolId: 'p1' });
+        mockDb.updateMatch.mockClear();
+        const finishSpy = (server as any).finishArenaMatch as ReturnType<typeof vi.fn>;
+        finishSpy.mockClear();
+        const res = makeRes();
+        await findHandler('post', '/api/matches/:matchId/finish')(
+          makeReq({ method: 'POST', params: { matchId: 'm1' }, body: { scoreA: 5, scoreB: 2 } }),
+          res,
+          vi.fn()
+        );
+        expect(res.status).toHaveBeenCalledWith(409);
+        expect(res.json).toHaveBeenCalledWith({
+          error: 'score_refused',
+          code: 'bracket_exists',
+          detail: 'Tableau déjà construit',
+        });
+        expect(mockDb.updateMatch).not.toHaveBeenCalled();
+        expect(finishSpy).not.toHaveBeenCalled();
+      } finally {
+        scoreCheck.refuse = null;
+      }
+    });
+
+    it('feuille de poule : score refusé → 409, égalité sans vainqueur comprise (#2151)', async () => {
+      scoreCheck.refuse = { code: 'tie_at_max', message: 'Égalité impossible' };
+      try {
+        mockDb.updateMatch.mockClear();
+        const res = makeRes();
+        await findHandler('post', '/api/pools/:poolId/matches/:matchId/score')(
+          makeReq({
+            method: 'POST',
+            params: { poolId: 'p1', matchId: 'm1' },
+            body: { scoreA: 5, scoreB: 5 },
+          }),
+          res,
+          vi.fn()
+        );
+        expect(res.status).toHaveBeenCalledWith(409);
+        expect(res.json.mock.calls[0][0]).toMatchObject({
+          error: 'score_refused',
+          code: 'tie_at_max',
+        });
+        expect(mockDb.updateMatch).not.toHaveBeenCalled();
+        expect((server as any).sessionMatchScores.get('m1')?.status).not.toBe('finished');
+      } finally {
+        scoreCheck.refuse = null;
+      }
     });
 
     it('vainqueur et bornes via les règles partagées (#1829)', async () => {

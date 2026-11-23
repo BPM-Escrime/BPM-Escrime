@@ -4412,6 +4412,8 @@
     "add_room": "Ouzhpennañ ur sal",
     "remove_room": "Dilemel ar sal",
     "item_text": "Testenn diskouezet",
+    "item_color": "Liv",
+    "item_color_reset": "Liv dre ziouer",
     "overview": "Gwel hollek",
     "overview_hint": "Riklañ ur sal evit he fiñval (biroù ar c'hlavier) ; daou-glik pe Enter evit he digeriñ.",
     "overview_room_line": "{{name}} : {{width}} × {{length}} m, {{count}} tachenn",

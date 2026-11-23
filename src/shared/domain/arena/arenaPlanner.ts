@@ -144,6 +144,8 @@ export interface RoomItem {
   kind: 'table' | 'outlet' | 'accessory' | 'exit' | 'blocked';
   /** Zone combattants, public ou DT ; absent = zone bloquée ou équipement */
   zone?: RoomZoneType;
+  /** Couleur choisie (#rrggbb) ; absent = couleur du type ou de la zone */
+  color?: string;
   label: string;
   x: number;
   y: number;

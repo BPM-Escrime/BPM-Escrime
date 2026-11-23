@@ -2,8 +2,10 @@
  * BPM - Escrime - Fin de match distante par la commande recordScore (#1980, ADR-0005)
  * Tablettes et appareils de piste (Cyrano, OPP2) écrivent le score par le moteur : mêmes
  * contrôles que l'écran et le MCP, état de session, base et journal dans une transaction.
- * L'écran ouvert relit la session (session:changed). Formats que le moteur ne pilote pas
- * (équipes, tableaux séparés) ou match absent de la session : repli sur le chemin historique.
+ * L'écran ouvert relit la session (session:changed). Score refusé par une règle : rien
+ * d'écrit, la tablette ou l'appareil reçoit le refus (#2151). Repli provisoire sur le chemin
+ * historique seulement pour un match absent de la session (tableaux séparés, ADR-0024 : #2100)
+ * ou une épreuve sans journal.
  * Licensed under GPL-3.0
  */
 import type { DatabaseManager } from '../../database';
@@ -38,17 +40,12 @@ export function sessionMatchId(competitionId: string, matchId: string): string {
   return matchId.startsWith(prefix) ? matchId.slice(prefix.length) : matchId;
 }
 
-/** Refus qui renvoient au chemin historique : format ou cas que le moteur ne pilote pas */
-const FALLBACK_CODES = new Set([
-  'unsupported_format',
-  'match_not_found',
-  'bracket_exists',
-  'round_closed',
-  'next_match_played',
-  'match_not_ready',
-  'competition_not_found',
-  'internal',
-]);
+/**
+ * Refus qui renvoient encore au chemin historique (#2151, étape 2) : match absent de la
+ * session (seul le groupe affiché d'un tableau séparé y est enregistré, ADR-0024). À retirer
+ * avec #2100. Tout autre refus (règle du score, tableau tiré, tour suivant joué…) est rendu.
+ */
+const FALLBACK_CODES = new Set(['match_not_found', 'competition_not_found']);
 
 export type FinishOutcome =
   | { kind: 'accepted' }
@@ -89,19 +86,31 @@ function runFinished(db: DatabaseManager, score: FinishedScore, dryRun: boolean)
 }
 
 /**
- * Enregistre le score par recordScore ; true si le moteur l'a écrit, false pour le
- * chemin historique (format non pris en charge, match hors session, score refusé).
+ * Enregistre le score par recordScore : accepted (le moteur l'a écrit), refused (rien
+ * d'écrit, refus à rendre à la tablette) ou fallback (chemin historique provisoire).
  */
-export function recordFinishedScore(db: DatabaseManager, score: FinishedScore): boolean {
+export function recordFinishedScore(db: DatabaseManager, score: FinishedScore): FinishOutcome {
   const outcome = runFinished(db, score, false);
-  if (outcome.kind !== 'accepted') {
-    logger.info(
+  if (outcome.kind === 'fallback') {
+    logger.warn(
       LogCategory.NETWORK,
       `[recordFinishedScore] ${score.matchId} : chemin historique (${outcome.code})`
     );
+  } else if (outcome.kind === 'refused') {
+    logger.info(
+      LogCategory.NETWORK,
+      `[recordFinishedScore] ${score.matchId} : score refusé (${outcome.code})`
+    );
   }
-  return outcome.kind === 'accepted';
+  return outcome;
 }
+
+/** Réponse HTTP d'un score refusé par le moteur : code stable traduit par la tablette */
+export const scoreRefusal = (outcome: Extract<FinishOutcome, { kind: 'refused' }>) => ({
+  error: 'score_refused',
+  code: outcome.code,
+  detail: outcome.message,
+});
 
 /**
  * Contrôle du score sans rien écrire (recordScore en simulation) : l'appareil de piste
@@ -109,6 +118,37 @@ export function recordFinishedScore(db: DatabaseManager, score: FinishedScore): 
  */
 export function checkFinishedScore(db: DatabaseManager, score: FinishedScore): FinishOutcome {
   return runFinished(db, score, true);
+}
+
+/**
+ * Arbitre du match en cours choisi sur la tablette (« changer d'arbitre ») : commande
+ * assignReferee sur `matchId` (docs/adr/0014, #2151) ; true si le moteur l'a écrit.
+ */
+export function assignMatchRefereeByCommand(
+  db: DatabaseManager,
+  competitionId: string | null | undefined,
+  matchId: string,
+  refereeId: string
+): boolean {
+  if (!competitionId || !db.eventLog) return false;
+  try {
+    invokeCommandSync(
+      {
+        db,
+        actor: { source: 'tablet' },
+        emitChange: emitChangeVia((type, id) => emitCompetitionEvent(type, id)),
+      },
+      'assignReferee',
+      { competitionId, matchId: sessionMatchId(competitionId, matchId), refereeId }
+    );
+    return true;
+  } catch (e) {
+    logger.info(
+      LogCategory.NETWORK,
+      `[assignMatchRefereeByCommand] ${matchId} : arbitre refusé (${(e as { code?: string }).code ?? 'internal'})`
+    );
+    return false;
+  }
 }
 
 /**

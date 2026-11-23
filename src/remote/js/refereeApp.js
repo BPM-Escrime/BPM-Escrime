@@ -591,7 +591,7 @@ class RefereeApp extends RefereeAppBase {
     this.stopTimer();
 
     try {
-      await fetch(`/api/matches/${this.currentMatch.id}/finish`, {
+      const resp = await fetch(`/api/matches/${this.currentMatch.id}/finish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -603,6 +603,7 @@ class RefereeApp extends RefereeAppBase {
           cardsB: this.cardsB,
         }),
       });
+      if (await this.finishRefused(resp)) return;
 
       this.updateControlButtons();
       this.socket.emit('arena_control', {
@@ -807,6 +808,7 @@ class RefereeApp extends RefereeAppBase {
           fightSeconds: this.fightSeconds(),
         }),
       });
+      if (await this.finishRefused(resp)) return;
       const result = await resp.json().catch(() => ({}));
 
       this.updateMatchStatus();
@@ -853,6 +855,24 @@ class RefereeApp extends RefereeAppBase {
       console.error('Erreur fin de match:', error);
       this.showNotification(window.T('referee.error_save'), true);
     }
+  }
+
+  /**
+   * Score refusé par le poste (règle du score, tableau tiré, tour suivant joué… #2151) :
+   * rien n'est enregistré, le match reste en cours sur la tablette ; le DT corrige au poste.
+   */
+  async finishRefused(resp) {
+    if (resp.status !== 409) return false;
+    const body = await resp
+      .clone()
+      .json()
+      .catch(() => ({}));
+    if (body.error !== 'score_refused') return false;
+    this.matchStatus = 'in_progress';
+    this.updateMatchStatus();
+    this.updateControlButtons();
+    this.showNotification(window.errorText(body, window.T('referee.error_save')), true);
+    return true;
   }
 
   // ── Signature des combattants après un match du tableau ──

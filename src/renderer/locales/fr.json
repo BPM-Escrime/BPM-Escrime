@@ -4412,6 +4412,8 @@
     "add_room": "Ajouter une salle",
     "remove_room": "Supprimer la salle",
     "item_text": "Texte affiché",
+    "item_color": "Couleur",
+    "item_color_reset": "Couleur par défaut",
     "overview": "Vue d'ensemble",
     "overview_hint": "Glisser une salle pour la déplacer (flèches au clavier) ; double-clic ou Entrée pour l'ouvrir.",
     "overview_room_line": "{{name}} : {{width}} × {{length}} m, {{count}} arène(s)",

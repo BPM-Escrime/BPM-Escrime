@@ -639,6 +639,7 @@
   'error.registration_closed': '報名已截止',
   'error.registration_failed': '報名失敗',
   'error.reinstate_failed': '無法恢復',
+  'error.score_refused': 'DT 電腦拒絕此比分：{{detail}}',
   'error.results_fetch_failed': '無法載入結果',
   'error.save_failed': '儲存失敗',
   'error.score_save_failed': '無法儲存分數',

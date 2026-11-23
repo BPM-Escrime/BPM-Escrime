@@ -4412,6 +4412,8 @@
     "add_room": "Add a room",
     "remove_room": "Remove room",
     "item_text": "Displayed text",
+    "item_color": "Colour",
+    "item_color_reset": "Default colour",
     "overview": "Overview",
     "overview_hint": "Drag a room to move it (arrow keys); double-click or Enter to open it.",
     "overview_room_line": "{{name}}: {{width}} × {{length}} m, {{count}} arena(s)",
