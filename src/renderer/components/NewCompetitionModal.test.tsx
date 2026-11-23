@@ -97,7 +97,8 @@ describe('NewCompetitionModal', () => {
       )
     );
     expect(container.querySelector('input[type="date"]')).toBeDisabled();
-    expect(container.querySelector('#new-competition-check_in')).toHaveValue('08:30');
+    expect(container.querySelector('#new-competition-check_in')).toHaveValue('08');
+    expect(screen.getAllByLabelText('time.minutes')[0]).toHaveValue('30');
 
     fireEvent.submit(container.querySelector('form')!);
     const [data, imported] = onCreate.mock.calls[0];

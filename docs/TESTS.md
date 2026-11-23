@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 271 |
-| `src/main/` | 146 | 1235 |
+| `src/main/` | 147 | 1241 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 129 | 693 |
+| `src/renderer/components/` | 131 | 702 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 35 | 375 |
+| `src/shared/domain/` | 36 | 384 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **593** | **4558** |
+| **Total** | **597** | **4582** |
 
-Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3438,10 +3438,11 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/referees.test.ts</code> — 3 tests</summary>
+<summary><code>src/main/engine/commands/referees.test.ts</code> — 4 tests</summary>
 
 - registerReferees : non pointés, doublons signalés ; listReferees
 - updateRefereeDetails, setRefereeAvailability, unregisterReferee
+- addRefereeComment (#2159) : commentaire relu par listRefereeComments, arbitre exigé
 - unregisterReferee : refusé pour l’arbitre d’un match en cours
 
 </details>
@@ -3601,7 +3602,7 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/station.test.ts</code> — 24 tests</summary>
+<summary><code>src/main/engine/commands/station.test.ts</code> — 26 tests</summary>
 
 - lit les valeurs par défaut, modifie puis relit
 - refuse une clé inconnue ou les dossiers de l’agent (schéma), une valeur invalide (dépôt)
@@ -3627,7 +3628,10 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - sans port du poste : réglages indisponibles, droits des personnes fonctionnent
 - état, réglages, jeton, journal : par le port du serveur
 - **contrat du poste**
-  - 45 opérations, chacune avec son gestionnaire
+  - 46 opérations, chacune avec son gestionnaire
+- **listPlaceSuggestions (docs/adr/0026)**
+  - texte nettoyé transmis au port, langue par défaut fr
+  - texte trop court : refus du contrat ; poste sans service : indisponible
 
 </details>
 
@@ -4174,6 +4178,16 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **verrou appareil maître sur la tablette équipe**
   - maître et en ligne : ajout de touche, cartons, relais suivant, remise à zéro refusés ; retrait permis
   - afficheur ou appareil absent : tablette libre
+
+</details>
+
+<details>
+<summary><code>src/main/placeSearch.test.ts</code> — 3 tests</summary>
+
+- **createPlaceSearch**
+  - Photon répond : pas d’appel à la Géoplateforme, réponse gardée
+  - Photon en panne → Géoplateforme
+  - hors ligne → unavailable, rien de gardé
 
 </details>
 
@@ -5878,7 +5892,7 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 20 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 21 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5890,6 +5904,7 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - ajoute une zone bloquée et permet de changer sa largeur
   - ajoute une zone public nommée depuis le menu « Zone »
   - nomme une arène et affiche son nom sur le plan
+  - tourne une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle
   - change la couleur d'une zone puis revient à la couleur par défaut
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
   - ne permet jamais plus d'arènes que le maximum de la zone
@@ -6815,6 +6830,15 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/common/PlaceSearchField.test.tsx</code> — 2 tests</summary>
+
+- **PlaceSearchField**
+  - cherche après la pause, choix → « nom, commune » et onPick
+  - hors ligne : message, saisie libre gardée
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/common/RankMedal.test.tsx</code> — 2 tests</summary>
 
 - **RankMedal**
@@ -6831,6 +6855,20 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - exclusion : question carton noir, Oui =\> blackCard true
   - exclusion : Non =\> blackCard false
   - tireur absent désactivé ; Annuler appelle onCancel
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/common/TimeInput.test.tsx</code> — 6 tests</summary>
+
+- **conversions**
+  - splitTime
+  - to12h / from12h
+- **TimeInput**
+  - 24 h par défaut
+  - 24 h : heures 00–23, pas de AM/PM
+  - AM/PM : affiche 03 PM, renvoie toujours HH:MM en 24 h
+  - vider l’heure vide la valeur
 
 </details>
 
@@ -8831,7 +8869,7 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaDisciplines.test.ts</code> — 8 tests</summary>
+<summary><code>src/shared/domain/arena/arenaDisciplines.test.ts</code> — 11 tests</summary>
 
 - **disciplines du planificateur**
   - laser : cercle de sécurité Ø 12 m
@@ -8842,6 +8880,10 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - élément dans le couloir de la piste signalé, hors couloir accepté
   - glisser une piste sur une autre la repousse bord contre bord
   - cotes décalées selon l'emprise rectangulaire
+- **rotation des arènes**
+  - laser : quart de tour, retour à 0 après 270
+  - piste et scène : demi-tour, emprise alignée sur les murs
+  - valeur invalide ou négative ramenée au pas
 
 </details>
 
@@ -9000,6 +9042,19 @@ Unitaires : 575 fichiers, 4508 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - %s _(each)_
 - **passivityWinner (P-noir)**
   - score, puis classement initial, puis tirage
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/places/placeSearch.test.ts</code> — 6 tests</summary>
+
+- **placeSearch**
+  - requête : espaces réduits, 3 caractères minimum
+  - URL Photon : langue connue ou « default »
+  - Photon : nom, adresse, commune
+  - Photon : adresse sans nom → nom = adresse
+  - Géoplateforme : lieu (tableaux) et adresse
+  - réponse invalide → liste vide ; doublons retirés
 
 </details>
 

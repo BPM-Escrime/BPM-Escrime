@@ -18,6 +18,12 @@ const PdfTemplateModal = React.lazy(() => import('./PdfTemplateModal'));
 import { restartGuidedTour } from './guidedTourFlags';
 import { UI_SCALES, normalizeUiScale } from '../services/uiScale';
 import { UI_DENSITIES, normalizeUiDensity } from '../services/uiDensity';
+import {
+  TIME_FORMATS,
+  normalizeTimeFormat,
+  saveTimeFormat,
+  useTimeFormat,
+} from '../services/timeFormat';
 import { Button } from './common/Button';
 import { Icon } from './common/Icon';
 import {
@@ -35,6 +41,7 @@ import { useSettingsPreferences } from '../hooks/settingsModal/useSettingsPrefer
 
 const SettingsModal: React.FC<SettingsModalProps> = (props: SettingsModalProps) => {
   const settingsPreferences = useSettingsPreferences({ ...props });
+  const timeFormat = useTimeFormat();
   const settingsHandlers = useSettingsHandlers({ ...props, ...settingsPreferences });
   const {
     modalRef,
@@ -215,6 +222,21 @@ const SettingsModal: React.FC<SettingsModalProps> = (props: SettingsModalProps) 
                 {UI_DENSITIES.map(d => (
                   <option key={d} value={d}>
                     {t(`settings.density_${d}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="settings-time-format">{t('settings.time_format')}</label>
+              <select
+                id="settings-time-format"
+                className="form-input form-select"
+                value={timeFormat}
+                onChange={e => saveTimeFormat(normalizeTimeFormat(e.target.value))}
+              >
+                {TIME_FORMATS.map(f => (
+                  <option key={f} value={f}>
+                    {t(`settings.time_format_${f}`)}
                   </option>
                 ))}
               </select>

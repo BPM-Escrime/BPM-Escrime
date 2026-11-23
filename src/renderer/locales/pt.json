@@ -310,6 +310,9 @@
     "density_comfortable": "Confortável",
     "density_standard": "Padrão",
     "density_compact": "Compacta",
+    "time_format": "Formato da hora",
+    "time_format_24h": "24 h (14:30)",
+    "time_format_12h": "AM/PM (2:30 PM)",
     "pool_rounds": "Rondas de poules",
     "has_direct_elimination": "Eliminação direta",
     "default_pool_max_score": "Pontuação máxima predefinida das poules",
@@ -522,7 +525,10 @@
     "minutes": "minutos",
     "seconds": "segundos",
     "hours": "horas",
-    "days": "dias"
+    "days": "dias",
+    "period": "AM/PM",
+    "am": "AM",
+    "pm": "PM"
   },
   "pdfTemplate": {
     "modalTitle": "Personalizar exportações PDF",
