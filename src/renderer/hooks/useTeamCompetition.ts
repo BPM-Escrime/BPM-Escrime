@@ -51,7 +51,6 @@ export function useTeamCompetition(competitionId: string) {
   const [data, setData] = useState<TeamCompetitionData>(EMPTY);
   const [loading, setLoading] = useState(true);
   const alive = useRef(true);
-  const retried = useRef(false);
   const reloadRef = useRef<() => Promise<void>>(async () => {});
 
   const reload = useCallback(async () => {
@@ -72,12 +71,6 @@ export function useTeamCompetition(competitionId: string) {
             }
           : EMPTY
       );
-      // Épreuve jamais ouverte : pas d'état tant que l'écran n'a pas écrit son bloc (500 ms) ;
-      // une relecture suffit (docs/adr/0024, persistLocally jusqu'au lot N)
-      if (!state && !retried.current) {
-        retried.current = true;
-        setTimeout(() => void reloadRef.current(), 700);
-      }
     } catch (e) {
       if (alive.current) showToast((e as Error).message, 'error');
     } finally {

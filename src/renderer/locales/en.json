@@ -2844,7 +2844,6 @@
     "none": "No fencer available",
     "adding": "Adding…",
     "add": "Add the fencer",
-    "sync_failed": "Fencer added, but the database sync failed",
     "add_error": "Error while adding: {{msg}}",
     "unknown_error": "Unknown error"
   },

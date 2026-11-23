@@ -14,11 +14,10 @@ vi.mock('../components/Toast', () => ({ useToast: () => ({ showToast }) }));
 vi.mock('./useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 let call: ReturnType<typeof vi.fn>;
-const flush = vi.fn(async () => {});
 
 const setup = () => {
   const client = { call } as unknown as BpmClient;
-  return renderHook(() => useFencerWithdrawal('c1', flush), {
+  return renderHook(() => useFencerWithdrawal('c1'), {
     wrapper: ({ children }) => <BpmClientProvider client={client}>{children}</BpmClientProvider>,
   }).result;
 };
@@ -26,16 +25,14 @@ const setup = () => {
 beforeEach(() => {
   call = vi.fn(async () => ({ forfeitedMatchIds: ['m1', 'm2'] }));
   showToast.mockClear();
-  flush.mockClear();
 });
 
 describe('useFencerWithdrawal', () => {
-  it('retrait par la commande, après la sauvegarde en attente ; matchs perdus annoncés', async () => {
+  it('retrait par la commande ; matchs perdus annoncés', async () => {
     const r = setup();
     const input = { fencerId: 'f1', reason: 'abandon' as const, matchId: 'm1' };
     expect(await r.current.withdraw(input)).toBe('recorded');
     expect(call).toHaveBeenCalledWith('withdrawFencer', { competitionId: 'c1', ...input });
-    expect(flush.mock.invocationCallOrder[0]).toBeLessThan(call.mock.invocationCallOrder[0]);
     expect(showToast).toHaveBeenCalledWith('plural.matches_not_played', 'success');
   });
 
@@ -45,12 +42,15 @@ describe('useFencerWithdrawal', () => {
     expect(call).toHaveBeenCalledWith('reinstateFencer', { competitionId: 'c1', fencerId: 'f1' });
   });
 
-  it('format hors moteur ou hors Electron : repli local, sans message', async () => {
-    call.mockRejectedValueOnce(new ApiError('unsupported_format', 'équipes'));
+  it('hors Electron : repli local, sans message ; plus de repli sur unsupported_format', async () => {
+    call.mockRejectedValueOnce(new ApiError('unavailable', 'hors Electron'));
     expect(await setup().current.withdraw({ fencerId: 'f1', reason: 'forfait' })).toBe('local');
     call.mockRejectedValueOnce(new ApiError('unavailable', 'hors Electron'));
     expect(await setup().current.reinstate('f1')).toBe('local');
     expect(showToast).not.toHaveBeenCalled();
+    // Tous les formats passent par le moteur (docs/adr/0024) : refus affiché
+    call.mockRejectedValueOnce(new ApiError('unsupported_format', 'format'));
+    expect(await setup().current.withdraw({ fencerId: 'f1', reason: 'forfait' })).toBe('refused');
   });
 
   it('refus du moteur : message, rien d’appliqué', async () => {

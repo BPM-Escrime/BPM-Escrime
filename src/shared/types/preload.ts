@@ -372,75 +372,14 @@ export interface DatabaseAPI {
   // Competitions
   getAllCompetitions: () => Promise<Competition[]>;
 
-  // Fencers
-  updateFencer: (id: string, updates: FencerUpdateData) => Promise<void>;
-
-  // Matches
-  createMatch: (match: MatchCreateData, poolId?: string) => Promise<Match>;
-  updateMatch: (id: string, updates: MatchUpdateData) => Promise<void>;
-  upsertMultipleTableauMatches: (
-    competitionId: string,
-    matches: Array<{
-      matchId: string;
-      round: number;
-      position: number;
-      fencerAId?: string | null;
-      fencerBId?: string | null;
-      scoreA?: Partial<Score> | null;
-      scoreB?: Partial<Score> | null;
-      status?: string;
-      maxScore?: number;
-      isBye?: boolean;
-    }>
-  ) => Promise<void>;
-
-  // Pools
-  createPool: (phaseId: string, number: number, poolId?: string) => Promise<Pool>;
-  clearPoolsForPhase: (phaseId: string) => Promise<void>;
-  addFencerToPool: (poolId: string, fencerId: string, position: number) => Promise<void>;
-  syncPoolSnapshot: (competitionId: string, snapshot: PoolSnapshot) => Promise<void>;
+  // Poules d'une préparation écrite par une version précédente (lecture seule)
   getPoolsByPhase: (phaseId: string) => Promise<Pool[]>;
-  updatePool: (pool: Pool) => Promise<void>;
-
-  // Phases
-  createPhase: (competitionId: string, type: string, order: number, name: string) => Promise<Phase>;
   getPhasesByCompetition: (competitionId: string) => Promise<Phase[]>;
 
-  // Referees
-
-  // Touch / Card read
-
-  // Session State
-  /** conflict : état réécrit par le MCP depuis le chargement (#1880), rien n'est écrit */
-  saveSessionState: (id: string, state: SessionState) => Promise<void | { conflict: true }>;
-  saveSessionStateSync: (competitionId: string, state: unknown) => boolean;
+  // État de l'épreuve hors moteur (lecture seule ; écrit par le moteur seul, docs/adr/0024)
   getSessionState: (competitionId: string) => Promise<SessionState | null>;
 
-  // Statistiques combattants
-  saveAbandonSnapshot: (
-    fencerId: string,
-    competitionId: string,
-    previousStatus: string,
-    abandonType: string,
-    matchSnapshots: MatchSnapshot[]
-  ) => Promise<void>;
-  getAbandonSnapshot: (fencerId: string) => Promise<AbandonSnapshot | null>;
-  deleteAbandonSnapshot: (fencerId: string) => Promise<void>;
-
-  // Score audit log
-
-  // Classement saisonnier Quest
-
-  // Match timeline
-
-  // Équipes
-  createTeam: (competitionId: string, name: string, club: string) => Promise<{ id: string }>;
-  upsertTeamFencer: (
-    teamId: string,
-    fencerId: string,
-    teamOrder: number,
-    isReserve: boolean
-  ) => Promise<void>;
+  // Cartons d'équipe : hors du moteur (docs/adr/0024, « Hors de cette ADR »)
   createTeamMatchCard: (
     matchId: string,
     teamId: string,

@@ -2844,7 +2844,6 @@
     "none": "Aucun tireur disponible",
     "adding": "Ajout…",
     "add": "Ajouter le tireur",
-    "sync_failed": "Tireur ajouté, mais la synchronisation en base a échoué",
     "add_error": "Erreur lors de l'ajout : {{msg}}",
     "unknown_error": "Erreur inconnue"
   },

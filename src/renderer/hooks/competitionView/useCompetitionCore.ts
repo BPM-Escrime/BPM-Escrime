@@ -232,10 +232,9 @@ export function useCompetitionCore(ctx: Ctx) {
     computeOverallRanking,
     areAllPoolsComplete,
     handleFencerForfeit,
-    handleUndoAbandon,
     handleBlackCardCancelled,
     syncFencersToPool,
-  } = usePoolManagement({ isLaserSabre, poolMaxScore, showToast, competitionId: competition?.id });
+  } = usePoolManagement({ isLaserSabre, poolMaxScore, showToast });
 
   // Affichage des poules : grille (toutes les poules) ou poule unique avec navigation
   const {
@@ -424,7 +423,6 @@ export function useCompetitionCore(ctx: Ctx) {
     computeOverallRanking,
     areAllPoolsComplete,
     handleFencerForfeit,
-    handleUndoAbandon,
     handleBlackCardCancelled,
     syncFencersToPool,
     poolCardSize,

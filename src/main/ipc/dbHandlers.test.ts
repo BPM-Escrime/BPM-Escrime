@@ -39,48 +39,27 @@ describe('bus d’événements db (#1298)', () => {
     });
   });
 
-  it('db:updateMatch et db:createMatch émettent matches:changed', async () => {
-    await handlers.get('db:updateMatch')!({}, 'm1', { status: 'x' });
-    await handlers.get('db:createMatch')!({}, {}, 'p1');
-    expect(send.mock.calls.filter(c => c[1].type === 'matches:changed')).toHaveLength(2);
-  });
-
-  it('db:updateMatch : motif de correction au journal, jamais écrit dans le match (#1996)', async () => {
-    db.updateMatch.mockClear();
-    db.logScoreChange.mockClear();
-    const scoreA = { value: 3, isVictory: false };
-    await handlers.get('db:updateMatch')!({}, 'm1', {
-      scoreA,
-      auditReason: '  Correction après tirage du tableau, tableau conservé  ',
-    });
-    expect(db.updateMatch).toHaveBeenCalledWith('m1', { scoreA });
-    expect(db.logScoreChange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        changedBy: 'correction',
-        reason: 'Correction après tirage du tableau, tableau conservé',
-      })
-    );
-
-    db.logScoreChange.mockClear();
-    await handlers.get('db:updateMatch')!({}, 'm1', { scoreA });
-    expect(db.logScoreChange).toHaveBeenCalledWith(expect.objectContaining({ changedBy: 'ui' }));
-    expect(db.logScoreChange.mock.calls[0][0]).not.toHaveProperty('reason');
-  });
-
-  it('db:updateMatch : score déjà en base (écrit par recordScore) ni réécrit ni journalisé (#1980)', async () => {
-    db.updateMatch.mockClear();
-    db.logScoreChange.mockClear();
-    db.getMatch.mockReturnValueOnce({
-      id: 'm1',
-      poolId: 'p1',
-      scoreA: { value: 5, isVictory: true },
-      scoreB: { value: 4 },
-    } as never);
-    await handlers.get('db:updateMatch')!({}, 'm1', {
-      scoreA: { isVictory: true, value: 5 },
-      scoreB: { value: 4 },
-    });
-    expect(db.updateMatch).not.toHaveBeenCalled();
-    expect(db.logScoreChange).not.toHaveBeenCalled();
+  it('lot N (docs/adr/0024) : plus aucun canal d’écriture de l’épreuve par le préload', () => {
+    for (const ch of [
+      'db:saveSessionState',
+      'db:updateFencer',
+      'db:createMatch',
+      'db:updateMatch',
+      'db:upsertMultipleTableauMatches',
+      'db:createPool',
+      'db:clearPoolsForPhase',
+      'db:addFencerToPool',
+      'db:syncPoolSnapshot',
+      'db:updatePool',
+      'db:createPhase',
+      'db:saveAbandonSnapshot',
+      'db:getAbandonSnapshot',
+      'db:deleteAbandonSnapshot',
+      'db:createTeam',
+      'db:upsertTeamFencer',
+    ]) {
+      expect(handlers.has(ch), ch).toBe(false);
+    }
+    expect(handlers.has('db:getSessionState')).toBe(true);
   });
 });

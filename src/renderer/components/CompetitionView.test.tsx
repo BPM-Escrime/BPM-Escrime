@@ -12,7 +12,15 @@ import CompetitionView from './CompetitionView';
 import { ToastProvider } from './Toast';
 import { ConfirmProvider } from './ConfirmDialog';
 import { TranslationProvider } from '../contexts/TranslationContext';
-import { Category, Competition, Fencer, FencerStatus, Gender, Weapon } from '../../shared/types';
+import {
+  Category,
+  Competition,
+  Fencer,
+  FencerStatus,
+  Gender,
+  Pool,
+  Weapon,
+} from '../../shared/types';
 
 const fencer = (n: number, status = FencerStatus.CHECKED_IN): Fencer => ({
   id: `f${n}`,
@@ -189,47 +197,60 @@ describe('CompetitionView', () => {
     expect(btn).toBeDisabled();
   });
 
-  it('génère les poules, les persiste en base et passe en préparation', async () => {
+  it('génère les poules, sans rien écrire en base, et passe en préparation', async () => {
     const calls = mockElectronAPI(Array.from({ length: 10 }, (_, i) => fencer(i + 1)));
     renderView();
     await screen.findByText('Nom1');
     const btn = screen.getByRole('button', { name: /Préparer les poules/ });
     expect(btn).toBeEnabled();
     fireEvent.click(btn);
-    await waitFor(() => expect(calls.createPool?.length).toBeGreaterThan(0));
-    // 10 tireurs en poules de 5 à 7 : 2 poules, 10 matchs par poule de 5
-    const poolIds = calls.createPool.map(a => a[2]);
-    expect(new Set(poolIds).size).toBe(calls.createPool.length);
-    expect(calls.addFencerToPool).toHaveLength(10);
-    const placed = new Set(calls.addFencerToPool.map(a => a[1]));
-    expect(placed.size).toBe(10);
-    expect(calls.createMatch.length).toBeGreaterThan(0);
     await waitFor(() =>
       expect(document.querySelectorAll('.phase-step')[1]).toHaveClass('phase-step-active')
     );
+    // Tirage non lancé : travail du poste (docs/adr/0024, lot N), aucune écriture par le préload
+    const draft = JSON.parse(localStorage.getItem('bellepoule-pooldraft-c1') ?? '[]');
+    // 10 tireurs en poules de 5 à 7 : 2 poules
+    expect(draft).toHaveLength(2);
+    expect(new Set(draft.flatMap((p: Pool) => p.fencers.map(f => f.id))).size).toBe(10);
+    for (const write of ['createPool', 'addFencerToPool', 'createMatch', 'createPhase']) {
+      expect(calls[write] ?? []).toHaveLength(0);
+    }
   });
 
-  it('préparation non lancée : le tirage est relu en base au rechargement, pas de nouveau tirage', async () => {
+  it('préparation non lancée : le tirage du poste est relu au rechargement, pas de nouveau tirage', async () => {
     const all = Array.from({ length: 10 }, (_, i) => fencer(i + 1));
-    const calls = mockElectronAPI(all);
+    mockElectronAPI(all);
     const first = renderView();
     await screen.findByText('Nom1');
     fireEvent.click(screen.getByRole('button', { name: /Préparer les poules/ }));
-    await waitFor(() => expect(calls.addFencerToPool?.length).toBe(10));
+    await waitFor(() => expect(localStorage.getItem('bellepoule-pooldraft-c1')).not.toBeNull());
+    const drawn = localStorage.getItem('bellepoule-pooldraft-c1');
     first.unmount();
 
-    // Rechargement avant « Lancer » : session sans poules, poules lues en base (repli DB)
-    const byId = new Map(all.map(f => [f.id, f]));
-    const dbPools = calls.createPool.map(([, number, id]) => ({
-      id,
-      number,
-      fencers: calls.addFencerToPool
-        .filter(([poolId]) => poolId === id)
-        .sort((x, y) => x[2] - y[2])
-        .map(([, fencerId]) => byId.get(fencerId)),
+    // Rechargement avant « Lancer » : pas d'état du moteur, tirage relu sur le poste
+    mockElectronAPI(all);
+    renderView();
+    await screen.findByText('Nom1');
+    // Appel inchangé : « Aller à la préparation », pas « Préparer » ni « Repréparer »
+    const resume = document.querySelector('[data-tour="generate-pools"]') as HTMLElement;
+    await waitFor(() => expect(resume).toHaveTextContent('Aller à la préparation'));
+    fireEvent.click(resume);
+    await waitFor(() =>
+      expect(document.querySelectorAll('.phase-step')[1]).toHaveClass('phase-step-active')
+    );
+    // Même appel : préparation reprise telle quelle, aucun nouveau tirage
+    expect(localStorage.getItem('bellepoule-pooldraft-c1')).toBe(drawn);
+  });
+
+  it('préparation écrite en base par une version précédente : relue (lecture seule)', async () => {
+    const all = Array.from({ length: 10 }, (_, i) => fencer(i + 1));
+    const dbPools = [0, 1].map(n => ({
+      id: `pool-${n}`,
+      number: n + 1,
+      fencers: all.filter((_, i) => i % 2 === n),
       matches: [],
     }));
-    const again = mockElectronAPI(all);
+    const calls = mockElectronAPI(all);
     const db = (window as any).electronAPI.db;
     const getPoolsByPhase = vi.fn(async () => dbPools);
     (window as any).electronAPI.db = new Proxy(db, {
@@ -243,15 +264,9 @@ describe('CompetitionView', () => {
     renderView();
     await screen.findByText('Nom1');
     await waitFor(() => expect(getPoolsByPhase).toHaveBeenCalled());
-    // Appel inchangé : « Aller à la préparation », pas « Préparer » ni « Repréparer »
     const resume = document.querySelector('[data-tour="generate-pools"]') as HTMLElement;
     await waitFor(() => expect(resume).toHaveTextContent('Aller à la préparation'));
-    fireEvent.click(resume);
-    await waitFor(() =>
-      expect(document.querySelectorAll('.phase-step')[1]).toHaveClass('phase-step-active')
-    );
-    // Même appel : préparation reprise telle quelle, aucun nouveau tirage écrit
-    expect(again.createPool ?? []).toHaveLength(0);
+    expect(calls.createPool ?? []).toHaveLength(0);
   });
 
   describe('accès aux étapes et relance (#1499)', () => {

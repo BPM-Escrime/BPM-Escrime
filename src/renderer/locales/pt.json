@@ -2844,7 +2844,6 @@
     "none": "Nenhum esgrimista disponível",
     "adding": "A adicionar…",
     "add": "Adicionar o esgrimista",
-    "sync_failed": "Esgrimista adicionado, mas a sincronização com a base de dados falhou",
     "add_error": "Erro ao adicionar: {{msg}}",
     "unknown_error": "Erro desconhecido"
   },

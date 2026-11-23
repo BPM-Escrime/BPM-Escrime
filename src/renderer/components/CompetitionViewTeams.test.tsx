@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 /**
- * Épreuve par équipes à l'écran par le moteur (docs/adr/0024, lots E1 et E3) : l'écran écrit
- * encore son bloc de session (persistLocally, jusqu'au lot N), mais ses équipes passent par le
- * contrat seulement : inscription, composition, tirage des poules, relais (fin, réouverture),
- * remplacement, tirage explicite du tableau. Aucune écriture d'équipe par le préload ; le
- * journal rejoué ne diverge pas des tables. Épreuve créée avant E1 (rencontres de l'écran, UUID)
- * reprise telle quelle. Moteur et base réels derrière le contrat (engineBridge).
+ * Épreuve par équipes à l'écran par le moteur (docs/adr/0024, lots E1, E3 et N) : l'écran
+ * n'écrit rien lui-même, ni bloc de session ni équipes. Tout passe par le contrat :
+ * inscription, composition, tirage des poules, relais (fin, réouverture), remplacement, tirage
+ * explicite du tableau. L'onglet rouvert est celui du poste (posteUiState). Le journal rejoué ne
+ * diverge pas des tables. Épreuve créée avant E1 (rencontres et bloc de l'écran, UUID) reprise
+ * telle quelle. Moteur et base réels derrière le contrat (engineBridge).
  */
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -56,8 +56,10 @@ const session = (id: string) => db.getSessionState(id) as Session | null;
 const call = (op: string, input: Record<string, unknown>) =>
   invoke(ctx, op as never, input as never) as Promise<any>;
 
-/** Écritures d'équipe du préload : plus aucune depuis l'écran (lot E3) */
+/** Écritures du préload : plus aucune depuis l'écran (lots E3 et N) */
 const TEAM_WRITES = [
+  'saveSessionState',
+  'saveSessionStateSync',
   'createTeam',
   'deleteTeam',
   'upsertTeamFencer',
@@ -73,7 +75,6 @@ function mockElectronAPI() {
   const direct = [
     'getFencersByCompetition',
     'getSessionState',
-    'saveSessionState',
     'getTeamBoutCards',
     'getTeamMatchCards',
     ...TEAM_WRITES,
@@ -146,11 +147,17 @@ const addFencer = (competitionId: string, lastName: string) =>
     status: FencerStatus.CHECKED_IN,
   }).id;
 
-/** Onglet ouvert à la réouverture : bloc de session tel que l'écran l'écrit */
-const openAt = (competitionId: string, phase: number, tab: string) =>
+/** Onglet ouvert à la réouverture : préférence du poste (posteUiState, docs/adr/0017) */
+const openAt = (competitionId: string, tab: string) =>
+  localStorage.setItem(`bellepoule-ui-${competitionId}`, JSON.stringify({ tab }));
+
+/** Bloc de session tel que l'écran d'avant le lot N l'écrivait (bases existantes) */
+const oldScreenSession = (competitionId: string, phase: number, tab: string) =>
   db.saveSessionState(competitionId, {
     currentPhase: phase,
-    uiState: { currentPhase: tab },
+    pools: [],
+    tableauMatches: [],
+    uiState: { currentPhase: tab, currentPoolRound: 1, pools: 0 },
   } as never);
 
 /** Équipes inscrites et composées par le contrat : 3 titulaires et un remplaçant */
@@ -220,7 +227,7 @@ const plus = (side: 'A' | 'B') =>
     .getAllByRole('button', { name: 'Ajouter' })
     .filter(b => !(b as HTMLButtonElement).disabled)[side === 'A' ? 0 : 1];
 
-d('épreuve par équipes à l’écran (docs/adr/0024, lots E1 et E3)', () => {
+d('épreuve par équipes à l’écran (docs/adr/0024, lots E1, E3 et N)', () => {
   beforeEach(async () => {
     localStorage.clear();
     db = new DatabaseManager(':memory:');
@@ -248,32 +255,51 @@ d('épreuve par équipes à l’écran (docs/adr/0024, lots E1 et E3)', () => {
     for (const name of TEAM_WRITES) expect(writes[name], name).toBeUndefined();
   };
 
-  it('épreuve neuve : pas d’état du moteur avant l’ouverture ; l’écran écrit son bloc', async () => {
+  it('épreuve neuve : état et bloc « teams » dès la création, sans écriture de l’écran', async () => {
     const comp = teamCompetition();
-    expect((await call('getCompetitionState', { competitionId: comp.id })).state).toBeNull();
-    renderView(comp);
-    await waitFor(() => expect(session(comp.id)).not.toBeNull());
-    expect(session(comp.id)!.currentPhase).toBe(0);
-    // Bloc écrit, le moteur rend l'état et son bloc « teams » (vide)
+    // Le moteur rend l'état d'emblée (lot N : plus de bloc écrit par l'écran, plus de délai)
     const { state } = await call('getCompetitionState', { competitionId: comp.id });
-    expect(state.teams).toMatchObject({ teams: [], poolMatches: [] });
+    expect(state).toMatchObject({ currentPhase: 0, teams: { teams: [], poolMatches: [] } });
+    const fencers = ['ALPHA1', 'ALPHA2', 'ALPHA3'].map(n => addFencer(comp.id, n));
+    const { team } = await call('registerTeam', { competitionId: comp.id, name: 'Alpha' });
+    for (const [k, fencerId] of fencers.entries()) {
+      await call('assignTeamFencer', {
+        competitionId: comp.id,
+        teamId: team.id,
+        fencerId,
+        teamOrder: k + 1,
+      });
+    }
+    // Phase déduite des tables : équipes inscrites
+    expect((await call('getCompetitionState', { competitionId: comp.id })).state.currentPhase).toBe(
+      10
+    );
+
+    // Premier affichage de l'onglet Équipes : l'équipe est lue d'emblée (plus de relecture
+    // différée de 700 ms en attendant un bloc écrit par l'écran)
+    openAt(comp.id, 'teams');
+    renderView(comp);
+    expect(await screen.findAllByText(/Alpha/)).not.toHaveLength(0);
+    await new Promise(r => setTimeout(r, 650));
+    expect(session(comp.id)).toBeNull();
     noTeamWrite();
   });
 
   it('épreuve d’avant E1 (rencontres de l’écran) : reprise telle quelle, rien réécrit ni tiré', async () => {
     const comp = teamCompetition();
     const matchId = composedByOldScreen(comp.id);
-    openAt(comp.id, 11, 'teampool');
+    oldScreenSession(comp.id, 11, 'teampool');
+    const kept = session(comp.id);
     const before = db.getTeamMatchesByCompetition(comp.id);
 
     renderView(comp);
     expect(await screen.findAllByText(/Alpha/)).not.toHaveLength(0);
     expect(screen.getAllByText(/Bravo/).length).toBeGreaterThan(0);
     expect(await screen.findByText('5 – 2')).toBeInTheDocument();
-    // Sauvegarde différée de l'écran passée : phase gardée, aucun tirage refait, aucun tableau
-    // créé à l'ouverture (lot E3)
-    await waitFor(() => expect(writes.saveSessionState?.length ?? 0).toBeGreaterThan(0));
-    expect(session(comp.id)!.currentPhase).toBe(11);
+    // Phase de l'ancien bloc reprise (onglet Poule) ; bloc laissé tel quel, aucun tirage
+    // refait, aucun tableau créé à l'ouverture (lots E3 et N)
+    await new Promise(r => setTimeout(r, 650));
+    expect(session(comp.id)).toEqual(kept);
     noTeamWrite();
     expect(db.getTeamMatchesByCompetition(comp.id)).toEqual(before);
     expect(db.getTeamTableauMatches(comp.id, comp.id)).toEqual([]);
@@ -291,7 +317,7 @@ d('épreuve par équipes à l’écran (docs/adr/0024, lots E1 et E3)', () => {
     const comp = teamCompetition();
     const names = ['ALPHA1', 'ALPHA2', 'ALPHA3', 'BRAVO1', 'BRAVO2', 'BRAVO3'];
     const ids = Object.fromEntries(names.map(n => [n, addFencer(comp.id, n)]));
-    openAt(comp.id, 10, 'teams');
+    openAt(comp.id, 'teams');
     renderView(comp);
 
     const nameInput = await screen.findByPlaceholderText('Ex : équipe A');
@@ -342,7 +368,7 @@ d('épreuve par équipes à l’écran (docs/adr/0024, lots E1 et E3)', () => {
     const comp = teamCompetition();
     const [alpha] = await teamsByContract(comp.id, ['Alpha', 'Bravo']);
     await call('generateTeamPools', { competitionId: comp.id });
-    openAt(comp.id, 11, 'teampool');
+    openAt(comp.id, 'teampool');
     renderView(comp);
     fireEvent.click(await screen.findByRole('button', { name: 'Scorer' }));
 
@@ -414,7 +440,7 @@ d('épreuve par équipes à l’écran (docs/adr/0024, lots E1 et E3)', () => {
         scoreB: 0,
       });
     }
-    openAt(comp.id, 12, 'teamtableau');
+    openAt(comp.id, 'teamtableau');
     renderView(comp);
 
     // Ouverture : aucun tableau créé

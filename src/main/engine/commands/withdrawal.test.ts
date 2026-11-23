@@ -137,6 +137,40 @@ d('withdrawFencer / reinstateFencer (ADR-0016)', () => {
     expect(listMatches(ctx, comp.id).find(m => m.matchId === first.matchId)?.state).toBe('done');
   });
 
+  it('instantané écrit par l’écran d’avant le lot N (même format) : relu par reinstateFencer', async () => {
+    const comp = setup(5);
+    generatePools(ctx, comp.id, { poolCount: 1 });
+    const first = listMatches(ctx, comp.id, { state: 'ready' })[0];
+    recordScore(ctx, comp.id, { matchId: first.matchId, scoreA: 5, scoreB: 2 });
+    const fid = first.fencerA!.id;
+    // Matchs du tireur tels que l'écran les photographiait (usePoolManagement, avant le lot N)
+    const session = db.getSessionState(comp.id) as { pools: any[] };
+    const screenSnapshot = session.pools.flatMap(p =>
+      p.matches
+        .filter((m: any) => m.fencerA?.id === fid || m.fencerB?.id === fid)
+        .map((m: any) => ({
+          matchId: m.id,
+          status: m.status as string,
+          scoreA: m.scoreA ? { ...m.scoreA } : null,
+          scoreB: m.scoreB ? { ...m.scoreB } : null,
+        }))
+    );
+    await call('withdrawFencer', { competitionId: comp.id, fencerId: fid, reason: 'abandon' });
+    // Instantané remplacé par celui de l'écran (table fencer_abandons, même format)
+    db.deleteAbandonSnapshot(fid);
+    db.saveAbandonSnapshot(fid, comp.id, FencerStatus.CHECKED_IN, 'abandon', screenSnapshot);
+
+    const back = await call('reinstateFencer', { competitionId: comp.id, fencerId: fid });
+    expect(back.restoredMatchIds).toHaveLength(screenSnapshot.length);
+    expect(db.getFencer(fid)?.status).toBe(FencerStatus.CHECKED_IN);
+    expect(db.getAbandonSnapshot(fid)).toBeNull();
+    const mine = listMatches(ctx, comp.id).filter(
+      m => m.fencerA?.id === fid || m.fencerB?.id === fid
+    );
+    expect(mine.filter(m => m.state === 'ready')).toHaveLength(3);
+    expect(mine.find(m => m.matchId === first.matchId)?.state).toBe('done');
+  });
+
   it('au tableau : exclusion sur carton noir, l’adversaire passe ; réintégration bornée', async () => {
     const comp = setup(4);
     generatePools(ctx, comp.id, { poolCount: 1 });
@@ -248,18 +282,44 @@ d('withdrawFencer / reinstateFencer (ADR-0016)', () => {
     });
   });
 
-  it('épreuve par équipes, tireur inconnu : refus', async () => {
+  it('tireur inconnu : refus', async () => {
     const comp = setup(4);
     await expect(
       call('withdrawFencer', { competitionId: comp.id, fencerId: 'x', reason: 'forfait' })
     ).rejects.toMatchObject({ code: 'fencer_not_found' });
+  });
+
+  it('épreuve par équipes (docs/adr/0024, §3) : statut et motif, journal sans match, pas d’instantané', async () => {
+    const comp = setup(4);
     db.updateCompetition(comp.id, { isTeamEvent: true } as never);
-    await expect(
-      call('withdrawFencer', {
-        competitionId: comp.id,
-        fencerId: fencerIds(comp.id)[0],
-        reason: 'forfait',
-      })
-    ).rejects.toMatchObject({ code: 'unsupported_format' });
+    const [fid] = fencerIds(comp.id);
+    const res = await call('withdrawFencer', {
+      competitionId: comp.id,
+      fencerId: fid,
+      reason: 'exclusion',
+      blackCard: true,
+    });
+    expect(res).toMatchObject({
+      phase: 'checkin',
+      status: FencerStatus.EXCLUDED,
+      exclusionReason: 'black_card',
+      forfeitedMatchIds: [],
+    });
+    expect(db.getFencersByCompetition(comp.id)[0]).toMatchObject({
+      status: FencerStatus.EXCLUDED,
+      exclusionReason: 'black_card',
+    });
+    expect(lastEvent(comp.id)).toMatchObject({
+      type: 'FencerWithdrawn',
+      payload: { fencerId: fid, reason: 'exclusion', blackCard: true, forfeitedMatchIds: [] },
+    });
+    expect(db.getAbandonSnapshot(fid)).toBeNull();
+    // Aucun état écrit pour l'écran : les équipes vivent dans leurs tables
+    expect(db.getSessionState(comp.id)).toBeNull();
+
+    // Réintégration : présent, sans instantané à relire
+    const back = await call('reinstateFencer', { competitionId: comp.id, fencerId: fid });
+    expect(back).toMatchObject({ status: FencerStatus.CHECKED_IN, restoredMatchIds: [] });
+    expect(lastEvent(comp.id)).toMatchObject({ type: 'FencerReinstated' });
   });
 });

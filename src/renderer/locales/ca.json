@@ -2844,7 +2844,6 @@
     "none": "Cap tirador disponible",
     "adding": "Afegint…",
     "add": "Afegeix el tirador",
-    "sync_failed": "Tirador afegit, però la sincronització amb la base ha fallat",
     "add_error": "Error en afegir: {{msg}}",
     "unknown_error": "Error desconegut"
   },

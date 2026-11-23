@@ -2844,7 +2844,6 @@
     "none": "沒有可用的劍手",
     "adding": "新增中…",
     "add": "新增劍手",
-    "sync_failed": "已新增劍手，但資料庫同步失敗",
     "add_error": "新增時出錯：{{msg}}",
     "unknown_error": "未知錯誤"
   },

@@ -2844,7 +2844,6 @@
     "none": "Kein Fechter verfügbar",
     "adding": "Wird hinzugefügt…",
     "add": "Fechter hinzufügen",
-    "sync_failed": "Fechter hinzugefügt, aber die Datenbanksynchronisierung ist fehlgeschlagen",
     "add_error": "Fehler beim Hinzufügen: {{msg}}",
     "unknown_error": "Unbekannter Fehler"
   },

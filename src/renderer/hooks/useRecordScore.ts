@@ -2,7 +2,7 @@
  * BPM - Escrime - Saisie d'un score à l'écran par la commande recordScore (#1980, ADR-0005)
  * Un fait, un chemin : écran, tablettes, appareils de piste et MCP écrivent le score par le
  * moteur (session, base et journal dans une transaction) ; l'écran relit la session
- * (session:changed). Les formats que le moteur ne pilote pas restent saisis localement.
+ * (session:changed). Épreuves par équipes : relais par recordRelayScore (docs/adr/0024).
  * Licensed under GPL-3.0
  */
 import { useCallback } from 'react';
@@ -15,7 +15,6 @@ import type { RecordScoreOutcome } from '../components/tableau/tableauViewShared
 const LOCAL_CODES = new Set([
   // Hors Electron (navigateur, tests E2E sur le serveur de dev) : pas de moteur
   'unavailable',
-  'unsupported_format',
   'match_not_found',
   'bracket_exists',
   'round_closed',
@@ -35,11 +34,7 @@ export interface ScreenScoreInput {
   correction?: { reason: string; rebuildTableau?: boolean };
 }
 
-export function useRecordScore(
-  competitionId: string | undefined,
-  /** Sauvegarde en attente de l'écran écrite avant la commande (rien de perdu au rechargement) */
-  flushSession: () => Promise<void>
-) {
+export function useRecordScore(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   const { t } = useTranslation();
@@ -47,7 +42,6 @@ export function useRecordScore(
     async (input: ScreenScoreInput): Promise<RecordScoreOutcome> => {
       if (!competitionId) return 'local';
       try {
-        await flushSession();
         await client.call('recordScore', { competitionId, ...input });
         return 'recorded';
       } catch (e) {
@@ -60,6 +54,6 @@ export function useRecordScore(
         return 'refused';
       }
     },
-    [client, competitionId, flushSession, showToast, t]
+    [client, competitionId, showToast, t]
   );
 }

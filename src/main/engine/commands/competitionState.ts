@@ -12,6 +12,19 @@ import { groupTableauxView } from './groupTableaux';
 
 const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
+/** Numéros des phases d'une épreuve par équipes (useCompetitionSession, jamais renumérotés) */
+const TEAM_PHASE = { checkin: 0, teams: 10, teampool: 11, teamtableau: 12 } as const;
+
+/**
+ * Phase d'une épreuve par équipes, déduite de ses tables : tableau tiré, poules tirées, équipes
+ * inscrites. Borne l'onglet rouvert par le poste (posteUiState) ; l'écran n'écrit plus la phase
+ */
+function teamPhase(teams: TeamsStateDTO): number {
+  if (teams.tableauMatches.length > 0) return TEAM_PHASE.teamtableau;
+  if (teams.poolMatches.length > 0) return TEAM_PHASE.teampool;
+  return teams.teams.length > 0 ? TEAM_PHASE.teams : TEAM_PHASE.checkin;
+}
+
 /**
  * État d'une épreuve à partir du bloc de session ; null si l'épreuve n'a jamais été ouverte.
  * Tableaux séparés après les poules (docs/adr/0024) : un tableau par groupe dans
@@ -23,10 +36,9 @@ export function competitionState(
   /** Épreuve par équipes : bloc lu dans les tables des équipes (docs/adr/0024) */
   teams?: TeamsStateDTO | null
 ): CompetitionStateDTO | null {
-  // Jamais ouverte : pas d'état, épreuve par équipes comprise. L'écran des équipes écrit encore
-  // le bloc lui-même (persistLocally) : un état par défaut déclencherait sa restauration
-  // (phase, onglet) à la première ouverture (docs/adr/0024, jusqu'au lot E3)
-  if (Object.keys(session).length === 0) return null;
+  // Jamais ouverte : pas d'état. Épreuve par équipes : l'état vient des tables des équipes,
+  // écrites par les commandes seules ; il existe dès la création (docs/adr/0024, lot N)
+  if (Object.keys(session).length === 0 && !teams) return null;
   const groups = comp ? groupTableauxView(comp, session) : null;
   // Tableau repris lu dans son groupe : la racine ne le montre plus
   const rootMoved =
@@ -37,7 +49,10 @@ export function competitionState(
   const ui = (session.uiState ?? {}) as { currentPoolRound?: number };
   const prep = session.poolPrepParams as CompetitionStateDTO['poolPrepParams'];
   return {
-    currentPhase: typeof session.currentPhase === 'number' ? session.currentPhase : 0,
+    currentPhase: Math.max(
+      typeof session.currentPhase === 'number' ? session.currentPhase : 0,
+      teams ? teamPhase(teams) : 0
+    ),
     pools: arr(session.pools),
     poolHistory: arr(session.poolHistory),
     appelHistory: arr(session.appelHistory),

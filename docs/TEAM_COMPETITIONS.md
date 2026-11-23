@@ -154,7 +154,12 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   `cyrano` ou `opp2`. Refus du moteur : rien d'écrit ; motif affiché sur la tablette, NAK
   sur l'appareil. Le compteur du relais en cours (touches, chrono) reste un état de
   l'arène. Les cartons (individuels des
-  relais, « E » d'équipe) restent hors du moteur.
+  relais, « E » d'équipe) restent hors du moteur. Lot N : l'écran n'écrit plus aucun bloc de
+  session ; l'état d'une épreuve par équipes existe dès sa création (bloc `teams` lu dans les
+  tables), l'onglet rouvert est celui du poste. Abandon, forfait ou exclusion d'un tireur
+  (appel) : `withdrawFencer`, statut et motif seuls, sans effet sur les rencontres (le
+  remplaçant entre par `substituteTeamFencer`). Import fédéral : équipes par `registerTeam`
+  et `assignTeamFencer`.
 - Épreuve créée avant le lot E1 : équipes, rencontres et relais en base sont repris tels
   quels ; un relais en cours garde son score, qui devient le compteur de l'écran. Un
   tableau dont les poules sont finies mais pas encore créé se tire par le bouton. Le relais
