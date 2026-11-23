@@ -4,19 +4,16 @@
  * Écritures par le contrat seulement (docs/adr/0024, lot E3) : inscription, composition,
  * tirages des poules et du tableau, fin de relais, réouverture, remplacement. État lu dans le
  * bloc « teams » du moteur (useTeamCompetition) ; le compteur de touches du relais en cours
- * est un état de l'écran, envoyé à la fin du relais (recordRelayScore). Les cartons restent
- * hors du moteur (docs/adr/0024, « Hors de cette ADR »).
+ * est un état de l'écran, envoyé à la fin du relais (recordRelayScore). Cartons et retrait
+ * d'une équipe par le moteur (docs/adr/0028, lot C2) : lus dans le bloc « teams », écrits par
+ * giveTeamCard, giveRelayCard, cancelTeamCard, cancelRelayCard, withdrawTeam ; succès affiché
+ * après la réponse du moteur (docs/adr/0005).
  * Licensed under GPL-3.0
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Card, CardReason, Competition, Fencer, Weapon } from '../../shared/types';
-import {
-  TeamRow,
-  TeamMatchRow,
-  TeamBoutRow,
-  TeamMatchCardRow,
-} from '../../shared/domain/teams/team.types';
+import { CardReason, Competition, Fencer, Weapon } from '../../shared/types';
+import { TeamRow, TeamMatchRow, TeamBoutRow } from '../../shared/domain/teams/team.types';
 import { getTeamTargetRule } from '../../shared/domain/teams/teamCalculations';
 import {
   getLaserArenaBoutCap,
@@ -30,8 +27,7 @@ import {
   teamFormatOf,
 } from '../../shared/domain/teams/relay';
 import { rankTeamsForTableau } from '../../shared/domain/teams/teamTableau';
-import { buildCard } from '../../shared/domain/penalties/cards';
-import TeamPoolView, { CardTarget, RelayHandlers } from './TeamPoolView';
+import TeamPoolView, { CardHandlers, CardTarget, RelayHandlers } from './TeamPoolView';
 import TeamTableauView from './TeamTableauView';
 import BookSectionsModal from './BookSectionsModal';
 import {
@@ -101,6 +97,9 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     poolMatches: matches,
     tableauMatches,
     poolRanking,
+    relayCards,
+    teamCards,
+    withdrawn,
     loading,
     run,
   } = useTeamCompetition(competitionId);
@@ -129,48 +128,12 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   } | null>(null);
   const sending = useRef(new Set<string>());
 
-  // Cartons individuels par assaut (en mémoire pour la session — cf. limites connues en documentation)
-  const [boutCards, setBoutCards] = useState<Record<string, Card[]>>({});
+  // Carton individuel en cours de saisie (relais et tireur visés, motif)
   const [cardTarget, setCardTarget] = useState<CardTarget | null>(null);
   const [selectedReason, setSelectedReason] = useState<CardReason | ''>('');
 
-  // Cartons d'équipe "E" (format arène Sabre Laser uniquement), persistés en DB
-  // par rencontre (matchId), contrairement aux cartons individuels ci-dessus.
-  const [matchCards, setMatchCards] = useState<Record<string, TeamMatchCardRow[]>>({});
-
   const allMatches = useMemo(() => [...matches, ...tableauMatches], [matches, tableauMatches]);
-  const matchIdsKey = allMatches.map(m => m.id).join('|');
-
-  // Cartons (hors moteur, docs/adr/0024) : relus quand les rencontres changent
-  useEffect(() => {
-    const ids = matchIdsKey ? matchIdsKey.split('|') : [];
-    let cancelled = false;
-    void (async () => {
-      // Cartons individuels des relais, persistés en base (#1086)
-      const boutCardLists = await Promise.all(
-        ids.map(id => window.electronAPI.db.getTeamBoutCards?.(id) ?? [])
-      );
-      const byBout: Record<string, Card[]> = {};
-      for (const { boutId, card } of boutCardLists.flat()) {
-        (byBout[boutId] ??= []).push(card);
-      }
-      const map: Record<string, TeamMatchCardRow[]> = {};
-      if (isLaserArena) {
-        const cardsArrays = await Promise.all(
-          ids.map(id => window.electronAPI.db.getTeamMatchCards(id))
-        );
-        ids.forEach((id, i) => {
-          map[id] = cardsArrays[i] as TeamMatchCardRow[];
-        });
-      }
-      if (cancelled) return;
-      setBoutCards(byBout);
-      setMatchCards(map);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [matchIdsKey, isLaserArena]);
+  const teamName = (id: string) => teams.find(team => team.id === id)?.name ?? '—';
 
   // Relais terminés ou rouverts par le moteur : leur compteur local tombe
   useEffect(() => {
@@ -317,6 +280,14 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     },
     onSubstitute: (matchId, teamId, outFencerId) =>
       void run('substituteTeamFencer', { competitionId, matchId, teamId, outFencerId }),
+    onWithdrawTeam: (matchId, teamId) => void handleWithdrawTeam(matchId, teamId),
+  };
+
+  // ── Abandon d'une équipe incomplète sans remplaçant (o.99.7.a) ───────────────
+  const handleWithdrawTeam = async (matchId: string, teamId: string) => {
+    if (!(await confirm(t('teams.confirmWithdrawTeam', { team: teamName(teamId) })))) return;
+    const out = await run('withdrawTeam', { competitionId, matchId, teamId, reason: 'abandon' });
+    if (out) showToast(t('teams.teamWithdrawnDone', { team: teamName(teamId) }), 'success');
   };
 
   // Relais en cours affichés avec le compteur de l'écran
@@ -332,24 +303,23 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
         : m
     );
 
-  // ── Carton d'équipe "E" (format arène Sabre Laser, persisté, traçabilité seule) ──
-  const handleAddTeamCard = async (
-    matchId: string,
-    teamId: string,
-    type: 'white' | 'yellow' | 'red' | 'black'
-  ) => {
-    const card = await window.electronAPI.db.createTeamMatchCard(
-      matchId,
-      teamId,
-      type,
-      'late_designation'
-    );
-    if (card) {
-      setMatchCards(prev => ({
-        ...prev,
-        [matchId]: [...(prev[matchId] ?? []), card as TeamMatchCardRow],
-      }));
-    }
+  // ── Cartons par le moteur (docs/adr/0028) : affichés après sa réponse ─────────
+  const cardHandlers: CardHandlers = {
+    // Carton E (arène Sabre Laser) ; sans type : escalade du moteur
+    onAddTeamCard: (matchId, teamId, type) =>
+      void run('giveTeamCard', { competitionId, matchId, teamId, ...(type ? { type } : {}) }).then(
+        out => out && showToast(t('teams.cardGiven'), 'success')
+      ),
+    // Annulation : décision du Directoire technique (t.164, t.172), après confirmation
+    onCancelCard: (matchId, cardId, kind) =>
+      void (async () => {
+        if (!(await confirm(t('teams.confirmCancelCard')))) return;
+        const out =
+          kind === 'team'
+            ? await run('cancelTeamCard', { competitionId, matchId, cardId })
+            : await run('cancelRelayCard', { competitionId, matchId, cardId });
+        if (out) showToast(t('teams.cardCancelled'), 'success');
+      })(),
   };
 
   // ── Envoyer une rencontre sur une arène pour saisie tablette temps réel ──────
@@ -367,31 +337,31 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     }
   };
 
-  // ── Carton (arme-aware, escalade selon les cartons déjà reçus par ce tireur) ──
+  // ── Carton individuel : type, points et exclusion décidés par le moteur (escalade sur la
+  // rencontre, règlement de l'arme) ; noir : tireur exclu, équipe exclue en armes olympiques ──
   const handleAddCard = async (matchId: string) => {
     if (!cardTarget || !selectedReason) return;
-    const match = allMatches.find(m => m.id === matchId);
-    const previousCards = Object.entries(boutCards)
-      .filter(([boutId]) => match?.bouts.some(b => b.id === boutId))
-      .flatMap(([, cards]) => cards)
-      .filter(c => c.fencerId === cardTarget.fencerId);
-    const card = buildCard({
-      id: crypto.randomUUID(),
-      at: new Date(),
+    const bout = allMatches
+      .find(m => m.id === matchId)
+      ?.bouts.find(b => b.id === cardTarget.boutId);
+    if (!bout) return;
+    const side = bout.fencerAId === cardTarget.fencerId ? 'A' : 'B';
+    const out = await run('giveRelayCard', {
+      competitionId,
       matchId,
-      fencerId: cardTarget.fencerId,
+      relayId: bout.id,
+      side,
       reason: selectedReason,
-      previousCards,
-      weapon: competition.weapon,
     });
-    const boutId = cardTarget.boutId;
-    setBoutCards(prev => ({ ...prev, [boutId]: [...(prev[boutId] ?? []), card] }));
+    if (!out) return;
     setCardTarget(null);
     setSelectedReason('');
-    try {
-      await window.electronAPI.db.createTeamBoutCard(boutId, card);
-    } catch (e) {
-      showToast(`${t('teams.cardSaveError')} : ${(e as Error).message}`, 'error');
+    if (out.withdrawnTeamId) {
+      showToast(t('teams.teamExcludedToast', { team: teamName(out.withdrawnTeamId) }), 'warning');
+    } else if (out.fencerWithdrawn) {
+      showToast(t('teams.fencerExcludedToast', { name: fencerName(out.card.fencerId) }), 'warning');
+    } else {
+      showToast(t('teams.cardGiven'), 'success');
     }
   };
 
@@ -576,6 +546,15 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                   <div>
                     <span className="font-semibold text-gray-900">{team.name}</span>
                     <span className="text-sm text-gray-400 ml-2">{team.club}</span>
+                    {withdrawn[team.id] && (
+                      <span className="ml-2 text-xs text-red-600 font-semibold">
+                        {t(
+                          withdrawn[team.id].reason === 'exclusion'
+                            ? 'teams.statusExcluded'
+                            : 'teams.statusAbandoned'
+                        )}
+                      </span>
+                    )}
                     {valid ? (
                       <span className="ml-2 text-xs text-green-600 font-medium">
                         {t('teamManager.complete')}
@@ -742,7 +721,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           onToggleScoring={id => setScoringMatchId(scoringMatchId === id ? null : id)}
           onScoreBout={handleScoreBout}
           relay={relayHandlers}
-          boutCards={boutCards}
+          boutCards={relayCards}
           cardTarget={cardTarget}
           onSetCardTarget={setCardTarget}
           selectedReason={selectedReason}
@@ -751,8 +730,9 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           emptyLabel={t('teamManager.no_pool_match')}
           isLaserArena={isLaserArena}
           boutCap={boutCap}
-          matchCards={matchCards}
-          onAddTeamCard={handleAddTeamCard}
+          matchCards={teamCards}
+          cards={cardHandlers}
+          withdrawn={withdrawn}
           onAssignArena={handleAssignArena}
         />
       )}
@@ -772,7 +752,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           onToggleScoring={id => setScoringMatchId(scoringMatchId === id ? null : id)}
           onScoreBout={handleScoreBout}
           relay={relayHandlers}
-          boutCards={boutCards}
+          boutCards={relayCards}
           cardTarget={cardTarget}
           onSetCardTarget={setCardTarget}
           selectedReason={selectedReason}
@@ -781,8 +761,9 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           onGenerate={() => void handleGenerateTableau()}
           isLaserArena={isLaserArena}
           boutCap={boutCap}
-          matchCards={matchCards}
-          onAddTeamCard={handleAddTeamCard}
+          matchCards={teamCards}
+          cards={cardHandlers}
+          withdrawn={withdrawn}
           onAssignArena={handleAssignArena}
         />
       )}
@@ -1030,6 +1011,20 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
             </table>
           )}
         </div>
+      )}
+      {/* Équipes retirées (o.99.7.a, « N'a pas terminé ») ou exclues (o.99.7.b, sans rang) */}
+      {view === 'ranking' && Object.keys(withdrawn).length > 0 && (
+        <ul className="mt-3 text-sm space-y-1" aria-label={t('teams.withdrawnTitle')}>
+          {Object.values(withdrawn).map(w => (
+            <li key={w.teamId} className="flex gap-2 px-3">
+              <span className="font-bold text-gray-400 w-8 text-center">—</span>
+              <span className="font-semibold text-gray-900">{teamName(w.teamId)}</span>
+              <span className="text-red-600 font-medium">
+                {t(w.reason === 'exclusion' ? 'teams.statusExcluded' : 'teams.statusAbandoned')}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </>
   );
