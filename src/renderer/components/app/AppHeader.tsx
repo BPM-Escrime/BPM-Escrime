@@ -51,6 +51,7 @@ interface AppHeaderProps {
   onWifiQR: () => void;
   onTVRemote: () => void;
   onArenaPlanner: () => void;
+  onRoadmap: () => void;
   onStartDemo: () => void;
   onSettings: () => void;
 }
@@ -72,6 +73,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onWifiQR,
   onTVRemote,
   onArenaPlanner,
+  onRoadmap,
   onStartDemo,
   onSettings,
 }) => {
@@ -171,6 +173,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             onWifiQR={onWifiQR}
             onTVRemote={onTVRemote}
             onArenaPlanner={onArenaPlanner}
+            onRoadmap={onRoadmap}
             onStartDemo={onStartDemo}
           />
         )}
