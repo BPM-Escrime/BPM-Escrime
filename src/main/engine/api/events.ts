@@ -7,6 +7,7 @@ import { EventEmitter } from 'events';
 import type { RemoteActivity, RemoteClientsEvent } from '../../../shared/types/remote';
 import type { ConnectedClient } from '../../../shared/types/preload';
 import type { TrainingActivity } from '../../../shared/types/training';
+import type { StripControlChange } from '../../../shared/types/stripDevice';
 
 export interface CompetitionEventPayload {
   type: string;
@@ -78,5 +79,20 @@ export function onTrainingActivityEvent(cb: (event: TrainingActivity) => void): 
   bus.on('training:activity', cb);
   return () => {
     bus.off('training:activity', cb);
+  };
+}
+
+/**
+ * Pilotage de la salle hors compétition (onStripControlChanged, #2117) : accusé d'un affichage
+ * libre ou liaison d'un appareil changés. Identifiants seulement, jamais de nom (RGPD).
+ */
+export function publishStripControlChange(event: StripControlChange): void {
+  bus.emit('strip:control', event);
+}
+
+export function onStripControlChangeEvent(cb: (event: StripControlChange) => void): () => void {
+  bus.on('strip:control', cb);
+  return () => {
+    bus.off('strip:control', cb);
   };
 }

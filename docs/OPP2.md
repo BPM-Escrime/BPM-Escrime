@@ -78,6 +78,12 @@ passer une piste en manuel (`manualStrips`). Droit `remote:admin`, jamais sur le
 
 Le `PisteHub` reste branché tant que Cyrano ou OPP2 est en service.
 
+**Pilotage de la salle hors compétition** (#2117, [CYRANO.md](CYRANO.md#pilotage-de-la-salle-hors-compétition-2117)) :
+`sendStripDisplay` publie un affichage libre sur `software/fencers` (noms en majuscules, code CIO
+ou `club_abbr`, Id vide) et `software/match` (arme seule) ; remise à blanc = `software/fencers`
+vide. Accusé : l'écho `apparatus/fencers` portant les noms envoyés (reçu) ; `apparatus/state`
+actif (refusé) ; rien sous 8 s (sans réponse). OPP2 ne renvoie pas l'arme.
+
 ## Tests
 
 - `mqttPacket.test.ts`, `mqttBroker.test.ts` : codec, retenus, dernière volonté, authentification,

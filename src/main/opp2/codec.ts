@@ -14,6 +14,8 @@ import type {
   PisteFencingState,
 } from '../piste/types';
 import { toCyranoWeapon } from '../cyrano/disp';
+import type { StripEcho, StripPanel, StripPanelSide } from '../../shared/types/stripDevice';
+import { isBlankPanel } from '../../shared/domain/stripDevices/stripControl';
 
 export const OPP2_PROTOCOL = 'OPP2';
 export const OPP2_VERSION = '1.0';
@@ -192,4 +194,38 @@ export function buildScoreBody(d: PisteDisplay): Record<string, unknown> {
 /** `software/clock` : chrono à reprendre, toujours à l'arrêt (spéc. § 11). */
 export function buildClockBody(stopwatch: number): Record<string, unknown> {
   return { running: false, time_ms: Math.round(stopwatch * 1000), time: formatOpp2Time(stopwatch) };
+}
+
+// ── Affichage libre hors compétition (pilotage de la salle, #2117) ─────────────
+
+/** Nom libre tel qu'envoyé : majuscules, espaces réduits (OPP2 ne tronque pas) */
+const panelName = (side: StripPanelSide | undefined): string =>
+  (side?.name ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
+
+/** `software/fencers` d'un affichage libre : noms et nations, sans identifiant de tireur */
+export function buildPanelFencersBody(panel: StripPanel): Record<string, unknown> {
+  if (isBlankPanel(panel)) return buildEmptyFencersBody();
+  const side = (s: StripPanelSide | undefined) => ({
+    fencer: { id: '', name: panelName(s), ...nationOf(s?.nat) },
+  });
+  return { left: side(panel.left), right: side(panel.right) };
+}
+
+/** `software/match` d'un affichage libre : l'arme seule (pas d'épreuve, de phase ni de match) */
+export function buildPanelMatchBody(panel: StripPanel): Record<string, unknown> {
+  return {
+    weapon: panel.weapon ?? '',
+    type: 'I',
+    competition: '',
+    phase_type: 'pool',
+    phase: '',
+    poule: '',
+    match: 0,
+    round: 1,
+  };
+}
+
+/** Écho attendu d'`apparatus/fencers` (OPP2 ne renvoie pas l'arme) */
+export function opp2PanelEcho(panel: StripPanel): StripEcho {
+  return { left: panelName(panel.left), right: panelName(panel.right), clear: isBlankPanel(panel) };
 }

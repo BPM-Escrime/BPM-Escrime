@@ -22,7 +22,7 @@ Aperçu des principaux écrans et menus de BellePoule Modern, sur une compétiti
 14. [Paramètres](#paramètres)
 15. [Mode Entraînement](#mode-entraînement)
 16. [Palette de commandes](#palette-de-commandes)
-17. [Appareils de piste (Cyrano)](#appareils-de-piste-cyrano)
+17. [Appareils de piste (saisie distante)](#appareils-de-piste-saisie-distante)
 18. [Tableau de bord analytique](#tableau-de-bord-analytique)
 19. [Salles et pistes](#salles-et-pistes)
 20. [Paramètres Système (agent IA, sauvegardes)](#paramètres-système-agent-ia-sauvegardes)
@@ -30,6 +30,8 @@ Aperçu des principaux écrans et menus de BellePoule Modern, sur une compétiti
 22. [Mode Club : membres](#mode-club--membres)
 23. [Mode Club : séance](#mode-club--séance)
 24. [Mode Club : statistiques](#mode-club--statistiques)
+25. [Appareils d'une salle (déclaration en masse)](#appareils-dune-salle-déclaration-en-masse)
+26. [Pilotage de la salle](#pilotage-de-la-salle)
 
 ## Accueil
 
@@ -127,9 +129,9 @@ Arme, nombre de pistes, durée du combat, interface réseau.
 
 ![Palette de commandes](screenshots/16-palette-commandes.png)
 
-## Appareils de piste (Cyrano)
+## Appareils de piste (saisie distante)
 
-Saisie distante, onglet **Expert**, volet **Cyrano EFP1 / EFP1.1** : port UDP, pistes ajoutées en lot (IP, arène, protocole, maître / esclave), journal des trames. Voir [CYRANO.md](CYRANO.md).
+Saisie distante, onglet **Expert**, volet des appareils : salle de l'épreuve, appareils Cyrano et OPP2 déclarés sur la salle (lecture seule), liaison de chaque piste, case **Manuel** qui passe une piste en saisie sur tablette pour cette épreuve, pilotes Cyrano (UDP) et OPP2 (MQTT), journal des trames. Voir [CYRANO.md](CYRANO.md).
 
 ![Appareils de piste](screenshots/17-appareils-piste.png)
 
@@ -141,7 +143,7 @@ Menu **⋯** → **Analytics** : performances, statistiques, graphiques, organis
 
 ## Salles et pistes
 
-Paramètres → **Salles et pistes** : salles du poste et leurs pistes, réutilisées par les journées, les arènes et les appareils Cyrano.
+Paramètres → **Salles et pistes** : salles du poste et leurs pistes, réutilisées par les journées, les arènes et les appareils de piste. Chaque piste déclare son appareil une fois (Cyrano : adresse, port, version ; OPP2 : identifiant MQTT ; mode), repris par toutes les épreuves de la salle ([ADR-0023](adr/0023-appareils-de-piste-salle.md)).
 
 ![Salles et pistes](screenshots/19-salles-pistes.png)
 
@@ -174,3 +176,15 @@ Séance ouverte : scan des cartes, pointage, plan de cours, saisie distante des 
 Classement du club par période et par catégorie d'âge, à partir des combats des séances.
 
 ![Mode Club : statistiques](screenshots/24-club-statistiques.png)
+
+## Appareils d'une salle (déclaration en masse)
+
+Salles et pistes → bouton **Appareils** d'une salle → **Déclaration en masse** : ajout en lot (première piste, nombre, protocole, profil constructeur, IP de la première piste incrémentée, port, version), export et import JSON des appareils de la salle. Voir [CYRANO.md](CYRANO.md#pilotage-de-la-salle-hors-compétition-2117).
+
+![Appareils d'une salle](screenshots/25-salle-appareils.png)
+
+## Pilotage de la salle
+
+Même panneau, **Pilotage de la salle**, sans compétition ouverte : grille des pistes (protocole, liaison, épreuve qui occupe la piste, dernier envoi et accusé), sélection de plusieurs pistes, envoi en une fois de l'arme, des noms et des nations, remise à blanc. Résultat par piste : envoyé puis **Reçu** quand l'appareil renvoie l'affichage, refusé si la piste est occupée par une épreuve en cours, hors ligne. Voir [CYRANO.md](CYRANO.md#pilotage-de-la-salle-hors-compétition-2117).
+
+![Pilotage de la salle](screenshots/26-pilotage-salle.png)

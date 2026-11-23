@@ -71,6 +71,7 @@ import {
   decodePhotosZip,
   importArchiveFencers,
 } from '../commands/dataFiles';
+import { devicesControlHandlers, onStripControlChanged } from '../commands/devicesControl';
 import { competitionStats } from '../commands/competitionStats';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
@@ -274,6 +275,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     return runCommand(ctx, competitionId, {}, c => applyFencerPhotos(c, competitionId, photos))
       .result;
   },
+  ...devicesControlHandlers,
+  onStripControlChanged,
 };
 
 export const isOperation = (name: unknown): name is OperationName =>

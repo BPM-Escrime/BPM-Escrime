@@ -6,6 +6,9 @@
  * Licensed under GPL-3.0
  */
 
+import type { StripEcho, StripPanel } from '../../shared/types/stripDevice';
+import type { StripEchoState } from '../../shared/domain/stripDevices/stripControl';
+
 /** État de l'appareil : assaut, halte, pause (minute de repos), attente, fin en attente d'ACK. */
 export type PisteFencingState = 'fencing' | 'halt' | 'pause' | 'waiting' | 'ending';
 
@@ -118,7 +121,12 @@ export type PisteCommand =
     }
   | { kind: 'clear' }
   | { kind: 'ack' }
-  | { kind: 'nak' };
+  | { kind: 'nak' }
+  /**
+   * Affichage libre hors compétition (pilotage de la salle, #2117) : arme, noms, nationalités ;
+   * vide = remise à blanc. Pas un match : aucun identifiant de tireur, aucun fait d'épreuve.
+   */
+  | { kind: 'panel'; panel: StripPanel };
 
 /**
  * Mode d'une piste :
@@ -159,6 +167,11 @@ export interface PisteDriverEvents {
   input: [input: PisteInput, link: PisteLink];
   /** Changement de statut de liaison */
   status: [link: PisteLink];
+  /**
+   * Ce que l'appareil affiche (noms, arme, combat en cours), lu dans sa trame : accusé de
+   * réception d'un affichage libre (#2117). Champ absent : non renvoyé par cette trame.
+   */
+  echo: [piste: string, state: StripEchoState];
 }
 
 /** Pilote d'appareils de piste. */
@@ -175,6 +188,11 @@ export interface PisteDriver {
    * `piste` désigne le pilote quand plusieurs protocoles coexistent (#1960).
    */
   fencerId(id: string, piste?: string): string;
+  /**
+   * Ce que l'appareil doit renvoyer après un affichage libre (noms tronqués comme le pilote
+   * les envoie) ; absent : pas d'accusé possible.
+   */
+  panelEcho?(piste: string, panel: StripPanel): StripEcho | null;
   /** Longueur des noms affichés, pour les pilotes qui transmettent les noms. */
   setNameLength?(length: PisteNameLength): void;
   on<K extends keyof PisteDriverEvents>(

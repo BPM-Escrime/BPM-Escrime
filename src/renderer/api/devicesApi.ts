@@ -10,12 +10,24 @@ import { useMemo } from 'react';
 import type { BpmClient } from '../../shared/api/client';
 import type { Venue } from '../../shared/types/appSettings';
 import type {
+  StripControlChange,
   StripDevice,
   StripDeviceAction,
+  StripDeviceDeclaration,
   StripDeviceOptions,
+  StripPanelSide,
+  StripPanelWeapon,
 } from '../../shared/types/stripDevice';
 import { useBpmClient } from './BpmClientContext';
 import { defaultBpmClient } from './IpcClient';
+
+/** Envoi du pilotage de la salle : champ absent = inchangé, chaîne vide = effacé */
+export interface StripDisplayRequest {
+  weapon?: StripPanelWeapon;
+  left?: StripPanelSide;
+  right?: StripPanelSide;
+  clear?: boolean;
+}
 
 export function createDevicesApi(client: BpmClient) {
   const q = client.query.bind(client);
@@ -48,6 +60,27 @@ export function createDevicesApi(client: BpmClient) {
     setOptions: (options: StripDeviceOptions) => c('setStripDeviceOptions', options),
     action: async (piste: string, action: StripDeviceAction) =>
       (await c('runStripDeviceAction', { piste, action })).done,
+    // ── Pilotage de la salle hors compétition (#2117) ──
+    control: {
+      list: (venueId: string) => q('listVenueStripControl', { venueId }),
+      send: (venueId: string, strips: number[] | 'all', request: StripDisplayRequest) =>
+        c('sendStripDisplay', { venueId, strips, ...request }),
+      /** Accusés et liaisons qui changent ; renvoie la fonction de désabonnement */
+      onChange: (cb: (event: StripControlChange) => void): (() => void) => {
+        try {
+          return client.subscribe('onStripControlChanged', {}, cb);
+        } catch {
+          // Hors Electron (pas de pont) : aucun avis
+          return () => undefined;
+        }
+      },
+    },
+    // ── Déclaration en masse (#2117) ──
+    setStripDevices: (venueId: string, devices: StripDeviceDeclaration[]) =>
+      c('setStripDevices', { venueId, devices }),
+    getStripDevicesFile: (venueId: string) => q('getStripDevicesFile', { venueId }),
+    importStripDevices: (venueId: string, content: string, dryRun = false) =>
+      c('importStripDevices', { venueId, content, dryRun }),
   };
 }
 

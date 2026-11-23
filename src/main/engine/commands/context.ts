@@ -24,10 +24,15 @@ import type {
   CyranoFrameLog,
   CyranoStatus,
   Opp2Status,
+  EffectiveStripDevice,
   StripDeviceAction,
+  StripDeviceLink,
   StripDeviceOptions,
+  StripLastSend,
+  StripPanel,
 } from '../../../shared/types/stripDevice';
 import type { RemoteScoreServer } from '../../remoteScoreServer';
+import type { StripControlTarget } from '../../piste/stripControl';
 
 /** Écriture faite hors de l'écran : l'écran ouvert recharge les données concernées */
 export interface DomainChange {
@@ -237,6 +242,19 @@ export interface DevicesPort {
   setOptions(options: StripDeviceOptions): void;
   /** Action de secours ; false si elle ne s'applique pas */
   action(piste: string, action: StripDeviceAction): boolean;
+  /** Pilotage de la salle hors compétition (#2117) */
+  control: {
+    /** Salle pilotée : ses appareils chargés dans les pilotes en plus des épreuves suivies */
+    watchVenue(venueId: string): void;
+    /** Épreuves en saisie distante et arènes de leur séance */
+    activeArenas(): { competitionId: string; arenas: number[] }[];
+    /** Liaison d'une piste chargée dans le pilote ; null : pilote arrêté ou appareil non chargé */
+    link(device: EffectiveStripDevice): StripDeviceLink | null;
+    /** Affichage libre envoyé ; false : piste inconnue du pilote */
+    send(target: StripControlTarget, panel: StripPanel): boolean;
+    /** Dernier envoi à la piste ; `match` : seulement s'il visait cette piste de cette salle */
+    last(piste: string, match?: { venueId: string; strip: number }): StripLastSend | null;
+  };
 }
 
 /** Services du poste (réglages, thèmes, RGPD, agent, journée) : ce qui dépasse la base */

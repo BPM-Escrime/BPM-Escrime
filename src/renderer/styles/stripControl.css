@@ -1,0 +1,65 @@
+/* Pilotage de la salle hors compétition et déclaration en masse (#2117, docs/adr/0023) */
+.strip-control-box {
+  border: 1px solid var(--border, #d0d5dd);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-2, 8px);
+  margin-bottom: var(--space-2, 8px);
+}
+
+.strip-control-title {
+  margin: var(--space-2, 8px) 0 var(--space-1, 4px);
+}
+
+.strip-control-driver {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-1, 4px) var(--space-2, 8px);
+  margin-bottom: var(--space-1, 4px);
+  border-radius: var(--radius-md, 8px);
+  background: var(--warning-soft);
+  color: var(--warning-on-soft);
+}
+
+.strip-control-table td {
+  vertical-align: middle;
+}
+
+.strip-control-busy {
+  opacity: 0.75;
+}
+
+.strip-control-link,
+.strip-control-last {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+
+.strip-control-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2, 8px);
+  margin: var(--space-2, 8px) 0 var(--space-1, 4px);
+}
+
+.strip-control-side {
+  display: flex;
+  gap: var(--space-1, 4px);
+  border: 1px solid var(--border, #d0d5dd);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-1, 4px) var(--space-2, 8px);
+  margin: 0;
+}
+
+.strip-control-nat {
+  width: 9rem;
+}
+
+.strip-bulk summary {
+  cursor: pointer;
+  margin: var(--space-1, 4px) 0;
+}
