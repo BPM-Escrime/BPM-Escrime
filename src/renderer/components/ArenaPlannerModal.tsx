@@ -37,7 +37,7 @@ import { ArenaNamesFields } from './arenaPlanner/ArenaNamesFields';
 import { withColor } from './arenaPlanner/ItemColorField';
 import { ItemInspector } from './arenaPlanner/ItemInspector';
 import { DisciplineField, disciplineKey } from './arenaPlanner/DisciplineField';
-import { arenaFootprint } from '@shared/domain/arena/arenaDisciplines';
+import { arenaFootprint, nextArenaRotation } from '@shared/domain/arena/arenaDisciplines';
 import { SitePlanCanvas, type SiteRoom } from './arenaPlanner/SitePlanCanvas';
 import {
   computeRoomLayout,
@@ -207,6 +207,16 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
       const next = [...(prev ?? [])];
       next[index] = name;
       return Array.from(next, n => n ?? '');
+    });
+
+  /** Rotation d'une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle */
+  const rotateArena = (index: number) =>
+    setField('arenaRotations')(prev => {
+      const next = Array.from({ length: Math.max(prev?.length ?? 0, index + 1) }, (_, i) =>
+        Number.isFinite(prev?.[i]) ? (prev?.[i] as number) : 0
+      );
+      next[index] = nextArenaRotation(next[index], discipline);
+      return next;
     });
 
   /** Menus « Équipement » / « Zone » : élément de base (table, zone bloquée…) ou du catalogue */
@@ -566,6 +576,8 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                   count={centers.length}
                   names={plan.arenaNames ?? []}
                   onChange={setArenaName}
+                  rotations={plan.arenaRotations}
+                  onRotate={rotateArena}
                 />
                 <div className="arena-planner-field">
                   <label className="form-label" htmlFor="arena-spacing">
@@ -682,6 +694,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                 discipline={discipline}
                 centers={centers}
                 arenaNames={plan.arenaNames}
+                arenaRotations={plan.arenaRotations}
                 items={items}
                 selectedId={selectedId}
                 conflictIds={conflictIds}

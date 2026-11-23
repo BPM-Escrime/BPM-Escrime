@@ -35,6 +35,8 @@ export interface RoomPlan {
   items: RoomItem[];
   /** Noms des arènes, par rang (vide : sans nom), affichés sur le plan */
   arenaNames?: string[];
+  /** Rotation des arènes par rang, en degrés (lignes, arbitres, assesseurs), absent = 0 */
+  arenaRotations?: number[];
   /** Positions des arènes après un glisser à la souris ; null = positions calculées */
   manual: { key: string; centers: Point[] } | null;
   /** Coin nord-ouest de la salle sur la vue d'ensemble (m) */

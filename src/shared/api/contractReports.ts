@@ -1,12 +1,13 @@
 /**
  * BPM - Escrime - Relevés de l'épreuve (#1981 lot 2)
  * Historique des scores, commentaires des formateurs, signatures du tableau, chiffres de
- * l'épreuve : lectures seules, à la place des appels window.electronAPI.db de l'écran.
+ * l'épreuve : lectures, à la place des appels window.electronAPI.db de l'écran ; ajout d'un
+ * commentaire de formateur (espace formateurs, #2159).
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';
 import type { Score } from '../types';
-import { CompetitionId, FencerSchema, Id, query } from './contractDef';
+import { command, CompetitionId, FencerSchema, Id, query } from './contractDef';
 
 const ScorePart = z.custom<Partial<Score>>().nullable();
 
@@ -31,6 +32,16 @@ const ScoreAuditSchema = z.object({
   tableauPosition: z.number().nullable().optional(),
 });
 
+const RefereeCommentSchema = z.object({
+  id: z.string(),
+  competitionId: z.string(),
+  refereeId: z.string(),
+  author: z.string().nullable(),
+  comment: z.string(),
+  matchLabel: z.string().nullable(),
+  createdAt: z.string(),
+});
+
 export const reportOperations = {
   listScoreAudit: query({
     description:
@@ -44,18 +55,22 @@ export const reportOperations = {
     description:
       'Commentaires des formateurs sur les arbitres d’une épreuve (espace formateurs), du plus ancien au plus récent.',
     input: z.object({ competitionId: CompetitionId, refereeId: Id.optional() }),
-    output: z.array(
-      z.object({
-        id: z.string(),
-        competitionId: z.string(),
-        refereeId: z.string(),
-        author: z.string().nullable(),
-        comment: z.string(),
-        matchLabel: z.string().nullable(),
-        createdAt: z.string(),
-      })
-    ),
+    output: z.array(RefereeCommentSchema),
     permission: 'competition:read',
+  }),
+
+  addRefereeComment: command({
+    description:
+      'Commentaire d’un formateur sur un arbitre de l’épreuve (espace formateurs) : texte, auteur, match en cours. Arbitre inconnu : referee_not_found.',
+    input: z.object({
+      competitionId: CompetitionId,
+      refereeId: Id,
+      comment: z.string().trim().min(1).max(4000),
+      author: z.string().trim().max(100).nullable().optional(),
+      matchLabel: z.string().max(200).nullable().optional(),
+    }),
+    output: RefereeCommentSchema,
+    permission: 'referees:write',
   }),
 
   getTableauSignatures: query({

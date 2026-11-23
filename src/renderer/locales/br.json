@@ -4376,6 +4376,7 @@
     "hint_arenas": "Niver arenaoù a garit. « Optimiñ » a gav ar maksimum posupl.",
     "arena_names": "Anvioù an tachennoù",
     "arena_name": "Tachenn {{n}}",
+    "arena_rotate": "Treiñ an dachenn {{n}}",
     "hint_margin": "Pellder ar plan diouzh an tu diabarzh ar voger.",
     "spacing": "Pellder",
     "spacing_packed": "Tost (munud)",

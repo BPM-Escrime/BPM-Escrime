@@ -6,6 +6,8 @@ import { vi, type Mock } from 'vitest';
 // Mock pour la DB
 export const mockDb: Record<string, Mock> = {
   getCompetition: vi.fn(),
+  // Commandes du contrat exécutées sur la base factice (#2159)
+  transaction: vi.fn((fn: () => unknown) => fn()),
   getPendingMatches: vi.fn().mockReturnValue([]),
   getCompetitionPools: vi.fn().mockReturnValue([]),
   getMatchesByPool: vi.fn().mockReturnValue([]),

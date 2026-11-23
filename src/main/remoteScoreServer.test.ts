@@ -1189,6 +1189,8 @@ describe('RemoteScoreServer', () => {
 
     beforeEach(() => {
       (server as any).session = { competitionId: 'comp-1', referees: [] };
+      // Pointage par les commandes checkIn / setRefereeAvailability (#2159)
+      mockDb.getCompetition.mockImplementation((id: string) => (id === 'comp-1' ? { id } : null));
       mockDb.getFencersByCompetition.mockReturnValue([
         { id: 'f1', ref: 1, lastName: 'DUPONT', firstName: 'Jean', club: 'Pontivy', status: 'N' },
         { id: 'f2', ref: 2, lastName: 'MARTIN', firstName: 'Paul', status: 'E' },

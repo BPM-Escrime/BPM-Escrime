@@ -4376,6 +4376,7 @@
     "hint_arenas": "Number of arenas you want. “Optimize” finds the maximum possible.",
     "arena_names": "Arena names",
     "arena_name": "Arena {{n}}",
+    "arena_rotate": "Rotate arena {{n}}",
     "hint_margin": "Distance from the plan to the inside of the walls.",
     "spacing": "Spacing",
     "spacing_packed": "Packed (minimum)",

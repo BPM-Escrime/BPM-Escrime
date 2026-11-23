@@ -84,6 +84,8 @@ export interface ArenaPlanCanvasProps {
   centers: Point[];
   /** Noms des arènes, par rang, écrits au-dessus de chaque arène */
   arenaNames?: string[];
+  /** Rotation des arènes, par rang, en degrés */
+  arenaRotations?: number[];
   items: RoomItem[];
   selectedId: string | null;
   conflictIds: Set<string>;
@@ -103,6 +105,7 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   discipline = 'laser',
   centers,
   arenaNames,
+  arenaRotations,
   items,
   selectedId,
   conflictIds,
@@ -318,6 +321,7 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
             discipline={discipline}
             center={c}
             name={arenaNames?.[i]}
+            rotationDeg={arenaRotations?.[i]}
             grabTitle={t('arenaPlanner.handle_arena')}
             onGrab={e => {
               const p = toMetres(e.clientX, e.clientY);

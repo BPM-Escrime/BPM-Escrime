@@ -4376,6 +4376,7 @@
     "hint_arenas": "Número de arenas pretendido. «Otimizar» encontra o máximo possível.",
     "arena_names": "Nomes das pistas",
     "arena_name": "Pista {{n}}",
+    "arena_rotate": "Rodar a arena {{n}}",
     "hint_margin": "Distância da planta ao interior das paredes.",
     "spacing": "Espaçamento",
     "spacing_packed": "Juntas (mínimo)",
