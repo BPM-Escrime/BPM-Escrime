@@ -4447,7 +4447,10 @@
     "props_title": "場地屬性",
     "props_summary": "{{width}} 米 × {{length}} 米 · {{count}} 個賽場",
     "group_dimensions": "尺寸",
-    "group_arenas": "賽場"
+    "group_arenas": "賽場",
+    "legend_title": "圖例",
+    "legend_show": "顯示圖例",
+    "legend_pdf": "PDF 匯出包含圖例"
   },
   "stripControl": {
     "title": "場地控制",

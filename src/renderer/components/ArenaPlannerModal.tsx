@@ -44,6 +44,11 @@ import {
   roomDimsKey,
   type RoomPlan,
 } from './arenaPlanner/roomPlans';
+import {
+  ArenaPlanLegendControls,
+  buildLegendEntries,
+  useLegendOptions,
+} from './arenaPlanner/planLegend';
 import { maxIdSuffix, useArenaPlanPersistence } from './arenaPlanner/useArenaPlanPersistence';
 
 interface ArenaPlannerModalProps {
@@ -96,6 +101,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snap, setSnap] = useState(true);
   const [showDims, setShowDims] = useState(false);
+  const legendOptions = useLegendOptions();
   /** Vue d'ensemble : toutes les salles, déplaçables à la souris */
   const [overview, setOverview] = useState(false);
   /** Les positions glissées ne valent que pour les dimensions et le nombre d'arènes qui les ont produites */
@@ -317,12 +323,11 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
     });
   };
 
-  const legend = () => [
-    t('arenaPlanner.legend_zone'),
-    t('arenaPlanner.legend_safety'),
-    t('arenaPlanner.legend_guard'),
-    t('arenaPlanner.legend_roles'),
-  ];
+  /** Légende de la vue affichée : salle active, ou toutes les salles en vue d'ensemble */
+  const legendEntries = buildLegendEntries(overview ? siteRooms.flatMap(r => r.items) : items, t);
+  const legend = () => (legendOptions.inPdf ? legendEntries : null);
+
+  const legendControls = <ArenaPlanLegendControls entries={legendEntries} {...legendOptions} />;
 
   /** Texte de l'export de la vue d'ensemble : une ligne par salle. */
   const siteExportText = () => ({
@@ -335,6 +340,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
         count: r.centers.length,
       })
     ),
+    legendTitle: t('arenaPlanner.legend_title'),
     legend: legend(),
     itemsTitle: t('arenaPlanner.items_title'),
     items: siteRooms.flatMap(r =>
@@ -353,6 +359,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
         t('arenaPlanner.summary_arenas_max', { count: centers.length, max: maxLayout.count }),
         maxText(),
       ],
+      legendTitle: t('arenaPlanner.legend_title'),
       legend: legend(),
       itemsTitle: t('arenaPlanner.items_title'),
       items: items.map(i =>
@@ -614,6 +621,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                 onMove={moveRoom}
                 onOpen={openRoom}
               />
+              {legendControls}
               <div className="arena-planner-actions">
                 <Button type="button" variant="primary" onClick={() => runExport('pdf')}>
                   {t('arenaPlanner.export_pdf')}
@@ -760,12 +768,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                 )}
               </section>
 
-              <ul className="arena-planner-legend">
-                <li>{t('arenaPlanner.legend_zone')}</li>
-                <li>{t('arenaPlanner.legend_safety')}</li>
-                <li>{t('arenaPlanner.legend_guard')}</li>
-                <li>{t('arenaPlanner.legend_roles')}</li>
-              </ul>
+              {legendControls}
               <p className="arena-planner-hint">{t('arenaPlanner.note')}</p>
 
               <label className="arena-planner-check">

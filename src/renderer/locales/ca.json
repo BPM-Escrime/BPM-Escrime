@@ -4447,7 +4447,10 @@
     "props_title": "Propietats de la sala",
     "props_summary": "{{width}} × {{length}} m · {{count}} arena/es",
     "group_dimensions": "Dimensions",
-    "group_arenas": "Arenes"
+    "group_arenas": "Arenes",
+    "legend_title": "Llegenda",
+    "legend_show": "Mostra la llegenda",
+    "legend_pdf": "Llegenda a l’exportació PDF"
   },
   "stripControl": {
     "title": "Control de la sala",

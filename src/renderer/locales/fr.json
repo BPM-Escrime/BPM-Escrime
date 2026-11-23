@@ -4447,7 +4447,10 @@
     "props_title": "Propriétés de la salle",
     "props_summary": "{{width}} × {{length}} m · {{count}} arène(s)",
     "group_dimensions": "Dimensions",
-    "group_arenas": "Arènes"
+    "group_arenas": "Arènes",
+    "legend_title": "Légende",
+    "legend_show": "Afficher la légende",
+    "legend_pdf": "Légende dans l’export PDF"
   },
   "stripControl": {
     "title": "Pilotage de la salle",
