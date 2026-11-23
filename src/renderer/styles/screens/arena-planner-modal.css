@@ -139,6 +139,37 @@
   stroke-width: 0.08;
 }
 
+.arena-planner-runoff {
+  fill: #e5e7eb;
+  stroke: #1e3a8a;
+  stroke-width: 0.05;
+}
+
+.arena-planner-piste {
+  fill: #bfdbfe;
+  stroke: #1e3a8a;
+  stroke-width: 0.08;
+}
+
+.arena-planner-piste-line,
+.arena-planner-piste-end {
+  stroke: #1e3a8a;
+  stroke-width: 0.08;
+}
+
+.arena-planner-piste-warning {
+  stroke: #1e3a8a;
+  stroke-width: 0.06;
+  stroke-dasharray: 0.2 0.12;
+}
+
+.arena-planner-stage {
+  fill: #fde68a;
+  fill-opacity: 0.7;
+  stroke: #92400e;
+  stroke-width: 0.1;
+}
+
 .arena-planner-guard-red {
   stroke: #dc2626;
   stroke-width: 0.12;

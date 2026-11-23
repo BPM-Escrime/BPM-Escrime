@@ -34,7 +34,10 @@ import { ArenaPlanCanvas, KIND_LABEL_KEY } from './arenaPlanner/ArenaPlanCanvas'
 import { ArenaPlanHelp } from './arenaPlanner/ArenaPlanHelp';
 import { AddItemMenus, KIND_OPTION_PREFIX } from './arenaPlanner/AddItemMenus';
 import { ArenaNamesFields } from './arenaPlanner/ArenaNamesFields';
-import { ItemColorField, withColor } from './arenaPlanner/ItemColorField';
+import { withColor } from './arenaPlanner/ItemColorField';
+import { ItemInspector } from './arenaPlanner/ItemInspector';
+import { DisciplineField, disciplineKey } from './arenaPlanner/DisciplineField';
+import { arenaFootprint } from '@shared/domain/arena/arenaDisciplines';
 import { SitePlanCanvas, type SiteRoom } from './arenaPlanner/SitePlanCanvas';
 import {
   computeRoomLayout,
@@ -98,6 +101,8 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
   const setItems = setField('items');
   const setManual = setField('manual');
   const setRoomName = setField('name');
+  const discipline = plan.discipline ?? 'laser';
+  const fp = useMemo(() => arenaFootprint(discipline), [discipline]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snap, setSnap] = useState(true);
   const [showDims, setShowDims] = useState(false);
@@ -156,6 +161,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
           lengthM: l.room.lengthM,
           centers: l.centers,
           items: r.items,
+          discipline: r.discipline,
         },
       ];
     });
@@ -171,8 +177,8 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
 
   const issues = useMemo(() => {
     if (!room) return [];
-    return checkRoomItems(room, centers, items);
-  }, [room, centers, items]);
+    return checkRoomItems(room, centers, items, fp);
+  }, [room, centers, items, fp]);
   const conflictIds = useMemo(() => new Set(issues.map(i => i.itemId)), [issues]);
   const selectedItem = useMemo(
     () => items.find(i => i.id === selectedId) ?? null,
@@ -218,7 +224,9 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
       createEquipmentItem(equipment, id, label, room),
       items,
       room,
-      centers
+      centers,
+      0.5,
+      fp
     );
     setItems(prev => [...prev, item]);
     setSelectedId(id);
@@ -287,7 +295,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
   /** Glisser une arène : les arènes voisines et les éléments qui touchent son cercle sont repoussés. */
   const moveArena = (index: number, x: number, y: number) => {
     if (!room || !parsed) return;
-    const result = moveArenaWithPush(centers, index, { x, y }, room, parsed.m, items);
+    const result = moveArenaWithPush(centers, index, { x, y }, room, parsed.m, items, fp);
     setManual({ key: dimsKey, centers: result.centers });
     setItems(result.items);
   };
@@ -324,7 +332,13 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
   };
 
   /** Légende de la vue affichée : salle active, ou toutes les salles en vue d'ensemble */
-  const legendEntries = buildLegendEntries(overview ? siteRooms.flatMap(r => r.items) : items, t);
+  const legendEntries = overview
+    ? buildLegendEntries(
+        siteRooms.flatMap(r => r.items),
+        t,
+        siteRooms.map(r => r.discipline ?? 'laser')
+      )
+    : buildLegendEntries(items, t, [discipline]);
   const legend = () => (legendOptions.inPdf ? legendEntries : null);
 
   const legendControls = <ArenaPlanLegendControls entries={legendEntries} {...legendOptions} />;
@@ -346,7 +360,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
     items: siteRooms.flatMap(r =>
       r.items.map(i => `${r.name} — ${i.label.replace(/\n/g, ' ') || t(KIND_LABEL_KEY[i.kind])}`)
     ),
-    note: t('arenaPlanner.note'),
+    note: t(disciplineKey('note', discipline)),
   });
 
   const exportText = () => {
@@ -371,7 +385,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
           height: fmt(i.heightM),
         })
       ),
-      note: t('arenaPlanner.note'),
+      note: t(disciplineKey('note', discipline)),
     };
   };
 
@@ -417,7 +431,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
       scroll
       closeOnOverlay={false}
     >
-      <p className="arena-planner-lead">{t('arenaPlanner.hint')}</p>
+      <p className="arena-planner-lead">{t(disciplineKey('hint', discipline))}</p>
 
       <div className="arena-planner-rooms" role="group" aria-label={t('arenaPlanner.rooms_title')}>
         <span className="form-label">{t('arenaPlanner.rooms_title')}</span>
@@ -533,9 +547,10 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
               </fieldset>
               <fieldset className="arena-planner-group">
                 <legend>{t('arenaPlanner.group_arenas')}</legend>
+                <DisciplineField value={discipline} onChange={setField('discipline')} />
                 <div className="arena-planner-field">
                   <label className="form-label" htmlFor="arena-count">
-                    {t('arenaPlanner.arenas')}
+                    {t(disciplineKey('arenas', discipline))}
                   </label>
                   <input
                     id="arena-count"
@@ -664,6 +679,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
               <ArenaPlanCanvas
                 key={plan.id}
                 room={room}
+                discipline={discipline}
                 centers={centers}
                 arenaNames={plan.arenaNames}
                 items={items}
@@ -689,87 +705,19 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                 <p role="alert">{t('arenaPlanner.blocked_overlap')}</p>
               )}
 
-              <section className="arena-planner-inspector" aria-labelledby="arena-inspector-title">
-                <h3 id="arena-inspector-title">{t('arenaPlanner.inspector_title')}</h3>
-                {selectedItem ? (
-                  <div className="arena-planner-fields">
-                    <label className="form-label arena-planner-text-field">
-                      {t('arenaPlanner.item_text')}
-                      <textarea
-                        className="form-input"
-                        rows={2}
-                        value={selectedItem.label}
-                        onChange={e => editLabel(e.target.value)}
-                      />
-                    </label>
-                    <ItemColorField item={selectedItem} onChange={setItemColor} />
-                    <label className="form-label">
-                      {t('arenaPlanner.pos_x')}
-                      <input
-                        className="form-input"
-                        type="text"
-                        inputMode="decimal"
-                        value={fmt(selectedItem.x)}
-                        onChange={e => editSelected('x', e.target.value)}
-                      />
-                    </label>
-                    <label className="form-label">
-                      {t('arenaPlanner.pos_y')}
-                      <input
-                        className="form-input"
-                        type="text"
-                        inputMode="decimal"
-                        value={fmt(selectedItem.y)}
-                        onChange={e => editSelected('y', e.target.value)}
-                      />
-                    </label>
-                    <label className="form-label">
-                      {t('arenaPlanner.size_w')}
-                      <input
-                        className="form-input"
-                        type="text"
-                        inputMode="decimal"
-                        value={fmt(selectedItem.widthM)}
-                        onChange={e => editSelected('w', e.target.value)}
-                      />
-                    </label>
-                    <label className="form-label">
-                      {t('arenaPlanner.rotate_label')}
-                      <input
-                        className="form-input"
-                        type="text"
-                        inputMode="decimal"
-                        value={fmt(selectedItem.rotationDeg ?? 0)}
-                        onChange={e => rotateSelected(e.target.value)}
-                      />
-                    </label>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() =>
-                        rotateItem(selectedItem.id, (selectedItem.rotationDeg ?? 0) + 90)
-                      }
-                    >
-                      {t('arenaPlanner.rotate_90')}
-                    </Button>
-                    <label className="form-label">
-                      {t('arenaPlanner.size_h')}
-                      <input
-                        className="form-input"
-                        type="text"
-                        inputMode="decimal"
-                        value={fmt(selectedItem.heightM)}
-                        onChange={e => editSelected('h', e.target.value)}
-                      />
-                    </label>
-                  </div>
-                ) : (
-                  <p className="arena-planner-hint">{t('arenaPlanner.inspector_none')}</p>
-                )}
-              </section>
+              <ItemInspector
+                item={selectedItem}
+                onLabel={editLabel}
+                onColor={setItemColor}
+                onField={editSelected}
+                onRotate={rotateSelected}
+                onRotate90={() =>
+                  selectedItem && rotateItem(selectedItem.id, (selectedItem.rotationDeg ?? 0) + 90)
+                }
+              />
 
               {legendControls}
-              <p className="arena-planner-hint">{t('arenaPlanner.note')}</p>
+              <p className="arena-planner-hint">{t(disciplineKey('note', discipline))}</p>
 
               <label className="arena-planner-check">
                 <input

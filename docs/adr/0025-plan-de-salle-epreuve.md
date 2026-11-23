@@ -40,7 +40,8 @@ commande y serait écrasée par la sauvegarde suivante.
   sur chacune (copie possible plus tard).
 - `competitions.venue_id` (migration 47, ADR-0023) reste indépendant du plan.
 - Ajout compatible sans changer de version : un champ optionnel du plan (ex. `arenaNames`, noms
-  des arènes par salle) reste en version 1 ; un plan ancien sans ce champ se lit tel quel.
+  des arènes par salle ; `discipline`, Sabre Laser, escrime ou escrime artistique, absente =
+  laser) reste en version 1 ; un plan ancien sans ce champ se lit tel quel.
 
 ## Alternatives écartées
 

@@ -37,6 +37,8 @@ const RoomPlanSchema = z.object({
   arenas: Field,
   margin: Field,
   spacing: z.enum(['packed', 'spread']),
+  /** Sabre Laser, escrime (piste FIE) ou escrime artistique ; absent = laser (ajout compatible, ADR-0025) */
+  discipline: z.enum(['laser', 'fencing', 'artistic']).optional(),
   align: z.enum(['left', 'center', 'right']),
   items: z.array(RoomItemSchema).max(500),
   /** Noms des arènes par rang (ajout compatible, version 1 conservée) */
