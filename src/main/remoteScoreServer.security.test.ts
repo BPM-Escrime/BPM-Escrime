@@ -381,7 +381,6 @@ describe('RemoteScoreServer', () => {
         await protectArena();
         const state = seedTeamState();
         state.liveScoreA = 2;
-        (mockDb as any).updateTeamBout = vi.fn();
         (mockDb as any).createTeamMatchCard = vi.fn().mockReturnValue({ id: 'c1' });
         const { handlers, socket } = connectSocket();
         handlers[ev]({ arenaId: 'arena1', ...extra });
@@ -390,7 +389,9 @@ describe('RemoteScoreServer', () => {
         expect(state.timerStartedAt).toBeNull();
         expect(state.cards).toHaveLength(0);
         expect(state.fencerCards).toHaveLength(0);
-        expect((mockDb as any).updateTeamBout).not.toHaveBeenCalled();
+        // Fin de relais : ni commande ni refus rendu (docs/adr/0024)
+        expect(state.currentBoutIndex).toBe(0);
+        expect(socket.emit).not.toHaveBeenCalledWith('team_arena_error', expect.anything());
       });
 
       describe('relais FIE (#1086)', () => {
@@ -430,23 +431,7 @@ describe('RemoteScoreServer', () => {
           expect(state.liveScoreB).toBe(1);
         });
 
-        it('relais suivant : vainqueur au cumul, score du relais persisté', async () => {
-          const cookie = await protectArena();
-          // Relais 2 perdu 2-3 par A, mais cumul 7-6 → relais attribué à A
-          const state = seedTeamState({
-            format: 'fie-relay',
-            isLaserPoints: false,
-            bouts: relayBouts(),
-            currentBoutIndex: 1,
-            liveScoreA: 2,
-            liveScoreB: 3,
-          });
-          (mockDb as any).updateTeamBout = vi.fn();
-          const { handlers } = connectSocket(cookie);
-          handlers.team_advance_bout({ arenaId: 'arena1' });
-          expect((mockDb as any).updateTeamBout).toHaveBeenCalledWith('b2', 2, 3, 'finished', 'a2');
-          expect(state.currentBoutIndex).toBe(-1);
-        });
+        // Relais suivant par recordRelayScore : src/main/remote/teamArena.test.ts (base réelle)
 
         it('carton individuel : escalade, persistance, motif inconnu refusé', async () => {
           const cookie = await protectArena();
