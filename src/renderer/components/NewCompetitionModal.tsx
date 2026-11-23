@@ -447,7 +447,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
 
               <div className="form-group">
                 <label className="form-label" htmlFor="new-competition-location">
-                  {t('competition.location')} ({t('actions.default')})
+                  {t('competition.location')} ({t('actions.optional')})
                 </label>
                 <input
                   id="new-competition-location"
