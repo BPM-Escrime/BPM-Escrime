@@ -109,8 +109,8 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 144 | 1228 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 128 | 685 |
-| E2E Playwright (`e2e/`) | 17 | 48 |
+| `src/renderer/components/` | 128 | 688 |
+| E2E Playwright (`e2e/`) | 18 | 49 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
 | `src/renderer/contexts/` | 1 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 34 | 367 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **589** | **4534** |
+| **Total** | **590** | **4538** |
 
-Unitaires : 572 fichiers, 4486 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 572 fichiers, 4489 tests. E2E : 18 fichiers, 49 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -6005,10 +6005,13 @@ Unitaires : 572 fichiers, 4486 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/CompetitionViewTeams.test.tsx</code> — 2 tests</summary>
+<summary><code>src/renderer/components/CompetitionViewTeams.test.tsx</code> — 5 tests</summary>
 
 - épreuve neuve : pas d’état du moteur avant l’ouverture ; l’écran écrit son bloc
-- rechargement après composition et poule de l’écran : tout est retrouvé, rien n’est réécrit
+- épreuve d’avant E1 (rencontres de l’écran) : reprise telle quelle, rien réécrit ni tiré
+- composition et poules depuis l’écran : inscription, affectation, tirage par le contrat
+- relais à l’écran : touches comptées localement, fin, réouverture, remplacement, refus traduit
+- tableau : rien à l’ouverture, tiré par le bouton ; égalité au dernier relais tranchée
 
 </details>
 
@@ -7556,6 +7559,13 @@ Unitaires : 572 fichiers, 4486 tests. E2E : 17 fichiers, 48 tests (comptage stat
 <summary><code>e2e/electron/strip-control.spec.ts</code> — 1 test</summary>
 
 - pilotage de la salle : arme et noms envoyés à 2 pistes, accusé visible
+
+</details>
+
+<details>
+<summary><code>e2e/electron/teams.spec.ts</code> — 1 test</summary>
+
+- équipes : poule et tableau joués à l’écran par le moteur, retrouvés au rechargement
 
 </details>
 
