@@ -71,6 +71,31 @@ export class CompetitionRepo {
     new PrivacyRepo(this.sql).purgeCompetition(id, true);
   }
 
+  /** Plan de salle du planificateur (docs/adr/0025) : JSON opaque pour la base ; null si absent */
+  public getArenaPlan(id: string): unknown {
+    if (!this.sql.db) throw new Error('Database not open');
+    const row = this.sql.queryOne<{ arena_plan: string | null }>(
+      'SELECT arena_plan FROM competitions WHERE id = ?',
+      [id]
+    );
+    if (!row?.arena_plan) return null;
+    try {
+      return JSON.parse(row.arena_plan);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Enregistre (ou efface avec null) le plan de salle d'une épreuve */
+  public saveArenaPlan(id: string, plan: unknown): void {
+    if (!this.sql.db) throw new Error('Database not open');
+    this.sql.run('UPDATE competitions SET arena_plan = ?, updated_at = ? WHERE id = ?', [
+      plan === null ? null : JSON.stringify(plan),
+      new Date().toISOString(),
+      id,
+    ]);
+  }
+
   public updateCompetition(id: string, updates: Partial<Competition>): void {
     if (!this.sql.db) throw new Error('Database not open');
     const now = new Date().toISOString();

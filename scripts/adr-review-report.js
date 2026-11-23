@@ -168,8 +168,7 @@ function occurrences(rev) {
 
 /**
  * Lignes apparues entre la base et HEAD, par différence d'occurrences (pas par patch) :
- * un code déplacé d'un fichier à l'autre ne compte qu'une fois par fichier d'arrivée,
- * mais un code simplement déplacé dans le même fichier ne compte pas.
+ * un code déplacé dans un fichier ou d'un fichier à l'autre ne compte pas.
  */
 function newLines(base) {
   const before = occurrences(base);
@@ -202,17 +201,32 @@ function newLines(base) {
       3
     );
   };
-  // Total par règle et par texte, tous fichiers : un déplacement entre fichiers s'annule
+  // 1) Même fichier d'abord : seul l'excédent d'un fichier est nouveau (une ligne commune comme
+  //    « eslint-disable-next-line react-hooks/exhaustive-deps » reste attribuée au bon fichier)
+  // 2) Puis l'excédent consomme ce qui a disparu ailleurs : un déplacement entre fichiers s'annule
+  const count = texts => {
+    const m = new Map();
+    for (const t of texts) m.set(t, (m.get(t) || 0) + 1);
+    return m;
+  };
   for (const [label, byFile] of after) {
-    const pool = new Map();
-    for (const texts of before.get(label).values())
-      for (const t of texts) pool.set(t, (pool.get(t) || 0) + 1);
-    for (const [file, texts] of byFile) {
-      for (const text of texts) {
-        const left = pool.get(text) || 0;
-        if (left > 0) pool.set(text, left - 1);
-        else hits.get(label).push({ file, text, commits: commitsOf(file, text) });
+    const beforeByFile = before.get(label);
+    const pool = new Map(); // occurrences disparues de leur fichier
+    const excess = []; // [fichier, texte] en plus dans leur fichier
+    const files = new Set([...beforeByFile.keys(), ...byFile.keys()]);
+    for (const file of files) {
+      const b = count(beforeByFile.get(file) || []);
+      const a = count(byFile.get(file) || []);
+      for (const t of new Set([...b.keys(), ...a.keys()])) {
+        const diff = (a.get(t) || 0) - (b.get(t) || 0);
+        if (diff < 0) pool.set(t, (pool.get(t) || 0) - diff);
+        for (let i = 0; i < diff; i++) excess.push([file, t]);
       }
+    }
+    for (const [file, text] of excess) {
+      const left = pool.get(text) || 0;
+      if (left > 0) pool.set(text, left - 1);
+      else hits.get(label).push({ file, text, commits: commitsOf(file, text) });
     }
   }
   return hits;

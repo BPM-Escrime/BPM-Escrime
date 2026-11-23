@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 85 | 954 |
+| `src/shared/utils/` | 84 | 948 |
 | `src/shared/services/` | 8 | 87 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 272 |
-| `src/main/` | 137 | 1181 |
+| `src/main/` | 138 | 1189 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 124 | 673 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 30 | 297 |
+| `src/shared/domain/` | 31 | 311 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **574** | **4409** |
+| **Total** | **575** | **4425** |
 
-Unitaires : 558 fichiers, 4363 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -1601,19 +1601,6 @@ Unitaires : 558 fichiers, 4363 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - Sabre Laser : touches par zone cohérentes avec le score
   - arme classique : pas de zones, durée et horodatages dans le match
   - cartons générés avec motif (rng forcé)
-
-</details>
-
-<details>
-<summary><code>src/shared/utils/splitCompetition.test.ts</code> — 6 tests</summary>
-
-- **splitCompetition**
-  - propose un titre par défaut
-  - copie les paramètres sans le mode couplé et lie la compétition source
-  - borne le score de poule et normalise une date sérialisée
-  - extrait et renumérote le classement du groupe
-  - prépare les données tireur avec le rang après poules et pointe les non-pointés
-  - remappe les tireurs en conservant les stats de poule
 
 </details>
 
@@ -3394,6 +3381,20 @@ Unitaires : 558 fichiers, 4363 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/groupTableaux.test.ts</code> — 8 tests</summary>
+
+- groupe exigé avec le réglage, refusé sans ; groupe inconnu
+- épreuve à deux groupes jouée par les commandes, rejouée sans écart
+- retirer le tableau d’un groupe laisse l’autre ; rejeu et reconstruction
+- placement de l’écran admis pour un groupe, identifiants préfixés
+- « toutes les places » par groupe : tableaux de classement préfixés, rejeu sans écart
+- reprise : tableau tiré à la racine avant les groupes, rangé dans le groupe de ses tireurs
+- sauvegarde du bloc par l’écran : les tableaux des groupes sont gardés
+- nouveau tirage des poules : tableaux des groupes retirés
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/privacy.test.ts</code> — 8 tests</summary>
 
 - **applyRetention**
@@ -3556,7 +3557,7 @@ Unitaires : 558 fichiers, 4363 tests. E2E : 16 fichiers, 46 tests (comptage stat
 - tireur en retard : un match contre chacun, poule rouverte, PoolFencerAdded
 - qualifiés et éliminés, tour archivé avec son appel, tour 2 tiré par composition
 - « toutes les places » : placement tel quel, TableauGenerated, jouable jusqu’au bout
-- placement invalide ou tableaux séparés : refus
+- placement invalide ou tableaux séparés sans groupe : refus
 - sans correction : refusée ; avec motif : tableau gardé, journal des scores et du journal
 - tableau à refaire : retiré avec la correction ; statut spécial refusé
 - vague lancée, vagues arrêtées puis reprises, mode de tableau au journal
@@ -8777,7 +8778,7 @@ Unitaires : 558 fichiers, 4363 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 6 tests</summary>
+<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 9 tests</summary>
 
 - **projectCompetition**
   - journal complet seulement s’il commence (après l’appel) par un tirage
@@ -8786,6 +8787,10 @@ Unitaires : 558 fichiers, 4363 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - correction avec tableau à refaire : tableau retiré
   - tableau : décision, retrait puis réintégration (match rouvert)
   - rapières : vague, arrêt, remise à zéro au tirage suivant
+- **tableaux séparés après les poules (docs/adr/0024)**
+  - un tableau par groupe ; décisions rangées dans leur tableau
+  - nouveau tirage d’un groupe : ses décisions seules sont retirées
+  - nouveau tirage des poules : tous les tableaux retirés
 
 </details>
 
@@ -8841,6 +8846,25 @@ Unitaires : 558 fichiers, 4363 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - buildPools (MCP) et drawPools (écran) donnent le même tirage par défaut
   - critères de l’écran transmis au MCP : même résultat
   - ni tireur ni poule : aucun tirage
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/ranking/splitGroups.test.ts</code> — 11 tests</summary>
+
+- **splitCompetition**
+  - propose un titre par défaut
+  - copie les paramètres sans le mode couplé et lie la compétition source
+  - borne le score de poule et normalise une date sérialisée
+  - extrait et renumérote le classement du groupe
+  - prépare les données tireur avec le rang après poules et pointe les non-pointés
+  - remappe les tireurs en conservant les stats de poule
+- **tableaux séparés (docs/adr/0024)**
+  - planSplitGroups : groupes triés, mixte et groupes extraits écartés, rangs renumérotés
+  - filterSplitGroup : groupe affiché, ou groupes extraits écartés
+  - identifiants préfixés par le groupe, sans double préfixe
+  - lecture de tous les tableaux : racine et groupes
+  - reprise : groupe d’un tableau tiré à la racine, d’après ses tireurs
 
 </details>
 

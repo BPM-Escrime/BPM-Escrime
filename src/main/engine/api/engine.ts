@@ -26,6 +26,7 @@ import { reinstateFencer, withdrawFencer } from '../commands/withdrawal';
 import { addPoolFencer } from '../commands/poolComposition';
 import { closePoolRound } from '../commands/poolRound';
 import { endRapieresWaves, launchRapieresWave, setRapieresTeams } from '../commands/rapieres';
+import { getArenaPlan, saveArenaPlan } from '../commands/arenaPlan';
 import { clearScore } from '../commands/scoreClear';
 import { assignMatches } from '../commands/assignments';
 import { adjustRanking, clearTableau, skipPools } from '../commands/ranking';
@@ -126,6 +127,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   createCompetition: (ctx, { commandId: _c, ...input }) => createCompetition(ctx, input),
   updateCompetitionDetails: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     updateCompetitionDetails(ctx, input),
+  saveArenaPlan: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    saveArenaPlan(ctx, input),
   updateCompetitionSettings: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     updateCompetitionSettings(ctx, input),
   deleteCompetition: (ctx, { commandId: _c, ...input }) => deleteCompetition(ctx, input),
@@ -171,6 +174,7 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     ranking: ctx.db.getSeasonRanking(),
     competitions: ctx.db.getSeasonCompetitions(),
   }),
+  getArenaPlan: (ctx, { competitionId }) => getArenaPlan(ctx, competitionId),
   getCompetition: (ctx, { competitionId }) =>
     competitionDTO(getCompetitionOrThrow(ctx, competitionId)),
   listCompetitions: ctx => ctx.db.getAllCompetitions().map(competitionDTO),

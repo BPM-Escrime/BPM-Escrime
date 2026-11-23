@@ -315,6 +315,18 @@ export class DatabaseManager {
     return this.competitions.updateCompetition(...args);
   }
 
+  public getArenaPlan(
+    ...args: Parameters<CompetitionRepo['getArenaPlan']>
+  ): ReturnType<CompetitionRepo['getArenaPlan']> {
+    return this.competitions.getArenaPlan(...args);
+  }
+
+  public saveArenaPlan(
+    ...args: Parameters<CompetitionRepo['saveArenaPlan']>
+  ): ReturnType<CompetitionRepo['saveArenaPlan']> {
+    return this.competitions.saveArenaPlan(...args);
+  }
+
   public createPhase(
     ...args: Parameters<CompetitionRepo['createPhase']>
   ): ReturnType<CompetitionRepo['createPhase']> {

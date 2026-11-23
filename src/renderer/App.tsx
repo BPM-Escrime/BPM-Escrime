@@ -424,7 +424,10 @@ const AppContent: React.FC = () => {
 
         {showArenaPlanner && (
           <Suspense fallback={null}>
-            <ArenaPlannerModal onClose={() => setShowArenaPlanner(false)} />
+            <ArenaPlannerModal
+              onClose={() => setShowArenaPlanner(false)}
+              competitionId={view === 'competition' ? (currentCompetition?.id ?? null) : null}
+            />
           </Suspense>
         )}
 
