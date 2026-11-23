@@ -12,6 +12,8 @@ const Field = z.string().max(20);
 const RoomItemSchema = z.object({
   id: z.string().min(1).max(64),
   kind: z.enum(['table', 'outlet', 'accessory', 'exit', 'blocked']),
+  /** Type de zone (couleur), ajout compatible — ADR-0025 */
+  zone: z.enum(['fencers', 'public', 'dt']).optional(),
   label: z.string().max(200),
   x: Coord,
   y: Coord,

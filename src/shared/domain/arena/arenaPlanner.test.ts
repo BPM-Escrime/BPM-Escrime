@@ -14,6 +14,7 @@ import {
   createEquipmentItem,
   createRoomItem,
   ROOM_EQUIPMENT,
+  ROOM_ZONES,
   placeOnFreeSpot,
   moveRoomItem,
   resizeRoomItem,
@@ -486,5 +487,22 @@ describe('placeOnFreeSpot', () => {
       { x: 10, y: 10 },
     ]);
     expect(checkRoomItems(room, [{ x: 10, y: 10 }], [item])).toEqual([]);
+  });
+});
+
+describe('ROOM_ZONES', () => {
+  it('donne à chaque zone son type (couleur sur le plan), emprise évitée par les arènes', () => {
+    for (const z of ROOM_ZONES) {
+      const item = createEquipmentItem(z, 'z', z.id, { widthM: 20, lengthM: 20 });
+      expect(item.kind).toBe('blocked');
+      expect(item.zone).toBe(z.id);
+    }
+  });
+
+  it('laisse sans type de zone un équipement du catalogue', () => {
+    const lockers = ROOM_EQUIPMENT.find(e => e.id === 'locker_room')!;
+    expect(createEquipmentItem(lockers, 'a', 'V', { widthM: 20, lengthM: 20 })).not.toHaveProperty(
+      'zone'
+    );
   });
 });
