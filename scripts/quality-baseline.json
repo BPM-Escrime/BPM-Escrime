@@ -15,7 +15,7 @@
   "electronApiCalls": 30,
   "electronApiUses": 65,
   "ipcChannels": 65,
-  "directDbWrites": 21,
+  "directDbWrites": 16,
   "remoteUnescaped": 0,
   "remoteHardLocale": 3,
   "remoteHardColor": 0,

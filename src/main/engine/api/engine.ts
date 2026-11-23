@@ -42,6 +42,7 @@ import {
   updateFencerDetails,
 } from '../commands/fencers';
 import {
+  addRefereeComment,
   refereeDTO,
   registerReferees,
   setRefereeAvailability,
@@ -206,6 +207,7 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     getCompetitionOrThrow(ctx, competitionId);
     return ctx.db.getRefereeComments(competitionId, refereeId);
   },
+  addRefereeComment: (ctx, input) => addRefereeComment(ctx, input),
   getCompetitionStats: (ctx, input) => competitionStats(ctx, input),
   // Remplissage automatique : données d'essai, rien au journal
   replaceSimulatedMatchEvents: (ctx, input) => replaceSimulatedMatchEvents(ctx, input),

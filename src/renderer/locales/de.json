@@ -8,6 +8,7 @@
     "close": "Schließen",
     "confirm": "Bestätigen",
     "default": "Nicht Angegeben",
+    "optional": "Optional",
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "export": "Exportieren",
@@ -449,6 +450,9 @@
     "density_comfortable": "Komfortabel",
     "density_standard": "Standard",
     "density_compact": "Kompakt",
+    "time_format": "Zeitformat",
+    "time_format_24h": "24 Std. (14:30)",
+    "time_format_12h": "AM/PM (2:30 PM)",
     "title": "Einstellungen",
     "pseudo_locale": "Übersetzungs-Debug",
     "pseudo_locale_hint": "Zeigt übersetzte Texte als [!! … !!] an: Text ohne diese Markierung ist nicht übersetzt.",
@@ -671,7 +675,10 @@
     "days": "Tage",
     "hours": "Stunden",
     "minutes": "Minuten",
-    "seconds": "Sekunden"
+    "seconds": "Sekunden",
+    "period": "AM/PM",
+    "am": "AM",
+    "pm": "PM"
   },
   "weapons": {
     "custom": "Eigene Formel",
@@ -4369,6 +4376,7 @@
     "hint_arenas": "Gewünschte Anzahl Arenen. „Optimieren“ findet das Maximum.",
     "arena_names": "Namen der Bahnen",
     "arena_name": "Bahn {{n}}",
+    "arena_rotate": "Arena {{n}} drehen",
     "hint_margin": "Abstand des Plans zur Innenseite der Wände.",
     "spacing": "Abstand",
     "spacing_packed": "Dicht (Minimum)",
@@ -4594,7 +4602,8 @@
     "info_contactName": "Name des Kontakts",
     "info_contactEmail": "E-Mail des Kontakts",
     "variables": "Variablen",
-    "variables_hint": "Klicken, um im aktuellen Feld einzufügen: Der Wert folgt dem Wesentlichen.",
+    "variables_hint": "Werte: Reiter „Das Wesentliche“. Chip = in das aktuelle Feld einfügen; gestrichelt = ohne Wert. Markierte Variable in der Vorschau: zum Ausfüllen anklicken.",
+    "variable_empty": "unter „Das Wesentliche“ ausfüllen",
     "var_titre": "Name des Wettkampfs",
     "var_edition": "Ausgabe",
     "var_date": "Datum des Wettkampfs",
@@ -4618,6 +4627,7 @@
     "layout_text": "Text",
     "move_up": "Nach oben",
     "move_down": "Nach unten",
+    "drag_section": "Ziehen, um den Abschnitt zu verschieben",
     "delete_section": "Abschnitt löschen",
     "delete_section_confirm": "Abschnitt „{{title}}“ löschen?",
     "row_label": "Bezeichnung",
@@ -4654,5 +4664,11 @@
     "exported": "Dokument exportiert",
     "preview_hint": "A4-Vorschau: Klicken Sie auf einen Abschnitt, um ihn zu bearbeiten",
     "content_note": "Der vorausgefüllte Inhalt ist auf Französisch verfasst (FFE-Regeln). Der Entwurf wird auf diesem Gerät automatisch gespeichert."
+  },
+  "placeSearch": {
+    "loading": "Suche…",
+    "empty": "Kein Ort gefunden",
+    "offline": "Suche nicht verfügbar (keine Verbindung)",
+    "credit": "Daten © OpenStreetMap, IGN"
   }
 }

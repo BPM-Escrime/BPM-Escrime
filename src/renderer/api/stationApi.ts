@@ -44,6 +44,9 @@ export function createStationApi(client: BpmClient) {
       upsertVenue: (input: VenueInput) => c('saveVenue', input),
       setDefaultVenue: (venueId: string) => c('setDefaultVenue', { venueId }),
       deleteVenue: (venueId: string) => c('deleteVenue', { venueId }),
+      /** Lieux trouvés sur Internet depuis le poste (docs/adr/0026) */
+      searchPlaces: (query: string, language: string) =>
+        q('listPlaceSuggestions', { query, language }),
       getAgentFolders: () => q('listAgentFolders', {}),
       removeAgentFolder: (folder: string) => c('removeAgentFolder', { folder }),
       /** Langue ou thème changés hors de l'écran (agent) : à relire. Renvoie la désinscription. */

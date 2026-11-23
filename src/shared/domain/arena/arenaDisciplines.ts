@@ -124,3 +124,18 @@ export function computeStageGeometry(center: Point): StageGeometry {
     ],
   };
 }
+
+/**
+ * Pas de rotation d'une arène (degrés). Sabre Laser : quart de tour (emprise circulaire,
+ * inchangée). Piste et scène : demi-tour seulement, l'emprise reste alignée sur les murs.
+ */
+export function arenaRotationStep(discipline: ArenaDiscipline = 'laser'): number {
+  return discipline === 'laser' ? 90 : 180;
+}
+
+/** Rotation suivante d'une arène, dans [0, 360), arrondie au pas de la discipline. */
+export function nextArenaRotation(current: number, discipline: ArenaDiscipline = 'laser'): number {
+  const step = arenaRotationStep(discipline);
+  const snapped = Math.round((Number.isFinite(current) ? current : 0) / step) * step;
+  return (((snapped + step) % 360) + 360) % 360;
+}

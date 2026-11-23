@@ -105,12 +105,12 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 22 | 272 |
-| `src/main/` | 144 | 1228 |
+| `src/database/` | 21 | 271 |
+| `src/main/` | 147 | 1241 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 128 | 690 |
-| E2E Playwright (`e2e/`) | 18 | 49 |
+| `src/renderer/components/` | 131 | 702 |
+| E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
 | `src/renderer/contexts/` | 1 | 7 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 35 | 375 |
+| `src/shared/domain/` | 36 | 384 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **591** | **4548** |
+| **Total** | **597** | **4582** |
 
-Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2638,14 +2638,6 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/database/repos/teamRepo.test.ts</code> — 1 test</summary>
-
-- **TeamRepo.reopenTeamBout**
-  - rencontre terminée → en cours, vainqueur effacé, scores et relais courant recalculés
-
-</details>
-
-<details>
 <summary><code>src/database/repos/touchStats.test.ts</code> — 3 tests</summary>
 
 - **Touches données / reçues par zone**
@@ -3007,14 +2999,14 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/cyrano/e2eTeam.test.ts</code> — 5 tests</summary>
+<summary><code>src/main/cyrano/e2eTeam.test.ts</code> — 6 tests</summary>
 
-- **Cyrano bout en bout : relais par équipes, UDP réel (#1829)**
-  - DISP Type=T reçu par UDP : relais 1, tireurs du relais, nation = équipe
-  - relais 1 : touches de l’appareil → score du relais sur l’arène équipe
-  - VALIDATE → ACK → relais 2 affiché avec les scores cumulés
-  - relais 2 : BEGIN sans remise à zéro, remplaçant demandé (RESERVE), pas encore pris en compte
-  - VALIDATE → relais 3 ; PREV avant BEGIN → relais 2 rappelé aux mêmes cumuls
+- DISP Type=T reçu par UDP : relais 1 (ordre FIE), tireurs du relais, nation = équipe
+- relais 1 : touches de l’appareil → score du relais sur l’arène équipe, rien en base
+- VALIDATE → ACK → relais enregistré par recordRelayScore, relais 2 affiché aux cumuls
+- relais 2 : BEGIN sans remise à zéro, remplaçant demandé (RESERVE), pas encore pris en compte
+- VALIDATE → relais 3 ; remplaçant par substituteTeamFencer ; PREV → relais 2 rouvert
+- relais 2 réenregistré puis relais 3 à 9 : rencontre terminée, journal rejoué sans écart
 
 </details>
 
@@ -3446,10 +3438,11 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/referees.test.ts</code> — 3 tests</summary>
+<summary><code>src/main/engine/commands/referees.test.ts</code> — 4 tests</summary>
 
 - registerReferees : non pointés, doublons signalés ; listReferees
 - updateRefereeDetails, setRefereeAvailability, unregisterReferee
+- addRefereeComment (#2159) : commentaire relu par listRefereeComments, arbitre exigé
 - unregisterReferee : refusé pour l’arbitre d’un match en cours
 
 </details>
@@ -3609,7 +3602,7 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/station.test.ts</code> — 24 tests</summary>
+<summary><code>src/main/engine/commands/station.test.ts</code> — 26 tests</summary>
 
 - lit les valeurs par défaut, modifie puis relit
 - refuse une clé inconnue ou les dossiers de l’agent (schéma), une valeur invalide (dépôt)
@@ -3635,7 +3628,10 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 - sans port du poste : réglages indisponibles, droits des personnes fonctionnent
 - état, réglages, jeton, journal : par le port du serveur
 - **contrat du poste**
-  - 45 opérations, chacune avec son gestionnaire
+  - 46 opérations, chacune avec son gestionnaire
+- **listPlaceSuggestions (docs/adr/0026)**
+  - texte nettoyé transmis au port, langue par défaut fr
+  - texte trop court : refus du contrat ; poste sans service : indisponible
 
 </details>
 
@@ -3650,7 +3646,7 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 - placement, demi-finales, finale créée après les deux demi-finales, rejeu sans écart
 - remplacement du tableau tant qu’aucun relais n’est joué ; refus : titulaires manquants
 - 5 équipes sans poules : exemptés, rencontre du 2e tour formée d’emblée
-- relais écrit hors moteur (écran) sur une rencontre du journal : écart rendu
+- relais écrit hors moteur (version antérieure) sur une rencontre du journal : écart rendu
 - outils MCP des relais et du tableau d’équipes (écriture sportive)
 
 </details>
@@ -3666,7 +3662,7 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 - refus : titulaires manquants, moins de 2 équipes, épreuve individuelle ; generatePools nomme la commande d’équipe
 - écarts : relais retiré ou rencontre hors journal signalés
 - outil MCP generate\_team\_pools (écriture sportive)
-- rencontres de l’écran (UUID) lues dans le bloc « teams », journal incomplet sans écart
+- rencontres de l’ancien écran (UUID) lues dans le bloc « teams », journal incomplet sans écart
 
 </details>
 
@@ -4012,6 +4008,16 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/opp2/e2eTeam.test.ts</code> — 4 tests</summary>
+
+- relais 1 à 3 : END → ACK, relais enregistré par le moteur (source opp2), relais suivant affiché
+- PREV avant le début du relais 4 : relais 3 rouvert par reopenRelay, puis réenregistré
+- END au-delà du palier du relais : NAK, rien d’enregistré
+- relais 4 à 9 : rencontre terminée par le moteur, journal rejoué sans écart
+
+</details>
+
+<details>
 <summary><code>src/main/opp2/mqttBroker.test.ts</code> — 4 tests</summary>
 
 - **broker MQTT intégré (#1960)**
@@ -4138,41 +4144,50 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 <details>
 <summary><code>src/main/piste/teamRelayPiste.test.ts</code> — 30 tests</summary>
 
-- **PisteHub — relais FIE par équipes (Type=T)**
-  - rencontre assignée : DISP Type=T du relais 1, tireurs du relais, nation = équipe
-  - rencontre de tableau : phase du tableau, A\<tour\>, position + 1
-  - compétition internationale : nation = pays du tireur
-  - état reçu : score cumulé → score du relais, cartons reportés au relais, chrono, sans écho
-  - cartons cumulés sur la rencontre : le DISP d’un relais reprend ceux déjà reçus par chaque tireur
-  - inversion droite / gauche : équipe A suivie par Id, pas par position
-  - fin d’un relais intermédiaire : toujours correcte, ACK puis DISP du relais suivant avec les cumuls
-  - relais intermédiaire avec abandon ou exclusion : fin toujours correcte (spéc. § 4), ACK et DT prévenu
-  - relais suivant : score du relais = cumul − relais terminés ; END répété (ACK perdu) → nouvel ACK
-  - cumul inférieur aux relais terminés : ignoré, cumul de l’arène renvoyé à l’appareil
-  - cumul au-delà du palier du relais ou de l’objectif : ignoré, tracé, cumul de l’arène renvoyé
-  - BAD MATCH : tireurs d’un autre relais → alerte ; END → NAK
-  - appareil au repos sans le relais en cours → DISP du relais
-  - arme laser : affichage seul (END → NAK) ; format arène laser : non raccordé
-  - rencontre terminée encore assignée : l’arène individuelle N reçoit les entrées
-  - rencontre retirée de l’arène : affichage vide
-  - **remplaçant (R11 / L11 = R)**
-    - accepté : le remplaçant prend la place du tireur dans ses relais suivants
-    - annulé pendant le relais : aucun remplacement
-    - refusé : équipe sans remplaçant, remplaçant déjà utilisé (tracé)
-  - **NEXT / PREV dans la rencontre**
-    - NEXT pendant un relais : refusé, relais en cours renvoyé
-    - PREV avant le début du relais suivant : relais précédent rappelé avec son score
-    - PREV après la fin de la rencontre : dernier relais rouvert, rencontre recalculée en base
-    - PREV refusé une fois le relais en cours commencé
-    - afficheur : NEXT / PREV ignorés, END → NAK
-  - **dernier relais : règles de fin individuelles**
-    - END après une rencontre terminée hors de ce poste (aucun ACK donné) : NAK
-    - égalité sans priorité : NAK
-    - vainqueur imposé (priorité à égalité) : NAK, non enregistrable par le modèle d’équipe
-    - victoire au cumul : ACK, rencontre terminée, affichage vide
-  - **verrou appareil maître sur la tablette équipe**
-    - maître et en ligne : ajout de touche, cartons, relais suivant, remise à zéro refusés ; retrait permis
-    - afficheur ou appareil absent : tablette libre
+- rencontre assignée : DISP Type=T du relais 1, tireurs du relais, nation = équipe
+- rencontre de tableau : phase du tableau, A\<tour\>, position + 1
+- compétition internationale : nation = pays du tireur
+- état reçu : score cumulé → score du relais, cartons reportés au relais, chrono, sans écho
+- cartons cumulés sur la rencontre : le DISP d’un relais reprend ceux déjà reçus par chaque tireur
+- inversion droite / gauche : équipe A suivie par Id, pas par position
+- fin d’un relais intermédiaire : toujours correcte, ACK puis DISP du relais suivant avec les cumuls
+- relais intermédiaire avec abandon ou exclusion : fin toujours correcte (spéc. § 4), ACK et DT prévenu
+- relais suivant : score du relais = cumul − relais terminés ; END répété (ACK perdu) → nouvel ACK
+- cumul inférieur aux relais terminés : ignoré, cumul de l’arène renvoyé à l’appareil
+- cumul au-delà du palier du relais ou de l’objectif : ignoré, tracé, cumul de l’arène renvoyé
+- BAD MATCH : tireurs d’un autre relais → alerte ; END → NAK
+- appareil au repos sans le relais en cours → DISP du relais
+- arme laser : affichage seul (END → NAK) ; format arène laser : non raccordé
+- rencontre terminée encore assignée : l’arène individuelle N reçoit les entrées
+- rencontre retirée de l’arène : affichage vide
+- **remplaçant (R11 / L11 = R)**
+  - accepté : le remplaçant prend la place du tireur dans ses relais suivants
+  - annulé pendant le relais : aucun remplacement
+  - refusé : équipe sans remplaçant, remplaçant déjà utilisé (code du catalogue, tracé)
+- **NEXT / PREV dans la rencontre**
+  - NEXT pendant un relais : refusé, relais en cours renvoyé
+  - PREV avant le début du relais suivant : relais précédent rouvert par le moteur avec son score
+  - PREV après la fin de la rencontre : dernier relais rouvert, rencontre recalculée par le moteur
+  - PREV refusé une fois le relais en cours commencé
+  - afficheur : NEXT / PREV ignorés, END → NAK
+- **dernier relais : règles de fin individuelles**
+  - END après une rencontre terminée hors de ce poste (aucun ACK donné) : NAK
+  - égalité sans priorité : NAK
+  - vainqueur imposé (priorité à égalité) : NAK, non enregistrable par le modèle d’équipe
+  - victoire au cumul : ACK, rencontre terminée par le moteur, affichage vide
+- **verrou appareil maître sur la tablette équipe**
+  - maître et en ligne : ajout de touche, cartons, relais suivant, remise à zéro refusés ; retrait permis
+  - afficheur ou appareil absent : tablette libre
+
+</details>
+
+<details>
+<summary><code>src/main/placeSearch.test.ts</code> — 3 tests</summary>
+
+- **createPlaceSearch**
+  - Photon répond : pas d’appel à la Géoplateforme, réponse gardée
+  - Photon en panne → Géoplateforme
+  - hors ligne → unavailable, rien de gardé
 
 </details>
 
@@ -4726,6 +4741,15 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/remote/teamArena.test.ts</code> — 3 tests</summary>
+
+- relais FIE complet : 9 relais par la tablette, rencontre terminée, rejeu sans écart
+- relais au-delà du palier : refusé par le moteur, motif rendu à la tablette, rien d’écrit
+- égalité au tableau à la fin du dernier relais : draw\_needs\_winner, rencontre non décidée
+
+</details>
+
+<details>
 <summary><code>src/main/remote/trainingLobby.test.ts</code> — 17 tests</summary>
 
 - **TrainingLobby (#1500)**
@@ -4774,7 +4798,7 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remoteScoreServer.security.test.ts</code> — 43 tests</summary>
+<summary><code>src/main/remoteScoreServer.security.test.ts</code> — 42 tests</summary>
 
 - **RemoteScoreServer**
   - **route /api/auth/login/:arenaId**
@@ -4799,7 +4823,6 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
       - team\_touch accepté avec cookie, points invalides ignorés
       - **relais FIE (#1086)**
         - touche simple uniquement (pas de zones hors mode points)
-        - relais suivant : vainqueur au cumul, score du relais persisté
         - carton individuel : escalade, persistance, motif inconnu refusé
         - état public : cumul, palier du relais, cible, motifs de carton
   - **P1 : anti force brute**
@@ -5869,7 +5892,7 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 20 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 21 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5881,6 +5904,7 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
   - ajoute une zone bloquée et permet de changer sa largeur
   - ajoute une zone public nommée depuis le menu « Zone »
   - nomme une arène et affiche son nom sur le plan
+  - tourne une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle
   - change la couleur d'une zone puis revient à la couleur par défaut
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
   - ne permet jamais plus d'arènes que le maximum de la zone
@@ -6806,6 +6830,15 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/common/PlaceSearchField.test.tsx</code> — 2 tests</summary>
+
+- **PlaceSearchField**
+  - cherche après la pause, choix → « nom, commune » et onPick
+  - hors ligne : message, saisie libre gardée
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/common/RankMedal.test.tsx</code> — 2 tests</summary>
 
 - **RankMedal**
@@ -6822,6 +6855,20 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
   - exclusion : question carton noir, Oui =\> blackCard true
   - exclusion : Non =\> blackCard false
   - tireur absent désactivé ; Annuler appelle onCancel
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/common/TimeInput.test.tsx</code> — 6 tests</summary>
+
+- **conversions**
+  - splitTime
+  - to12h / from12h
+- **TimeInput**
+  - 24 h par défaut
+  - 24 h : heures 00–23, pas de AM/PM
+  - AM/PM : affiche 03 PM, renvoie toujours HH:MM en 24 h
+  - vider l’heure vide la valeur
 
 </details>
 
@@ -7295,6 +7342,16 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/roadmap/RoadmapPreview.test.tsx</code> — 3 tests</summary>
+
+- **RoadmapPreview**
+  - clic sur une variable sans valeur → onPickVariable, pas la section
+  - clic ailleurs dans une section → onPickSection
+  - {date} manquante dans l’en-tête → onPickVariable("date")
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/roadmap/roadmapDocx.test.ts</code> — 3 tests</summary>
 
 - **roadmapDocx**
@@ -7565,9 +7622,10 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
-<summary><code>e2e/electron/teams.spec.ts</code> — 1 test</summary>
+<summary><code>e2e/electron/teams.spec.ts</code> — 2 tests</summary>
 
 - équipes : poule et tableau joués à l’écran par le moteur, retrouvés au rechargement
+- équipes : relais FIE joués sur la tablette /equipe1/arbitre par le moteur (lot E4)
 
 </details>
 
@@ -8811,7 +8869,7 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaDisciplines.test.ts</code> — 8 tests</summary>
+<summary><code>src/shared/domain/arena/arenaDisciplines.test.ts</code> — 11 tests</summary>
 
 - **disciplines du planificateur**
   - laser : cercle de sécurité Ø 12 m
@@ -8822,6 +8880,10 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
   - élément dans le couloir de la piste signalé, hors couloir accepté
   - glisser une piste sur une autre la repousse bord contre bord
   - cotes décalées selon l'emprise rectangulaire
+- **rotation des arènes**
+  - laser : quart de tour, retour à 0 après 270
+  - piste et scène : demi-tour, emprise alignée sur les murs
+  - valeur invalide ou négative ramenée au pas
 
 </details>
 
@@ -8980,6 +9042,19 @@ Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage stat
   - %s _(each)_
 - **passivityWinner (P-noir)**
   - score, puis classement initial, puis tirage
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/places/placeSearch.test.ts</code> — 6 tests</summary>
+
+- **placeSearch**
+  - requête : espaces réduits, 3 caractères minimum
+  - URL Photon : langue connue ou « default »
+  - Photon : nom, adresse, commune
+  - Photon : adresse sans nom → nom = adresse
+  - Géoplateforme : lieu (tableaux) et adresse
+  - réponse invalide → liste vide ; doublons retirés
 
 </details>
 

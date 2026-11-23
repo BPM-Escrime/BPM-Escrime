@@ -1,11 +1,19 @@
 /**
  * BPM - Escrime - Feuille de route : sections (tableau ou texte), lignes,
- * ordre, bibliothèque de lignes et de sections toutes prêtes.
+ * ordre (flèches ou glisser-déposer par la poignée), bibliothèque de lignes et de sections toutes prêtes.
  * Licensed under GPL-3.0
  */
 
-import React, { useEffect, useRef } from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronRight,
+  GripVertical,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import {
   moveItem,
   nextId,
@@ -62,6 +70,22 @@ export const RoadmapSectionsEditor: React.FC<RoadmapSectionsEditorProps> = ({
   const { t } = useTranslation();
   const { confirm } = useConfirm();
   const refs = useRef(new Map<string, HTMLDivElement>());
+  // Glisser-déposer : section saisie par la poignée, section survolée
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+
+  const endDrag = () => {
+    setDragId(null);
+    setOverId(null);
+  };
+  const dropOn = (targetId: string) => {
+    if (dragId && dragId !== targetId) {
+      const from = sections.findIndex(x => x.id === dragId);
+      const to = sections.findIndex(x => x.id === targetId);
+      if (from >= 0 && to >= 0) onChange(moveItem(sections, dragId, to - from));
+    }
+    endDrag();
+  };
 
   useEffect(() => {
     if (focusId) refs.current.get(focusId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -119,9 +143,36 @@ export const RoadmapSectionsEditor: React.FC<RoadmapSectionsEditorProps> = ({
               if (el) refs.current.set(s.id, el);
               else refs.current.delete(s.id);
             }}
-            className={`roadmap-section-card${s.enabled ? '' : ' is-disabled'}${focusId === s.id ? ' is-focused' : ''}`}
+            className={`roadmap-section-card${s.enabled ? '' : ' is-disabled'}${focusId === s.id ? ' is-focused' : ''}${dragId === s.id ? ' is-dragging' : ''}${overId === s.id && dragId !== s.id ? ' is-drop-target' : ''}`}
+            onDragOver={e => {
+              if (!dragId) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              if (overId !== s.id) setOverId(s.id);
+            }}
+            onDrop={e => {
+              e.preventDefault();
+              dropOn(s.id);
+            }}
           >
             <div className="roadmap-section-head">
+              <span
+                className="roadmap-drag-handle"
+                draggable
+                role="img"
+                title={t('roadmap.drag_section')}
+                aria-label={t('roadmap.drag_section')}
+                onDragStart={e => {
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', s.id);
+                  const card = refs.current.get(s.id);
+                  if (card) e.dataTransfer.setDragImage(card, 16, 16);
+                  setDragId(s.id);
+                }}
+                onDragEnd={endDrag}
+              >
+                <GripVertical size={15} />
+              </span>
               <IconButton
                 label={open ? t('roadmap.collapse') : t('roadmap.expand')}
                 onClick={() => onToggle(s.id)}

@@ -37,6 +37,11 @@ import type {
 } from '../types/privacy';
 import type { McpLogEntry, McpStatus } from '../types/mcp';
 import type { BackupDirDTO } from '../types/systemSettings';
+import {
+  PLACE_QUERY_MAX,
+  PLACE_QUERY_MIN,
+  type PlaceSuggestion,
+} from '../domain/places/placeSearch';
 
 const Short = z.string().max(200);
 const Nothing = z.void();
@@ -261,6 +266,21 @@ export const stationOperations = {
     description: 'Désigne la salle par défaut.',
     input: z.object({ venueId: VenueId }),
     output: Nothing,
+    permission: 'station:admin',
+  }),
+
+  // ── Recherche de lieu (docs/adr/0026) ──
+  listPlaceSuggestions: query({
+    description:
+      'Lieux et adresses trouvés sur Internet pour le texte tapé (Photon / OpenStreetMap, puis Géoplateforme de l’IGN), depuis le poste. unavailable : aucun service joignable.',
+    input: z.object({
+      query: z.string().min(PLACE_QUERY_MIN).max(PLACE_QUERY_MAX),
+      language: z.string().max(10).default('fr'),
+    }),
+    output: z.object({
+      suggestions: z.custom<PlaceSuggestion[]>(),
+      unavailable: z.boolean(),
+    }),
     permission: 'station:admin',
   }),
 

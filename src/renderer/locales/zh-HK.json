@@ -310,6 +310,9 @@
     "density_comfortable": "寬鬆",
     "density_standard": "標準",
     "density_compact": "緊湊",
+    "time_format": "時間格式",
+    "time_format_24h": "24 小時制 (14:30)",
+    "time_format_12h": "上午/下午 (2:30 PM)",
     "pool_rounds": "分組賽輪次",
     "has_direct_elimination": "直接淘汰賽",
     "default_pool_max_score": "分組賽最高分數",
@@ -482,6 +485,7 @@
     "uncheck_all": "全部取消報到",
     "view": "查看",
     "default": "未指定",
+    "optional": "選填",
     "save_and_add": "儲存並新增",
     "remove": "移除",
     "move_up": "上移",
@@ -521,7 +525,10 @@
     "minutes": "分鐘",
     "seconds": "秒",
     "hours": "小時",
-    "days": "天"
+    "days": "天",
+    "period": "上午/下午",
+    "am": "上午",
+    "pm": "下午"
   },
   "pdfTemplate": {
     "modalTitle": "自訂PDF匯出",
@@ -4369,6 +4376,7 @@
     "hint_arenas": "所需劍場數目。「優化」會找出最多可容納數目。",
     "arena_names": "劍道名稱",
     "arena_name": "劍道 {{n}}",
+    "arena_rotate": "旋轉場地 {{n}}",
     "hint_margin": "平面圖與牆內側的距離。",
     "spacing": "間距",
     "spacing_packed": "緊貼（最小）",
@@ -4594,7 +4602,8 @@
     "info_contactName": "聯絡人姓名",
     "info_contactEmail": "聯絡人電郵",
     "variables": "變數",
-    "variables_hint": "點擊即可插入目前欄位：數值會跟隨重點資料更新。",
+    "variables_hint": "數值：「重點資料」分頁。標籤＝插入目前欄位；虛線＝未有數值。預覽中標示的變數：點擊即可填寫。",
+    "variable_empty": "請在「重點資料」填寫",
     "var_titre": "比賽名稱",
     "var_edition": "屆數",
     "var_date": "比賽日期",
@@ -4618,6 +4627,7 @@
     "layout_text": "文字",
     "move_up": "上移",
     "move_down": "下移",
+    "drag_section": "拖曳以移動此部分",
     "delete_section": "刪除章節",
     "delete_section_confirm": "刪除「{{title}}」章節？",
     "row_label": "項目",
@@ -4654,5 +4664,11 @@
     "exported": "文件已匯出",
     "preview_hint": "A4 預覽：點擊章節即可編輯",
     "content_note": "預設內容以法文撰寫（FFE 規則）。草稿會自動儲存於此電腦。"
+  },
+  "placeSearch": {
+    "loading": "搜尋中…",
+    "empty": "找不到地點",
+    "offline": "無法搜尋（沒有網絡連線）",
+    "credit": "資料 © OpenStreetMap、IGN"
   }
 }

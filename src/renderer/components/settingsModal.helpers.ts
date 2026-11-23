@@ -69,7 +69,7 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
       { id: 'language', keys: ['settings.language'] },
       { id: 'theme', keys: ['settings.theme'] },
       { id: 'text_size', keys: ['settings.text_size'] },
-      { id: 'density', keys: ['settings.density'] },
+      { id: 'density', keys: ['settings.density', 'settings.time_format'] },
       { id: 'animations', keys: ['settings.animations_title', 'settings.animations_hint'] },
       { id: 'pseudo', keys: ['settings.pseudo_locale', 'settings.pseudo_locale_hint'] },
     ],

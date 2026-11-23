@@ -4,6 +4,7 @@ import {
   computePisteGeometry,
   computeStageGeometry,
   FENCING_PISTE,
+  nextArenaRotation,
 } from './arenaDisciplines';
 import {
   checkRoomItems,
@@ -111,5 +112,22 @@ describe('disciplines du planificateur', () => {
     const dims = technicalDimensions({ widthM: 20, lengthM: 20 }, [{ x: 10, y: 10 }], [], fp);
     const h = dims.lines.find(l => l.orientation === 'h' && l.from === 0 && l.to === 10);
     expect(h?.at).toBeCloseTo(10 + 2.5 + 0.8, 6);
+  });
+});
+
+describe('rotation des arènes', () => {
+  it('laser : quart de tour, retour à 0 après 270', () => {
+    expect(nextArenaRotation(0, 'laser')).toBe(90);
+    expect(nextArenaRotation(90, 'laser')).toBe(180);
+    expect(nextArenaRotation(270, 'laser')).toBe(0);
+  });
+  it('piste et scène : demi-tour, emprise alignée sur les murs', () => {
+    expect(nextArenaRotation(0, 'fencing')).toBe(180);
+    expect(nextArenaRotation(180, 'fencing')).toBe(0);
+    expect(nextArenaRotation(90, 'artistic')).toBe(0);
+  });
+  it('valeur invalide ou négative ramenée au pas', () => {
+    expect(nextArenaRotation(Number.NaN)).toBe(90);
+    expect(nextArenaRotation(-90)).toBe(0);
   });
 });

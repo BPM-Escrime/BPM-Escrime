@@ -310,6 +310,9 @@
     "density_comfortable": "Kempenn",
     "density_standard": "Standard",
     "density_compact": "Stang",
+    "time_format": "Furmad an eurioù",
+    "time_format_24h": "24 eur (14:30)",
+    "time_format_12h": "AM/PM (2:30 PM)",
     "pool_rounds": "Troùioù ar poullou",
     "has_direct_elimination": "Taolenn",
     "default_pool_max_score": "Skor brassek ar poullou",
@@ -482,6 +485,7 @@
     "uncheck_all": "Digoumanañ pep tra",
     "view": "Gwelet",
     "default": "N'eus ket",
+    "optional": "Diret",
     "save_and_add": "Enrollañ ha ouzhpennañ",
     "remove": "Dilemel",
     "move_up": "Pignat",
@@ -521,7 +525,10 @@
     "minutes": "munutennoù",
     "seconds": "eil",
     "hours": "eurvezh",
-    "days": "deiz"
+    "days": "deiz",
+    "period": "AM/PM",
+    "am": "AM",
+    "pm": "PM"
   },
   "pdfTemplate": {
     "modalTitle": "Personelañ ezporzhioù PDF",
@@ -4369,6 +4376,7 @@
     "hint_arenas": "Niver arenaoù a garit. « Optimiñ » a gav ar maksimum posupl.",
     "arena_names": "Anvioù an tachennoù",
     "arena_name": "Tachenn {{n}}",
+    "arena_rotate": "Treiñ an dachenn {{n}}",
     "hint_margin": "Pellder ar plan diouzh an tu diabarzh ar voger.",
     "spacing": "Pellder",
     "spacing_packed": "Tost (munud)",
@@ -4594,7 +4602,8 @@
     "info_contactName": "Anv ar darempred",
     "info_contactEmail": "Postel ar darempred",
     "variables": "Argemmennoù",
-    "variables_hint": "Klikit evit enlakaat en maezienn a zo : an talvoudenn a heuilh ar pezhioù pennañ.",
+    "variables_hint": "Talvoudoù : ivinell « Ar pezhioù pennañ ». Pastilhenn = enlakaat er maezienn a zo ; pikennoù = hep talvoudenn. Argemmenn sklaeraet er rakwel : klikit evit he leuniañ.",
+    "variable_empty": "da leuniañ e « Ar pezhioù pennañ »",
     "var_titre": "Anv an droidigezh",
     "var_edition": "Embannadur",
     "var_date": "Deiz an droidigezh",
@@ -4618,6 +4627,7 @@
     "layout_text": "Testenn",
     "move_up": "Dont enep",
     "move_down": "Dont a-is",
+    "drag_section": "Riklañ evit dilec'hiañ ar rann",
     "delete_section": "Diverkañ an dielfenn",
     "delete_section_confirm": "Diverkañ an dielfenn « {{title}} » ?",
     "row_label": "Titl",
@@ -4654,5 +4664,11 @@
     "exported": "Teuliad ezporzhet",
     "preview_hint": "Rakwel A4 : klikit war ur pezh evit kemm anezhi",
     "content_note": "An endalc'h rakleniet a zo skrivet e galleg (reolennoù FFE). Enrollet emgefreek an drafenn war ar rekkomp-mañ."
+  },
+  "placeSearch": {
+    "loading": "O klask…",
+    "empty": "Lec'h ebet kavet",
+    "offline": "Klask dihegerz (kevreadenn ebet)",
+    "credit": "Roadennoù © OpenStreetMap, IGN"
   }
 }
