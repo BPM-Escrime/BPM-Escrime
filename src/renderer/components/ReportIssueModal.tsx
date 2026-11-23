@@ -102,7 +102,7 @@ _Issue créée automatiquement depuis BPM - Escrime_`;
       labels: labels,
     });
 
-    const githubUrl = `https://github.com/BellePoule-Modern/bellepoule-modern/issues/new?${params.toString()}`;
+    const githubUrl = `https://github.com/BPM-Escrime/BPM-Escrime/issues/new?${params.toString()}`;
 
     // Ouvrir dans le navigateur
     defaultPlatform.openExternal(githubUrl);

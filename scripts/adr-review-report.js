@@ -46,7 +46,10 @@ const LINE_RULES = [
   ],
   [
     'nouveau canal IPC (ADR-0005, 0018)',
-    (f, l) => /^src\/main\//.test(f) && /ipcMain\.(handle|on|handleOnce)\(/.test(l),
+    (f, l) =>
+      /^src\/main\//.test(f) &&
+      f !== 'src/main/engine/api/ipcAdapter.ts' && // canal du contrat lui-même
+      /ipcMain\.(handle|on|handleOnce)\(/.test(l),
   ],
   [
     '`window.electronAPI` / `useElectronDB()` dans l’interface',
@@ -61,7 +64,16 @@ const LINE_RULES = [
   ],
 ];
 
-const TEST_RE = /(\.test\.tsx?$|\.spec\.tsx?$|[\\/]__tests__[\\/]|^e2e\/)/;
+const TEST_RE = /(\.test\.tsx?$|\.spec\.tsx?$|[\\/]__tests__[\\/]|[\\/]testUtils[\\/]|^e2e\/)/;
+
+/** Ligne de commentaire (JSDoc, //, /*) : pas un appel */
+const COMMENT_RE = /^\s*(\*|\/\/|\/\*)/;
+
+/** Première migration soumise à ADR-0011 (src/database/migrations/migrationsAdr.test.ts) */
+const FIRST_UNDER_ADR = 46;
+
+/** Commit de masse (renommage, formatage) : trop de fichiers pour désigner l'auteur d'une ligne */
+const MASS_COMMIT_FILES = 200;
 
 /** Références du cliquet relevées (une baisse est un gain, pas un signal) */
 function baselineRaises() {
@@ -143,6 +155,7 @@ function occurrences(rev) {
     if (!m) continue;
     const [, file, text] = m;
     if (TEST_RE.test(file) && !file.endsWith('contractNaming.test.ts')) continue;
+    if (COMMENT_RE.test(text) && !/eslint-disable|@ts-(ignore|expect-error)/.test(text)) continue;
     for (const [label, test] of LINE_RULES) {
       if (!test(file, text)) continue;
       const byFile = map.get(label);
@@ -162,20 +175,32 @@ function newLines(base) {
   const before = occurrences(base);
   const after = occurrences('HEAD');
   const hits = new Map(LINE_RULES.map(([label]) => [label, []]));
-  const fileCommits = new Map();
-  const commitsOf = file => {
-    if (!fileCommits.has(file)) {
-      fileCommits.set(
-        file,
-        git(['log', '--no-merges', '--follow', `${base}..HEAD`, '--format=%h\t%an\t%s', '--', file])
-          .trim()
-          .split('\n')
-          .filter(Boolean)
-          .slice(0, 3)
-          .map(l => l.split('\t'))
-      );
-    }
-    return fileCommits.get(file);
+  const massCommits = new Set(
+    git(['log', '--no-merges', '--format=@@C %h', '--name-only', `${base}..HEAD`])
+      .split('@@C ')
+      .filter(Boolean)
+      .map(chunk => chunk.trim().split('\n'))
+      .filter(([, ...files]) => files.filter(Boolean).length > MASS_COMMIT_FILES)
+      .map(([h]) => h)
+  );
+  const parse = out =>
+    out
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .map(l => l.split('\t'))
+      .filter(c => !massCommits.has(c[0]));
+  /** Commit qui a fait apparaître la ligne (pickaxe), à défaut les derniers commits du fichier */
+  const commitsOf = (file, text) => {
+    const fmt = '--format=%h\t%an\t%s';
+    const introduced = parse(
+      git(['log', '--no-merges', '-S', text, `${base}..HEAD`, fmt, '--', file])
+    ).slice(-1);
+    if (introduced.length) return introduced;
+    return parse(git(['log', '--no-merges', '--follow', `${base}..HEAD`, fmt, '--', file])).slice(
+      0,
+      3
+    );
   };
   // Total par règle et par texte, tous fichiers : un déplacement entre fichiers s'annule
   for (const [label, byFile] of after) {
@@ -186,7 +211,7 @@ function newLines(base) {
       for (const text of texts) {
         const left = pool.get(text) || 0;
         if (left > 0) pool.set(text, left - 1);
-        else hits.get(label).push({ file, text, commits: commitsOf(file) });
+        else hits.get(label).push({ file, text, commits: commitsOf(file, text) });
       }
     }
   }
@@ -249,12 +274,15 @@ function main() {
   if (migrations.length) {
     lines.push('### Migrations ajoutées (ADR-0011)', '');
     for (const m of migrations) {
-      lines.push(
-        `- ${m.version} : ${m.adr ? `ADR-${m.adr}` : '**aucune ADR citée**'} — ${ref(m.commit)}`
-      );
+      const adr = m.adr
+        ? `ADR-${m.adr}`
+        : m.version < FIRST_UNDER_ADR
+          ? 'antérieure à la règle'
+          : '**aucune ADR citée**';
+      lines.push(`- ${m.version} : ${adr} — ${ref(m.commit)}`);
     }
     lines.push('');
-    total += migrations.length;
+    total += migrations.filter(m => !m.adr && m.version >= FIRST_UNDER_ADR).length;
   }
 
   const lineHits = [...hits].filter(([, list]) => list.length);
@@ -263,7 +291,9 @@ function main() {
     for (const [label, list] of lineHits) {
       lines.push(`<details><summary>${label} : ${list.length}</summary>`, '');
       for (const h of list.slice(0, 50))
-        lines.push(`- ${h.file} — ${code(h.text)} — ${h.commits.map(c => c[0]).join(', ')}`);
+        lines.push(
+          `- ${h.file} — ${code(h.text)} — ${h.commits.map(c => c[0]).join(', ') || 'commit de masse'}`
+        );
       if (list.length > 50) lines.push(`- … ${list.length - 50} de plus`);
       lines.push('', '</details>', '');
       total += list.length;

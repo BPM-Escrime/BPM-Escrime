@@ -5,8 +5,8 @@
   "author": {
     "name": "BPM - Escrime"
   },
-  "homepage": "https://github.com/BellePoule-Modern/bellepoule-modern/blob/dev/docs/MCP.md",
-  "repository": "https://github.com/BellePoule-Modern/bellepoule-modern",
+  "homepage": "https://github.com/BPM-Escrime/BPM-Escrime/blob/dev/docs/MCP.md",
+  "repository": "https://github.com/BPM-Escrime/BPM-Escrime",
   "license": "GPL-3.0",
   "keywords": ["escrime", "fencing", "bpm-escrime", "mcp", "tournoi"],
   "userConfig": {
