@@ -12,6 +12,7 @@ import { logger, LogCategory } from '../../shared/services/logger';
 import { recordRemoteEvent } from './remoteEvents';
 import { isCyranoMasterOnline } from './cyranoLock';
 import { advanceTeamBout, broadcastTeamArena, teamArenaElapsedSec } from './teamArena';
+import { teamRefusal } from './teamCommand';
 
 type S = RemoteScoreServer;
 
@@ -354,11 +355,13 @@ export function setupSocketHandlers(ctx: SocketHandlersContext): void {
       broadcastTeamArena(ctx, data.arenaId);
     });
 
-    // Termine l'assaut en cours (persiste le score), avance au suivant s'il en reste.
+    // Termine l'assaut en cours par recordRelayScore (docs/adr/0024, lot E4), avance au
+    // suivant s'il en reste. Refus du moteur : rien d'écrit, motif rendu à la tablette.
     socket.on('team_advance_bout', (data: { arenaId: string }) => {
       if (!ctx.checkSocketArenaAuth(socket, data?.arenaId)) return;
       if (teamDeviceLocked(data.arenaId, 'team_advance_bout')) return;
-      advanceTeamBout(ctx, data.arenaId);
+      const outcome = advanceTeamBout(ctx, data.arenaId, 'tablet');
+      if (!outcome.ok) socket.emit('team_arena_error', teamRefusal(outcome));
     });
 
     // Carton d'équipe "E" (traçabilité, pas d'impact automatique sur le score).

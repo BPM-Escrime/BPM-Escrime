@@ -5,7 +5,8 @@
  * journal RelayScoreRecorded, RelayReopened, TeamMatchDecided, TeamFencerSubstituted,
  * TeamTableauGenerated, TeamMatchScheduled. Le score de la rencontre est le cumul des relais
  * terminés, calculé ici (pas de recalcul par la base). Règles : shared/domain/teams.
- * L'écran (TeamManagerView) et l'arène équipe écrivent encore par la base (lots E3, E4).
+ * Mêmes commandes pour l'écran (TeamManagerView, lot E3), la tablette `/equipe{N}` et les
+ * appareils de piste (`teamArena`, `teamRelayDevice`, lot E4).
  * Licensed under GPL-3.0
  */
 import type { z } from 'zod';

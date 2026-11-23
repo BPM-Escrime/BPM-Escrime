@@ -937,18 +937,6 @@ export class DatabaseManager {
     return this.teams.removeTeamFencer(...args);
   }
 
-  public createTeamMatch(
-    ...args: Parameters<TeamRepo['createTeamMatch']>
-  ): ReturnType<TeamRepo['createTeamMatch']> {
-    return this.teams.createTeamMatch(...args);
-  }
-
-  public createTeamTableauMatch(
-    ...args: Parameters<TeamRepo['createTeamTableauMatch']>
-  ): ReturnType<TeamRepo['createTeamTableauMatch']> {
-    return this.teams.createTeamTableauMatch(...args);
-  }
-
   public getTeamTableauMatches(
     ...args: Parameters<TeamRepo['getTeamTableauMatches']>
   ): ReturnType<TeamRepo['getTeamTableauMatches']> {
@@ -959,26 +947,6 @@ export class DatabaseManager {
     ...args: Parameters<TeamRepo['getTeamMatchesByCompetition']>
   ): ReturnType<TeamRepo['getTeamMatchesByCompetition']> {
     return this.teams.getTeamMatchesByCompetition(...args);
-  }
-
-  public createTeamBout(
-    ...args: Parameters<TeamRepo['createTeamBout']>
-  ): ReturnType<TeamRepo['createTeamBout']> {
-    return this.teams.createTeamBout(...args);
-  }
-
-  public updateTeamBout(
-    ...args: Parameters<TeamRepo['updateTeamBout']>
-  ): ReturnType<TeamRepo['updateTeamBout']> {
-    return this.teams.updateTeamBout(...args);
-  }
-
-  public reopenTeamBout(boutId: string): void {
-    this.teams.reopenTeamBout(boutId);
-  }
-
-  public setTeamBoutFencer(...args: Parameters<TeamRepo['setTeamBoutFencer']>): void {
-    this.teams.setTeamBoutFencer(...args);
   }
 
   public createTeamMatchCard(

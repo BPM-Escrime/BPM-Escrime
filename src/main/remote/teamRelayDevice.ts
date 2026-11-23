@@ -2,7 +2,8 @@
  * BPM - Escrime - Relais FIE par équipes piloté par un appareil de piste (#1829)
  * Opérations de l'arène équipe (`/equipe{N}`, relais FIE en direct #1086) utilisées par le
  * PisteHub. L'appareil donne le score cumulé de l'équipe ; l'arène tient le score du relais
- * en cours (`liveScoreA/B`) : relais = cumul reçu − relais précédents terminés.
+ * en cours (`liveScoreA/B`) : relais = cumul reçu − relais précédents terminés. Fin de relais,
+ * rappel et remplaçant passent par les commandes du moteur (docs/adr/0024, lot E4).
  * Licensed under GPL-3.0
  */
 
@@ -12,7 +13,14 @@ import {
   relayCumul,
 } from '../../shared/domain/teams/teamRelayLive';
 import { logger, LogCategory } from '../../shared/services/logger';
-import { advanceTeamBout, broadcastTeamArena, type TeamArenaContext } from './teamArena';
+import {
+  advanceTeamBout,
+  broadcastTeamArena,
+  checkTeamBout,
+  reloadTeamArenaMatch,
+  type TeamArenaContext,
+} from './teamArena';
+import { runTeamCommand, type TeamCommandOutcome, type TeamSource } from './teamCommand';
 import type { TeamArenaBout, TeamArenaState } from './types';
 import type { ArenaCyranoLink } from '../../shared/types/remote';
 
@@ -153,20 +161,46 @@ export function setTeamArenaDeviceLink(
   broadcastTeamArena(ctx, arenaId);
 }
 
-/** Fin du relais en cours (END acquitté) : relais enregistré, passage au suivant. */
-export function finishRelay(ctx: TeamArenaContext, arenaId: string): boolean {
-  return advanceTeamBout(ctx, arenaId);
+/**
+ * Fin du relais en cours contrôlée par le moteur sans rien écrire (recordRelayScore en
+ * simulation) : refus → NAK de l'appareil, avant tout ACK.
+ */
+export function checkRelayFinish(
+  ctx: TeamArenaContext,
+  arenaId: string,
+  source: TeamSource
+): TeamCommandOutcome<'recordRelayScore'> {
+  return checkTeamBout(ctx, arenaId, source);
+}
+
+/**
+ * Fin du relais en cours (END acquitté) : relais enregistré par recordRelayScore, passage au
+ * suivant. `broadcast: false` : diffusion laissée à l'appelant (remplaçant à insérer d'abord).
+ */
+export function finishRelay(
+  ctx: TeamArenaContext,
+  arenaId: string,
+  source: TeamSource,
+  options: { broadcast?: boolean } = {}
+): TeamCommandOutcome<'recordRelayScore'> {
+  return advanceTeamBout(ctx, arenaId, source, options);
 }
 
 /**
  * PREV : rappel du relais précédent pour correction, seulement si le relais en cours n'a pas
- * commencé (score nul, chrono à zéro et arrêté) ou si la rencontre est terminée. Le relais
- * rappelé repasse « en cours » avec son score ; un nouvel END le réenregistre.
+ * commencé (score nul, chrono à zéro et arrêté) ou si la rencontre est terminée. Le moteur
+ * rouvre le dernier relais terminé (reopenRelay, score conservé) ; l'arène reprend ce score
+ * comme score en direct, et un nouvel END le réenregistre. Refus du moteur (rencontre
+ * suivante du tableau commencée…) : rien ne change.
  */
-export function reopenPreviousRelay(ctx: TeamArenaContext, arenaId: string): boolean {
+export function reopenPreviousRelay(
+  ctx: TeamArenaContext,
+  arenaId: string,
+  source: TeamSource
+): boolean {
   const view = teamRelayView(ctx, arenaId);
   if (!view?.previous) return false;
-  const { state, previous } = view;
+  const { state } = view;
   if (
     view.bout &&
     (state.liveScoreA !== 0 ||
@@ -175,57 +209,56 @@ export function reopenPreviousRelay(ctx: TeamArenaContext, arenaId: string): boo
       state.timerStartedAt !== null)
   )
     return false;
-  // Rencontre recalculée en base : statut « en cours », vainqueur effacé, scores (#1829)
-  ctx.db.reopenTeamBout(previous.id);
-  previous.status = 'in_progress';
-  previous.winnerId = null;
-  state.currentBoutIndex = state.bouts.indexOf(previous);
-  state.liveScoreA = previous.scoreA;
-  state.liveScoreB = previous.scoreB;
+  const outcome = runTeamCommand(
+    ctx.db,
+    'reopenRelay',
+    { competitionId: state.competitionId, matchId: state.matchId },
+    source
+  );
+  if (!outcome.ok) return false;
+  reloadTeamArenaMatch(ctx, state);
+  const reopened = state.bouts.find(b => b.id === outcome.out.relayId);
+  state.currentBoutIndex = reopened ? state.bouts.indexOf(reopened) : state.currentBoutIndex;
+  state.liveScoreA = outcome.out.scoreA;
+  state.liveScoreB = outcome.out.scoreB;
   state.elapsedAccumulatedSec = 0;
   state.timerStartedAt = null;
   broadcastTeamArena(ctx, arenaId);
   return true;
 }
 
-export type SubstitutionRefusal =
-  'no_relay' | 'unknown_fencer' | 'no_reserve' | 'reserve_used' | 'no_later_relay';
-
 /**
- * Remplaçant (o.99.5 / o.99.6) : le remplaçant de l'équipe du côté `side` prend la place du
- * tireur `outFencerId` dans les relais suivants non tirés. Refusé si l'équipe n'a pas de
- * remplaçant, si un remplaçant figure déjà dans la rencontre, ou s'il ne reste aucun relais
- * de ce tireur.
+ * Remplaçant (o.99.5 / o.99.6) par substituteTeamFencer : le remplaçant de l'équipe du côté
+ * `side` prend la place du tireur `outFencerId` dans les relais non terminés. Appelé après
+ * l'enregistrement du relais où la demande est faite (le relais tiré garde son tireur).
+ * Refus du moteur (codes du catalogue) : pas de remplaçant (`no_reserve`), remplaçant déjà
+ * entré (`reserve_used`), plus de relais pour ce tireur (`no_later_relay`)…
  */
 export function substituteRelayFencer(
   ctx: TeamArenaContext,
   arenaId: string,
   side: 'A' | 'B',
-  outFencerId: string
-): { ok: true; reserveId: string; relays: number[] } | { ok: false; reason: SubstitutionRefusal } {
-  const view = teamRelayView(ctx, arenaId);
-  if (!view?.bout) return { ok: false, reason: 'no_relay' };
-  const { state, bout } = view;
-  const fencerKey = side === 'A' ? 'fencerAId' : 'fencerBId';
-  const nameKey = side === 'A' ? 'fencerAName' : 'fencerBName';
-  if (bout[fencerKey] !== outFencerId) return { ok: false, reason: 'unknown_fencer' };
-  const teamId = side === 'A' ? state.teamAId : state.teamBId;
-  const team = ctx.db.getTeamsByCompetition(state.competitionId).find(t => t.id === teamId);
-  const reserves = team?.fencers.filter(f => f.isReserve) ?? [];
-  if (reserves.length === 0) return { ok: false, reason: 'no_reserve' };
-  const used = new Set(state.bouts.map(b => b[fencerKey]));
-  if (reserves.some(r => used.has(r.fencerId))) return { ok: false, reason: 'reserve_used' };
-  const later = state.bouts.filter(
-    b => b.boutOrder > bout.boutOrder && b.status !== 'finished' && b[fencerKey] === outFencerId
+  outFencerId: string,
+  source: TeamSource,
+  { broadcast = true }: { broadcast?: boolean } = {}
+): { ok: true; reserveId: string; relays: number[] } | { ok: false; reason: string } {
+  const state = ctx.teamArenaState.get(arenaId);
+  if (!state) return { ok: false, reason: 'match_not_found' };
+  const outcome = runTeamCommand(
+    ctx.db,
+    'substituteTeamFencer',
+    {
+      competitionId: state.competitionId,
+      matchId: state.matchId,
+      teamId: side === 'A' ? state.teamAId : state.teamBId,
+      outFencerId,
+    },
+    source
   );
-  if (later.length === 0) return { ok: false, reason: 'no_later_relay' };
-  const reserve = reserves[0];
-  const name = `${reserve.fencerLastName} ${reserve.fencerFirstName ?? ''}`.trim();
-  for (const b of later) {
-    ctx.db.setTeamBoutFencer(b.id, side, reserve.fencerId);
-    b[fencerKey] = reserve.fencerId;
-    b[nameKey] = name;
-  }
-  broadcastTeamArena(ctx, arenaId);
-  return { ok: true, reserveId: reserve.fencerId, relays: later.map(b => b.boutOrder) };
+  if (!outcome.ok) return { ok: false, reason: outcome.code };
+  reloadTeamArenaMatch(ctx, state);
+  const ids = new Set(outcome.out.relayIds);
+  const relays = state.bouts.filter(b => ids.has(b.id)).map(b => b.boutOrder);
+  if (broadcast) broadcastTeamArena(ctx, arenaId);
+  return { ok: true, reserveId: outcome.out.inFencerId, relays };
 }

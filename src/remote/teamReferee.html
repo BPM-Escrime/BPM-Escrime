@@ -240,8 +240,11 @@
         }
         let toastTimer = null;
         function notify(key) {
+          showToast(tk(key));
+        }
+        function showToast(text) {
           const toast = document.getElementById('team-toast');
-          toast.textContent = tk(key);
+          toast.textContent = text;
           toast.style.display = 'block';
           clearTimeout(toastTimer);
           toastTimer = setTimeout(() => (toast.style.display = 'none'), 3000);
@@ -431,6 +434,11 @@
         socket.on('team_arena_state', state => {
           lastState = state;
           render();
+        });
+
+        // Fin de relais refusée par le poste DT (docs/adr/0024) : rien d'enregistré, motif affiché
+        socket.on('team_arena_error', body => {
+          showToast(window.errorText ? window.errorText(body, tk('referee.error_save')) : tk('referee.error_save'));
         });
 
         // Rafraîchit l'affichage du chrono localement entre deux broadcasts serveur.

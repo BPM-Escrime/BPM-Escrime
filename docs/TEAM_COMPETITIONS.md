@@ -148,8 +148,12 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   `reopen_relay`, `substitute_team_fencer`), journalisées et rejouées. Lot E3 : l'écran
   n'écrit plus que par ces commandes et lit le bloc `teams` (le moteur fait foi : totaux,
   classement, avancement du tableau) ; la composition est figée dès le tirage (refus
-  `draw_done`). La tablette `/equipe{N}` et les appareils de piste écrivent par la base
-  jusqu'au lot E4 ; l'écran se met à jour sur leurs signaux. Les cartons (individuels des
+  `draw_done`). Lot E4 : la tablette `/equipe{N}/arbitre` et les appareils de piste (Cyrano,
+  OPP2) passent par les mêmes commandes (fin de relais → `recordRelayScore`, PREV →
+  `reopenRelay`, remplaçant → `substituteTeamFencer`), au journal sous la source `tablet`,
+  `cyrano` ou `opp2`. Refus du moteur : rien d'écrit ; motif affiché sur la tablette, NAK
+  sur l'appareil. Le compteur du relais en cours (touches, chrono) reste un état de
+  l'arène. Les cartons (individuels des
   relais, « E » d'équipe) restent hors du moteur.
 - Épreuve créée avant le lot E1 : équipes, rencontres et relais en base sont repris tels
   quels ; un relais en cours garde son score, qui devient le compteur de l'écran. Un
