@@ -60,6 +60,11 @@ export default defineConfig({
     {
       name: 'electron',
       testMatch: 'electron/**/*.spec.ts',
+      // Une instance Electron par test (profil vierge, 48 migrations, SQLCipher) : en parallèle
+      // local, 30 s ne suffisent pas et le dépassement apparaît en « Target page… closed » (#2177)
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+      workers: 4,
     },
     ...(process.env.E2E_ALL_BROWSERS
       ? [
