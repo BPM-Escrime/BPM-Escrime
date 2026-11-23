@@ -32,6 +32,8 @@ const RoomPlanSchema = z.object({
   spacing: z.enum(['packed', 'spread']),
   align: z.enum(['left', 'center', 'right']),
   items: z.array(RoomItemSchema).max(500),
+  /** Noms des arènes par rang (ajout compatible, version 1 conservée) */
+  arenaNames: z.array(z.string().max(60)).max(200).optional(),
   manual: z.object({ key: z.string().max(200), centers: z.array(PointSchema).max(200) }).nullable(),
   x: Coord,
   y: Coord,
