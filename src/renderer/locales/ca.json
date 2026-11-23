@@ -703,7 +703,6 @@
     "addCard": "Afegir una targeta",
     "doubleTooltip": "Tocat doble simultani (sense prioritat a l'espasa)",
     "double": "doble",
-    "resetBout": "Reiniciar aquest assalt",
     "cardFor": "Targeta per a {{name}}:",
     "reasonPlaceholder": "-- motiu --",
     "teamCardsTitle": "Targetes d'equip «E» — {{team}}",
@@ -712,7 +711,7 @@
     "tableauNeedTwo": "Calen almenys 2 equips per generar un quadre.",
     "tableauNone": "Cap quadre generat.",
     "tableauGenerate": "Generar el quadre ({{count}} equips)",
-    "tableauRegenerate": "Regenerar / avançar el quadre",
+    "tableauRegenerate": "Tornar a sortejar el quadre",
     "roundQuarterfinals": "Quarts de final",
     "roundOf16": "Vuitens de final",
     "roundOf32": "Setzens de final",
@@ -727,7 +726,14 @@
     "loading": "Carregant…",
     "teamCount": "{{count}} equips",
     "toCompose": "Formar equips",
-    "cardSaveError": "Targeta no desada"
+    "cardSaveError": "Targeta no desada",
+    "removeTouch": "Treure un tocat",
+    "endRelay": "Acabar el relleu",
+    "reopenRelay": "Reobrir aquest relleu per corregir-lo",
+    "tieNeedsWinner": "Empat: designeu el guanyador (minut amb prioritat)",
+    "priorityWinner": "Guanyador: {{team}}",
+    "substituteOut": "-- surt ({{team}}) --",
+    "substitute": "Fer entrar el suplent"
   },
   "kiosk": {
     "tbd": "Per determinar",
@@ -1101,7 +1107,18 @@
     "password_too_short": "Contrasenya massa curta (mín. 8 caràcters)",
     "no_pending_file": "Cap fitxer pendent",
     "wrong_password": "Contrasenya incorrecta",
-    "invalid_settings": "Paràmetres no vàlids"
+    "invalid_settings": "Paràmetres no vàlids",
+    "relay_out_of_order": "Relleu fora d’ordre: acabeu els relleus anteriors o reobriu aquest relleu per corregir-lo",
+    "no_reserve": "Equip sense suplent",
+    "reserve_used": "El suplent ja ha entrat en l’enfrontament",
+    "no_later_relay": "Cap relleu restant per a aquest tirador en l’enfrontament",
+    "team_incomplete": "Equip incomplet: falten titulars",
+    "team_not_found": "Equip no trobat",
+    "next_match_played": "L’enfrontament següent del quadre ja ha començat",
+    "pools_not_complete": "Enfrontaments de poule no acabats",
+    "draw_done": "Sorteig ja fet: composició fixada (només substitució)",
+    "bracket_has_scores": "Quadre ja començat: relleus disputats",
+    "pools_have_scores": "Poules ja començades: relleus disputats"
   },
   "properties": {
     "backup_dir_label": "Carpeta de còpies dedicada (opcional)",

@@ -703,7 +703,6 @@
     "addCard": "Add a card",
     "doubleTooltip": "Simultaneous double touch (no priority in épée)",
     "double": "double",
-    "resetBout": "Reset this bout",
     "cardFor": "Card for {{name}}:",
     "reasonPlaceholder": "-- reason --",
     "teamCardsTitle": "Team “E” cards — {{team}}",
@@ -712,7 +711,7 @@
     "tableauNeedTwo": "At least 2 teams are required to generate a tableau.",
     "tableauNone": "No tableau generated.",
     "tableauGenerate": "Generate tableau ({{count}} teams)",
-    "tableauRegenerate": "Regenerate / advance the tableau",
+    "tableauRegenerate": "Redraw the tableau",
     "roundQuarterfinals": "Quarterfinals",
     "roundOf16": "Round of 16",
     "roundOf32": "Round of 32",
@@ -727,7 +726,14 @@
     "loading": "Loading…",
     "teamCount": "{{count}} teams",
     "toCompose": "Build teams",
-    "cardSaveError": "Card not saved"
+    "cardSaveError": "Card not saved",
+    "removeTouch": "Remove a touch",
+    "endRelay": "End relay",
+    "reopenRelay": "Reopen this relay to correct it",
+    "tieNeedsWinner": "Tie: designate the winner (priority minute)",
+    "priorityWinner": "Winner: {{team}}",
+    "substituteOut": "-- outgoing ({{team}}) --",
+    "substitute": "Bring in the substitute"
   },
   "kiosk": {
     "ranking": "Ranking",
@@ -1101,7 +1107,18 @@
     "password_too_short": "Password too short (min. 8 characters)",
     "no_pending_file": "No pending file",
     "wrong_password": "Wrong password",
-    "invalid_settings": "Invalid settings"
+    "invalid_settings": "Invalid settings",
+    "relay_out_of_order": "Relay out of order: finish the previous relays, or reopen this relay to correct it",
+    "no_reserve": "Team has no substitute",
+    "reserve_used": "Substitute already brought in for this match",
+    "no_later_relay": "No relay left for this fencer in the match",
+    "team_incomplete": "Incomplete team: starters missing",
+    "team_not_found": "Team not found",
+    "next_match_played": "The next tableau match has already started",
+    "pools_not_complete": "Pool matches not finished",
+    "draw_done": "Draw already done: line-ups are frozen (substitution only)",
+    "bracket_has_scores": "Tableau already started: relays played",
+    "pools_have_scores": "Pools already started: relays played"
   },
   "properties": {
     "backup_dir_label": "Dedicated backup folder (optional)",

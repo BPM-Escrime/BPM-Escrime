@@ -703,7 +703,6 @@
     "addCard": "加牌",
     "doubleTooltip": "同時互中（重劍無優先權）",
     "double": "互中",
-    "resetBout": "重設此回合",
     "cardFor": "{{name}} 的牌：",
     "reasonPlaceholder": "-- 原因 --",
     "teamCardsTitle": "隊伍「E」牌 — {{team}}",
@@ -712,7 +711,7 @@
     "tableauNeedTwo": "至少需要 2 隊才能產生淘汰表。",
     "tableauNone": "尚未產生淘汰表。",
     "tableauGenerate": "產生淘汰表（{{count}} 隊）",
-    "tableauRegenerate": "重新產生／推進淘汰表",
+    "tableauRegenerate": "重新抽籤淘汰表",
     "roundQuarterfinals": "八強",
     "roundOf16": "十六強",
     "roundOf32": "三十二強",
@@ -727,7 +726,14 @@
     "loading": "載入中…",
     "teamCount": "{{count}} 隊",
     "toCompose": "組隊",
-    "cardSaveError": "牌未儲存"
+    "cardSaveError": "牌未儲存",
+    "removeTouch": "減一劍",
+    "endRelay": "結束此棒",
+    "reopenRelay": "重開此棒以作更正",
+    "tieNeedsWinner": "平手：指定勝方（優先權一分鐘）",
+    "priorityWinner": "勝方：{{team}}",
+    "substituteOut": "-- 換出（{{team}}）--",
+    "substitute": "換入後備"
   },
   "kiosk": {
     "tbd": "待定",
@@ -1101,7 +1107,18 @@
     "password_too_short": "密碼太短（最少 8 個字元）",
     "no_pending_file": "沒有待處理的檔案",
     "wrong_password": "密碼錯誤",
-    "invalid_settings": "設定無效"
+    "invalid_settings": "設定無效",
+    "relay_out_of_order": "棒次次序錯誤：先完成之前各棒，或重開此棒以作更正",
+    "no_reserve": "隊伍沒有後備",
+    "reserve_used": "後備已在此場上場",
+    "no_later_relay": "此劍手在此場已無餘下棒次",
+    "team_incomplete": "隊伍不完整：缺少正選",
+    "team_not_found": "找不到隊伍",
+    "next_match_played": "淘汰表下一場已經開始",
+    "pools_not_complete": "分組賽未完成",
+    "draw_done": "已抽籤：陣容已鎖定（只可換人）",
+    "bracket_has_scores": "淘汰表已開始：已有棒次完成",
+    "pools_have_scores": "分組賽已開始：已有棒次完成"
   },
   "properties": {
     "backup_dir_label": "專用備份資料夾（選填）",

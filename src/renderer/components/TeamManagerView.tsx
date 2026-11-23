@@ -1,10 +1,15 @@
 /**
  * BPM - Escrime - Gestionnaire de compétitions par équipes
  * Vue: création d'équipes, affectation tireurs, poule équipes, tableau équipes, scores
+ * Écritures par le contrat seulement (docs/adr/0024, lot E3) : inscription, composition,
+ * tirages des poules et du tableau, fin de relais, réouverture, remplacement. État lu dans le
+ * bloc « teams » du moteur (useTeamCompetition) ; le compteur de touches du relais en cours
+ * est un état de l'écran, envoyé à la fin du relais (recordRelayScore). Les cartons restent
+ * hors du moteur (docs/adr/0024, « Hors de cette ADR »).
  * Licensed under GPL-3.0
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardReason, Competition, Fencer, Weapon } from '../../shared/types';
 import {
   TeamRow,
@@ -12,29 +17,20 @@ import {
   TeamBoutRow,
   TeamMatchCardRow,
 } from '../../shared/domain/teams/team.types';
-import {
-  relayOrderFor,
-  getTeamTargetRule,
-  calculateTeamPoolRanking,
-  calculateTableSize,
-  placeRankedTeamsInTable,
-  resolveTeamTableauSlot,
-} from '../../shared/domain/teams/teamCalculations';
+import { getTeamTargetRule } from '../../shared/domain/teams/teamCalculations';
 import {
   getLaserArenaBoutCap,
   isLaserArenaBoutComplete,
-  calculateLaserArenaPoolRanking,
 } from '../../shared/domain/teams/laserArenaCalculations';
 import {
-  applyRematchAvoidanceSwap,
-  buildPoolPairHistory,
-} from '../../shared/domain/teams/laserArenaBracketRules';
-import {
-  getLaserArenaPoolSchedule,
-  resolveLaserArenaSchedule,
-} from '../../shared/domain/teams/laserArenaPoolSchedules';
+  relayCap,
+  relayCumulative,
+  relayRuleOf,
+  teamFormatOf,
+} from '../../shared/domain/teams/relay';
+import { rankTeamsForTableau } from '../../shared/domain/teams/teamTableau';
 import { createCard } from '../../shared/utils/cardSystem';
-import TeamPoolView, { CardTarget } from './TeamPoolView';
+import TeamPoolView, { CardTarget, RelayHandlers } from './TeamPoolView';
 import TeamTableauView from './TeamTableauView';
 import BookSectionsModal from './BookSectionsModal';
 import {
@@ -44,14 +40,13 @@ import {
 import { useConfirm } from './ConfirmDialog';
 import { useToast } from './Toast';
 import { useTranslation } from '../hooks/useTranslation';
+import { useTeamCompetition } from '../hooks/useTeamCompetition';
 import { ipcErrorText } from '../services/ipcError';
 import { Button } from './common/Button';
 import { TriangleAlert, Users } from 'lucide-react';
 import EmptyState from './common/EmptyState';
 import { Icon } from './common/Icon';
 import { useRemoteApi } from '../api/remoteApi';
-
-const LASER_ARENA_POOL_NUMBER_BY_LETTER: Record<string, number> = { A: 1, B: 2, C: 3 };
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
@@ -65,6 +60,17 @@ interface Props {
   /** Demande de changement de phase (ex. vers la poule après génération) */
   onNavigate?: (view: TeamViewMode) => void;
 }
+
+/** Score du relais en cours, compté à l'écran jusqu'à la fin du relais */
+type Draft = { scoreA: number; scoreB: number };
+
+const relayScoresOf = (m: TeamMatchRow) =>
+  m.bouts.map(b => ({
+    order: b.boutOrder,
+    scoreA: b.scoreA,
+    scoreB: b.scoreB,
+    finished: b.status === 'finished',
+  }));
 
 export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, onNavigate }) => {
   const teamSize = competition.settings?.minTeamSize ?? 3;
@@ -81,16 +87,22 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   // score = total de points) — distinct du relais FIE classique ci-dessus,
   // qui reste le comportement par défaut pour tous les autres cas.
   const isLaserArena = competition.settings?.teamFormat === 'laser-arena';
+  const format = teamFormatOf(competition.settings);
+  const rule = relayRuleOf(competition.weapon, competition.settings);
   const boutCap = getLaserArenaBoutCap();
-  const tableId = competition.id; // Un seul tableau équipes par compétition
+  const competitionId = competition.id;
   const { confirm } = useConfirm();
   const { showToast, showUndoToast } = useToast();
   const { t } = useTranslation();
   const remote = useRemoteApi();
-  const [teams, setTeams] = useState<TeamRow[]>([]);
-  const [matches, setMatches] = useState<TeamMatchRow[]>([]);
-  const [tableauMatches, setTableauMatches] = useState<TeamMatchRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    teams,
+    poolMatches: matches,
+    tableauMatches,
+    poolRanking,
+    loading,
+    run,
+  } = useTeamCompetition(competitionId);
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
 
   // Création équipe
@@ -106,6 +118,15 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
 
   // Scoring
   const [scoringMatchId, setScoringMatchId] = useState<string | null>(null);
+  // Touches du relais en cours, par relais (non persistées : seule la fin du relais l'est)
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  // Égalité au dernier relais du tableau : vainqueur à désigner (draw_needs_winner)
+  const [pendingTie, setPendingTie] = useState<{
+    matchId: string;
+    boutId: string;
+    draft: Draft;
+  } | null>(null);
+  const sending = useRef(new Set<string>());
 
   // Cartons individuels par assaut (en mémoire pour la session — cf. limites connues en documentation)
   const [boutCards, setBoutCards] = useState<Record<string, Card[]>>({});
@@ -116,158 +137,66 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   // par rencontre (matchId), contrairement aux cartons individuels ci-dessus.
   const [matchCards, setMatchCards] = useState<Record<string, TeamMatchCardRow[]>>({});
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [t, m, tm] = await Promise.all([
-        window.electronAPI.db.getTeamsByCompetition(competition.id),
-        window.electronAPI.db.getTeamMatchesByCompetition(competition.id),
-        window.electronAPI.db.getTeamTableauMatches(competition.id, tableId),
-      ]);
-      setTeams(t as TeamRow[]);
-      setMatches(m as TeamMatchRow[]);
-      setTableauMatches(tm as TeamMatchRow[]);
+  const allMatches = useMemo(() => [...matches, ...tableauMatches], [matches, tableauMatches]);
+  const matchIdsKey = allMatches.map(m => m.id).join('|');
+
+  // Cartons (hors moteur, docs/adr/0024) : relus quand les rencontres changent
+  useEffect(() => {
+    const ids = matchIdsKey ? matchIdsKey.split('|') : [];
+    let cancelled = false;
+    void (async () => {
       // Cartons individuels des relais, persistés en base (#1086)
-      const allMatches = [...(m as TeamMatchRow[]), ...(tm as TeamMatchRow[])];
       const boutCardLists = await Promise.all(
-        allMatches.map(x => window.electronAPI.db.getTeamBoutCards?.(x.id) ?? [])
+        ids.map(id => window.electronAPI.db.getTeamBoutCards?.(id) ?? [])
       );
       const byBout: Record<string, Card[]> = {};
       for (const { boutId, card } of boutCardLists.flat()) {
         (byBout[boutId] ??= []).push(card);
       }
-      setBoutCards(byBout);
+      const map: Record<string, TeamMatchCardRow[]> = {};
       if (isLaserArena) {
-        const allMatchIds = [...(m as TeamMatchRow[]), ...(tm as TeamMatchRow[])].map(x => x.id);
         const cardsArrays = await Promise.all(
-          allMatchIds.map(id => window.electronAPI.db.getTeamMatchCards(id))
+          ids.map(id => window.electronAPI.db.getTeamMatchCards(id))
         );
-        const map: Record<string, TeamMatchCardRow[]> = {};
-        allMatchIds.forEach((id, i) => {
+        ids.forEach((id, i) => {
           map[id] = cardsArrays[i] as TeamMatchCardRow[];
         });
-        setMatchCards(map);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [competition.id, tableId, isLaserArena]);
-
-  useEffect(() => {
-    reload();
-  }, [reload]);
-
-  // Fait avancer automatiquement le tableau : crée les matchs (+ relais) dès que
-  // les deux équipes d'un round/position sont connues (têtes de série ou vainqueurs
-  // des matchs précédents), sans jamais persister les exempts (byes).
-  useEffect(() => {
-    if (loading || teams.length < 2) return;
-
-    const baseRankedTeams = isLaserArena
-      ? calculateLaserArenaPoolRanking(teams, matches).map(r => r.team)
-      : calculateTeamPoolRanking(teams, matches).map(r => r.team);
-    // Évitement de revanche (format arène uniquement) : si les équipes classées
-    // 5/6 ou 7/8 tombent contre une équipe déjà rencontrée en poule au 1er tour,
-    // échange leurs places — n'affecte que le placement dans le tableau, pas le
-    // classement de poule affiché dans l'onglet Classement.
-    const rankedTeams = isLaserArena
-      ? applyRematchAvoidanceSwap(baseRankedTeams, buildPoolPairHistory(matches))
-      : baseRankedTeams;
-    const tableSize = calculateTableSize(rankedTeams.length);
-    const placements = placeRankedTeamsInTable(rankedTeams, tableSize);
-    const teamByIdLocal = new Map(teams.map(t => [t.id, t]));
-    const matchesByKey = new Map(tableauMatches.map(m => [`${m.round}-${m.position}`, m]));
-
-    let cancelled = false;
-    const createMissing = async () => {
-      for (let round = tableSize / 2; round >= 1; round /= 2) {
-        for (let position = 0; position < round; position++) {
-          if (cancelled) return;
-          const slot = resolveTeamTableauSlot(
-            round,
-            position,
-            tableSize,
-            placements,
-            matchesByKey,
-            teamByIdLocal
-          );
-          if (!slot.match && slot.teamA && slot.teamB) {
-            const { id: matchId } = await window.electronAPI.db.createTeamTableauMatch(
-              competition.id,
-              tableId,
-              round,
-              position,
-              slot.teamA.id,
-              slot.teamB.id
-            );
-            const mainA = slot.teamA.fencers
-              .filter(f => !f.isReserve)
-              .sort((x, y) => x.teamOrder - y.teamOrder);
-            const mainB = slot.teamB.fencers
-              .filter(f => !f.isReserve)
-              .sort((x, y) => x.teamOrder - y.teamOrder);
-            if (mainA.length >= teamSize && mainB.length >= teamSize) {
-              const relayOrder = relayOrderFor(teamSize, competition.weapon);
-              for (let k = 0; k < relayOrder.length; k++) {
-                const [oi, oj] = relayOrder[k];
-                await window.electronAPI.db.createTeamBout(
-                  matchId,
-                  k + 1,
-                  mainA[oi].fencerId,
-                  mainB[oj].fencerId,
-                  isLaserArena ? boutCap.maxTouches : targetRule.stepSize
-                );
-              }
-            }
-            matchesByKey.set(`${round}-${position}`, {
-              id: matchId,
-              round,
-              position,
-              teamAId: slot.teamA.id,
-              teamBId: slot.teamB.id,
-              scoreBoutsA: 0,
-              scoreBoutsB: 0,
-              status: 'not_started',
-              winnerId: null,
-              currentBoutIndex: 0,
-              bouts: [],
-            });
-            if (!cancelled) await reload();
-          }
-        }
-      }
-    };
-    createMissing();
+      if (cancelled) return;
+      setBoutCards(byBout);
+      setMatchCards(map);
+    })();
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    loading,
-    teams,
-    matches,
-    tableauMatches,
-    competition.id,
-    tableId,
-    teamSize,
-    targetRule.stepSize,
-    isLaserArena,
-    boutCap.maxTouches,
-  ]);
+  }, [matchIdsKey, isLaserArena]);
+
+  // Relais terminés ou rouverts par le moteur : leur compteur local tombe
+  useEffect(() => {
+    setDrafts(prev => {
+      const open = new Map(
+        allMatches.flatMap(m => m.bouts.filter(b => b.status !== 'finished').map(b => [b.id, b]))
+      );
+      const next = Object.fromEntries(Object.entries(prev).filter(([id]) => open.has(id)));
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
+  }, [allMatches]);
 
   // ── Créer équipe ──────────────────────────────────────────────────────────────
   const handleCreateTeam = async () => {
     if (!newTeamName.trim()) return;
     setCreating(true);
     try {
-      await window.electronAPI.db.createTeam(
-        competition.id,
-        newTeamName.trim(),
-        newTeamClub.trim() || newTeamName.trim()
-      );
-      setNewTeamName('');
-      setNewTeamClub('');
-      await reload();
+      const club = newTeamClub.trim();
+      const out = await run('registerTeam', {
+        competitionId,
+        name: newTeamName.trim(),
+        ...(club ? { club } : {}),
+      });
+      if (out) {
+        setNewTeamName('');
+        setNewTeamClub('');
+      }
     } finally {
       setCreating(false);
     }
@@ -275,21 +204,20 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
 
   // ── Supprimer équipe ──────────────────────────────────────────────────────────
   const handleDeleteTeam = async (teamId: string) => {
-    await window.electronAPI.db.deleteTeam(teamId);
-    await reload();
+    await run('unregisterTeam', { competitionId, teamId });
   };
 
   // ── Affecter tireur ───────────────────────────────────────────────────────────
   const handleUpsertFencer = async () => {
     if (!editTeamId || !selectedFencerId) return;
-    await window.electronAPI.db.upsertTeamFencer(
-      editTeamId,
-      selectedFencerId,
-      selectedOrder,
-      selectedIsReserve
-    );
-    setSelectedFencerId('');
-    await reload();
+    const out = await run('assignTeamFencer', {
+      competitionId,
+      teamId: editTeamId,
+      fencerId: selectedFencerId,
+      teamOrder: selectedOrder,
+      isReserve: selectedIsReserve,
+    });
+    if (out) setSelectedFencerId('');
   };
 
   const handleRemoveFencer = async (
@@ -298,150 +226,108 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     teamOrder: number,
     isReserve: boolean
   ) => {
-    await window.electronAPI.db.removeTeamFencer(teamId, fencerId);
-    await reload();
+    const out = await run('unassignTeamFencer', { competitionId, teamId, fencerId });
+    if (!out) return;
     // Retrait annulable sans confirmation modale (#1535)
     showUndoToast(t('teamManager.fencer_removed'), () => {
-      void window.electronAPI.db
-        .upsertTeamFencer(teamId, fencerId, teamOrder, isReserve)
-        .then(reload);
+      void run('assignTeamFencer', { competitionId, teamId, fencerId, teamOrder, isReserve });
     });
   };
 
-  // ── Générer poule (round-robin) ───────────────────────────────────────────────
+  // ── Tirer les poules (moteur : relais FIE tous contre tous, arène 8 ou 12 équipes) ──
   const handleGeneratePool = async () => {
     if (teams.length < 2) return;
-    if (matches.length > 0 && !(await confirm(t('teams.confirmRegenerate')))) return;
-
-    if (isLaserArena) {
-      // Calendrier de poule figé du règlement (uniquement 8 ou 12 équipes) —
-      // aucune génération automatique pour un autre effectif : l'organisateur
-      // reste sur la saisie manuelle des équipes.
-      const schedule = getLaserArenaPoolSchedule(teams.length);
-      if (!schedule) {
-        showToast(
-          `Le calendrier de poule figé "Sabre Laser équipe" n'est défini que pour 8 ou 12 équipes (actuellement ${teams.length}).`,
-          'error'
-        );
-        return;
-      }
-      const resolved = resolveLaserArenaSchedule(teams, schedule);
-      for (const rm of resolved) {
-        const { id: matchId } = await window.electronAPI.db.createTeamMatch(
-          competition.id,
-          LASER_ARENA_POOL_NUMBER_BY_LETTER[rm.pool] ?? 1,
-          rm.teamA.id,
-          rm.teamB.id,
-          rm.round
-        );
-        const mainA = rm.teamA.fencers
-          .filter(f => !f.isReserve)
-          .sort((x, y) => x.teamOrder - y.teamOrder);
-        const mainB = rm.teamB.fencers
-          .filter(f => !f.isReserve)
-          .sort((x, y) => x.teamOrder - y.teamOrder);
-        if (mainA.length >= teamSize && mainB.length >= teamSize) {
-          const relayOrder = relayOrderFor(teamSize, competition.weapon);
-          for (let k = 0; k < relayOrder.length; k++) {
-            const [oi, oj] = relayOrder[k];
-            await window.electronAPI.db.createTeamBout(
-              matchId,
-              k + 1,
-              mainA[oi].fencerId,
-              mainB[oj].fencerId,
-              boutCap.maxTouches
-            );
-          }
-        }
-      }
-      await reload();
-      onNavigate?.('pool');
-      return;
-    }
-
-    for (let i = 0; i < teams.length; i++) {
-      for (let j = i + 1; j < teams.length; j++) {
-        const a = teams[i];
-        const b = teams[j];
-        const { id: matchId } = await window.electronAPI.db.createTeamMatch(
-          competition.id,
-          1,
-          a.id,
-          b.id
-        );
-
-        const mainA = a.fencers.filter(f => !f.isReserve).sort((x, y) => x.teamOrder - y.teamOrder);
-        const mainB = b.fencers.filter(f => !f.isReserve).sort((x, y) => x.teamOrder - y.teamOrder);
-
-        if (mainA.length >= teamSize && mainB.length >= teamSize) {
-          const relayOrder = relayOrderFor(teamSize, competition.weapon);
-          for (let k = 0; k < relayOrder.length; k++) {
-            const [oi, oj] = relayOrder[k];
-            await window.electronAPI.db.createTeamBout(
-              matchId,
-              k + 1,
-              mainA[oi].fencerId,
-              mainB[oj].fencerId,
-              targetRule.stepSize
-            );
-          }
-        }
-      }
-    }
-    await reload();
-    onNavigate?.('pool');
+    const replace = matches.length > 0;
+    if (replace && !(await confirm(t('teams.confirmRegenerate')))) return;
+    const out = await run('generateTeamPools', { competitionId, ...(replace ? { replace } : {}) });
+    if (out) onNavigate?.('pool');
   };
 
-  // ── Scorer un assaut (arme-aware) ─────────────────────────────────────────────
+  // ── Tirer le tableau (action explicite : plus de création à l'ouverture) ──────
+  const handleGenerateTableau = async () => {
+    const replace = tableauMatches.length > 0;
+    if (replace && !(await confirm(t('teams.confirmRegenerate')))) return;
+    await run('generateTeamTableau', { competitionId, ...(replace ? { replace } : {}) });
+  };
+
+  // ── Relais en cours : touches comptées à l'écran, fin envoyée au moteur ───────
+  const endRelay = async (matchId: string, bout: TeamBoutRow, draft: Draft, winner?: 'A' | 'B') => {
+    if (sending.current.has(bout.id)) return;
+    sending.current.add(bout.id);
+    try {
+      const out = await run(
+        'recordRelayScore',
+        {
+          competitionId,
+          matchId,
+          relay: bout.boutOrder,
+          scoreA: draft.scoreA,
+          scoreB: draft.scoreB,
+          ...(winner ? { winner } : {}),
+        },
+        ['draw_needs_winner']
+      );
+      if (out) setPendingTie(null);
+    } catch {
+      // Égalité au dernier relais du tableau : le moteur demande le vainqueur
+      setPendingTie({ matchId, boutId: bout.id, draft });
+    } finally {
+      sending.current.delete(bout.id);
+    }
+  };
+
   // side='double' : touche double simultanée (épée uniquement, pas de priorité).
-  // points : 1 par défaut, ou valeur de zone A/B/C (1/3/5) en Sabre Laser mode points.
-  const handleScoreBout = async (
-    bout: TeamBoutRow,
-    side: 'A' | 'B' | 'double',
-    points: number = 1
-  ) => {
-    const match = [...matches, ...tableauMatches].find(m => m.bouts.some(b => b.id === bout.id));
-    if (!match) return;
-
-    const newScoreA = side === 'A' || side === 'double' ? bout.scoreA + points : bout.scoreA;
-    const newScoreB = side === 'B' || side === 'double' ? bout.scoreB + points : bout.scoreB;
-
-    let maxReached: boolean;
-    let winnerId: string | null;
-
-    if (isLaserArena) {
-      // Format arène : chaque assaut est indépendant, plafonné à 5 touches
-      // valides cumulées (les deux côtés) — pas de cible d'équipe progressive.
-      // Le plafond de 3 minutes s'applique côté saisie temps réel (tablette).
-      maxReached = isLaserArenaBoutComplete(newScoreA, newScoreB, 0, boutCap);
-      winnerId = maxReached
-        ? newScoreA > newScoreB
-          ? bout.fencerAId
-          : newScoreB > newScoreA
-            ? bout.fencerBId
-            : null
-        : null;
-    } else {
-      // Cible progressive FIE : le relais s'arrête quand le cumul d'équipe atteint
-      // le palier (5-10-15…) de ce relais, ou la cible finale de la rencontre.
-      const priorBouts = match.bouts.filter(b => b.boutOrder < bout.boutOrder);
-      const cumulA = priorBouts.reduce((s, b) => s + b.scoreA, 0) + newScoreA;
-      const cumulB = priorBouts.reduce((s, b) => s + b.scoreB, 0) + newScoreB;
-      const cap = Math.min(bout.boutOrder * targetRule.stepSize, targetRule.target);
-      maxReached = cumulA >= cap || cumulB >= cap;
-      winnerId = maxReached
-        ? cumulA > cumulB
-          ? bout.fencerAId
-          : cumulB > cumulA
-            ? bout.fencerBId
-            : null
-        : null;
-    }
-
-    const newStatus = maxReached ? 'finished' : 'in_progress';
-    await window.electronAPI.db.updateTeamBout(bout.id, newScoreA, newScoreB, newStatus, winnerId);
-    await reload();
+  // points : 1 par défaut, valeur de zone A/B/C (1/3/5) en Sabre Laser mode points, -1 pour
+  // retirer une touche. Palier du relais atteint : fin du relais envoyée.
+  const handleScoreBout = (bout: TeamBoutRow, side: 'A' | 'B' | 'double', points: number = 1) => {
+    const match = allMatches.find(m => m.bouts.some(b => b.id === bout.id));
+    if (!match || bout.status === 'finished' || sending.current.has(bout.id)) return;
+    const cur = drafts[bout.id] ?? { scoreA: bout.scoreA, scoreB: bout.scoreB };
+    const before = isLaserArena
+      ? { scoreA: 0, scoreB: 0 }
+      : relayCumulative(relayScoresOf(match), bout.boutOrder - 1);
+    const cap = relayCap(bout.boutOrder, format, rule);
+    const clamp = (v: number, prior: number) => Math.max(0, Math.min(v, cap - prior));
+    const next: Draft = {
+      scoreA: clamp(cur.scoreA + (side === 'B' ? 0 : points), before.scoreA),
+      scoreB: clamp(cur.scoreB + (side === 'A' ? 0 : points), before.scoreB),
+    };
+    setDrafts(prev => ({ ...prev, [bout.id]: next }));
+    setPendingTie(null);
+    const complete = isLaserArena
+      ? isLaserArenaBoutComplete(next.scoreA, next.scoreB, 0, boutCap)
+      : before.scoreA + next.scoreA >= cap || before.scoreB + next.scoreB >= cap;
+    if (complete && points > 0) void endRelay(match.id, bout, next);
   };
+
+  const relayHandlers: RelayHandlers = {
+    onEndRelay: (matchId, bout) =>
+      void endRelay(matchId, bout, drafts[bout.id] ?? { scoreA: bout.scoreA, scoreB: bout.scoreB }),
+    onReopenRelay: matchId => void run('reopenRelay', { competitionId, matchId }),
+    pendingTieMatchId: pendingTie?.matchId ?? null,
+    onResolveTie: winner => {
+      if (!pendingTie) return;
+      const bout = allMatches
+        .find(m => m.id === pendingTie.matchId)
+        ?.bouts.find(b => b.id === pendingTie.boutId);
+      if (bout) void endRelay(pendingTie.matchId, bout, pendingTie.draft, winner);
+    },
+    onSubstitute: (matchId, teamId, outFencerId) =>
+      void run('substituteTeamFencer', { competitionId, matchId, teamId, outFencerId }),
+  };
+
+  // Relais en cours affichés avec le compteur de l'écran
+  const withDrafts = (list: TeamMatchRow[]) =>
+    list.map(m =>
+      m.bouts.some(b => drafts[b.id])
+        ? {
+            ...m,
+            bouts: m.bouts.map(b =>
+              b.status !== 'finished' && drafts[b.id] ? { ...b, ...drafts[b.id] } : b
+            ),
+          }
+        : m
+    );
 
   // ── Carton d'équipe "E" (format arène Sabre Laser, persisté, traçabilité seule) ──
   const handleAddTeamCard = async (
@@ -449,8 +335,18 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     teamId: string,
     type: 'white' | 'yellow' | 'red' | 'black'
   ) => {
-    await window.electronAPI.db.createTeamMatchCard(matchId, teamId, type, 'late_designation');
-    await reload();
+    const card = await window.electronAPI.db.createTeamMatchCard(
+      matchId,
+      teamId,
+      type,
+      'late_designation'
+    );
+    if (card) {
+      setMatchCards(prev => ({
+        ...prev,
+        [matchId]: [...(prev[matchId] ?? []), card as TeamMatchCardRow],
+      }));
+    }
   };
 
   // ── Envoyer une rencontre sur une arène pour saisie tablette temps réel ──────
@@ -468,15 +364,10 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     }
   };
 
-  const handleResetBout = async (bout: TeamBoutRow) => {
-    await window.electronAPI.db.updateTeamBout(bout.id, 0, 0, 'not_started', null);
-    await reload();
-  };
-
   // ── Carton (arme-aware, escalade selon les cartons déjà reçus par ce tireur) ──
   const handleAddCard = async (matchId: string) => {
     if (!cardTarget || !selectedReason) return;
-    const match = [...matches, ...tableauMatches].find(m => m.id === matchId);
+    const match = allMatches.find(m => m.id === matchId);
     const previousCards = Object.entries(boutCards)
       .filter(([boutId]) => match?.bouts.some(b => b.id === boutId))
       .flatMap(([, cards]) => cards)
@@ -508,11 +399,17 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     return f ? `${f.lastName} ${f.firstName ?? ''}`.trim() : id.slice(0, 8);
   };
 
-  const fieRankings = calculateTeamPoolRanking(teams, matches);
-  const laserRankings = isLaserArena ? calculateLaserArenaPoolRanking(teams, matches) : [];
-  const rankedTeamsForBracket = isLaserArena
-    ? laserRankings.map(r => r.team)
-    : fieRankings.map(r => r.team);
+  // Classement de poule du moteur (relais FIE par victoires, arène par points)
+  const teamById = new Map(teams.map(team => [team.id, team]));
+  const rankings = poolRanking
+    .map(r => ({ ...r, team: teamById.get(r.teamId) }))
+    .filter((r): r is typeof r & { team: TeamRow } => !!r.team);
+  const rankedTeamsForBracket = rankings.map(r => r.team);
+  // Placement affiché du tableau (exempts, cases en attente) : même règle que le moteur
+  const bracketSeeding = useMemo(
+    () => rankTeamsForTableau(teams, matches, format),
+    [teams, matches, format]
+  );
 
   const canExportPdf =
     (view === 'pool' && matches.length > 0) ||
@@ -543,7 +440,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   };
 
   // Résultats pour la fédération (#1949) : classement final, noms d'équipe et licences conservés
-  const handleExportFederal = async (format: 'fff' | 'xml') => {
+  const handleExportFederal = async (kind: 'fff' | 'xml') => {
     try {
       const [{ computeTeamFinalRanking }, fff, xml] = await Promise.all([
         import('../../shared/utils/pdfExport/teamPdf'),
@@ -561,7 +458,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           .filter((f): f is Fencer => !!f),
       }));
       const blob =
-        format === 'fff'
+        kind === 'fff'
           ? new Blob(
               [fff.encodeFFFWin1252(fff.exportTeamResultsToFFF(competition, results)) as BlobPart],
               { type: 'text/plain;charset=windows-1252' }
@@ -573,7 +470,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `resultats_${competition.title.replace(/[^a-z0-9]/gi, '_')}.${format}`;
+      a.download = `resultats_${competition.title.replace(/[^a-z0-9]/gi, '_')}.${kind}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -830,7 +727,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
       {view === 'pool' && (
         <TeamPoolView
           teams={teams}
-          matches={matches}
+          matches={withDrafts(matches)}
           weapon={competition.weapon}
           targetRule={targetRule}
           isEpee={isEpee}
@@ -839,7 +736,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           scoringMatchId={scoringMatchId}
           onToggleScoring={id => setScoringMatchId(scoringMatchId === id ? null : id)}
           onScoreBout={handleScoreBout}
-          onResetBout={handleResetBout}
+          relay={relayHandlers}
           boutCards={boutCards}
           cardTarget={cardTarget}
           onSetCardTarget={setCardTarget}
@@ -859,8 +756,8 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
       {view === 'tableau' && (
         <TeamTableauView
           teams={teams}
-          rankedTeams={rankedTeamsForBracket}
-          tableauMatches={tableauMatches}
+          rankedTeams={bracketSeeding}
+          tableauMatches={withDrafts(tableauMatches)}
           weapon={competition.weapon}
           targetRule={targetRule}
           isEpee={isEpee}
@@ -869,14 +766,14 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           scoringMatchId={scoringMatchId}
           onToggleScoring={id => setScoringMatchId(scoringMatchId === id ? null : id)}
           onScoreBout={handleScoreBout}
-          onResetBout={handleResetBout}
+          relay={relayHandlers}
           boutCards={boutCards}
           cardTarget={cardTarget}
           onSetCardTarget={setCardTarget}
           selectedReason={selectedReason}
           onSelectReason={setSelectedReason}
           onAddCard={handleAddCard}
-          onGenerate={reload}
+          onGenerate={() => void handleGenerateTableau()}
           isLaserArena={isLaserArena}
           boutCap={boutCap}
           matchCards={matchCards}
@@ -888,13 +785,13 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
       {/* ── Vue CLASSEMENT ── */}
       {view === 'ranking' && isLaserArena && (
         <div>
-          {laserRankings.length > 0 && (
+          {rankings.length > 0 && (
             <div className="team-manager-view-1">
               <Button
                 style={{ fontSize: '0.8rem', padding: '0.3rem 0.7rem' }}
                 onClick={() => {
                   const header = 'Rang,Équipe,Club,V,D,Points+,Points-,Ratio,Égalité\n';
-                  const rows = laserRankings
+                  const rows = rankings
                     .map((r, i) =>
                       [
                         i + 1,
@@ -924,7 +821,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
               </Button>
             </div>
           )}
-          {laserRankings.length === 0 ? (
+          {rankings.length === 0 ? (
             <div className="text-center text-gray-400 py-10">{t('teamManager.no_match')}</div>
           ) : (
             <table className="min-w-full text-sm">
@@ -960,7 +857,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {laserRankings.map((r, i) => (
+                {rankings.map((r, i) => (
                   <tr
                     key={r.team.id}
                     className={i === 0 ? 'bg-yellow-50' : 'hover:bg-gray-50'}
@@ -1004,13 +901,13 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
       )}
       {view === 'ranking' && !isLaserArena && (
         <div>
-          {fieRankings.length > 0 && (
+          {rankings.length > 0 && (
             <div className="team-manager-view-1">
               <Button
                 style={{ fontSize: '0.8rem', padding: '0.3rem 0.7rem' }}
                 onClick={() => {
                   const header = 'Rang,Équipe,Club,V,D,RelaisG,RelaisP,Ind.,Touches+,Touches-\n';
-                  const rows = fieRankings
+                  const rows = rankings
                     .map((r, i) =>
                       [
                         i + 1,
@@ -1018,9 +915,9 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                         `"${r.team.club ?? ''}"`,
                         r.victories,
                         r.defeats,
-                        r.boutsWon,
-                        r.boutsLost,
-                        r.boutsWon - r.boutsLost,
+                        r.relaysWon,
+                        r.relaysLost,
+                        r.relaysWon - r.relaysLost,
                         r.pointsFor,
                         r.pointsAgainst,
                       ].join(',')
@@ -1051,7 +948,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
               </Button>
             </div>
           )}
-          {fieRankings.length === 0 ? (
+          {rankings.length === 0 ? (
             <div className="text-center text-gray-400 py-10">{t('teamManager.no_match')}</div>
           ) : (
             <table className="min-w-full text-sm">
@@ -1099,7 +996,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {fieRankings.map((r, i) => (
+                {rankings.map((r, i) => (
                   <tr key={r.team.id} className={i === 0 ? 'bg-yellow-50' : 'hover:bg-gray-50'}>
                     <td className="px-3 py-2 text-center font-bold text-gray-400">{i + 1}</td>
                     <td className="px-3 py-2 font-semibold text-gray-900">
@@ -1110,13 +1007,13 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                       {r.victories}
                     </td>
                     <td className="px-3 py-2 text-center text-red-500">{r.defeats}</td>
-                    <td className="px-3 py-2 text-center">{r.boutsWon}</td>
-                    <td className="px-3 py-2 text-center">{r.boutsLost}</td>
+                    <td className="px-3 py-2 text-center">{r.relaysWon}</td>
+                    <td className="px-3 py-2 text-center">{r.relaysLost}</td>
                     <td
-                      className={`px-3 py-2 text-center font-bold ${r.boutsWon - r.boutsLost >= 0 ? 'text-green-600' : 'text-red-500'}`}
+                      className={`px-3 py-2 text-center font-bold ${r.relaysWon - r.relaysLost >= 0 ? 'text-green-600' : 'text-red-500'}`}
                     >
-                      {r.boutsWon - r.boutsLost > 0 ? '+' : ''}
-                      {r.boutsWon - r.boutsLost}
+                      {r.relaysWon - r.relaysLost > 0 ? '+' : ''}
+                      {r.relaysWon - r.relaysLost}
                     </td>
                     <td className="px-3 py-2 text-center font-mono">{r.pointsFor}</td>
                     <td className="px-3 py-2 text-center font-mono text-gray-400">

@@ -703,7 +703,6 @@
     "addCard": "Añadir una tarjeta",
     "doubleTooltip": "Tocado doble simultáneo (sin prioridad en espada)",
     "double": "doble",
-    "resetBout": "Reiniciar este asalto",
     "cardFor": "Tarjeta para {{name}}:",
     "reasonPlaceholder": "-- motivo --",
     "teamCardsTitle": "Tarjetas de equipo «E» — {{team}}",
@@ -712,7 +711,7 @@
     "tableauNeedTwo": "Se necesitan al menos 2 equipos para generar un cuadro.",
     "tableauNone": "Ningún cuadro generado.",
     "tableauGenerate": "Generar el cuadro ({{count}} equipos)",
-    "tableauRegenerate": "Regenerar / avanzar el cuadro",
+    "tableauRegenerate": "Volver a sortear el cuadro",
     "roundQuarterfinals": "Cuartos de final",
     "roundOf16": "Octavos de final",
     "roundOf32": "Dieciseisavos de final",
@@ -727,7 +726,14 @@
     "loading": "Cargando…",
     "teamCount": "{{count}} equipos",
     "toCompose": "Formar equipos",
-    "cardSaveError": "Tarjeta no guardada"
+    "cardSaveError": "Tarjeta no guardada",
+    "removeTouch": "Quitar un tocado",
+    "endRelay": "Terminar el relevo",
+    "reopenRelay": "Reabrir este relevo para corregirlo",
+    "tieNeedsWinner": "Empate: designar al ganador (minuto con prioridad)",
+    "priorityWinner": "Ganador: {{team}}",
+    "substituteOut": "-- sale ({{team}}) --",
+    "substitute": "Hacer entrar al suplente"
   },
   "kiosk": {
     "tbd": "Por determinar",
@@ -1101,7 +1107,18 @@
     "password_too_short": "Contraseña demasiado corta (mín. 8 caracteres)",
     "no_pending_file": "Ningún archivo pendiente",
     "wrong_password": "Contraseña incorrecta",
-    "invalid_settings": "Ajustes no válidos"
+    "invalid_settings": "Ajustes no válidos",
+    "relay_out_of_order": "Relevo fuera de orden: terminar los relevos anteriores o reabrir este relevo para corregirlo",
+    "no_reserve": "Equipo sin suplente",
+    "reserve_used": "El suplente ya ha entrado en el encuentro",
+    "no_later_relay": "No quedan relevos para este tirador en el encuentro",
+    "team_incomplete": "Equipo incompleto: faltan titulares",
+    "team_not_found": "Equipo no encontrado",
+    "next_match_played": "El siguiente encuentro del cuadro ya ha empezado",
+    "pools_not_complete": "Encuentros de poule no terminados",
+    "draw_done": "Sorteo ya hecho: composición fijada (solo sustitución)",
+    "bracket_has_scores": "Cuadro ya empezado: relevos disputados",
+    "pools_have_scores": "Poules ya empezadas: relevos disputados"
   },
   "properties": {
     "backup_dir_label": "Carpeta de copias dedicada (opcional)",

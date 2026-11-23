@@ -703,7 +703,6 @@
     "addCard": "Ouzhpennañ ur gartenn",
     "doubleTooltip": "Taol doubl war un dro (priorelezh ebet er c'hleze-beg)",
     "double": "doubl",
-    "resetBout": "Adderaouekaat an emgann-mañ",
     "cardFor": "Kartenn evit {{name}} :",
     "reasonPlaceholder": "-- abeg --",
     "teamCardsTitle": "Kartennoù skipailh « E » — {{team}}",
@@ -712,7 +711,7 @@
     "tableauNeedTwo": "Ezhomm 'zo da 2 skipailh d'an nebeutañ evit krouiñ un daolenn.",
     "tableauNone": "Taolenn ebet krouet.",
     "tableauGenerate": "Krouiñ an daolenn ({{count}} skipailh)",
-    "tableauRegenerate": "Adkrouiñ / lakaat an daolenn da vont war-raok",
+    "tableauRegenerate": "Tennañ an daolenn en-dro",
     "roundQuarterfinals": "Kardoù-finalenn",
     "roundOf16": "Eizhvedoù-finalenn",
     "roundOf32": "C'hwezekvedoù-finalenn",
@@ -727,7 +726,14 @@
     "loading": "O kargañ…",
     "teamCount": "{{count}} skipailh",
     "toCompose": "Sevel ar skipailhoù",
-    "cardSaveError": "N'eo ket bet enrollet ar c'hartenn"
+    "cardSaveError": "N'eo ket bet enrollet ar c'hartenn",
+    "removeTouch": "Lemel un taol",
+    "endRelay": "Echuiñ ar redadeg",
+    "reopenRelay": "Addigeriñ ar redadeg-mañ evit he reizhañ",
+    "tieNeedsWinner": "Kevatalder : diskouez an trec’haour (munutenn gant kentwir)",
+    "priorityWinner": "Trec’haour : {{team}}",
+    "substituteOut": "-- o vont kuit ({{team}}) --",
+    "substitute": "Lakaat an erlec’hier da vont e-barzh"
   },
   "kiosk": {
     "tbd": "Da benn-diviz",
@@ -1101,7 +1107,18 @@
     "password_too_short": "Re verr eo ar ger-tremen (8 arouezenn d'an nebeutañ)",
     "no_pending_file": "Restr ebet o c'hortoz",
     "wrong_password": "Ger-tremen fall",
-    "invalid_settings": "Arventennoù direizh"
+    "invalid_settings": "Arventennoù direizh",
+    "relay_out_of_order": "Redadeg e-maez urzh : echuiñ ar redadegoù kent, pe addigeriñ ar redadeg-mañ evit he reizhañ",
+    "no_reserve": "Skipailh hep erlec’hier",
+    "reserve_used": "Erlec’hier aet e-barzh an emgav dija",
+    "no_later_relay": "Redadeg ebet ken evit an emgann-mañ en emgav",
+    "team_incomplete": "Skipailh diglok : tituler o vankout",
+    "team_not_found": "N’eo ket bet kavet ar skipailh",
+    "next_match_played": "Kroget eo an emgav da-heul en daolenn dija",
+    "pools_not_complete": "Emgavioù ar poull n’int ket echu",
+    "draw_done": "Tennadenn graet dija : skipailhoù stanket (erlec’hiañ hepken)",
+    "bracket_has_scores": "Daolenn kroget dija : redadegoù c’hoariet",
+    "pools_have_scores": "Poulloù kroget dija : redadegoù c’hoariet"
   },
   "properties": {
     "backup_dir_label": "Teuliad gopioù dedennet (diret)",

@@ -145,55 +145,10 @@ export const dbApi = {
   // Équipes
   createTeam: (competitionId: string, name: string, club: string) =>
     ipcRenderer.invoke('db:createTeam', competitionId, name, club),
-  getTeamsByCompetition: (competitionId: string) =>
-    ipcRenderer.invoke('db:getTeamsByCompetition', competitionId),
-  deleteTeam: (teamId: string) => ipcRenderer.invoke('db:deleteTeam', teamId),
+  // Écriture des équipes par le contrat (docs/adr/0024, lot E3) ; restent l'inscription
+  // fédérale (federalCreation, lot N) et les cartons, hors du moteur
   upsertTeamFencer: (teamId: string, fencerId: string, teamOrder: number, isReserve: boolean) =>
     ipcRenderer.invoke('db:upsertTeamFencer', teamId, fencerId, teamOrder, isReserve),
-  removeTeamFencer: (teamId: string, fencerId: string) =>
-    ipcRenderer.invoke('db:removeTeamFencer', teamId, fencerId),
-  createTeamMatch: (
-    competitionId: string,
-    poolNumber: number,
-    teamAId: string,
-    teamBId: string,
-    round?: number
-  ) => ipcRenderer.invoke('db:createTeamMatch', competitionId, poolNumber, teamAId, teamBId, round),
-  getTeamMatchesByCompetition: (competitionId: string) =>
-    ipcRenderer.invoke('db:getTeamMatchesByCompetition', competitionId),
-  createTeamBout: (
-    matchId: string,
-    boutOrder: number,
-    fencerAId: string,
-    fencerBId: string,
-    maxScore: number
-  ) => ipcRenderer.invoke('db:createTeamBout', matchId, boutOrder, fencerAId, fencerBId, maxScore),
-  updateTeamBout: (
-    boutId: string,
-    scoreA: number,
-    scoreB: number,
-    status: string,
-    winnerId: string | null
-  ) => ipcRenderer.invoke('db:updateTeamBout', boutId, scoreA, scoreB, status, winnerId),
-  createTeamTableauMatch: (
-    competitionId: string,
-    tableId: string,
-    round: number,
-    position: number,
-    teamAId: string,
-    teamBId: string
-  ) =>
-    ipcRenderer.invoke(
-      'db:createTeamTableauMatch',
-      competitionId,
-      tableId,
-      round,
-      position,
-      teamAId,
-      teamBId
-    ),
-  getTeamTableauMatches: (competitionId: string, tableId: string) =>
-    ipcRenderer.invoke('db:getTeamTableauMatches', competitionId, tableId),
   createTeamMatchCard: (
     matchId: string,
     teamId: string,

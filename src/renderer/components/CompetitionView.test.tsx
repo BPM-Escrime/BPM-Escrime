@@ -371,11 +371,12 @@ describe('CompetitionView', () => {
     });
 
     it('« Composer les équipes » ouvre la phase équipes intégrée (sans modale)', async () => {
-      const calls = mockElectronAPI([1, 2, 3, 4].map(n => fencer(n)));
+      mockElectronAPI([1, 2, 3, 4].map(n => fencer(n)));
       renderView(teamComp());
       await screen.findByText('Nom1');
       fireEvent.click(screen.getByRole('button', { name: /Composer les équipes/ }));
-      await waitFor(() => expect(calls.getTeamsByCompetition?.length).toBeGreaterThan(0));
+      // Écran des équipes : état lu par le contrat (docs/adr/0024, lot E3)
+      expect(await screen.findByPlaceholderText('Ex : équipe A')).toBeInTheDocument();
       const active = document.querySelector('.phase-step-active');
       expect(active?.textContent).toMatch(/Équipes(fait|en cours|à faire|bloqué)$/);
       expect(document.querySelector('.fixed.inset-0')).toBeNull();

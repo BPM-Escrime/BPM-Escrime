@@ -703,7 +703,6 @@
     "addCard": "Karte hinzufügen",
     "doubleTooltip": "Gleichzeitiger Doppeltreffer (kein Vorrecht im Degen)",
     "double": "Doppel",
-    "resetBout": "Dieses Gefecht zurücksetzen",
     "cardFor": "Karte für {{name}}:",
     "reasonPlaceholder": "-- Grund --",
     "teamCardsTitle": "Mannschaftskarten „E“ — {{team}}",
@@ -712,7 +711,7 @@
     "tableauNeedTwo": "Für ein Tableau sind mindestens 2 Mannschaften nötig.",
     "tableauNone": "Kein Tableau erstellt.",
     "tableauGenerate": "Tableau erstellen ({{count}} Mannschaften)",
-    "tableauRegenerate": "Tableau neu erstellen / fortschreiben",
+    "tableauRegenerate": "Tableau neu auslosen",
     "roundQuarterfinals": "Viertelfinale",
     "roundOf16": "Achtelfinale",
     "roundOf32": "Sechzehntelfinale",
@@ -727,7 +726,14 @@
     "loading": "Wird geladen…",
     "teamCount": "{{count}} Mannschaften",
     "toCompose": "Mannschaften bilden",
-    "cardSaveError": "Karte nicht gespeichert"
+    "cardSaveError": "Karte nicht gespeichert",
+    "removeTouch": "Treffer abziehen",
+    "endRelay": "Staffel beenden",
+    "reopenRelay": "Diese Staffel zur Korrektur wieder öffnen",
+    "tieNeedsWinner": "Gleichstand: Sieger bestimmen (Minute mit Priorität)",
+    "priorityWinner": "Sieger: {{team}}",
+    "substituteOut": "-- auswechseln ({{team}}) --",
+    "substitute": "Ersatzfechter einwechseln"
   },
   "kiosk": {
     "ranking": "Rangliste",
@@ -1101,7 +1107,18 @@
     "password_too_short": "Passwort zu kurz (mind. 8 Zeichen)",
     "no_pending_file": "Keine Datei ausstehend",
     "wrong_password": "Falsches Passwort",
-    "invalid_settings": "Ungültige Einstellungen"
+    "invalid_settings": "Ungültige Einstellungen",
+    "relay_out_of_order": "Staffel außer der Reihe: vorherige Staffeln beenden oder diese Staffel zur Korrektur wieder öffnen",
+    "no_reserve": "Mannschaft ohne Ersatzfechter",
+    "reserve_used": "Ersatzfechter in dieser Begegnung bereits eingewechselt",
+    "no_later_relay": "Keine Staffel mehr für diesen Fechter in der Begegnung",
+    "team_incomplete": "Mannschaft unvollständig: Stammfechter fehlen",
+    "team_not_found": "Mannschaft nicht gefunden",
+    "next_match_played": "Die nächste Begegnung im Tableau hat bereits begonnen",
+    "pools_not_complete": "Pool-Begegnungen nicht beendet",
+    "draw_done": "Auslosung bereits erfolgt: Aufstellung fest (nur Auswechslung)",
+    "bracket_has_scores": "Tableau bereits begonnen: Staffeln gefochten",
+    "pools_have_scores": "Pools bereits begonnen: Staffeln gefochten"
   },
   "properties": {
     "backup_dir_label": "Eigener Sicherungsordner (optional)",
