@@ -42,3 +42,81 @@
 .comp-header.comp-header-menu-open {
   z-index: calc(var(--z-sticky, 200) + 1);
 }
+
+/* Engrenage « Organisation » avant l'appel : plan de salle, feuille de route */
+.phase-nav-org {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-secondary, inherit);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    transform var(--duration-base) ease;
+}
+
+.phase-nav-org:hover,
+.phase-nav-org:focus-visible {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.phase-nav-org:hover svg {
+  transform: rotate(45deg);
+  transition: transform var(--duration-base) ease;
+}
+
+.organization-intro {
+  margin: 0 0 1rem;
+  color: var(--color-text-secondary, inherit);
+}
+
+.organization-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.organization-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-surface);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.organization-shortcut:hover,
+.organization-shortcut:focus-visible {
+  border-color: var(--color-primary);
+}
+
+.organization-shortcut svg {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.organization-shortcut-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.875rem;
+}
+
+.organization-shortcut-text span {
+  color: var(--color-text-secondary, inherit);
+  font-size: 0.8125rem;
+}

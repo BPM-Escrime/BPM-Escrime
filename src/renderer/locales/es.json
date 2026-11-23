@@ -2748,6 +2748,10 @@
   },
   "competitionNav": {
     "back": "Volver",
+    "organization": "Organización",
+    "organization_intro": "Preparar la prueba: sala e información para los tiradores.",
+    "organization_arena_desc": "Disponer las pistas y arenas en la sala",
+    "organization_roadmap_desc": "Horarios, lugar e instrucciones de la prueba",
     "quest": "Ronda Quest",
     "generate": "Preparar las poules",
     "planning": "Planificación",

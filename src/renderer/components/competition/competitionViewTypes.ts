@@ -11,4 +11,7 @@ export interface CompetitionViewProps {
   onPhaseApplied?: () => void;
   onRemoteServerChange?: (url: string | null, arenaCount: number) => void;
   onOpenCompetition?: (competitionId: string) => void;
+  /** Page Organisation : plan de salle (arènes) et feuille de route, ouverts par App */
+  onOpenArenaPlanner?: () => void;
+  onOpenRoadmap?: () => void;
 }
