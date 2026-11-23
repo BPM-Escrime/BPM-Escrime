@@ -56,6 +56,7 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `referee_not_found` | not_found | Arbitre introuvable |
 | `pool_not_found` | not_found | Poule introuvable |
 | `match_not_found` | not_found | Match introuvable |
+| `split_group_not_found` | not_found | Groupe de tableaux séparés inconnu ou extrait |
 | `withdrawal_not_found` | not_found | Aucun retrait à annuler pour ce tireur |
 | `dir_not_found` | not_found | Dossier introuvable |
 | `venue_not_found` | not_found | Salle introuvable |
@@ -276,7 +277,7 @@ même identifiant (renvoi après une coupure), elle n'écrit rien et est refusé
 | `generatePools`                                | `PoolsGenerated` (tour, poules, tireurs, pistes, ordre des matchs : rejouable sans graine) |
 | `addPoolFencer`                                | `PoolFencerAdded` (poule, tireur, matchs ajoutés dans l'ordre)                             |
 | `closePoolRound`                               | `PoolRoundClosed` (tour, qualifiés dans l'ordre, éliminés, nombre de qualifiés)            |
-| `generateTableau`                              | `TableauGenerated` (taille, petite finale, « toutes les places », placement complet)       |
+| `generateTableau`                              | `TableauGenerated` (taille, petite finale, « toutes les places », placement complet, `group`) |
 | `launchRapieresWave` / `endRapieresWaves`      | `RapieresWaveLaunched` (vague, matchs) / `RapieresWavesEnded`                              |
 | `clearScore`                                   | `ScoreCleared` (match, poule)                                                              |
 | `adjustRanking` / `skipPools` / `clearTableau` | `RankingAdjusted` / `PoolsSkipped` / `TableauCleared`                                      |
@@ -382,6 +383,26 @@ sauvegarde plus, ni en différé ni à la fermeture) ; seul le moteur l'écrit, 
 (`getCompetitionState`). Exceptions documentées, où l'écran l'écrit encore : tableaux séparés
 après les poules, épreuves par équipes (`persistLocally`). La préparation des poules (avant
 « Lancer ») reste un brouillon de l'écran, non conservé au redémarrage.
+
+**Tableaux séparés après les poules** ([ADR-0024](adr/0024-tableaux-separes-equipes-moteur.md)),
+lot A1 fait (moteur) : un tableau par groupe dans la même épreuve, rangé dans
+`session_state.groupTableaux` (`{ [groupe]: { tableauMatches, consolationBrackets, finalResults } }`),
+racine vide ; identifiants de match préfixés par le groupe (`F:32-0`, tableaux de classement
+compris), uniques dans l'épreuve et dans la table `matches`. Règles pures :
+`shared/domain/ranking/splitGroups.ts` (`planSplitGroups`, `filterSplitGroup`,
+`allTableauMatches`). `generateTableau` et `clearTableau` prennent `group`, exigé avec
+`postPoolSplitCriteria` et refusé sans (`invalid_input`) ; groupe inconnu ou extrait :
+`split_group_not_found`. `recordScore`, `clearScore`, `assignMatches`, `withdrawFencer`,
+`reinstateFencer` : l'identifiant du match (ou le tireur) désigne son tableau, plus de refus
+`unsupported_format`. `TableauGenerated`, `TableauCleared` et `TableauCompleted` portent `group`
+(facultatif, `schemaVersion` 1 ; absent = tableau unique). Phase Résultats quand chaque groupe
+restant est terminé. Le partage du classement n'est pas journalisé (dérivé). Rejeu :
+`projectCompetition` rend `groupTableaux`, `compareWithState` compare chaque tableau de groupe.
+`getCompetitionState` expose `groupTableaux`. Reprise : un tableau tiré à la racine avant ce lot
+est le tableau du groupe de ses tireurs (identifiants inchangés) ; il reste à la racine tant que
+l'écran l'y écrit. Jusqu'au lot A2, l'écran garde son tableau local pour ce format
+(`generateTableau` et `clearTableau` en repli local) et sa sauvegarde du bloc conserve
+`groupTableaux`.
 
 **Étape 5 commencée** : `projectCompetition(events)` (`src/shared/domain/journal`) rejoue le
 journal et rend les faits rejouables : statuts des tireurs nommés par le journal, tours de poules

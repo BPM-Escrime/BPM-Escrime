@@ -592,7 +592,7 @@ Aucun argument.
 
 ### `build_bracket` — Construire le tableau
 
-*⚠️ écriture, destructif.* Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, un tour, tableau simple). Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable.
+*⚠️ écriture, destructif.* Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, un tour, tableau simple). Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »).
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -600,6 +600,7 @@ Aucun argument.
 | `thirdPlaceMatch` | boolean |  | Match pour la 3e place |
 | `composition` | object[] |  | Placement calculé par l’écran : pas de planification |
 | `rapieresTableauMode` | `normal`, `third`, `all`, `semis` |  | Tournoi des rapières : mode de tableau choisi |
+| `group` | string |  | Tableaux séparés après les poules : groupe du tableau (« F », « M »), exigé pour ce format |
 | `replace` | boolean |  | Remplacer un tableau existant |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
@@ -692,11 +693,12 @@ Aucun argument.
 
 ### `clear_tableau` — Retirer le tableau
 
-*⚠️ écriture, destructif.* Retire le tableau (et les tableaux de classement) : il est refait sur le classement courant à l’ouverture de l’onglet Tableau. Accord du DT indispensable si des matchs sont joués.
+*⚠️ écriture, destructif.* Retire le tableau (et les tableaux de classement) : il est refait sur le classement courant à l’ouverture de l’onglet Tableau. Accord du DT indispensable si des matchs sont joués. Tableaux séparés : tableau du groupe « group ».
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `group` | string |  | Tableaux séparés après les poules : groupe du tableau (« F », « M »), exigé pour ce format |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
