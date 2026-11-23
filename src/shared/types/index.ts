@@ -61,6 +61,45 @@ export enum CardReason {
   REFUSAL = 'refusal',
   UNSPORTSMANLIKE = 'unsportsmanlike',
   CHEATING = 'cheating',
+  // Escrime olympique (épée, fleuret, sabre) : motifs du tableau t.170 du règlement technique FIE (#2207)
+  // 1er groupe (t.165)
+  FIE_LEAVING_PISTE = 'fie_leaving_piste',
+  FIE_BODY_CONTACT = 'fie_body_contact',
+  FIE_TURNING_BACK = 'fie_turning_back',
+  FIE_COVERING_TARGET = 'fie_covering_target',
+  FIE_TOUCHING_EQUIPMENT = 'fie_touching_equipment',
+  FIE_LATERAL_EXIT = 'fie_lateral_exit',
+  FIE_UNJUSTIFIED_STOP = 'fie_unjustified_stop',
+  FIE_NON_COMPLIANT_EQUIPMENT = 'fie_non_compliant_equipment',
+  FIE_STRAIGHTENING_BLADE = 'fie_straightening_blade',
+  FIE_POINT_ON_PISTE = 'fie_point_on_piste',
+  FIE_SABRE_FORWARD_CROSS = 'fie_sabre_forward_cross',
+  FIE_DISOBEDIENCE = 'fie_disobedience',
+  FIE_NON_COMPLIANT_HAIR = 'fie_non_compliant_hair',
+  FIE_JOSTLING = 'fie_jostling',
+  FIE_ABNORMAL_MOVEMENT = 'fie_abnormal_movement',
+  FIE_UNJUSTIFIED_APPEAL = 'fie_unjustified_appeal',
+  // 2e groupe (t.166)
+  FIE_UNARMED_ARM = 'fie_unarmed_arm',
+  FIE_MEDICAL_PRETEXT = 'fie_medical_pretext',
+  FIE_MISSING_CONTROL_MARK = 'fie_missing_control_mark',
+  FIE_DROPPING_WEAPON = 'fie_dropping_weapon',
+  FIE_HIT_OFF_TARGET = 'fie_hit_off_target',
+  FIE_VIOLENT_ACT = 'fie_violent_act',
+  // 3e groupe (t.167)
+  FIE_DISORDER = 'fie_disorder',
+  FIE_UNFAIR_FIGHT = 'fie_unfair_fight',
+  FIE_ADVERTISING = 'fie_advertising',
+  FIE_UNSPORTING = 'fie_unsporting',
+  // 4e groupe (t.169)
+  FIE_ELECTRONIC_DEVICE = 'fie_electronic_device',
+  FIE_FRAUD = 'fie_fraud',
+  FIE_TAMPERED_EQUIPMENT = 'fie_tampered_equipment',
+  FIE_REFUSAL_TO_FENCE = 'fie_refusal_to_fence',
+  FIE_SPORTING_SPIRIT = 'fie_sporting_spirit',
+  FIE_REFUSAL_TO_SALUTE = 'fie_refusal_to_salute',
+  FIE_COLLUSION = 'fie_collusion',
+  FIE_VIOLENCE = 'fie_violence',
 }
 
 export interface Card {
@@ -82,10 +121,19 @@ export interface WeaponCardScoreImpact {
   black: number;
 }
 
+/**
+ * Escalade des cartons : 'laser' (blanc → jaune, jaune → rouge…, Sabre Laser et arme à la carte)
+ * ou 'fie' (règlement technique FIE t.165 à t.169 : pas de blanc, jaune puis rouge au 1er groupe,
+ * rouge au 2e, rouge puis noir au 3e, noir au 4e).
+ */
+export type CardEscalation = 'laser' | 'fie';
+
 export interface WeaponCardConfig {
   availableReasons: CardReason[];
   reasonToGroup: Partial<Record<CardReason, CardGroup>>;
   scoreImpact: WeaponCardScoreImpact;
+  /** Absent = 'laser' */
+  escalation?: CardEscalation;
 }
 
 // ============================================================================

@@ -138,8 +138,8 @@ Premier écran affiché à l'ouverture.
 | Bouton | Sabre Laser | Escrime olympique |
 |---|---|---|
 | **B** (blanc) | Avertissement. 2ᵉ blanc → jaune automatique. | Remplacé par **P** (passivité). |
-| **J** (jaune) | +3 pts à l'adversaire. 2ᵉ faute de groupe 2 → rouge. | Avertissement, 0 pt. Jaune après jaune/rouge → rouge. |
-| **R** (rouge) | +5 pts à l'adversaire. | +1 touche à l'adversaire. |
+| **J** (jaune) | +3 pts à l'adversaire. 2ᵉ faute de groupe 2 → rouge. | Fautes du 1ᵉʳ groupe FIE. Avertissement, 0 pt (t.162.1). Jaune après jaune/rouge → rouge (t.165). |
+| **R** (rouge) | +5 pts à l'adversaire. | Fautes des 2ᵉ et 3ᵉ groupes FIE. +1 touche à l'adversaire (t.162.2). |
 | **N** (noir) | Exclusion (si option activée). | Exclusion (si option activée). |
 | **P** (passivité) | — | 1ᵉʳ : P-rouge aux deux tireurs, +1 chacun. 2ᵉ : P-noir, fin du combat. |
 
@@ -165,9 +165,23 @@ l'historique du tireur :
 | 2 | Jaune → Rouge → Rouge | Acte violent, touche d'estoc, sortie volontaire pour éviter une touche, bras non armé |
 | 3 | Rouge direct | Combat non loyal, comportement antisportif, trouble de l'ordre |
 
-En escrime olympique : fautes « jaunes » (jaune → rouge) et fautes « rouges » (rouge direct),
-pas de blanc. Le motif est annoncé sur l'écran d'arène (`card_announcement`), avec mention
-« revalorisation » quand un blanc devient jaune. « ✕ Annuler » = carton donné sans annonce.
+En escrime olympique (épée, fleuret, sabre) : groupes et motifs du tableau t.170 du règlement
+technique FIE, numérotation FIE portée sur la feuille (t.163). Pas de blanc. **J** ouvre les
+fautes du 1ᵉʳ groupe, **R** celles des 2ᵉ et 3ᵉ groupes ; le 4ᵉ groupe passe par **N**.
+
+| Groupe (FIE) | Progression | Exemples |
+|---|---|---|
+| 1 (t.165) | Jaune (0 pt) → Rouge à chaque nouvelle faute du groupe ; rouge d'emblée après un rouge du 2ᵉ ou 3ᵉ groupe | Abandon de la piste, corps à corps, tourner le dos, sortie latérale, refus d'obéissance |
+| 2 (t.166) | Rouge dès la 1ʳᵉ faute | Bras non armé, touche hors de l'adversaire, acte violent, lâcher l'arme |
+| 3 (t.167) | Rouge → Noir à la récidive | Trouble de l'ordre sur la piste, combat non loyal, comportement antisportif |
+| 4 (t.169) | Noir | Refus du salut, collusion, fraude, matériel aménagé |
+
+La tablette donne le rouge au 3ᵉ groupe ; à la récidive, l'arbitre donne le noir par **N**.
+Le domaine (`determineCardType`, `src/shared/utils/cardSystem.ts`, cartons des relais par
+équipes) applique t.165 à t.169 complets ; motifs et groupes de la tablette
+(`src/remote/js/refereeFaults.js`) et du domaine : parité testée. Le motif est annoncé sur
+l'écran d'arène (`card_announcement`), avec mention « revalorisation » quand un blanc devient
+jaune (Sabre Laser). « ✕ Annuler » = carton donné sans annonce.
 
 ### 3.5 Chronomètre
 

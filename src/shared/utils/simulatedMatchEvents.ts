@@ -42,6 +42,19 @@ const MAJOR_REASONS: CardReason[] = [
   CardReason.VOLUNTARY_EXIT,
   CardReason.HEAVY_HIT,
 ];
+// Escrime olympique : motifs FIE du 1er groupe (jaune) et du 2e groupe (rouge), t.170 (#2207)
+const FIE_MINOR_REASONS: CardReason[] = [
+  CardReason.FIE_BODY_CONTACT,
+  CardReason.FIE_TURNING_BACK,
+  CardReason.FIE_COVERING_TARGET,
+  CardReason.FIE_LATERAL_EXIT,
+  CardReason.FIE_JOSTLING,
+];
+const FIE_MAJOR_REASONS: CardReason[] = [
+  CardReason.FIE_UNARMED_ARM,
+  CardReason.FIE_HIT_OFF_TARGET,
+  CardReason.FIE_VIOLENT_ACT,
+];
 
 /** Décompose un score Sabre Laser en zones A (1), B (3), C (5) tirées au hasard. */
 export function decomposeLaserScore(
@@ -63,6 +76,7 @@ export function decomposeLaserScore(
 export function simulateMatchEvents(p: SimulateMatchParams): SimulatedMatchEvents {
   const rng = p.rng ?? Math.random;
   const isLaser = p.weapon === Weapon.LASER;
+  const isOlympic = [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE].includes(p.weapon as Weapon);
   const end = p.end ?? new Date();
   // 1 min 30 à 5 min
   const duration = 90 + Math.floor(rng() * 211);
@@ -104,13 +118,16 @@ export function simulateMatchEvents(p: SimulateMatchParams): SimulatedMatchEvent
       reason,
       cardGroup,
       timestamp: at(),
-      pointsAwarded: cardType === 'white' ? 0 : 1,
+      // Jaune olympique = avertissement sans point (t.162.1)
+      pointsAwarded: cardType === 'white' || (isOlympic && cardType === 'yellow') ? 0 : 1,
       resultingExclusion: false,
     });
   for (const fencerId of [p.fencerAId, p.fencerBId]) {
     if (isLaser && rng() < 0.2) addCard(fencerId, 'white', pickReason(MINOR_REASONS), 1);
-    if (rng() < 0.15) addCard(fencerId, 'yellow', pickReason(MINOR_REASONS), 1);
-    if (rng() < 0.05) addCard(fencerId, 'red', pickReason(MAJOR_REASONS), 2);
+    if (rng() < 0.15)
+      addCard(fencerId, 'yellow', pickReason(isOlympic ? FIE_MINOR_REASONS : MINOR_REASONS), 1);
+    if (rng() < 0.05)
+      addCard(fencerId, 'red', pickReason(isOlympic ? FIE_MAJOR_REASONS : MAJOR_REASONS), 2);
   }
 
   return {

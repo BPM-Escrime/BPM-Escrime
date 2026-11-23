@@ -110,7 +110,12 @@ class RefereeApp extends RefereeAppBase {
     }
 
     // Décrémenter l'historique des fautes (meilleure approximation par type)
-    if (lastCard === 'white' && history[1] > 0) {
+    if (this.isModernFencing) {
+      // Numérotation FIE (#2207) : jaune = 1er groupe ; rouge = 3e, 2e ou 1er groupe
+      const g = lastCard === 'yellow' ? [1] : lastCard === 'red' ? [3, 2, 1] : [];
+      const hit = g.find(n => history[n] > 0);
+      if (hit) history[hit]--;
+    } else if (lastCard === 'white' && history[1] > 0) {
       history[1]--;
     } else if (lastCard === 'yellow') {
       if (history[2] > 0) history[2]--;
