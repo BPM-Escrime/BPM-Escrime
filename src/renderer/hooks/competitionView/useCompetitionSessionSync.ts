@@ -430,7 +430,9 @@ export function useCompetitionSessionSync(ctx: Ctx) {
         setPoolsLaunched(false);
         setRelaunchPending(true);
       }
-      await persistPoolsToDB(newPools);
+      // Poules écrites en base au lancement par le moteur (generatePools) ; format hors
+      // moteur (équipes, #2100) : par l'écran dès la préparation, comme avant
+      if (competition.isTeamEvent) await persistPoolsToDB(newPools);
       // Fermer l'inscription distante dès que les poules sont générées
       if (isRemoteActive) {
         void remote.setRegistrationEnabled(competition.id, false);

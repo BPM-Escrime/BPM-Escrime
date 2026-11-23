@@ -189,24 +189,19 @@ describe('CompetitionView', () => {
     expect(btn).toBeDisabled();
   });
 
-  it('génère les poules, les persiste en base et passe en préparation', async () => {
+  it('génère les poules et passe en préparation, sans écriture en base avant le lancement', async () => {
     const calls = mockElectronAPI(Array.from({ length: 10 }, (_, i) => fencer(i + 1)));
     renderView();
     await screen.findByText('Nom1');
     const btn = screen.getByRole('button', { name: /Préparer les poules/ });
     expect(btn).toBeEnabled();
     fireEvent.click(btn);
-    await waitFor(() => expect(calls.createPool?.length).toBeGreaterThan(0));
-    // 10 tireurs en poules de 5 à 7 : 2 poules, 10 matchs par poule de 5
-    const poolIds = calls.createPool.map(a => a[2]);
-    expect(new Set(poolIds).size).toBe(calls.createPool.length);
-    expect(calls.addFencerToPool).toHaveLength(10);
-    const placed = new Set(calls.addFencerToPool.map(a => a[1]));
-    expect(placed.size).toBe(10);
-    expect(calls.createMatch.length).toBeGreaterThan(0);
     await waitFor(() =>
       expect(document.querySelectorAll('.phase-step')[1]).toHaveClass('phase-step-active')
     );
+    // Poules écrites en base au lancement par le moteur (generatePools, docs/adr/0017)
+    expect(calls.createPool ?? []).toHaveLength(0);
+    expect(calls.addFencerToPool ?? []).toHaveLength(0);
   });
 
   describe('accès aux étapes et relance (#1499)', () => {

@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal } from '../common/Modal';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { Fencer } from '../../../shared/types';
+import { useBpmClient } from '../../api/BpmClientContext';
 
 interface PoolSignaturesModalProps {
   poolId: string;
@@ -24,12 +25,13 @@ export const PoolSignaturesModal: React.FC<PoolSignaturesModalProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const client = useBpmClient();
   const [signatures, setSignatures] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     let alive = true;
-    window.electronAPI?.db
-      ?.getPoolSignatures?.(poolId)
+    client
+      .query('getPoolSignatures', { poolId })
       .then(sigs => {
         if (alive) setSignatures(new Map(sigs.map(s => [s.fencerId, s.signatureData])));
       })
@@ -37,7 +39,7 @@ export const PoolSignaturesModal: React.FC<PoolSignaturesModalProps> = ({
     return () => {
       alive = false;
     };
-  }, [poolId]);
+  }, [client, poolId]);
 
   return (
     <Modal title={t('poolView.signatures_title', { n: poolNumber })} onClose={onClose} scroll>

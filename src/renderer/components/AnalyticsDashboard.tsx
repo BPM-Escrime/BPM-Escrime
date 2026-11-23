@@ -443,7 +443,7 @@ const AnalyticsDashboard_: React.FC<AnalyticsDashboardProps> = ({
     setExporting(true);
     try {
       const source = { matches, tableauMatches, fencers, overallRanking, finalResults };
-      await exportPostTournamentPDF(competition, source);
+      await exportPostTournamentPDF(competition, source, client);
     } catch (e) {
       showToast(`${t('fencerList.export_error')} : ${e instanceof Error ? e.message : e}`, 'error');
     } finally {

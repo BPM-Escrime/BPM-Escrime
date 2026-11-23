@@ -11,6 +11,8 @@ import { poolMatchesWithReferee, propagatePoolReferee } from '../../shared/utils
 import type { ConsolationBracket, TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import type { AssignmentsInput } from './usePoolsLaunch';
 import { useRemoteApi } from '../api/remoteApi';
+import { useBpmClient } from '../api/BpmClientContext';
+import { loadCompetitionReferees } from '../api/refereeMapping';
 
 interface UseCompetitionRefereesParams {
   competitionId: string;
@@ -42,6 +44,7 @@ export function useCompetitionReferees({
   assign,
 }: UseCompetitionRefereesParams) {
   const remote = useRemoteApi();
+  const client = useBpmClient();
   // Applique des assignations d'arbitres (matchId → arbitre) aux matchs de poule
   const applyPoolRefereeAssignments = useCallback(
     (assignments: Map<string, Referee>) => {
@@ -108,9 +111,9 @@ export function useCompetitionReferees({
       async ({ matchId, refereeId }) => {
         let ref = refereesRef.current.find(r => r.id === refereeId);
         if (!ref) {
-          const rows: Referee[] = await window.electronAPI.db
-            .getRefereesByCompetition(competitionId)
-            .catch(() => []);
+          const rows: Referee[] = await loadCompetitionReferees(client, competitionId).catch(
+            () => []
+          );
           setReferees(rows);
           ref = rows.find(r => r.id === refereeId);
         }
@@ -138,7 +141,7 @@ export function useCompetitionReferees({
       }
     );
     return () => off();
-  }, [competitionId, applyPoolRefereeAssignments, remote]);
+  }, [client, competitionId, applyPoolRefereeAssignments, remote]);
 
   // Matchs proposés à l'assignation d'arbitres : poules + tableau + consolation
   const refereeAssignableMatches = useMemo<Match[]>(() => {

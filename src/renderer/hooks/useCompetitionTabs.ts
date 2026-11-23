@@ -81,6 +81,7 @@ export function useCompetitionTabs({
           // Tireurs, équipes et arbitres des fichiers de l'extranet (#1938)
           if (imported) {
             const counts = await applyFederalImport(
+              client,
               newComp.id,
               imported,
               newComp.settings?.minTeamSize ?? 3

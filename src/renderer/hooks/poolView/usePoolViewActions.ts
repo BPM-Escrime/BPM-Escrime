@@ -388,7 +388,7 @@ export function usePoolViewActions(ctx: Ctx) {
     const applyGenerated = () => {
       for (const g of generated) onScoreUpdate(g.index, g.a, g.b, g.winner);
       setMatchesUpdateTrigger(prev => prev + 1);
-      void persistSimulatedEvents(simulated);
+      void persistSimulatedEvents(client, competitionId, simulated);
     };
     addAction({
       type: 'UPDATE_SCORE',
@@ -396,7 +396,11 @@ export function usePoolViewActions(ctx: Ctx) {
       undo: () => {
         for (const g of generated) onMatchReset?.(g.index);
         setMatchesUpdateTrigger(prev => prev + 1);
-        void persistSimulatedEvents(simulated.map(e => ({ matchId: e.matchId, events: null })));
+        void persistSimulatedEvents(
+          client,
+          competitionId,
+          simulated.map(e => ({ matchId: e.matchId, events: null }))
+        );
       },
       redo: applyGenerated,
     });

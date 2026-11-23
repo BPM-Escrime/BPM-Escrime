@@ -8,6 +8,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { Fencer, Referee } from '../../shared/types';
 import type { usePoolManagement } from './usePoolManagement';
 import { useRemoteApi } from '../api/remoteApi';
+import { useBpmClient } from '../api/BpmClientContext';
+import { loadCompetitionReferees } from '../api/refereeMapping';
 
 interface UseCompetitionBootstrapParams {
   competitionId: string;
@@ -34,6 +36,7 @@ export function useCompetitionBootstrap({
   setRemoteServerUrl,
 }: UseCompetitionBootstrapParams) {
   const remote = useRemoteApi();
+  const client = useBpmClient();
   // Rétablir isRemoteActive si une session est déjà en cours (ex: rechargement après phase poules)
   useEffect(() => {
     remote
@@ -52,11 +55,10 @@ export function useCompetitionBootstrap({
   // Charger les arbitres si la fonction est activée
   useEffect(() => {
     if (!refereeFeatureEnabled) return;
-    window.electronAPI.db
-      .getRefereesByCompetition(competitionId)
-      .then((rows: Referee[]) => setReferees(rows))
+    loadCompetitionReferees(client, competitionId)
+      .then(setReferees)
       .catch(() => {});
-  }, [competitionId, refereeFeatureEnabled]);
+  }, [client, competitionId, refereeFeatureEnabled]);
 
   // Synchroniser les photos/données tireurs dans les matches de poule à chaque mise à jour
   useEffect(() => {

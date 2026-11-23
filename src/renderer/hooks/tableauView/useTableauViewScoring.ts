@@ -36,6 +36,7 @@ import {
 import { autoFillRefereeAssignments } from '../../services/autoFillReferees';
 import { simulateMatchEvents } from '../../../shared/utils/simulatedMatchEvents';
 import { persistSimulatedEvents } from '../../services/simulatedEventsPersistence';
+import { useBpmClient } from '../../api/BpmClientContext';
 import { TableauViewProps } from '../../components/tableau/tableauViewShared';
 import { useTableauViewState } from './useTableauViewState';
 import { isTableauEligible } from '../../../shared/domain/fencers/fencerStatus';
@@ -85,6 +86,7 @@ export function useTableauViewScoring(ctx: Ctx) {
     onGenerateTableau,
     onClearScore,
   } = ctx;
+  const client = useBpmClient();
   // Génération en cours par le moteur : l'effet de montage ne la relance pas
   const generatingRef = useRef(false);
 
@@ -286,7 +288,7 @@ export function useTableauViewScoring(ctx: Ctx) {
             }),
           };
         });
-      void persistSimulatedEvents(entries);
+      void persistSimulatedEvents(client, competitionId, entries);
     };
 
     // Toutes les places : barrages + tableau principal + tous les brackets de consolation.
