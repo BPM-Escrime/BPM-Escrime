@@ -358,6 +358,16 @@ export const ROOM_EQUIPMENT: readonly RoomEquipment[] = [
   { id: 'electrical_panel', kind: 'outlet', widthM: 1, heightM: 0.3 },
 ];
 
+/**
+ * Zones de la salle proposées par le menu « Zone » du planificateur, en plus de la zone
+ * bloquée libre : emprises au sol que les arènes évitent, taille par défaut en mètres.
+ */
+export const ROOM_ZONES: readonly RoomEquipment[] = [
+  { id: 'fencers', kind: 'blocked', widthM: 6, heightM: 4 },
+  { id: 'public', kind: 'blocked', widthM: 10, heightM: 4 },
+  { id: 'dt', kind: 'blocked', widthM: 4, heightM: 3 },
+];
+
 /** Élément créé depuis un équipement du catalogue, taille bornée à la salle. */
 export function createEquipmentItem(
   equipment: RoomEquipment,

@@ -25,12 +25,15 @@ import {
   rotateRoomItem,
   resizeRoomItem,
   ROOM_EQUIPMENT,
+  ROOM_ZONES,
   type ArenaAlign,
   type ArenaSpacing,
   type RoomItem,
 } from '@shared/domain/arena/arenaPlanner';
 import { ArenaPlanCanvas, KIND_LABEL_KEY } from './arenaPlanner/ArenaPlanCanvas';
 import { ArenaPlanHelp } from './arenaPlanner/ArenaPlanHelp';
+import { AddItemMenus, KIND_OPTION_PREFIX } from './arenaPlanner/AddItemMenus';
+import { ArenaNamesFields } from './arenaPlanner/ArenaNamesFields';
 import { SitePlanCanvas, type SiteRoom } from './arenaPlanner/SitePlanCanvas';
 import {
   computeRoomLayout,
@@ -49,16 +52,6 @@ interface ArenaPlannerModalProps {
 }
 
 type ItemKind = RoomItem['kind'];
-
-const TOOL_KINDS: ItemKind[] = ['table', 'outlet', 'accessory', 'exit', 'blocked'];
-
-const TOOL_LABEL_KEY: Record<ItemKind, string> = {
-  table: 'arenaPlanner.add_table',
-  outlet: 'arenaPlanner.add_outlet',
-  accessory: 'arenaPlanner.add_accessory',
-  exit: 'arenaPlanner.add_exit',
-  blocked: 'arenaPlanner.add_blocked',
-};
 
 type Updater<T> = T | ((prev: T) => T);
 
@@ -195,13 +188,23 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
     setSelectedId(id);
   };
 
-  /** Équipement du catalogue (vestiaires, gradins, infirmerie…) */
-  const addEquipment = (equipmentId: string) => {
-    const equipment = ROOM_EQUIPMENT.find(e => e.id === equipmentId);
+  /** Nom d'une arène de la salle active, affiché sur le plan */
+  const setArenaName = (index: number, name: string) =>
+    setField('arenaNames')(prev => {
+      const next = [...(prev ?? [])];
+      next[index] = name;
+      return Array.from(next, n => n ?? '');
+    });
+
+  /** Menus « Équipement » / « Zone » : élément de base (table, zone bloquée…) ou du catalogue */
+  const addFromMenu = (value: string, zone = false) => {
+    if (value.startsWith(KIND_OPTION_PREFIX))
+      return addItem(value.slice(KIND_OPTION_PREFIX.length) as ItemKind);
+    const equipment = (zone ? ROOM_ZONES : ROOM_EQUIPMENT).find(e => e.id === value);
     if (!room || !equipment) return;
     idCounter.current += 1;
     const id = `item-${idCounter.current}`;
-    const name = t(`arenaPlanner.equipment_${equipment.id}`);
+    const name = t(`arenaPlanner.${zone ? 'zone' : 'equipment'}_${equipment.id}`);
     const count = items.filter(i => i.label === name || i.label.startsWith(`${name} `)).length;
     const label = count ? `${name} ${count + 1}` : name;
     const item = placeOnFreeSpot(
@@ -531,6 +534,11 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                   />
                   <p className="arena-planner-hint">{t('arenaPlanner.hint_arenas')}</p>
                 </div>
+                <ArenaNamesFields
+                  count={centers.length}
+                  names={plan.arenaNames ?? []}
+                  onChange={setArenaName}
+                />
                 <div className="arena-planner-field">
                   <label className="form-label" htmlFor="arena-spacing">
                     {t('arenaPlanner.spacing')}
@@ -627,25 +635,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                 role="toolbar"
                 aria-label={t('arenaPlanner.tools_hint')}
               >
-                {TOOL_KINDS.map(kind => (
-                  <Button key={kind} type="button" size="sm" onClick={() => addItem(kind)}>
-                    {t(TOOL_LABEL_KEY[kind])}
-                  </Button>
-                ))}
-                <select
-                  className="form-input arena-planner-equipment"
-                  aria-label={t('arenaPlanner.add_equipment')}
-                  value=""
-                  disabled={!room}
-                  onChange={e => addEquipment(e.target.value)}
-                >
-                  <option value="">{t('arenaPlanner.add_equipment')}</option>
-                  {ROOM_EQUIPMENT.map(e => (
-                    <option key={e.id} value={e.id}>
-                      {t(`arenaPlanner.equipment_${e.id}`)}
-                    </option>
-                  ))}
-                </select>
+                <AddItemMenus disabled={!room} onPick={addFromMenu} />
                 <Button
                   type="button"
                   size="sm"
@@ -661,6 +651,7 @@ export const ArenaPlannerModal: React.FC<ArenaPlannerModalProps> = ({ onClose, c
                 key={plan.id}
                 room={room}
                 centers={centers}
+                arenaNames={plan.arenaNames}
                 items={items}
                 selectedId={selectedId}
                 conflictIds={conflictIds}
