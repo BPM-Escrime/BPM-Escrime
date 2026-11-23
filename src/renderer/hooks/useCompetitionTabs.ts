@@ -76,7 +76,12 @@ export function useCompetitionTabs({
           });
           const newComp = await loadCompetition(client, created.competitionId!);
           if (!newComp) throw new Error('Épreuve créée introuvable');
-          setCompetitions(prev => [newComp, ...prev]);
+          // L'avis competitions:changed recharge déjà la liste : pas de doublon
+          setCompetitions(prev =>
+            prev.some(c => c.id === newComp.id)
+              ? prev.map(c => (c.id === newComp.id ? newComp : c))
+              : [newComp, ...prev]
+          );
 
           // Tireurs, équipes et arbitres des fichiers de l'extranet (#1938)
           if (imported) {

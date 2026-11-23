@@ -4,6 +4,15 @@
  */
 
 import { recordFinishedScore, scoreRefusal } from '../scoreCommand';
+import { runRemoteCommand } from '../remoteCommand';
+
+/** Refus de signPoolSheet → réponse de la page (codes stables déjà traduits) */
+const POOL_SIGNATURE_REFUSALS: Record<string, [number, string]> = {
+  pool_not_found: [404, 'fencer_not_in_pool'],
+  fencer_not_in_pool: [404, 'fencer_not_in_pool'],
+  fencer_matches_pending: [403, 'fencer_matches_pending'],
+  signatures_locked: [409, 'signatures_locked'],
+};
 import path from 'path';
 import os from 'os';
 import type { Server as SocketIOServer } from 'socket.io';
@@ -398,38 +407,23 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
       return ctx.db.getMatchesByPool(poolId);
     })();
 
-    const fencerMatches = allMatches.filter(
-      m =>
-        m.fencerA?.id === fencerId ||
-        (m as { fencerAId?: string }).fencerAId === fencerId ||
-        m.fencerB?.id === fencerId ||
-        (m as { fencerBId?: string }).fencerBId === fencerId
-    );
-
-    if (fencerMatches.length === 0) {
-      return res.status(404).json({ error: 'fencer_not_in_pool' });
-    }
-    const allDone = fencerMatches.every(m => m.status === MatchStatus.FINISHED);
-    if (!allDone) {
-      return res.status(403).json({ error: 'fencer_matches_pending' });
-    }
-
-    // Poule verrouillée dès que tous les tireurs ont signé : plus de re-signature (#1826)
-    const poolFencerIds = new Set<string>();
-    for (const m of allMatches) {
-      const a = m.fencerA?.id ?? (m as { fencerAId?: string }).fencerAId;
-      const b = m.fencerB?.id ?? (m as { fencerBId?: string }).fencerBId;
-      if (a) poolFencerIds.add(a);
-      if (b) poolFencerIds.add(b);
-    }
-    const signedIds = new Set(ctx.db.getPoolSignatures(poolId).map(sig => sig.fencerId));
-    if (poolFencerIds.size > 0 && [...poolFencerIds].every(id => signedIds.has(id))) {
-      return res.status(409).json({ error: 'signatures_locked' });
+    // Signature par la commande signPoolSheet (#2159) : tireur de la poule, matchs terminés,
+    // feuille verrouillée une fois signée par tous (#1826) : règles du moteur
+    const competitionId = ctx.session?.competitionId;
+    if (!competitionId) return res.status(503).json({ error: 'no_session' });
+    const run = runRemoteCommand(ctx.db, 'signPoolSheet', {
+      competitionId,
+      poolId,
+      fencerId,
+      signatureData,
+    });
+    if (!run.ok) {
+      const refusal = POOL_SIGNATURE_REFUSALS[run.code];
+      if (refusal) return res.status(refusal[0]).json({ error: refusal[1] });
+      return res.status(500).json({ error: 'signature_save_failed' });
     }
 
     try {
-      ctx.db.savePoolSignature(poolId, fencerId, signatureData);
-
       if (!ctx.poolSignaturesCache.has(poolId)) {
         ctx.poolSignaturesCache.set(poolId, new Map());
       }
@@ -572,25 +566,24 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
       return res.status(400).json({ error: 'signature_too_large' });
     }
 
-    // Un match de tableau est envoyé à la tablette avec son id de tableau (ex: "r16-3") ;
-    // en base il est stocké sous "${competitionId}-${matchId}". On accepte les deux, ainsi
-    // que les matchs connus uniquement en mémoire de session.
-    const compositeId = ctx.session?.competitionId
-      ? `${ctx.session.competitionId}-${matchId}`
-      : null;
-    const dbMatch = ctx.db.getMatch(matchId) ?? (compositeId ? ctx.db.getMatch(compositeId) : null);
-    const inMemoryMatch = dbMatch ? undefined : ctx.sessionMatches.find(m => m.id === matchId);
-    if (!dbMatch && !inMemoryMatch) {
-      return res.status(404).json({ error: 'match_not_found' });
-    }
-    // Réservé aux matchs de tableau (pas de poule)
-    if ((dbMatch ?? inMemoryMatch)?.poolId) {
-      return res.status(400).json({ error: 'signature_tableau_only' });
+    // Signature par la commande signMatchSheet (#2159)
+    const competitionId = ctx.session?.competitionId;
+    if (!competitionId) return res.status(503).json({ error: 'no_session' });
+    const run = runRemoteCommand(ctx.db, 'signMatchSheet', {
+      competitionId,
+      matchId,
+      fencerId,
+      signatureData,
+    });
+    if (!run.ok) {
+      if (run.code === 'match_not_found') return res.status(404).json({ error: 'match_not_found' });
+      if (run.code === 'signature_tableau_only') {
+        return res.status(400).json({ error: 'signature_tableau_only' });
+      }
+      return res.status(500).json({ error: 'signature_save_failed' });
     }
 
     try {
-      ctx.db.saveDEMatchSignature(matchId, fencerId, signatureData);
-
       const mainWin = getSharedMainWindow();
       if (mainWin) {
         notifyScreen({

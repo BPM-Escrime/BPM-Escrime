@@ -83,6 +83,25 @@ d('épreuves (docs/adr/0018)', () => {
     ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 
+  it('createCompetition : Sabre Laser individuel et par équipes créés (réglages de repli)', async () => {
+    const base = { title: 'Laser', date: '2026-12-13', weapon: 'L', gender: 'X', category: 'SEN' };
+    const solo = await invoke(ctx, 'createCompetition' as never, base as never);
+    const soloComp = db.getCompetition((solo as any).competitionId)!;
+    expect(soloComp.settings).toMatchObject({ defaultPoolMaxScore: 5, defaultTableMaxScore: 21 });
+    const team = await invoke(
+      ctx,
+      'createCompetition' as never,
+      {
+        ...base,
+        isTeamEvent: true,
+        settings: { minTeamSize: 3, teamReserveCount: 1, laserTeamMode: 'points' },
+      } as never
+    );
+    const teamComp = db.getCompetition((team as any).competitionId)!;
+    expect(teamComp.isTeamEvent).toBe(true);
+    expect(teamComp.settings).toMatchObject({ laserTeamMode: 'points', defaultPoolMaxScore: 5 });
+  });
+
   it('updateCompetitionDetails : titre, date, lieu ; entrée stricte', async () => {
     const r = await call('updateCompetitionDetails', {
       details: { title: 'Renommée', location: 'Nice', date: '2027-01-02' },

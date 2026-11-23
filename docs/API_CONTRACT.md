@@ -56,6 +56,7 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `referee_not_found` | not_found | Arbitre introuvable |
 | `pool_not_found` | not_found | Poule introuvable |
 | `match_not_found` | not_found | Match introuvable |
+| `fencer_not_in_pool` | not_found | Tireur absent de cette poule |
 | `split_group_not_found` | not_found | Groupe de tableaux séparés inconnu ou extrait |
 | `team_not_found` | not_found | Équipe introuvable dans l’épreuve |
 | `withdrawal_not_found` | not_found | Aucun retrait à annuler pour ce tireur |
@@ -73,10 +74,13 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `referee_busy` | conflict | Arbitre déjà occupé sur ce créneau |
 | `file_exists` | conflict | Fichier déjà présent |
 | `club_exists` | conflict | Club de la sauvegarde déjà présent sur le poste |
+| `signatures_locked` | conflict | Feuille déjà signée par tous les tireurs |
 | `competition_open` | conflict | Épreuve ouverte ou servie aux tablettes : à fermer avant l’anonymisation ou l’effacement |
 | `score_invalid` | rule | Score non entier ou négatif |
 | `score_above_max` | rule | Score au-delà du score maximal |
 | `tie_at_max` | rule | Égalité au score maximal (o.17) |
+| `fencer_matches_pending` | rule | Matchs du tireur pas tous terminés : signature refusée |
+| `signature_tableau_only` | rule | Signature de match réservée au tableau |
 | `draw_needs_winner` | rule | Égalité : vainqueur ou priorité requis |
 | `draw_not_allowed` | rule | Égalité interdite (Sabre Laser) |
 | `priority_not_allowed` | rule | Priorité non prévue pour cette arme |
