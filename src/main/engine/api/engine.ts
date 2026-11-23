@@ -31,6 +31,7 @@ import { clearScore } from '../commands/scoreClear';
 import { assignMatches } from '../commands/assignments';
 import { adjustRanking, clearTableau, skipPools } from '../commands/ranking';
 import { splitOffGroup } from '../commands/splitOff';
+import { teamHandlers, teamsState } from '../commands/teams';
 import { rebuildCompetitionState } from '../commands/rebuild';
 import {
   fencerDTO,
@@ -241,7 +242,7 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     return {
       revision: ctx.db.eventLog.getRevision(competitionId),
       sessionRevision: typeof session.revision === 'number' ? session.revision : 0,
-      state: competitionState(session, comp),
+      state: competitionState(session, comp, teamsState(ctx, comp)),
     };
   },
   getMatchHistory: (ctx, { competitionId, matchId }) => {
@@ -286,6 +287,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
       .result;
   },
   ...devicesControlHandlers,
+  // Épreuves par équipes : inscription, poules d'équipes (docs/adr/0024)
+  ...teamHandlers,
   onStripControlChanged,
 };
 

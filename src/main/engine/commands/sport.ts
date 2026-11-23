@@ -241,6 +241,13 @@ export function generatePools(
 ) {
   const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
+  // Épreuve par équipes : la commande d'équipe tire les poules (docs/adr/0024)
+  if (comp.isTeamEvent) {
+    throw new CommandError(
+      'unsupported_format',
+      'Épreuve par équipes : poules d’équipes par generateTeamPools'
+    );
+  }
   if (options.composition) assertScoreSupported(comp);
   else assertSupported(comp, session);
   const existing = sessionPools(session);

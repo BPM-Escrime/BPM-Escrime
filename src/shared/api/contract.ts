@@ -31,6 +31,7 @@ import { devicesOperations } from './contractDevices';
 import { fileOperations } from './contractFiles';
 import { simulationOperations } from './contractSimulation';
 import { splitOperations } from './contractSplit';
+import { teamOperations, TeamsStateSchema } from './contractTeams';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { ArenaPlanSchema } from './arenaPlanSchema';
@@ -210,6 +211,8 @@ const CompetitionStateSchema = z.object({
   rapieres: z.custom<RapieresSession | RapieresLegacyState>().optional(),
   /** Tableaux séparés après les poules : un tableau par groupe (docs/adr/0024) */
   groupTableaux: z.record(z.string(), z.custom<GroupTableau>()).optional(),
+  /** Épreuve par équipes (docs/adr/0024) : équipes, rencontres, relais ; null : individuelle */
+  teams: TeamsStateSchema.nullable().optional(),
   poolPrepParams: z
     .object({
       poolCount: z.number(),
@@ -1470,6 +1473,7 @@ export const contract = {
   ...simulationOperations,
   // Tableaux séparés : extraction d'un groupe en épreuve séparée (docs/adr/0024)
   ...splitOperations,
+  ...teamOperations, // Épreuves par équipes : inscription, poules d'équipes (docs/adr/0024)
 } satisfies ApiContract;
 
 // ─── Types dérivés ───────────────────────────────────────────────────────────

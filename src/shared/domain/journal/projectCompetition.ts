@@ -61,6 +61,24 @@ export interface TableauFact {
   slots: TableauSlotFact[];
 }
 
+/** Rencontre d'équipes telle que le journal l'a créée (docs/adr/0024) */
+export interface TeamMatchFact {
+  matchId: string;
+  teamAId: string;
+  teamBId: string;
+  pool: number | null;
+  round: number | null;
+  position: number | null;
+  relays: Array<{ relayId: string; order: number; fencerAId: string; fencerBId: string }>;
+}
+
+/** Épreuve par équipes : poules tirées et rencontres créées (docs/adr/0024) */
+export interface TeamsFact {
+  pools: Array<{ number: number; teamIds: string[] }>;
+  /** Rencontres, dans l'ordre du journal */
+  matches: TeamMatchFact[];
+}
+
 export interface CompetitionFacts {
   /**
    * Journal complet : il commence (après l'appel) par le tirage des poules, l'épreuve sans
@@ -96,6 +114,8 @@ export interface CompetitionFacts {
     group: string;
     ranking: Array<{ fencerId: string; sourceFencerId: string; rank: number }>;
   } | null;
+  /** Épreuve par équipes (docs/adr/0024) ; null : aucun fait d'équipe */
+  teams: TeamsFact | null;
   /** Tournoi des rapières : vague lancée, vagues arrêtées (undefined : jamais lancées) */
   rapieres?: { wave: number; ended: boolean };
   /** Révision du dernier événement rejoué */
@@ -109,6 +129,7 @@ const FACT_EVENTS: ReadonlySet<string> = new Set([
   JOURNAL_EVENT.poolsSkipped,
   JOURNAL_EVENT.splitRankingImported,
   JOURNAL_EVENT.tableauGenerated,
+  JOURNAL_EVENT.teamPoolsGenerated,
 ]);
 const CHECK_IN_EVENTS: ReadonlySet<string> = new Set([
   JOURNAL_EVENT.fencerCheckedIn,
@@ -127,6 +148,7 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
     bracketResults: {},
     splitOffGroups: {},
     importedRanking: null,
+    teams: null,
     revision: 0,
   };
   const firstFact = events.find(e => !CHECK_IN_EVENTS.has(e.type));
@@ -341,6 +363,22 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
           group,
           ranking: ranking.map(r => ({ ...r })),
         };
+        break;
+      }
+      case JOURNAL_EVENT.teamPoolsGenerated:
+        // Nouveau tirage : il remplace les poules et leurs rencontres
+        facts.teams = {
+          pools: event.payload.pools.map(p => ({ number: p.number, teamIds: [...p.teamIds] })),
+          matches: (facts.teams?.matches ?? []).filter(m => m.pool === null),
+        };
+        break;
+      case JOURNAL_EVENT.teamMatchScheduled: {
+        const p = event.payload;
+        const teams = (facts.teams ??= { pools: [], matches: [] });
+        teams.matches = [
+          ...teams.matches.filter(m => m.matchId !== p.matchId),
+          { ...p, relays: p.relays.map(r => ({ ...r })) },
+        ];
         break;
       }
       case JOURNAL_EVENT.rapieresWaveLaunched:

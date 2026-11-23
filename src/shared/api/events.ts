@@ -37,6 +37,8 @@ export const JOURNAL_EVENT = {
   rapieresTeamsUpdated: 'RapieresTeamsUpdated',
   groupSplitOff: 'GroupSplitOff',
   splitRankingImported: 'SplitRankingImported',
+  teamPoolsGenerated: 'TeamPoolsGenerated',
+  teamMatchScheduled: 'TeamMatchScheduled',
 } as const;
 
 const member = <T extends string, P extends z.ZodType>(type: T, payload: P) =>
@@ -178,6 +180,29 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
       sourceCompetitionId: Id,
       group: Group,
       ranking: z.array(z.object({ fencerId: Id, sourceFencerId: Id, rank: z.number().int() })),
+    })
+  ),
+  // Épreuves par équipes (docs/adr/0024) : poules d'équipes tirées, puis chaque rencontre
+  // avec ses relais fixés à la création (titulaires dans l'ordre de l'arme)
+  member(
+    JOURNAL_EVENT.teamPoolsGenerated,
+    z.object({ pools: z.array(z.object({ number: z.number().int(), teamIds: z.array(Id) })) })
+  ),
+  member(
+    JOURNAL_EVENT.teamMatchScheduled,
+    z.object({
+      matchId: Id,
+      teamAId: Id,
+      teamBId: Id,
+      /** Poule de la rencontre ; null au tableau */
+      pool: z.number().int().nullable(),
+      /** Tour du tableau ; en poule, créneau du calendrier de l'arène Sabre Laser, sinon null */
+      round: z.number().int().nullable(),
+      /** Position au tableau ; null en poule */
+      position: z.number().int().nullable(),
+      relays: z.array(
+        z.object({ relayId: Id, order: z.number().int(), fencerAId: Id, fencerBId: Id })
+      ),
     })
   ),
 ]);

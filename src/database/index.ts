@@ -61,7 +61,8 @@ export class DatabaseManager {
   private readonly matches = new MatchRepo(this.sql, this);
   private readonly pools = new PoolRepo(this.sql, this);
   private readonly referees = new RefereeRepo(this.sql);
-  private readonly teams = new TeamRepo(this.sql);
+  /** Équipes : écritures du moteur (docs/adr/0024) ; l'écran passe encore par les délégations */
+  public readonly teams = new TeamRepo(this.sql);
   private readonly organisation = new OrganisationRepo(this.sql);
   /** Journée multi-épreuves : pistes et arbitres partagés (#1714) */
   public readonly eventDays = new EventDayRepo(this.sql);

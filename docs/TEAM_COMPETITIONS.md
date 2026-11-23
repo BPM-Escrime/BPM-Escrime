@@ -133,6 +133,13 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
 
 - Le nombre de réservistes n'est pas encore utilisé pour les remplacements en cours de
   match (affectation uniquement).
+- Passage au moteur en cours ([ADR-0024](adr/0024-tableaux-separes-equipes-moteur.md)) :
+  inscription des équipes, composition et tirage des poules existent comme commandes du
+  contrat (`registerTeam`, `assignTeamFencer`, `generateTeamPools`, outil MCP
+  `generate_team_pools` ; lot E1), et `getCompetitionState` rend le bloc `teams`. L'écran
+  écrit encore les équipes, rencontres et relais par le préload (sans journal) jusqu'au
+  lot E3 ; relais, tableau et remplacement par commandes au lot E2. Le moteur fige la
+  composition dès qu'une rencontre existe ; l'écran ne la fige pas encore.
 
 **Format arène Sabre Laser (`teamFormat: 'laser-arena'`) uniquement :**
 
