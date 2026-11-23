@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 144 | 1228 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 128 | 688 |
+| `src/renderer/components/` | 128 | 690 |
 | E2E Playwright (`e2e/`) | 18 | 49 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 34 | 367 |
+| `src/shared/domain/` | 35 | 375 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **590** | **4538** |
+| **Total** | **591** | **4548** |
 
-Unitaires : 572 fichiers, 4489 tests. E2E : 18 fichiers, 49 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 573 fichiers, 4499 tests. E2E : 18 fichiers, 49 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5869,7 +5869,7 @@ Unitaires : 572 fichiers, 4489 tests. E2E : 18 fichiers, 49 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 18 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 20 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5886,6 +5886,8 @@ Unitaires : 572 fichiers, 4489 tests. E2E : 18 fichiers, 49 tests (comptage stat
   - ne permet jamais plus d'arènes que le maximum de la zone
   - étire les arènes avec « Espacées » et les centre avec « Centré »
   - affiche les cotes techniques quand la case est cochée
+  - affiche la légende avec un repère par élément posé, et la masque sur demande
+  - passe en escrime (pistes) puis en escrime artistique (scènes), légende adaptée
   - modifie le texte affiché sur une table, sur plusieurs lignes
   - ajoute une deuxième salle indépendante, puis la supprime
   - zoome et revient à la taille réelle sans changer la vue d'export
@@ -8805,6 +8807,21 @@ Unitaires : 572 fichiers, 4489 tests. E2E : 18 fichiers, 49 tests (comptage stat
 - **organisationKpis : durées de référence (#1965)**
   - tableau d’épée sans mesure : 12 min + changement de piste
   - sans clé : anciennes valeurs par défaut
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/arena/arenaDisciplines.test.ts</code> — 8 tests</summary>
+
+- **disciplines du planificateur**
+  - laser : cercle de sécurité Ø 12 m
+  - escrime : piste 14 × 2 m, dégagements 2 m, couloir 1,5 m
+  - escrime artistique : scène 10 × 8 m, jury face à la scène, au sud
+  - optimiseur : pistes empilées en grille, sans quinconce
+  - espacées : pistes réparties sur la longueur
+  - élément dans le couloir de la piste signalé, hors couloir accepté
+  - glisser une piste sur une autre la repousse bord contre bord
+  - cotes décalées selon l'emprise rectangulaire
 
 </details>
 
