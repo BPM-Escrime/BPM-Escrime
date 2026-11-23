@@ -166,6 +166,11 @@
   cursor: pointer;
 }
 
+.roadmap-chip.is-missing {
+  border-style: dashed;
+  color: var(--color-text-muted);
+}
+
 .roadmap-chip:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
@@ -251,6 +256,26 @@
   border-radius: var(--radius-md, 6px);
   background: var(--color-surface);
   scroll-margin-top: 0.5rem;
+}
+
+.roadmap-section-card.is-dragging {
+  opacity: 0.5;
+}
+
+.roadmap-section-card.is-drop-target {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 2px;
+}
+
+.roadmap-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  cursor: grab;
+  color: var(--color-text-muted);
+}
+
+.roadmap-drag-handle:active {
+  cursor: grabbing;
 }
 
 .roadmap-section-card.is-disabled {
@@ -504,6 +529,10 @@
   padding: 0 2px;
   font-family: monospace;
   font-size: 0.9em;
+}
+
+.roadmap-doc .rm-missing[data-var] {
+  cursor: pointer;
 }
 
 .roadmap-doc [data-section] {
