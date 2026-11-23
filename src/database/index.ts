@@ -843,7 +843,15 @@ export class DatabaseManager {
       const source = new DatabaseManager(tmp);
       await source.open();
       source.close();
-      this.db.prepare('ATTACH DATABASE ? AS bpm_import').run(tmp);
+      // Base chiffrée (SQLCipher) : sans KEY '', ATTACH lirait le .bpm en clair avec la clé de
+      // la base principale (« file is not a database »)
+      this.db
+        .prepare(
+          this.encryptionKey
+            ? "ATTACH DATABASE ? AS bpm_import KEY ''"
+            : 'ATTACH DATABASE ? AS bpm_import'
+        )
+        .run(tmp);
       try {
         return mergeAttachedDatabase(this.db, 'bpm_import', id => this.deleteCompetition(id));
       } finally {
