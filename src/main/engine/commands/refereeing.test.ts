@@ -137,8 +137,17 @@ d('assignReferee (à la main)', () => {
   it('arbitre d’un match (#2151) : ce match seulement, en session et en base', async () => {
     const comp = setup();
     const r = referee(comp.id, 'Anne CLUB', 'A');
-    type S = { pools: { number: number; matches: { id: string; referee?: { id: string } }[] }[] };
-    const [first, second] = (db.getSessionState(comp.id) as S).pools[0].matches;
+    type M = {
+      id: string;
+      referee?: { id: string };
+      fencerA?: { club?: string };
+      fencerB?: { club?: string };
+    };
+    type S = { pools: { number: number; matches: M[] }[] };
+    // Tirage aléatoire : un match avec un tireur du club A (arbitre non neutre)
+    const matches = (db.getSessionState(comp.id) as S).pools[0].matches;
+    const first = matches.find(m => m.fencerA?.club === 'A' || m.fencerB?.club === 'A')!;
+    const second = matches.find(m => m.id !== first.id)!;
     const res = (await invoke(ctx, 'assignReferee', {
       competitionId: comp.id,
       matchId: first.id,
