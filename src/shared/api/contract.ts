@@ -31,6 +31,7 @@ import { fileOperations } from './contractFiles';
 import { simulationOperations } from './contractSimulation';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
+import { ArenaPlanSchema } from './arenaPlanSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
 import type { ConsolationBracket, FinalResult, TableauMatch } from '../domain/tableau/tableauTypes';
 import type { RapieresLegacyState, RapieresSession } from '../domain/rapieres/rapieres.types';
@@ -762,6 +763,20 @@ export const contract = {
     permission: 'competition:write',
   }),
 
+  saveArenaPlan: command({
+    description:
+      'Plan de salle du planificateur d’arène (salles, arènes, matériel) enregistré sur l’épreuve ; « plan: null » l’efface (docs/adr/0025). Sans journal.',
+    input: z.object({
+      competitionId: CompetitionId,
+      plan: ArenaPlanSchema.nullable(),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), competitionId: z.string(), revision: Revision }),
+    permission: 'competition:write',
+  }),
+
   updateCompetitionSettings: command({
     description:
       'Arme, sexe, catégorie, format par équipes et réglages (fusion de premier niveau ; clé inconnue ou valeur invalide refusées à l’entrée). ' +
@@ -1171,6 +1186,14 @@ export const contract = {
       'Une épreuve : identité, arme, catégorie, statut et réglages (dates en ISO 8601). Tireurs : listFencers ; arbitres : listReferees.',
     input: z.object({ competitionId: CompetitionId }),
     output: CompetitionSchema,
+    permission: 'competition:read',
+  }),
+
+  getArenaPlan: query({
+    description:
+      'Plan de salle du planificateur d’arène enregistré sur l’épreuve ; null si aucun (docs/adr/0025).',
+    input: z.object({ competitionId: CompetitionId }),
+    output: ArenaPlanSchema.nullable(),
     permission: 'competition:read',
   }),
 

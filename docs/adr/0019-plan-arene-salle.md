@@ -1,6 +1,6 @@
 # ADR-0019 — Disposition d'arène rattachée à la salle, salle liée à la compétition
 
-- **Statut** : Proposée
+- **Statut** : Remplacée par ADR-0025
 - **Date** : 2026-11-22
 - **Tickets** : #2075 (planificateur de placement d'arène Sabre Laser)
 
