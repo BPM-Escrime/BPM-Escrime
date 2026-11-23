@@ -233,12 +233,12 @@ export complet des résultats) par `getPoolSignatures` / `getTableauSignatures` 
 l'export des résultats par `listFencers` / `getCompetitionState` ; rapport de fin de tournoi par
 `listFencerStats` / `listRefereeMatches` ; import fédéral (tireurs, arbitres) par `registerFencers` /
 `registerReferees` ; événements simulés par `replaceSimulatedMatchEvents`. Piste d'une poule : plus
-d'écriture directe à côté d'`assignMatches` ; poules écrites en base au lancement par `generatePools`
-(préparation : épreuves par équipes seulement). `useElectronDB` supprimé, 47 canaux `db:*` sans appelant
+d'écriture directe à côté d'`assignMatches` ; poules réécrites en base au lancement par `generatePools`
+(le tirage de la préparation reste écrit par l'écran, relu au rechargement avant « Lancer »). `useElectronDB` supprimé, 47 canaux `db:*` sans appelant
 retirés. Restent en `db.*`, tous liés aux formats hors moteur (#2100, ADR à écrire) : `persistLocally`
 (`useCompetitionSession`, `useCompetitionRestore`, `useMatchDbSync`, `useSplitGroups`), équipes
-(`TeamManagerView`, équipes de l'import fédéral), repli local du lancement et de l'ajout en poule
-(`poolPersistence`, `AddFencerToPoolModal`), retrait local (instantanés d'abandon de
+(`TeamManagerView`, équipes de l'import fédéral), tirage de la préparation et repli local du lancement
+et de l'ajout en poule (`poolPersistence`, `AddFencerToPoolModal`), retrait local (instantanés d'abandon de
 `usePoolManagement`) et statut écrit par `useFencerManagement` (un statut est un fait sportif : commande
 et événement à décider dans cette ADR). Cliquets : `electronApiCalls` 39, `electronApiUses` 108,
 `ipcChannels` 99.

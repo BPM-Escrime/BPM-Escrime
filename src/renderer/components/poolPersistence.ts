@@ -1,7 +1,8 @@
 /**
  * BellePoule Modern - Persistance des poules générées en base, par l'écran
- * Reste des formats que le moteur ne pilote pas (épreuves par équipes, #2100) : ailleurs,
- * generatePools écrit poules, tireurs, matchs et pistes dans sa transaction (docs/adr/0017).
+ * Tirage de la préparation (relu au rechargement avant le lancement) et lancement des formats
+ * que le moteur ne pilote pas (épreuves par équipes, #2100). Au lancement des autres formats,
+ * generatePools réécrit poules, tireurs, matchs et pistes dans sa transaction (docs/adr/0017).
  * Licensed under GPL-3.0
  */
 

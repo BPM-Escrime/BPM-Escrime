@@ -430,9 +430,11 @@ export function useCompetitionSessionSync(ctx: Ctx) {
         setPoolsLaunched(false);
         setRelaunchPending(true);
       }
-      // Poules écrites en base au lancement par le moteur (generatePools) ; format hors
-      // moteur (équipes, #2100) : par l'écran dès la préparation, comme avant
-      if (competition.isTeamEvent) await persistPoolsToDB(newPools);
+      // Tirage écrit en base dès la préparation : relu au rechargement avant « Lancer »
+      // (repli DB de useCompetitionRestore, la session n'est écrite qu'au lancement par le
+      // moteur). Pas d'opération du contrat pour des poules non lancées : écriture de l'écran
+      // gardée (poolPersistence), à reprendre avec l'ADR de #2100
+      await persistPoolsToDB(newPools);
       // Fermer l'inscription distante dès que les poules sont générées
       if (isRemoteActive) {
         void remote.setRegistrationEnabled(competition.id, false);

@@ -189,19 +189,69 @@ describe('CompetitionView', () => {
     expect(btn).toBeDisabled();
   });
 
-  it('génère les poules et passe en préparation, sans écriture en base avant le lancement', async () => {
+  it('génère les poules, les persiste en base et passe en préparation', async () => {
     const calls = mockElectronAPI(Array.from({ length: 10 }, (_, i) => fencer(i + 1)));
     renderView();
     await screen.findByText('Nom1');
     const btn = screen.getByRole('button', { name: /Préparer les poules/ });
     expect(btn).toBeEnabled();
     fireEvent.click(btn);
+    await waitFor(() => expect(calls.createPool?.length).toBeGreaterThan(0));
+    // 10 tireurs en poules de 5 à 7 : 2 poules, 10 matchs par poule de 5
+    const poolIds = calls.createPool.map(a => a[2]);
+    expect(new Set(poolIds).size).toBe(calls.createPool.length);
+    expect(calls.addFencerToPool).toHaveLength(10);
+    const placed = new Set(calls.addFencerToPool.map(a => a[1]));
+    expect(placed.size).toBe(10);
+    expect(calls.createMatch.length).toBeGreaterThan(0);
     await waitFor(() =>
       expect(document.querySelectorAll('.phase-step')[1]).toHaveClass('phase-step-active')
     );
-    // Poules écrites en base au lancement par le moteur (generatePools, docs/adr/0017)
-    expect(calls.createPool ?? []).toHaveLength(0);
-    expect(calls.addFencerToPool ?? []).toHaveLength(0);
+  });
+
+  it('préparation non lancée : le tirage est relu en base au rechargement, pas de nouveau tirage', async () => {
+    const all = Array.from({ length: 10 }, (_, i) => fencer(i + 1));
+    const calls = mockElectronAPI(all);
+    const first = renderView();
+    await screen.findByText('Nom1');
+    fireEvent.click(screen.getByRole('button', { name: /Préparer les poules/ }));
+    await waitFor(() => expect(calls.addFencerToPool?.length).toBe(10));
+    first.unmount();
+
+    // Rechargement avant « Lancer » : session sans poules, poules lues en base (repli DB)
+    const byId = new Map(all.map(f => [f.id, f]));
+    const dbPools = calls.createPool.map(([, number, id]) => ({
+      id,
+      number,
+      fencers: calls.addFencerToPool
+        .filter(([poolId]) => poolId === id)
+        .sort((x, y) => x[2] - y[2])
+        .map(([, fencerId]) => byId.get(fencerId)),
+      matches: [],
+    }));
+    const again = mockElectronAPI(all);
+    const db = (window as any).electronAPI.db;
+    const getPoolsByPhase = vi.fn(async () => dbPools);
+    (window as any).electronAPI.db = new Proxy(db, {
+      get: (t, key) =>
+        key === 'getPhasesByCompetition'
+          ? async () => [{ id: 'ph1', type: 'pool' }]
+          : key === 'getPoolsByPhase'
+            ? getPoolsByPhase
+            : t[key as string],
+    });
+    renderView();
+    await screen.findByText('Nom1');
+    await waitFor(() => expect(getPoolsByPhase).toHaveBeenCalled());
+    // Appel inchangé : « Aller à la préparation », pas « Préparer » ni « Repréparer »
+    const resume = document.querySelector('[data-tour="generate-pools"]') as HTMLElement;
+    await waitFor(() => expect(resume).toHaveTextContent('Aller à la préparation'));
+    fireEvent.click(resume);
+    await waitFor(() =>
+      expect(document.querySelectorAll('.phase-step')[1]).toHaveClass('phase-step-active')
+    );
+    // Même appel : préparation reprise telle quelle, aucun nouveau tirage écrit
+    expect(again.createPool ?? []).toHaveLength(0);
   });
 
   describe('accès aux étapes et relance (#1499)', () => {
