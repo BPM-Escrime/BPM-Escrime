@@ -7,6 +7,17 @@
 import { Fencer, FencerCompetitionStats } from '../../../shared/types';
 import { defaultBpmClient } from '../../../renderer/api/IpcClient';
 import { fencerFromDTO } from '../../../renderer/api/fencerMapping';
+import { ApiError } from '../../../shared/api/client';
+
+/** Contrat indisponible (hors Electron, tests) : valeur neutre au lieu d'une erreur (#2134) */
+async function orIfUnavailable<T>(fallback: T, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (e instanceof ApiError && e.code === 'unavailable') return fallback;
+    throw e;
+  }
+}
 
 export interface CompetitionStats {
   totalFencers: number;
@@ -26,28 +37,27 @@ export class AnalyticsService {
    * Chiffres de l'épreuve, calculés par le moteur (requête getCompetitionStats, #1981)
    */
   async getCompetitionStats(competitionId: string): Promise<CompetitionStats> {
-    if (typeof window === 'undefined' || !window.electronAPI?.api) {
-      return {
-        totalFencers: 0,
-        totalMatches: 0,
-        completedMatches: 0,
-        averageMatchDuration: 0,
-        topFencers: [],
-      };
-    }
-    const stats = await defaultBpmClient.query('getCompetitionStats', { competitionId });
-    return {
-      ...stats,
-      topFencers: stats.topFencers.map(f => ({ ...f, fencer: fencerFromDTO(f.fencer) })),
+    const empty: CompetitionStats = {
+      totalFencers: 0,
+      totalMatches: 0,
+      completedMatches: 0,
+      averageMatchDuration: 0,
+      topFencers: [],
     };
+    return orIfUnavailable(empty, async () => {
+      const stats = await defaultBpmClient.query('getCompetitionStats', { competitionId });
+      return {
+        ...stats,
+        topFencers: stats.topFencers.map(f => ({ ...f, fencer: fencerFromDTO(f.fencer) })),
+      };
+    });
   }
 
   /**
    * Statistiques détaillées par combattant (touches, cartons, sorties, durée)
    */
   async getCompetitionFencerStats(competitionId: string): Promise<FencerCompetitionStats[]> {
-    if (typeof window === 'undefined' || !window.electronAPI?.api) return [];
-    return defaultBpmClient.query('listFencerStats', { competitionId });
+    return orIfUnavailable([], () => defaultBpmClient.query('listFencerStats', { competitionId }));
   }
 
   // Alias utilisé par useAnalyticsStore
@@ -56,8 +66,7 @@ export class AnalyticsService {
   }
 
   async getFencerCompetitionStats(fencerId: string): Promise<FencerCompetitionStats | null> {
-    if (typeof window === 'undefined' || !window.electronAPI?.api) return null;
-    return defaultBpmClient.query('getFencerStats', { fencerId });
+    return orIfUnavailable(null, () => defaultBpmClient.query('getFencerStats', { fencerId }));
   }
 
   // Stub minimal pour getCompetitionMetrics (appelé par le store)

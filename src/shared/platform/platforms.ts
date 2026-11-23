@@ -63,6 +63,19 @@ export class ElectronPlatform implements PlatformServices {
     return { name: baseName(result.filePath), bytes: result.bytes };
   }
 
+  async openBinaryFiles(request: OpenFileRequest): Promise<OpenedBinaryFile[] | null> {
+    const result = await this.api().dialog.openFile({
+      ...(request.title ? { title: request.title } : {}),
+      filters: request.filters,
+      properties: ['openFile', 'multiSelections'],
+      binary: true,
+    });
+    const files =
+      result?.files ?? (result?.bytes ? [{ filePath: result.filePath, bytes: result.bytes }] : []);
+    if (files.length === 0) return null;
+    return files.map(f => ({ name: baseName(f.filePath), bytes: f.bytes }));
+  }
+
   async print(html: string): Promise<void> {
     const res = await this.api().file.printHtml(html);
     if (!res?.success) throw new PlatformError("Échec de l'impression", res?.error);
@@ -137,20 +150,43 @@ export class BrowserPlatform implements PlatformServices {
     }));
   }
 
+  async openBinaryFiles(request: OpenFileRequest): Promise<OpenedBinaryFile[] | null> {
+    const files = await this.pick(request, file => Promise.resolve(file), true);
+    if (!files) return null;
+    return Promise.all(
+      files.map(async file => ({
+        name: file.name,
+        bytes: new Uint8Array(await file.arrayBuffer()),
+      }))
+    );
+  }
+
   /** Choix d'un fichier par <input type="file"> ; null si annulé */
-  private pick<T>(request: OpenFileRequest, read: (file: File) => Promise<T>): Promise<T | null> {
+  private pick<T>(request: OpenFileRequest, read: (file: File) => Promise<T>): Promise<T | null>;
+  private pick<T>(
+    request: OpenFileRequest,
+    read: (file: File) => Promise<T>,
+    multiple: true
+  ): Promise<T[] | null>;
+  private pick<T>(
+    request: OpenFileRequest,
+    read: (file: File) => Promise<T>,
+    multiple = false
+  ): Promise<T | T[] | null> {
     return new Promise((resolve, reject) => {
       const input = this.doc.createElement('input');
       input.type = 'file';
+      input.multiple = multiple;
       input.accept = request.filters
         .flatMap(f => f.extensions)
         .filter(e => e !== '*')
         .map(e => `.${e}`)
         .join(',');
       input.addEventListener('change', () => {
-        const file = input.files?.[0];
-        if (!file) return resolve(null);
-        read(file).then(resolve, reject);
+        const chosen = Array.from(input.files ?? []);
+        if (chosen.length === 0) return resolve(null);
+        if (multiple) return void Promise.all(chosen.map(read)).then(resolve, reject);
+        read(chosen[0]).then(resolve, reject);
       });
       // Fenêtre fermée sans choix (navigateurs récents)
       input.addEventListener('cancel', () => resolve(null));
@@ -202,6 +238,7 @@ export const defaultPlatform: PlatformServices = {
   saveFile: request => detectPlatform().saveFile(request),
   openFile: request => detectPlatform().openFile(request),
   openBinaryFile: request => detectPlatform().openBinaryFile(request),
+  openBinaryFiles: request => detectPlatform().openBinaryFiles(request),
   print: html => detectPlatform().print(html),
   exportPdf: async (html, request) => {
     const p = detectPlatform();

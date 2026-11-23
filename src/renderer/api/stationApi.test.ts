@@ -99,6 +99,8 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
   ['eventDay.setStripRule', () => api.eventDay.setStripRule('d1', 2, rule)],
   ['eventDay.setStripRule (levée)', () => api.eventDay.setStripRule('d1', 2, null)],
   ['eventDay.setAutoAssign', () => api.eventDay.setAutoAssign('d1', true)],
+  ['backup.getDir', () => api.backup.getDir()],
+  ['backup.resetDir', () => api.backup.resetDir()],
   ['privacy.getSettings', () => api.privacy.getSettings()],
   [
     'privacy.setSettings',

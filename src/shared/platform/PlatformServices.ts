@@ -62,6 +62,8 @@ export interface PlatformServices {
   openFile(request: OpenFileRequest): Promise<OpenedFile | null>;
   /** Choix d'un fichier binaire (octets bruts) ; null si annulé */
   openBinaryFile(request: OpenFileRequest): Promise<OpenedBinaryFile | null>;
+  /** Choix de plusieurs fichiers binaires (extranet fédéral, #2134) ; null si annulé */
+  openBinaryFiles(request: OpenFileRequest): Promise<OpenedBinaryFile[] | null>;
   /** Imprime un document HTML complet ; erreur si l'impression échoue (annulation : pas d'erreur) */
   print(html: string): Promise<void>;
   /**

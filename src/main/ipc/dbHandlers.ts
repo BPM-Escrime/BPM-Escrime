@@ -169,13 +169,6 @@ export function registerDbHandlers({ db, remoteServers }: DbHandlersContext): vo
 
   // Touch / Card read handlers
   // Cartons de plusieurs matchs pour les feuilles imprimées (#1829)
-  ipcMain.handle('db:getCardsByMatchIds', async (_, matchIds: unknown) => {
-    if (!Array.isArray(matchIds)) return [];
-    return db.getCardsByMatchIds(
-      matchIds.filter((id): id is string => typeof id === 'string').slice(0, 5000)
-    );
-  });
-
   // Statistiques combattants
 
   // Abandon snapshot handlers

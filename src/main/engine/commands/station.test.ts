@@ -23,6 +23,7 @@ import {
   sanitizePrivacySettings,
   writePrivacySettings,
 } from '../../privacySettings';
+import { resolveBackupDir, writeBackupSettings } from '../../backupSettings';
 import type { CommandContext, StationPort } from './context';
 import { handlers, invoke, subscribe } from '../api/engine';
 import { publishCompetitionEvent } from '../api/events';
@@ -49,6 +50,13 @@ const mcpStatus: McpStatus = {
 function stationPort(): StationPort {
   return {
     defaultAgentFolders: () => ['/home/dt/Documents'],
+    backup: {
+      info: () => resolveBackupDir(dir, path.join(dir, 'Documents')),
+      reset: () => {
+        writeBackupSettings(dir, {});
+        return resolveBackupDir(dir, path.join(dir, 'Documents'));
+      },
+    },
     themes: createThemesStore(() => dir),
     privacy: {
       settings: () => readPrivacySettings(dir),
@@ -172,6 +180,17 @@ d('Poste : réglages', () => {
       folders: ['/srv/exports'],
       defaults: [],
     });
+  });
+
+  it('dossier de sauvegarde : lu, puis remis au défaut (#2134)', async () => {
+    const custom = path.join(dir, 'Sauvegardes');
+    writeBackupSettings(dir, { dir: custom });
+    expect(await op('getBackupDir')).toEqual({ dir: custom, isDefault: false });
+    const reset = (await op('resetBackupDir')) as { dir: string; isDefault: boolean };
+    expect(reset.isDefault).toBe(true);
+    expect(await op('getBackupDir')).toEqual(reset);
+    // Sans port du poste : refus explicite, pas de chemin inventé
+    await expect(op('getBackupDir', {}, { db })).rejects.toBeInstanceOf(ApiError);
   });
 
   it('onStationSettingsChanged : relaie les changements de paramètres, pas les autres', () => {
@@ -515,8 +534,8 @@ describe('contrat du poste', () => {
     n => contract[n].permission === 'station:admin' && !(n in fileOperations)
   );
 
-  it('43 opérations, chacune avec son gestionnaire', () => {
-    expect(ops).toHaveLength(43);
+  it('45 opérations, chacune avec son gestionnaire', () => {
+    expect(ops).toHaveLength(45);
     for (const name of ops) expect(typeof handlers[name], name).toBe('function');
   });
 });

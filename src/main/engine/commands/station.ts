@@ -50,6 +50,8 @@ type SettingsOps =
   | 'importLegacySettings'
   | 'listAgentFolders'
   | 'removeAgentFolder'
+  | 'getBackupDir'
+  | 'resetBackupDir'
   | 'listVenues'
   | 'saveVenue'
   | 'deleteVenue'
@@ -88,6 +90,8 @@ const settingsHandlers: { [N in SettingsOps]: StationHandler<N> } = {
       return ctx.db.settings.importLegacySettings(settings);
     }),
   listAgentFolders: ctx => refuse(() => agentFolders(ctx)),
+  getBackupDir: ctx => refuse(() => portOf(ctx).backup.info()),
+  resetBackupDir: ctx => refuse(() => portOf(ctx).backup.reset()),
   removeAgentFolder: (ctx, { folder }) =>
     refuse(() => {
       const current = ctx.db.settings.getSetting('agentFolders');
