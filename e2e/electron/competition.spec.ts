@@ -12,6 +12,8 @@ test.describe('Compétitions (application Electron)', () => {
     await createCompetition(win, 'E2E Liste');
     await win.getByRole('button', { name: /revenir à la liste des comp/i }).click();
     const card = win.locator('.competition-card', { hasText: 'E2E Liste' });
+    // Une seule carte : l'avis competitions:changed ne doit pas ajouter un doublon (#2177)
+    await expect(card).toHaveCount(1);
     await expect(card).toBeVisible();
     await card.click();
     await expect(win.getByRole('heading', { name: 'Appel' })).toBeVisible();
