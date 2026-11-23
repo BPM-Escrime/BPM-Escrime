@@ -1130,7 +1130,8 @@ function recordBracketScore(
     throw new CommandError('score_invalid', 'Score refusé : score_invalid');
   }
   const max = effectiveSettings(comp).tableMaxScore;
-  if (!input.specialStatus && max > 0 && (scoreA > max || scoreB > max)) {
+  // Sabre Laser : pas de plafond (19 possible, cartons en plus ; Livret 2 FFE, #2194)
+  if (!input.specialStatus && !isLaser(comp) && max > 0 && (scoreA > max || scoreB > max)) {
     throw new CommandError('score_above_max', `Score refusé : ${max} touches maximum`);
   }
   if (!input.specialStatus && !isLaser(comp) && isTieAtScoreLimit(scoreA, scoreB, max)) {

@@ -8,6 +8,8 @@ import { Category, Gender, Weapon } from '../../../shared/types';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
+import { effectiveSettings } from './sport';
+import { validatePoolScore } from '../../../shared/utils/poolOrchestration';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -88,6 +90,19 @@ d('épreuves (docs/adr/0018)', () => {
     const solo = await invoke(ctx, 'createCompetition' as never, base as never);
     const soloComp = db.getCompetition((solo as any).competitionId)!;
     expect(soloComp.settings).toMatchObject({ defaultPoolMaxScore: 5, defaultTableMaxScore: 21 });
+    // Livret 2 FFE : combats en 15 points, score jusqu'à 19 et plus avec les cartons (#2194)
+    const eff = effectiveSettings(soloComp);
+    const pool = (scoreA: number, scoreB: number) =>
+      validatePoolScore({
+        scoreA,
+        scoreB,
+        maxScore: eff.poolMaxScore,
+        isLaserSabre: true,
+        tieByVictory: false,
+      });
+    expect(pool(15, 10)).toBeNull();
+    expect(pool(19, 14)).toBeNull();
+    expect(pool(5, 3)).toBeNull();
     const team = await invoke(
       ctx,
       'createCompetition' as never,
