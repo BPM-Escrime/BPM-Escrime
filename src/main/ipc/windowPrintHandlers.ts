@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handlers IPC window:*, impression / PDF (file:printHtml*), perf:* et shell:openExternal
+ * BPM - Escrime - Handlers IPC window:*, impression / PDF (file:printHtml*), perf:* et shell:openExternal
  * (extraits de main.ts, #1341).
  * Licensed under GPL-3.0
  */

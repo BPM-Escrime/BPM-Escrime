@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arène : plan de mise à jour d'affichage (extrait de arena.html #1401)
+ * BPM - Escrime - Arène : plan de mise à jour d'affichage (extrait de arena.html #1401)
  * planArenaUpdate est pur : il traduit un message serveur en liste ordonnée d'opérations que
  * ArenaDisplay applique (état + DOM). Servi en /js/arenaUpdate.js (CSP 'self').
  * Licensed under GPL-3.0

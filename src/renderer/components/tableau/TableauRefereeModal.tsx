@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - TableauRefereeModal
+ * BPM - Escrime - TableauRefereeModal
  * Modal d'assignation d'un ou plusieurs arbitres (mode expert) à un match du tableau
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écran d'arène : utilitaires purs extraits de arena.html (#1401)
+ * BPM - Escrime - Écran d'arène : utilitaires purs extraits de arena.html (#1401)
  * Bannière texte seul, identifiant d'arène, thèmes. Servi en /js/arenaDisplayUtils.js (CSP 'self').
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pilotage de la salle hors compétition (#2117, docs/adr/0023)
+ * BPM - Escrime - Pilotage de la salle hors compétition (#2117, docs/adr/0023)
  * Grille des pistes de la salle (protocole, liaison, épreuve en cours, dernier envoi et son
  * accusé), sélection de plusieurs pistes ou de toutes, envoi en une fois de l'arme, des noms
  * et des nationalités (ou clubs), remise à blanc. Pilotes Cyrano / OPP2 démarrables d'ici.

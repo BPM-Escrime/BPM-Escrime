@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : tablettes, synchronisation et sauvegardes du poste
+ * BPM - Escrime - Mode Club : tablettes, synchronisation et sauvegardes du poste
  * (#1981 lot 2, docs/adr/0022). Les services dépendant d'Electron (serveur d'entraînement,
  * sélecteur de dossier) passent par le port `ctx.club`, branché par main.ts.
  * Licensed under GPL-3.0

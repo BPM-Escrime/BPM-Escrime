@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pool Preparation View Component
+ * BPM - Escrime - Pool Preparation View Component
  * Allows configuring pools before starting matches
  * Licensed under GPL-3.0
  */
@@ -167,7 +167,7 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
   }
   const [separationCriteria, setSeparationCriteria] = useState<SeparationCriterion[]>(() => {
     const defaults: SeparationCriterion[] = [
-      // Classement : rang 1 par défaut (BellePoule : serpentin puis échanges dans le chapeau),
+      // Classement : rang 1 par défaut (BPM - Escrime : serpentin puis échanges dans le chapeau),
       // toujours actif, déplaçable ; critères placés après = échange dans le chapeau
       { key: 'byRanking' as const, label: 'Classement', enabled: true },
       { key: 'byClub' as const, label: 'Club', enabled: !customDistribution },
@@ -557,7 +557,7 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
 
   /**
    * Valeurs au-delà du quota dans une poule (club, région…) → nombre d'occurrences.
-   * Quota BellePoule : ⌈effectif de la valeur / nb poules⌉ (un gros club se répartit sans alerte).
+   * Quota BPM - Escrime : ⌈effectif de la valeur / nb poules⌉ (un gros club se répartit sans alerte).
    */
   const getPoolConflicts = (
     pool: Pool,

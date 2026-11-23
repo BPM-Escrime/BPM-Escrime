@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (inventaire) : liste gérée par le club (catégories ou marques)
+ * BPM - Escrime - Mode Club (inventaire) : liste gérée par le club (catégories ou marques)
  * — ajout, renommage, suppression ; réutilisée dans les menus déroulants des fiches.
  * Licensed under GPL-3.0
  */

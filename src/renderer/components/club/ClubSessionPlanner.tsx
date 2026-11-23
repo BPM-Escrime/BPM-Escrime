@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : préparation d'une séance de cours.
+ * BPM - Escrime - Mode Club (#1872) : préparation d'une séance de cours.
  * Date, intitulé, objectifs, plan (exercices avec durée et consignes), notes.
  * Licensed under GPL-3.0
  */

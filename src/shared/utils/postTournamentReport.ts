@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Rapport post-tournoi PDF
+ * BPM - Escrime - Rapport post-tournoi PDF
  * Génère un rapport HTML complet pour export PDF
  * Licensed under GPL-3.0
  */
@@ -379,7 +379,7 @@ export function generatePostTournamentReportHTML(
   }
 
   <div class="footer">
-    Rapport généré par BellePoule Modern · ${new Date().toLocaleString(getActiveLocale())}
+    Rapport généré par BPM - Escrime · ${new Date().toLocaleString(getActiveLocale())}
   </div>
 </body>
 </html>`;

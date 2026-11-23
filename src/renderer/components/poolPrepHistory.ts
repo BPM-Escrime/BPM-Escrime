@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Historique d'annulation de la préparation des poules
+ * BPM - Escrime - Historique d'annulation de la préparation des poules
  * Licensed under GPL-3.0
  */
 

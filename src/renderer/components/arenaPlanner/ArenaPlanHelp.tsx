@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Aide du planificateur d'arène (#2075)
+ * BPM - Escrime - Aide du planificateur d'arène (#2075)
  * Mode d'emploi court, raccourcis et règles du livret, repliable.
  * Licensed under GPL-3.0
  */

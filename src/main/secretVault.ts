@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Sous-ensemble asynchrone de `safeStorage` (Electron) : Keychain / DPAPI /
+ * BPM - Escrime - Sous-ensemble asynchrone de `safeStorage` (Electron) : Keychain / DPAPI /
  * libsecret. L'API synchrone est dépréciée (#1988) ; l'asynchrone ne bloque pas le thread
  * principal pendant le déverrouillage du trousseau. Injecté pour les tests.
  * Licensed under GPL-3.0

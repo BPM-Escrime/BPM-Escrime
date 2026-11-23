@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Éditeur de zones de score personnalisées
+ * BPM - Escrime - Éditeur de zones de score personnalisées
  */
 
 import React, { memo } from 'react';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handler IPC `settings:addAgentFolder` : dossier de l'agent choisi dans une
+ * BPM - Escrime - Handler IPC `settings:addAgentFolder` : dossier de l'agent choisi dans une
  * boîte de dialogue native (#1880). Les autres réglages du poste et les salles sont des
  * opérations du contrat (engine/commands/station.ts, docs/adr/0022) ; celle-ci reste en IPC car
  * elle ouvre un dialogue natif (ADR-0021).

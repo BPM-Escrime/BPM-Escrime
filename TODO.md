@@ -1,4 +1,4 @@
-# BellePoule Modern — Todo List
+# BPM - Escrime — Todo List
 
 > Seuls les points restants sont listés (audit du 2026-10, vérifié contre `src/`).
 

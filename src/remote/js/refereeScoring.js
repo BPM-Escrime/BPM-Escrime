@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : règles de saisie des points (extrait de referee.html #1401)
+ * BPM - Escrime - Arbitre : règles de saisie des points (extrait de referee.html #1401)
  * Zones de score, validation d'une touche, mort subite challenger. Pur, sans DOM.
  * Servi en /js/refereeScoring.js (CSP 'self').
  * Licensed under GPL-3.0

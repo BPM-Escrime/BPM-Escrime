@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglages d'affectation des arbitres d'une épreuve (docs/adr/0014)
+ * BPM - Escrime - Réglages d'affectation des arbitres d'une épreuve (docs/adr/0014)
  * Résolution des valeurs par défaut et fusion d'une modification : une seule règle pour
  * l'écran, le moteur et le MCP.
  * Licensed under GPL-3.0

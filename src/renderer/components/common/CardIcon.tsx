@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Icône de carton (#1532)
+ * BPM - Escrime - Icône de carton (#1532)
  * Carré lucide plein (blanc / jaune / rouge / noir) à la place des emojis de carton.
  * Décorative (aria-hidden) sauf si `label` est fourni (icône seule, ex. en-tête de colonne).
  * Licensed under GPL-3.0

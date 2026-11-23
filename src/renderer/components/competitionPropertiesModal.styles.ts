@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Styles statiques de CompetitionPropertiesModal
+ * BPM - Escrime - Styles statiques de CompetitionPropertiesModal
  * Constantes au niveau module (références stables) pour les styles répétés.
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Briques communes des opérations du serveur distant (#1981 lot 2,
+ * BPM - Escrime - Briques communes des opérations du serveur distant (#1981 lot 2,
  * docs/adr/0022) : type des gestionnaires, accès au port, refus rendus sous un code du catalogue.
  * Licensed under GPL-3.0
  */

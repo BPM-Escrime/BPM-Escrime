@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : vue des pistes (extrait de kiosk.html #1401)
+ * BPM - Escrime - Kiosque : vue des pistes (extrait de kiosk.html #1401)
  * Détection des changements de score et gabarit HTML (escHtml, tk et libellé injectés :
  * toute donnée dynamique est échappée). Servi en /js/kioskArenas.js (CSP 'self').
  * Licensed under GPL-3.0

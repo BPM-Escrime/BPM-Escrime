@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests unitaires - commandes « / » de la palette (Ctrl+K)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';

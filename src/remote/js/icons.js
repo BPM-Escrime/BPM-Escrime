@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Jeu d'icônes SVG partagé des pages distantes (#1532)
+ * BPM - Escrime - Jeu d'icônes SVG partagé des pages distantes (#1532)
  * Remplace les emojis d'icône : rendu identique sur toutes les tablettes/écrans, couleur et
  * taille héritées du texte (currentColor / 1em), décoratif (aria-hidden). Tracés issus de
  * lucide (ISC). Servi en /js/icons.js (CSP 'self', aucun script inline).

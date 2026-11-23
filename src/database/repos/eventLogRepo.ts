@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Journal des événements par épreuve (#1980, format : docs/adr/0007)
+ * BPM - Escrime - Journal des événements par épreuve (#1980, format : docs/adr/0007)
  * Ajout seul ; une révision croissante par épreuve (ordre local) et un identifiant unique
  * par événement (event_id, stable entre postes) ; les événements d'une même commande
  * partagent command_id. Les événements portent des identifiants, jamais de noms

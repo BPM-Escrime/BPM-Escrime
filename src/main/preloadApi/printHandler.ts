@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Préload : boîte d'impression intégrée enregistrée par le renderer (#1214, #1774)
+ * BPM - Escrime - Préload : boîte d'impression intégrée enregistrée par le renderer (#1214, #1774)
  * Licensed under GPL-3.0
  */
 export type PrintRequestHandler = (html: string) => Promise<{ success: boolean; error?: string }>;

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tablette arbitre : classe RefereeApp (2e moitié : saisie des touches, cartons, listes, signatures).
+ * BPM - Escrime - Tablette arbitre : classe RefereeApp (2e moitié : saisie des touches, cartons, listes, signatures).
  * Extrait de referee.html (#1600). Hérite de RefereeAppBase (/js/refereeAppBase.js, chargé avant).
  * Script classique chargé en <script src="/js/refereeApp.js"> (CSP : pas de script inline).
  * Licensed under GPL-3.0

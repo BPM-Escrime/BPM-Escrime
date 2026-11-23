@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Report Issue Modal
+ * BPM - Escrime - Report Issue Modal
  * Creates a GitHub issue with pre-filled information
  * Licensed under GPL-3.0
  */
@@ -90,7 +90,7 @@ ${description || '_Aucune description fournie_'}
 ${issueType === 'bug' ? '_Décrivez les étapes pour reproduire le bug..._' : '_Ajoutez des détails si nécessaire..._'}
 
 ---
-_Issue créée automatiquement depuis BellePoule Modern_`;
+_Issue créée automatiquement depuis BPM - Escrime_`;
 
     // Construire l'URL GitHub
     const labels = issueType === 'bug' ? 'bug' : 'enhancement';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : calculs purs du tableau / classement (extrait de kiosk.html #1401)
+ * BPM - Escrime - Kiosque : calculs purs du tableau / classement (extrait de kiosk.html #1401)
  * Aucun accès au DOM ni à l'état global : tout est passé en paramètre. Servi en /js/kioskBracketUtils.js.
  * Licensed under GPL-3.0
  */

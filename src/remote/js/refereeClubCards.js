@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : identification des tireurs par leur carte de club (#1872).
+ * BPM - Escrime - Arbitre : identification des tireurs par leur carte de club (#1872).
  * Séance du Mode Club reliée au serveur d'entraînement : combat déjà sur la piste (scanné ou
  * lancé depuis le poste) → vue arbitre directe ; sinon la tablette demande la carte du tireur A
  * puis celle du tireur B (caméra ou code en clair), chacune pouvant être passée. Bouton

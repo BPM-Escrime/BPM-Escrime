@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Affichage des poules : taille des cartes, grille / poule unique (#1241)
+ * BPM - Escrime - Affichage des poules : taille des cartes, grille / poule unique (#1241)
  * Extrait de CompetitionView. Mode et taille persistés dans localStorage.
  * Licensed under GPL-3.0
  */

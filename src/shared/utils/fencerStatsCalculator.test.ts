@@ -1,6 +1,6 @@
 /**
  * Tests unitaires pour le calculateur de statistiques tireurs
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Couche domaine : paramétrage global et salles (#1880)
+ * BPM - Escrime - Couche domaine : paramétrage global et salles (#1880)
  * Ordre de résolution : épreuve → journée → salle → app_settings → valeur par défaut du code.
  * Licensed under GPL-3.0
  */

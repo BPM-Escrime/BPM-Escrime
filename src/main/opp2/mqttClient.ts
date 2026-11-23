@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Client MQTT 3.1.1 minimal (#1960)
+ * BPM - Escrime - Client MQTT 3.1.1 minimal (#1960)
  * Sert d'appareil OPP2 simulé dans les tests et prépare le raccordement à un broker externe.
  * Session propre, QoS 0 / 1, dernière volonté, keepalive (PINGREQ).
  * Licensed under GPL-3.0

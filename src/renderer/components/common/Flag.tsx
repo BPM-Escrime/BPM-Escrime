@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Drapeau (image SVG embarquée ; les emoji drapeaux ne s'affichent pas sous Windows)
+ * BPM - Escrime - Drapeau (image SVG embarquée ; les emoji drapeaux ne s'affichent pas sous Windows)
  * Licensed under GPL-3.0
  */
 

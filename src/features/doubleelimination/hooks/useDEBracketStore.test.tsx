@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests unitaires - useDEBracketStore (double élimination)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';

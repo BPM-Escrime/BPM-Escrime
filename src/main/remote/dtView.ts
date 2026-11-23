@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Espace « Vue DT » du serveur distant (#1981 lot 3, docs/adr/0020)
+ * BPM - Escrime - Espace « Vue DT » du serveur distant (#1981 lot 3, docs/adr/0020)
  * Mot de passe haché, jeton en cookie bp_dt_token (8 h), désactivé par défaut. Branche
  * l'adaptateur WebSocket du contrat (/api, lecture seule) avec les limites des autres sockets :
  * plafond de connexions par IP, seau à jetons par socket.
@@ -35,7 +35,7 @@ export const DT_PAGE_HTML = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>BellePoule</title>
+<title>BPM - Escrime</title>
 <link rel="stylesheet" href="/dt/dt.css">
 </head>
 <body>

@@ -1,7 +1,7 @@
-# RGPD — données personnelles dans BellePoule Modern
+# RGPD — données personnelles dans BPM - Escrime
 
 > Issue #1882. Le logiciel **n'est pas responsable de traitement** : l'organisateur (club,
-> comité, ligue) l'est. BellePoule Modern fournit les outils pour qu'il puisse être conforme.
+> comité, ligue) l'est. BPM - Escrime fournit les outils pour qu'il puisse être conforme.
 > Ce document n'est pas un avis juridique.
 
 ## 1. Données traitées

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglages effectifs d'une formule personnalisée (arme CUSTOM) (#1125)
+ * BPM - Escrime - Réglages effectifs d'une formule personnalisée (arme CUSTOM) (#1125)
  * La formule (score max, chrono, tours, qualifiés, 3e place) prime sur les réglages par défaut.
  * Licensed under GPL-3.0
  */

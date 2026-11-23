@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Helpers réseau du serveur distant (CORS, IP, routes de login)
+ * BPM - Escrime - Helpers réseau du serveur distant (CORS, IP, routes de login)
  * (extraits de remoteScoreServer.ts, #1065).
  * Licensed under GPL-3.0
  */

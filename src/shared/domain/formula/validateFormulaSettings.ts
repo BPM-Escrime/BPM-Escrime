@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Validation de la formule (docs/adr/0012)
+ * BPM - Escrime - Validation de la formule (docs/adr/0012)
  * Une seule fonction, appelée par le moteur à chaque écriture de réglages (création,
  * modification) ; l'écran peut l'appeler pour afficher les erreurs. Pure : rend la liste des
  * écarts, sans lever.

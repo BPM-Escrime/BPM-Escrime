@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Invite RGPD globale (#1882) : rappel au démarrage des données dépassant
+ * BPM - Escrime - Invite RGPD globale (#1882) : rappel au démarrage des données dépassant
  * la durée de conservation. Le mot de passe d'une archive chiffrée : EncryptedBpmPrompt.
  * Licensed under GPL-3.0
  */

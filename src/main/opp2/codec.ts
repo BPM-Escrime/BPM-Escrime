@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Messages OPP2 niveau 2 (#1960)
+ * BPM - Escrime - Messages OPP2 niveau 2 (#1960)
  * OpenPiste Protocol, JSON sur MQTT : https://github.com/OpenPiste/protocols (docs/level2.md).
  * Sujets `openpiste/{piste_id}/{rôle}/{message}` ; champs communs `protocol`, `version`,
  * `seq` (QoS 1), `ts`. Conversion modèle commun (#1829) ↔ messages OPP2.
@@ -113,7 +113,7 @@ export function formatOpp2Time(seconds: number): string {
   return whole < 10 ? `${base}.${String(cs).padStart(2, '0')}` : base;
 }
 
-/** En-tête commun d'un message publié par BellePoule. */
+/** En-tête commun d'un message publié par BPM - Escrime. */
 export function opp2Header(seq: number | undefined, ts: number): Record<string, unknown> {
   const h: Record<string, unknown> = { protocol: OPP2_PROTOCOL, version: OPP2_VERSION };
   if (seq !== undefined) h.seq = seq;

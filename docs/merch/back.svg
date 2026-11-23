@@ -14,7 +14,7 @@
   <!-- lampes de touche -->
   <circle cx="54" cy="195" r="13" fill="#2ee86b" opacity=".2"/><circle cx="54" cy="195" r="7" fill="#2ee86b"/><circle cx="52" cy="193" r="2.2" fill="#fff" opacity=".8"/>
   <circle cx="346" cy="195" r="13" fill="#ff3b5c" opacity=".2"/><circle cx="346" cy="195" r="7" fill="#ff3b5c"/><circle cx="344" cy="193" r="2.2" fill="#fff" opacity=".8"/>
-  <text font-family="Inter, Arial, sans-serif" font-weight="900" font-size="21" letter-spacing="5" fill="#ffffff"><textPath xlink:href="#arcTop" href="#arcTop" startOffset="50%" text-anchor="middle">BELLEPOULE</textPath></text>
+  <text font-family="Inter, Arial, sans-serif" font-weight="900" font-size="21" letter-spacing="5" fill="#ffffff"><textPath xlink:href="#arcTop" href="#arcTop" startOffset="50%" text-anchor="middle">BPM_ESCRIME</textPath></text>
   
   <!-- fleuret : garde en bas à droite, pointe en haut à gauche -->
   <polygon points="88,83 92,81 298,293 292,299" fill="url(#steel)"/>

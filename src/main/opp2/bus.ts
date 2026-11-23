@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bus OPP2 (#1960)
+ * BPM - Escrime - Bus OPP2 (#1960)
  * Ce que le pilote OPP2 attend du broker : publier, s'abonner. Le broker intégré
  * (`MqttBroker`) l'implémente sans socket ; un client vers un broker externe l'implémentera.
  * Licensed under GPL-3.0

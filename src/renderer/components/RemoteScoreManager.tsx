@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Remote Score Management Component
+ * BPM - Escrime - Remote Score Management Component
  * Interface for managing remote score entry
  * Licensed under GPL-3.0
  */

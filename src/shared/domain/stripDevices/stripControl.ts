@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pilotage des appareils de la salle hors compétition (#2117, docs/adr/0023)
+ * BPM - Escrime - Pilotage des appareils de la salle hors compétition (#2117, docs/adr/0023)
  * Règles pures :
  * - sélection des pistes (liste ou toutes les pistes déclarées) ;
  * - occupation : une piste est refusée si une épreuve en cours dans la salle l'utilise, sauf si

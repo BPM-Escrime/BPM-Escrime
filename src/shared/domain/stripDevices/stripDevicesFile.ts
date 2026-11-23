@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Déclaration en masse des appareils d'une salle (#2117, docs/adr/0023) :
+ * BPM - Escrime - Déclaration en masse des appareils d'une salle (#2117, docs/adr/0023) :
  * profils constructeur, ajout en lot (plage de pistes, IP de départ incrémentée), fichier
  * d'export / d'import. Reprend les outils de l'ancien panneau Cyrano (#1829), désormais sur la
  * salle. Règles pures : le fichier circule par contenu (jamais un chemin), la validation de

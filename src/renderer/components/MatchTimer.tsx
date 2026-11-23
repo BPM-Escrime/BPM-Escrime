@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Match Timer Component
+ * BPM - Escrime - Match Timer Component
  * Real-time match timer for FFE Sabre Laser (3 minutes)
  * Licensed under GPL-3.0
  */

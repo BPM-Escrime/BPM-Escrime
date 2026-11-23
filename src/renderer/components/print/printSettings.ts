@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Boîte d'impression intégrée : réglages côté renderer (#1214)
+ * BPM - Escrime - Boîte d'impression intégrée : réglages côté renderer (#1214)
  * Valeurs par défaut, validation des plages de pages, mémorisation du dernier choix.
  * Licensed under GPL-3.0
  */

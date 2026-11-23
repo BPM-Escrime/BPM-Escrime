@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Card System (FFE Sabre Laser)
+ * BPM - Escrime - Card System (FFE Sabre Laser)
  * Gestion des cartons selon le règlement 2025-2026
  * Licensed under GPL-3.0
  */

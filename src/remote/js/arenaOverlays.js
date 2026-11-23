@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écran d'arène : bannières et surcouches, extraites de arena.html (#1401)
+ * BPM - Escrime - Écran d'arène : bannières et surcouches, extraites de arena.html (#1401)
  * Annonces de carton / sortie, pile ou face, message distant, identification de l'écran.
  * Le DOM et les dépendances sont injectés (testable). Servi en /js/arenaOverlays.js (CSP 'self').
  * Licensed under GPL-3.0

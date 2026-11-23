@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Handlers IPC `crypto:*` : safeStorage (Keychain/DPAPI/libsecret)
+ * BPM - Escrime - Handlers IPC `crypto:*` : safeStorage (Keychain/DPAPI/libsecret)
  * pour les secrets locaux, ex. clé de synchronisation cloud. Renvoie une chaîne base64
  * (extraits de main.ts, #1341). API asynchrone (#1988).
  * Licensed under GPL-3.0

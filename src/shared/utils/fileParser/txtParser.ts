@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File Parser - Format TXT simple
+ * BPM - Escrime - File Parser - Format TXT simple
  * Licensed under GPL-3.0
  */
 
@@ -135,7 +135,7 @@ function parseTXTLine(line: string, lineNumber: number): Partial<Fencer> | null 
     return null;
   }
 
-  // Sauter le premier champ s'il est purement numérique (colonne N° du format TXT BellePoule)
+  // Sauter le premier champ s'il est purement numérique (colonne N° du format TXT BPM - Escrime)
   if (/^\d+$/.test(bestParts[0]) && bestParts.length >= 3) {
     bestParts = bestParts.slice(1);
   }

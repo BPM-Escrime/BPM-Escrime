@@ -3,7 +3,7 @@ description: Préparer une journée d'escrime depuis un dossier de fichiers (tir
 argument-hint: <dossier> [nom de la journée] [date AAAA-MM-JJ]
 ---
 
-Prépare une journée multi-épreuves dans BellePoule Modern avec l'outil MCP `import_day` (skill `bellepoule`). Arguments : $ARGUMENTS
+Prépare une journée multi-épreuves dans BPM - Escrime avec l'outil MCP `import_day` (skill `bpm-escrime`). Arguments : $ARGUMENTS
 
 1. Liste les fichiers du dossier indiqué : un fichier de tireurs par épreuve (`.fff`, `.csv`, `.xlsx`, `.xml`, `.cotcot`, `.txt`) et, s'il existe, un fichier d'arbitres Engarde (`nom;prenom;…`). Le dossier doit faire partie des dossiers accessibles à l'agent (Paramètres → Système → Agent IA).
 2. Déduis de chaque nom de fichier (ou de son en-tête) l'épreuve : arme E/F/S, sexe M/F/X, catégorie U9…V4. Nom et date de la journée : arguments, sinon les demander. Pistes : `get_settings.defaultStripCount` (salle par défaut) sauf indication contraire.

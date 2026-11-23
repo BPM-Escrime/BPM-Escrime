@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pilotage de la salle hors compétition et déclaration en masse (#2117,
+ * BPM - Escrime - Pilotage de la salle hors compétition et déclaration en masse (#2117,
  * docs/adr/0023) : grille des pistes, affichage libre (arme, noms, nationalités, remise à
  * blanc) avec accusé de réception, ajout en lot, export et import des appareils de la salle.
  * Règles pures : shared/domain/stripDevices (stripControl, stripDevicesFile). Les envois passent

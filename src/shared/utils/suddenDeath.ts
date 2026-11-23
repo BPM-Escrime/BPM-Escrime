@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Sudden Death System (FFE Sabre Laser)
+ * BPM - Escrime - Sudden Death System (FFE Sabre Laser)
  * Gestion de la mort subite selon le règlement 2025-2026
  * Licensed under GPL-3.0
  */

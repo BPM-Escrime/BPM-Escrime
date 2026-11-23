@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fichiers de données : appels de l'écran au contrat d'API (#1981,
+ * BPM - Escrime - Fichiers de données : appels de l'écran au contrat d'API (#1981,
  * docs/adr/0021). Sauvegarde .bpm (en clair ou chiffrée), archive de tireurs .bpf, photos ZIP,
  * sauvegarde d'un club .bpclub. Le contrat rend ou reçoit le contenu en base64 ; l'écran
  * l'enregistre ou le choisit par PlatformServices (`saveDataFile`, `openDataFile`). Remplace
@@ -77,8 +77,8 @@ export async function openDataFile(
 
 /** Filtres des dialogues des fichiers de données */
 export const DATA_FILE_FILTERS = {
-  bpm: [{ name: 'BellePoule', extensions: ['bpm'] }],
-  bpf: [{ name: 'BellePoule Fencers', extensions: ['bpf'] }],
+  bpm: [{ name: 'BPM - Escrime', extensions: ['bpm'] }],
+  bpf: [{ name: 'BPM - Escrime Fencers', extensions: ['bpf'] }],
   zip: [{ name: 'Archive ZIP', extensions: ['zip'] }],
 } satisfies Record<string, FileFilter[]>;
 

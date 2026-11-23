@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écoute des commandes « /remote start|stop » de la palette (Ctrl+K)
+ * BPM - Escrime - Écoute des commandes « /remote start|stop » de la palette (Ctrl+K)
  * Licensed under GPL-3.0
  */
 

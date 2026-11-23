@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modale de désignation des arbitres d'une poule (#1532)
+ * BPM - Escrime - Modale de désignation des arbitres d'une poule (#1532)
  * Extraite de PoolView (plafond de longueur #1155).
  * Licensed under GPL-3.0
  */

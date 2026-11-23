@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - LiveInterPoolRanking (#1288)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

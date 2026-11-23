@@ -6,7 +6,7 @@ Fonctionnalité accessible via **Outils → 📺 Télécommande TV** depuis n'im
 
 ## Vue d'ensemble
 
-La télécommande TV permet de piloter tous les écrans connectés au serveur BellePoule (TV Android, Xiaomi TV Stick, PC secondaire) depuis le poste organisateur, sans installation supplémentaire. Elle fonctionne via le serveur Socket.IO déjà utilisé pour les arbitres (port 8066 par défaut).
+La télécommande TV permet de piloter tous les écrans connectés au serveur BPM - Escrime (TV Android, Xiaomi TV Stick, PC secondaire) depuis le poste organisateur, sans installation supplémentaire. Elle fonctionne via le serveur Socket.IO déjà utilisé pour les arbitres (port 8066 par défaut).
 
 ```
 PC organisateur
@@ -128,5 +128,5 @@ Droit `remote:admin`, jamais servi sur le réseau ([ADR-0022](adr/0022-fonctions
 |----------|----------|
 | L'écran n'apparaît pas dans la liste | Vérifier que le serveur remote est démarré (onglet Remote) |
 | L'écran est gris (hors ligne) | La TV a fermé le navigateur ou perdu le WiFi — le heartbeat 30 s n'est plus reçu |
-| Le rafraîchissement ne fonctionne pas | La TV a quitté la page BellePoule ; naviguer manuellement vers `/lobby` pour la ré-enregistrer |
+| Le rafraîchissement ne fonctionne pas | La TV a quitté la page BPM - Escrime ; naviguer manuellement vers `/lobby` pour la ré-enregistrer |
 | La commande "Naviguer" change l'URL mais la TV reste blanche | L'arène demandée n'existe pas sur le serveur — vérifier le nombre de pistes configuré |

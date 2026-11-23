@@ -1,9 +1,9 @@
 /**
- * BellePoule Modern - Dossier de sauvegarde par défaut (Paramètres → Sauvegarde)
+ * BPM - Escrime - Dossier de sauvegarde par défaut (Paramètres → Sauvegarde)
  * Licensed under GPL-3.0
  *
  * Fichier `<userData>/backup-settings.json` : `{ "dir": "/chemin/absolu" }`.
- * Sans réglage, le dossier par défaut est `<Documents>/BellePoule`.
+ * Sans réglage, le dossier par défaut est `<Documents>/BPM - Escrime`.
  * Les sauvegardes automatiques (toutes les 2 minutes) et « Enregistrer » y écrivent.
  */
 
@@ -12,7 +12,7 @@ import path from 'path';
 
 export const BACKUP_SETTINGS_FILE = 'backup-settings.json';
 /** Nom fixe de la sauvegarde automatique : écrasée à chaque cycle, jamais empilée */
-export const AUTOSAVE_FILE_NAME = 'BellePoule-autosave.bpm';
+export const AUTOSAVE_FILE_NAME = 'BPM-Escrime-autosave.bpm';
 
 export interface BackupSettings {
   /** Dossier choisi par l'utilisateur ; absent = dossier par défaut */
@@ -24,9 +24,9 @@ export interface BackupDirInfo {
   isDefault: boolean;
 }
 
-/** Dossier par défaut : `<Documents>/BellePoule` */
+/** Dossier par défaut : `<Documents>/BPM - Escrime` */
 export function defaultBackupDir(documentsPath: string): string {
-  return path.join(documentsPath, 'BellePoule');
+  return path.join(documentsPath, 'BPM - Escrime');
 }
 
 /** Chemin saisi valide : absolu, sans octet nul ; normalisé. */

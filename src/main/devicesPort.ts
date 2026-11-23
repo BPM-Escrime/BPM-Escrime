@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Port des appareils de piste (#2117, docs/adr/0023)
+ * BPM - Escrime - Port des appareils de piste (#2117, docs/adr/0023)
  * Branche sur le CommandContext les pilotes Cyrano (serveur UDP) et OPP2 (broker MQTT intégré)
  * et le PisteHub. Remplace les canaux `cyrano:*` et `opp2:*` (ex-ipc/cyranoHandlers.ts,
  * ipc/opp2Handlers.ts). Les tables des pilotes ne viennent plus de l'écran : `reload` relit les

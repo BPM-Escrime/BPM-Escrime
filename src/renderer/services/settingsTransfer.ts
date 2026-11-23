@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Export / import des paramètres (JSON, logos inclus)
+ * BPM - Escrime - Export / import des paramètres (JSON, logos inclus)
  * Seules les clés listées ici sont exportées / acceptées à l'import.
  * Licensed under GPL-3.0
  */
@@ -80,7 +80,7 @@ export function buildSettingsExport(
 }
 
 export function settingsExportFileName(now: Date = new Date()): string {
-  return `bellepoule-parametres-${now.toISOString().slice(0, 10)}.json`;
+  return `bpm-escrime-parametres-${now.toISOString().slice(0, 10)}.json`;
 }
 
 function validValue(key: string, value: unknown): string | null {

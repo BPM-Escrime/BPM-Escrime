@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pilote Cyrano du modèle commun des appareils de piste (#1829)
+ * BPM - Escrime - Pilote Cyrano du modèle commun des appareils de piste (#1829)
  * Adaptateur `CyranoServer` ↔ `PisteDriver` :
  * - INFO / NEXT / PREV → `PisteInput` (état normalisé, n° de séquence croissant par piste) ;
  * - `PisteCommand` → DISP / ACK / NAK.

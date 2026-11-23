@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tableau des tireurs de la liste d'appel (lignes, tri, actions)
+ * BPM - Escrime - Tableau des tireurs de la liste d'appel (lignes, tri, actions)
  * Licensed under GPL-3.0
  */
 

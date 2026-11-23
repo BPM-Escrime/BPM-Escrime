@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - État « poules lancées » (#1499)
+ * BPM - Escrime - État « poules lancées » (#1499)
  * Licensed under GPL-3.0
  */
 

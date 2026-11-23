@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Onglet Club de l'accueil (#1872), extrait d'App.tsx (#1897)
+ * BPM - Escrime - Onglet Club de l'accueil (#1872), extrait d'App.tsx (#1897)
  * Onglet ouvert et club affiché mémorisés localement ; logo et nom du club relus à
  * chaque changement de vue.
  * Licensed under GPL-3.0

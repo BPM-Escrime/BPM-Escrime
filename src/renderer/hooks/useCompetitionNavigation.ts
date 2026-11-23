@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Navigation entre phases de la compétition (poules → classement → tableau,
+ * BPM - Escrime - Navigation entre phases de la compétition (poules → classement → tableau,
  * tour suivant, 3e place) (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

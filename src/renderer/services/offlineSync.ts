@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Offline Sync Manager
+ * BPM - Escrime - Offline Sync Manager
  * Handles synchronization between local and remote data
  * Licensed under GPL-3.0
  */

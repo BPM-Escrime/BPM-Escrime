@@ -1,4 +1,4 @@
-# Améliorations UX Proposées pour BellePoule Modern
+# Améliorations UX Proposées pour BPM - Escrime
 
 ## 📊 Analyse des Points d'Amélioration
 

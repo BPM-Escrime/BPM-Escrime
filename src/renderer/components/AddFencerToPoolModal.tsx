@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Add Fencer To Pool Modal
+ * BPM - Escrime - Add Fencer To Pool Modal
  * Allows adding an unassigned fencer to a pool mid-competition
  * Licensed under GPL-3.0
  */

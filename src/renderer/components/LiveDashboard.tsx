@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Live Public Dashboard
+ * BPM - Escrime - Live Public Dashboard
  * Public-facing interface for spectators
  * Licensed under GPL-3.0
  */

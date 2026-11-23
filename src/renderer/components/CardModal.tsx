@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Card Modal Component
+ * BPM - Escrime - Card Modal Component
  * Modal for assigning penalty cards in FFE Sabre Laser
  * Licensed under GPL-3.0
  */

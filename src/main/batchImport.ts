@@ -1,6 +1,6 @@
 /**
- * BellePoule Modern - Import d'une journée en ligne de commande (#1880, lot 0)
- *   bellepoule-modern --batch-import journee.json [--dry-run]
+ * BPM - Escrime - Import d'une journée en ligne de commande (#1880, lot 0)
+ *   bpm-escrime --batch-import journee.json [--dry-run]
  * Le manifeste a la forme des arguments de l'outil MCP `import_day` (docs/MCP.md) : même
  * logique, mêmes garanties (rejouable sans doublon). Les chemins `fencersFile` et
  * `refereesFile` peuvent être relatifs au manifeste. Rapport JSON sur la sortie standard,

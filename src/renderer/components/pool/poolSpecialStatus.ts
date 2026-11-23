@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Résultat d'un match de poule sur statut spécial (médical / forfait / exclusion)
+ * BPM - Escrime - Résultat d'un match de poule sur statut spécial (médical / forfait / exclusion)
  * Extrait de PoolView (#1418) : le tireur désigné perd, son adversaire est déclaré vainqueur.
  * Licensed under GPL-3.0
  */

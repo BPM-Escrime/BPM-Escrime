@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : menu global des séances, visible depuis tous
+ * BPM - Escrime - Mode Club (#1872) : menu global des séances, visible depuis tous
  * les onglets du club. Séances ouvertes (affichage, fermeture), séances prévues à
  * l'avance (ouverture) ou passées (réouverture). Plusieurs séances peuvent rester
  * ouvertes : chacune n'est fermée que sur décision explicite.

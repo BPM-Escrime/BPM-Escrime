@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Égalité tranchée par un vainqueur désigné (V) (#1442)
+ * BPM - Escrime - Égalité tranchée par un vainqueur désigné (V) (#1442)
  * Sabre laser (existant), armes olympiques (épée, fleuret, sabre : « minute prioritaire »)
  * et tournoi des rapières : une égalité en fin de temps se tranche par le vainqueur saisi
  * (tirage au sort avant la minute supplémentaire, ou V manuel).

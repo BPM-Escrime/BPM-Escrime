@@ -1,6 +1,6 @@
 /**
  * Tests unitaires - logger (singleton)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';

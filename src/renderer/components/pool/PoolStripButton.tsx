@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bouton d'assignation de piste pour toute une poule (#1501)
+ * BPM - Escrime - Bouton d'assignation de piste pour toute une poule (#1501)
  * Même principe que le bouton de désignation d'arbitre ; lié à la sélection de
  * piste de l'onglet Préparation (pool.strip).
  * Licensed under GPL-3.0

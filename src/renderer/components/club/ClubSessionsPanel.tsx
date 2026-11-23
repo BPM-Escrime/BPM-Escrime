@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : séances. Ouverture, pointage des présents,
+ * BPM - Escrime - Mode Club (#1872) : séances. Ouverture, pointage des présents,
  * combats libres sur les pistes (appariement manuel ou scan webcam), scores, fermeture.
  * Licensed under GPL-3.0
  */

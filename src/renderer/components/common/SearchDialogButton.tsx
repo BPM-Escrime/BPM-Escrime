@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Recherche compacte : loupe + boîte de dialogue
+ * BPM - Escrime - Recherche compacte : loupe + boîte de dialogue
  * Icône seule (infobulle « Rechercher »), le champ s'ouvre dans une modale.
  * Terme actif rappelé à côté de la loupe, effaçable d'un clic.
  * Licensed under GPL-3.0

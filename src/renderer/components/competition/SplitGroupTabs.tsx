@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Onglets de groupe d'une compétition couplée (#1532)
+ * BPM - Escrime - Onglets de groupe d'une compétition couplée (#1532)
  * Extrait de CompetitionView (plafond de longueur #1155).
  * Licensed under GPL-3.0
  */

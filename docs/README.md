@@ -1,4 +1,4 @@
-# Documentation BellePoule Modern — index
+# Documentation BPM - Escrime — index
 
 > Version **1.0.3**, build **#1365** — mise à jour du 9 octobre 2026.
 
@@ -11,7 +11,7 @@
 | [../INSTALLATION.md](../INSTALLATION.md) | Installation Windows / macOS / Linux, depuis les sources |
 | [MAC_VERSION.md](MAC_VERSION.md) | macOS : choisir la version Apple Silicon (arm64) ou Intel (x64) |
 | [../USER_MANUAL.md](../USER_MANUAL.md) | Manuel utilisateur (EN) : compétition, import, poules, tableau, exports |
-| [../MIGRATION_GUIDE.md](../MIGRATION_GUIDE.md) | Passer de BellePoule historique à BellePoule Modern |
+| [../MIGRATION_GUIDE.md](../MIGRATION_GUIDE.md) | Passer de BPM - Escrime historique à BPM - Escrime |
 | [../FILE_FORMATS.md](../FILE_FORMATS.md) | Formats d'import/export (FFF, XML, CSV, ...) |
 | **[PROCEDURE_SABRE_LASER.md](PROCEDURE_SABRE_LASER.md)** | **Procédure de bout en bout d'une compétition Sabre Laser individuelle** |
 | [TEAM_COMPETITIONS.md](TEAM_COMPETITIONS.md) | Compétitions par équipes (relais FIE, format arène Sabre Laser) |

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Serveur d'entraînement : identité dans le registre, arrêt, liaison à la
+ * BPM - Escrime - Serveur d'entraînement : identité dans le registre, arrêt, liaison à la
  * fenêtre principale (ex-ipc/trainingHandlers.ts, #1155 ; canaux `training:*` migrés vers le
  * contrat d'API par trainingPort.ts, #1981 lot 2, docs/adr/0022). Aucun canal IPC ici : le Mode
  * Club (clubPort.ts) et le port d'entraînement s'en servent.

@@ -84,7 +84,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BellePoule Modern is a cross-platform fencing tournament management software built with Electron, React 19, and TypeScript. It manages pool phases, elimination brackets, and real-time remote scoring via WebSocket for referee tablets.
+BPM - Escrime is a cross-platform fencing tournament management software built with Electron, React 19, and TypeScript. It manages pool phases, elimination brackets, and real-time remote scoring via WebSocket for referee tablets.
 
 Code is in English; comments and documentation are in French.
 

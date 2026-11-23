@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tests du contrat de prêt imprimable (#1872)
+ * BPM - Escrime - Tests du contrat de prêt imprimable (#1872)
  * Licensed under GPL-3.0
  */
 import { describe, expect, it } from 'vitest';

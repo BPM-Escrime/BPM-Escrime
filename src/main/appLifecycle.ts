@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Cycle de vie de l'application : fermeture des fenêtres et arrêt de la base.
+ * BPM - Escrime - Cycle de vie de l'application : fermeture des fenêtres et arrêt de la base.
  * Licensed under GPL-3.0
  */
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bibliothèque de thèmes d'écrans (<userData>/themes.json)
+ * BPM - Escrime - Bibliothèque de thèmes d'écrans (<userData>/themes.json)
  * (extraite de main.ts, #1341 ; port `themes` du poste, docs/adr/0022).
  * Licensed under GPL-3.0
  */

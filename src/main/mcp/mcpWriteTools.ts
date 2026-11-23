@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Outils MCP d'écriture administrative (#1880, lot 2)
+ * BPM - Escrime - Outils MCP d'écriture administrative (#1880, lot 2)
  * Création d'épreuve, import de tireurs, pointage. Proposés seulement si « Autoriser
  * l'écriture » est coché ; `dryRun` décrit sans écrire ; chaque écriture prévient l'écran.
  * Licensed under GPL-3.0

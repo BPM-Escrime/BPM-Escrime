@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : appels de l'écran au contrat d'API (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Mode Club : appels de l'écran au contrat d'API (#1981 lot 2, docs/adr/0022)
  * Un seul endroit traduit les appels de l'écran (arguments positionnels) en opérations du
  * contrat (entrées nommées, shared/api/contractClub.ts). Hors Electron, le client lève
  * ApiError('unavailable'). Photos ZIP et sauvegardes .bpclub (chemins de fichiers, ADR-0021)

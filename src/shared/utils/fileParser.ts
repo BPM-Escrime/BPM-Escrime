@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - FFE/TXT File Parser
+ * BPM - Escrime - FFE/TXT File Parser
  * Parse FFE and simple TXT format files for fencer import
  * Licensed under GPL-3.0
  *

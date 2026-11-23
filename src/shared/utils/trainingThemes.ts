@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Thèmes visuels du mode entraînement (#1500).
+ * BPM - Escrime - Thèmes visuels du mode entraînement (#1500).
  * Un thème choisi dans la fenêtre Entraînement s'applique à tous les écrans :
  * affichage de piste, kiosk, tablette d'arbitre et lobby.
  * Licensed under GPL-3.0

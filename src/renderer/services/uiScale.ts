@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Taille du texte de l'interface (#1156) : variable CSS --ui-scale
+ * BPM - Escrime - Taille du texte de l'interface (#1156) : variable CSS --ui-scale
  * (tokens.css), persistée en local. Les tailles en rem suivent l'échelle.
  * Licensed under GPL-3.0
  */

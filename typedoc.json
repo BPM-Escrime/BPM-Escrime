@@ -8,7 +8,7 @@
     "src/shared/services/tournamentFlow.ts"
   ],
   "out": "docs/api",
-  "name": "BellePoule Modern — API IPC",
+  "name": "BPM - Escrime — API IPC",
   "excludePrivate": true,
   "excludeInternal": true,
   "readme": "none",

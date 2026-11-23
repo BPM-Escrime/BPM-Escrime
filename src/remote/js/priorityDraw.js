@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tirage du tireur prioritaire (minute prioritaire, #1442)
+ * BPM - Escrime - Tirage du tireur prioritaire (minute prioritaire, #1442)
  * Le cadre doré passe d'un tireur à l'autre en ralentissant, puis se fixe au bout de ~3 s.
  * Partagé arbitre / écran d'arène / vue publique. Servi en /js/priorityDraw.js (CSP 'self').
  * Licensed under GPL-3.0

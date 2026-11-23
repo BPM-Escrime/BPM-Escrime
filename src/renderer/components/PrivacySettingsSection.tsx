@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Paramètres → Confidentialité (RGPD, #1882)
+ * BPM - Escrime - Paramètres → Confidentialité (RGPD, #1882)
  * Noms sur le réseau, durée de conservation, droits des personnes (accès, portabilité,
  * anonymisation, effacement) et archives .bpm chiffrées.
  * Licensed under GPL-3.0

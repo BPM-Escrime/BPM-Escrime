@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modal Save/Load de formules nommées
+ * BPM - Escrime - Modal Save/Load de formules nommées
  */
 
 import React, { useRef, useState, memo } from 'react';

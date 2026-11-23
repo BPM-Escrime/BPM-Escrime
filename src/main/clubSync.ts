@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : synchronisation externe d'un club vers un dossier
+ * BPM - Escrime - Mode Club : synchronisation externe d'un club vers un dossier
  * (Google Drive, Dropbox… via leur client de bureau ; plusieurs postes peuvent pointer
  * le même dossier). Un fichier `.bpclub` par club, reprise automatique toutes les 30 s.
  * Licensed under GPL-3.0

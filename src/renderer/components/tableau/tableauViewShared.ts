@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types et styles de TableauView (extrait, #1599)
+ * BPM - Escrime - Types et styles de TableauView (extrait, #1599)
  * Licensed under GPL-3.0
  */
 import React from 'react';

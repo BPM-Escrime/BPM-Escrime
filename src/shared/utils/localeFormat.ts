@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Formats de dates, heures et nombres selon la langue active (#1160).
+ * BPM - Escrime - Formats de dates, heures et nombres selon la langue active (#1160).
  * La langue est fixée par le TranslationContext (renderer) ; partagé avec les exports PDF/CSV.
  * Licensed under GPL-3.0
  */

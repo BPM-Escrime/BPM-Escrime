@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Graphiques des exports PDF de statistiques :
+ * BPM - Escrime - Graphiques des exports PDF de statistiques :
  * mannequins des zones (touches données / reçues), touches par match, résumé par club.
  * Licensed under GPL-3.0
  */

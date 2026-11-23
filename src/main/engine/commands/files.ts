@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Couche domaine : fichiers écrits hors écran (#1880)
+ * BPM - Escrime - Couche domaine : fichiers écrits hors écran (#1880)
  * Exports demandés par un agent (MCP) : dossiers accessibles à l'agent seulement (chemin
  * réel, liens des dossiers parents résolus), création exclusive, remplacement atomique.
  * Messages d'erreur sans le chemin résolu.

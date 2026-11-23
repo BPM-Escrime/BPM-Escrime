@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : armes visées par un exercice (épée, fleuret,
+ * BPM - Escrime - Mode Club (#1872) : armes visées par un exercice (épée, fleuret,
  * sabre, sabre laser, escrime artistique) — cartes activables (édition) et filtre (recherche).
  * Licensed under GPL-3.0
  */

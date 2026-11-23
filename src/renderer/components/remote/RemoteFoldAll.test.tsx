@@ -28,7 +28,7 @@ const Harness: React.FC = () => {
 describe('RemoteFoldAllButton', () => {
   beforeEach(() => {
     localStorage.clear();
-    localStorage.setItem('bellepoule_remote_collapsed_sections', '[]');
+    localStorage.setItem('bpm_escrime_remote_collapsed_sections', '[]');
   });
 
   it('volets repliés par défaut sans état mémorisé', () => {
@@ -56,11 +56,11 @@ describe('RemoteFoldAllButton', () => {
   });
 
   it('ne touche pas aux volets non listés', () => {
-    localStorage.setItem('bellepoule_remote_collapsed_sections', JSON.stringify(['cyrano']));
+    localStorage.setItem('bpm_escrime_remote_collapsed_sections', JSON.stringify(['cyrano']));
     render(<Harness />);
     fireEvent.click(screen.getByText('rsm.collapse_all'));
     fireEvent.click(screen.getByText('rsm.expand_all'));
-    expect(JSON.parse(localStorage.getItem('bellepoule_remote_collapsed_sections')!)).toEqual([
+    expect(JSON.parse(localStorage.getItem('bpm_escrime_remote_collapsed_sections')!)).toEqual([
       'cyrano',
     ]);
   });

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Création de session et mise à jour de score depuis la base (#1240)
+ * BPM - Escrime - Création de session et mise à jour de score depuis la base (#1240)
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */

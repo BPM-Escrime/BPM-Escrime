@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : rappel du match précédent (PREV) et pause sabre à 8 touches (#2001)
+ * BPM - Escrime - Arbitre : rappel du match précédent (PREV) et pause sabre à 8 touches (#2001)
  * - PREV : bouton « Match précédent » de la liste des matchs. Le serveur refuse si un combat est
  *   en cours ou si la fenêtre de correction (3 min) est dépassée ; son verdict revient dans
  *   `arena:{id}:prev_result` et s'affiche en notification.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Onglets Basique / Expert de la Saisie distante (#1414)
+ * BPM - Escrime - Onglets Basique / Expert de la Saisie distante (#1414)
  * Licensed under GPL-3.0
  */
 import React from 'react';

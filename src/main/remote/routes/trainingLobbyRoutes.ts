@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Routes du lobby du mode entraînement (#1500).
+ * BPM - Escrime - Routes du lobby du mode entraînement (#1500).
  * GET /entrainement-lobby (page), GET /api/training/lobby (état des pistes),
  * POST /api/training/lobby/claim | release (occupation d'une piste).
  * Le kiosk lit aussi GET /api/training/lobby pour marquer « Libre » les pistes non tenues.

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types du serveur MCP intégré (#1880)
+ * BPM - Escrime - Types du serveur MCP intégré (#1880)
  * Licensed under GPL-3.0
  */
 

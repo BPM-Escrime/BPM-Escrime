@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Scores max par défaut selon arme et catégorie (#1826)
+ * BPM - Escrime - Scores max par défaut selon arme et catégorie (#1826)
  * Escrime olympique (épée, fleuret, sabre) : 5 touches en poule, 15 au tableau,
  * sauf M9 (3/6), M11-M13 (4/8) et vétérans (5/10).
  * Licensed under GPL-3.0

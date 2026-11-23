@@ -289,7 +289,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
             'CSV — classement et statistiques pour tableur',
             'XML FFE — résultats au format fédéral',
             'TXT / FFF — liste des tireurs ; .bpf — archive des tireurs (photos comprises)',
-            '.BPM — format natif BellePoule Modern (Fichier › Enregistrer sous)',
+            '.BPM — format natif BPM - Escrime (Fichier › Enregistrer sous)',
           ],
         },
         { type: 'h2', text: 'Export PDF personnalisé' },
@@ -301,7 +301,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'XML BellePoule (.xml, .cotcot) et liste FFE (.fff, .csv, .txt)',
+            'XML BPM - Escrime (.xml, .cotcot) et liste FFE (.fff, .csv, .txt)',
             'Classement (FFF, CSV ou XLSX) et archive de tireurs .bpf',
             'FFE Connect — import direct depuis la fédération',
             ".BPM / .cotcot — ouverture d'une compétition (fusionnée dans la base)",
@@ -326,7 +326,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
             'CSV — ranking and statistics for spreadsheets',
             'FFE XML — results in the federation format',
             'TXT / FFF — fencer list; .bpf — fencer archive (photos included)',
-            '.BPM — BellePoule Modern native format (File › Save as)',
+            '.BPM — BPM - Escrime native format (File › Save as)',
           ],
         },
         { type: 'h2', text: 'Custom PDF Export' },
@@ -338,7 +338,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'BellePoule XML (.xml, .cotcot) and FFE list (.fff, .csv, .txt)',
+            'BPM - Escrime XML (.xml, .cotcot) and FFE list (.fff, .csv, .txt)',
             'Ranking (FFF, CSV or XLSX) and .bpf fencer archive',
             'FFE Connect — direct import from the federation',
             '.BPM / .cotcot — open a competition (merged into the database)',
@@ -363,7 +363,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
             'CSV — Rangliste und Statistiken für Tabellenkalkulation',
             'FFE-XML — Ergebnisse im Verbandsformat',
             'TXT / FFF — Fechterliste; .bpf — Fechterarchiv (inkl. Fotos)',
-            '.BPM — natives Format von BellePoule Modern (Datei › Speichern unter)',
+            '.BPM — natives Format von BPM - Escrime (Datei › Speichern unter)',
           ],
         },
         { type: 'h2', text: 'Benutzerdefinierter PDF-Export' },
@@ -375,7 +375,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'BellePoule-XML (.xml, .cotcot) und FFE-Liste (.fff, .csv, .txt)',
+            'BPM-Escrime-XML (.xml, .cotcot) und FFE-Liste (.fff, .csv, .txt)',
             'Rangliste (FFF, CSV oder XLSX) und .bpf-Fechterarchiv',
             'FFE Connect — Direktimport vom Verband',
             '.BPM / .cotcot — Wettkampf öffnen (in die Datenbank übernommen)',
@@ -400,7 +400,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
             'CSV — clasificación y estadísticas para hoja de cálculo',
             'XML FFE — resultados en formato federativo',
             'TXT / FFF — lista de tiradores; .bpf — archivo de tiradores (fotos incluidas)',
-            '.BPM — formato nativo de BellePoule Modern (Archivo › Guardar como)',
+            '.BPM — formato nativo de BPM - Escrime (Archivo › Guardar como)',
           ],
         },
         { type: 'h2', text: 'Exportación PDF personalizada' },
@@ -412,7 +412,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'XML BellePoule (.xml, .cotcot) y lista FFE (.fff, .csv, .txt)',
+            'XML BPM - Escrime (.xml, .cotcot) y lista FFE (.fff, .csv, .txt)',
             'Clasificación (FFF, CSV o XLSX) y archivo de tiradores .bpf',
             'FFE Connect — importación directa desde la federación',
             '.BPM / .cotcot — abrir una competición (fusionada en la base de datos)',
@@ -437,7 +437,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
             'CSV — 排名及統計，供試算表使用',
             'FFE XML — 總會格式的結果',
             'TXT / FFF — 選手名單；.bpf — 選手封存檔（含相片）',
-            '.BPM — BellePoule Modern 原生格式（檔案 › 另存新檔）',
+            '.BPM — BPM - Escrime 原生格式（檔案 › 另存新檔）',
           ],
         },
         { type: 'h2', text: '自訂 PDF 匯出' },
@@ -449,7 +449,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'BellePoule XML（.xml、.cotcot）及 FFE 名單（.fff、.csv、.txt）',
+            'BPM - Escrime XML（.xml、.cotcot）及 FFE 名單（.fff、.csv、.txt）',
             '排名（FFF、CSV 或 XLSX）及 .bpf 選手封存檔',
             'FFE Connect — 直接從總會匯入',
             '.BPM / .cotcot — 開啟比賽（合併至資料庫）',
@@ -474,7 +474,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
             'CSV — renkadur ha stadegoù evit ur follenn-jediñ',
             "XML FFE — disoc'hoù er furmad kevredel",
             'TXT / FFF — roll ar glezeourien ; .bpf — diell ar glezeourien (gant ar poltredoù)',
-            '.BPM — furmad genidik BellePoule Modern (Restr › Enrollañ evel)',
+            '.BPM — furmad genidik BPM - Escrime (Restr › Enrollañ evel)',
           ],
         },
         { type: 'h2', text: 'Ezporzhadur PDF personalizet' },
@@ -486,7 +486,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'XML BellePoule (.xml, .cotcot) ha roll FFE (.fff, .csv, .txt)',
+            'XML BPM - Escrime (.xml, .cotcot) ha roll FFE (.fff, .csv, .txt)',
             'Renkadur (FFF, CSV pe XLSX) hag diell klezeourien .bpf',
             "FFE Connect — enporzhiañ war-eeun eus ar c'hevredad",
             '.BPM / .cotcot — digeriñ ur genstrivadeg (kendeuzet en diaz)',
@@ -511,7 +511,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
             'CSV — classificació i estadístiques per a full de càlcul',
             'XML FFE — resultats en format federatiu',
             'TXT / FFF — llista de tiradors; .bpf — arxiu de tiradors (fotos incloses)',
-            '.BPM — format natiu de BellePoule Modern (Fitxer › Desa com a)',
+            '.BPM — format natiu de BPM - Escrime (Fitxer › Desa com a)',
           ],
         },
         { type: 'h2', text: 'Exportació PDF personalitzada' },
@@ -523,7 +523,7 @@ export const ADVANCED_ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'XML BellePoule (.xml, .cotcot) i llista FFE (.fff, .csv, .txt)',
+            'XML BPM - Escrime (.xml, .cotcot) i llista FFE (.fff, .csv, .txt)',
             'Classificació (FFF, CSV o XLSX) i arxiu de tiradors .bpf',
             'FFE Connect — importació directa des de la federació',
             '.BPM / .cotcot — obrir una competició (fusionada a la base de dades)',

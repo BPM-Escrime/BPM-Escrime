@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Serveur distant : mots de passe, thèmes, kiosque, note d'organisation,
+ * BPM - Escrime - Serveur distant : mots de passe, thèmes, kiosque, note d'organisation,
  * inscription, pointage, espace formateurs, webhook, logo et synthèse vocale (#1981 lot 2,
  * docs/adr/0022). Reprise des anciens canaux IPC remote:* (remoteDisplayHandlers,
  * remoteSettingsHandlers, remoteSessionHandlers, webhookHandlers). Pas de journal.

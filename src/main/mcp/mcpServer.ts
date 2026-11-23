@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Serveur MCP intégré (#1880, lot 1)
+ * BPM - Escrime - Serveur MCP intégré (#1880, lot 1)
  * Transport « Streamable HTTP » (réponses JSON) sur 127.0.0.1 uniquement, jeton Bearer
  * obligatoire, contrôle Host / Origin contre le DNS rebinding. Désactivé par défaut.
  * Méthodes : initialize, ping, tools/list, tools/call (outils en lecture, mcpTools.ts).
@@ -101,9 +101,9 @@ export async function handleMcpMessage(
         result: {
           protocolVersion: MCP_PROTOCOL_VERSIONS.includes(asked) ? asked : MCP_PROTOCOL_VERSIONS[0],
           capabilities: { tools: { listChanged: false } },
-          serverInfo: { name: 'bellepoule-modern', title: 'BellePoule Modern', version },
+          serverInfo: { name: 'bpm-escrime', title: 'BPM - Escrime', version },
           instructions:
-            'Base BellePoule Modern du poste DT : épreuves, tireurs, poules, tableau, arbitres, ' +
+            'Base BPM - Escrime du poste DT : épreuves, tireurs, poules, tableau, arbitres, ' +
             'journée multi-épreuves, pistes, serveur distant, appareils Cyrano. Commencer par ' +
             'list_competitions ou day_overview.' +
             (allowWrite
@@ -137,7 +137,7 @@ export async function handleMcpMessage(
       if (!tool) {
         if (WRITE_TOOLS.some(t => t.name === name)) {
           done(false, name);
-          return rpcError(msg.id, -32602, `Écriture désactivée dans BellePoule Modern : ${name}`);
+          return rpcError(msg.id, -32602, `Écriture désactivée dans BPM - Escrime : ${name}`);
         }
         done(false, name);
         return rpcError(msg.id, -32602, `Outil inconnu : ${name}`);

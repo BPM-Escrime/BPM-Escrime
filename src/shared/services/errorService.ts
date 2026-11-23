@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Error Service
+ * BPM - Escrime - Error Service
  * Centralized error handling singleton
  * Licensed under GPL-3.0
  */

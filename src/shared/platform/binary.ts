@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Octets ↔ base64 (#1981, ADR-0021) : le contrat échange les fichiers de
+ * BPM - Escrime - Octets ↔ base64 (#1981, ADR-0021) : le contrat échange les fichiers de
  * données en base64 (transport neutre : IPC, JSON, Socket.IO) ; PlatformServices les enregistre
  * ou les lit en octets. Sans Buffer : marche dans l'écran, le navigateur et Node.
  * Licensed under GPL-3.0

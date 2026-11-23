@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : tableau compact (extrait de kiosk.html #1401)
+ * BPM - Escrime - Kiosque : tableau compact (extrait de kiosk.html #1401)
  * Géométrie (échelle, colonnes, centres des matchs) et gabarit HTML/SVG du tableau
  * d'élimination directe (escHtml injecté : toute donnée dynamique est échappée).
  * Servi en /js/kioskBracketRender.js (CSP 'self').

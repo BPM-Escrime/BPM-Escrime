@@ -1,6 +1,6 @@
 /**
  * Tests unitaires pour la résolution de conflits (mode hors-ligne)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

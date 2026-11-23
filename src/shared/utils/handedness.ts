@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Placement gaucher/droitier (#1439)
+ * BPM - Escrime - Placement gaucher/droitier (#1439)
  * Armes olympiques : un gaucher face à un droitier se place à gauche (rouge).
  * Par défaut le premier appelé (A) est à droite (vert), le second (B) à gauche (rouge).
  * Deux gauchers : placement de l'appel conservé.

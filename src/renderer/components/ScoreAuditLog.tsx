@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Historique des scores par poules
+ * BPM - Escrime - Historique des scores par poules
  * Licensed under GPL-3.0
  */
 

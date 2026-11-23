@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Carte standard (#1157)
+ * BPM - Escrime - Carte standard (#1157)
  * En-tête (titre + actions), corps, pied : classes .card* (design.css).
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Keyboard Shortcuts Hook
+ * BPM - Escrime - Keyboard Shortcuts Hook
  * Gestion des raccourcis clavier globaux
  * Licensed under GPL-3.0
  */

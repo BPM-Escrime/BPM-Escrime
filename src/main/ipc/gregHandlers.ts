@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Canal IPC `greg:publish` : envoi des résultats vers GREG (escrime-info.com) (#1328)
+ * BPM - Escrime - Canal IPC `greg:publish` : envoi des résultats vers GREG (escrime-info.com) (#1328)
  * Deux étapes comme l'ancien `GregUploader` : envoi du fichier, puis validation du formulaire.
  * Le renderer ne peut pas appeler un hôte externe (CSP) : l'envoi part du main.
  * Licensed under GPL-3.0

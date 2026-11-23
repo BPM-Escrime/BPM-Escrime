@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tableau non conforme au classement corrigé (#1996)
+ * BPM - Escrime - Tableau non conforme au classement corrigé (#1996)
  * Après une ou plusieurs corrections de poule gardées, le tableau tiré ne correspond plus
  * au classement : bandeau persistant et reconstruction en une fois (accord du DT).
  * Licensed under GPL-3.0

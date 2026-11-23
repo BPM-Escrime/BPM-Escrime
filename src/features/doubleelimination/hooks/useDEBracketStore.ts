@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Double Elimination Bracket
+ * BPM - Escrime - Double Elimination Bracket
  * Feature 25: Winners and losers brackets
  * Licensed under GPL-3.0
  */

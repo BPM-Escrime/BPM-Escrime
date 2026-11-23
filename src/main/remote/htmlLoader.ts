@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Chargement en mémoire des pages distantes et du client socket.io (#1240)
+ * BPM - Escrime - Chargement en mémoire des pages distantes et du client socket.io (#1240)
  * Fonctions pures de lecture disque : l'état (htmlFiles, remoteBasePath…) reste dans le serveur.
  * Lecture synchrone au démarrage du serveur uniquement : les pages sont ensuite servies
  * depuis la mémoire, jamais relues par requête (#1776).

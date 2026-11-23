@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Icônes lucide des phases de compétition (#1532)
+ * BPM - Escrime - Icônes lucide des phases de compétition (#1532)
  * Licensed under GPL-3.0
  */
 

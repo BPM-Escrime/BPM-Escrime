@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fichiers de données du poste (#1981, docs/adr/0021 et 0022) : sauvegarde
+ * BPM - Escrime - Fichiers de données du poste (#1981, docs/adr/0021 et 0022) : sauvegarde
  * .bpm d'une épreuve (en clair ou chiffrée), archive de tireurs .bpf, photos en ZIP, sauvegarde
  * d'un club .bpclub. Le contrat rend ou reçoit un **contenu** (base64), jamais un chemin :
  * l'écran l'enregistre ou le choisit par PlatformServices (usePlatform).

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Refus des dépôts rendus sous un code du catalogue (docs/adr/0009)
+ * BPM - Escrime - Refus des dépôts rendus sous un code du catalogue (docs/adr/0009)
  * Les dépôts refusent par une `Error` au message pour l'opérateur (« Séance fermée »,
  * « Salle introuvable »…) : sans cela l'écran n'afficherait que « Erreur interne ». Une panne
  * de la base (SQLite) reste une erreur interne, journalisée, jamais son texte brut à l'écran.

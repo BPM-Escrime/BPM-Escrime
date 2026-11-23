@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écran d'arène : transition de score discrète et mode écran noir / pause (#1540)
+ * BPM - Escrime - Écran d'arène : transition de score discrète et mode écran noir / pause (#1540)
  * - Un score qui change reçoit brièvement la classe `score-changed` (fondu léger, pas de saut)
  * - Touche « B » (ou ?blackout=1) : écran noir ; toute touche / clic le rétablit
  * Chargé en <script src="/js/arenaScreen.js" data-bp-init> (CSP : pas de script inline).

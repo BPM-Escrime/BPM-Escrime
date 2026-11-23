@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Abonnement IPC du préload (#1894)
+ * BPM - Escrime - Abonnement IPC du préload (#1894)
  * Enveloppe le callback sans l'IpcRendererEvent (pas de fuite de `sender` vers le renderer)
  * et retourne la fonction de désabonnement à appeler dans le cleanup d'un useEffect.
  * Licensed under GPL-3.0

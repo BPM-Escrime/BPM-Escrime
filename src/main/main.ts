@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Electron Main Process
+ * BPM - Escrime - Electron Main Process
  * Licensed under GPL-3.0
  */
 
@@ -199,7 +199,7 @@ const cyranoServer = new CyranoServer();
 // Appareils OPP2 (JSON sur MQTT) : broker intégré, démarré à la demande (#1960)
 const opp2Broker = new MqttBroker();
 const opp2Driver = new Opp2PisteDriver(opp2Broker, {
-  software: { name: 'BellePoule Modern', version: app.getVersion() },
+  software: { name: 'BPM - Escrime', version: app.getVersion() },
 });
 // Pilotes Cyrano (#1829) et OPP2 (#1960) du modèle commun des appareils de piste
 const pisteDriver = new MultiPisteDriver([new CyranoPisteDriver(cyranoServer), opp2Driver]);
@@ -379,8 +379,8 @@ function prewarmRendererChunks(): void {
   });
 }
 
-// Rendu logiciel pour VMware/ARM sans GPU — activer via BELLEPOULE_SW_RENDER=1
-if (process.platform === 'linux' && process.env.BELLEPOULE_SW_RENDER === '1') {
+// Rendu logiciel pour VMware/ARM sans GPU — activer via BPM_ESCRIME_SW_RENDER=1
+if (process.platform === 'linux' && process.env.BPM_ESCRIME_SW_RENDER === '1') {
   app.disableHardwareAcceleration();
   app.commandLine.appendSwitch('disable-gpu');
   app.commandLine.appendSwitch('disable-gpu-sandbox');
@@ -419,7 +419,7 @@ async function openDatabase(): Promise<void> {
   } catch (e) {
     // Base illisible (clé absente ou incorrecte) : on n'écrase rien, on arrête proprement
     logger.error(LogCategory.SYSTEM, 'Ouverture de la base impossible:', toError(e));
-    dialog.showErrorBox('BellePoule Modern', e instanceof Error ? e.message : String(e));
+    dialog.showErrorBox('BPM - Escrime', e instanceof Error ? e.message : String(e));
     app.quit();
     return;
   }

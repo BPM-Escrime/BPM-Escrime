@@ -30,11 +30,11 @@
 
 | Élément | Requis |
 |---|---|
-| Poste organisateur | BellePoule Modern installé ([INSTALLATION.md](../INSTALLATION.md)), alimenté secteur |
+| Poste organisateur | BPM - Escrime installé ([INSTALLATION.md](../INSTALLATION.md)), alimenté secteur |
 | Réseau | Un Wi-Fi local commun au poste et aux tablettes (Internet non requis) |
 | Tablettes / smartphones | 1 par arène (arbitre), navigateur récent |
 | Écrans d'arène (optionnel) | 1 TV/navigateur par arène (`/arene{N}`) |
-| Fichier d'inscrits | FFE (`.fff`, `.csv`), XML BellePoule, Engarde, TXT ([FILE_FORMATS.md](../FILE_FORMATS.md)) |
+| Fichier d'inscrits | FFE (`.fff`, `.csv`), XML BPM - Escrime, Engarde, TXT ([FILE_FORMATS.md](../FILE_FORMATS.md)) |
 
 Vérifier la veille :
 - Le pare-feu du poste autorise le port **8066** (ou le port libre suivant).

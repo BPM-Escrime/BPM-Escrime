@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Poules figées après le tirage du tableau, correction vérifiée (#1996)
+ * BPM - Escrime - Poules figées après le tirage du tableau, correction vérifiée (#1996)
  * Dès qu'un tableau existe, une poule ne se modifie plus qu'en mode correction : chaque
  * score passe par une mesure d'impact, puis « garder le tableau » ou « refaire le tableau ».
  * Licensed under GPL-3.0

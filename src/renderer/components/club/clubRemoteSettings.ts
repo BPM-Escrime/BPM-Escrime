@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : paramètres de la saisie distante du club
+ * BPM - Escrime - Mode Club (#1872) : paramètres de la saisie distante du club
  * (serveur du mode entraînement) : interface, port, HTTPS, thème des écrans.
  * Mémorisés par poste ; le mot de passe des pistes reste en mémoire, jamais stocké.
  * Licensed under GPL-3.0

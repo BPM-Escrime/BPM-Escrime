@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Éditeur de règle d'avancement inter-phases
+ * BPM - Escrime - Éditeur de règle d'avancement inter-phases
  */
 
 import React, { memo } from 'react';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : minuteur vocal (TTS) (extrait de referee.html #1401)
+ * BPM - Escrime - Arbitre : minuteur vocal (TTS) (extrait de referee.html #1401)
  * Langue, phrases d'annonce, paliers et fusion de config : pur, sans DOM ni speechSynthesis.
  * Servi en /js/refereeTts.js (CSP 'self').
  * Licensed under GPL-3.0

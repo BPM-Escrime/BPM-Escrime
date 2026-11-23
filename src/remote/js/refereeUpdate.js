@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : transitions d'état reçues du serveur (extrait de referee.html #1401)
+ * BPM - Escrime - Arbitre : transitions d'état reçues du serveur (extrait de referee.html #1401)
  * Fonctions pures : décident de l'action à mener et construisent les matchs locaux.
  * Servi en /js/refereeUpdate.js (CSP 'self').
  * Licensed under GPL-3.0

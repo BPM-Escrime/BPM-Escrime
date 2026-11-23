@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Intervalle de pistes (piste de départ / piste de fin)
+ * BPM - Escrime - Intervalle de pistes (piste de départ / piste de fin)
  * Deux champs éditables, chacun avec ses boutons − et + (#1501).
  * Licensed under GPL-3.0
  */

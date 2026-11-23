@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Codec du protocole Cyrano EFP1 / EFP1.1 (#1720)
+ * BPM - Escrime - Codec du protocole Cyrano EFP1 / EFP1.1 (#1720)
  * Trame texte : `|EFP1.1|COM|piste|compé|…|%|<tireur droit>|%|<tireur gauche>|%|`.
  * 3 zones séparées par `%`, champs séparés par `|`. Spécification :
  * https://superfencingsystem.com/CyranoProtocol-1-1.pdf (11 octobre 2019).

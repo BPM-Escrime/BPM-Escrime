@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Optimized Pool Grid Component
+ * BPM - Escrime - Optimized Pool Grid Component
  * Efficient rendering of pool results grid
  * Licensed under GPL-3.0
  */

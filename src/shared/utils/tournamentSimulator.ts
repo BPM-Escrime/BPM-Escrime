@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Simulateur de tournoi
+ * BPM - Escrime - Simulateur de tournoi
  * Joue automatiquement une compétition complète (poules → tableau → classement)
  * avec des scores aléatoires valides. Déterministe pour une graine donnée.
  *

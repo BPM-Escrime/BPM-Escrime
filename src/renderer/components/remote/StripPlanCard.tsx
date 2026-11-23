@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Plan des pistes (#1501)
+ * BPM - Escrime - Plan des pistes (#1501)
  * Carte repliable (repliée par défaut) : une case par piste de l'intervalle ;
  * un clic bascule la piste en indisponible (case rouge).
  * Licensed under GPL-3.0

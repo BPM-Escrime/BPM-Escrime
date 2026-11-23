@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Page publique : classe PublicDisplay (socket, affichage du match, annonces).
+ * BPM - Escrime - Page publique : classe PublicDisplay (socket, affichage du match, annonces).
  * Extrait de public.html (#1600) : lintable et testable.
  * Script classique chargé en <script src="/js/publicDisplay.js"> (CSP : pas de script inline).
  * Licensed under GPL-3.0

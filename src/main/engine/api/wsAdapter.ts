@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Adaptateur WebSocket du contrat d'API (#1981 lot 3, docs/adr/0020)
+ * BPM - Escrime - Adaptateur WebSocket du contrat d'API (#1981 lot 3, docs/adr/0020)
  * Espace de noms Socket.IO `/api` du serveur distant : mêmes messages que l'IPC (api:invoke,
  * api:subscribe / api:unsubscribe, événements sur api:event), même enveloppe ApiEnvelope.
  * Lecture seule jusqu'aux comptes et rôles de #1982, limitée à l'épreuve du serveur.

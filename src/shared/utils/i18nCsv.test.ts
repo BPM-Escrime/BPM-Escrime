@@ -3,8 +3,11 @@ import { describe, it, expect } from 'vitest';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { toCsv, parseCsv, applyCsv } = require('../../../scripts/lib/i18nCsv.js');
 
-const fr = { app: { title: 'BellePoule', quit: 'Quitter' }, msg: { hello: 'Bonjour, "{{name}}"' } };
-const br = { app: { title: 'BellePoule', quit: 'Kuitaat' }, msg: { hello: '' } };
+const fr = {
+  app: { title: 'BPM - Escrime', quit: 'Quitter' },
+  msg: { hello: 'Bonjour, "{{name}}"' },
+};
+const br = { app: { title: 'BPM - Escrime', quit: 'Kuitaat' }, msg: { hello: '' } };
 
 describe('i18n CSV (#1079)', () => {
   it('exporte key, fr, langue avec échappement CSV et BOM', () => {
@@ -19,7 +22,7 @@ describe('i18n CSV (#1079)', () => {
     const rows = parseCsv(toCsv(fr, br, 'br'));
     expect(rows).toEqual([
       ['key', 'fr', 'br'],
-      ['app.title', 'BellePoule', 'BellePoule'],
+      ['app.title', 'BPM - Escrime', 'BPM - Escrime'],
       ['app.quit', 'Quitter', 'Kuitaat'],
       ['msg.hello', 'Bonjour, "{{name}}"', ''],
     ]);
@@ -37,7 +40,7 @@ describe('i18n CSV (#1079)', () => {
     const { lang, locale, changed, unknown } = applyCsv(fr, br, csv);
     expect(lang).toBe('br');
     expect(locale).toEqual({
-      app: { title: 'BellePoule', quit: 'Kuitaat' },
+      app: { title: 'BPM - Escrime', quit: 'Kuitaat' },
       msg: { hello: 'Demat, {{name}}' },
     });
     expect(changed).toEqual(['msg.hello']);

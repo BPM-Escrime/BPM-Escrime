@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Création et réinitialisation des arènes du serveur distant
+ * BPM - Escrime - Création et réinitialisation des arènes du serveur distant
  * (extrait de remoteScoreServer.ts, #1896).
  * Licensed under GPL-3.0
  */

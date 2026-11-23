@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arène : client socket / initialisation (extrait de arena.html #1401)
+ * BPM - Escrime - Arène : client socket / initialisation (extrait de arena.html #1401)
  * Identifiant d'écran, commandes serveur, état initial et règles olympiques. Stockage et
  * actions injectés. Servi en /js/arenaClient.js (CSP 'self').
  * Licensed under GPL-3.0

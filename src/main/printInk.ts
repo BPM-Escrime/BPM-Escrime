@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Économie d'encre : réglage du poste appliqué à tout HTML imprimé ou rendu en PDF
+ * BPM - Escrime - Économie d'encre : réglage du poste appliqué à tout HTML imprimé ou rendu en PDF
  * (aperçu, impression, PDF, MCP). Le réglage est lu à chaque rendu depuis la base (app_settings).
  * Licensed under GPL-3.0
  */

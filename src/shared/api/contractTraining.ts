@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Opérations du serveur d'entraînement (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Opérations du serveur d'entraînement (#1981 lot 2, docs/adr/0022)
  * Serveur distant sans épreuve (entraînement, démo autonome, tablettes du Mode Club) : démarrage,
  * session, thème des écrans, historique, écrans de démo. Ce ne sont pas des faits de l'épreuve :
  * aucun journal (docs/adr/0005). Droit `remote:admin` (c'est un serveur distant), jamais servi sur

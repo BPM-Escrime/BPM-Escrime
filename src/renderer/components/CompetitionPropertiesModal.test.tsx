@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests de composant - CompetitionPropertiesModal (menu vertical par onglets, #1505)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

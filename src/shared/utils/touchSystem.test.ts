@@ -1,6 +1,6 @@
 /**
  * Tests unitaires pour le système de touches par zone FFE Sabre Laser
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

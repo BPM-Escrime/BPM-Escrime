@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Préférences de l'application : affichage, voix, mises à jour, webhook (état et effets)
+ * BPM - Escrime - Préférences de l'application : affichage, voix, mises à jour, webhook (état et effets)
  * Licensed under GPL-3.0
  */
 

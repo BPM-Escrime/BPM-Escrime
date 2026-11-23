@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Touch-Optimized Tablet Interface for Referees
+ * BPM - Escrime - Touch-Optimized Tablet Interface for Referees
  * Enhanced remote scoring interface with touch optimization
  * Licensed under GPL-3.0
  */

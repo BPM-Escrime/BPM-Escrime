@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Bouton standard (#1157, #1529)
+ * BPM - Escrime - Bouton standard (#1157, #1529)
  * Variantes et tailles des classes .btn-* (design.css) ; type="button" par défaut.
  * État `loading` : bouton désactivé, aria-busy, libellé conservé (pas de saut de mise en page).
  * Icône seule (sans enfants) : classe .btn-icon-only ; un aria-label est alors requis par le type.

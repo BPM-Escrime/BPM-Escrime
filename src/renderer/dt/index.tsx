@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Vue DT dans un navigateur (#1981 lot 3, docs/adr/0020)
+ * BPM - Escrime - Vue DT dans un navigateur (#1981 lot 3, docs/adr/0020)
  * Entrée Webpack `dt` (cible web), servie par le serveur distant sous /dt/. Lecture seule :
  * le contrat passe par WsClient (Socket.IO /api), jamais par window.electronAPI.
  * Licensed under GPL-3.0

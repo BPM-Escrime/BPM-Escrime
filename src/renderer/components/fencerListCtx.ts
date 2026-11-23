@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Contexte partagé des sous-composants de FencerList (#1599)
+ * BPM - Escrime - Contexte partagé des sous-composants de FencerList (#1599)
  * Licensed under GPL-3.0
  */
 import type { useFencerListState } from '../hooks/fencerList/useFencerListState';

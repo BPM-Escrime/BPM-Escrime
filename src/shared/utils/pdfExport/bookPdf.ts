@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Dossier PDF : assemblage page de garde + sommaire + sections (#1325)
+ * BPM - Escrime - Dossier PDF : assemblage page de garde + sommaire + sections (#1325)
  * Commun au dossier individuel (fullCompetitionPdf) et au dossier équipes (teamPdf).
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Archive .bpm d'une compétition (#1117)
+ * BPM - Escrime - Archive .bpm d'une compétition (#1117)
  * Un .bpm est une base SQLite. L'export n'y garde qu'une compétition ; l'ouverture
  * fusionne ses compétitions dans la base active (état d'avancement compris)
  * au lieu de remplacer la base.

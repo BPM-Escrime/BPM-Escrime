@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Cycle de vie du serveur et de la session distante (#1240)
+ * BPM - Escrime - Cycle de vie du serveur et de la session distante (#1240)
  * Extrait de RemoteScoreServer : démarrage / arrêt du serveur HTTP, lancement et fin de session.
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Phases d'une compétition par équipes ↔ onglets de TeamManagerView (#1085)
+ * BPM - Escrime - Phases d'une compétition par équipes ↔ onglets de TeamManagerView (#1085)
  * Licensed under GPL-3.0
  */
 

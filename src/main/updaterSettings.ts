@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Préférences de l'updater (persistées côté main)
+ * BPM - Escrime - Préférences de l'updater (persistées côté main)
  * Licensed under GPL-3.0
  *
  * Fichier `<userData>/updater-settings.json`, lu au démarrage avant le premier check.

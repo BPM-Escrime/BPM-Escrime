@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Éditeur de thème arène
+ * BPM - Escrime - Éditeur de thème arène
  * Permet de créer, sauvegarder, importer et exporter des thèmes visuels personnalisés
  * Licensed under GPL-3.0
  */

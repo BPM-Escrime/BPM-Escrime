@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - État de l'épreuve exposé par le contrat (#1980, docs/adr/0017, étape 4a)
+ * BPM - Escrime - État de l'épreuve exposé par le contrat (#1980, docs/adr/0017, étape 4a)
  * Projection tenue par le moteur dans session_state, lue par getCompetitionState : l'écran la
  * relit quand le journal avance au lieu de relire le bloc par sa propre API.
  * Licensed under GPL-3.0

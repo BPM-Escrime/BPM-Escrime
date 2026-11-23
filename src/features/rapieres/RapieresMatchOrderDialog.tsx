@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : ordre des combats au lancement des poules (#1816)
+ * BPM - Escrime - Tournoi des rapières : ordre des combats au lancement des poules (#1816)
  * « Ordre standard » (vagues calculées) ou « Ordre classique » (tables des poules de 10 à 15).
  * Licensed under GPL-3.0
  */

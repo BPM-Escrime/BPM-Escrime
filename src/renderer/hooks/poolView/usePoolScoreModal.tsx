@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Rendu de la modale de saisie du score d'un match de poule
+ * BPM - Escrime - Rendu de la modale de saisie du score d'un match de poule
  * Licensed under GPL-3.0
  */
 

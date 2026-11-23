@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : sauvegarde d'un club (.bpclub) et chargement sur un
+ * BPM - Escrime - Mode Club : sauvegarde d'un club (.bpclub) et chargement sur un
  * autre poste. Contenu par le contrat (getClubBackupFile, importClubBackup), dialogues par la
  * plateforme (ADR-0021).
  * Licensed under GPL-3.0

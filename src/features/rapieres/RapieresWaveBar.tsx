@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : pilotage des vagues (phase Poules) (#1118)
+ * BPM - Escrime - Tournoi des rapières : pilotage des vagues (phase Poules) (#1118)
  * Le DT lance chaque vague (toutes les poules en même temps) une fois la précédente saisie,
  * et peut arrêter les vagues avant leur terme pour passer au classement.
  * Licensed under GPL-3.0

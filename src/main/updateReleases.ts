@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Sélection de la release GitHub à proposer
+ * BPM - Escrime - Sélection de la release GitHub à proposer
  * Licensed under GPL-3.0
  */
 

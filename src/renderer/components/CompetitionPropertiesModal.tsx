@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Competition Properties Modal
+ * BPM - Escrime - Competition Properties Modal
  * Licensed under GPL-3.0
  */
 

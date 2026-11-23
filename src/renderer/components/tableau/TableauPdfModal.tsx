@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - TableauPdfModal
+ * BPM - Escrime - TableauPdfModal
  * Modal d'impression / export PDF des feuilles de match du tableau
  * Licensed under GPL-3.0
  */

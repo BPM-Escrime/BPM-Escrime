@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests unitaires - CloudSyncService (chiffrement + compression)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';

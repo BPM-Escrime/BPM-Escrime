@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - ConsolationBracketsSection
+ * BPM - Escrime - ConsolationBracketsSection
  * Affichage des brackets de consolation (mode Jouer toutes les places)
  * Licensed under GPL-3.0
  */

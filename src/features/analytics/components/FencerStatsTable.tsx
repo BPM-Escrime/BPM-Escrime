@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tableau de statistiques par combattant
+ * BPM - Escrime - Tableau de statistiques par combattant
  * Licensed under GPL-3.0
  */
 

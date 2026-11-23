@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Referee Manager Component
+ * BPM - Escrime - Referee Manager Component
  * Interface for managing referee assignments
  * Licensed under GPL-3.0
  */

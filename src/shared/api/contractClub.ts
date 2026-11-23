@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Opérations du Mode Club (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Opérations du Mode Club (#1981 lot 2, docs/adr/0022)
  * Clubs, membres, maîtres d'armes, séances, exercices, combats libres, statistiques, inventaire,
  * tablettes du serveur d'entraînement, synchronisation et sauvegardes du poste.
  * Ce ne sont pas des faits de l'épreuve : aucun journal. Droits `club:read` / `club:write`,

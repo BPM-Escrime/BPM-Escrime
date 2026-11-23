@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types RGPD (#1882) : droits des personnes, conservation,
+ * BPM - Escrime - Types RGPD (#1882) : droits des personnes, conservation,
  * exposition réseau, archives .bpm chiffrées.
  * Licensed under GPL-3.0
  */

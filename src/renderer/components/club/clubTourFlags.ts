@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Parcours de première connexion du Mode Club (#1872), logique pure.
+ * BPM - Escrime - Parcours de première connexion du Mode Club (#1872), logique pure.
  * Étapes validées par l'état réel du club : nom, logo (facultatif), membres, cartes.
  * Licensed under GPL-3.0
  */
@@ -11,7 +11,7 @@ export const CLUB_TOUR_STEPS: ClubTourStepId[] = ['identity', 'logo', 'members',
 
 export const CLUB_TOUR_KEY = 'bellepoule-club-tour';
 export const CLUB_CARDS_PRINTED_KEY = 'bellepoule-club-cards-printed';
-export const CLUB_TOUR_RESTART_EVENT = 'bellepoule:restart-club-tour';
+export const CLUB_TOUR_RESTART_EVENT = 'bpm-escrime:restart-club-tour';
 
 export type ClubTourFlag = 'active' | 'done';
 

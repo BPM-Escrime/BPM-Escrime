@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitres et pistes des poules et des matchs (#1980, docs/adr/0017)
+ * BPM - Escrime - Arbitres et pistes des poules et des matchs (#1980, docs/adr/0017)
  * assignMatches : organisation de l'épreuve écrite par le moteur (état de session, base),
  * plus par l'écran. Pas d'événement : l'affectation des arbitres a aussi d'autres chemins
  * (tablettes, moteur ADR-0014) ; elle sera journalisée quand ils passeront tous par ici

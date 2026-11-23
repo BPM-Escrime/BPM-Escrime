@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Lecture d'un état d'appareil rapporté au match de l'arène (#1829)
+ * BPM - Escrime - Lecture d'un état d'appareil rapporté au match de l'arène (#1829)
  * Indépendant du protocole :
  * - côtés droite / gauche → tireurs A / B par identifiant, jamais par position (inversion) ;
  * - cartons au format des arènes (`yellow`, `red`, `p-red`, `p-black`) ;

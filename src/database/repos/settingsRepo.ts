@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Paramétrage global du poste (app_settings) et salles (venues,
+ * BPM - Escrime - Paramétrage global du poste (app_settings) et salles (venues,
  * venue_strips) (#1880, lot 0). Valeurs JSON validées par clé (shared/types/appSettings).
  * Licensed under GPL-3.0
  */

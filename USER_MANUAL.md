@@ -1,6 +1,6 @@
 # User Manual
 
-This comprehensive guide covers all features of BellePoule Modern for tournament organizers, referees, and competition managers.
+This comprehensive guide covers all features of BPM - Escrime for tournament organizers, referees, and competition managers.
 
 ## 📖 Table of Contents
 
@@ -16,11 +16,11 @@ This comprehensive guide covers all features of BellePoule Modern for tournament
 
 ### First Launch
 
-When you first open BellePoule Modern, you'll see the main competition list screen:
+When you first open BPM - Escrime, you'll see the main competition list screen:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ 🤺 BellePoule Modern                    ☰ Help □ □ ⊗       │
+│ 🤺 BPM - Escrime                    ☰ Help □ □ ⊗       │
 ├─────────────────────────────────────────────────────────────┤
 │ [+ New Competition]           [🔍 Search]        [⚙️]     │
 │                                                             │
@@ -95,7 +95,7 @@ When you first open BellePoule Modern, you'll see the main competition list scre
 │ Other Settings:                                             │
 │ ┌─────────────────────────────────────────────────────────┐ │
 │ │ Auto-save: [✓] Every 2 minutes                        │ │
-│ │ Export Format: [BellePoule XML ▼]                     │ │
+│ │ Export Format: [BPM - Escrime XML ▼]                     │ │
 │ │ Language: [Français ▼]                                │ │
 │ └─────────────────────────────────────────────────────────┘ │
 │                                                             │
@@ -138,7 +138,7 @@ DUPONT,JEAN,15/03/1995,M,FRA;;12345678,ÎLE-DE-FRANCE,PARIS ESCRIME
 MARTIN,MARIE,22/07/1998,F,FRA;;87654321,PROVENCE,MARSEILLE CLUB
 ```
 
-#### 3. XML BellePoule Format
+#### 3. XML BPM - Escrime Format
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -155,7 +155,7 @@ MARTIN,MARIE,22/07/1998,F,FRA;;87654321,PROVENCE,MARSEILLE CLUB
 1. **Open Competition** → **Import Fencers**
 2. **Select File Type**:
    - [📄 FFE File (.fff, .csv)]
-   - [📄 XML BellePoule]
+   - [📄 XML BPM - Escrime]
    - [✋ Manual Entry]
 
 3. **Browse and Select File**
@@ -484,7 +484,7 @@ URL: `https://<organiser-IP>:8066/arene{N}/arbitre`.
 │                                                             │
 │ Export Format:                                              │
 │ ┌─────────────────────────────────────────────────────────┐ │
-│ │ ☑ BellePoule XML (compatible with original BellePoule) │ │
+│ │ ☑ BPM - Escrime XML (compatible with original software) │ │
 │ │ ☐ FFF Format (for FFE submission)                      │ │
 │ │ ☐ CSV Format (Excel compatible)                        │ │
 │ │ ☐ PDF Report (Printable results)                       │ │
@@ -500,7 +500,7 @@ URL: `https://<organiser-IP>:8066/arene{N}/arbitre`.
 │                                                             │
 │ File name: [regional_championship_eppee_results.xml]       │
 │                                                             │
-│ Save location: [~/Documents/BellePoule/exports/]           │
+│ Save location: [~/Documents/BPM - Escrime/exports/]           │
 │                                                             │
 │              [Preview]              [Export]                │
 └─────────────────────────────────────────────────────────────┘
@@ -508,7 +508,7 @@ URL: `https://<organiser-IP>:8066/arene{N}/arbitre`.
 
 ### Export Formats Examples
 
-#### BellePoule XML
+#### BPM - Escrime XML
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -599,4 +599,4 @@ In-app help: the built-in **Wiki** and the shortcut list (`KeyboardShortcutsHelp
 
 ---
 
-**🎉 Congratulations!** You're now ready to manage fencing competitions with BellePoule Modern. For technical support, see the [Troubleshooting Guide](TROUBLESHOOTING.md).
+**🎉 Congratulations!** You're now ready to manage fencing competitions with BPM - Escrime. For technical support, see the [Troubleshooting Guide](TROUBLESHOOTING.md).

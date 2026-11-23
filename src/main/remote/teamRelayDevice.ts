@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Relais FIE par équipes piloté par un appareil de piste (#1829)
+ * BPM - Escrime - Relais FIE par équipes piloté par un appareil de piste (#1829)
  * Opérations de l'arène équipe (`/equipe{N}`, relais FIE en direct #1086) utilisées par le
  * PisteHub. L'appareil donne le score cumulé de l'équipe ; l'arène tient le score du relais
  * en cours (`liveScoreA/B`) : relais = cumul reçu − relais précédents terminés.

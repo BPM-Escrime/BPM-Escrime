@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : espace permanent du club, ouvert comme un
+ * BPM - Escrime - Mode Club (#1872) : espace permanent du club, ouvert comme un
  * onglet de compétition. Sous-onglets Identité / Membres / Maîtres d'armes / Séances /
  * Statistiques / Exercices / Matériel.
  * Licensed under GPL-3.0

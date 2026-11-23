@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Heure de fin planifiée et écart final (onglet Organisation, #1817)
+ * BPM - Escrime - Heure de fin planifiée et écart final (onglet Organisation, #1817)
  * Mémorisé par poste (localStorage) : la référence vient de l'assistant de planning,
  * par phase (poules / tableau) ; l'écart final est figé à la fin de la compétition.
  * Licensed under GPL-3.0

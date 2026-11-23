@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pistes d'une salle : libellé et appareil de piste (#1880, docs/adr/0023)
+ * BPM - Escrime - Pistes d'une salle : libellé et appareil de piste (#1880, docs/adr/0023)
  * Cyrano (IPv4, port, version) ou OPP2 (identifiant MQTT), mode. Déclaré une fois sur la salle,
  * repris par toutes les épreuves et journées qui s'y tiennent.
  * Licensed under GPL-3.0

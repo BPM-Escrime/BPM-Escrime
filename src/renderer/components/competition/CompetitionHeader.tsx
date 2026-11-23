@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Competition Header Sub-component
+ * BPM - Escrime - Competition Header Sub-component
  * Licensed under GPL-3.0
  */
 

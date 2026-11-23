@@ -21,7 +21,7 @@ export const ARTICLES: WikiArticle[] = [
       fr: [
         {
           type: 'p',
-          text: "BellePoule Modern est un logiciel de gestion de tournois d'escrime. Il prend en charge les poules, les tableaux d'élimination directe et la saisie distante via tablette.",
+          text: "BPM - Escrime est un logiciel de gestion de tournois d'escrime. Il prend en charge les poules, les tableaux d'élimination directe et la saisie distante via tablette.",
         },
         { type: 'h2', text: 'Flux de travail standard' },
         {
@@ -53,7 +53,7 @@ export const ARTICLES: WikiArticle[] = [
       en: [
         {
           type: 'p',
-          text: 'BellePoule Modern is a fencing tournament management software. It handles pools, direct elimination brackets, and remote scoring via tablets.',
+          text: 'BPM - Escrime is a fencing tournament management software. It handles pools, direct elimination brackets, and remote scoring via tablets.',
         },
         { type: 'h2', text: 'Standard Workflow' },
         {
@@ -85,7 +85,7 @@ export const ARTICLES: WikiArticle[] = [
       de: [
         {
           type: 'p',
-          text: 'BellePoule Modern ist eine Software zur Verwaltung von Fechtturnieren. Sie unterstützt Pools, direkte Ausscheidungsrunden und Fernwertung via Tablet.',
+          text: 'BPM - Escrime ist eine Software zur Verwaltung von Fechtturnieren. Sie unterstützt Pools, direkte Ausscheidungsrunden und Fernwertung via Tablet.',
         },
         { type: 'h2', text: 'Standardablauf' },
         {
@@ -117,7 +117,7 @@ export const ARTICLES: WikiArticle[] = [
       es: [
         {
           type: 'p',
-          text: 'BellePoule Modern es un software de gestión de torneos de esgrima. Gestiona poules, cuadros de eliminación directa y puntuación remota vía tablet.',
+          text: 'BPM - Escrime es un software de gestión de torneos de esgrima. Gestiona poules, cuadros de eliminación directa y puntuación remota vía tablet.',
         },
         { type: 'h2', text: 'Flujo de trabajo estándar' },
         {
@@ -149,7 +149,7 @@ export const ARTICLES: WikiArticle[] = [
       'zh-HK': [
         {
           type: 'p',
-          text: 'BellePoule Modern 是一款擊劍錦標賽管理軟件，支援分組循環賽、直接淘汰賽及平板遠端記分。',
+          text: 'BPM - Escrime 是一款擊劍錦標賽管理軟件，支援分組循環賽、直接淘汰賽及平板遠端記分。',
         },
         { type: 'h2', text: '標準流程' },
         {
@@ -178,7 +178,7 @@ export const ARTICLES: WikiArticle[] = [
       br: [
         {
           type: 'p',
-          text: 'BellePoule Modern a zo ur meziant evit merañ kenstrivadegoù klezeouriezh. Emaog merañ poulloù, tablelloù eliminerezh direkt ha enrollañ eus-pell dre tablet.',
+          text: 'BPM - Escrime a zo ur meziant evit merañ kenstrivadegoù klezeouriezh. Emaog merañ poulloù, tablelloù eliminerezh direkt ha enrollañ eus-pell dre tablet.',
         },
         { type: 'h2', text: 'Rummad labour reizh' },
         {
@@ -210,7 +210,7 @@ export const ARTICLES: WikiArticle[] = [
       ca: [
         {
           type: 'p',
-          text: "BellePoule Modern és un programari de gestió de tornejos d'esgrima. Gestiona poules, quadres d'eliminació directa i puntuació remota via tauleta.",
+          text: "BPM - Escrime és un programari de gestió de tornejos d'esgrima. Gestiona poules, quadres d'eliminació directa i puntuació remota via tauleta.",
         },
         { type: 'h2', text: 'Flux de treball estàndard' },
         {
@@ -522,7 +522,7 @@ export const ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'XML BellePoule (.xml, .cotcot) et liste FFE (.fff, .csv, .txt)',
+            'XML BPM - Escrime (.xml, .cotcot) et liste FFE (.fff, .csv, .txt)',
             'Classement (FFF, CSV ou XLSX : NOM, PRÉNOM, CLASSEMENT) et archive de tireurs .bpf (photos comprises)',
             'FFE Connect — import direct depuis la fédération ; Tournoi des rapières : import des équipes (CSV / XLSX)',
           ],
@@ -562,7 +562,7 @@ export const ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'BellePoule XML (.xml, .cotcot) and FFE list (.fff, .csv, .txt)',
+            'BPM - Escrime XML (.xml, .cotcot) and FFE list (.fff, .csv, .txt)',
             'Ranking (FFF, CSV or XLSX: LAST NAME, FIRST NAME, RANKING) and .bpf fencer archive (photos included)',
             'FFE Connect — direct import from the federation; Rapier tournament: team import (CSV / XLSX)',
           ],
@@ -602,7 +602,7 @@ export const ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'BellePoule-XML (.xml, .cotcot) und FFE-Liste (.fff, .csv, .txt)',
+            'BPM-Escrime-XML (.xml, .cotcot) und FFE-Liste (.fff, .csv, .txt)',
             'Rangliste (FFF, CSV oder XLSX: NAME, VORNAME, RANG) und .bpf-Fechterarchiv (inkl. Fotos)',
             'FFE Connect — Direktimport vom Verband; Rapier-Turnier: Teamimport (CSV / XLSX)',
           ],
@@ -642,7 +642,7 @@ export const ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'XML BellePoule (.xml, .cotcot) y lista FFE (.fff, .csv, .txt)',
+            'XML BPM - Escrime (.xml, .cotcot) y lista FFE (.fff, .csv, .txt)',
             'Clasificación (FFF, CSV o XLSX: APELLIDO, NOMBRE, CLASIFICACIÓN) y archivo de tiradores .bpf (fotos incluidas)',
             'FFE Connect — importación directa desde la federación; Torneo de las roperas: importación de equipos (CSV / XLSX)',
           ],
@@ -679,7 +679,7 @@ export const ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'BellePoule XML（.xml、.cotcot）及 FFE 名單（.fff、.csv、.txt）',
+            'BPM - Escrime XML（.xml、.cotcot）及 FFE 名單（.fff、.csv、.txt）',
             '排名（FFF、CSV 或 XLSX：姓、名、排名）及 .bpf 選手封存檔（含相片）',
             'FFE Connect — 直接從總會匯入；細劍錦標賽：匯入隊伍（CSV / XLSX）',
           ],
@@ -719,7 +719,7 @@ export const ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'XML BellePoule (.xml, .cotcot) ha roll FFE (.fff, .csv, .txt)',
+            'XML BPM - Escrime (.xml, .cotcot) ha roll FFE (.fff, .csv, .txt)',
             'Renkadur (FFF, CSV pe XLSX : ANV, ANV-BIHAN, RENK) hag diell klezeourien .bpf (gant ar poltredoù)',
             "FFE Connect — enporzhiañ war-eeun eus ar c'hevredad ; Tournamant ar rapierennoù : enporzhiañ ar skipailhoù (CSV / XLSX)",
           ],
@@ -759,7 +759,7 @@ export const ARTICLES: WikiArticle[] = [
         {
           type: 'ul',
           items: [
-            'XML BellePoule (.xml, .cotcot) i llista FFE (.fff, .csv, .txt)',
+            'XML BPM - Escrime (.xml, .cotcot) i llista FFE (.fff, .csv, .txt)',
             'Classificació (FFF, CSV o XLSX: COGNOM, NOM, CLASSIFICACIÓ) i arxiu de tiradors .bpf (fotos incloses)',
             "FFE Connect — importació directa des de la federació; Torneig de les roperes: importació d'equips (CSV / XLSX)",
           ],
@@ -806,7 +806,7 @@ export const ARTICLES: WikiArticle[] = [
         { type: 'h2', text: 'Génération des poules' },
         {
           type: 'p',
-          text: 'BellePoule répartit automatiquement les tireurs en poules de taille optimale selon le nombre de participants. La répartition peut être ajustée manuellement dans la phase de Préparation.',
+          text: 'BPM - Escrime répartit automatiquement les tireurs en poules de taille optimale selon le nombre de participants. La répartition peut être ajustée manuellement dans la phase de Préparation.',
         },
         { type: 'h2', text: 'Saisie des scores' },
         {
@@ -847,7 +847,7 @@ export const ARTICLES: WikiArticle[] = [
         { type: 'h2', text: 'Pool Generation' },
         {
           type: 'p',
-          text: 'BellePoule automatically distributes fencers into optimally-sized pools based on participant count. Distribution can be manually adjusted in the Preparation phase.',
+          text: 'BPM - Escrime automatically distributes fencers into optimally-sized pools based on participant count. Distribution can be manually adjusted in the Preparation phase.',
         },
         { type: 'h2', text: 'Score Entry' },
         {
@@ -888,7 +888,7 @@ export const ARTICLES: WikiArticle[] = [
         { type: 'h2', text: 'Pool-Generierung' },
         {
           type: 'p',
-          text: 'BellePoule verteilt Fechter automatisch in Pools optimaler Größe basierend auf der Teilnehmerzahl. Die Verteilung kann in der Vorbereitungsphase manuell angepasst werden.',
+          text: 'BPM - Escrime verteilt Fechter automatisch in Pools optimaler Größe basierend auf der Teilnehmerzahl. Die Verteilung kann in der Vorbereitungsphase manuell angepasst werden.',
         },
         { type: 'h2', text: 'Ergebniseingabe' },
         {
@@ -929,7 +929,7 @@ export const ARTICLES: WikiArticle[] = [
         { type: 'h2', text: 'Generación de poules' },
         {
           type: 'p',
-          text: 'BellePoule distribuye automáticamente los tiradores en grupos de tamaño óptimo según el número de participantes. La distribución puede ajustarse manualmente en la fase de Preparación.',
+          text: 'BPM - Escrime distribuye automáticamente los tiradores en grupos de tamaño óptimo según el número de participantes. La distribución puede ajustarse manualmente en la fase de Preparación.',
         },
         { type: 'h2', text: 'Introducción de puntuaciones' },
         {
@@ -970,7 +970,7 @@ export const ARTICLES: WikiArticle[] = [
         { type: 'h2', text: '生成分組' },
         {
           type: 'p',
-          text: 'BellePoule 根據參賽人數自動將選手分配到最佳規模的分組中，也可在準備階段手動調整。',
+          text: 'BPM - Escrime 根據參賽人數自動將選手分配到最佳規模的分組中，也可在準備階段手動調整。',
         },
         { type: 'h2', text: '輸入成績' },
         {
@@ -1005,7 +1005,7 @@ export const ARTICLES: WikiArticle[] = [
         { type: 'h2', text: 'Sevel ar poulloù' },
         {
           type: 'p',
-          text: "BellePoule a rann ar c'hlañvourien ent emgefreek e poulloù eus ment reizh hervez an niver a c'hourennourien.",
+          text: "BPM - Escrime a rann ar c'hlañvourien ent emgefreek e poulloù eus ment reizh hervez an niver a c'hourennourien.",
         },
         { type: 'h2', text: 'Pourvezañ notadoù' },
         {
@@ -1046,7 +1046,7 @@ export const ARTICLES: WikiArticle[] = [
         { type: 'h2', text: 'Generació de poules' },
         {
           type: 'p',
-          text: 'BellePoule distribueix automàticament els tiradors en grups de mida òptima segons el nombre de participants. La distribució es pot ajustar manualment a la fase de Preparació.',
+          text: 'BPM - Escrime distribueix automàticament els tiradors en grups de mida òptima segons el nombre de participants. La distribució es pot ajustar manualment a la fase de Preparació.',
         },
         { type: 'h2', text: 'Introducció de puntuacions' },
         {

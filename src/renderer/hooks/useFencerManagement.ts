@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fencer Management Hook
+ * BPM - Escrime - Fencer Management Hook
  * Gestion des tireurs (CRUD, check-in, import)
  * Licensed under GPL-3.0
  */

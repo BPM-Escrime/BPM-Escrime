@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Progression des opérations longues (#1535)
+ * BPM - Escrime - Progression des opérations longues (#1535)
  * runOperation(kind, tâche) : si la tâche dépasse 1 s, une barre de progression
  * indéterminée (role="status" + <progress>) s'affiche en haut de la fenêtre jusqu'à la fin.
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Départements français (code -> nom)
+ * BPM - Escrime - Départements français (code -> nom)
  * Licensed under GPL-3.0
  *
  * Le code (01…95, 2A, 2B, 971…) est celui stocké dans Fencer.department (#1504).

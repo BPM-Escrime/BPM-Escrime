@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Remote Referee Interface JavaScript
+ * BPM - Escrime - Remote Referee Interface JavaScript
  * Frontend for remote score entry
  */
 

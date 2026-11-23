@@ -5,7 +5,7 @@
 - **Permissions** : `setPermissionRequestHandler` et `setPermissionCheckHandler` n'accordent que la vidéo (`media`/`camera`) à l'application ; micro et autres permissions refusés.
 - **CSP** : la meta de `index.html` est alignée sur l'en-tête de session (`script-src 'self'`). `style-src 'self'` sans `'unsafe-inline'` (#1157) : CSS extraites en fichiers (`mini-css-extract-plugin`), styles React posés par CSSOM, aperçu PDF (iframe) réappliqué par CSSOM (`renderer/utils/writeHtmlWithCssom.ts`). L'en-tête de session est strict (`style-src 'self'`) pour la fenêtre principale ; seules les autres fenêtres (impression / PDF, HTML avec `<style>`, JS désactivé) reçoivent `'unsafe-inline'` (`buildSessionCsp`, #1343). `connect-src http://localhost:*` est conservé : le port du serveur distant est dynamique.
 - **Fuses** (`build.electronFuses`) : `runAsNode`, `enableNodeOptionsEnvironmentVariable`, `enableNodeCliInspectArguments` désactivés ; `onlyLoadAppFromAsar` activé.
-- **`disable-gpu-sandbox`** : uniquement avec `BELLEPOULE_SW_RENDER=1` (Linux/VM sans GPU), jamais par défaut.
+- **`disable-gpu-sandbox`** : uniquement avec `BPM_ESCRIME_SW_RENDER=1` (Linux/VM sans GPU), jamais par défaut.
 
 ## Sandbox Chromium sous Linux (Ubuntu 24.04+, #1715)
 
@@ -25,7 +25,7 @@ FATAL:sandbox/linux/suid/client/setuid_sandbox_host.cc:172] The SUID sandbox hel
    sudo tee /etc/apparmor.d/bellepoule-electron-dev >/dev/null <<'EOF'
    abi <abi/4.0>,
    include <tunables/global>
-   profile bellepoule-electron-dev /CHEMIN/ABSOLU/bellepoule-modern/node_modules/electron/dist/electron flags=(unconfined) {
+   profile bellepoule-electron-dev /CHEMIN/ABSOLU/bpm-escrime/node_modules/electron/dist/electron flags=(unconfined) {
      userns,
    }
    EOF
@@ -45,7 +45,7 @@ FATAL:sandbox/linux/suid/client/setuid_sandbox_host.cc:172] The SUID sandbox hel
 
 3. **`--no-sandbox`** (dépannage ponctuel uniquement) : `npx electron . --no-sandbox` après `npm run build`. Désactive le sandbox du renderer : ne jamais l'utiliser pour une session de compétition sur un poste qui affiche ou traite du contenu non maîtrisé.
 
-**Ce qui ne règle pas le problème** : `BELLEPOULE_SW_RENDER=1` ajoute `disable-gpu-sandbox` (sandbox GPU seulement) ; il ne lève pas ce plantage.
+**Ce qui ne règle pas le problème** : `BPM_ESCRIME_SW_RENDER=1` ajoute `disable-gpu-sandbox` (sandbox GPU seulement) ; il ne lève pas ce plantage.
 
 **Paquets utilisateur** : aucun profil AppArmor n'est livré avec les paquets à ce jour. Sur Ubuntu 24.04+, le sandbox Chromium n'est donc pas garanti. Le constat de #1715 indique que l'AppImage démarre alors sans sandbox du renderer (`--no-sandbox` ajouté au lancement) ; ce comportement n'a pas été re-vérifié sur un build de ce dépôt.
 

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Penalty System Types
+ * BPM - Escrime - Penalty System Types
  * Feature 23: Card management
  * Licensed under GPL-3.0
  */

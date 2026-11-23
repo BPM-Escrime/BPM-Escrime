@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Attribution des pistes aux poules
+ * BPM - Escrime - Attribution des pistes aux poules
  * Même règle que le serveur de saisie distante : pool.strip si défini,
  * sinon première piste libre dans l'ordre des poules.
  * Licensed under GPL-3.0

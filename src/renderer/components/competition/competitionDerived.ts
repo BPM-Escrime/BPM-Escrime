@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Valeurs dérivées de la vue compétition (extrait de CompetitionView, #1599)
+ * BPM - Escrime - Valeurs dérivées de la vue compétition (extrait de CompetitionView, #1599)
  * Les règles de classement sont dans src/shared/domain/ranking/tableauRanking.ts (#1979).
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Persistance et restauration de l'état de la compétition (extrait de
+ * BPM - Escrime - Persistance et restauration de l'état de la compétition (extrait de
  * CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

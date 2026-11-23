@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Création des tireurs, équipes et arbitres lus dans les fichiers
+ * BPM - Escrime - Création des tireurs, équipes et arbitres lus dans les fichiers
  * de l'extranet, juste après la création de la compétition (#1938)
  * Licensed under GPL-3.0
  */

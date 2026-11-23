@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Keyboard Shortcuts Help
+ * BPM - Escrime - Keyboard Shortcuts Help
  * UX Improvement: Accessible shortcut documentation
  * Licensed under GPL-3.0
  */

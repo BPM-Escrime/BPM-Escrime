@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tablette arbitre en démo autonome (?demo=1), extraite de referee.html.
+ * BPM - Escrime - Tablette arbitre en démo autonome (?demo=1), extraite de referee.html.
  * Miroir de l'arbitre virtuel du serveur : ouvre seule le match de la piste, suit scores et chrono,
  * anime l'appui sur le bouton de score, sans jamais envoyer d'action (arena_control filtré).
  * Script classique : window.BPDemoMirror.install(RefereeApp.prototype). Servi en /js (CSP 'self').

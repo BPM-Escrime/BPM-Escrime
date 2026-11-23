@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Performance Service
+ * BPM - Escrime - Performance Service
  * Caching, memoization, and optimization utilities
  * Licensed under GPL-3.0
  */

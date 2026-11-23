@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Database Validation Utilities
+ * BPM - Escrime - Database Validation Utilities
  * Input validation for database operations
  * Licensed under GPL-3.0
  */

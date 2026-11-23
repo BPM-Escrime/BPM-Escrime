@@ -1,6 +1,6 @@
 /**
  * Tests unitaires pour le système de Mort Subite FFE Sabre Laser
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - New Competition Modal
+ * BPM - Escrime - New Competition Modal
  * Licensed under GPL-3.0
  */
 
@@ -128,7 +128,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
     });
 
   // Réglages initiaux : défauts du formulaire + niveau GREG proposé à l'import (fichier
-  // BellePoule ou Domaine fédéral), visible et modifiable dans Propriétés (#1328)
+  // BPM - Escrime ou Domaine fédéral), visible et modifiable dans Propriétés (#1328)
   const initialSettings = () => {
     const base = buildSettings();
     const gregLevel = header?.fields.gregLevel;

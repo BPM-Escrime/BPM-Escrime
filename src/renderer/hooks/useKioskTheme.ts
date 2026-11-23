@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Thème du kiosque (prédéfini ou personnalisé) (#1241)
+ * BPM - Escrime - Thème du kiosque (prédéfini ou personnalisé) (#1241)
  * Extrait de RemoteScoreManager. Le préréglage est mémorisé par compétition (localStorage).
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Registre des phases de la compétition ouverte (#1536)
+ * BPM - Escrime - Registre des phases de la compétition ouverte (#1536)
  * La barre de phases publie ses phases accessibles ; la palette de commandes (Ctrl+K)
  * les liste pour permettre la navigation entre phases. Licensed under GPL-3.0
  */

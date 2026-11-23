@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Synchronisation des poules poussées par le renderer (#1240)
+ * BPM - Escrime - Synchronisation des poules poussées par le renderer (#1240)
  * Extrait de RemoteScoreServer : tireurs de poule, matchs de poule en mémoire et
  * notification des tablettes d'arène qui affichent une poule modifiée.
  * Licensed under GPL-3.0

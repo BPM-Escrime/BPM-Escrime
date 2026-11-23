@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Pool Ranking View Component
+ * BPM - Escrime - Pool Ranking View Component
  * Shows ranking after pools with export/print functionality
  * Licensed under GPL-3.0
  */

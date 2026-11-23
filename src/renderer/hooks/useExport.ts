@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Export Hook
+ * BPM - Escrime - Export Hook
  * Gestion des exports de données
  * Licensed under GPL-3.0
  */
@@ -379,7 +379,7 @@ export const useExport = ({
           fencers,
           referees
         );
-        // Comme l'ancien BellePoule : une adresse escrime-info.com part toujours vers GREG (sans identifiant)
+        // Comme l'ancien BPM - Escrime : une adresse escrime-info.com part toujours vers GREG (sans identifiant)
         if (
           target === 'greg' ||
           target === 'greg-auto' ||

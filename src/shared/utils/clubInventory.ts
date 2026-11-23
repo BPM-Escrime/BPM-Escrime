@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : inventaire du matériel (achats, garanties, prêts).
+ * BPM - Escrime - Mode Club : inventaire du matériel (achats, garanties, prêts).
  * Fonctions pures partagées par le dépôt, l'interface et les exports.
  * Licensed under GPL-3.0
  */

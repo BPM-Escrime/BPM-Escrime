@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Boîte d'impression intégrée (#1214)
+ * BPM - Escrime - Boîte d'impression intégrée (#1214)
  * À gauche l'aperçu réel des pages (PDF exact, rendu pdf.js), à droite les réglages.
  * Imprimer = envoi direct à l'imprimante choisie ; secours : boîte du système, enregistrement PDF.
  * Licensed under GPL-3.0

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Dashboard & Charts Components
+ * BPM - Escrime - Dashboard & Charts Components
  * Modern data visualization components
  * Licensed under GPL-3.0
  */

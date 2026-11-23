@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Laser Sabre "arena" team format
+ * BPM - Escrime - Laser Sabre "arena" team format
  * Cartons d'équipe "E" : sanctionnent le retard d'une équipe à désigner son
  * combattant (règlement épreuve par équipe Sabre Laser, section "Cartons").
  * Un carton blanc E est adressé à la première désignation tardive (pause de

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Drapeaux booléens groupés (modales, menus) dans un seul état (#1241)
+ * BPM - Escrime - Drapeaux booléens groupés (modales, menus) dans un seul état (#1241)
  * Remplace une série de useState<boolean>(false) : un seul reducer, setters stables
  * compatibles React.Dispatch<SetStateAction<boolean>> (valeur ou fonction).
  * Licensed under GPL-3.0

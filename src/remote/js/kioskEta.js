@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : fin estimée de la phase en cours (#1077, extrait de kiosk.html #1401)
+ * BPM - Escrime - Kiosque : fin estimée de la phase en cours (#1077, extrait de kiosk.html #1401)
  * Option désactivable (localStorage kioskShowEta). Servi en /js/kioskEta.js (script 'self', CSP).
  * Licensed under GPL-3.0
  */

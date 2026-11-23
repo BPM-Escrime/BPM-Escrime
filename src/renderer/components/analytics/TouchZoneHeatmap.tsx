@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mannequin des zones de touche (Sabre Laser)
+ * BPM - Escrime - Mannequin des zones de touche (Sabre Laser)
  * Géométrie, couleurs et rang partagés avec les exports PDF : shared/utils/touchZoneFigure.ts.
  * `variant` : « given » (touches portées) ou « received » (touches reçues) — cadre bleu / rouge.
  * Licensed under GPL-3.0

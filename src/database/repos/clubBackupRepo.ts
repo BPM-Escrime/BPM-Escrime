@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : sauvegarde complète d'un club (tables brutes) pour la
+ * BPM - Escrime - Mode Club : sauvegarde complète d'un club (tables brutes) pour la
  * recharger sur un autre poste. Membres, maîtres d'armes, séances, présences, combats,
  * inventaire, prêts,
  * catégories, marques et bibliothèque d'exercices.
@@ -127,10 +127,12 @@ export class ClubBackupRepo {
   public static validate(data: unknown): ClubBackup {
     const d = data as Partial<ClubBackup> | null;
     if (!d || typeof d !== 'object' || d.format !== CLUB_BACKUP_FORMAT) {
-      throw new Error("Ce fichier n'est pas une sauvegarde de club BellePoule");
+      throw new Error("Ce fichier n'est pas une sauvegarde de club BPM - Escrime");
     }
     if (typeof d.version !== 'number' || d.version > CLUB_BACKUP_VERSION) {
-      throw new Error('Sauvegarde créée par une version plus récente : mettez BellePoule à jour');
+      throw new Error(
+        'Sauvegarde créée par une version plus récente : mettez BPM - Escrime à jour'
+      );
     }
     if (typeof d.clubId !== 'string' || !d.clubId || d.clubId.length > 100) {
       throw new Error('Sauvegarde invalide : identifiant du club manquant');

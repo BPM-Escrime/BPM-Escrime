@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : fiche d'un membre, en création (« Nouveau membre »)
+ * BPM - Escrime - Mode Club (#1872) : fiche d'un membre, en création (« Nouveau membre »)
  * ou en correction (nom, prénom, licence, date de naissance, latéralité, catégorie d'âge).
  * Présences, combats et code carte sont conservés à la modification.
  * Licensed under GPL-3.0

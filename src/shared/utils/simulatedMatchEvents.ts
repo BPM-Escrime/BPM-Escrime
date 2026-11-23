@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Événements simulés pour le remplissage automatique (outil de test)
+ * BPM - Escrime - Événements simulés pour le remplissage automatique (outil de test)
  * Durée, touches par zone (Sabre Laser) et cartons : alimentent l'analytique comme un vrai match.
  * Licensed under GPL-3.0
  */

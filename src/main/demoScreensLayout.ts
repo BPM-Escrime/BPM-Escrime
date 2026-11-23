@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Démo autonome : liste et disposition des écrans (logique pure, testable)
+ * BPM - Escrime - Démo autonome : liste et disposition des écrans (logique pure, testable)
  * Licensed under GPL-3.0
  */
 

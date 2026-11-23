@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Quest Scheduler Tests
+ * BPM - Escrime - Quest Scheduler Tests
  * Licensed under GPL-3.0
  */
 

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests - EmptyState commun (#1535)
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import '@testing-library/jest-dom';

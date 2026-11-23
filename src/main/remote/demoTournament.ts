@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Démo autonome : tournoi fictif complet joué en boucle.
+ * BPM - Escrime - Démo autonome : tournoi fictif complet joué en boucle.
  * Poules (matrice remplie au fil des matchs) → classement après poules → tableau d'élimination
  * directe → classement final → pause → nouveau tournoi. Logique pure : l'arbitre virtuel
  * (demoMode.ts) demande les duels et rapporte les scores, l'horloge est injectée.

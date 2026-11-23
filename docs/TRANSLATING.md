@@ -1,4 +1,4 @@
-# Traduire BellePoule Modern
+# Traduire BPM - Escrime
 
 Aucune connaissance technique requise : on traduit dans un tableur.
 

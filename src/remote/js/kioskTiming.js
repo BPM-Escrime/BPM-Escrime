@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : rotation des vues, reprise réseau et défilement automatique
+ * BPM - Escrime - Kiosque : rotation des vues, reprise réseau et défilement automatique
  * (extrait de kiosk.html #1401). Horloge, rAF et minuteries injectés. Servi en /js/kioskTiming.js (CSP 'self').
  * Licensed under GPL-3.0
  */

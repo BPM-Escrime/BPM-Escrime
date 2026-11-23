@@ -53,6 +53,6 @@
   <path d="M194 200 C186 224 204 230 203 212 C210 226 216 206 207 198 Z" fill="#e63950" stroke="#7a1229" stroke-width="1.5"/>
   <path d="M186 180 L214 180 L200 206 Z" fill="#ffb703" stroke="#c77700" stroke-width="1.5" stroke-linejoin="round"/>
   <path d="M189 187 L211 187" stroke="#c77700" stroke-width="1.5"/>
-  <text x="200" y="420" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="900" font-size="46" letter-spacing="3" fill="#ffffff">BELLEPOULE</text>
+  <text x="200" y="420" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="900" font-size="46" letter-spacing="3" fill="#ffffff">BPM - ESCRIME</text>
   <text x="200" y="460" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="700" font-size="24" letter-spacing="16" fill="#6b84e8">MODERN</text>
 </svg>

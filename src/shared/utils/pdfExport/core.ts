@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - PDF Export Service
+ * BPM - Escrime - PDF Export Service
  * Helpers communs : sauvegarde PDF, helpers de template, CSS partagé
  * Licensed under GPL-3.0
  */

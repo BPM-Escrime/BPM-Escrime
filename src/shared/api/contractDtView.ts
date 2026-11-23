@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Opérations de l'espace « Vue DT » (#1981 lot 3, docs/adr/0020)
+ * BPM - Escrime - Opérations de l'espace « Vue DT » (#1981 lot 3, docs/adr/0020)
  * Consultation de l'épreuve dans un navigateur du réseau de la salle, en lecture seule.
  * Licensed under GPL-3.0
  */

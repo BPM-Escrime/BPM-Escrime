@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Contexte d'accesseurs générique (#1240)
+ * BPM - Escrime - Contexte d'accesseurs générique (#1240)
  * Construit un contexte dont chaque propriété lit/écrit directement le serveur (valeurs toujours
  * à jour) ; les méthodes sont liées à l'instance. Le typage vient de l'interface de contexte du module.
  * Licensed under GPL-3.0

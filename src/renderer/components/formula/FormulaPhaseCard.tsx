@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Carte d'une phase dans le pipeline de formule
+ * BPM - Escrime - Carte d'une phase dans le pipeline de formule
  */
 
 import React, { useState, memo } from 'react';

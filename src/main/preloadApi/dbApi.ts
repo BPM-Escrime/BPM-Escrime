@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Préload : Base de données (db:*), avec validation (#1774)
+ * BPM - Escrime - Préload : Base de données (db:*), avec validation (#1774)
  * Licensed under GPL-3.0
  */
 import { ipcRenderer } from 'electron';

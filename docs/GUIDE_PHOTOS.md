@@ -10,7 +10,7 @@ Ce guide couvre les 4 boutons de gestion de photos disponibles dans la liste des
 |--------|-----------------|---------|
 | `📤 Export Photos` | ZIP | Exporte toutes les photos de la compétition dans un fichier `.zip` |
 | `📥 Import Photos` | ZIP | Importe des photos depuis un fichier `.zip` (matching par numéro de licence) |
-| `💾 .bpf` | Archive | Exporte tireurs + photos dans un fichier `.bpf` (BellePoule Fencers) |
+| `💾 .bpf` | Archive | Exporte tireurs + photos dans un fichier `.bpf` (BPM - Escrime Fencers) |
 | `📦 .bpf` | Archive | Importe tireurs + photos depuis un fichier `.bpf` |
 
 Ces boutons sont disponibles uniquement si une compétition est ouverte.
@@ -119,7 +119,7 @@ Signifie : 8 photos ont été associées à un tireur sur 12 fichiers image trou
 Exporte l'ensemble des tireurs (données + photos) dans un fichier archive `.bpf`.
 
 ### Format produit
-- **Extension** : `.bpf` (BellePoule Fencers — ZIP renommé)
+- **Extension** : `.bpf` (BPM - Escrime Fencers — ZIP renommé)
 - **Nom par défaut proposé** : `tireurs.bpf`
 - **Compression** : DEFLATE
 
@@ -170,7 +170,7 @@ Importe des tireurs (données + photos) depuis un fichier `.bpf` dans la compét
 
 ### Format attendu
 - **Extension** : `.bpf`
-- Doit contenir un fichier `fencers.json` valide (produit par BellePoule Modern)
+- Doit contenir un fichier `fencers.json` valide (produit par BPM - Escrime)
 
 ### Stratégie de matching
 L'import tente de faire correspondre chaque tireur importé dans cet ordre :

@@ -1,4 +1,4 @@
-# BellePoule Modern — Architecture
+# BPM - Escrime — Architecture
 
 > Version **1.0.3**, build **#1365** (octobre 2026).
 > Dépendances et versions : [docs/STACK_TECHNIQUE.md](docs/STACK_TECHNIQUE.md).
@@ -43,7 +43,7 @@ Application **Electron** (poste organisateur) + **serveur web embarqué** (table
 ## 2. Arborescence
 
 ```
-bellepoule-modern/
+bpm-escrime/
 ├── src/
 │   ├── main/                     # Processus principal Electron
 │   │   ├── main.ts               # Fenêtres, menus (fr/en/de), ~165 handlers IPC, autosave, cycle DB

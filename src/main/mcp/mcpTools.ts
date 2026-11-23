@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Outils MCP en lecture (#1880, lot 1)
+ * BPM - Escrime - Outils MCP en lecture (#1880, lot 1)
  * Interroger la salle en langage naturel : épreuves, tireurs, poules, tableau, arbitres,
  * journée multi-épreuves, pistes, serveur distant, appareils Cyrano.
  * Données personnelles minimales (pas de date de naissance, licence ni photo, RGPD #1882).

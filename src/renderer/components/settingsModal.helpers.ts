@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Constantes, types et helpers de SettingsModal (extrait, #1599)
+ * BPM - Escrime - Constantes, types et helpers de SettingsModal (extrait, #1599)
  * Licensed under GPL-3.0
  */
 import {

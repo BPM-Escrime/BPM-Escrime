@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Session d'entraînement (#1240)
+ * BPM - Escrime - Session d'entraînement (#1240)
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Appareils de piste (#2117, docs/adr/0023 ; groupe « appareils » de
+ * BPM - Escrime - Appareils de piste (#2117, docs/adr/0023 ; groupe « appareils » de
  * docs/adr/0022) : déclaration sur la piste de la salle, salle d'une épreuve, appareils
  * effectifs, pilotage des pilotes Cyrano (UDP) et OPP2 (broker MQTT intégré).
  * Ce ne sont pas des faits de l'épreuve : aucun journal. Droit `remote:admin`, jamais servi sur

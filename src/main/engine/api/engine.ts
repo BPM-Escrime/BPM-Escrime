@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Moteur du contrat d'API (#1981)
+ * BPM - Escrime - Moteur du contrat d'API (#1981)
  * Implémentation de chaque opération du contrat, validation des entrées et forme d'erreur
  * unique (ApiError) : les adaptateurs IPC, MCP et (lot 3) WebSocket passent tous par ici.
  * Licensed under GPL-3.0

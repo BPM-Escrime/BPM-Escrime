@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : logique des vagues et migration (extrait de
+ * BPM - Escrime - Tournoi des rapières : logique des vagues et migration (extrait de
  * CompetitionView, #1599)
  * Licensed under GPL-3.0
  */

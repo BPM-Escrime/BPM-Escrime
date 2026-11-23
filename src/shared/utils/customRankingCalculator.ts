@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Moteur de classement pour formule personnalisée
+ * BPM - Escrime - Moteur de classement pour formule personnalisée
  * Utilisé exclusivement pour l'arme CUSTOM — les armes standard (E/F/S/L)
  * continuent d'utiliser calculatePoolRanking / calculatePoolRankingQuest.
  */

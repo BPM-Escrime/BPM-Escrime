@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Couche domaine : accès aux épreuves (#1880)
+ * BPM - Escrime - Couche domaine : accès aux épreuves (#1880)
  * Licensed under GPL-3.0
  */
 import type { Competition } from '../../../shared/types';

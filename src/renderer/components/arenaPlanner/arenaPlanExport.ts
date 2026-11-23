@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Export du plan de salle d'arène (PNG et PDF, #2075)
+ * BPM - Escrime - Export du plan de salle d'arène (PNG et PDF, #2075)
  * Sérialise l'aperçu SVG affiché et le rastérise dans un canvas. Le PDF est
  * une page A4 paysage composée dans le même canvas (plan + résumé + matériel),
  * encodée en JPEG et embarquée directement (filtre DCTDecode) : aucune

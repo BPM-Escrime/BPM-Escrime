@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : contenu des QR codes des cartes de membre
+ * BPM - Escrime - Mode Club (#1872) : contenu des QR codes des cartes de membre
  * et des pistes, lus plus tard par webcam pour lancer un combat (piste puis 2 tireurs).
  * Format texte versionné, sans URL : `BPC1:M:<code>` (membre), `BPC1:A:<n>` (piste).
  * Licensed under GPL-3.0

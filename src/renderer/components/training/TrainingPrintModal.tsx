@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Impression des QR Codes du mode entraînement (#1500)
+ * BPM - Escrime - Impression des QR Codes du mode entraînement (#1500)
  * Sélection : kiosk, pistes arbitres, pistes affichage, lobby.
  * Licensed under GPL-3.0
  */

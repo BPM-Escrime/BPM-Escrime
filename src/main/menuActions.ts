@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Actions du menu natif (ouvrir, enregistrer, exporter, importer, à propos)
+ * BPM - Escrime - Actions du menu natif (ouvrir, enregistrer, exporter, importer, à propos)
  * (extraites de main.ts, #1341).
  * Licensed under GPL-3.0
  */
@@ -61,7 +61,7 @@ export function createMenuActions({
       const filepath = result.filePaths[0];
       try {
         if (/\.(cotcot|cocot)$/i.test(filepath)) {
-          // Fichier BellePoule classique : import XML dans la compétition ouverte
+          // Fichier BPM - Escrime classique : import XML dans la compétition ouverte
           const content = await readImportText(filepath);
           getMainWindow()?.webContents.send('menu:import', 'xml', filepath, content);
           return;

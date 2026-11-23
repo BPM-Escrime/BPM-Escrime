@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Tests unitaires - useColumnVisibility
- * BellePoule Modern
+ * BPM - Escrime
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -63,7 +63,7 @@ describe('useColumnVisibility', () => {
   it('persiste dans localStorage', () => {
     const { result } = renderHook(() => useColumnVisibility());
     act(() => result.current.setVisibleColumns('pool', ['rank']));
-    const stored = JSON.parse(localStorage.getItem('bellepoule_column_visibility')!);
+    const stored = JSON.parse(localStorage.getItem('bpm_escrime_column_visibility')!);
     expect(stored.pool).toEqual(['rank']);
   });
 });

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Kiosque : application d'affichage (socket, rotation des vues, rendu).
+ * BPM - Escrime - Kiosque : application d'affichage (socket, rotation des vues, rendu).
  * Extrait de kiosk.html (#1600) : lintable et testable.
  * Script classique chargé en <script src="/js/kioskApp.js"> (CSP : pas de script inline).
  * Licensed under GPL-3.0

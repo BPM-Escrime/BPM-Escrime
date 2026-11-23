@@ -10,7 +10,7 @@ describe('replaceMacAppBundle', () => {
 
   const setup = () => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-mac-'));
-    const bundle = path.join(dir, 'BellePoule Modern.app');
+    const bundle = path.join(dir, 'BPM - Escrime.app');
     fs.mkdirSync(path.join(bundle, 'Contents'), { recursive: true });
     fs.writeFileSync(path.join(bundle, 'Contents', 'v'), 'old');
     return bundle;
@@ -22,21 +22,21 @@ describe('replaceMacAppBundle', () => {
     replaceMacAppBundle('/dl/u.zip', bundle, (cmd, args) => {
       calls.push(cmd);
       if (cmd === '/usr/bin/ditto') {
-        const app = path.join(args[3], 'BellePoule Modern.app', 'Contents');
+        const app = path.join(args[3], 'BPM - Escrime.app', 'Contents');
         fs.mkdirSync(app, { recursive: true });
         fs.writeFileSync(path.join(app, 'v'), 'new');
       }
     });
     expect(calls).toEqual(['/usr/bin/ditto', '/usr/bin/xattr']);
     expect(fs.readFileSync(path.join(bundle, 'Contents', 'v'), 'utf8')).toBe('new');
-    expect(fs.readdirSync(dir)).toEqual(['BellePoule Modern.app']);
+    expect(fs.readdirSync(dir)).toEqual(['BPM - Escrime.app']);
   });
 
   it('archive sans .app → erreur, bundle intact, pas de reste', () => {
     const bundle = setup();
     expect(() => replaceMacAppBundle('/dl/u.zip', bundle, () => {})).toThrow(/\.app/);
     expect(fs.readFileSync(path.join(bundle, 'Contents', 'v'), 'utf8')).toBe('old');
-    expect(fs.readdirSync(dir)).toEqual(['BellePoule Modern.app']);
+    expect(fs.readdirSync(dir)).toEqual(['BPM - Escrime.app']);
   });
 
   it('extraction en échec → bundle intact', () => {
@@ -46,7 +46,7 @@ describe('replaceMacAppBundle', () => {
         throw new Error('ditto');
       })
     ).toThrow('ditto');
-    expect(fs.readdirSync(dir)).toEqual(['BellePoule Modern.app']);
+    expect(fs.readdirSync(dir)).toEqual(['BPM - Escrime.app']);
   });
 });
 

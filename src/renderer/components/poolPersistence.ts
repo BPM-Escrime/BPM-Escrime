@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Persistance des poules générées en base
+ * BPM - Escrime - Persistance des poules générées en base
  * Licensed under GPL-3.0
  */
 

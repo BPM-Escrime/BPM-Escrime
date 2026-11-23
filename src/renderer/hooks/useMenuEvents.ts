@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Menu Events Hook
+ * BPM - Escrime - Menu Events Hook
  * Gestion des événements IPC du menu
  * Licensed under GPL-3.0
  */

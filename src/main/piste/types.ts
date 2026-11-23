@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modèle commun des appareils de piste (#1829)
+ * BPM - Escrime - Modèle commun des appareils de piste (#1829)
  * Indépendant du protocole : chaque pilote (Cyrano, OPP2/MQTT (#1960) ; RS422-FPA, Favero
  * série ensuite) convertit ses trames en `PisteInput` et traduit les `PisteCommand` en
  * trames. Le PisteHub ne connaît que ce modèle.
@@ -105,7 +105,7 @@ export interface PisteDisplay {
   time?: string;
   /** Chrono à reprendre, en secondes (match rappelé) */
   stopwatch?: number;
-  /** Arme BellePoule ('E' | 'F' | 'S' | 'L' | 'C') */
+  /** Arme BPM - Escrime ('E' | 'F' | 'S' | 'L' | 'C') */
   weapon: string;
   right: PisteDisplaySide;
   left: PisteDisplaySide;
@@ -141,7 +141,7 @@ export type PisteLinkState = 'online' | 'stale' | 'offline' | 'never';
 /** Liaison d'une piste, telle que le pilote la supervise. */
 export interface PisteLink {
   piste: string;
-  /** Arène BellePoule rattachée (`/arene{N}`, `/equipe{N}`) */
+  /** Arène BPM - Escrime rattachée (`/arene{N}`, `/equipe{N}`) */
   arena?: number;
   mode: PisteMode;
   status: PisteLinkState;

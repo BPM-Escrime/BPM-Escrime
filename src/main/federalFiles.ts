@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Lecture des fichiers de l'extranet fédéral (#1938)
+ * BPM - Escrime - Lecture des fichiers de l'extranet fédéral (#1938)
  * Licensed under GPL-3.0
  *
  * Ouvre le .zip de l'extranet (ou des .xml / .fff / .txt isolés) dans le main, avec les

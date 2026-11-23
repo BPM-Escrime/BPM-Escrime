@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Port du Mode Club (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Port du Mode Club (#1981 lot 2, docs/adr/0022)
  * Branche sur le CommandContext ce que les commandes du club ne peuvent pas faire seules :
  * serveur d'entraînement (tablettes arbitre), dossier de synchronisation (sélecteur natif),
  * sauvegardes locales. Remplace les canaux `club:*` de l'ancien ipc/clubHandlers.ts.

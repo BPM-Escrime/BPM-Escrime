@@ -1,4 +1,4 @@
-# Historique - BellePoule Modern
+# Historique - BPM - Escrime
 
 ## Décisions techniques
 

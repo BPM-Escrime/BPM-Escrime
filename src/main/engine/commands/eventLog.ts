@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Journal des événements d'une épreuve, côté commandes (#1980)
+ * BPM - Escrime - Journal des événements d'une épreuve, côté commandes (#1980)
  * Chaque commande ajoute ses événements dans la même transaction que ses écritures
  * (runCommand, docs/adr/0006). Types et charges : contrat (shared/api/events, ADR-0007).
  * Les tables actuelles restent la lecture ; le journal s'écrit en plus.

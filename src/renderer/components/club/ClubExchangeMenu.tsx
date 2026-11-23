@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club : bouton à menu regroupant les formats d'un import ou d'un
+ * BPM - Escrime - Mode Club : bouton à menu regroupant les formats d'un import ou d'un
  * export (évite une multiplication de boutons dans la barre d'outils).
  * Licensed under GPL-3.0
  */

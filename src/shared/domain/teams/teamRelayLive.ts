@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Relais FIE en saisie temps réel (tablette, #1086)
+ * BPM - Escrime - Relais FIE en saisie temps réel (tablette, #1086)
  * Cible progressive : le relais n s'arrête quand une équipe atteint n × palier
  * (5-10-15…45), ou au bout de 3 minutes. Score d'équipe = touches cumulées.
  * Licensed under GPL-3.0

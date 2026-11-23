@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Database Layer (better-sqlite3-multiple-ciphers, SQLCipher #1882)
+ * BPM - Escrime - Database Layer (better-sqlite3-multiple-ciphers, SQLCipher #1882)
  * Native SQLite binding — synchronous, 10-50× faster than sql.js at startup.
  * Licensed under GPL-3.0
  */

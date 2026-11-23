@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : bibliothèque d'exercices (échauffements,
+ * BPM - Escrime - Mode Club (#1872) : bibliothèque d'exercices (échauffements,
  * technique, tactique…) réutilisable dans les plans de séance ; partagée entre clubs,
  * exportable / importable (fichier JSON) pour l'échange entre utilisateurs.
  * Licensed under GPL-3.0

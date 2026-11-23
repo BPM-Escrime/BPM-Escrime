@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Client abstrait du contrat d'API (#1981)
+ * BPM - Escrime - Client abstrait du contrat d'API (#1981)
  * L'écran appelle un BpmClient ; IpcClient (Electron) aujourd'hui, WsClient (navigateur) au lot 3.
  * Même forme d'erreur quel que soit le transport : ApiError { code, message }.
  * Licensed under GPL-3.0

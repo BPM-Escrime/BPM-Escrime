@@ -1,5 +1,5 @@
 ﻿/**
- * BellePoule Modern - Preload Script
+ * BPM - Escrime - Preload Script
  * Exposes safe APIs to the renderer process with type safety
  * Licensed under GPL-3.0
  */

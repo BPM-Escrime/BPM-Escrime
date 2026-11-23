@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Annulation d'un score (#1115, #1980, docs/adr/0005 et 0017)
+ * BPM - Escrime - Annulation d'un score (#1115, #1980, docs/adr/0005 et 0017)
  * clearScore : match de poule remis à jouer (classements recalculés), ou match de tableau
  * rouvert (vainqueur retiré du tour suivant ; refus si le tour suivant est joué). Mêmes
  * règles que l'écran (resetTableauMatch). Journal : ScoreCleared.

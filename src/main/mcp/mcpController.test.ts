@@ -55,7 +55,7 @@ describe('contrôleur MCP', () => {
     expect(readMcpSettings(dir)).toEqual({ enabled: false, port: 8067, allowWrite: false });
     expect(await mcp.clientConfig()).toEqual({
       mcpServers: {
-        bellepoule: {
+        'bpm-escrime': {
           type: 'http',
           url: `http://127.0.0.1:${port}/mcp`,
           headers: { Authorization: `Bearer ${await getMcpToken(dir, box(true))}` },

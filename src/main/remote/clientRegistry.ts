@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Registre des écrans / tablettes connectés au serveur distant
+ * BPM - Escrime - Registre des écrans / tablettes connectés au serveur distant
  * (télécommande des écrans). Extrait de remoteScoreServer.ts (#1896, lot 1).
  * Licensed under GPL-3.0
  */

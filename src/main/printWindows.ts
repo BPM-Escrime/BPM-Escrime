@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Fenêtres cachées d'impression HTML (#1214)
+ * BPM - Escrime - Fenêtres cachées d'impression HTML (#1214)
  * Impression silencieuse (boîte intégrée) et avec la boîte de dialogue native du système.
  * HTML écrit dans un dossier privé (mkdtemp 0700, fichier 0600 exclusif), supprimé ensuite.
  * Licensed under GPL-3.0

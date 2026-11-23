@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Système de touches personnalisé (arme CUSTOM)
+ * BPM - Escrime - Système de touches personnalisé (arme CUSTOM)
  * Gère les zones de touche configurables (label, points, couleur).
  */
 

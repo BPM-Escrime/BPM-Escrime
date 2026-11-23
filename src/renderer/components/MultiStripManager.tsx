@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Multi Strip Manager
+ * BPM - Escrime - Multi Strip Manager
  * Orchestration de plusieurs pistes simultanées
  * Licensed under GPL-3.0
  */

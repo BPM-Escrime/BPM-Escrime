@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Création de la fenêtre principale (sécurité #1148, CSP #1343, rechargement
+ * BPM - Escrime - Création de la fenêtre principale (sécurité #1148, CSP #1343, rechargement
  * après crash, menu natif au chargement) — extraite de main.ts, #1341.
  * Licensed under GPL-3.0
  */
@@ -41,7 +41,7 @@ export function createMainWindow({
     minHeight: Math.min(768, workArea.height),
     show: false,
     backgroundColor: '#f3f4f6',
-    title: `BellePoule Modern v${versionInfo.version} (Build #${versionInfo.build})`,
+    title: `BPM - Escrime v${versionInfo.version} (Build #${versionInfo.build})`,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

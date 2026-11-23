@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mini-calendrier (Mode Club #1872) : grille d'un mois, semaines
+ * BPM - Escrime - Mini-calendrier (Mode Club #1872) : grille d'un mois, semaines
  * commençant le lundi, dates ISO AAAA-MM-JJ (UTC, sans décalage de fuseau).
  * Licensed under GPL-3.0
  */

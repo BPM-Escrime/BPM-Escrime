@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Réglages des pilotes d'appareils mémorisés sur le poste (#1720, #1829,
+ * BPM - Escrime - Réglages des pilotes d'appareils mémorisés sur le poste (#1720, #1829,
  * #1960) : port et interface d'écoute Cyrano, port du broker OPP2, options d'affichage,
  * démarrage automatique ; démarrage des pilotes par le contrat (panneau ou séance de saisie
  * distante). Les appareils eux-mêmes sont déclarés sur la salle (docs/adr/0023).

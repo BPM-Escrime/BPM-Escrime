@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Arbitre : lien avec le lobby du mode entraînement (#1500).
+ * BPM - Escrime - Arbitre : lien avec le lobby du mode entraînement (#1500).
  * Hors entraînement : aucun effet. En entraînement : occupe la piste, remplace « Retour » par « Lobby »
  * (même style, #1808), signale l'activité, libère la piste au retour lobby, à la
  * fermeture de la page et après 3 minutes d'inactivité (retour forcé vers le lobby).

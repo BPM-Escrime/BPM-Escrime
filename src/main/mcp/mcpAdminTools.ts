@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Outils MCP : paramétrage du poste, salles, et compléments du lot 2
+ * BPM - Escrime - Outils MCP : paramétrage du poste, salles, et compléments du lot 2
  * (arbitres, serveur distant, suppression d'épreuve) (#1880).
  * Outils d'écriture proposés seulement si « Autoriser l'écriture » est coché.
  * Licensed under GPL-3.0

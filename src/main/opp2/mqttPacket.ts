@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Paquets MQTT 3.1.1 (#1960)
+ * BPM - Escrime - Paquets MQTT 3.1.1 (#1960)
  * Codec minimal pour le broker intégré OPP2 : CONNECT, CONNACK, PUBLISH (QoS 0 à 2),
  * PUBACK, PUBREC / PUBREL / PUBCOMP, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, PINGREQ,
  * PINGRESP, DISCONNECT. Aucune dépendance : le broker tourne dans le processus main.

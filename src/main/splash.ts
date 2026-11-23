@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Écran de démarrage (splash) et mémorisation de la langue choisie
+ * BPM - Escrime - Écran de démarrage (splash) et mémorisation de la langue choisie
  * (extrait de main.ts, #1341).
  * Licensed under GPL-3.0
  */

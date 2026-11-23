@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Libellé traduit d'une catégorie (#931)
+ * BPM - Escrime - Libellé traduit d'une catégorie (#931)
  * Licensed under GPL-3.0
  */
 

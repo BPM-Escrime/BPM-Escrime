@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Types et colonnes de FencerList (extrait, #1599)
+ * BPM - Escrime - Types et colonnes de FencerList (extrait, #1599)
  * Licensed under GPL-3.0
  */
 import { Competition, Fencer, FencerStatus } from '../../shared/types';

@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mode Club (#1872) : arme valide (fleuret, épée, sabre, sabre laser).
+ * BPM - Escrime - Mode Club (#1872) : arme valide (fleuret, épée, sabre, sabre laser).
  * Licensed under GPL-3.0
  */
 import { Weapon } from '../types';

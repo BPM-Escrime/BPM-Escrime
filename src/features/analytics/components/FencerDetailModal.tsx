@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Modale de détail d'un combattant
+ * BPM - Escrime - Modale de détail d'un combattant
  * Licensed under GPL-3.0
  */
 

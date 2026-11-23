@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Navigation entre poules (vue « poule unique », extrait de CompetitionView, #1599)
+ * BPM - Escrime - Navigation entre poules (vue « poule unique », extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
 import React from 'react';

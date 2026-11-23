@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Schéma d'une épreuve dans le contrat d'API (#1981, docs/adr/0018)
+ * BPM - Escrime - Schéma d'une épreuve dans le contrat d'API (#1981, docs/adr/0018)
  * Réglages (CompetitionSettings) en zod strict : sortie de getCompetition / listCompetitions,
  * entrée de createCompetition / updateCompetitionSettings (valeurs validées). La formule à la
  * carte garde son type sans validation de valeur, en attendant validateFormulaSettings

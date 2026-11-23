@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Relais FIE par équipes sur appareil de piste (#1829)
+ * BPM - Escrime - Relais FIE par équipes sur appareil de piste (#1829)
  * Une piste rattachée à l'arène N suit l'arène équipe `/equipe{N}` quand une rencontre en
  * relais FIE y est assignée (`setTeamArenaMatch`). L'appareil affiche le relais en cours :
  * - affichage `type = team`, `round` = n° du relais, tireurs du relais, scores cumulés ;

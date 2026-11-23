@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : âge et catégorie des équipes (#1441)
+ * BPM - Escrime - Tournoi des rapières : âge et catégorie des équipes (#1441)
  * Catégorie d'équipe = moyenne des années de naissance des deux tireurs
  * ((naissance 1 + naissance 2) / 2), appliquée aux tranches d'âge de la saison.
  * Âge = année de saison − année de naissance (jamais l'âge réel à la date du jour).

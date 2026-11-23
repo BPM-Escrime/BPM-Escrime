@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Simple PDF Template System
+ * BPM - Escrime - Simple PDF Template System
  * Gestion des modèles PDF personnalisables pour les compétitions
  * Licensed under GPL-3.0
  */
@@ -61,8 +61,8 @@ export const TEMPLATES: Record<string, SimplePdfTemplate> = {
       body: { size: 10, family: 'helvetica' },
     },
     branding: {
-      organizationName: 'BellePoule Modern',
-      footerText: 'Généré avec BellePoule Modern',
+      organizationName: 'BPM - Escrime',
+      footerText: 'Généré avec BPM - Escrime',
     },
   },
 
@@ -84,8 +84,8 @@ export const TEMPLATES: Record<string, SimplePdfTemplate> = {
       body: { size: 11, family: 'helvetica' },
     },
     branding: {
-      organizationName: 'BellePoule Modern',
-      footerText: 'Généré avec BellePoule Modern',
+      organizationName: 'BPM - Escrime',
+      footerText: 'Généré avec BPM - Escrime',
     },
   },
 
@@ -517,7 +517,7 @@ export function generatePodiumCertificate(
   // Footer
   doc.setFontSize(9);
   doc.setTextColor(156, 163, 175);
-  const footer = `${competition.organizer ? competition.organizer + ' — ' : ''}Généré avec BellePoule Modern le ${new Date().toLocaleDateString(getActiveLocale())}`;
+  const footer = `${competition.organizer ? competition.organizer + ' — ' : ''}Généré avec BPM - Escrime le ${new Date().toLocaleDateString(getActiveLocale())}`;
   doc.text(footer, W / 2, H - margin / 2 - 2, { align: 'center' });
 
   return doc;

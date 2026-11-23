@@ -1,8 +1,8 @@
 /**
- * BellePoule Modern - Paramètres → Sauvegarde → Dossier de sauvegarde
+ * BPM - Escrime - Paramètres → Sauvegarde → Dossier de sauvegarde
  * Licensed under GPL-3.0
  *
- * Dossier des sauvegardes automatiques et de « Enregistrer » (défaut : Documents/BellePoule).
+ * Dossier des sauvegardes automatiques et de « Enregistrer » (défaut : Documents/BPM - Escrime).
  */
 
 import React, { useEffect, useState } from 'react';

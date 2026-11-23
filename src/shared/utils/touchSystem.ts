@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Zone-Based Touch System (FFE Sabre Laser)
+ * BPM - Escrime - Zone-Based Touch System (FFE Sabre Laser)
  * Handles scoring with zones A (1pt), B (3pts), C (5pts)
  * Licensed under GPL-3.0
  */

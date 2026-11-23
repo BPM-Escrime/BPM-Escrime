@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Éditeur de critères de classement drag-reorderable
+ * BPM - Escrime - Éditeur de critères de classement drag-reorderable
  */
 
 import React, { useRef, useState, memo } from 'react';

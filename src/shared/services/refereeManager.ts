@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Referee Management Service
+ * BPM - Escrime - Referee Management Service
  * Advanced referee assignment and rotation system
  * Licensed under GPL-3.0
  */

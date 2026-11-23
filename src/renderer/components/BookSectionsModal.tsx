@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Choix des sections et de leur ordre pour le dossier PDF (#1325)
+ * BPM - Escrime - Choix des sections et de leur ordre pour le dossier PDF (#1325)
  * Licensed under GPL-3.0
  */
 

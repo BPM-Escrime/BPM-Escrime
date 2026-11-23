@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Opérations du serveur distant (#1981 lot 2, docs/adr/0022)
+ * BPM - Escrime - Opérations du serveur distant (#1981 lot 2, docs/adr/0022)
  * Pilotage du serveur de saisie distante de l'épreuve : démarrage, session, pistes, mots de
  * passe, thèmes d'écrans, note d'organisation, clients connectés, webhook, logo, synthèse
  * vocale. Ce ne sont pas des faits de l'épreuve : aucun journal (docs/adr/0005). Droit

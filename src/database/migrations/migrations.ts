@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Liste des migrations DB
+ * BPM - Escrime - Liste des migrations DB
  * Ajouter ici chaque nouvelle migration avec un numéro de version croissant.
  */
 

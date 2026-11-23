@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Gestionnaires de la fenêtre de paramètres : logos, webhook, préférences, sauvegarde et import
+ * BPM - Escrime - Gestionnaires de la fenêtre de paramètres : logos, webhook, préférences, sauvegarde et import
  * Licensed under GPL-3.0
  */
 

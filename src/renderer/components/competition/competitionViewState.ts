@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - États initiaux regroupés de CompetitionView (#1241)
+ * BPM - Escrime - États initiaux regroupés de CompetitionView (#1241)
  * Licensed under GPL-3.0
  */
 import {

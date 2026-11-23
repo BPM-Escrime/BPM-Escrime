@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Note d'organisation affichée sur les écrans (kiosque, arènes) (#1241)
+ * BPM - Escrime - Note d'organisation affichée sur les écrans (kiosque, arènes) (#1241)
  * Extrait de RemoteScoreManager : état local au panneau.
  * Licensed under GPL-3.0
  */

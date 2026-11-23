@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - File Parser - Import des fichiers de l'extranet fédéral (#1938)
+ * BPM - Escrime - File Parser - Import des fichiers de l'extranet fédéral (#1938)
  * Licensed under GPL-3.0
  *
  * Le .zip de l'extranet FFE contient un .xml (en-tête + tireurs [+ équipes] + arbitres),

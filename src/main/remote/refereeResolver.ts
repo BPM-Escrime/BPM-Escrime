@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Résolution des arbitres de la session distante (#1240)
+ * BPM - Escrime - Résolution des arbitres de la session distante (#1240)
  * Fonctions pures : la session et la base restent dans le serveur (contexte injecté).
  * Licensed under GPL-3.0
  */

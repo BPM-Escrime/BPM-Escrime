@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Sauvegardes automatiques (toutes les 2 min, cf. main.ts)
+ * BPM - Escrime - Sauvegardes automatiques (toutes les 2 min, cf. main.ts)
  * Licensed under GPL-3.0
  *
  * - Base complète → dossier global (`resolveBackupDir`), fichier fixe.

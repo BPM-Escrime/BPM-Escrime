@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Mise à jour en attente (stockage privé + validation)
+ * BPM - Escrime - Mise à jour en attente (stockage privé + validation)
  * Licensed under GPL-3.0
  *
  * Dossier privé (0700) sous userData, JSON 0600. À la relecture, tout élément

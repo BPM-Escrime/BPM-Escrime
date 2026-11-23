@@ -1,5 +1,5 @@
 /**
- * BellePoule Modern - Tournoi des rapières : mode de tableau au passage au tableau (#1441)
+ * BPM - Escrime - Tournoi des rapières : mode de tableau au passage au tableau (#1441)
  * « Tableau normal », « Tableau avec 3è place », « Tableau toutes places tirées »
  * ou « Demi-finales » (4 équipes, 3e place tirée).
  * Licensed under GPL-3.0
