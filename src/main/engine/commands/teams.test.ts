@@ -15,6 +15,10 @@ import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import type { CommandContext } from './context';
 import { teamStateView } from './teams';
 import { invoke } from '../api/engine';
+import {
+  insertLegacyTeamMatch,
+  writeLegacyRelay,
+} from '../../../database/testing/legacyTeamWrites';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -269,8 +273,14 @@ d('generateTeamPools : poules d’équipes tirées par le moteur (docs/adr/0024,
     expect(replay(comp.id).divergences).toEqual([]);
 
     // Relais joué : plus de nouveau tirage
-    const bout = db.getTeamMatchesByCompetition(comp.id)[0].bouts[0];
-    db.updateTeamBout(bout.id, 5, 2, 'finished', bout.fencerAId);
+    const played = db.getTeamMatchesByCompetition(comp.id)[0];
+    await call('recordRelayScore', {
+      competitionId: comp.id,
+      matchId: played.id,
+      relay: 1,
+      scoreA: 5,
+      scoreB: 2,
+    });
     await reject('generateTeamPools', { replace: true }).toMatchObject({
       code: 'pools_have_scores',
     });
@@ -325,8 +335,8 @@ d('generateTeamPools : poules d’équipes tirées par le moteur (docs/adr/0024,
     const [a, b] = await teamsRegistered(comp.id, ['A', 'B']);
     await call('generateTeamPools', { competitionId: comp.id });
     const [m] = db.getTeamMatchesByCompetition(comp.id);
-    // Écriture hors moteur (chemin de l'écran) : rencontre sans journal
-    db.createTeamMatch(comp.id, 1, b, a);
+    // Écriture hors moteur (version antérieure) : rencontre sans journal
+    insertLegacyTeamMatch(db, { competitionId: comp.id, teamAId: b, teamBId: a, relays: [] });
     const { divergences } = replay(comp.id);
     expect(divergences).toEqual([expect.objectContaining({ kind: 'team_match_unexpected' })]);
     db.teams.deleteTeamPoolMatches(comp.id);
@@ -342,21 +352,20 @@ d('generateTeamPools : poules d’équipes tirées par le moteur (docs/adr/0024,
   });
 });
 
-d('Non-régression : écran des équipes (écritures par les délégations de la base)', () => {
-  it('rencontres de l’écran (UUID) lues dans le bloc « teams », journal incomplet sans écart', async () => {
+d('Reprise : rencontres écrites par une version antérieure (UUID, sans journal)', () => {
+  it('rencontres de l’ancien écran (UUID) lues dans le bloc « teams », journal incomplet sans écart', async () => {
     const comp = competition(Weapon.EPEE);
     const [a, b] = await teamsRegistered(comp.id, ['A', 'B']);
-    // Chemin actuel de TeamManagerView : createTeamMatch puis createTeamBout
-    const { id } = db.createTeamMatch(comp.id, 1, a, b);
+    // Ancien chemin de TeamManagerView (avant E3) : rencontre, relais, puis score par la base
     const teams = db.getTeamsByCompetition(comp.id);
-    db.createTeamBout(id, 1, teams[0].fencers[0].fencerId, teams[1].fencers[0].fencerId, 5);
-    db.updateTeamBout(
-      db.getTeamMatchesByCompetition(comp.id)[0].bouts[0].id,
-      5,
-      3,
-      'finished',
-      null
-    );
+    const { id, boutIds } = insertLegacyTeamMatch(db, {
+      competitionId: comp.id,
+      teamAId: a,
+      teamBId: b,
+      relays: [[teams[0].fencers[0].fencerId, teams[1].fencers[0].fencerId]],
+      maxScore: 5,
+    });
+    writeLegacyRelay(db, id, boutIds[0], { scoreA: 5, scoreB: 3, status: 'finished' });
     const state = await stateOf(comp.id);
     expect(state.teams.poolMatches).toEqual([
       expect.objectContaining({ id, scoreBoutsA: 5, scoreBoutsB: 3, status: 'finished' }),

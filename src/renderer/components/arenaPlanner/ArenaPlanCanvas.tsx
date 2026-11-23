@@ -12,10 +12,9 @@ import React, { useMemo, useRef } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { PlanZoomBar, usePlanZoom } from './planZoom';
 import { technicalDimensions, type DimensionLine } from '@shared/domain/arena/arenaDimensions';
+import { arenaFootprint, type ArenaDiscipline } from '@shared/domain/arena/arenaDisciplines';
+import { ArenaShape } from './ArenaShape';
 import {
-  ARENA_SAFETY_RADIUS_M,
-  ARENA_ZONE_RADIUS_M,
-  computeArenaGeometry,
   snapToStep,
   type Point,
   type RoomItem,
@@ -80,9 +79,13 @@ export const itemClass = (item: RoomItem): string =>
 
 export interface ArenaPlanCanvasProps {
   room: RoomSize;
+  /** Sabre Laser (défaut), escrime ou escrime artistique */
+  discipline?: ArenaDiscipline;
   centers: Point[];
   /** Noms des arènes, par rang, écrits au-dessus de chaque arène */
   arenaNames?: string[];
+  /** Rotation des arènes, par rang, en degrés */
+  arenaRotations?: number[];
   items: RoomItem[];
   selectedId: string | null;
   conflictIds: Set<string>;
@@ -99,8 +102,10 @@ export interface ArenaPlanCanvasProps {
 
 export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   room,
+  discipline = 'laser',
   centers,
   arenaNames,
+  arenaRotations,
   items,
   selectedId,
   conflictIds,
@@ -244,10 +249,9 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
 
   const gridX = Array.from({ length: Math.floor(W) + 1 }, (_, i) => i);
   const gridY = Array.from({ length: Math.floor(L) + 1 }, (_, i) => i);
-  const geos = centers.map(c => computeArenaGeometry(c));
   const dims = useMemo(
-    () => (showDims ? technicalDimensions(room, centers, items) : null),
-    [showDims, room, centers, items]
+    () => (showDims ? technicalDimensions(room, centers, items, arenaFootprint(discipline)) : null),
+    [showDims, room, centers, items, discipline]
   );
 
   return (
@@ -311,75 +315,20 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
             ))
           : null}
 
-        {geos.map((g, i) => (
-          <g key={`arena${i}`} className="arena-planner-arena">
-            <circle
-              cx={g.center.x}
-              cy={g.center.y}
-              r={ARENA_SAFETY_RADIUS_M}
-              className="arena-planner-safety"
-            />
-            <circle
-              cx={g.center.x}
-              cy={g.center.y}
-              r={ARENA_ZONE_RADIUS_M}
-              className="arena-planner-zone arena-planner-arena-grab"
-              onPointerDown={e => {
-                const p = toMetres(e.clientX, e.clientY);
-                if (!p) return;
-                startDrag(e, {
-                  mode: 'arena',
-                  index: i,
-                  dx: p.x - g.center.x,
-                  dy: p.y - g.center.y,
-                });
-              }}
-            >
-              <title>{t('arenaPlanner.handle_arena')}</title>
-            </circle>
-            <line
-              x1={g.center.x + g.guardLines.red}
-              y1={g.center.y - 0.6}
-              x2={g.center.x + g.guardLines.red}
-              y2={g.center.y + 0.6}
-              className="arena-planner-guard-red"
-            />
-            <line
-              x1={g.center.x + g.guardLines.green}
-              y1={g.center.y - 0.6}
-              x2={g.center.x + g.guardLines.green}
-              y2={g.center.y + 0.6}
-              className="arena-planner-guard-green"
-            />
-            {arenaNames?.[i]?.trim() ? (
-              <text
-                x={g.center.x}
-                y={g.center.y - ARENA_ZONE_RADIUS_M - 0.3}
-                className="arena-planner-arena-name"
-                textAnchor="middle"
-              >
-                {arenaNames[i].trim()}
-              </text>
-            ) : null}
-            {g.roles.map(r => (
-              <g key={r.label}>
-                <circle
-                  cx={r.position.x}
-                  cy={r.position.y}
-                  r={0.35}
-                  className="arena-planner-role"
-                />
-                <text
-                  x={r.position.x}
-                  y={r.position.y + 0.15}
-                  className="arena-planner-role-label"
-                  textAnchor="middle"
-                >
-                  {r.label}
-                </text>
-              </g>
-            ))}
-          </g>
+        {centers.map((c, i) => (
+          <ArenaShape
+            key={`arena${i}`}
+            discipline={discipline}
+            center={c}
+            name={arenaNames?.[i]}
+            rotationDeg={arenaRotations?.[i]}
+            grabTitle={t('arenaPlanner.handle_arena')}
+            onGrab={e => {
+              const p = toMetres(e.clientX, e.clientY);
+              if (!p) return;
+              startDrag(e, { mode: 'arena', index: i, dx: p.x - c.x, dy: p.y - c.y });
+            }}
+          />
         ))}
 
         {items.map(item => {

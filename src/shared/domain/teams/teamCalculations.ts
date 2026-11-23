@@ -249,7 +249,7 @@ export interface TeamPoolRankingRow {
 
 /**
  * Classement d'une poule équipes à partir des matchs terminés (DB/IPC row shapes).
- * `m.scoreBoutsA/B` = touches cumulées de la rencontre (cf. `recomputeTeamMatchScore`),
+ * `m.scoreBoutsA/B` = touches cumulées de la rencontre (cumul des relais calculé par le moteur, `recordRelayScore`),
  * les relais individuels gagnés sont comptés séparément depuis `m.bouts[].winnerId`.
  */
 export function calculateTeamPoolRanking(

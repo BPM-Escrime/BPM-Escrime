@@ -24,9 +24,11 @@ import {
   completeness,
   normalizeRoadmap,
   roadmapVariables,
+  VARIABLE_SOURCE,
   type RoadmapDoc,
   type RoadmapInfo,
   type RoadmapPresetId,
+  type RoadmapVariable,
 } from '@shared/domain/roadmap/roadmap';
 import { createRoadmap } from '@shared/domain/roadmap/presets';
 import { formatDate } from '@shared/utils/localeFormat';
@@ -37,7 +39,7 @@ import { useConfirm } from '../ConfirmDialog';
 import { useToast } from '../Toast';
 import Modal from '../common/Modal';
 import { Button } from '../common/Button';
-import { FieldFocusProvider, VariableChips } from './roadmapFields';
+import { FieldFocusProvider, VariableChips, infoFieldId } from './roadmapFields';
 import { RoadmapInfoForm } from './RoadmapInfoForm';
 import { RoadmapPreview } from './RoadmapPreview';
 import { RoadmapSectionsEditor } from './RoadmapSectionsEditor';
@@ -154,6 +156,17 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onClose, competition
     setFocusId(null);
     requestAnimationFrame(() => setFocusId(id));
   };
+
+  // Valeur à saisir : onglet « L'essentiel », champ source mis en évidence
+  const goToInfo = (key: keyof RoadmapInfo) => {
+    setTab('essentials');
+    requestAnimationFrame(() => {
+      const el = document.getElementById(infoFieldId(key));
+      el?.scrollIntoView({ block: 'center' });
+      el?.focus();
+    });
+  };
+  const goToVariable = (name: RoadmapVariable) => goToInfo(VARIABLE_SOURCE[name]);
 
   const applyPreset = async (preset: RoadmapPresetId) => {
     const ok = await confirm({
@@ -330,11 +343,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onClose, competition
               <ul className="roadmap-missing-list">
                 {progress.missingInfo.map(k => (
                   <li key={k}>
-                    <button
-                      type="button"
-                      className="roadmap-link"
-                      onClick={() => setTab('essentials')}
-                    >
+                    <button type="button" className="roadmap-link" onClick={() => goToInfo(k)}>
                       {t(`roadmap.info_${k}`)}
                     </button>
                   </li>
@@ -345,7 +354,11 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onClose, competition
                   </li>
                 ))}
                 {progress.missingVariables.map(v => (
-                  <li key={v}>{t('roadmap.missing_variable', { name: `{${v}}` })}</li>
+                  <li key={v}>
+                    <button type="button" className="roadmap-link" onClick={() => goToVariable(v)}>
+                      {t('roadmap.missing_variable', { name: `{${v}}` })}
+                    </button>
+                  </li>
                 ))}
               </ul>
             )}
@@ -369,7 +382,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onClose, competition
                 </button>
               ))}
             </div>
-            {tab !== 'style' && <VariableChips />}
+            {tab !== 'style' && <VariableChips vars={vars} />}
             {tab === 'essentials' && (
               <RoadmapInfoForm
                 info={doc.info}
@@ -408,7 +421,13 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onClose, competition
           <div className="roadmap-preview-pane">
             <div className="roadmap-preview-head roadmap-muted">{t('roadmap.preview_hint')}</div>
             <div className="roadmap-paper">
-              <RoadmapPreview ref={previewRef} doc={doc} vars={vars} onPickSection={pickSection} />
+              <RoadmapPreview
+                ref={previewRef}
+                doc={doc}
+                vars={vars}
+                onPickSection={pickSection}
+                onPickVariable={goToVariable}
+              />
             </div>
           </div>
         </div>

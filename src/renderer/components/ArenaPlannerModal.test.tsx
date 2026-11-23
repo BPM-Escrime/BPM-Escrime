@@ -101,6 +101,23 @@ describe('ArenaPlannerModal', () => {
     expect(document.querySelector('.arena-planner-arena-name')).toHaveTextContent('Piste Rouge');
   });
 
+  it('tourne une arène : lignes de mise en garde, arbitre et assesseurs tournent avec elle', () => {
+    const { container } = render(<ArenaPlannerModal onClose={() => {}} />);
+    const rotate = screen.getByRole('button', { name: 'arenaPlanner.arena_rotate n=1' });
+    expect(rotate).toHaveTextContent('0°');
+    fireEvent.click(rotate);
+    expect(rotate).toHaveTextContent('90°');
+    const turned = container.querySelector('.arena-planner-guard-red')!.parentElement!;
+    expect(turned.getAttribute('transform')).toMatch(/^rotate\(90 /);
+    // Chiffres des rôles gardés droits
+    const label = container.querySelector('.arena-planner-role-label')!;
+    expect(label.getAttribute('transform')).toMatch(/^rotate\(-90 /);
+    fireEvent.click(rotate);
+    fireEvent.click(rotate);
+    fireEvent.click(rotate);
+    expect(rotate).toHaveTextContent('0°');
+  });
+
   it("change la couleur d'une zone puis revient à la couleur par défaut", () => {
     render(<ArenaPlannerModal onClose={() => {}} />);
     fireEvent.change(screen.getByLabelText('arenaPlanner.add_zone'), {
@@ -171,6 +188,36 @@ describe('ArenaPlannerModal', () => {
     expect(document.querySelectorAll('.arena-planner-dimline')).toHaveLength(0);
     fireEvent.click(screen.getByLabelText('arenaPlanner.dims_option'));
     expect(document.querySelectorAll('.arena-planner-dimline').length).toBeGreaterThan(0);
+  });
+
+  it('affiche la légende avec un repère par élément posé, et la masque sur demande', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    const legend = () => screen.queryByRole('region', { name: 'arenaPlanner.legend_title' });
+    expect(legend()).not.toBeNull();
+    expect(legend()!.querySelectorAll('li')).toHaveLength(4);
+    addKind('table');
+    expect(legend()!.textContent).toContain('arenaPlanner.kind_table');
+    fireEvent.click(screen.getByLabelText('arenaPlanner.legend_show'));
+    expect(legend()).toBeNull();
+    expect(screen.getByLabelText('arenaPlanner.legend_pdf')).toBeChecked();
+  });
+
+  it('passe en escrime (pistes) puis en escrime artistique (scènes), légende adaptée', () => {
+    render(<ArenaPlannerModal onClose={() => {}} />);
+    expect(document.querySelectorAll('.arena-planner-piste')).toHaveLength(0);
+    fireEvent.change(screen.getByLabelText('arenaPlanner.discipline'), {
+      target: { value: 'fencing' },
+    });
+    expect(document.querySelectorAll('.arena-planner-piste')).toHaveLength(1);
+    expect(screen.getByLabelText('arenaPlanner.arenas_fencing')).toBeTruthy();
+    expect(screen.getByText('arenaPlanner.legend_piste')).toBeTruthy();
+    expect(screen.queryByText('arenaPlanner.legend_zone')).toBeNull();
+    fireEvent.change(screen.getByLabelText('arenaPlanner.discipline'), {
+      target: { value: 'artistic' },
+    });
+    expect(document.querySelectorAll('.arena-planner-piste')).toHaveLength(0);
+    expect(document.querySelectorAll('.arena-planner-stage')).toHaveLength(1);
+    expect(screen.getByText('arenaPlanner.legend_stage_roles')).toBeTruthy();
   });
 
   it('modifie le texte affiché sur une table, sur plusieurs lignes', () => {

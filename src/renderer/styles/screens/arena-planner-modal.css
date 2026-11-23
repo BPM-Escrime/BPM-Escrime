@@ -139,6 +139,37 @@
   stroke-width: 0.08;
 }
 
+.arena-planner-runoff {
+  fill: #e5e7eb;
+  stroke: #1e3a8a;
+  stroke-width: 0.05;
+}
+
+.arena-planner-piste {
+  fill: #bfdbfe;
+  stroke: #1e3a8a;
+  stroke-width: 0.08;
+}
+
+.arena-planner-piste-line,
+.arena-planner-piste-end {
+  stroke: #1e3a8a;
+  stroke-width: 0.08;
+}
+
+.arena-planner-piste-warning {
+  stroke: #1e3a8a;
+  stroke-width: 0.06;
+  stroke-dasharray: 0.2 0.12;
+}
+
+.arena-planner-stage {
+  fill: #fde68a;
+  fill-opacity: 0.7;
+  stroke: #92400e;
+  stroke-width: 0.1;
+}
+
 .arena-planner-guard-red {
   stroke: #dc2626;
   stroke-width: 0.12;
@@ -164,6 +195,21 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.arena-planner-arena-name-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.arena-planner-arena-name-row .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.arena-planner-arena-name-row .btn {
+  white-space: nowrap;
 }
 
 .arena-planner-role-label {
@@ -272,10 +318,33 @@
   align-items: end;
 }
 
+.arena-planner-legend-box {
+  margin: 0.6rem 0 0.2rem;
+}
+
+.arena-planner-legend-title {
+  font-size: 0.95rem;
+  margin: 0 0 0.3rem;
+}
+
 .arena-planner-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
   font-size: 0.85rem;
-  margin: 0.6rem 0 0.2rem 1rem;
-  list-style: disc;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arena-planner-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.arena-planner-legend-swatch {
+  flex: none;
 }
 
 .arena-planner-help {

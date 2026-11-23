@@ -79,6 +79,41 @@ export function computeArenaGeometry(center: Point = { x: 0, y: 0 }): ArenaGeome
   };
 }
 
+/**
+ * Emprise de sécurité d'une arène autour de son centre : cercle (Sabre Laser, rayon halfX)
+ * ou rectangle aligné sur les murs (piste d'escrime, espace scénique), demi-côtés halfX / halfY.
+ * Rien ne se pose dedans ; deux emprises ne se recouvrent pas.
+ */
+export interface ArenaFootprint {
+  shape: 'circle' | 'rect';
+  halfX: number;
+  halfY: number;
+}
+
+/** Emprise Sabre Laser : cercle de sécurité Ø 12 m (défaut de toutes les fonctions) */
+export const LASER_FOOTPRINT: ArenaFootprint = {
+  shape: 'circle',
+  halfX: ARENA_SAFETY_RADIUS_M,
+  halfY: ARENA_SAFETY_RADIUS_M,
+};
+
+/** Coins d'une emprise rectangulaire centrée en c. */
+export function footprintCorners(c: Point, fp: ArenaFootprint): Point[] {
+  return [
+    { x: c.x - fp.halfX, y: c.y - fp.halfY },
+    { x: c.x + fp.halfX, y: c.y - fp.halfY },
+    { x: c.x + fp.halfX, y: c.y + fp.halfY },
+    { x: c.x - fp.halfX, y: c.y + fp.halfY },
+  ];
+}
+
+/** Vrai si le polygone entre dans l'emprise de l'arène centrée en c. */
+function footprintHitsPolygon(poly: Point[], c: Point, fp: ArenaFootprint): boolean {
+  return fp.shape === 'circle'
+    ? polygonIntersectsCircle(poly, c, fp.halfX)
+    : polygonsOverlap(poly, footprintCorners(c, fp));
+}
+
 export interface RoomSize {
   widthM: number;
   lengthM: number;
@@ -161,12 +196,12 @@ export interface LayoutIssue {
   arenaIndex?: number;
 }
 
-/** Contrôle : chaque élément est dans la salle et hors des cercles de sécurité. */
+/** Contrôle : chaque élément est dans la salle et hors des emprises de sécurité. */
 export function checkRoomItems(
   room: RoomSize,
   arenaCenters: Point[],
   items: RoomItem[],
-  safetyRadiusM = ARENA_SAFETY_RADIUS_M
+  fp: ArenaFootprint = LASER_FOOTPRINT
 ): LayoutIssue[] {
   const issues: LayoutIssue[] = [];
   const blocked = items.filter(i => i.kind === 'blocked');
@@ -189,7 +224,7 @@ export function checkRoomItems(
       issues.push({ itemId: item.id, type: 'overlapsBlocked' });
     }
     arenaCenters.forEach((c, arenaIndex) => {
-      if (polygonIntersectsCircle(poly, c, safetyRadiusM)) {
+      if (footprintHitsPolygon(poly, c, fp)) {
         issues.push({
           itemId: item.id,
           type: item.kind === 'blocked' ? 'arenaBlocked' : 'inSafetyZone',
@@ -401,10 +436,11 @@ export function placeOnFreeSpot(
   others: RoomItem[],
   room: RoomSize,
   arenaCenters: Point[],
-  stepM = 0.5
+  stepM = 0.5,
+  fp: ArenaFootprint = LASER_FOOTPRINT
 ): RoomItem {
   const free = (candidate: RoomItem) =>
-    checkRoomItems(room, arenaCenters, [candidate]).length === 0 &&
+    checkRoomItems(room, arenaCenters, [candidate], fp).length === 0 &&
     !others.some(o => polygonsOverlap(itemCorners(candidate), itemCorners(o)));
   if (free(item)) return item;
   for (let y = 0; y + item.heightM <= room.lengthM + EPS; y += stepM) {
@@ -477,12 +513,18 @@ export interface OptimizedLayout {
   centers: Point[];
 }
 
-/** Arène valide : cercle de sécurité dans la salle (marge comprise), hors zones bloquées. */
-function isValidCenter(c: Point, room: RoomSize, marginM: number, blocked: RoomItem[]): boolean {
-  const r = ARENA_SAFETY_RADIUS_M;
-  if (c.x - r < marginM || c.y - r < marginM) return false;
-  if (c.x + r > room.widthM - marginM || c.y + r > room.lengthM - marginM) return false;
-  return !blocked.some(b => polygonIntersectsCircle(itemCorners(b), c, r));
+/** Arène valide : emprise de sécurité dans la salle (marge comprise), hors zones bloquées. */
+function isValidCenter(
+  c: Point,
+  room: RoomSize,
+  marginM: number,
+  blocked: RoomItem[],
+  fp: ArenaFootprint = LASER_FOOTPRINT
+): boolean {
+  if (c.x - fp.halfX < marginM - EPS || c.y - fp.halfY < marginM - EPS) return false;
+  if (c.x + fp.halfX > room.widthM - marginM + EPS) return false;
+  if (c.y + fp.halfY > room.lengthM - marginM + EPS) return false;
+  return !blocked.some(b => footprintHitsPolygon(itemCorners(b), c, fp));
 }
 
 /** Toutes les arènes possibles pour un quinconce ou une grille carrée, décalée de (ox, oy). */
@@ -492,18 +534,19 @@ function latticeCenters(
   oy: number,
   room: RoomSize,
   marginM: number,
-  blocked: RoomItem[]
+  blocked: RoomItem[],
+  fp: ArenaFootprint
 ): Point[] {
-  const pitch = 2 * ARENA_SAFETY_RADIUS_M;
-  const rowStep = lattice === 'hex' ? HEX_ROW_SPACING_M : pitch;
+  const pitch = 2 * fp.halfX;
+  const rowStep = lattice === 'hex' ? (2 * fp.halfY * Math.sqrt(3)) / 2 : 2 * fp.halfY;
   const out: Point[] = [];
-  const startY = marginM + ARENA_SAFETY_RADIUS_M + oy;
+  const startY = marginM + fp.halfY + oy;
   for (let j = 0, y = startY; y <= room.lengthM; j++, y = startY + j * rowStep) {
-    const shift = lattice === 'hex' && j % 2 === 1 ? ARENA_SAFETY_RADIUS_M : 0;
-    const startX = marginM + ARENA_SAFETY_RADIUS_M + ((ox + shift) % pitch);
+    const shift = lattice === 'hex' && j % 2 === 1 ? fp.halfX : 0;
+    const startX = marginM + fp.halfX + ((ox + shift) % pitch);
     for (let x = startX; x <= room.widthM; x += pitch) {
       const c = { x, y };
-      if (isValidCenter(c, room, marginM, blocked)) out.push(c);
+      if (isValidCenter(c, room, marginM, blocked, fp)) out.push(c);
     }
   }
   return out;
@@ -518,16 +561,18 @@ function latticeCenters(
 export function optimizeArenaLayout(
   room: RoomSize,
   marginM: number,
-  blocked: RoomItem[] = []
+  blocked: RoomItem[] = [],
+  fp: ArenaFootprint = LASER_FOOTPRINT
 ): OptimizedLayout {
-  const pitch = 2 * ARENA_SAFETY_RADIUS_M;
+  const pitch = 2 * fp.halfX;
   let best: OptimizedLayout = { count: 0, lattice: 'square', centers: [] };
-  const lattices: ArenaLattice[] = ['square', 'hex'];
+  // Quinconce : utile pour des cercles seulement ; des rectangles s'empilent en grille
+  const lattices: ArenaLattice[] = fp.shape === 'circle' ? ['square', 'hex'] : ['square'];
   for (const lattice of lattices) {
-    const maxOy = lattice === 'hex' ? HEX_ROW_SPACING_M : pitch;
+    const maxOy = lattice === 'hex' ? (2 * fp.halfY * Math.sqrt(3)) / 2 : 2 * fp.halfY;
     for (let ox = 0; ox < pitch; ox += OPTIMIZER_STEP_M) {
       for (let oy = 0; oy < maxOy; oy += OPTIMIZER_STEP_M) {
-        const centers = latticeCenters(lattice, ox, oy, room, marginM, blocked);
+        const centers = latticeCenters(lattice, ox, oy, room, marginM, blocked, fp);
         // Strictement plus : à égalité, on garde la grille carrée (plus simple à mettre en place)
         if (centers.length > best.count) {
           best = { count: centers.length, lattice, centers };
@@ -548,12 +593,17 @@ const PUSH_STEP_M = 0.1;
 /** Déplacement maximal d'un élément poussé (mètres) : au-delà, il reste à sa place. */
 const PUSH_MAX_M = 30;
 
-/** Éloigne un élément d'un cercle, pas à pas, dans la direction centre de l'élément → centre du cercle. */
-function pushItemOutOfCircle(item: RoomItem, c: Point, room: RoomSize, r: number): RoomItem {
+/** Éloigne un élément d'une emprise, pas à pas, dans la direction centre de l'arène → centre de l'élément. */
+function pushItemOutOfFootprint(
+  item: RoomItem,
+  c: Point,
+  room: RoomSize,
+  fp: ArenaFootprint
+): RoomItem {
   let current = item;
   const steps = Math.round(PUSH_MAX_M / PUSH_STEP_M);
   for (let k = 0; k < steps; k++) {
-    if (!polygonIntersectsCircle(itemCorners(current), c, r)) return current;
+    if (!footprintHitsPolygon(itemCorners(current), c, fp)) return current;
     const cx = current.x + current.widthM / 2;
     const cy = current.y + current.heightM / 2;
     let dx = cx - c.x;
@@ -587,14 +637,15 @@ export function moveArenaWithPush(
   target: Point,
   room: RoomSize,
   marginM: number,
-  items: RoomItem[]
+  items: RoomItem[],
+  fp: ArenaFootprint = LASER_FOOTPRINT
 ): { centers: Point[]; items: RoomItem[] } {
-  const r = ARENA_SAFETY_RADIUS_M;
-  const pitch = 2 * r;
-  const minX = marginM + r;
-  const maxX = room.widthM - marginM - r;
-  const minY = marginM + r;
-  const maxY = room.lengthM - marginM - r;
+  const pitch = 2 * fp.halfX;
+  const pitchY = 2 * fp.halfY;
+  const minX = marginM + fp.halfX;
+  const maxX = room.widthM - marginM - fp.halfX;
+  const minY = marginM + fp.halfY;
+  const maxY = room.lengthM - marginM - fp.halfY;
   const clampPoint = (p: Point): Point => ({
     x: Math.min(Math.max(p.x, minX), Math.max(minX, maxX)),
     y: Math.min(Math.max(p.y, minY), Math.max(minY, maxY)),
@@ -610,6 +661,17 @@ export function moveArenaWithPush(
     const b = next[j];
     const dx = b.x - a.x;
     const dy = b.y - a.y;
+    if (fp.shape === 'rect') {
+      // Rectangles : poussée sur l'axe le moins enfoncé, bord contre bord
+      const penX = pitch - Math.abs(dx);
+      const penY = pitchY - Math.abs(dy);
+      if (penX <= 1e-6 || penY <= 1e-6) continue;
+      next[j] =
+        penX <= penY
+          ? clampPoint({ x: a.x + (dx < 0 ? -pitch : pitch), y: b.y })
+          : clampPoint({ x: b.x, y: a.y + (dy < 0 ? -pitchY : pitchY) });
+      continue;
+    }
     const d = Math.hypot(dx, dy);
     if (d >= pitch - 1e-6) continue;
     const ux = d < 1e-9 ? 1 : dx / d;
@@ -626,7 +688,7 @@ export function moveArenaWithPush(
       i.kind === 'outlet' ||
       i.kind === 'accessory' ||
       i.kind === 'blocked'
-        ? pushItemOutOfCircle(i, c, room, r)
+        ? pushItemOutOfFootprint(i, c, room, fp)
         : i
     );
   }
@@ -656,10 +718,11 @@ export function alignArenaCenters(
   room: RoomSize,
   marginM: number,
   align: ArenaAlign,
-  blocked: RoomItem[] = []
+  blocked: RoomItem[] = [],
+  fp: ArenaFootprint = LASER_FOOTPRINT
 ): Point[] {
   if (centers.length === 0) return [];
-  const r = ARENA_SAFETY_RADIUS_M;
+  const r = fp.halfX;
   const minX = Math.min(...centers.map(c => c.x)) - r;
   const maxX = Math.max(...centers.map(c => c.x)) + r;
   const blockWidth = maxX - minX;
@@ -673,7 +736,7 @@ export function alignArenaCenters(
   const fits = (dx: number) =>
     centers
       .map(c => ({ x: c.x + dx, y: c.y }))
-      .every(c => isValidCenter(c, room, marginM, blocked));
+      .every(c => isValidCenter(c, room, marginM, blocked, fp));
   // Décalages candidats, du plus proche de l'idéal vers 0 (position d'origine)
   const candidates: number[] = [];
   for (let k = 0; ; k++) {
@@ -698,35 +761,37 @@ export function spreadArenaCenters(
   room: RoomSize,
   count: number,
   marginM: number,
-  blocked: RoomItem[] = []
+  blocked: RoomItem[] = [],
+  fp: ArenaFootprint = LASER_FOOTPRINT
 ): Point[] | null {
   const n = Math.max(0, Math.floor(count));
   if (n === 0) return [];
-  const pitch = 2 * ARENA_SAFETY_RADIUS_M;
+  const pitch = 2 * fp.halfX;
+  const pitchY = 2 * fp.halfY;
   // Disposition qui tient dans la salle avec le moins de cases vides (à égalité, moins de colonnes)
   let best: { columns: number; rows: number; waste: number } | null = null;
   for (let columns = 1; columns <= n; columns++) {
     const rows = Math.ceil(n / columns);
     const fits =
-      columns * pitch + 2 * marginM <= room.widthM && rows * pitch + 2 * marginM <= room.lengthM;
+      columns * pitch + 2 * marginM <= room.widthM + EPS &&
+      rows * pitchY + 2 * marginM <= room.lengthM + EPS;
     const waste = columns * rows - n;
     if (fits && (!best || waste < best.waste)) best = { columns, rows, waste };
   }
   if (!best) return null;
-  const r = ARENA_SAFETY_RADIUS_M;
-  const availW = room.widthM - 2 * marginM - 2 * r;
-  const availL = room.lengthM - 2 * marginM - 2 * r;
+  const availW = room.widthM - 2 * marginM - 2 * fp.halfX;
+  const availL = room.lengthM - 2 * marginM - 2 * fp.halfY;
   const pitchX = best.columns > 1 ? availW / (best.columns - 1) : 0;
-  const pitchY = best.rows > 1 ? availL / (best.rows - 1) : 0;
+  const pitchYs = best.rows > 1 ? availL / (best.rows - 1) : 0;
   const centers: Point[] = [];
   for (let i = 0; i < n; i++) {
     const col = i % best.columns;
     const row = Math.floor(i / best.columns);
     centers.push({
-      x: marginM + r + col * pitchX,
-      y: marginM + r + row * pitchY,
+      x: marginM + fp.halfX + col * pitchX,
+      y: marginM + fp.halfY + row * pitchYs,
     });
   }
-  if (!centers.every(c => isValidCenter(c, room, marginM, blocked))) return null;
+  if (!centers.every(c => isValidCenter(c, room, marginM, blocked, fp))) return null;
   return centers;
 }

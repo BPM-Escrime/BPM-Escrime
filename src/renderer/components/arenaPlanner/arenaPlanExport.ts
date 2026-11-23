@@ -7,6 +7,8 @@
  * Licensed under GPL-3.0
  */
 
+import type { LegendEntry, LegendSwatch } from './planLegend';
+
 const EXPORT_WIDTH_PX = 1600;
 /** Page A4 paysage à 200 dpi */
 const PAGE_W = 2339;
@@ -18,7 +20,9 @@ const PAGE_H_PT = 595.28;
 export interface ArenaPlanExportText {
   title: string;
   summary: string[];
-  legend: string[];
+  legendTitle: string;
+  /** null : légende exclue de l'export */
+  legend: LegendEntry[] | null;
   itemsTitle: string;
   items: string[];
   note: string;
@@ -124,6 +128,50 @@ export const exportArenaPlanPng = async (svg: SVGSVGElement, filename: string): 
   downloadBlob(blob, filename);
 };
 
+/** Pastille de légende dans un carré de côté s (coin haut gauche x, y). */
+const drawSwatch = (
+  ctx: CanvasRenderingContext2D,
+  swatch: LegendSwatch,
+  x: number,
+  y: number,
+  s: number
+) => {
+  ctx.save();
+  ctx.lineWidth = 3;
+  if (swatch.shape === 'fill') {
+    ctx.fillStyle = swatch.fill;
+    ctx.fillRect(x + 2, y + 2, s - 4, s - 4);
+    if (swatch.stroke) {
+      ctx.strokeStyle = swatch.stroke;
+      ctx.strokeRect(x + 2, y + 2, s - 4, s - 4);
+    }
+  } else if (swatch.shape === 'ring') {
+    ctx.strokeStyle = swatch.stroke;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.arc(x + s / 2, y + s / 2, s / 2 - 3, 0, 2 * Math.PI);
+    ctx.stroke();
+  } else if (swatch.shape === 'lines') {
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = swatch.stroke;
+    ctx.beginPath();
+    ctx.moveTo(x + s * 0.3, y + 2);
+    ctx.lineTo(x + s * 0.3, y + s - 2);
+    ctx.stroke();
+    ctx.strokeStyle = swatch.stroke2;
+    ctx.beginPath();
+    ctx.moveTo(x + s * 0.7, y + 2);
+    ctx.lineTo(x + s * 0.7, y + s - 2);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = swatch.fill;
+    ctx.beginPath();
+    ctx.arc(x + s / 2, y + s / 2, s / 4, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+  ctx.restore();
+};
+
 /** Retour à la ligne sur la largeur donnée ; renvoie la hauteur utilisée. */
 const wrapText = (
   ctx: CanvasRenderingContext2D,
@@ -189,7 +237,19 @@ export const exportArenaPlanPdf = async (
     y += 24;
   };
   block(text.summary, '36px sans-serif', 46);
-  block(text.legend, '32px sans-serif', 42);
+  if (text.legend && text.legend.length > 0) {
+    ctx.font = 'bold 36px sans-serif';
+    ctx.fillText(text.legendTitle, colX, y);
+    y += 52;
+    const sw = 32;
+    ctx.font = '30px sans-serif';
+    for (const entry of text.legend) {
+      drawSwatch(ctx, entry.swatch, colX, y + 2, sw);
+      ctx.fillStyle = '#111111';
+      y += Math.max(wrapText(ctx, entry.label, colX + sw + 16, y, colW - sw - 16, 40), sw + 8);
+    }
+    y += 24;
+  }
   ctx.font = 'bold 36px sans-serif';
   ctx.fillText(text.itemsTitle, colX, y);
   y += 56;

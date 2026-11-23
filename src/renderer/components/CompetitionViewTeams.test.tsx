@@ -35,6 +35,7 @@ import { teamStateView } from '../../main/engine/commands/teams';
 import { projectCompetition } from '../../shared/domain/journal/projectCompetition';
 import { compareWithState, stateView } from '../../shared/domain/journal/compareWithState';
 import { engineBridge } from '../testUtils/engineBridge';
+import { insertLegacyTeamMatch, writeLegacyRelay } from '../../database/testing/legacyTeamWrites';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -181,11 +182,20 @@ function composedByOldScreen(competitionId: string) {
     return id;
   });
   const teams = db.getTeamsByCompetition(competitionId);
-  const { id: matchId } = db.createTeamMatch(competitionId, 1, teamIds[0], teamIds[1]);
   const [a, b] = teams.map(t => t.fencers.map(f => f.fencerId));
-  for (let k = 0; k < 3; k++) db.createTeamBout(matchId, k + 1, a[k], b[k], 5);
-  const first = db.getTeamMatchesByCompetition(competitionId)[0].bouts[0];
-  db.updateTeamBout(first.id, 5, 2, 'finished', first.fencerAId);
+  const { id: matchId, boutIds } = insertLegacyTeamMatch(db, {
+    competitionId,
+    teamAId: teamIds[0],
+    teamBId: teamIds[1],
+    relays: [0, 1, 2].map(k => [a[k], b[k]]),
+    maxScore: 5,
+  });
+  writeLegacyRelay(db, matchId, boutIds[0], {
+    scoreA: 5,
+    scoreB: 2,
+    status: 'finished',
+    winnerId: a[0],
+  });
   return matchId;
 }
 

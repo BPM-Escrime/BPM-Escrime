@@ -472,8 +472,8 @@ composition, rencontres de poule et de tableau avec leurs relais, classement de 
 rend `teams` (poules, rencontres et relais) ; journal complet dès `TeamPoolsGenerated` ;
 `compareWithState` reçoit la vue des tables (`teamStateView`) et signale `team_pool`,
 `team_match_missing`, `team_match`, `team_match_unexpected` ; `rebuildCompetitionState` les rend
-sans correction. L'écran des équipes écrit encore par le préload (`persistLocally`) jusqu'au
-lot E3, l'arène équipe et les appareils de piste par la base jusqu'au lot E4.
+sans correction. L'écran des équipes écrit par les commandes depuis le lot E3, l'arène équipe et les appareils
+de piste depuis le lot E4.
 
 Lot E2 fait (moteur) : `generateTeamTableau` (classement de poule, évitement de revanche en
 arène ; rencontres dont les deux équipes sont connues, exemptés compris ; tour = nombre de
@@ -493,6 +493,15 @@ rencontre : `fencer_not_found`. `recordScore` et `generateTableau` refusent une 
 nommés ; journal complet dès `TeamTableauGenerated` ; écarts `team_relay` (relais terminé et
 son score ; un relais en cours n'est pas un fait) et `team_match_result` (rencontre terminée et
 son vainqueur), rendus sans correction.
+
+Lot E4 fait (tablettes et appareils) : la tablette `/equipe{N}/arbitre` (`team_advance_bout`) et
+les appareils de piste (Cyrano, OPP2 : END, PREV, demande de remplaçant) appellent
+`recordRelayScore`, `reopenRelay` et `substituteTeamFencer` par `invokeCommandSync`
+(`src/main/remote/teamCommand.ts`), sources `tablet`, `cyrano`, `opp2`. L'END de l'appareil est
+contrôlé en simulation (`dryRun`) avant l'ACK : refus du moteur → NAK. Refus à la tablette :
+événement socket `team_arena_error` (`{ error: 'score_refused', code, detail }`). Après chaque
+commande, l'arène relit la rencontre. Plus aucune écriture des relais par la base
+(`updateTeamBout`, `reopenTeamBout`, recalcul de la rencontre retirés).
 
 **Étape 5 commencée** : `projectCompetition(events)` (`src/shared/domain/journal`) rejoue le
 journal et rend les faits rejouables : statuts des tireurs nommés par le journal, tours de poules

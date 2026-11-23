@@ -6,7 +6,8 @@
  * - état reçu : score cumulé → score du relais en cours, cartons reportés à ce relais ;
  * - fin d'un relais (pas le dernier) : toujours correcte → ACK, relais enregistré, puis
  *   affichage du relais suivant avec les scores cumulés ; dernier relais : règles de fin
- *   individuelles du module partagé ;
+ *   individuelles du module partagé. Le relais est enregistré par recordRelayScore
+ *   (docs/adr/0024, lot E4) : contrôlé avant l'ACK, un refus du moteur donne NAK ;
  * - remplaçant demandé (`reserve`) : accepté une fois par équipe, à la fin du relais, pour les
  *   relais suivants (annulable pendant le relais) ;
  * - NEXT ne saute jamais un relais ; PREV rappelle le relais précédent tant que le relais en
@@ -18,8 +19,11 @@
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import type { TeamArenaBout, TeamArenaState } from '../remote/types';
 import { tableauId } from '../cyrano/disp';
+import { broadcastTeamArena } from '../remote/teamArena';
+import type { TeamSource } from '../remote/teamCommand';
 import {
   applyRelayDeviceState,
+  checkRelayFinish,
   fencerMeetingCards,
   finishRelay,
   reopenPreviousRelay,
@@ -66,6 +70,12 @@ export interface TeamPisteHost {
 /** Contexte de l'arène équipe d'un serveur distant (absent sur un serveur simulé). */
 function teamCtx(remote: RemoteScoreServer): RemoteScoreServer['teamArenaCtx'] | null {
   return (remote as Partial<Pick<RemoteScoreServer, 'teamArenaCtx'>>).teamArenaCtx ?? null;
+}
+
+/** Source du journal : protocole du pilote de la piste (Cyrano ou OPP2, #1960). */
+function sourceOf(driver: PisteDriver, piste: string): TeamSource {
+  const owner = (driver as { ownerOf?: (p: string) => PisteDriver | undefined }).ownerOf?.(piste);
+  return (owner ?? driver).id === 'opp2' ? 'opp2' : 'cyrano';
 }
 
 /** Clé d'un relais pour l'état connu de l'appareil et l'ACK. */
@@ -283,7 +293,9 @@ export class TeamRelayPiste {
 
   /**
    * Remplaçant demandé (`reserve`) : pris en compte à la fin acquittée du relais, car la demande
-   * peut être annulée pendant le relais où elle est posée (spéc. Cyrano § 4). Refus tracé.
+   * peut être annulée pendant le relais où elle est posée (spéc. Cyrano § 4). Appelé après
+   * l'enregistrement du relais : le tireur sortant garde le relais qu'il vient de tirer.
+   * Refus tracé (code du catalogue).
    */
   private substitutions(
     link: PisteLink,
@@ -296,7 +308,14 @@ export class TeamRelayPiste {
     for (const side of ['A', 'B'] as const) {
       if (!sides[side].reserve) continue;
       const out = side === 'A' ? view.bout.fencerAId : view.bout.fencerBId;
-      const result = substituteRelayFencer(ctx, String(link.arena), side, out);
+      const result = substituteRelayFencer(
+        ctx,
+        String(link.arena),
+        side,
+        out,
+        sourceOf(this.host.driver, link.piste),
+        { broadcast: false }
+      );
       if (result.ok)
         logger.info(
           LogCategory.NETWORK,
@@ -373,12 +392,31 @@ export class TeamRelayPiste {
       logger.info(LogCategory.NETWORK, `Cyrano: NAK → ${piste} (cumul incohérent)`);
       return;
     }
+    // Score du relais contrôlé par le moteur avant l'ACK (recordRelayScore en simulation)
+    const arena = String(link.arena);
+    const source = sourceOf(this.host.driver, piste);
+    const check = checkRelayFinish(ctx, arena, source);
+    if (!check.ok) {
+      this.send(piste, 'nak');
+      logger.info(LogCategory.NETWORK, `Cyrano: NAK → ${piste} (refus du moteur : ${check.code})`);
+      return;
+    }
     const key = relayKey(view.state.matchId, bout);
     this.send(piste, 'ack');
     this.host.acked.set(piste, key);
     logger.info(LogCategory.NETWORK, `Cyrano: ACK → ${piste} (relais ${bout.boutOrder})`);
-    // Remplaçant toujours demandé à la fin du relais : inséré dans les relais suivants
-    this.substitutions(link, sides, remote, view);
+    // Relais enregistré par le moteur ; diffusion après l'éventuel remplaçant
+    const recorded = finishRelay(ctx, arena, source, { broadcast: false });
+    if (!recorded.ok) {
+      logger.error(
+        LogCategory.NETWORK,
+        `Cyrano: piste ${piste}, relais ${bout.boutOrder} acquitté mais refusé par le moteur ` +
+          `(${recorded.code}) : à saisir par le DT`
+      );
+    } else {
+      // Remplaçant demandé à la fin du relais : inséré dans les relais suivants
+      this.substitutions(link, sides, remote, view);
+    }
     if (out && (out.status === 'abandon' || out.status === 'exclusion')) {
       logger.warn(
         LogCategory.NETWORK,
@@ -393,8 +431,8 @@ export class TeamRelayPiste {
         fencer: out.name ?? '?',
       });
     }
-    // Relais enregistré ; l'arène prévient le hub, qui affiche le relais suivant
-    finishRelay(ctx, String(link.arena));
+    // L'arène prévient le hub, qui affiche le relais suivant
+    broadcastTeamArena(ctx, arena);
   }
 
   /** NEXT : ne saute jamais un relais ; rencontre terminée → affichage vide. */
@@ -416,7 +454,10 @@ export class TeamRelayPiste {
   handlePrev(link: PisteLink, remote: RemoteScoreServer, view: TeamRelayView): void {
     const ctx = teamCtx(remote);
     this.host.device.delete(link.piste);
-    if (ctx && reopenPreviousRelay(ctx, String(link.arena))) {
+    if (
+      ctx &&
+      reopenPreviousRelay(ctx, String(link.arena), sourceOf(this.host.driver, link.piste))
+    ) {
       logger.info(LogCategory.NETWORK, `Cyrano: PREV sur piste ${link.piste} → relais rappelé`);
       return;
     }

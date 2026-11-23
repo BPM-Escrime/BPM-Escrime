@@ -16,6 +16,7 @@ import {
   type RoomItem,
   type RoomSize,
 } from '@shared/domain/arena/arenaPlanner';
+import { arenaFootprint, type ArenaDiscipline } from '@shared/domain/arena/arenaDisciplines';
 
 /** Une salle du plan : dimensions, arènes et matériel propres. */
 export interface RoomPlan {
@@ -27,11 +28,15 @@ export interface RoomPlan {
   margin: string;
   /** Collées (pas minimal) ou espacées (occupation maximale de la salle) */
   spacing: ArenaSpacing;
+  /** Discipline des arènes de la salle ; absent = Sabre Laser (ajout compatible, ADR-0025) */
+  discipline?: ArenaDiscipline;
   /** Centrage horizontal du bloc d'arènes */
   align: ArenaAlign;
   items: RoomItem[];
   /** Noms des arènes, par rang (vide : sans nom), affichés sur le plan */
   arenaNames?: string[];
+  /** Rotation des arènes par rang, en degrés (lignes, arbitres, assesseurs), absent = 0 */
+  arenaRotations?: number[];
   /** Positions des arènes après un glisser à la souris ; null = positions calculées */
   manual: { key: string; centers: Point[] } | null;
   /** Coin nord-ouest de la salle sur la vue d'ensemble (m) */
@@ -64,7 +69,10 @@ export const parseNumber = (value: string): number | null => {
 
 /** Clé des champs qui invalident les positions d'arènes glissées. */
 export const roomDimsKey = (p: RoomPlan) =>
-  [p.width, p.length, p.arenas, p.margin, p.spacing, p.align].join('|');
+  [p.width, p.length, p.arenas, p.margin, p.spacing, p.align]
+    // Laser : clé d'avant les disciplines, pour garder les arènes glissées des plans enregistrés
+    .concat(p.discipline && p.discipline !== 'laser' ? [p.discipline] : [])
+    .join('|');
 
 export interface RoomLayout {
   parsed: { w: number; l: number; n: number; m: number };
@@ -87,8 +95,9 @@ export function computeRoomLayout(plan: RoomPlan): RoomLayout | null {
   const parsed = { w, l, n: Math.floor(n), m };
   const room = { widthM: w, lengthM: l };
   const blocked = plan.items.filter(i => i.kind === 'blocked');
+  const fp = arenaFootprint(plan.discipline);
   // Maximum d'arènes que la zone peut recevoir (marge et zones bloquées prises en compte)
-  const maxLayout = optimizeArenaLayout(room, m, blocked);
+  const maxLayout = optimizeArenaLayout(room, m, blocked, fp);
   // Jamais plus d'arènes que le maximum possible
   const arenaCount = Math.min(parsed.n, maxLayout.count);
   const manual = plan.manual && plan.manual.key === roomDimsKey(plan) ? plan.manual.centers : null;
@@ -98,9 +107,9 @@ export function computeRoomLayout(plan: RoomPlan): RoomLayout | null {
   } else {
     // « Espacées » : répartition sur la salle ; à défaut (salle trop petite, zone bloquée), collées
     const base =
-      (plan.spacing === 'spread' && spreadArenaCenters(room, arenaCount, m, blocked)) ||
+      (plan.spacing === 'spread' && spreadArenaCenters(room, arenaCount, m, blocked, fp)) ||
       maxLayout.centers.slice(0, arenaCount);
-    centers = alignArenaCenters(base, room, m, plan.align, blocked);
+    centers = alignArenaCenters(base, room, m, plan.align, blocked, fp);
   }
   return { parsed, room, maxLayout, arenaCount, clamped: parsed.n > maxLayout.count, centers };
 }

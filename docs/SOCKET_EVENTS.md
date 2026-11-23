@@ -62,6 +62,7 @@ Champ `action` de l'événement `arena_control` (`handleArenaControl`) :
 | `rankings:update` | ✓ | `dashboard.html` |
 | `server:command` | ✓ | `arena.html`, `kiosk.html`, `lobby.html`, `pool.html`, `public.html`, `referee.html` |
 | `strips:plan` | ✓ | — |
+| `team_arena_error` | ✓ | `teamReferee.html` |
 | `team_arena_state` | ✓ | `teamArena.html`, `teamReferee.html` |
 | `tts:update` | ✓ | `referee.html` |
 | `wallpaper:update` | ✓ | `arena.html` |

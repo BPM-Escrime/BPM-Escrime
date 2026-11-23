@@ -14,11 +14,11 @@ import {
   isRelayComplete,
   relayCapFor,
   relayCumul,
-  relayWinnerSide,
 } from '../../shared/domain/teams/teamRelayLive';
 import { getAvailableReasons } from '../../shared/utils/cardSystem';
 import type { TeamArenaCard, TeamArenaState } from './types';
 import type { RemoteScoreServer } from '../remoteScoreServer';
+import { runTeamCommand, type TeamCommandOutcome, type TeamSource } from './teamCommand';
 
 type S = RemoteScoreServer;
 
@@ -40,34 +40,73 @@ export function broadcastTeamArena(ctx: TeamArenaContext, arenaId: string): void
 }
 
 /**
- * Termine l'assaut (relais) en cours : score persisté, passage au suivant s'il en reste.
- * Relais FIE : vainqueur du relais = équipe en tête au cumul ; arène : score de l'assaut.
+ * Rencontre relue dans les tables après une commande du moteur : relais (scores, statuts,
+ * tireurs) et relais en cours. Le score en direct, le chrono et les cartons restent ceux de
+ * l'arène. false : rencontre introuvable.
  */
-export function advanceTeamBout(ctx: TeamArenaContext, arenaId: string): boolean {
-  const state = ctx.teamArenaState.get(arenaId);
-  if (!state) return false;
+export function reloadTeamArenaMatch(ctx: TeamArenaContext, state: TeamArenaState): boolean {
+  const detail = ctx.db.getTeamMatchDetail(state.matchId);
+  if (!detail) return false;
+  state.bouts = detail.bouts;
+  state.currentBoutIndex = detail.bouts.findIndex(b => b.status !== 'finished');
+  return true;
+}
+
+/** Relais en cours et score à enregistrer ; null : pas de relais à terminer */
+function currentRelayInput(state: TeamArenaState) {
   const bout = state.bouts[state.currentBoutIndex];
-  if (!bout || bout.status === 'finished') return false;
-  const scoreA = state.liveScoreA;
-  const scoreB = state.liveScoreB;
-  const { cumulA, cumulB } = relayCumul(state.bouts, bout, scoreA, scoreB);
-  const side =
-    state.format === 'fie-relay'
-      ? relayWinnerSide(cumulA, cumulB)
-      : relayWinnerSide(scoreA, scoreB);
-  const winnerId = side === 'A' ? bout.fencerAId : side === 'B' ? bout.fencerBId : null;
-  ctx.db.updateTeamBout(bout.id, scoreA, scoreB, 'finished', winnerId);
-  bout.scoreA = scoreA;
-  bout.scoreB = scoreB;
-  bout.status = 'finished';
-  bout.winnerId = winnerId;
-  state.currentBoutIndex = state.bouts.findIndex(b => b.status !== 'finished');
+  if (!bout || bout.status === 'finished') return null;
+  return {
+    competitionId: state.competitionId,
+    matchId: state.matchId,
+    relay: bout.boutOrder,
+    scoreA: state.liveScoreA,
+    scoreB: state.liveScoreB,
+  };
+}
+
+const NO_RELAY = { ok: false, code: 'match_not_ready', message: 'Aucun relais en cours' } as const;
+
+/**
+ * Contrôle de la fin du relais en cours par recordRelayScore, sans rien écrire : l'appareil
+ * reçoit NAK si le moteur refuse, avant tout ACK (docs/adr/0024).
+ */
+export function checkTeamBout(
+  ctx: TeamArenaContext,
+  arenaId: string,
+  source: TeamSource
+): TeamCommandOutcome<'recordRelayScore'> {
+  const state = ctx.teamArenaState.get(arenaId);
+  const input = state && currentRelayInput(state);
+  if (!input) return NO_RELAY;
+  return runTeamCommand(ctx.db, 'recordRelayScore', input, source, true);
+}
+
+/**
+ * Termine l'assaut (relais) en cours par recordRelayScore (docs/adr/0024, lot E4) : score du
+ * relais enregistré par le moteur (vainqueur du relais, cumul, fin de rencontre et avancement
+ * du tableau calculés par lui), puis rencontre relue et passage au relais suivant. Refus :
+ * rien d'écrit, l'arène garde le relais et son score en direct.
+ * `broadcast: false` : l'appelant diffuse lui-même (remplaçant enregistré entre-temps).
+ */
+export function advanceTeamBout(
+  ctx: TeamArenaContext,
+  arenaId: string,
+  source: TeamSource = 'tablet',
+  { broadcast = true }: { broadcast?: boolean } = {}
+): TeamCommandOutcome<'recordRelayScore'> {
+  const state = ctx.teamArenaState.get(arenaId);
+  const input = state && currentRelayInput(state);
+  if (!state || !input) return NO_RELAY;
+  const outcome = runTeamCommand(ctx.db, 'recordRelayScore', input, source);
+  if (!outcome.ok) return outcome;
+  reloadTeamArenaMatch(ctx, state);
   state.liveScoreA = 0;
   state.liveScoreB = 0;
   state.elapsedAccumulatedSec = 0;
   state.timerStartedAt = null;
-  broadcastTeamArena(ctx, arenaId);
-  return true;
+  if (broadcast) broadcastTeamArena(ctx, arenaId);
+  return outcome;
 }
 
 // ── Format arène Sabre Laser équipe : saisie temps réel ──────────────────────
@@ -92,6 +131,8 @@ export function setTeamArenaMatch(
     settings?.laserTeamMode ?? 'touches',
     settings?.teamRelayStepSize ?? 5
   );
+  const current = detail.bouts.findIndex(b => b.status !== 'finished');
+  const reopened = detail.bouts[current]?.status === 'in_progress' ? detail.bouts[current] : null;
   ctx.teamArenaState.set(arenaId, {
     format: settings?.teamFormat === 'laser-arena' ? 'laser-arena' : 'fie-relay',
     weapon,
@@ -117,9 +158,10 @@ export function setTeamArenaMatch(
     teamBName: detail.teamBName,
     isLaserPoints,
     bouts: detail.bouts,
-    currentBoutIndex: detail.bouts.findIndex(b => b.status !== 'finished'),
-    liveScoreA: 0,
-    liveScoreB: 0,
+    currentBoutIndex: current,
+    // Relais rouvert (reopenRelay) : son score repris comme score en direct
+    liveScoreA: reopened ? reopened.scoreA : 0,
+    liveScoreB: reopened ? reopened.scoreB : 0,
     elapsedAccumulatedSec: 0,
     timerStartedAt: null,
     cards: ctx.db.getTeamMatchCards(matchId) as TeamArenaCard[],

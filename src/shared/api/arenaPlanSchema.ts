@@ -37,10 +37,14 @@ const RoomPlanSchema = z.object({
   arenas: Field,
   margin: Field,
   spacing: z.enum(['packed', 'spread']),
+  /** Sabre Laser, escrime (piste FIE) ou escrime artistique ; absent = laser (ajout compatible, ADR-0025) */
+  discipline: z.enum(['laser', 'fencing', 'artistic']).optional(),
   align: z.enum(['left', 'center', 'right']),
   items: z.array(RoomItemSchema).max(500),
   /** Noms des arènes par rang (ajout compatible, version 1 conservée) */
   arenaNames: z.array(z.string().max(60)).max(200).optional(),
+  /** Rotation des arènes par rang, en degrés (ajout compatible, version 1 conservée) */
+  arenaRotations: z.array(Coord).max(200).optional(),
   manual: z.object({ key: z.string().max(200), centers: z.array(PointSchema).max(200) }).nullable(),
   x: Coord,
   y: Coord,
