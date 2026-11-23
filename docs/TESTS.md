@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 144 | 1228 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 127 | 682 |
+| `src/renderer/components/` | 128 | 685 |
 | E2E Playwright (`e2e/`) | 17 | 48 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 34 | 367 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **588** | **4531** |
+| **Total** | **589** | **4534** |
 
-Unitaires : 571 fichiers, 4483 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 572 fichiers, 4486 tests. E2E : 17 fichiers, 48 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5869,7 +5869,7 @@ Unitaires : 571 fichiers, 4483 tests. E2E : 17 fichiers, 48 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 17 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 18 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5881,6 +5881,7 @@ Unitaires : 571 fichiers, 4483 tests. E2E : 17 fichiers, 48 tests (comptage stat
   - ajoute une zone bloquée et permet de changer sa largeur
   - ajoute une zone public nommée depuis le menu « Zone »
   - nomme une arène et affiche son nom sur le plan
+  - change la couleur d'une zone puis revient à la couleur par défaut
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
   - ne permet jamais plus d'arènes que le maximum de la zone
   - étire les arènes avec « Espacées » et les centre avec « Centré »
@@ -6849,6 +6850,15 @@ Unitaires : 571 fichiers, 4483 tests. E2E : 17 fichiers, 48 tests (comptage stat
   - reste surligné (aria-current) quand la vue saisie distante est active
   - non surligné hors de la vue saisie distante
   - sans gestionnaire : pas de bouton
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/competition/OrganizationModal.test.tsx</code> — 2 tests</summary>
+
+- **OrganizationModal**
+  - ouvre le plan de salle et ferme la page
+  - ouvre la feuille de route
 
 </details>
 
