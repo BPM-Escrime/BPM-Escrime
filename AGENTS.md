@@ -1,10 +1,10 @@
-# BPM - Escrime - Agent Instructions
+# BPM - Escrime (Base de Poules et Management) - Agent Instructions
 
 ## Project Overview
 
 BPM - Escrime is an Electron desktop application for fencing tournament management. It uses React 19 + TypeScript 6 for the frontend, SQLite via better-sqlite3 for data storage, and Webpack 5 for bundling.
 
-**Version:** v1.0.3 Build #1365  
+**Version:** v3.0.0 Build #2041  
 **Last Updated:** October 2026  
 **Dependency versions:** see `docs/STACK_TECHNIQUE.md`
 

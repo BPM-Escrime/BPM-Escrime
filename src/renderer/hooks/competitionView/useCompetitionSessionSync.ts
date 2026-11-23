@@ -430,6 +430,10 @@ export function useCompetitionSessionSync(ctx: Ctx) {
         setPoolsLaunched(false);
         setRelaunchPending(true);
       }
+      // Tirage écrit en base dès la préparation : relu au rechargement avant « Lancer »
+      // (repli DB de useCompetitionRestore, la session n'est écrite qu'au lancement par le
+      // moteur). Pas d'opération du contrat pour des poules non lancées : écriture de l'écran
+      // gardée (poolPersistence), à reprendre avec l'ADR de #2100
       await persistPoolsToDB(newPools);
       // Fermer l'inscription distante dès que les poules sont générées
       if (isRemoteActive) {

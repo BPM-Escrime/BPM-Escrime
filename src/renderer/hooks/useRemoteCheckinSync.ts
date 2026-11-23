@@ -8,6 +8,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { Referee } from '../../shared/types';
 import type { Phase } from './useCompetitionSession';
 import { useRemoteApi } from '../api/remoteApi';
+import { useBpmClient } from '../api/BpmClientContext';
+import { loadCompetitionReferees } from '../api/refereeMapping';
 
 interface UseRemoteCheckinSyncParams {
   competitionId: string;
@@ -28,6 +30,7 @@ export function useRemoteCheckinSync({
   setReferees,
 }: UseRemoteCheckinSyncParams) {
   const remote = useRemoteApi();
+  const client = useBpmClient();
   // Synchroniser l'état d'inscription distante avec la phase courante
   useEffect(() => {
     if (!isRemoteActive) return;
@@ -49,12 +52,11 @@ export function useRemoteCheckinSync({
       if (person === 'fencer') {
         loadFencers();
       } else {
-        window.electronAPI.db
-          .getRefereesByCompetition(competitionId)
-          .then((rows: Referee[]) => setReferees(rows))
+        loadCompetitionReferees(client, competitionId)
+          .then(setReferees)
           .catch(() => {});
       }
     });
     return () => off?.();
-  }, [loadFencers, competitionId]);
+  }, [client, loadFencers, competitionId]);
 }

@@ -35,12 +35,24 @@ export const PDF_DIALOG_INIT = {
 
 export type DESignatures = Record<string, { A?: string; B?: string }>;
 
-/** Signatures des tireurs saisies sur tablette (optionnelles : échec silencieux). */
-export async function loadDESignatures(matches: TableauMatch[]): Promise<DESignatures | undefined> {
+/** Identifiants par requête getTableauSignatures (borne du contrat) */
+const SIGNATURE_BATCH = 512;
+
+/**
+ * Signatures des tireurs saisies sur tablette (optionnelles : échec silencieux).
+ * Contrat d'API (#1981) : requête getTableauSignatures.
+ */
+export async function loadDESignatures(
+  matches: Array<Pick<TableauMatch, 'id' | 'fencerA' | 'fencerB'>>,
+  client: BpmClient = defaultBpmClient
+): Promise<DESignatures | undefined> {
   try {
-    const api = window.electronAPI;
     const ids = matches.map(m => m.id).filter(Boolean);
-    const rows = (await api?.db?.getDEMatchSignaturesByMatchIds?.(ids)) ?? [];
+    const rows = [];
+    for (let i = 0; i < ids.length; i += SIGNATURE_BATCH) {
+      const matchIds = ids.slice(i, i + SIGNATURE_BATCH);
+      rows.push(...(await client.query('getTableauSignatures', { matchIds })));
+    }
     if (rows.length === 0) return undefined;
     const signatures: DESignatures = {};
     for (const row of rows) {

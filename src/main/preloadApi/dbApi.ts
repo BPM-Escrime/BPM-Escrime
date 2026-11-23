@@ -4,18 +4,13 @@
  */
 import { ipcRenderer } from 'electron';
 import type {
-  ArenaExitData,
   CompetitionCreateData,
   CompetitionUpdateData,
   DatabaseAPI,
   FencerCreateData,
   FencerUpdateData,
-  MatchCardData,
   MatchCreateData,
   MatchSnapshot,
-  MatchTimingData,
-  SimulatedMatchEvents,
-  MatchTouchData,
   MatchUpdateData,
   Pool,
   PoolSnapshot,
@@ -34,18 +29,10 @@ export const dbApi = {
     validateCompetitionData(data);
     return ipcRenderer.invoke('db:createCompetition', data);
   },
-  getCompetition: (id: string) => {
-    validateUUID(id, 'competition ID');
-    return ipcRenderer.invoke('db:getCompetition', id);
-  },
   getAllCompetitions: () => ipcRenderer.invoke('db:getAllCompetitions'),
   updateCompetition: (id: string, updates: CompetitionUpdateData) => {
     validateUUID(id, 'competition ID');
     return ipcRenderer.invoke('db:updateCompetition', id, updates);
-  },
-  deleteCompetition: (id: string) => {
-    validateUUID(id, 'competition ID');
-    return ipcRenderer.invoke('db:deleteCompetition', id);
   },
 
   // Fencers
@@ -54,25 +41,9 @@ export const dbApi = {
     validateFencerData(fencer);
     return ipcRenderer.invoke('db:addFencer', competitionId, fencer);
   },
-  getFencer: (id: string) => {
-    validateUUID(id, 'fencer ID');
-    return ipcRenderer.invoke('db:getFencer', id);
-  },
-  getFencersByCompetition: (competitionId: string) => {
-    validateUUID(competitionId, 'competition ID');
-    return ipcRenderer.invoke('db:getFencersByCompetition', competitionId);
-  },
   updateFencer: (id: string, updates: FencerUpdateData) => {
     validateUUID(id, 'fencer ID');
     return ipcRenderer.invoke('db:updateFencer', id, updates);
-  },
-  deleteFencer: (id: string) => {
-    validateUUID(id, 'fencer ID');
-    return ipcRenderer.invoke('db:deleteFencer', id);
-  },
-  deleteAllFencers: (competitionId: string) => {
-    validateUUID(competitionId, 'competition ID');
-    return ipcRenderer.invoke('db:deleteAllFencers', competitionId);
   },
 
   // Matches
@@ -80,29 +51,15 @@ export const dbApi = {
     validateMatchData(match);
     return ipcRenderer.invoke('db:createMatch', match, poolId);
   },
-  getMatch: (id: string) => {
-    validateUUID(id, 'match ID');
-    return ipcRenderer.invoke('db:getMatch', id);
-  },
-  getMatchesByPool: (poolId: string) => {
-    if (!poolId || typeof poolId !== 'string') {
-      throw new Error('Pool ID is required and must be a string');
-    }
-    return ipcRenderer.invoke('db:getMatchesByPool', poolId);
-  },
   updateMatch: (id: string, updates: MatchUpdateData) => {
     validateUUID(id, 'match ID');
     return ipcRenderer.invoke('db:updateMatch', id, updates);
   },
 
-  upsertTableauMatch: (params: Parameters<DatabaseAPI['upsertTableauMatch']>[0]) =>
-    ipcRenderer.invoke('db:upsertTableauMatch', params),
   upsertMultipleTableauMatches: (
     competitionId: string,
     matches: Parameters<DatabaseAPI['upsertMultipleTableauMatches']>[1]
   ) => ipcRenderer.invoke('db:upsertMultipleTableauMatches', competitionId, matches),
-  getTableauMatchesForExport: (competitionId: string) =>
-    ipcRenderer.invoke('db:getTableauMatchesForExport', competitionId),
 
   // Pools
   createPool: (phaseId: string, number: number, poolId?: string) => {
@@ -146,12 +103,6 @@ export const dbApi = {
     }
     return ipcRenderer.invoke('db:syncPoolSnapshot', competitionId, snapshot);
   },
-  getPoolFencers: (poolId: string) => {
-    if (!poolId || typeof poolId !== 'string') {
-      throw new Error('Pool ID is required and must be a string');
-    }
-    return ipcRenderer.invoke('db:getPoolFencers', poolId);
-  },
   updatePool: (pool: Pool) => {
     if (!pool || typeof pool !== 'object') {
       throw new Error('Pool is required and must be an object');
@@ -159,56 +110,16 @@ export const dbApi = {
     return ipcRenderer.invoke('db:updatePool', pool);
   },
   getPoolsByPhase: (phaseId: string) => ipcRenderer.invoke('db:getPoolsByPhase', phaseId),
-  getPoolSignatures: (poolId: string) => ipcRenderer.invoke('db:getPoolSignatures', poolId),
-  getDEMatchSignaturesByMatchIds: (matchIds: string[]) =>
-    ipcRenderer.invoke('db:getDEMatchSignaturesByMatchIds', matchIds),
-  updatePoolReferee: (poolId: string, refereeId: string | null) =>
-    ipcRenderer.invoke('db:updatePoolReferee', poolId, refereeId),
-  updatePoolReferees: (poolId: string, refereeIds: string[]) =>
-    ipcRenderer.invoke('db:updatePoolReferees', poolId, refereeIds),
 
   // Phases
   createPhase: (competitionId: string, type: string, order: number, name: string) =>
     ipcRenderer.invoke('db:createPhase', competitionId, type, order, name),
-  getPhase: (id: string) => ipcRenderer.invoke('db:getPhase', id),
   getPhasesByCompetition: (competitionId: string) =>
     ipcRenderer.invoke('db:getPhasesByCompetition', competitionId),
-  updatePhase: (id: string, updates: { name?: string; isComplete?: boolean }) =>
-    ipcRenderer.invoke('db:updatePhase', id, updates),
-  deletePhase: (id: string) => ipcRenderer.invoke('db:deletePhase', id),
 
   // Referees
-  createReferee: (
-    competitionId: string,
-    data: {
-      name: string;
-      gender?: string;
-      nationality?: string;
-      club?: string;
-      license?: string;
-      category?: string;
-    }
-  ) => ipcRenderer.invoke('db:createReferee', competitionId, data),
-  getReferee: (id: string) => ipcRenderer.invoke('db:getReferee', id),
-  getRefereesByCompetition: (competitionId: string) =>
-    ipcRenderer.invoke('db:getRefereesByCompetition', competitionId),
-  getRefereeComments: (competitionId: string, refereeId?: string) =>
-    ipcRenderer.invoke('db:getRefereeComments', competitionId, refereeId),
-  updateReferee: (id: string, updates: Record<string, string | undefined>) =>
-    ipcRenderer.invoke('db:updateReferee', id, updates),
-  deleteReferee: (id: string) => ipcRenderer.invoke('db:deleteReferee', id),
-  getMatchesWithReferees: (competitionId: string) =>
-    ipcRenderer.invoke('db:getMatchesWithReferees', competitionId),
-  getRefereeStats: (competitionId: string) =>
-    ipcRenderer.invoke('db:getRefereeStats', competitionId),
-  getRemoteEvents: (competitionId: string) =>
-    ipcRenderer.invoke('db:getRemoteEvents', competitionId),
-  getMatchTimings: (competitionId: string) =>
-    ipcRenderer.invoke('db:getMatchTimings', competitionId),
 
   // Touch / Card read
-  getTouches: (matchId: string) => ipcRenderer.invoke('db:getTouches', matchId),
-  getCards: (matchId: string) => ipcRenderer.invoke('db:getCards', matchId),
   getCardsByMatchIds: (matchIds: string[]) => ipcRenderer.invoke('db:getCardsByMatchIds', matchIds),
 
   // Session State
@@ -230,31 +141,8 @@ export const dbApi = {
     }
     return ipcRenderer.invoke('db:getSessionState', competitionId);
   },
-  clearSessionState: (competitionId: string) => {
-    if (!competitionId || typeof competitionId !== 'string') {
-      throw new Error('Competition ID is required and must be a string');
-    }
-    return ipcRenderer.invoke('db:clearSessionState', competitionId);
-  },
 
   // Statistiques combattants
-  saveTouch: (touch: MatchTouchData) => ipcRenderer.invoke('db:saveTouch', touch),
-  saveCard: (card: MatchCardData) => ipcRenderer.invoke('db:saveCard', card),
-  updateMatchTiming: (timing: MatchTimingData) =>
-    ipcRenderer.invoke('db:updateMatchTiming', timing),
-  replaceSimulatedMatchEvents: (matchId: string, events: SimulatedMatchEvents | null) =>
-    ipcRenderer.invoke('db:replaceSimulatedMatchEvents', matchId, events),
-  getFencerHistory: (fencerId: string) => {
-    if (!fencerId || typeof fencerId !== 'string') {
-      throw new Error('Fencer ID is required and must be a string');
-    }
-    return ipcRenderer.invoke('db:getFencerHistory', fencerId);
-  },
-  saveArenaExit: (exit: ArenaExitData) => ipcRenderer.invoke('db:saveArenaExit', exit),
-  getFencerCompetitionStats: (fencerId: string) =>
-    ipcRenderer.invoke('db:getFencerCompetitionStats', fencerId),
-  getCompetitionFencerStats: (competitionId: string) =>
-    ipcRenderer.invoke('db:getCompetitionFencerStats', competitionId),
   saveAbandonSnapshot: (
     fencerId: string,
     competitionId: string,
@@ -271,22 +159,10 @@ export const dbApi = {
       snapshots
     ),
   getAbandonSnapshot: (fencerId: string) => ipcRenderer.invoke('db:getAbandonSnapshot', fencerId),
-  getScoreAuditLogByCompetition: (competitionId: string) =>
-    ipcRenderer.invoke('db:getScoreAuditLogByCompetition', competitionId),
   deleteAbandonSnapshot: (fencerId: string) =>
     ipcRenderer.invoke('db:deleteAbandonSnapshot', fencerId),
-  getMatchTimeline: (matchId: string) => ipcRenderer.invoke('db:getMatchTimeline', matchId),
-  getCompetitionTimeline: (competitionId: string) =>
-    ipcRenderer.invoke('db:getCompetitionTimeline', competitionId),
 
   // Classement saisonnier Quest
-  addCompetitionToSeason: (payload: Parameters<DatabaseAPI['addCompetitionToSeason']>[0]) =>
-    ipcRenderer.invoke('db:addCompetitionToSeason', payload),
-  getSeasonRanking: () => ipcRenderer.invoke('db:getSeasonRanking'),
-  getSeasonCompetitions: () => ipcRenderer.invoke('db:getSeasonCompetitions'),
-  removeCompetitionFromSeason: (competitionId: string) =>
-    ipcRenderer.invoke('db:removeCompetitionFromSeason', competitionId),
-  resetSeason: () => ipcRenderer.invoke('db:resetSeason'),
 
   // Équipes
   createTeam: (competitionId: string, name: string, club: string) =>

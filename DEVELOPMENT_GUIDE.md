@@ -1,6 +1,6 @@
 # Development Guide
 
-This comprehensive guide is for contributors who want to develop, extend, or maintain BPM - Escrime.
+This comprehensive guide is for contributors who want to develop, extend, or maintain BPM - Escrime (Base de Poules et Management).
 
 ## 📋 Table of Contents
 
@@ -876,7 +876,7 @@ All jobs use Node 22.
 
 `version.json` (source de vérité) :
 ```json
-{ "version": "1.0.3", "build": 1371, "channel": "dev", "date": "…" }
+{ "version": "3.0.0", "build": 2041, "channel": "dev", "date": "…" }
 ```
 
 ```bash

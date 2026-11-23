@@ -28,7 +28,6 @@ describe('bus d’événements db (#1298)', () => {
     registerDbHandlers({
       db: db as never,
       remoteServers: new Map(),
-      stopRemoteServer: () => false,
     });
   });
 

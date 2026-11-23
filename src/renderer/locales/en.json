@@ -4382,7 +4382,20 @@
     "too_many": "{{requested}} arenas requested, but the zone only fits {{max}}. Only the maximum is placed.",
     "dims_option": "Technical dimensions (plan and export)",
     "dims_hint": "Adds room, arena, spacing, margin and item dimensions to the plan and the exports.",
-    "handle_arena": "Arena (drag to move)"
+    "handle_arena": "Arena (drag to move)",
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out",
+    "zoom_reset": "Actual size (100 %)",
+    "zoom_hint": "Ctrl + wheel to zoom, drag the background to pan",
+    "rooms_title": "Rooms",
+    "room_name": "Room name",
+    "room_default": "Room",
+    "add_room": "Add a room",
+    "remove_room": "Remove room",
+    "item_text": "Displayed text",
+    "overview": "Overview",
+    "overview_hint": "Drag a room to move it (arrow keys); double-click or Enter to open it.",
+    "overview_room_line": "{{name}}: {{width}} × {{length}} m, {{count}} arena(s)"
   },
   "stripControl": {
     "title": "Strip control",

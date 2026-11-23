@@ -1,12 +1,15 @@
 /**
- * BPM - Escrime - Persistance des poules générées en base
+ * BPM - Escrime - Persistance des poules générées en base, par l'écran
+ * Tirage de la préparation (relu au rechargement avant le lancement) et lancement des formats
+ * que le moteur ne pilote pas (épreuves par équipes, #2100). Au lancement des autres formats,
+ * generatePools réécrit poules, tireurs, matchs et pistes dans sa transaction (docs/adr/0017).
  * Licensed under GPL-3.0
  */
 
 import { logger, LogCategory } from '@shared/services/logger';
 import { Pool } from '../../shared/types';
 
-/** Persiste les poules dans les tables DB (pools, pool_fencers, matches) */
+/** Persiste les poules dans les tables DB (pools, pool_fencers, matches, piste) */
 export async function persistPools(competitionId: string, generatedPools: Pool[]): Promise<void> {
   const db = window.electronAPI?.db;
   if (!db) return;
@@ -34,6 +37,7 @@ export async function persistPools(competitionId: string, generatedPools: Pool[]
           pool.id
         );
       }
+      if (pool.strip != null) await db.updatePool(pool);
     }
   } catch (e) {
     logger.error(LogCategory.DATABASE, 'persistPoolsToDB failed', e as Error);

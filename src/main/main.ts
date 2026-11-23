@@ -118,7 +118,7 @@ const buildMenu = (language?: string): void =>
     language
   );
 
-registerDbHandlers({ db, remoteServers, stopRemoteServer });
+registerDbHandlers({ db, remoteServers });
 // Mode Club : tablettes, synchro, sauvegardes du poste (port du contrat, docs/adr/0022)
 const clubStation = createClubStation({ db, userDataPath: app.getPath('userData') });
 // Dossiers accessibles à l'agent tant que l'opérateur n'en a pas choisi (Paramètres → Agent IA)

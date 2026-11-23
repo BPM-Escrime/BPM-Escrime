@@ -18,13 +18,19 @@ import type { TableauMatchForPDF, FinalResultForPDF } from '../../shared/utils/p
 import { statusCode, finalRankLabel, poolEliminatedAt } from '../../shared/utils/forfeit';
 import { usePdfTemplateStore } from '../../features/pdfTemplates/hooks/usePdfTemplateStore';
 import type { ConsolationBracket, TableauMatch } from '../../shared/domain/tableau/tableauTypes';
-import { logger, LogCategory } from '@shared/services/logger';
 import BookSectionsModal from './BookSectionsModal';
 import type { BookSectionKind } from '../../shared/utils/pdfExport/bookToc';
 import { Medal, Printer, Trophy, Upload } from 'lucide-react';
 import { RankMedal } from './common/RankMedal';
 import { Icon } from './common/Icon';
 import { isBlackCardExcluded } from '../../shared/domain/fencers/fencerStatus';
+import { useBpmClient } from '../api/BpmClientContext';
+import {
+  loadExportFencers,
+  loadExportPoolSignatures,
+  loadExportState,
+  loadExportTableauSignatures,
+} from './results/resultsExportData';
 
 interface FinalResult {
   rank: number;
@@ -299,6 +305,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   appelVisibleColumns,
 }) => {
   const { showToast } = useToast();
+  const client = useBpmClient();
   const { t } = useTranslation();
   const rankingTemplate = usePdfTemplateStore(s => s.templates.ranking);
   const poolTemplate = usePdfTemplateStore(s => s.templates.pool);
@@ -495,115 +502,31 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   const exportFullPDF = async (sectionOrder?: BookSectionKind[]) => {
     setIsExportingFull(true);
     try {
-      const api = window.electronAPI;
-
-      // Chaque fetch de secours est isolé : un échec ne doit pas vider tout l'export
-      const safe = async <T,>(fn: () => Promise<T>, label: string, fallback: T): Promise<T> => {
-        try {
-          return await fn();
-        } catch (e) {
-          logger.warn(
-            LogCategory.DATABASE,
-            `export complet — ${label} échoué`,
-            e instanceof Error ? e : undefined
-          );
-          return fallback;
-        }
-      };
-
+      // Données absentes de la vue relues par le contrat (#1981), chaque lecture isolée
       const effectiveFencers =
         appelFencers && appelFencers.length > 0
           ? appelFencers
           : fencers && fencers.length > 0
             ? fencers
-            : await safe(
-                () => api?.db?.getFencersByCompetition?.(competition.id) ?? [],
-                'tireurs',
-                []
-              );
+            : await loadExportFencers(client, competition.id);
 
+      const needState =
+        !(tableauMatches && tableauMatches.length > 0) || !((pools?.length ?? 0) > 0);
+      const state = needState
+        ? await loadExportState(client, competition.id)
+        : { pools: [], tableauMatches: [] };
       const effectiveTableauMatches =
-        tableauMatches && tableauMatches.length > 0
-          ? tableauMatches
-          : await safe(
-              () => api?.db?.getTableauMatchesForExport?.(competition.id) ?? [],
-              'matchs tableau',
-              []
-            );
+        tableauMatches && tableauMatches.length > 0 ? tableauMatches : state.tableauMatches;
+      const effectivePools: Pool[] = pools && pools.length > 0 ? pools : state.pools;
 
-      let effectivePools: Pool[] = pools && pools.length > 0 ? pools : [];
-      if (
-        effectivePools.length === 0 &&
-        api?.db?.getPhasesByCompetition &&
-        api?.db?.getPoolsByPhase
-      ) {
-        effectivePools = await safe(
-          async () => {
-            const phases = await api.db.getPhasesByCompetition(competition.id);
-            const poolPhases = phases.filter((p: { type: string }) => p.type === 'pool');
-            const poolArrays = await Promise.all(
-              poolPhases.map((ph: { id: string }) => api.db.getPoolsByPhase(ph.id))
-            );
-            return poolArrays.flat();
-          },
-          'poules',
-          []
-        );
-      }
-
-      // Signatures des poules : poolId → (fencerId → data URL)
-      const poolSignatures = await safe(
-        async () => {
-          const entries = await Promise.all(
-            effectivePools.map(async p => {
-              const sigs = (await api?.db?.getPoolSignatures?.(p.id)) ?? [];
-              return [
-                p.id,
-                Object.fromEntries(
-                  sigs.map((s: { fencerId: string; signatureData: string }) => [
-                    s.fencerId,
-                    s.signatureData,
-                  ])
-                ),
-              ] as const;
-            })
-          );
-          return Object.fromEntries(entries) as Record<string, Record<string, string>>;
-        },
-        'signatures poules',
-        {} as Record<string, Record<string, string>>
-      );
-
-      // Signatures des matchs de TDE : matchId → { A, B }
+      const poolSignatures = await loadExportPoolSignatures(client, effectivePools);
       const allTableauMatches = [
         ...(effectiveTableauMatches as TableauMatchForPDF[]),
         ...(consolationBrackets ?? []).flatMap(b => b.matches as TableauMatchForPDF[]),
       ];
-      const tableauSignatures = await safe(
-        async () => {
-          const ids = allTableauMatches.map(m => m.id).filter(Boolean);
-          const rows = (await api?.db?.getDEMatchSignaturesByMatchIds?.(ids)) ?? [];
-          const out: Record<string, { A?: string; B?: string }> = {};
-          for (const row of rows as {
-            matchId: string;
-            fencerId: string;
-            signatureData: string;
-          }[]) {
-            const match = allTableauMatches.find(m => m.id === row.matchId);
-            if (!match) continue;
-            const slot =
-              match.fencerA?.id === row.fencerId
-                ? 'A'
-                : match.fencerB?.id === row.fencerId
-                  ? 'B'
-                  : null;
-            if (!slot) continue;
-            (out[row.matchId] ??= {})[slot] = row.signatureData;
-          }
-          return out;
-        },
-        'signatures tableau',
-        {} as Record<string, { A?: string; B?: string }>
+      const tableauSignatures = await loadExportTableauSignatures(
+        client,
+        allTableauMatches as unknown as TableauMatch[]
       );
 
       const { exportFullCompetitionPDF } = await import('../../shared/utils/pdfExport');
@@ -637,49 +560,14 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   const exportNoSignaturePDF = async () => {
     setIsExportingFull(true);
     try {
-      const api = window.electronAPI;
-
-      const safe = async <T,>(fn: () => Promise<T>, label: string, fallback: T): Promise<T> => {
-        try {
-          return await fn();
-        } catch (e) {
-          logger.warn(
-            LogCategory.DATABASE,
-            `export sans signature — ${label} échoué`,
-            e instanceof Error ? e : undefined
-          );
-          return fallback;
-        }
-      };
-
+      const needState =
+        !(tableauMatches && tableauMatches.length > 0) || !((pools?.length ?? 0) > 0);
+      const state = needState
+        ? await loadExportState(client, competition.id)
+        : { pools: [], tableauMatches: [] };
       const effectiveTableauMatches =
-        tableauMatches && tableauMatches.length > 0
-          ? tableauMatches
-          : await safe(
-              () => api?.db?.getTableauMatchesForExport?.(competition.id) ?? [],
-              'matchs tableau',
-              []
-            );
-
-      let effectivePools: Pool[] = pools && pools.length > 0 ? pools : [];
-      if (
-        effectivePools.length === 0 &&
-        api?.db?.getPhasesByCompetition &&
-        api?.db?.getPoolsByPhase
-      ) {
-        effectivePools = await safe(
-          async () => {
-            const phases = await api.db.getPhasesByCompetition(competition.id);
-            const poolPhases = phases.filter((p: { type: string }) => p.type === 'pool');
-            const poolArrays = await Promise.all(
-              poolPhases.map((ph: { id: string }) => api.db.getPoolsByPhase(ph.id))
-            );
-            return poolArrays.flat();
-          },
-          'poules',
-          []
-        );
-      }
+        tableauMatches && tableauMatches.length > 0 ? tableauMatches : state.tableauMatches;
+      const effectivePools: Pool[] = pools && pools.length > 0 ? pools : state.pools;
 
       const { exportPoolsAndTableauxNoSignaturePDF } = await import('../../shared/utils/pdfExport');
       await exportPoolsAndTableauxNoSignaturePDF({

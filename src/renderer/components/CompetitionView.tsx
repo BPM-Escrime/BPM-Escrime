@@ -452,12 +452,9 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
               setPools(confirmedPools);
               setSkipPoolPhase(false);
               setCurrentPhase('pools');
-              // Les poules peuvent avoir été régénérées/modifiées en préparation :
-              // les persister pour que les saisies (tablette, UI) alimentent l'historique (#907)
+              // Format hors moteur (équipes, #2100) : poules et pistes écrites par l'écran pour
+              // que les saisies (tablette, UI) alimentent l'historique (#907)
               await persistPoolsToDB(confirmedPools);
-              confirmedPools.forEach(pool => {
-                if (pool.strip != null) window.electronAPI?.db?.updatePool(pool);
-              });
             }}
             onSkipPools={handleSkipToRanking}
             onLaunchActionChange={setPoolPrepLaunch}

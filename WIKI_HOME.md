@@ -1,4 +1,4 @@
-# BPM - Escrime - Wiki Home
+# BPM - Escrime (Base de Poules et Management) - Wiki Home
 
 Welcome to BPM - Escrime comprehensive documentation hub. BPM - Escrime is a modern fencing tournament management software rewritten from original software using cutting-edge web technologies.
 
@@ -193,7 +193,7 @@ Developer Guides/
 
 ## 🌟 Current Version
 
-**v1.0.3 — build #1365** (October 2026). Highlights:
+**v3.0.0 — build #2041** (November 2026). Highlights:
 - ✅ Pools, direct elimination, classification tables, formula builder (custom weapon)
 - ✅ Laser Sabre (zones A/B/C, Quest points, sudden death) and Olympic weapons
 - ✅ Team competitions (FIE relay, Laser Sabre arena format)

@@ -1,4 +1,4 @@
-# BPM - Escrime — Todo List
+# BPM - Escrime (Base de Poules et Management) — Todo List
 
 > Seuls les points restants sont listés (audit du 2026-10, vérifié contre `src/`).
 

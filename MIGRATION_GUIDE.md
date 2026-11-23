@@ -1,4 +1,4 @@
-# Migration from Original software
+# Migration depuis le logiciel d’origine
 
 This guide helps users transition from the original software to BPM - Escrime, covering data compatibility, feature differences, and migration workflows.
 

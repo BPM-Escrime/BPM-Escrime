@@ -4382,7 +4382,20 @@
     "too_many": "要求 {{requested}} 個劍場，但區域只能容納 {{max}} 個，只會放置最多數目。",
     "dims_option": "技術標註（平面圖及匯出）",
     "dims_hint": "在平面圖及匯出檔案中加入場館、劍場、間距、邊距及元件的尺寸。",
-    "handle_arena": "劍場（拖動即可移動）"
+    "handle_arena": "劍場（拖動即可移動）",
+    "zoom_in": "放大",
+    "zoom_out": "縮小",
+    "zoom_reset": "實際大小 (100 %)",
+    "zoom_hint": "Ctrl + 滾輪縮放，拖曳背景移動",
+    "rooms_title": "場館",
+    "room_name": "場館名稱",
+    "room_default": "場館",
+    "add_room": "新增場館",
+    "remove_room": "刪除場館",
+    "item_text": "顯示文字",
+    "overview": "總覽",
+    "overview_hint": "拖曳場館以移動（方向鍵亦可）；雙擊或按 Enter 開啟。",
+    "overview_room_line": "{{name}}：{{width}} × {{length}} 米，{{count}} 個場地"
   },
   "stripControl": {
     "title": "場地控制",

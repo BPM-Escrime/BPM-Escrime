@@ -1,4 +1,4 @@
-# Roadmap BPM - Escrime
+# Roadmap BPM - Escrime (Base de Poules et Management)
 
 > Mise à jour : 2026-10 — seuls les chantiers restants sont listés.
 

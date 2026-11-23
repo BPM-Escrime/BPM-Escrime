@@ -33,17 +33,27 @@ describe('tableauDialogState', () => {
     expect(PDF_DIALOG_INIT.selectedRounds.size).toBe(0);
   });
 
-  it('loadDESignatures associe signature au bon côté', async () => {
-    (window as any).electronAPI = {
-      db: {
-        getDEMatchSignaturesByMatchIds: vi.fn().mockResolvedValue([
-          { matchId: 'm1', fencerId: 'b', signatureData: 'SB' },
-          { matchId: 'm1', fencerId: 'zz', signatureData: 'X' },
-          { matchId: 'nope', fencerId: 'a', signatureData: 'Y' },
-        ]),
-      },
-    };
-    expect(await loadDESignatures([m('m1', 'a', 'b')])).toEqual({ m1: { B: 'SB' } });
+  it('loadDESignatures associe signature au bon côté (getTableauSignatures)', async () => {
+    const client = {
+      query: vi.fn().mockResolvedValue([
+        { matchId: 'm1', fencerId: 'b', signatureData: 'SB' },
+        { matchId: 'm1', fencerId: 'zz', signatureData: 'X' },
+        { matchId: 'nope', fencerId: 'a', signatureData: 'Y' },
+      ]),
+      call: vi.fn(),
+      subscribe: vi.fn(),
+    } as unknown as BpmClient;
+    expect(await loadDESignatures([m('m1', 'a', 'b')], client)).toEqual({ m1: { B: 'SB' } });
+    expect(client.query).toHaveBeenCalledWith('getTableauSignatures', { matchIds: ['m1'] });
+  });
+
+  it('loadDESignatures : identifiants envoyés par lots de 512 (borne du contrat)', async () => {
+    const query = vi.fn().mockResolvedValue([]);
+    const client = { query, call: vi.fn(), subscribe: vi.fn() } as unknown as BpmClient;
+    const many = Array.from({ length: 600 }, (_, i) => m(`m${i}`, 'a', 'b'));
+    expect(await loadDESignatures(many, client)).toBeUndefined();
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query.mock.calls[1][1].matchIds).toHaveLength(88);
   });
 
   it('loadDECards : id composite (saisie distante) ou id simple, rangés par côté (#1829)', async () => {
@@ -91,10 +101,13 @@ describe('tableauDialogState', () => {
   });
 
   it('retourne undefined sans lignes ou en cas d erreur', async () => {
+    // Hors Electron : client par défaut indisponible
     expect(await loadDESignatures([m('m1', 'a', 'b')])).toBeUndefined();
-    (window as any).electronAPI = {
-      db: { getDEMatchSignaturesByMatchIds: vi.fn().mockRejectedValue(new Error('x')) },
-    };
-    expect(await loadDESignatures([m('m1', 'a', 'b')])).toBeUndefined();
+    const failing = {
+      query: vi.fn().mockRejectedValue(new Error('x')),
+      call: vi.fn(),
+      subscribe: vi.fn(),
+    } as unknown as BpmClient;
+    expect(await loadDESignatures([m('m1', 'a', 'b')], failing)).toBeUndefined();
   });
 });

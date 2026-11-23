@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 136 | 1179 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 41 | 214 |
-| `src/renderer/components/` | 123 | 662 |
+| `src/renderer/components/` | 123 | 667 |
 | E2E Playwright (`e2e/`) | 16 | 46 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 30 | 286 |
+| `src/shared/domain/` | 30 | 297 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **571** | **4386** |
+| **Total** | **571** | **4402** |
 
-Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 555 fichiers, 4356 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5780,7 +5780,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 10 tests</summary>
+<summary><code>src/renderer/components/ArenaPlannerModal.test.tsx</code> — 15 tests</summary>
 
 - **ArenaPlannerModal**
   - affiche que la salle tient pour une arène dans 20 × 20 m
@@ -5792,7 +5792,12 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - ajoute une zone bloquée et permet de changer sa largeur
   - Optimiser affiche le maximum trouvé et règle le nombre d'arènes
   - ne permet jamais plus d'arènes que le maximum de la zone
+  - étire les arènes avec « Espacées » et les centre avec « Centré »
   - affiche les cotes techniques quand la case est cochée
+  - modifie le texte affiché sur une table, sur plusieurs lignes
+  - ajoute une deuxième salle indépendante, puis la supprime
+  - zoome et revient à la taille réelle sans changer la vue d'export
+  - vue d'ensemble : déplace une salle au clavier et l'ouvre avec Entrée
 
 </details>
 
@@ -8646,7 +8651,7 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 35 tests</summary>
+<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 46 tests</summary>
 
 - **computeArenaGeometry**
   - place les lignes de mise en garde à 2 m du centre, soit 4 m entre elles
@@ -8690,6 +8695,19 @@ Unitaires : 555 fichiers, 4340 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - repousse une arène voisine qui chevauche l'arène déplacée
   - repousse un élément posé dans le cercle de sécurité hors du cercle
   - borne l'arène déplacée à la marge de la salle
+- **alignArenaCenters**
+  - colle à gauche à la marge
+  - colle à droite à la marge
+  - centre le bloc dans la salle
+  - ne change pas les écarts entre arènes
+  - se rapproche de la position initiale si une zone bloquée gêne
+  - gère une liste vide
+- **spreadArenaCenters**
+  - étire la grille pour occuper toute la salle, marges comprises
+  - garde au moins 2 × rayon entre arènes voisines
+  - renvoie null si la salle est trop petite
+  - renvoie null si une arène tombe sur une zone bloquée
+  - gère zéro arène
 
 </details>
 

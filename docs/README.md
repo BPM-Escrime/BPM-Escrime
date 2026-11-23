@@ -1,6 +1,6 @@
-# Documentation BPM - Escrime — index
+# Documentation BPM - Escrime (Base de Poules et Management) — index
 
-> Version **1.0.3**, build **#1365** — mise à jour du 9 octobre 2026.
+> Version **3.0.0**, build **#2041** — mise à jour du 23 novembre 2026.
 
 ## Utiliser l'application
 

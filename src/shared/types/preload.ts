@@ -12,14 +12,10 @@ import {
   Match,
   Pool,
   PoolSnapshot,
-  Referee,
   Score,
-  RefereeComment,
   CompetitionSettings,
   Phase,
   FencerCompetitionStats,
-  RemoteEvent,
-  MatchTiming,
 } from '../types';
 import type { MatchSignatureRequest, ArenaUpdate } from './remote';
 import type { PrivacyAPI } from './privacy';
@@ -131,13 +127,6 @@ export interface MatchUpdateData {
 // ============================================================================
 
 export type {
-  MatchTouchData,
-  MatchCardData,
-  MatchTimingData,
-  SimulatedMatchEvents,
-  ArenaExitData,
-} from './matchEvents';
-import type {
   MatchTouchData,
   MatchCardData,
   MatchTimingData,
@@ -415,37 +404,16 @@ type CardRef = { matchId: string; fencerId: string; cardType: string };
 export interface DatabaseAPI {
   // Competitions
   createCompetition: (data: CompetitionCreateData) => Promise<Competition>;
-  getCompetition: (id: string) => Promise<Competition | null>;
   getAllCompetitions: () => Promise<Competition[]>;
   updateCompetition: (id: string, updates: CompetitionUpdateData) => Promise<void>;
-  deleteCompetition: (id: string) => Promise<void>;
 
   // Fencers
   addFencer: (competitionId: string, fencer: FencerCreateData) => Promise<Fencer>;
-  getFencer: (id: string) => Promise<Fencer | null>;
-  getFencersByCompetition: (competitionId: string) => Promise<Fencer[]>;
   updateFencer: (id: string, updates: FencerUpdateData) => Promise<void>;
-  deleteFencer: (id: string) => Promise<void>;
-  deleteAllFencers: (competitionId: string) => Promise<void>;
 
   // Matches
   createMatch: (match: MatchCreateData, poolId?: string) => Promise<Match>;
-  getMatch: (id: string) => Promise<Match | null>;
-  getMatchesByPool: (poolId: string) => Promise<Match[]>;
   updateMatch: (id: string, updates: MatchUpdateData) => Promise<void>;
-  upsertTableauMatch: (params: {
-    competitionId: string;
-    matchId: string;
-    round: number;
-    position: number;
-    fencerAId?: string | null;
-    fencerBId?: string | null;
-    scoreA?: Partial<Score> | null;
-    scoreB?: Partial<Score> | null;
-    status?: string;
-    maxScore?: number;
-    isBye?: boolean;
-  }) => Promise<void>;
   upsertMultipleTableauMatches: (
     competitionId: string,
     matches: Array<{
@@ -461,113 +429,22 @@ export interface DatabaseAPI {
       isBye?: boolean;
     }>
   ) => Promise<void>;
-  getTableauMatchesForExport: (competitionId: string) => Promise<
-    Array<{
-      id: string;
-      round: number;
-      position: number;
-      isBye: boolean;
-      fencerA: { id: string; firstName?: string; lastName: string; club?: string } | null;
-      fencerB: { id: string; firstName?: string; lastName: string; club?: string } | null;
-      scoreA: number | null;
-      scoreB: number | null;
-      winner: { id: string } | null;
-    }>
-  >;
 
   // Pools
   createPool: (phaseId: string, number: number, poolId?: string) => Promise<Pool>;
   clearPoolsForPhase: (phaseId: string) => Promise<void>;
   addFencerToPool: (poolId: string, fencerId: string, position: number) => Promise<void>;
   syncPoolSnapshot: (competitionId: string, snapshot: PoolSnapshot) => Promise<void>;
-  getPoolFencers: (poolId: string) => Promise<Fencer[]>;
   getPoolsByPhase: (phaseId: string) => Promise<Pool[]>;
   updatePool: (pool: Pool) => Promise<void>;
-  getPoolSignatures: (poolId: string) => Promise<{ fencerId: string; signatureData: string }[]>;
-  getDEMatchSignaturesByMatchIds: (
-    matchIds: string[]
-  ) => Promise<{ matchId: string; fencerId: string; signatureData: string }[]>;
-  updatePoolReferee: (poolId: string, refereeId: string | null) => Promise<void>;
-  updatePoolReferees: (poolId: string, refereeIds: string[]) => Promise<void>;
 
   // Phases
   createPhase: (competitionId: string, type: string, order: number, name: string) => Promise<Phase>;
-  getPhase: (id: string) => Promise<Phase | null>;
   getPhasesByCompetition: (competitionId: string) => Promise<Phase[]>;
-  updatePhase: (id: string, updates: { name?: string; isComplete?: boolean }) => Promise<void>;
-  deletePhase: (id: string) => Promise<void>;
 
   // Referees
-  createReferee: (
-    competitionId: string,
-    data: {
-      name: string;
-      gender?: string;
-      nationality?: string;
-      club?: string;
-      license?: string;
-      category?: string;
-    }
-  ) => Promise<Referee>;
-  getReferee: (id: string) => Promise<Referee | null>;
-  getRefereesByCompetition: (competitionId: string) => Promise<Referee[]>;
-  getRefereeComments: (competitionId: string, refereeId?: string) => Promise<RefereeComment[]>;
-  updateReferee: (id: string, updates: Record<string, string | undefined>) => Promise<void>;
-  deleteReferee: (id: string) => Promise<void>;
-  getMatchesWithReferees: (competitionId: string) => Promise<
-    Array<{
-      matchId: string;
-      matchNumber: number;
-      poolName: string | null;
-      fencerAName: string;
-      fencerBName: string;
-      scoreA: number | null;
-      scoreB: number | null;
-      status: string;
-      refereeId: string | null;
-      refereeName: string | null;
-    }>
-  >;
-  getRefereeStats: (competitionId: string) => Promise<
-    Array<{
-      refereeId: string;
-      refereeName: string;
-      matchesCount: number;
-      averageDuration: number;
-      cardsYellow: number;
-      cardsRed: number;
-      cardsBlack: number;
-      dtCalls: number;
-      averageRestSeconds: number;
-    }>
-  >;
-  getRemoteEvents: (competitionId: string) => Promise<RemoteEvent[]>;
-  getMatchTimings: (competitionId: string) => Promise<MatchTiming[]>;
 
   // Touch / Card read
-  getTouches: (matchId: string) => Promise<
-    Array<{
-      id: string;
-      fencerId: string;
-      zone: string;
-      points: number;
-      timestamp: string;
-      isValidInSuddenDeath: boolean;
-      isReversed: boolean;
-    }>
-  >;
-  getCards: (matchId: string) => Promise<
-    Array<{
-      id: string;
-      fencerId: string;
-      cardType: string;
-      reason: string;
-      cardGroup: number;
-      timestamp: string;
-      pointsAwarded: number;
-      resultingExclusion: boolean;
-    }>
-  >;
 
   getCardsByMatchIds: (ids: string[]) => Promise<CardRef[]>; // feuilles imprimées (#1829)
   // Session State
@@ -575,21 +452,8 @@ export interface DatabaseAPI {
   saveSessionState: (id: string, state: SessionState) => Promise<void | { conflict: true }>;
   saveSessionStateSync: (competitionId: string, state: unknown) => boolean;
   getSessionState: (competitionId: string) => Promise<SessionState | null>;
-  clearSessionState: (competitionId: string) => Promise<void>;
 
   // Statistiques combattants
-  saveTouch: (touch: MatchTouchData) => Promise<void>;
-  saveCard: (card: MatchCardData) => Promise<void>;
-  updateMatchTiming: (timing: MatchTimingData) => Promise<void>;
-  /** Remplissage automatique : remplace touches/cartons/timing simulés (null = effacer). false si match absent */
-  replaceSimulatedMatchEvents: (
-    matchId: string,
-    events: SimulatedMatchEvents | null
-  ) => Promise<boolean>;
-  getFencerHistory: (fencerId: string) => Promise<FencerHistory>;
-  saveArenaExit: (exit: ArenaExitData) => Promise<void>;
-  getFencerCompetitionStats: (fencerId: string) => Promise<FencerCompetitionStats>;
-  getCompetitionFencerStats: (competitionId: string) => Promise<FencerCompetitionStats[]>;
   saveAbandonSnapshot: (
     fencerId: string,
     competitionId: string,
@@ -601,66 +465,10 @@ export interface DatabaseAPI {
   deleteAbandonSnapshot: (fencerId: string) => Promise<void>;
 
   // Score audit log
-  getScoreAuditLogByCompetition: (competitionId: string) => Promise<ScoreAuditEntry[]>;
 
   // Classement saisonnier Quest
-  addCompetitionToSeason: (payload: {
-    competitionId: string;
-    competitionTitle: string;
-    competitionDate: string;
-    entries: Array<{
-      fencerId: string;
-      fencerLastName: string;
-      fencerFirstName: string;
-      fencerClub?: string;
-      victories: number;
-      matchesPlayed: number;
-      questPoints: number;
-      questV4: number;
-      questV3: number;
-      questV2: number;
-      questV1: number;
-      touchesScored: number;
-      touchesReceived: number;
-      redCards: number;
-      compRank: number;
-    }>;
-  }) => Promise<void>;
-  getSeasonRanking: () => Promise<
-    Array<{
-      fencerId: string;
-      fencerLastName: string;
-      fencerFirstName: string;
-      fencerClub: string | null;
-      totalVictories: number;
-      totalMatchesPlayed: number;
-      totalQuestPoints: number;
-      totalQuestV4: number;
-      totalQuestV3: number;
-      totalQuestV2: number;
-      totalQuestV1: number;
-      totalTouchesScored: number;
-      totalTouchesReceived: number;
-      totalRedCards: number;
-      competitionCount: number;
-      ratio: number;
-    }>
-  >;
-  getSeasonCompetitions: () => Promise<
-    Array<{
-      competitionId: string;
-      competitionTitle: string;
-      competitionDate: string;
-      fencerCount: number;
-      addedAt: string;
-    }>
-  >;
-  removeCompetitionFromSeason: (competitionId: string) => Promise<void>;
-  resetSeason: () => Promise<void>;
 
   // Match timeline
-  getMatchTimeline: (matchId: string) => Promise<import('./index').MatchEventEntry[]>;
-  getCompetitionTimeline: (competitionId: string) => Promise<import('./index').MatchEventEntry[]>;
 
   // Équipes
   createTeam: (competitionId: string, name: string, club: string) => Promise<{ id: string }>;

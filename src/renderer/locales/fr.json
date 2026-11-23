@@ -4382,7 +4382,20 @@
     "too_many": "{{requested}} arènes demandées, mais la zone n’en contient que {{max}}. Seul le maximum est placé.",
     "dims_option": "Cotes techniques (plan et export)",
     "dims_hint": "Ajoute au plan et aux exports les cotes de la salle, des arènes, des espacements, des marges et des éléments.",
-    "handle_arena": "Arène (glisser pour déplacer)"
+    "handle_arena": "Arène (glisser pour déplacer)",
+    "zoom_in": "Zoom avant",
+    "zoom_out": "Zoom arrière",
+    "zoom_reset": "Taille réelle (100 %)",
+    "zoom_hint": "Ctrl + molette pour zoomer, glisser le fond pour se déplacer",
+    "rooms_title": "Salles",
+    "room_name": "Nom de la salle",
+    "room_default": "Salle",
+    "add_room": "Ajouter une salle",
+    "remove_room": "Supprimer la salle",
+    "item_text": "Texte affiché",
+    "overview": "Vue d'ensemble",
+    "overview_hint": "Glisser une salle pour la déplacer (flèches au clavier) ; double-clic ou Entrée pour l'ouvrir.",
+    "overview_room_line": "{{name}} : {{width}} × {{length}} m, {{count}} arène(s)"
   },
   "stripControl": {
     "title": "Pilotage de la salle",
