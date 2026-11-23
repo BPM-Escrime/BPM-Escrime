@@ -16,7 +16,7 @@ import {
   Category,
   MatchStatus,
 } from '../shared/types';
-import { maxScoreLimits } from '../shared/domain/formula/validateFormulaSettings';
+import { maxScoreLimits } from '../shared/domain/formula/laserMaxScores';
 
 // ============================================================================
 // Validation Error Class

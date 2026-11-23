@@ -1,7 +1,6 @@
 /**
  * BPM - Escrime - Cartons individuels, règles pures (docs/adr/0028 lot D, 0002). Deux règlements :
- * FIE pour épée, fleuret, sabre (#2207) ; Sabre Laser : barème de la tablette, jaune +3 et
- * rouge +5 (provisoire, #2208), escalade inchangée (#2209) ; arme à la carte inchangée.
+ * FIE pour épée, fleuret, sabre (#2207) ; Sabre Laser, barème provisoire (#2208).
  * Licensed under GPL-3.0
  */
 
@@ -34,11 +33,7 @@ const LASER_REASONS = Object.keys(LASER_REASON_TO_GROUP) as CardReason[];
 
 const CLASSICAL_SCORE_IMPACT = { white: 0, yellow: 1, red: 1, black: 0 };
 
-/**
- * Sabre Laser, provisoire en attendant l'arbitrage de #2208 : barème de docs/ARBITRAGE.md § 3.4,
- * celui de la tablette (`src/remote/js/refereeCards.js`, `cardEffect`), parité testée.
- * Jaune +3 points à l'adversaire, rouge +5, blanc 0, noir exclusion.
- */
+// Provisoire (#2208) : barème de la tablette (docs/ARBITRAGE.md § 3.4), parité testée
 const LASER_SCORE_IMPACT = { white: 0, yellow: 3, red: 5, black: 0 };
 
 // Escrime olympique (FIE) : tableau t.170 du règlement technique FIE, motifs rangés dans leur groupe
@@ -194,7 +189,7 @@ function fieCardType(
   }
 }
 
-// Sabre Laser et arme à la carte, escalade inchangée (#2208, #2209) : [1re faute du groupe, récidive]
+// Sabre Laser et arme à la carte, inchangé (#2209) : [1re faute du groupe, récidive]
 const LASER_STEPS: Record<CardGroup, [CardType, CardType]> = {
   [CardGroup.GROUP_1]: [CardType.WHITE, CardType.YELLOW],
   [CardGroup.GROUP_2]: [CardType.YELLOW, CardType.RED],

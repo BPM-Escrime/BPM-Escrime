@@ -1,7 +1,7 @@
 /**
  * BPM - Escrime - Scores max par défaut selon arme et catégorie (#1826)
  * Escrime olympique (épée, fleuret, sabre) : 5 touches en poule, 15 au tableau,
- * sauf M9 (3/6), M11-M13 (4/8) et vétérans (5/10). Sabre Laser : 25 / 25 (#2208).
+ * sauf M9 (3/6), M11-M13 (4/8) et vétérans (5/10).
  * Licensed under GPL-3.0
  */
 
@@ -21,8 +21,7 @@ export function isOlympicWeapon(weapon: Weapon | string | undefined): boolean {
 }
 
 /**
- * Scores max par défaut. Sabre Laser : 25 / 25 (provisoire, #2208). Arme « À la carte » :
- * ancien comportement (21 en poule, tableau sans limite = 0).
+ * Scores max par défaut. Sabre Laser : 25 / 25 (#2208). À la carte : 21 / sans limite (0).
  */
 export function getDefaultMaxScores(
   weapon: Weapon | string | undefined,

@@ -42,7 +42,6 @@ const BASE = {
 
 /**
  * Réglages appliqués à la création d'une épreuve.
- * Sabre Laser individuel : score maximum 25 / 25, réglable (provisoire, #2208).
  */
 export function buildDefaultCompetitionSettings(
   input: DefaultCompetitionSettingsInput
@@ -84,7 +83,7 @@ export function buildDefaultCompetitionSettings(
   }
 
   if (isOlympicWeapon(weapon) || weapon === Weapon.LASER) {
-    // Scores par défaut selon la catégorie (#1826) ; Sabre Laser : 25 / 25 (#2208)
+    // Scores par défaut selon la catégorie (#1826)
     const scores = getDefaultMaxScores(weapon, category);
     return {
       ...BASE,
@@ -101,8 +100,7 @@ export function buildDefaultCompetitionSettings(
 /**
  * Réglages de repli d'une épreuve sans réglages enregistrés (#2013, étape A).
  * Source unique pour le repli base (rowMappers) et la fenêtre de propriétés :
- * armes olympiques → touches selon la catégorie ; Sabre Laser → 25 / 25 (#2208) ;
- * arme « À la carte » → 5 / 21 (comportement existant).
+ * armes olympiques et Sabre Laser → getDefaultMaxScores ; autres armes → 5 / 21.
  * Pas de petite finale par défaut, comme à la création.
  */
 export function getFallbackCompetitionSettings(

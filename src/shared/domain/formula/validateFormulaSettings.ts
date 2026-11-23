@@ -6,9 +6,11 @@
  * Licensed under GPL-3.0
  */
 import type { CompetitionSettings, CustomFormulaConfig, FormulaPhaseNode } from '../../types';
-import { Weapon } from '../../types';
 import { MAX_POOL_ROUNDS } from './formulaDraft';
-import { LASER_MAX_SCORE_LIMITS } from './laserMaxScores';
+import { FormulaScope, MAX_SCORE_LIMITS, maxScoreLimits } from './laserMaxScores';
+
+export { maxScoreLimits };
+export type { FormulaScope };
 
 export interface FormulaIssue {
   /** Réglage en cause (chemin pointé : customFormula.phases[0].config.maxScore) */
@@ -18,32 +20,12 @@ export interface FormulaIssue {
 
 /** Bornes de la formule : une seule déclaration (alignée sur database/validation.ts) */
 export const FORMULA_LIMITS = {
-  poolMaxScore: { min: 1, max: 15 },
-  tableMaxScore: { min: 1, max: 50 },
+  poolMaxScore: MAX_SCORE_LIMITS.pool,
+  tableMaxScore: MAX_SCORE_LIMITS.table,
   poolRounds: { min: 1, max: MAX_POOL_ROUNDS },
   poolSize: { min: 3, max: 64 },
   timerSeconds: { min: 1, max: 3600 },
 } as const;
-
-/** Épreuve dont la formule est jugée : bornes du score maximum */
-export interface FormulaScope {
-  weapon?: Weapon | string;
-  isTeamEvent?: boolean;
-}
-
-/**
- * Bornes du score maximum de poule et de tableau. Sabre Laser individuel : 15 à 50, défaut 25
- * (score saisi au-delà de 15 : touche finale en cible C, sortie, cartons ; provisoire, #2208).
- * Autres armes et épreuves par équipes (relais) : FORMULA_LIMITS (poule 1-15, tableau 1-50).
- */
-export function maxScoreLimits(scope: FormulaScope = {}): {
-  pool: { min: number; max: number };
-  table: { min: number; max: number };
-} {
-  if (scope.weapon === Weapon.LASER && !scope.isTeamEvent)
-    return { pool: LASER_MAX_SCORE_LIMITS, table: LASER_MAX_SCORE_LIMITS };
-  return { pool: FORMULA_LIMITS.poolMaxScore, table: FORMULA_LIMITS.tableMaxScore };
-}
 
 const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
 const PHASE_TYPES = ['pool_round', 'direct_elimination', 'classification'];
@@ -120,7 +102,6 @@ function checkCustomFormula(out: FormulaIssue[], f: CustomFormulaConfig) {
 /**
  * Écarts de la formule. `fields` : seuls les réglages modifiés sont jugés (une épreuve 2.0 aux
  * réglages anciens hors bornes reste modifiable pour le reste, ADR-0012) ; absent : tout.
- * `scope` : arme et épreuve par équipes, bornes du score maximum (`maxScoreLimits`).
  */
 export function validateFormulaSettings(
   settings: Partial<CompetitionSettings>,

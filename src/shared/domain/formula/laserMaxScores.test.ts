@@ -2,7 +2,12 @@
  * Lecture des réglages du Sabre Laser créés avec l'ancien repli 5 / 21 (#2208).
  */
 import { describe, it, expect } from 'vitest';
-import { LASER_DEFAULT_MAX_SCORE, readLaserMaxScores } from './laserMaxScores';
+import {
+  LASER_DEFAULT_MAX_SCORE,
+  LASER_MAX_SCORE_LIMITS,
+  readLaserMaxScores,
+} from './laserMaxScores';
+import { LASER_SCORE_LIMIT } from '../match/matchEndValidation';
 import { Weapon } from '../../types';
 
 const s = (pool?: number, table?: number) => ({
@@ -14,6 +19,7 @@ describe('readLaserMaxScores', () => {
   it('ancien repli 5 / 21 : lu 25 / 25', () => {
     expect(readLaserMaxScores(Weapon.LASER, false, s(5, 21))).toEqual(s(25, 25));
     expect(LASER_DEFAULT_MAX_SCORE).toBe(25);
+    expect(LASER_MAX_SCORE_LIMITS.min).toBe(LASER_SCORE_LIMIT);
   });
 
   it('poule ou tableau sous 15 : lu 25 ; tableau 21 seul conservé', () => {

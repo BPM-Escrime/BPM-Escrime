@@ -177,8 +177,7 @@ export function validatePoolScore(input: {
   const { scoreA, scoreB, maxScore } = input;
   if (![scoreA, scoreB].every(s => Number.isInteger(s) && s >= 0)) return 'score_invalid';
   if (input.priority && !input.tieByVictory) return 'priority_not_allowed';
-  // Score max 0 = illimité (comme l'écran). Sabre Laser : réglage de l'épreuve, 25 par défaut
-  // (touche finale en cible C, sortie, cartons ; provisoire, #2208)
+  // Score max 0 = illimité (comme l'écran)
   if (!input.specialStatus && maxScore > 0 && (scoreA > maxScore || scoreB > maxScore))
     return 'score_above_max';
   // Égalité au score max impossible au règlement (o.17), hors Sabre Laser
