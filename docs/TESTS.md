@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 147 | 1241 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 130 | 696 |
+| `src/renderer/components/` | 131 | 702 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 414 |
 | `src/renderer/api/` | 10 | 45 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 36 | 384 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **596** | **4576** |
+| **Total** | **597** | **4582** |
 
-Unitaires : 578 fichiers, 4526 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -6855,6 +6855,20 @@ Unitaires : 578 fichiers, 4526 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - exclusion : question carton noir, Oui =\> blackCard true
   - exclusion : Non =\> blackCard false
   - tireur absent désactivé ; Annuler appelle onCancel
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/common/TimeInput.test.tsx</code> — 6 tests</summary>
+
+- **conversions**
+  - splitTime
+  - to12h / from12h
+- **TimeInput**
+  - 24 h par défaut
+  - 24 h : heures 00–23, pas de AM/PM
+  - AM/PM : affiche 03 PM, renvoie toujours HH:MM en 24 h
+  - vider l’heure vide la valeur
 
 </details>
 
