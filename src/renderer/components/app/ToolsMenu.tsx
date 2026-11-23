@@ -1,12 +1,12 @@
 /**
- * BPM - Escrime - Menu « Outils » de l'en-tête (QR Wi-Fi, télécommande TV, visite
- * guidée, démo). Extrait d'App.tsx (#1897) : état d'ouverture, position et clic extérieur.
+ * BPM - Escrime - Menu « Outils » de l'en-tête (QR Wi-Fi, télécommande TV, plan de salle,
+ * feuille de route, visite guidée, démo). Extrait d'App.tsx (#1897) : état d'ouverture, position et clic extérieur.
  * Licensed under GPL-3.0
  */
 
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutGrid, PlayCircle, Sparkles, Tv2, Wifi, Wrench } from 'lucide-react';
+import { FileText, LayoutGrid, PlayCircle, Sparkles, Tv2, Wifi, Wrench } from 'lucide-react';
 import { Button } from '../common/Button';
 import { useTranslation } from '../../hooks/useTranslation';
 import { restartGuidedTour } from '../guidedTourFlags';
@@ -15,6 +15,7 @@ interface ToolsMenuProps {
   onWifiQR: () => void;
   onTVRemote: () => void;
   onArenaPlanner: () => void;
+  onRoadmap: () => void;
   onStartDemo: () => void;
 }
 
@@ -22,6 +23,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
   onWifiQR,
   onTVRemote,
   onArenaPlanner,
+  onRoadmap,
   onStartDemo,
 }) => {
   const { t } = useTranslation();
@@ -84,6 +86,9 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
               onClick={pick(onArenaPlanner)}
             >
               <LayoutGrid size={15} /> {t('app.arena_planner')}
+            </button>
+            <button className="comp-header-dropdown-item tools-menu-item" onClick={pick(onRoadmap)}>
+              <FileText size={15} /> {t('app.roadmap')}
             </button>
             <button
               className="comp-header-dropdown-item tools-menu-item"

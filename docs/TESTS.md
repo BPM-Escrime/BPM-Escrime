@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 272 |
-| `src/main/` | 138 | 1189 |
+| `src/main/` | 139 | 1194 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 124 | 673 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 31 | 311 |
+| `src/shared/domain/` | 31 | 317 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **575** | **4425** |
+| **Total** | **576** | **4436** |
 
-Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 560 fichiers, 4390 tests. E2E : 16 fichiers, 46 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3272,6 +3272,17 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - aucune opération club:\*, station:\* ou remote:\* n’est exposée à l’agent
 - **STATION\_PERMISSIONS (pas de journal, pas de réseau)**
   - couvre exactement les droits club:, station: et remote: du contrat
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/arenaPlan.test.ts</code> — 5 tests</summary>
+
+- aucun plan : null
+- saveArenaPlan puis getArenaPlan : plan relu à l’identique ; null l’efface
+- dryRun : rien n’est écrit
+- le plan survit aux écritures de l’état de session et des réglages
+- plan invalide ou épreuve inconnue refusés
 
 </details>
 
@@ -8677,7 +8688,7 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 46 tests</summary>
+<summary><code>src/shared/domain/arena/arenaPlanner.test.ts</code> — 52 tests</summary>
 
 - **computeArenaGeometry**
   - place les lignes de mise en garde à 2 m du centre, soit 4 m entre elles
@@ -8734,6 +8745,14 @@ Unitaires : 559 fichiers, 4379 tests. E2E : 16 fichiers, 46 tests (comptage stat
   - renvoie null si la salle est trop petite
   - renvoie null si une arène tombe sur une zone bloquée
   - gère zéro arène
+- **équipements de salle (catalogue du menu déroulant)**
+  - identifiants uniques, tailles positives
+  - vestiaires : zone bloquée à la taille du catalogue, dans la salle
+  - salle plus petite que l’équipement : taille bornée à la salle
+- **placeOnFreeSpot**
+  - place libre : inchangé
+  - place occupée : décalé à côté, sans chevauchement
+  - zone de sécurité d’une arène évitée
 
 </details>
 
