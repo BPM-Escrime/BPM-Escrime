@@ -48,6 +48,7 @@
                       ./tsconfig.json
                       ./webpack.main.config.js
                       ./webpack.renderer.config.js
+                      ./webpack.dt.config.js
                     ];
                   }
                 } $out
