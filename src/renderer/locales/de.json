@@ -4395,6 +4395,8 @@
     "add_room": "Halle hinzufügen",
     "remove_room": "Halle entfernen",
     "item_text": "Angezeigter Text",
+    "item_color": "Farbe",
+    "item_color_reset": "Standardfarbe",
     "overview": "Übersicht",
     "overview_hint": "Halle ziehen, um sie zu verschieben (Pfeiltasten); Doppelklick oder Eingabe öffnet sie.",
     "overview_room_line": "{{name}}: {{width}} × {{length}} m, {{count}} Arena(en)",

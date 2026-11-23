@@ -220,6 +220,23 @@
   fill: #fdba74;
 }
 
+.arena-planner-color-field {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.arena-planner-color-input {
+  display: block;
+  width: 48px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 4px);
+  background: none;
+  cursor: pointer;
+}
+
 .arena-planner-item-selected {
   stroke: #2563eb;
   stroke-width: 0.15;
