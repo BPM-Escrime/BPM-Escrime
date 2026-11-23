@@ -482,6 +482,7 @@
     "uncheck_all": "Uncheck all",
     "view": "View",
     "default": "Not specified",
+    "optional": "Optional",
     "save_and_add": "Save and add",
     "remove": "Remove",
     "move_up": "Move up",
@@ -4658,5 +4659,11 @@
     "exported": "Document exported",
     "preview_hint": "A4 preview: click a section to edit it",
     "content_note": "Pre-filled content is written in French (FFE rules). Draft saved automatically on this computer."
+  },
+  "placeSearch": {
+    "loading": "Searching…",
+    "empty": "No place found",
+    "offline": "Search unavailable (no connection)",
+    "credit": "Data © OpenStreetMap, IGN"
   }
 }

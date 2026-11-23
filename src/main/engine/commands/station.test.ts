@@ -73,6 +73,22 @@ function stationPort(): StationPort {
       regenerateToken: async () => ({ ...mcpStatus, token: 'nouveau' }),
       log: () => [{ at: '2026-12-06T09:00:00Z', method: 'tools/call', ok: true, ms: 3 }],
     },
+    places: {
+      search: async (query, language) => ({
+        suggestions: [
+          {
+            name: `${query} (${language})`,
+            address: '',
+            city: 'Vitré',
+            postcode: '35500',
+            lat: 48.12,
+            lon: -1.2,
+            source: 'osm',
+          },
+        ],
+        unavailable: false,
+      }),
+    },
     dayStrips: createDayStripService({ db, getServer: () => undefined }),
   };
 }
@@ -534,8 +550,24 @@ describe('contrat du poste', () => {
     n => contract[n].permission === 'station:admin' && !(n in fileOperations)
   );
 
-  it('45 opérations, chacune avec son gestionnaire', () => {
-    expect(ops).toHaveLength(45);
+  it('46 opérations, chacune avec son gestionnaire', () => {
+    expect(ops).toHaveLength(46);
     for (const name of ops) expect(typeof handlers[name], name).toBe('function');
+  });
+});
+
+describe('listPlaceSuggestions (docs/adr/0026)', () => {
+  it('texte nettoyé transmis au port, langue par défaut fr', async () => {
+    const r = await op('listPlaceSuggestions', { query: '  salle   omnisports ' });
+    expect(r.unavailable).toBe(false);
+    expect(r.suggestions[0].name).toBe('salle omnisports (fr)');
+  });
+
+  it('texte trop court : refus du contrat ; poste sans service : indisponible', async () => {
+    await refusal(op('listPlaceSuggestions', { query: 'ab' }));
+    expect(await op('listPlaceSuggestions', { query: 'gymnase' }, { db })).toEqual({
+      suggestions: [],
+      unavailable: true,
+    });
   });
 });

@@ -482,6 +482,7 @@
     "uncheck_all": "Cancelar Todos",
     "view": "Ver",
     "default": "No Especificado",
+    "optional": "Opcional",
     "save_and_add": "Guardar y añadir",
     "remove": "Quitar",
     "move_up": "Subir",
@@ -4658,5 +4659,11 @@
     "exported": "Documento exportado",
     "preview_hint": "Vista previa A4: haga clic en una sección para editarla",
     "content_note": "El contenido prerrellenado está redactado en francés (reglamentos FFE). El borrador se guarda automáticamente en este equipo."
+  },
+  "placeSearch": {
+    "loading": "Buscando…",
+    "empty": "Ningún lugar encontrado",
+    "offline": "Búsqueda no disponible (sin conexión)",
+    "credit": "Datos © OpenStreetMap, IGN"
   }
 }

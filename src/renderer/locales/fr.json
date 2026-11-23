@@ -482,6 +482,7 @@
     "uncheck_all": "Tout dépointer",
     "view": "Voir",
     "default": "Non spécifié",
+    "optional": "Optionnel",
     "save_and_add": "Enregistrer et ajouter",
     "remove": "Retirer",
     "move_up": "Monter",
@@ -4658,5 +4659,11 @@
     "exported": "Document exporté",
     "preview_hint": "Aperçu A4 : cliquez sur une section pour la modifier",
     "content_note": "Le contenu prérempli est rédigé en français (règlements FFE). Brouillon gardé automatiquement sur ce poste."
+  },
+  "placeSearch": {
+    "loading": "Recherche…",
+    "empty": "Aucun lieu trouvé",
+    "offline": "Recherche indisponible (pas de connexion)",
+    "credit": "Données © OpenStreetMap, IGN"
   }
 }
