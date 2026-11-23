@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 271 |
-| `src/main/` | 147 | 1241 |
+| `src/main/` | 148 | 1245 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 131 | 702 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 36 | 384 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **597** | **4582** |
+| **Total** | **598** | **4586** |
 
-Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 580 fichiers, 4536 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3318,9 +3318,10 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/engine/commands/competitionSetup.test.ts</code> — 7 tests</summary>
 
 - createCompetition : défauts du moteur, réglages choisis fusionnés, clé inconnue et valeur invalide refusées
+- createCompetition : Sabre Laser individuel et par équipes créés (réglages de repli)
 - updateCompetitionDetails : titre, date, lieu ; entrée stricte
 - updateCompetitionSettings : fusion, serveur distant prévenu, arme figée après le tirage
 - deleteCompetition : saisie distante arrêtée, épreuve supprimée
@@ -3537,6 +3538,15 @@ Unitaires : 579 fichiers, 4532 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **fichiers écrits par l’agent**
   - dossier hors périmètre refusé, lien vers l’extérieur compris
   - pas d’écrasement sans accord ; remplacement atomique
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/signatures.test.ts</code> — 3 tests</summary>
+
+- matchs terminés exigés, puis feuille verrouillée une fois signée par tous
+- tireur hors poule, image non PNG : refus
+- match de poule refusé, match inconnu refusé
 
 </details>
 
