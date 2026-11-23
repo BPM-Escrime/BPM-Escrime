@@ -41,7 +41,6 @@ function makeCtx(opts: {
   current: ArenaMatch | null;
   snapshot?: LastFinishedSnapshot;
   queue?: ArenaMatch[];
-  dbThrows?: boolean;
 }) {
   const arena = { id: 'a1', currentMatch: opts.current, status: 'ready' };
   const arenaMatchQueue = new Map<string, ArenaMatch[]>([['a1', opts.queue ?? []]]);
@@ -49,11 +48,7 @@ function makeCtx(opts: {
   const arenaTouches = new Map();
   const arenaExits = new Map();
   const arenaEventTimes = new Map();
-  const db = {
-    clearArenaEvents: vi.fn(() => {
-      if (opts.dbThrows) throw new Error('boom');
-    }),
-  };
+  const db = { clearArenaEvents: vi.fn() };
   const assignMatchToArena = vi.fn((_id: string, m: ArenaMatch) => {
     arena.currentMatch = m;
   });
@@ -93,7 +88,8 @@ describe('recallPrevMatch', () => {
       snapshot,
     });
     expect(recallPrevMatch(ctx, 'a1')).toBe(true);
-    expect(db.clearArenaEvents).toHaveBeenCalledWith('m1');
+    // Rien d'effacé en base : la fin suivante remplace les événements d'un bloc (#2175)
+    expect(db.clearArenaEvents).not.toHaveBeenCalled();
     expect(assignMatchToArena).toHaveBeenCalledTimes(1);
     expect(arena.currentMatch).toMatchObject({
       id: 'm1',
@@ -124,12 +120,6 @@ describe('recallPrevMatch', () => {
     expect(assignMatchToArena).not.toHaveBeenCalled();
   });
 
-  it('n’efface rien et ne rend rien si la purge DB échoue', () => {
-    const { ctx, assignMatchToArena } = makeCtx({ current: next, snapshot, dbThrows: true });
-    expect(recallPrevMatch(ctx, 'a1')).toBe(false);
-    expect(assignMatchToArena).not.toHaveBeenCalled();
-  });
-
   it('remet en tête de file un match DE non commencé', () => {
     const de: ArenaMatch = { ...next, id: 'de1', isTableau: true };
     const { ctx, arenaMatchQueue } = makeCtx({ current: de, snapshot, queue: [] });
@@ -144,7 +134,7 @@ describe('recallPrevMatchResult (motif du refus pour la tablette, #2001)', () =>
     expect(recallPrevMatchResult(ctx, 'a1')).toEqual({ ok: true });
   });
 
-  it('renvoie le motif : aucun match, hors fenêtre, combat en cours, purge en échec', () => {
+  it('renvoie le motif : aucun match, hors fenêtre, combat en cours', () => {
     expect(recallPrevMatchResult(makeCtx({ current: next }).ctx, 'a1')).toEqual({
       ok: false,
       reason: 'none',
@@ -162,8 +152,5 @@ describe('recallPrevMatchResult (motif du refus pour la tablette, #2001)', () =>
       ok: false,
       reason: 'in_progress',
     });
-    expect(
-      recallPrevMatchResult(makeCtx({ current: next, snapshot, dbThrows: true }).ctx, 'a1')
-    ).toEqual({ ok: false, reason: 'error' });
   });
 });

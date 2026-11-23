@@ -133,6 +133,8 @@ export function updateArenaScore(
 
   arena.currentMatch.scoreA = scoreA;
   arena.currentMatch.scoreB = scoreB;
+  // Score en cours gardé dans l'état d'arène persistant : repris après redémarrage (#2175)
+  ctx.persistArenaState(arenaId);
 
   // Audit trail si le match est en DB
   try {

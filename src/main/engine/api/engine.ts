@@ -79,7 +79,7 @@ import {
 import { devicesControlHandlers, onStripControlChanged } from '../commands/devicesControl';
 import { competitionStats } from '../commands/competitionStats';
 import { signMatchSheet, signPoolSheet } from '../commands/signatures';
-import { replaceSimulatedMatchEvents } from '../commands/simulation';
+import { recordMatchEvents, replaceSimulatedMatchEvents } from '../commands/simulation';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
 import { readSession } from '../commands/sessionView';
@@ -214,6 +214,7 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   getCompetitionStats: (ctx, input) => competitionStats(ctx, input),
   // Remplissage automatique : données d'essai, rien au journal
   replaceSimulatedMatchEvents: (ctx, input) => replaceSimulatedMatchEvents(ctx, input),
+  recordMatchEvents: (ctx, input) => recordMatchEvents(ctx, input),
   listFencerStats: (ctx, { competitionId }) => {
     getCompetitionOrThrow(ctx, competitionId);
     return ctx.db.getCompetitionFencerStats(competitionId);

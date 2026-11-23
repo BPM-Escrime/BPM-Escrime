@@ -136,3 +136,54 @@ d('événements simulés (replaceSimulatedMatchEvents)', () => {
     ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 });
+
+d('recordMatchEvents (#2175)', () => {
+  const card = (id: string, fencerId: string) => ({
+    id,
+    fencerId,
+    cardType: 'yellow',
+    reason: 'unknown',
+    cardGroup: 1,
+    timestamp: '2026-12-06T10:02:00Z',
+    pointsAwarded: 0,
+  });
+
+  it('remplace les événements du match d’un bloc, chrono compris ; listes vides : effacés', async () => {
+    const { a, b, matchId } = poolWithMatch();
+    const base = { competitionId, matchId, touches: [], exits: [] };
+    await q('recordMatchEvents', {
+      ...base,
+      cards: [card('c1', a.id), card('c2', b.id)],
+      exits: [
+        {
+          id: 'e1',
+          fencerId: b.id,
+          exitType: 'arena_exit',
+          timestamp: '2026-12-06T10:02:30Z',
+          pointsAwarded: 1,
+        },
+      ],
+      timing: { startTime: '2026-12-06T10:00:00Z', endTime: '2026-12-06T10:03:00Z', duration: 180 },
+    });
+    expect(db.getCards(matchId)).toHaveLength(2);
+    expect(durationOf(matchId)).toBe(180);
+    // Fin de match rejouée (correction) : remplacés, pas de doublon ; chrono absent : gardé
+    await q('recordMatchEvents', { ...base, cards: [card('c3', a.id)] });
+    expect(db.getCards(matchId).map(c => c.id)).toEqual(['c3']);
+    expect(durationOf(matchId)).toBe(180);
+    await q('recordMatchEvents', { ...base, cards: [] });
+    expect(db.getCards(matchId)).toHaveLength(0);
+  });
+
+  it('match pas en base : found faux, rien d’écrit', async () => {
+    expect(
+      await q('recordMatchEvents', {
+        competitionId,
+        matchId: 'zz',
+        cards: [],
+        touches: [],
+        exits: [],
+      })
+    ).toEqual({ found: false });
+  });
+});
