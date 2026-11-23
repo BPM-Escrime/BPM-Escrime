@@ -1,7 +1,8 @@
 /**
  * BPM - Escrime - Champs de la feuille de route
  * Chaque champ texte se signale au focus : les pastilles de variables insèrent
- * « {date} », « {debut} »… à la position du curseur du dernier champ actif.
+ * « {date} », « {debut} »… à la position du curseur du dernier champ actif ;
+ * sans champ actif (ou clic droit), la pastille mène au champ qui lui donne sa valeur.
  * Licensed under GPL-3.0
  */
 
@@ -24,7 +25,8 @@ interface ActiveField {
 
 interface FieldFocusApi {
   register: (field: ActiveField) => void;
-  insert: (snippet: string) => void;
+  /** Faux si aucun champ actif : rien n'est inséré */
+  insert: (snippet: string) => boolean;
 }
 
 const FieldFocusContext = createContext<FieldFocusApi | null>(null);
@@ -36,7 +38,7 @@ export const FieldFocusProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, []);
   const insert = useCallback((snippet: string) => {
     const field = active.current;
-    if (!field || !field.el.isConnected) return;
+    if (!field || !field.el.isConnected) return false;
     const { el } = field;
     const start = el.selectionStart ?? el.value.length;
     const end = el.selectionEnd ?? start;
@@ -46,6 +48,7 @@ export const FieldFocusProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       el.focus();
       el.setSelectionRange(start + snippet.length, start + snippet.length);
     });
+    return true;
   }, []);
   return (
     <FieldFocusContext.Provider value={{ register, insert }}>{children}</FieldFocusContext.Provider>
@@ -66,6 +69,8 @@ interface TextFieldProps {
   placeholder?: string;
   type?: 'text' | 'email' | 'date' | 'time';
   className?: string;
+  /** Variables alimentées par ce champ (badges à côté du libellé) */
+  variables?: RoadmapVariable[];
   /** Champ sans libellé visible (tableaux) */
   ariaLabel?: string;
   id?: string;
@@ -86,6 +91,7 @@ export const TextField: React.FC<TextFieldProps> = ({
   className,
   ariaLabel,
   id,
+  variables,
 }) => {
   const focus = useFieldFocus();
   const onFocus = (e: React.FocusEvent<FieldEl>) =>
@@ -119,14 +125,44 @@ export const TextField: React.FC<TextFieldProps> = ({
   if (!label) return control;
   return (
     <label className={`roadmap-field ${className ?? ''}`}>
-      <span className="roadmap-field-label">{label}</span>
+      <FieldLabel label={label} variables={variables} />
       {control}
     </label>
   );
 };
 
-/** Pastilles cliquables : insèrent la variable dans le dernier champ actif ; survol → valeur */
-export const VariableChips: React.FC<{ vars: RoadmapVariables }> = ({ vars }) => {
+/** Libellé d'un champ de l'essentiel, suivi des variables qu'il alimente */
+export const FieldLabel: React.FC<{ label: string; variables?: RoadmapVariable[] }> = ({
+  label,
+  variables,
+}) => {
+  const { t } = useTranslation();
+  const names = variables?.map(v => `{${v}}`) ?? [];
+  return (
+    <span className="roadmap-field-label">
+      {label}
+      {names.length > 0 && (
+        <span
+          className="roadmap-field-vars"
+          title={t('roadmap.field_feeds', { names: names.join(', ') })}
+        >
+          {names.map(n => (
+            <code key={n}>{n}</code>
+          ))}
+        </span>
+      )}
+    </span>
+  );
+};
+
+/**
+ * Pastilles : clic → insertion dans le dernier champ actif, sinon champ source ;
+ * clic droit → champ source ; survol → valeur
+ */
+export const VariableChips: React.FC<{
+  vars: RoadmapVariables;
+  onGoTo?: (name: RoadmapVariable) => void;
+}> = ({ vars, onGoTo }) => {
   const { t } = useTranslation();
   const focus = useFieldFocus();
   const chip = (name: RoadmapVariable) => `{${name}}`;
@@ -145,7 +181,14 @@ export const VariableChips: React.FC<{ vars: RoadmapVariables }> = ({ vars }) =>
             title={`${t(`roadmap.var_${v}`)} : ${vars[v] || t('roadmap.variable_empty')}`}
             // Garde le focus dans le champ : l'insertion lit sa sélection
             onMouseDown={e => e.preventDefault()}
-            onClick={() => focus?.insert(chip(v))}
+            onClick={() => {
+              if (!focus?.insert(chip(v))) onGoTo?.(v);
+            }}
+            onContextMenu={e => {
+              if (!onGoTo) return;
+              e.preventDefault();
+              onGoTo(v);
+            }}
           >
             {chip(v)}
           </button>
