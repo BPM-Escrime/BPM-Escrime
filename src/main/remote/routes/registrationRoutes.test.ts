@@ -1,12 +1,18 @@
 /**
- * Tests de POST /api/register : bornage et nettoyage des champs (#1193).
+ * Tests de POST /api/register : bornage et nettoyage des champs (#1193). Écriture par les
+ * commandes du contrat (registerFencers, checkIn : #2159), exécutées réellement sur un dépôt
+ * simulé.
  */
 import { describe, it, expect, vi } from 'vitest';
 import { registerRegistrationRoutes } from './registrationRoutes';
 
 function setup() {
   const handlers: Record<string, (req: any, res: any) => unknown> = {};
-  const addFencer = vi.fn(() => ({ id: 'f1', ref: 1 }));
+  const addFencer = vi.fn((_c: string, f: Record<string, unknown>) => ({
+    ...f,
+    id: 'f1',
+    ref: 1,
+  }));
   const ctx: any = {
     app: {
       get: vi.fn(),
@@ -18,7 +24,12 @@ function setup() {
     },
     registrationEnabled: true,
     session: { competitionId: 'c1' },
-    db: { addFencer },
+    db: {
+      addFencer,
+      getCompetition: (id: string) => (id === 'c1' ? { id } : null),
+      getFencersByCompetition: () => [],
+      transaction: <T>(fn: () => T) => fn(),
+    },
     getClientIp: () => '1.1.1.1',
     checkRegistrationRateLimit: () => true,
   };
@@ -63,6 +74,11 @@ describe('POST /api/register', () => {
       'c1',
       expect.objectContaining({ lastName: "D'BARTAGNAN", firstName: 'Jean', club: 'AS & Co' })
     );
+    // Par la commande registerFencers : non pointé, nationalité par défaut
+    expect(addFencer).toHaveBeenCalledWith(
+      'c1',
+      expect.objectContaining({ status: 'N', nationality: 'FRA' })
+    );
   });
 
   it('photo conservée seulement avec consentement coché (RGPD, #1882)', () => {
@@ -105,7 +121,12 @@ describe('pointage autonome /api/competitions/:id/self-checkin (#1858)', () => {
         },
       },
       session: { competitionId: 'c1' },
-      db: { getFencersByCompetition: () => [fencer], updateFencer },
+      db: {
+        getFencersByCompetition: () => [fencer],
+        getCompetition: (id: string) => (id === 'c1' ? { id } : null),
+        transaction: <T>(fn: () => T) => fn(),
+        updateFencer,
+      },
       getClientIp: () => '1.1.1.1',
       checkLoginAllowed: () => null,
       sendLoginLimited: vi.fn(),

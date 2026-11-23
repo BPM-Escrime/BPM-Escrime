@@ -99,6 +99,29 @@ d('inscription des arbitres (docs/adr/0018)', () => {
     });
   });
 
+  it('addRefereeComment (#2159) : commentaire relu par listRefereeComments, arbitre exigé', async () => {
+    const [a] = (await call('registerReferees', { referees: [{ lastName: 'Dupont' }] })).referees;
+    const saved = await call('addRefereeComment', {
+      refereeId: a.id,
+      comment: '  Bonne gestion du combat  ',
+      author: 'Formateur',
+      matchLabel: 'Poule 1 — match 3',
+    });
+    expect(saved).toMatchObject({
+      refereeId: a.id,
+      comment: 'Bonne gestion du combat',
+      author: 'Formateur',
+      matchLabel: 'Poule 1 — match 3',
+    });
+    expect(await call('listRefereeComments', { refereeId: a.id })).toEqual([saved]);
+    await expect(
+      call('addRefereeComment', { refereeId: 'zz', comment: 'x' })
+    ).rejects.toMatchObject({ code: 'referee_not_found' });
+    await expect(
+      call('addRefereeComment', { refereeId: a.id, comment: '  ' })
+    ).rejects.toMatchObject({ code: 'invalid_input' });
+  });
+
   it('unregisterReferee : refusé pour l’arbitre d’un match en cours', async () => {
     const [a] = (await call('registerReferees', { referees: [{ lastName: 'Dupont' }] })).referees;
     db.saveSessionState(competitionId, {

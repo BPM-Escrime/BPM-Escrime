@@ -144,6 +144,31 @@ export function setRefereeAvailability(
   return { dryRun: !!input.dryRun, status, updated: targets.length, unknown };
 }
 
+/**
+ * Commentaire d'un formateur sur un arbitre (espace formateurs, #2159) : hors journal de
+ * l'épreuve (avis, pas un fait sportif) ; arbitre de l'épreuve exigé.
+ */
+export function addRefereeComment(
+  ctx: CommandContext,
+  input: {
+    competitionId: string;
+    refereeId: string;
+    comment: string;
+    author?: string | null;
+    matchLabel?: string | null;
+  }
+) {
+  const comp = getCompetitionOrThrow(ctx, input.competitionId);
+  const r = refereeOf(ctx, comp.id, input.refereeId);
+  return ctx.db.addRefereeComment(
+    comp.id,
+    r.id,
+    input.comment,
+    input.author ?? null,
+    input.matchLabel ?? null
+  );
+}
+
 export function unregisterReferee(
   ctx: CommandContext,
   input: { competitionId: string; refereeId: string; dryRun?: boolean }
