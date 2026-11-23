@@ -192,6 +192,15 @@ d('outils MCP — séances du club', () => {
         present: true,
       })
     ).toMatch(/Membre inconnu/);
+    // Commandes du contrat en une transaction (#2134) : un membre refusé, aucun pointé
+    expect(
+      await ko('check_in_club_members', {
+        sessionId: s.id,
+        memberIds: [a.id, stranger.id],
+        present: true,
+      })
+    ).toMatch(/Membre inconnu/);
+    expect((await ok('get_club_session', { sessionId: s.id })).attendeeCount).toBe(1);
   });
 
   it('met à jour le bilan et les notes ; refuse une mise à jour vide', async () => {
