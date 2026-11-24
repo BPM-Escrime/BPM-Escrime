@@ -39,7 +39,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0027](0027-choregraphies-document-bibliotheque.md) | Une chorégraphie est un document versionné de la bibliothèque du poste (table `choreographies`, migration 51), compatible `.chore`                                            | Proposée            |
 | [0028](0028-cartons-equipe-moteur.md)               | Les cartons des épreuves par équipes (carton E, cartons des relais) passent par le moteur : `giveTeamCard`, `giveRelayCard`, journalisés                                      | Acceptée            |
 | [0029](0029-multi-poste-roles-bail.md)              | Multi-poste : comptes par fonction, droits `checkin:write` et `structure:write`, bail par épreuve en mémoire du moteur                                                        | Proposée            |
-| [0030](0030-services-de-bureau.md)                  | Fonctions de l'application de bureau (menu, mise à jour, fenêtre, langue, impression native, choix de dossier) derrière `PlatformServices.desktop`, absent dans le navigateur | Proposée            |
+| [0030](0030-services-de-bureau.md)                  | Fonctions de l'application de bureau (menu, mise à jour, fenêtre, langue, impression native, choix de dossier) derrière `PlatformServices.desktop`, absent dans le navigateur | Acceptée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.
