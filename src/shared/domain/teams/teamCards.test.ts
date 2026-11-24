@@ -260,12 +260,22 @@ describe('relayCardFor : refus', () => {
     });
   });
 
-  it('rencontre terminée ou décidée', () => {
-    const done = { matchId: 'm', finished: false, relays: relays(3) };
-    expect(relayCardFor(input({ meeting: done, relayId: 'r3' }))).toEqual({
+  it('rencontre terminée : dernier relais tant que la rencontre suivante n’a pas commencé (#2213)', () => {
+    const done = { matchId: 'm', finished: true, relays: relays(3) };
+    const after = relayCardFor(input({ meeting: done, relayId: 'r3' }));
+    expect(after.ok && after.card.relayId).toBe('r3');
+    expect(relayCardFor(input({ meeting: done, relayId: 'r2' }))).toEqual({
       ok: false,
       code: 'match_finished',
     });
+    const next = { ...done, nextMatchStarted: true };
+    expect(relayCardFor(input({ meeting: next, relayId: 'r3' }))).toEqual({
+      ok: false,
+      code: 'match_finished',
+    });
+  });
+
+  it('rencontre décidée avant son dernier relais (exclusion, abandon)', () => {
     const decided = { matchId: 'm', finished: true, relays: relays(1) };
     expect(relayCardFor(input({ meeting: decided, relayId: 'r2' }))).toEqual({
       ok: false,
@@ -296,7 +306,12 @@ describe('relayAcceptsCard (§ 5)', () => {
   it('relais futur, inconnu, rencontre terminée', () => {
     expect(relayAcceptsCard(relays(0), 'r2')).toBe('relay_out_of_order');
     expect(relayAcceptsCard(relays(0), 'x')).toBe('relay_not_found');
-    expect(relayAcceptsCard(relays(3), 'r3')).toBe('match_finished');
+    expect(relayAcceptsCard(relays(3), 'r2')).toBe('match_finished');
+  });
+
+  it('rencontre terminée : dernier relais accepté jusqu’au début de la rencontre suivante', () => {
+    expect(relayAcceptsCard(relays(3), 'r3')).toBe('ok');
+    expect(relayAcceptsCard(relays(3), 'r3', true)).toBe('match_finished');
   });
 });
 

@@ -33,6 +33,7 @@ import { adjustRanking, clearTableau, skipPools } from '../commands/ranking';
 import { splitOffGroup } from '../commands/splitOff';
 import { teamHandlers, teamsState } from '../commands/teams';
 import { teamRelayHandlers } from '../commands/teamRelays';
+import { teamCardHandlers } from '../commands/teamCards';
 import { rebuildCompetitionState } from '../commands/rebuild';
 import {
   fencerDTO,
@@ -297,6 +298,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   // Épreuves par équipes : inscription, poules, relais, tableau (docs/adr/0024)
   ...teamHandlers,
   ...teamRelayHandlers,
+  // Cartons des épreuves par équipes (docs/adr/0028)
+  ...teamCardHandlers,
   onStripControlChanged,
 };
 

@@ -137,6 +137,7 @@
       .tie-priority-buttons button { flex: 1; }
       .tie-priority-buttons button.chosen { background: var(--tw-amber-400); color: var(--slate-900); font-weight: 700; }
       .relay-live { text-align: center; font-size: 0.85rem; color: var(--tw-slate-300); }
+      .team-out { text-align: center; font-weight: 700; color: var(--tw-red-400); }
       .match-complete {
         text-align: center;
         font-size: 1rem;
@@ -170,6 +171,7 @@
         <div class="score" id="score-b">0</div>
       </div>
       <div class="relay-live" id="relay-live" style="display: none"></div>
+      <div class="team-out" id="team-out" hidden></div>
       <div class="tie-priority" id="tie-priority" hidden>
         <div class="tie-priority-label" data-i18n="referee.priority_applies">Minute prioritaire : le tireur tiré gagne si aucune touche</div>
         <div class="tie-priority-buttons">
@@ -429,6 +431,16 @@
 
           renderTiePriority();
 
+          // Équipe exclue (noir individuel, o.99.7.b) ou retirée : issue décidée par le moteur
+          const teamOut = document.getElementById('team-out');
+          const gone = (lastState.withdrawnTeams || []).map(w =>
+            tk(w.reason === 'abandon' ? 'team.team_abandoned' : 'team.team_excluded', {
+              team: w.teamId === lastState.teamAId ? lastState.teamAName : lastState.teamBName,
+            })
+          );
+          teamOut.hidden = !gone.length;
+          teamOut.textContent = gone.join(' · ');
+
           const advanceBtn = document.getElementById('advance-bout');
           advanceBtn.disabled = !lastState.currentBout;
           advanceBtn.classList.toggle('ready', !!lastState.boutComplete);
@@ -490,7 +502,8 @@
           render();
         });
 
-        // Fin de relais refusée par le poste DT (docs/adr/0024) : rien d'enregistré, motif affiché
+        // Fin de relais ou carton refusé par le poste DT (docs/adr/0024, 0028) : rien
+        // d'enregistré, motif affiché
         socket.on('team_arena_error', body => {
           showToast(window.errorText ? window.errorText(body, tk('referee.error_save')) : tk('referee.error_save'));
         });

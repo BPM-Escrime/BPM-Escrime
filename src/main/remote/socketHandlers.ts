@@ -4,16 +4,20 @@
  * Licensed under GPL-3.0
  */
 import type { Socket } from 'socket.io';
-import { CardReason } from '../../shared/types';
-import { randomUUID } from 'crypto';
-import { buildCard, getAvailableReasons } from '../../shared/domain/penalties/cards';
+import type { CardReason } from '../../shared/types';
 import { normalizeIp, isLoopbackAddress } from './network';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { logger, LogCategory } from '../../shared/services/logger';
 import { recordRemoteEvent } from './remoteEvents';
 import { isCyranoMasterOnline } from './cyranoLock';
-import { advanceTeamBout, broadcastTeamArena, teamArenaElapsedSec } from './teamArena';
-import { teamRefusal } from './teamCommand';
+import {
+  advanceTeamBout,
+  broadcastTeamArena,
+  giveTeamArenaCard,
+  giveTeamArenaRelayCard,
+  teamArenaElapsedSec,
+} from './teamArena';
+import { cardRefusal, teamRefusal } from './teamCommand';
 
 type S = RemoteScoreServer;
 
@@ -367,73 +371,41 @@ export function setupSocketHandlers(ctx: SocketHandlersContext): void {
       if (!outcome.ok) socket.emit('team_arena_error', teamRefusal(outcome));
     });
 
-    // Carton d'équipe "E" (traçabilité, pas d'impact automatique sur le score).
+    // Carton d'équipe « E » (arène Sabre Laser) par giveTeamCard (docs/adr/0028, lot C3) :
+    // équipe de la rencontre vérifiée par le moteur, noir toujours accepté (#2186 :
+    // `blackCardEnabled` ne fait que masquer le bouton). Refus : motif rendu à la tablette.
     socket.on(
       'team_card',
       (data: { arenaId: string; teamId: string; type: 'white' | 'yellow' | 'red' | 'black' }) => {
         if (!ctx.checkSocketArenaAuth(socket, data?.arenaId)) return;
+        if (typeof data.teamId !== 'string') return;
         if (!['white', 'yellow', 'red', 'black'].includes(data.type)) return;
-        const state = ctx.teamArenaState.get(data.arenaId);
-        if (!state) return;
+        if (!ctx.teamArenaState.get(data.arenaId)) return;
         if (teamDeviceLocked(data.arenaId, 'team_card')) return;
-        if (
-          data.type === 'black' &&
-          ctx.db.getCompetition(state.competitionId)?.settings?.blackCardEnabled !== true
-        ) {
-          return; // carton noir désactivé sur cette compétition
-        }
-        const { id } = ctx.db.createTeamMatchCard(
-          state.matchId,
-          data.teamId,
-          data.type,
-          'late_designation'
-        );
-        state.cards.push({
-          id,
-          teamId: data.teamId,
-          type: data.type,
-          createdAt: new Date().toISOString(),
-        });
-        broadcastTeamArena(ctx, data.arenaId);
+        const outcome = giveTeamArenaCard(ctx, data.arenaId, data.teamId, data.type, 'tablet');
+        if (!outcome.ok) socket.emit('team_arena_error', cardRefusal(outcome));
       }
     );
 
-    // Carton individuel du tireur en piste (relais) : escalade identique à l'application,
-    // persisté en base (#1086). Pas d'impact automatique sur le score.
+    // Carton individuel du tireur en piste (relais) par giveRelayCard avec le motif : escalade
+    // sur la rencontre par le moteur ; noir → tireur retiré et, en escrime olympique, équipe
+    // exclue (o.99.7.b) dans la même transaction. Pas d'effet sur le score (ADR-0028 § 3).
     socket.on(
       'team_fencer_card',
       (data: { arenaId: string; side: 'A' | 'B'; reason: CardReason }) => {
         if (!ctx.checkSocketArenaAuth(socket, data?.arenaId)) return;
         if (data.side !== 'A' && data.side !== 'B') return;
-        const state = ctx.teamArenaState.get(data.arenaId);
-        if (!state) return;
+        if (typeof data.reason !== 'string') return;
+        if (!ctx.teamArenaState.get(data.arenaId)) return;
         if (teamDeviceLocked(data.arenaId, 'team_fencer_card')) return;
-        if (!getAvailableReasons(state.weapon).includes(data.reason)) return;
-        const bout = state.bouts[state.currentBoutIndex];
-        if (!bout) return;
-        const fencerId = data.side === 'A' ? bout.fencerAId : bout.fencerBId;
-        const previous = ctx.db
-          .getTeamBoutCards(state.matchId)
-          .map(c => c.card)
-          .filter(c => c.fencerId === fencerId);
-        const card = buildCard({
-          id: randomUUID(),
-          at: new Date(),
-          matchId: state.matchId,
-          fencerId,
-          reason: data.reason,
-          previousCards: previous,
-          weapon: state.weapon,
-        });
-        ctx.db.createTeamBoutCard(bout.id, card);
-        state.fencerCards.push({
-          id: card.id,
-          boutId: bout.id,
-          fencerId,
-          type: card.type,
-          reason: card.reason,
-        });
-        broadcastTeamArena(ctx, data.arenaId);
+        const outcome = giveTeamArenaRelayCard(
+          ctx,
+          data.arenaId,
+          data.side,
+          { reason: data.reason },
+          'tablet'
+        );
+        if (!outcome.ok) socket.emit('team_arena_error', cardRefusal(outcome));
       }
     );
 

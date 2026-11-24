@@ -37,10 +37,15 @@ import {
   type TeamTableauPlan,
 } from '../../../shared/domain/teams/teamTableau';
 import { projectCompetition } from '../../../shared/domain/journal/projectCompetition';
+import { relayPenaltyTouches } from '../../../shared/domain/teams/teamCards';
+import {
+  involvesWithdrawn,
+  withoutWithdrawnTeams,
+} from '../../../shared/domain/teams/teamWithdrawal';
 import type { NewJournalEvent } from '../../../database/repos/eventLogRepo';
 import { CommandError, type CommandContext } from './context';
 import { EVENT, readJournal, recordEvents } from './eventLog';
-import { changed, teamCompetitionOrThrow } from './teams';
+import { changed, teamCompetitionOrThrow, withdrawnTeams } from './teams';
 
 type Ops = typeof teamRelayOperations;
 type Handler<N extends keyof Ops> = (
@@ -48,11 +53,15 @@ type Handler<N extends keyof Ops> = (
   input: z.output<Ops[N]['input']>
 ) => z.output<Ops[N]['output']>;
 
-type MatchRow = NonNullable<ReturnType<CommandContext['db']['teams']['getTeamMatch']>>;
+export type MatchRow = NonNullable<ReturnType<CommandContext['db']['teams']['getTeamMatch']>>;
 
 const iso = (now: Date, offsetMs = 0) => new Date(now.getTime() + offsetMs).toISOString();
 
-function matchOrThrow(ctx: CommandContext, competitionId: string, matchId: string): MatchRow {
+export function matchOrThrow(
+  ctx: CommandContext,
+  competitionId: string,
+  matchId: string
+): MatchRow {
   const m = ctx.db.teams.getTeamMatch(matchId);
   if (!m || m.competitionId !== competitionId) {
     throw new CommandError('match_not_found', `Rencontre introuvable : ${matchId}`);
@@ -72,7 +81,7 @@ const relayScores = (m: MatchRow): RelayScore[] =>
 const isTableau = (m: MatchRow) => m.tableId !== null && m.round !== null && m.position !== null;
 
 /** Rencontre jouée : un relais au moins commencé ou terminé */
-const played = (m: { status: string; bouts: Array<{ status: string }> }) =>
+export const played = (m: { status: string; bouts: Array<{ status: string }> }) =>
   m.status !== 'not_started' || m.bouts.some(b => b.status !== 'not_started');
 
 const teamsOf = (ctx: CommandContext, comp: Competition) =>
@@ -83,6 +92,17 @@ const tableauMatchesOf = (ctx: CommandContext, comp: Competition) =>
     TeamMatchRow & TeamTableauMatchState
   >;
 
+/** Équipes et rencontres de poule classables : sans les équipes retirées (o.99.8) */
+function rankable(ctx: CommandContext, comp: Competition) {
+  const pools = ctx.db.teams.getTeamMatchesByCompetition(comp.id) as TeamMatchRow[];
+  const out = withoutWithdrawnTeams(
+    teamsOf(ctx, comp),
+    pools,
+    new Set(withdrawnTeams(ctx, comp.id).keys())
+  );
+  return out;
+}
+
 /**
  * Tableau tiré : celui du journal (TeamTableauGenerated) ; à défaut (tableau créé par l'écran,
  * sans journal), recalculé sur le classement de poule comme l'écran
@@ -90,10 +110,16 @@ const tableauMatchesOf = (ctx: CommandContext, comp: Competition) =>
 function tableauOf(ctx: CommandContext, comp: Competition): TeamTableauPlan {
   const fact = projectCompetition(readJournal(ctx, comp.id)).teams?.tableau;
   if (fact) return fact;
-  const pools = ctx.db.teams.getTeamMatchesByCompetition(comp.id) as TeamMatchRow[];
-  return planTeamTableau(
-    rankTeamsForTableau(teamsOf(ctx, comp), pools, teamFormatOf(comp.settings))
-  );
+  const { teams, matches } = rankable(ctx, comp);
+  return planTeamTableau(rankTeamsForTableau(teams, matches, teamFormatOf(comp.settings)));
+}
+
+/** Rencontre d'une équipe retirée ou exclue : plus de relais (docs/adr/0028 § 4) */
+export function assertNoWithdrawnTeam(ctx: CommandContext, comp: Competition, m: MatchRow) {
+  const withdrawn = withdrawnTeams(ctx, comp.id);
+  if (involvesWithdrawn(m, new Set(withdrawn.keys()))) {
+    throw new CommandError('team_withdrawn', 'Équipe retirée ou exclue : rencontre close');
+  }
 }
 
 /** Rencontres de tableau et leurs relais écrites, événements TeamMatchScheduled rendus */
@@ -163,8 +189,9 @@ export function generateTeamTableau(
       `Titulaires manquants (${teamSize} par équipe) : ${incomplete.join(', ')}`
     );
   }
-  const pools = ctx.db.teams.getTeamMatchesByCompetition(comp.id) as TeamMatchRow[];
-  if (pools.some(m => m.status !== 'finished')) {
+  // o.99.8 : les rencontres d'une équipe retirée ne comptent plus, l'équipe n'est pas classée
+  const ranked = rankable(ctx, comp);
+  if (ranked.matches.some(m => m.status !== 'finished')) {
     throw new CommandError('pools_not_complete', 'Rencontres de poule non terminées');
   }
   const existing = tableauMatchesOf(ctx, comp);
@@ -179,7 +206,9 @@ export function generateTeamTableau(
       throw new CommandError('bracket_has_scores', 'Relais du tableau d’équipes déjà joués');
     }
   }
-  const tableau = planTeamTableau(rankTeamsForTableau(teams, pools, teamFormatOf(comp.settings)));
+  const tableau = planTeamTableau(
+    rankTeamsForTableau(ranked.teams, ranked.matches, teamFormatOf(comp.settings))
+  );
   const plans = planTeamTableauMatches(comp.id, tableau, [], teams, teamSize, comp.weapon);
   const out = { size: tableau.size, slots: tableau.slots, matchIds: plans.map(m => m.matchId) };
   if (input.dryRun) return { dryRun: true, ...out };
@@ -192,6 +221,56 @@ export function generateTeamTableau(
   ]);
   changed(ctx, comp.id);
   return { dryRun: false, ...out };
+}
+
+// ─── Rencontre décidée hors score (docs/adr/0028 § 4) ───────────────────────
+
+/**
+ * Rencontre décidée pour `winnerTeamId` sans relais (exclusion, abandon) : cumul des relais
+ * terminés gardé, relais non tirés laissés à jouer ; au tableau, rencontre suivante créée.
+ * Rend les événements TeamMatchDecided puis TeamMatchScheduled.
+ */
+export function decideTeamMatch(
+  ctx: CommandContext,
+  comp: Competition,
+  m: MatchRow,
+  winnerTeamId: string,
+  now: Date,
+  dryRun = false
+): { events: NewJournalEvent[]; scheduledMatchIds: string[] } {
+  let plans: TeamTableauMatchPlan[] = [];
+  if (isTableau(m)) {
+    const existing = tableauMatchesOf(ctx, comp).map(x =>
+      x.id === m.id ? { ...x, status: 'finished', winnerId: winnerTeamId } : x
+    );
+    plans = planTeamTableauMatches(
+      comp.id,
+      tableauOf(ctx, comp),
+      existing,
+      teamsOf(ctx, comp),
+      teamSizeOf(comp.settings),
+      comp.weapon
+    );
+  }
+  const scheduledMatchIds = plans.map(p => p.matchId);
+  if (dryRun) return { events: [], scheduledMatchIds };
+  const scores = relayScores(m);
+  const { scoreA, scoreB } = teamMatchOutcome(scores);
+  ctx.db.teams.setTeamMatchResult(m.id, {
+    scoreA,
+    scoreB,
+    status: 'finished',
+    winnerId: winnerTeamId,
+    currentBoutIndex: scores.filter(r => r.finished).length,
+    at: iso(now),
+  });
+  return {
+    events: [
+      { type: EVENT.teamMatchDecided, payload: { matchId: m.id, winnerTeamId } },
+      ...insertTableauMatches(ctx, comp, plans, now),
+    ],
+    scheduledMatchIds,
+  };
 }
 
 // ─── Relais ─────────────────────────────────────────────────────────────────
@@ -215,6 +294,7 @@ export function recordRelayScore(
   if (!bout) {
     throw new CommandError('match_not_found', `Relais ${input.relay} absent de la rencontre`);
   }
+  assertNoWithdrawnTeam(ctx, comp, m);
   const before = relayScores(m);
   if (bout.status === 'finished') {
     throw new CommandError(
@@ -230,7 +310,14 @@ export function recordRelayScore(
   }
   const format = teamFormatOf(comp.settings);
   const rule = relayRuleOf(comp.weapon, comp.settings);
-  if (relayScoreAboveMax(before, input.relay, input.scoreA, input.scoreB, format, rule)) {
+  // t.41.1 : palier dépassé d'autant de touches que de cartons rouges adverses du relais
+  const penalties = relayPenaltyTouches(
+    bout,
+    ctx.db.teams.getTeamBoutCards(m.id).flatMap(c => (c.boutId === bout.id ? [c.card] : []))
+  );
+  if (
+    relayScoreAboveMax(before, input.relay, input.scoreA, input.scoreB, format, rule, penalties)
+  ) {
     throw new CommandError(
       'score_above_max',
       format === 'laser-arena'
@@ -328,6 +415,7 @@ export function reopenRelay(
 ) {
   const comp = teamCompetitionOrThrow(ctx, input.competitionId);
   const m = matchOrThrow(ctx, comp.id, input.matchId);
+  assertNoWithdrawnTeam(ctx, comp, m);
   const last = [...m.bouts].reverse().find(b => b.status === 'finished');
   if (!last) {
     throw new CommandError('relay_out_of_order', 'Aucun relais terminé à rouvrir');

@@ -67,16 +67,15 @@ const MAX_TOUCH_POINTS = 5;
 /**
  * Dépassement du palier admis pour l'équipe qui termine le relais (ADR-0028, « Deux
  * règlements, deux barèmes ») :
- * - relais FIE (armes olympiques) : une touche (t.41.1 : dernière touche valable et touche de
- *   pénalisation accordées en même temps, les deux comptent) ;
+ * - relais FIE (armes olympiques) : une touche par rouge adverse du relais (t.41.1,
+ *   `relayScoreAboveMax`) ;
  * - Sabre Laser en points : la dernière touche peut valoir jusqu'à 5 points depuis palier − 1
  *   (Livret 2 FFE VIII.1 : « 14 + touche finale sur une cible vitale à 5 points » = 19) ;
  * - Sabre Laser en touches, arme à la carte : aucun (t.41.1 est une règle FIE ; à arbitrer
  *   pour le Sabre Laser, #2208).
  */
 export function relayOvershoot(rule: RelayRule): number {
-  if (rule.mode === 'points') return MAX_TOUCH_POINTS - 1;
-  return rule.fie ? 1 : 0;
+  return rule.mode === 'points' ? MAX_TOUCH_POINTS - 1 : 0;
 }
 
 export function relayRuleOf(weapon: Weapon, settings?: Partial<TeamSettings> | null): RelayRule {
@@ -293,7 +292,7 @@ export function relayWinner(
 /**
  * Score d'un relais au-delà de ce qu'il peut porter (#2188) :
  * - relais FIE : cumul au-delà du palier (`min(ordre × pas, cible)`), sauf pour **une** équipe
- *   qui le dépasse d'au plus `relayOvershoot` (FIE t.41.1 ; Sabre Laser en points) ;
+ *   qui le dépasse d'au plus `relayOvershoot` (FIE : `penalties`, rouges adverses) ;
  * - arène Sabre Laser : score de l'assaut au-delà du plafond de touches (en points : plafond
  *   × 5, chaque touche pouvant valoir 5 points).
  */
@@ -303,7 +302,8 @@ export function relayScoreAboveMax(
   scoreA: number,
   scoreB: number,
   format: TeamFormat,
-  rule: RelayRule
+  rule: RelayRule,
+  penalties = { A: 0, B: 0 }
 ): boolean {
   const cap = relayCap(order, format, rule);
   if (format === 'laser-arena') {
@@ -313,6 +313,7 @@ export function relayScoreAboveMax(
   const before = relayCumulative(relays, order - 1);
   const overA = before.scoreA + scoreA - cap;
   const overB = before.scoreB + scoreB - cap;
+  if (rule.fie) return overA > penalties.A || overB > penalties.B;
   if (overA > 0 && overB > 0) return true;
   return Math.max(overA, overB) > relayOvershoot(rule);
 }

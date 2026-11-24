@@ -187,7 +187,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (60)
+## Référence des outils (65)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -326,7 +326,7 @@ Aucun argument.
 | `since` | integer |  | Dernière révision connue (0 : tout) |
 | `limit` | integer |  | Nombre maximum (1000) |
 
-### En écriture, sur autorisation (43)
+### En écriture, sur autorisation (48)
 
 ### `create_competition` — Créer une épreuve
 
@@ -827,7 +827,7 @@ Aucun argument.
 
 ### `record_relay_score` — Saisir le score d’un relais
 
-*écriture.* Épreuve par équipes : enregistre le score d’un relais (le score du relais, pas le cumul) et le termine. Le cumul, le vainqueur du relais et celui de la rencontre se calculent. Dernier relais : rencontre terminée ; égalité au tableau → « winner » requis (minute avec priorité), en poule → égalité. Au tableau, la rencontre suivante est créée dès que ses deux équipes sont connues. Refus : rencontre inconnue (match_not_found), relais déjà terminé ou précédents non terminés (relay_out_of_order), cumul au-delà du palier du relais FIE (armes olympiques : une seule équipe peut le dépasser d’une touche, t.41.1 ; Sabre Laser en points : de 4 points) ou assaut au-delà du plafond en arène (score_above_max), égalité sans vainqueur au tableau (draw_needs_winner), vainqueur contraire au score (winner_contradicts_score). Journal : RelayScoreRecorded, puis TeamMatchDecided et TeamMatchScheduled selon le cas.
+*écriture.* Épreuve par équipes : enregistre le score d’un relais (le score du relais, pas le cumul) et le termine. Le cumul, le vainqueur du relais et celui de la rencontre se calculent. Dernier relais : rencontre terminée ; égalité au tableau → « winner » requis (minute avec priorité), en poule → égalité. Au tableau, la rencontre suivante est créée dès que ses deux équipes sont connues. Refus : rencontre inconnue (match_not_found), relais déjà terminé ou précédents non terminés (relay_out_of_order), cumul au-delà du palier du relais FIE (armes olympiques : d’autant de touches que de cartons rouges adverses du relais, t.41.1 ; Sabre Laser en points : de 4 points) ou assaut au-delà du plafond en arène (score_above_max), égalité sans vainqueur au tableau (draw_needs_winner), vainqueur contraire au score (winner_contradicts_score), équipe retirée ou exclue (team_withdrawn). Journal : RelayScoreRecorded, puis TeamMatchDecided et TeamMatchScheduled selon le cas.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -843,7 +843,7 @@ Aucun argument.
 
 ### `reopen_relay` — Rouvrir le dernier relais
 
-*⚠️ écriture, destructif.* Épreuve par équipes : rouvre le dernier relais terminé d’une rencontre pour correction (son score est gardé comme score en cours). La rencontre repasse en cours ; au tableau, la rencontre suivante pas encore commencée est retirée. Refus : rencontre inconnue (match_not_found), aucun relais terminé (relay_out_of_order), rencontre suivante du tableau commencée (next_match_played). Journal : RelayReopened.
+*⚠️ écriture, destructif.* Épreuve par équipes : rouvre le dernier relais terminé d’une rencontre pour correction (son score est gardé comme score en cours). La rencontre repasse en cours ; au tableau, la rencontre suivante pas encore commencée est retirée. Refus : rencontre inconnue (match_not_found), aucun relais terminé (relay_out_of_order), rencontre suivante du tableau commencée (next_match_played), équipe retirée ou exclue (team_withdrawn). Journal : RelayReopened.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -866,5 +866,75 @@ Aucun argument.
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `give_team_card` — Donner un carton E
+
+*écriture.* Arène Sabre Laser : carton E (désignation tardive) à une équipe de la rencontre ; sans « type », blanc puis jaune. Noir toujours accepté. Refus : unsupported_format, match_not_found, team_not_in_match, team_withdrawn, match_finished (rencontre suivante commencée). Journal : TeamCardGiven.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal (revision_conflict sinon) |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+| `teamId` | string | oui | Équipe sanctionnée |
+| `type` | `white`, `yellow`, `red`, `black` |  | Type choisi ; absent : escalade |
+
+### `give_relay_card` — Donner un carton dans un relais
+
+*écriture.* Épreuve par équipes : carton au tireur du côté A ou B dans un relais, en cours ou dernier terminé (rencontre suivante pas commencée). Exactement un de « reason » (type par l’escalade sur la rencontre) ou « type » (appareil de piste). Noir : tireur exclu (FencerWithdrawn) ; armes olympiques : rencontre perdue et équipe exclue (TeamMatchDecided, TeamWithdrawn, o.99.7.b). Sabre Laser : tireur seul. Refus : invalid_input, match_not_found, relay_not_found, relay_out_of_order, match_finished, team_withdrawn, already_withdrawn. Journal : RelayCardGiven.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal (revision_conflict sinon) |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+| `relayId` | string | oui | Relais (bouts[].id) |
+| `side` | `A`, `B` | oui | Côté du tireur sanctionné |
+| `reason` | `early_start`, `late_stop`, `body_contact`, `counter_attack`, `target_substitution`, `voluntary_drop`, `time_wasting`, `non_compliant_gear`, `estoc`, `unarmed_hand`, `voluntary_exit`, `heavy_hit`, `brutality`, `dangerous`, `refusal`, `unsportsmanlike`, `cheating`, `fie_leaving_piste`, `fie_body_contact`, `fie_turning_back`, `fie_covering_target`, `fie_touching_equipment`, `fie_lateral_exit`, `fie_unjustified_stop`, `fie_non_compliant_equipment`, `fie_straightening_blade`, `fie_point_on_piste`, `fie_sabre_forward_cross`, `fie_disobedience`, `fie_non_compliant_hair`, `fie_jostling`, `fie_abnormal_movement`, `fie_unjustified_appeal`, `fie_unarmed_arm`, `fie_medical_pretext`, `fie_missing_control_mark`, `fie_dropping_weapon`, `fie_hit_off_target`, `fie_violent_act`, `fie_disorder`, `fie_unfair_fight`, `fie_advertising`, `fie_unsporting`, `fie_electronic_device`, `fie_fraud`, `fie_tampered_equipment`, `fie_refusal_to_fence`, `fie_sporting_spirit`, `fie_refusal_to_salute`, `fie_collusion`, `fie_violence` |  | Motif (écran, tablette, MCP) |
+| `type` | `WHITE`, `YELLOW`, `RED`, `BLACK` |  | Type imposé (appareil de piste) |
+
+### `cancel_team_card` — Annuler un carton E
+
+*⚠️ écriture, destructif.* Directoire technique (écran, MCP) : annule un carton E. Refus : permission_denied (tablette, appareil), match_not_found, card_not_found. Journal : TeamCardCancelled.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal (revision_conflict sinon) |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+| `cardId` | string | oui | Carton E (teamCards[].id) |
+
+### `cancel_relay_card` — Annuler un carton de relais
+
+*⚠️ écriture, destructif.* Directoire technique (écran, MCP) : annule un carton individuel d’un relais. Le noir ne s’annule pas ainsi (reinstateFencer). Refus : permission_denied (tablette, appareil), match_not_found, card_not_found, already_withdrawn (noir). Journal : RelayCardCancelled.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal (revision_conflict sinon) |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+| `cardId` | string | oui | Carton (bouts[].cards[].id) |
+
+### `withdraw_team` — Retirer une équipe
+
+*⚠️ écriture, destructif.* Relais par équipes : équipe incomplète qui abandonne (o.99.7.a). Rencontre perdue, l’équipe se retire et garde sa place (« N’a pas terminé ») ; ses rencontres de poule ne comptent plus (o.99.8). Refus : unsupported_format (arène), match_not_found, team_not_in_match, match_finished, team_withdrawn. Journal : TeamMatchDecided, TeamWithdrawn.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal (revision_conflict sinon) |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+| `teamId` | string | oui | Équipe qui abandonne |
+| `reason` | string | oui |  |
 
 <!-- outils-mcp:fin -->

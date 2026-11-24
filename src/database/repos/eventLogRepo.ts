@@ -137,6 +137,19 @@ export class EventLogRepo {
     return rows.map(toEvent);
   }
 
+  /** Événements d'un ou plusieurs types, par révision croissante */
+  public getByTypes(competitionId: string, types: readonly string[]): StoredJournalEvent[] {
+    if (!this.sql.db || types.length === 0) return [];
+    return this.sql
+      .queryAll<Row>(
+        `SELECT ${COLUMNS} FROM competition_events
+          WHERE competition_id = ? AND type IN (${types.map(() => '?').join(', ')})
+          ORDER BY revision`,
+        [competitionId, ...types]
+      )
+      .map(toEvent);
+  }
+
   /** Historique d'un match (audit) : événements dont la charge porte ce matchId */
   public getMatchHistory(competitionId: string, matchId: string): StoredJournalEvent[] {
     if (!this.sql.db) return [];

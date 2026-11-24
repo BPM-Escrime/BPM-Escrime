@@ -2,7 +2,8 @@
  * Relais FIE par équipes sur appareil Cyrano (#1829) — RemoteScoreServer réel, arène équipe
  * `/equipe1` (relais FIE en direct, #1086), trames Cyrano `Type=T` injectées. Base SQLite
  * réelle : rencontre tirée par le moteur (ordre FIE des relais), fins de relais, rappel et
- * remplaçant écrits par les commandes du contrat (docs/adr/0024, lot E4).
+ * remplaçant écrits par les commandes du contrat (docs/adr/0024, lot E4) ; cartons de
+ * l'appareil enregistrés par giveRelayCard avant le contrôle de la fin (docs/adr/0028, lot C3).
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -65,6 +66,7 @@ interface Side {
   id: string;
   score: number;
   y?: number;
+  red?: number;
   reserve?: boolean;
   status?: CyranoFencer['status'];
 }
@@ -83,7 +85,7 @@ function info(
     score: f.score,
     status: f.status ?? 'U',
     yellowCards: f.y ?? 0,
-    redCards: 0,
+    redCards: f.red ?? 0,
     reserve: f.reserve ?? false,
   });
   return buildCyrano({
@@ -220,8 +222,78 @@ d('PisteHub — relais FIE par équipes (Type=T)', () => {
     expect(team().timerStartedAt).not.toBeNull();
     expect(team().deviceCards?.[fx.boutId(1)]).toEqual({ cardsA: ['yellow'], cardsB: [] });
     expect(disps()).toHaveLength(n);
-    // Touches en cours : état de l'arène, rien d'écrit en base
+    // Touches en cours : état de l'arène, score pas encore écrit en base
     expect(bout(1)).toMatchObject({ status: 'not_started', scoreA: 0, scoreB: 0 });
+    // Nouveau jaune montré : enregistré par giveRelayCard (type, sans motif), une seule fois
+    device(info('F', 1, { id: r(1)[0], score: 3, y: 1 }, { id: r(1)[1], score: 1 }));
+    expect(journal('RelayCardGiven')).toEqual([
+      expect.objectContaining({
+        source: 'cyrano',
+        payload: expect.objectContaining({
+          relayId: fx.boutId(1),
+          fencerId: r(1)[0],
+          type: 'YELLOW',
+          reason: null,
+        }),
+      }),
+    ]);
+    expect(team().fencerCards).toEqual([
+      expect.objectContaining({ fencerId: r(1)[0], type: 'YELLOW', reason: null }),
+    ]);
+  });
+
+  describe('cartons de l’appareil par giveRelayCard (docs/adr/0028, lot C3)', () => {
+    it('END au palier + 1 sans rouge : NAK ; rouge montré → enregistré avant le contrôle, ACK (t.41.1)', async () => {
+      await start([[5, 2]]); // relais 2 : palier 10
+      device(info('H', 2, { id: r(2)[0], score: 10 }, { id: r(2)[1], score: 4 }));
+      out = [];
+      device(info('E', 2, { id: r(2)[0], score: 11 }, { id: r(2)[1], score: 4 }));
+      expect(out).toContain('NAK');
+      expect(count('ACK')).toBe(0);
+      expect(bout(2).status).toBe('not_started');
+      // Rouge au tireur de l'équipe B montré avec la fin : touche de pénalisation pour A
+      out = [];
+      device(info('E', 2, { id: r(2)[0], score: 11 }, { id: r(2)[1], score: 4, red: 1 }));
+      expect(out[0]).toBe('ACK');
+      const [card] = journal('RelayCardGiven');
+      const [score] = journal('RelayScoreRecorded').slice(-1);
+      expect(card).toMatchObject({
+        source: 'cyrano',
+        payload: { relayId: fx.boutId(2), fencerId: r(2)[1], type: 'RED', reason: null },
+      });
+      // Carton enregistré avant le relais : il compte dans le palier du moteur
+      expect(card.revision).toBeLessThan(score.revision);
+      expect(bout(2)).toMatchObject({ status: 'finished', scoreA: 6, scoreB: 2 });
+      expect(fx.divergences()).toEqual([]);
+    });
+
+    it('rouge de l’autre côté : pas de dépassement pour l’équipe sanctionnée (NAK)', async () => {
+      await start([[5, 2]]);
+      out = [];
+      device(info('E', 2, { id: r(2)[0], score: 11, red: 1 }, { id: r(2)[1], score: 4 }));
+      expect(out).toContain('NAK');
+      expect(journal('RelayCardGiven')).toHaveLength(1);
+      expect(bout(2).status).toBe('not_started');
+    });
+
+    it('carton refusé par le moteur : tracé une fois, fin du relais décidée normalement (ACK)', async () => {
+      const warn = vi.spyOn(logger, 'warn');
+      await start();
+      vi.spyOn(fx.db.teams, 'createTeamBoutCard').mockImplementation(() => {
+        throw new Error('disque plein');
+      });
+      device(info('H', 1, { id: r(1)[0], score: 3, y: 1 }, { id: r(1)[1], score: 1 }));
+      device(info('H', 1, { id: r(1)[0], score: 4, y: 1 }, { id: r(1)[1], score: 1 }));
+      const refused = warn.mock.calls.filter(c => String(c[1]).includes('YELLOW'));
+      expect(refused).toHaveLength(1);
+      expect(team().liveScoreA).toBe(4);
+      out = [];
+      device(info('E', 1, { id: r(1)[0], score: 5, y: 1 }, { id: r(1)[1], score: 1 }));
+      expect(out[0]).toBe('ACK');
+      expect(journal('RelayCardGiven')).toHaveLength(0);
+      expect(bout(1)).toMatchObject({ status: 'finished', scoreA: 5, scoreB: 1 });
+      warn.mockRestore();
+    });
   });
 
   it('cartons cumulés sur la rencontre : le DISP d’un relais reprend ceux déjà reçus par chaque tireur', async () => {
