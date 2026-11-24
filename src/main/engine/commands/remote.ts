@@ -35,7 +35,6 @@ type LifecycleOps =
   | 'setRemoteStripCount'
   | 'setRemoteShowPhotos'
   | 'setRemoteCardAnnounce'
-  | 'setStripPlan'
   | 'setActiveWave'
   | 'moveMatchToArena'
   | 'setTeamArenaMatch'
@@ -109,10 +108,6 @@ export const remoteHandlers: { [N in LifecycleOps]: RemoteHandler<N> } = {
   setRemoteCardAnnounce: (ctx, { competitionId, value }) =>
     refuseLogged('Error updating cardAnnounce:', () =>
       serverOf(ctx, competitionId).updateCardAnnounce(value)
-    ),
-  setStripPlan: (ctx, { competitionId, plan }) =>
-    refuseLogged('Error setting strip plan:', () =>
-      serverOf(ctx, competitionId).setStripPlan(plan)
     ),
   setActiveWave: (ctx, { competitionId, matchIds, poolsClosed }) =>
     adminOf(ctx).setActiveWave(competitionId, matchIds, poolsClosed === true),

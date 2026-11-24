@@ -26,6 +26,7 @@ import { createMainWindow } from './mainWindow';
 import { createSplashWindow, saveLanguageToFile, splashConfirmPromise } from './splash';
 import { createTrainingPort } from './trainingPort';
 import { dayStripServer } from './remote/stripHandover';
+import { watchStripPlans } from './remote/stripPlan';
 import { createClubStation } from './clubPort';
 import { createStationPort } from './stationPort';
 import { applyStoredPrivacySettings, createPrivacyHandlers } from './ipc/privacyHandlers';
@@ -140,9 +141,14 @@ const stationServices = createStationPort({
   isCompetitionBusy: id => id === menuActions.getCurrentCompetitionId() || remoteServers.has(id),
   getServer: id => {
     const server = remoteServers.get(id)?.server;
-    return server ? dayStripServer(server) : undefined;
+    // Pistes indisponibles de l'épreuve lues en base (docs/adr/0015, #1878)
+    return server
+      ? dayStripServer(server, () => db.stripPlans.getStripPlan(id).unavailable)
+      : undefined;
   },
 });
+// Plan des pistes (docs/adr/0015) : envoyé au serveur distant de l'épreuve à chaque changement
+watchStripPlans(db, id => remoteServers.get(id)?.server);
 // Contrat d'API unique (#1981) : api:invoke / api:subscribe
 registerApiHandlers({
   db,

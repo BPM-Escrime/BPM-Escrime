@@ -14,6 +14,7 @@ import { ensureCert } from './certManager';
 import { findAvailablePort, remoteServers, usedPorts } from './remoteRegistry';
 import type { RemoteServerInfo } from '../shared/types/preload';
 import { applyActiveWave } from './remote/activeWave';
+import { pushStripPlan } from './remote/stripPlan';
 import { setSharedMainWindow } from './mainWindowRef';
 import { logger, LogCategory, toError } from '../shared/services/logger';
 
@@ -84,6 +85,8 @@ export async function startRemoteServer(
       };
     }
     applyActiveWave(competitionId, server);
+    // Plan des pistes de l'épreuve, donnée du moteur (docs/adr/0015)
+    pushStripPlan(db, competitionId, server);
     remoteServers.set(competitionId, {
       server,
       port: effectivePort,

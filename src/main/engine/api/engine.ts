@@ -34,6 +34,7 @@ import { splitOffGroup } from '../commands/splitOff';
 import { teamHandlers, teamsState } from '../commands/teams';
 import { teamRelayHandlers } from '../commands/teamRelays';
 import { teamCardHandlers } from '../commands/teamCards';
+import { stripHandlers } from '../commands/strips';
 import { rebuildCompetitionState } from '../commands/rebuild';
 import {
   fencerDTO,
@@ -300,6 +301,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   ...teamRelayHandlers,
   // Cartons des épreuves par équipes (docs/adr/0028)
   ...teamCardHandlers,
+  // Plan des pistes de l'épreuve (docs/adr/0015) ; journée : une runCommand par épreuve
+  ...stripHandlers(runCommandAcross),
   onStripControlChanged,
 };
 
@@ -501,6 +504,46 @@ export function runCommand<T>(
   };
   // Contexte sans transaction (tests sans base) : même enchaînement, sans atomicité
   return typeof ctx.db.transaction === 'function' ? ctx.db.transaction(body) : body();
+}
+
+/**
+ * Même commande sur plusieurs épreuves (journée, docs/adr/0015) : une `runCommand` par épreuve,
+ * toutes dans UNE transaction englobante (un refus ou une erreur sur une épreuve annule les
+ * autres), sous un `commandId` commun. Idempotence : si une des épreuves porte déjà ce
+ * `commandId`, `command_already_applied` et rien n'est réécrit. `journal:appended` part
+ * pour chaque journal qui avance, après validation, comme pour `invoke`.
+ */
+export function runCommandAcross<T>(
+  ctx: CommandContext,
+  competitionIds: readonly string[],
+  options: { commandId?: string },
+  fn: (commandCtx: CommandContext, competitionId: string) => T
+): { commandId: string; results: Array<{ competitionId: string; result: T }> } {
+  const commandId = options.commandId ?? uuidv4();
+  const body = () => {
+    const done = competitionIds.find(id => ctx.db.eventLog.hasCommand(id, commandId));
+    if (done) {
+      throw new ApiError(
+        'command_already_applied',
+        `Commande ${commandId} déjà appliquée (épreuve ${done}) : rien de réécrit`,
+        { commandId }
+      );
+    }
+    return competitionIds.map(id => ({
+      competitionId: id,
+      run: runCommand(ctx, id, { commandId }, c => fn(c, id)),
+    }));
+  };
+  const runs = typeof ctx.db.transaction === 'function' ? ctx.db.transaction(body) : body();
+  for (const { competitionId, run } of runs) {
+    if (run.after !== run.before) {
+      publishCompetitionEvent({ type: 'journal:appended', competitionId, revision: run.after });
+    }
+  }
+  return {
+    commandId,
+    results: runs.map(r => ({ competitionId: r.competitionId, result: r.run.result })),
+  };
 }
 
 /** Révision attendue périmée : refus explicite, avec les événements manquants. */

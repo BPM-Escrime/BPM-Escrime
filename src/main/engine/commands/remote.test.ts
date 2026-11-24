@@ -45,7 +45,6 @@ function fakeServer() {
       clearArenaThemeOverride: spy('clearArenaThemeOverride'),
       updateKioskViews: spy('updateKioskViews'),
       updateKioskTheme: spy('updateKioskTheme'),
-      setStripPlan: spy('setStripPlan'),
       updateArenaScreenTheme: spy('updateArenaScreenTheme'),
       setArenaPassword: vi.fn((arenaId: string, password: string) => {
         calls('setArenaPassword', arenaId, password);
@@ -436,7 +435,6 @@ describe('mots de passe, inscription, pointage, espace formateurs', () => {
       ['getRemoteSession', input],
       ['listRemoteArenas', input],
       ['setRemoteStripCount', { ...input, count: 2 }],
-      ['setStripPlan', { ...input, plan: { start: 1, unavailable: [] } }],
       ['pushPoolsToStrips', { ...input, pools: [] }],
       ['sendClientCommand', { ...input, socketId: 's1', command: { type: 'ping' } }],
       ['acknowledgeDtCall', { ...input, arenaId: 'arena1' }],

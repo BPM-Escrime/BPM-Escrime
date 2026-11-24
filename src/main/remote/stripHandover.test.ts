@@ -162,6 +162,13 @@ describe('stripHandover — travail en attente et piste libérée (#1878)', () =
     expect(server.getArena('arena5')?.currentMatch?.poolId).toBe('p3');
   });
 
+  it('piste indisponible au plan en base, même inconnue du serveur (docs/adr/0015)', () => {
+    const fromDb = dayStripServer(server, () => [2]);
+    expect(day().canHostStrip(2)).toBe(true);
+    expect(fromDb.canHostStrip(2)).toBe(false);
+    expect(fromDb.canHostStrip(3)).toBe(true);
+  });
+
   it('piste sous la plage de l’épreuve ou indisponible', async () => {
     await server.startSession('c1', 4, [
       poolMarker('p1', 1, 3),

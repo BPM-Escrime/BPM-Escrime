@@ -1329,4 +1329,31 @@ export const ALL_MIGRATIONS: Migration[] = [
       db.run(`CREATE INDEX IF NOT EXISTS idx_team_match_cards_match ON team_match_cards(match_id)`);
     },
   },
+  {
+    version: 50,
+    description:
+      'Plan des pistes de l’épreuve en base : competition_strip_plans (piste de départ, pistes indisponibles), reprise de la piste de départ de session_state (docs/adr/0015)',
+    up(db) {
+      // Purge RGPD, suppression et archive .bpm : parcours générique de competition_id
+      db.run(`
+        CREATE TABLE IF NOT EXISTS competition_strip_plans (
+          competition_id TEXT PRIMARY KEY,
+          start INTEGER NOT NULL DEFAULT 1,
+          unavailable TEXT NOT NULL DEFAULT '[]',
+          updated_at TEXT NOT NULL
+        )
+      `);
+      // Piste de départ de l'état de session (versions 2.x) : entier de 1 à 999 seulement
+      db.run(`
+        INSERT OR IGNORE INTO competition_strip_plans (competition_id, start, unavailable, updated_at)
+        SELECT s.competition_id, json_extract(s.state_json, '$.remoteStripStart'), '[]',
+               strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        FROM session_state s
+        WHERE json_valid(s.state_json)
+          AND json_type(s.state_json, '$.remoteStripStart') = 'integer'
+          AND json_extract(s.state_json, '$.remoteStripStart') BETWEEN 1 AND 999
+          AND s.competition_id IN (SELECT id FROM competitions)
+      `);
+    },
+  },
 ];

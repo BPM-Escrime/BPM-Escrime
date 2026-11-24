@@ -25,7 +25,12 @@ import { isWithinRoots } from '../engine/commands/files';
 
 /** Écran à rafraîchir après une écriture de l'agent */
 export type McpNotify = (
-  type: 'competitions:changed' | 'fencers:changed' | 'session:changed' | 'settings:changed',
+  type:
+    | 'competitions:changed'
+    | 'fencers:changed'
+    | 'session:changed'
+    | 'settings:changed'
+    | 'strips:changed',
   competitionId?: string
 ) => void;
 

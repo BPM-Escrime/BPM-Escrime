@@ -54,6 +54,8 @@ export const JOURNAL_EVENT = {
   teamCardCancelled: 'TeamCardCancelled',
   relayCardCancelled: 'RelayCardCancelled',
   teamWithdrawn: 'TeamWithdrawn',
+  stripStartChanged: 'StripStartChanged',
+  stripAvailabilityChanged: 'StripAvailabilityChanged',
 } as const;
 
 const member = <T extends string, P extends z.ZodType>(type: T, payload: P) =>
@@ -290,6 +292,13 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
   member(
     JOURNAL_EVENT.teamWithdrawn,
     z.object({ teamId: Id, matchId: Id, reason: z.enum(['exclusion', 'abandon']) })
+  ),
+  // Plan des pistes de l'épreuve (docs/adr/0015) : numéros seulement ; panne d'une journée =
+  // un événement par épreuve, même commandId
+  member(JOURNAL_EVENT.stripStartChanged, z.object({ start: z.number().int() })),
+  member(
+    JOURNAL_EVENT.stripAvailabilityChanged,
+    z.object({ strip: z.number().int(), available: z.boolean() })
   ),
 ]);
 export type JournalEventBody = z.infer<typeof JournalEventBodySchema>;

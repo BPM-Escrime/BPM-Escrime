@@ -18,7 +18,7 @@ function run(restored: Record<string, unknown>) {
   state.restored = { pools: [{ id: 'p1' }], poolHistory: [], ...restored };
   const setCurrentPhase = vi.fn();
   const noop = vi.fn();
-  renderHook(() =>
+  const view = renderHook(() =>
     useCompetitionRestore({
       competitionId: 'c1',
       currentPhase: 'tableau',
@@ -57,7 +57,7 @@ function run(restored: Record<string, unknown>) {
       setPoolsLaunched: noop,
     } as unknown as Parameters<typeof useCompetitionRestore>[0])
   );
-  return setCurrentPhase;
+  return Object.assign(setCurrentPhase, { rerender: view.rerender });
 }
 
 describe('onglet restauré (docs/adr/0017)', () => {
@@ -74,6 +74,18 @@ describe('onglet restauré (docs/adr/0017)', () => {
     expect(run({ currentPhase: 5 })).toHaveBeenCalledWith('checkin');
     localStorage.setItem('bellepoule-ui-c1', JSON.stringify({ tab: 'tableau' }));
     expect(run({ currentPhase: 2 })).toHaveBeenCalledWith('pools');
+    localStorage.clear();
+  });
+
+  it('second chargement complet (effets rejoués) : réglages du poste appliqués une seule fois', () => {
+    localStorage.setItem('bellepoule-ui-c1', JSON.stringify({ tab: 'tableau' }));
+    const setCurrentPhase = run({ currentPhase: 5 });
+    expect(setCurrentPhase).toHaveBeenCalledWith('tableau');
+    // État du poste réécrit avant que l'onglet restauré ne soit rendu (valeur d'avant)
+    localStorage.setItem('bellepoule-ui-c1', JSON.stringify({ tab: 'checkin' }));
+    state.restored = { pools: [{ id: 'p1' }], poolHistory: [], currentPhase: 5 };
+    setCurrentPhase.rerender();
+    expect(setCurrentPhase).toHaveBeenCalledTimes(1);
     localStorage.clear();
   });
 });

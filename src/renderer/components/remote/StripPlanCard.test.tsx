@@ -1,13 +1,20 @@
 // @vitest-environment jsdom
 /**
- * Tests du plan des pistes et du store des pistes indisponibles (#1501)
+ * Tests du plan des pistes (#1501) : carte, store lu et écrit par le contrat (docs/adr/0015),
+ * reprise unique des clés locales des versions précédentes
  */
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, renderHook, waitFor } from '@testing-library/react';
 import { StripPlanCard } from './StripPlanCard';
-import { useStripAvailability } from '../../hooks/useStripAvailability';
+import {
+  migrateLocalStripPlan,
+  useStripAvailability,
+  useStripPlan,
+} from '../../hooks/useStripAvailability';
+import { BpmClientProvider } from '../../api/BpmClientContext';
+import type { BpmClient } from '../../../shared/api/client';
 import { availableStrips, stripAtIndex } from '../../../shared/utils/stripRange';
 import { computePoolStrips } from '../../../shared/utils/poolStrips';
 import { buildSessionMatches } from './sessionMatches';
@@ -17,10 +24,54 @@ vi.mock('../../hooks/useTranslation', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
 
+type Plan = { start: number; unavailable: number[] };
+
+/** Moteur simulé : plan par épreuve, commandes et signal strips:changed */
+function fakeClient(initial: Record<string, Plan> = {}) {
+  const plans = new Map(Object.entries(initial));
+  const listeners: Array<(e: { type: string; competitionId?: string }) => void> = [];
+  const planOf = (id: string) => ({
+    competitionId: id,
+    ...(plans.get(id) ?? { start: 1, unavailable: [] }),
+    updatedAt: null,
+  });
+  const call = vi.fn(async (name: string, input: Record<string, unknown>) => {
+    const id = input.competitionId as string;
+    const cur = planOf(id);
+    if (name === 'setStripAvailability') {
+      const strip = input.strip as number;
+      const unavailable = input.available
+        ? cur.unavailable.filter(n => n !== strip)
+        : [...new Set([...cur.unavailable, strip])].sort((a, b) => a - b);
+      plans.set(id, { start: cur.start, unavailable });
+    }
+    if (name === 'setStripStart') {
+      plans.set(id, { start: input.start as number, unavailable: cur.unavailable });
+    }
+    for (const l of listeners) l({ type: 'strips:changed', competitionId: id });
+    return {};
+  });
+  const query = vi.fn(async (_name: string, input: { competitionId: string }) =>
+    planOf(input.competitionId)
+  );
+  const client = {
+    call,
+    query,
+    subscribe: vi.fn((_name: string, _input: unknown, cb: (e: never) => void) => {
+      listeners.push(cb as never);
+      return () => undefined;
+    }),
+  } as unknown as BpmClient;
+  return { client, call, query, plans };
+}
+
+let engine: ReturnType<typeof fakeClient>;
+
 beforeEach(() => {
   localStorage.clear();
-  useStripAvailability.setState({ competitionId: null, unavailable: [] });
-  useStripAvailability.getState().load('c1');
+  engine = fakeClient();
+  useStripAvailability.setState({ competitionId: null, client: null, start: 1, unavailable: [] });
+  useStripAvailability.getState().bind(engine.client, 'c1');
 });
 
 describe('StripPlanCard', () => {
@@ -33,21 +84,75 @@ describe('StripPlanCard', () => {
     expect(screen.queryByText('4')).toBeNull();
   });
 
-  it('passe une piste en indisponible (rouge) et la persiste', () => {
+  it('passe une piste en indisponible par la commande du moteur, sans localStorage', async () => {
     render(<StripPlanCard start={1} end={3} />);
     fireEvent.click(screen.getByText(/rsm.strip_plan$/));
     fireEvent.click(screen.getByText('2'));
     expect(screen.getByText('2')).toHaveClass('is-unavailable');
-    expect(useStripAvailability.getState().unavailable).toEqual([2]);
-    expect(localStorage.getItem('bellepoule-strips-unavailable-c1')).toBe('[2]');
+    expect(engine.call).toHaveBeenCalledWith('setStripAvailability', {
+      competitionId: 'c1',
+      strip: 2,
+      available: false,
+    });
+    await waitFor(() => expect(engine.plans.get('c1')?.unavailable).toEqual([2]));
+    expect(localStorage.length).toBe(0);
     fireEvent.click(screen.getByText('2'));
-    expect(screen.getByText('2')).not.toHaveClass('is-unavailable');
+    await waitFor(() => expect(screen.getByText('2')).not.toHaveClass('is-unavailable'));
+    expect(engine.call).toHaveBeenLastCalledWith('setStripAvailability', {
+      competitionId: 'c1',
+      strip: 2,
+      available: true,
+    });
+  });
+});
+
+describe('useStripPlan (docs/adr/0015)', () => {
+  const wrapper = (client: BpmClient) =>
+    function Wrapper({ children }: { children: React.ReactNode }) {
+      return <BpmClientProvider client={client}>{children}</BpmClientProvider>;
+    };
+
+  it('lit le plan du moteur, puis le relit sur strips:changed (autre poste, MCP)', async () => {
+    const e = fakeClient({ c2: { start: 4, unavailable: [3] } });
+    const { result } = renderHook(() => useStripPlan('c2'), { wrapper: wrapper(e.client) });
+    await waitFor(() => expect(result.current.start).toBe(4));
+    expect(useStripAvailability.getState().unavailable).toEqual([3]);
+    // Écriture faite ailleurs : le moteur change, le signal arrive
+    await e.client.call('setStripAvailability', {
+      competitionId: 'c2',
+      strip: 6,
+      available: false,
+    });
+    await waitFor(() => expect(useStripAvailability.getState().unavailable).toEqual([3, 6]));
   });
 
-  it('recharge les pistes indisponibles d’une compétition', () => {
-    localStorage.setItem('bellepoule-strips-unavailable-c2', '[3,4]');
-    useStripAvailability.getState().load('c2');
+  it('setStart passe par setStripStart', async () => {
+    const e = fakeClient();
+    const { result } = renderHook(() => useStripPlan('c3'), { wrapper: wrapper(e.client) });
+    await waitFor(() => expect(e.query).toHaveBeenCalled());
+    result.current.setStart(5);
+    await waitFor(() => expect(result.current.start).toBe(5));
+    expect(e.call).toHaveBeenCalledWith('setStripStart', { competitionId: 'c3', start: 5 });
+  });
+
+  it('reprise unique : pistes et piste de départ du poste envoyées, clés effacées', async () => {
+    localStorage.setItem('bellepoule-strips-unavailable-c4', '[3,4,4,"x"]');
+    localStorage.setItem('bellepoule-ui-c4', JSON.stringify({ tab: 'pools', remoteStripStart: 7 }));
+    const e = fakeClient({ c4: { start: 1, unavailable: [4] } });
+    renderHook(() => useStripPlan('c4'), { wrapper: wrapper(e.client) });
+    await waitFor(() => expect(useStripAvailability.getState().start).toBe(7));
     expect(useStripAvailability.getState().unavailable).toEqual([3, 4]);
+    expect(e.call).toHaveBeenCalledTimes(2);
+    expect(localStorage.getItem('bellepoule-strips-unavailable-c4')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('bellepoule-ui-c4')!)).toEqual({ tab: 'pools' });
+  });
+
+  it('reprise : piste de départ déjà écrite en base gardée, ancienne clé effacée', async () => {
+    localStorage.setItem('bellepoule-remote-strip-start-c5', '9');
+    const e = fakeClient({ c5: { start: 2, unavailable: [] } });
+    expect(await migrateLocalStripPlan(e.client, 'c5', { start: 2, unavailable: [] })).toBe(false);
+    expect(e.call).not.toHaveBeenCalled();
+    expect(localStorage.getItem('bellepoule-remote-strip-start-c5')).toBeNull();
   });
 });
 
