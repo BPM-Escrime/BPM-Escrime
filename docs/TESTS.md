@@ -96,7 +96,7 @@ npm run e2e:debug                                 # mode debug
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
 | `src/shared/utils/` | 84 | 912 |
-| `src/shared/services/` | 8 | 87 |
+| `src/shared/services/` | 9 | 89 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
 | Feature `latefencers` (`src/features/latefencers/`) | 1 | 14 |
@@ -105,11 +105,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 22 | 275 |
-| `src/main/` | 152 | 1301 |
-| `src/renderer/services/` | 13 | 62 |
-| `src/renderer/hooks/` | 40 | 203 |
-| `src/renderer/components/` | 132 | 711 |
+| `src/database/` | 23 | 278 |
+| `src/main/` | 153 | 1313 |
+| `src/renderer/services/` | 14 | 66 |
+| `src/renderer/hooks/` | 39 | 201 |
+| `src/renderer/components/` | 133 | 717 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 419 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 40 | 482 |
+| `src/shared/domain/` | 41 | 491 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **608** | **4717** |
+| **Total** | **613** | **4751** |
 
-Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -1845,6 +1845,15 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/services/keyValueStore.test.ts</code> — 2 tests</summary>
+
+- **keyValueStore (#2203)**
+  - localStorage du navigateur par défaut
+  - stockage injecté : le code partagé écrit dedans, pas dans localStorage
+
+</details>
+
+<details>
 <summary><code>src/shared/services/logger.test.ts</code> — 7 tests</summary>
 
 - **logger - enregistrement**
@@ -2366,6 +2375,16 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - sans salle : salle par défaut créée, pistes reprises et normalisées
   - journée → salle de la journée, épreuve sans journée → salle par défaut, rien d’écrasé
   - cyrano\_pistes vide : aucune salle créée
+
+</details>
+
+<details>
+<summary><code>src/database/migrations/stripPlans.test.ts</code> — 3 tests</summary>
+
+- **migration 50 : plan des pistes par épreuve**
+  - base 49 : piste de départ reprise de session\_state, valeurs invalides ignorées
+  - base vierge : table créée, vide, valeurs par défaut
+  - rejouée sur une base déjà migrée : sans effet
 
 </details>
 
@@ -3637,6 +3656,25 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/strips.test.ts</code> — 13 tests</summary>
+
+- plan par défaut sans ligne ; épreuve inconnue refusée
+- setStripStart : écrit, journalise, signale ; même valeur : rien
+- setStripAvailability : panne puis remise en service, journal et rejeu sans écart
+- rejeu : un plan changé hors commande est un écart
+- eventDayId : la panne vaut pour toutes les épreuves de la journée, un commandId
+- journée : une runCommand par épreuve, journal:appended pour chacune, commandId repris
+- journée : rejouer le même commandId ne réécrit rien (command\_already\_applied)
+- journée : une épreuve en échec au milieu → aucune écriture, aucun événement
+- journée : expectedRevision refusé (une révision par épreuve)
+- refus : journée inconnue, ni ou les deux identifiants, piste hors bornes
+- outils MCP : lecture du plan, écriture par la même commande
+- serveur distant : reçoit le plan relu après la commande (écran ou MCP)
+- suppression de l’épreuve et archive .bpm : parcours générique de competition\_id
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/teamCards.test.ts</code> — 11 tests</summary>
 
 - jaune puis rouge (t.165), palier + 1 seulement avec le rouge (t.41.1), état, rejeu
@@ -4762,11 +4800,12 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/stripHandover.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/remote/stripHandover.test.ts</code> — 7 tests</summary>
 
 - **stripHandover — travail en attente et piste libérée (#1878)**
   - poule sans piste : accueillie sur une piste hors de la plage de l’épreuve
   - épreuve sur les pistes 3–4 : la poule sans piste attend, jamais placée sur une piste masquée
+  - piste indisponible au plan en base, même inconnue du serveur (docs/adr/0015)
   - piste sous la plage de l’épreuve ou indisponible
   - poule en file derrière une piste occupée : installée sur la piste libre, qui la garde
   - match de tableau en file derrière une piste occupée : déplacé sur la piste libre
@@ -4775,17 +4814,14 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/stripPlan.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/remote/stripPlan.test.ts</code> — 4 tests</summary>
 
-- **normalizeStripPlan**
-  - valeurs par défaut pour une entrée invalide
-  - trie, déduplique et filtre les pistes indisponibles
 - **visibleArenas**
   - masque les arènes avant la piste de départ
   - tout visible par défaut
-- **nextFreeStrip (#1878)**
-  - première piste libre dans l’intervalle, hors pistes prises ou indisponibles
-  - aucune piste libre dans l’intervalle : null (la poule attend)
+- **envoi du plan au serveur distant (docs/adr/0015)**
+  - pushStripPlan : plan relu en base, sans date
+  - watchStripPlans : strips:changed → serveur de l’épreuve ; autres signaux ignorés
 
 </details>
 
@@ -5299,6 +5335,17 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/services/preferences.test.ts</code> — 4 tests</summary>
+
+- **preferences (#2203)**
+  - valeurs par défaut sans clé enregistrée
+  - écrit et relit sous les clés existantes
+  - logo null → clé retirée
+  - stockage qui lève (navigation privée) : défauts, aucune exception
+
+</details>
+
+<details>
 <summary><code>src/renderer/services/resizeGuard.test.ts</code> — 2 tests</summary>
 
 - **installResizeGuard (#1652)**
@@ -5528,12 +5575,13 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionRestore.phase.test.tsx</code> — 3 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionRestore.phase.test.tsx</code> — 4 tests</summary>
 
 - **onglet restauré (docs/adr/0017)**
   - chargement de l’épreuve : onglet de la session
   - relecture après une commande : onglet du poste conservé
   - chargement : onglet du poste s’il ne devance pas la phase de l’épreuve
+  - second chargement complet (effets rejoués) : réglages du poste appliqués une seule fois
 
 </details>
 
@@ -5827,16 +5875,6 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - expose les valeurs initiales et accepte valeur ou fonction
   - garde des setters stables
   - gère les Set immuables
-
-</details>
-
-<details>
-<summary><code>src/renderer/hooks/useStripPlanSync.test.tsx</code> — 3 tests</summary>
-
-- **useStripPlanSync**
-  - envoie le plan quand la session est active
-  - ne fait rien sans session active
-  - renvoie le plan quand les pistes indisponibles changent
 
 </details>
 
@@ -6387,7 +6425,7 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/SettingsModal.test.tsx</code> — 7 tests</summary>
+<summary><code>src/renderer/components/SettingsModal.test.tsx</code> — 8 tests</summary>
 
 - **SettingsModal**
   - affiche un onglet par section et seulement le contenu de l'onglet actif
@@ -6398,6 +6436,7 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **SettingsModal – export / import des paramètres**
   - importe un fichier JSON (logo inclus) et met à jour le stockage
   - signale un fichier invalide
+  - stockage du navigateur bloqué (navigation privée) : la modale reste utilisable (#2203)
 
 </details>
 
@@ -7288,12 +7327,16 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/remote/StripPlanCard.test.tsx</code> — 7 tests</summary>
+<summary><code>src/renderer/components/remote/StripPlanCard.test.tsx</code> — 10 tests</summary>
 
 - **StripPlanCard**
   - est replié par défaut puis affiche les pistes de l’intervalle
-  - passe une piste en indisponible (rouge) et la persiste
-  - recharge les pistes indisponibles d’une compétition
+  - passe une piste en indisponible par la commande du moteur, sans localStorage
+- **useStripPlan (docs/adr/0015)**
+  - lit le plan du moteur, puis le relit sur strips:changed (autre poste, MCP)
+  - setStart passe par setStripStart
+  - reprise unique : pistes et piste de départ du poste envoyées, clés effacées
+  - reprise : piste de départ déjà écrite en base gardée, ancienne clé effacée
 - **répartition automatique avec pistes indisponibles**
   - availableStrips exclut les indisponibles, sans jamais renvoyer une liste vide
   - stripAtIndex tourne sur les pistes disponibles
@@ -7539,6 +7582,16 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - tient compte du zoom
   - contenu plus petit que la vue : reste visible
   - laisse un pan valide inchangé
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/themeEditor/themeEditor.test.tsx</code> — 2 tests</summary>
+
+- **themeTargetConfig (#2200)**
+  - piste par défaut, kiosque à part
+- **VarRow (#2200)**
+  - ligne texte : libellé affiché, saisie transmise
 
 </details>
 
@@ -9215,6 +9268,25 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - Photon : adresse sans nom → nom = adresse
   - Géoplateforme : lieu (tableaux) et adresse
   - réponse invalide → liste vide ; doublons retirés
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/planning/stripPlan.test.ts</code> — 9 tests</summary>
+
+- **normalizeStripPlan**
+  - valeurs par défaut pour une entrée invalide
+  - trie, déduplique et filtre les pistes indisponibles
+- **withStripAvailability**
+  - marque et remet en service, liste triée
+  - rien ne change : null
+- **nextFreeStrip (#1878)**
+  - première piste libre dans l’intervalle, hors pistes prises ou indisponibles
+  - aucune piste libre dans l’intervalle : null (la poule attend)
+- **distributeArenasRoundRobin**
+  - tourne sur les pistes disponibles de l’intervalle
+  - saute exemptions, matchs joués, matchs incomplets et ceux que le filtre écarte
+  - aucune piste : rien ne change
 
 </details>
 
