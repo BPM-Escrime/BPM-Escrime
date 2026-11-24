@@ -288,8 +288,8 @@ mainteneur (ADR-0001).
 - Ce qui reste hors de cette ADR : logos et synthèse vocale (`getLogo`, `getLogos`, `saveLogos`,
   `getTtsConfig`), proxy, diagnostic, `greg`, `ftp`, et les lectures `db.*` restantes. Ils suivent
   les lots 1 et 2 (contrat, ADR-0022).
-- **`safeStorage`** (`crypto.*`, utilisé par `cloudSyncService`) : décision à part, **ticket à
-  ouvrir**. Il bloque la règle ESLint tant que `cloudSyncService` lit le préload.
+- **`safeStorage`** (`crypto.*`, utilisé par `cloudSyncService`) : décision à part,
+  **#2252**. Il bloque la règle ESLint tant que `cloudSyncService` lit le préload.
 
 ## Alternatives écartées
 
