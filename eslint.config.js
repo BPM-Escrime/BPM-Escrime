@@ -36,7 +36,6 @@ module.exports = [
       'dist',
       'node_modules',
       'release',
-      'src/examples',
       '**/*.js',
       '!src/remote/**/*.js',
       '**/*.cjs',
