@@ -106,9 +106,9 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 23 | 278 |
-| `src/main/` | 155 | 1340 |
+| `src/main/` | 156 | 1352 |
 | `src/renderer/services/` | 14 | 70 |
-| `src/renderer/hooks/` | 40 | 210 |
+| `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 134 | 736 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 423 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 44 | 534 |
 | `src/shared/platform/` | 3 | 31 |
-| **Total** | **620** | **4867** |
+| **Total** | **621** | **4883** |
 
-Unitaires : 602 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 603 fichiers, 4833 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3422,6 +3422,25 @@ Unitaires : 602 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/publishResults.test.ts</code> — 13 tests</summary>
+
+- construit le XML depuis la base et l’envoie avec les champs du formulaire
+- une adresse escrime-info.com saisie comme dépôt part vers GREG, sans identifiants
+- épreuve sans lieu : not\_publishable, rien n’est envoyé
+- échec du serveur : publication\_failed, message pour l’opérateur
+- dépose le XML à l’adresse indiquée avec les identifiants
+- URL refusée %s : invalid\_url, rien n’est envoyé _(each)_
+- échec réseau : publication\_failed, mot de passe masqué et jamais logué
+- mot de passe trop long : invalid\_input, sans écho de la valeur
+- sans port de publication (MCP, tests) : unavailable
+- épreuve inconnue : competition\_not\_found
+- droit du poste, pas d’outil MCP, refusé sur le réseau, pas de journal
+- rend les poules écrites en base tant que l’état n’en a pas
+- vide sans préparation en base, ou quand l’état a ses poules
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/refereeing.test.ts</code> — 7 tests</summary>
 
 - fusionne côté moteur sans toucher aux autres réglages de l’épreuve
@@ -3658,7 +3677,7 @@ Unitaires : 602 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - adresse invalide ou avec identifiants : station\_refused, réglage inchangé
 - contenu JSON en base64, nom horodaté, liste blanche de champs
 - **contrat du poste**
-  - 60 opérations, chacune avec son gestionnaire
+  - 61 opérations, chacune avec son gestionnaire
 - **listPlaceSuggestions (docs/adr/0026)**
   - texte nettoyé transmis au port, langue par défaut fr
   - texte trop court : refus du contrat ; poste sans service : indisponible
@@ -3805,11 +3824,10 @@ Unitaires : 602 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/dbHandlers.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/ipc/dbHandlers.test.ts</code> — 1 test</summary>
 
 - **bus d’événements db (#1298)**
   - emitCompetitionEvent publie sur le bus du contrat, plus sur un canal IPC (ADR-0010)
-  - lot N (docs/adr/0024) : plus aucun canal d’écriture de l’épreuve par le préload
 
 </details>
 
@@ -3822,45 +3840,6 @@ Unitaires : 602 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - écrit des octets (fichier de données rendu par le contrat, ADR-0021) ou du texte
   - dialog:openFile binaire : octets bruts, option retirée du dialogue natif
   - dialog:pickDirectory (docs/adr/0030) : chemin rendu, null si annulé, rien d’autre
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/ftpHandlers.test.ts</code> — 12 tests</summary>
-
-- **parseRemoteUrl (#1331)**
-  - accepte ftp et ftps, avec port et dossier décodé
-  - accepte http et https pour un dépôt HTTP PUT
-  - refuse les autres schémas, les URL sans hôte et les identifiants dans l'URL
-- **parseFtpRequest (#1331)**
-  - accepte une requête bien formée
-  - refuse un nom de fichier, un XML, une URL ou des identifiants invalides
-- **publishRemote en FTP/FTPS (#1331)**
-  - se connecte, va dans le dossier, dépose le fichier puis ferme
-  - n'envoie pas d'identifiant vide et ne change pas de dossier à la racine
-  - ferme toujours la connexion et remonte l'erreur, sans le mot de passe
-- **publishRemote en HTTP PUT (#1331)**
-  - envoie le XML en PUT vers \<dossier\>/\<fichier\> avec authentification Basic
-  - sans identifiant complet, n'envoie pas d'en-tête Authorization
-  - remonte le code HTTP en cas d'échec, sans le mot de passe
-- **publishRemote : URL refusée (#1331)**
-  - ne se connecte pas si le schéma est refusé
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/gregHandlers.test.ts</code> — 8 tests</summary>
-
-- **parseGregRequest (#1328)**
-  - accepte une requête bien formée
-  - refuse un nom de fichier qui sort du dossier attendu
-  - refuse un champ inconnu ou manquant
-  - ignore les champs supplémentaires (jamais transmis)
-  - refuse un XML vide ou une requête non objet
-- **publishToGreg (#1328)**
-  - envoie le fichier puis valide le formulaire, dans cet ordre
-  - s'arrête à la première étape en erreur HTTP
-  - remonte une erreur réseau sans lever d'exception
 
 </details>
 
@@ -4354,6 +4333,45 @@ Unitaires : 602 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - manuel sans serveur valide ou mode inconnu → null
 - **persistance**
   - défaut système ; relit ce qui est écrit ; fichier corrompu → défaut
+
+</details>
+
+<details>
+<summary><code>src/main/publication/ftpUpload.test.ts</code> — 12 tests</summary>
+
+- **parseRemoteUrl (#1331)**
+  - accepte ftp et ftps, avec port et dossier décodé
+  - accepte http et https pour un dépôt HTTP PUT
+  - refuse les autres schémas, les URL sans hôte et les identifiants dans l'URL
+- **parseFtpRequest (#1331)**
+  - accepte une requête bien formée
+  - refuse un nom de fichier, un XML, une URL ou des identifiants invalides
+- **publishRemote en FTP/FTPS (#1331)**
+  - se connecte, va dans le dossier, dépose le fichier puis ferme
+  - n'envoie pas d'identifiant vide et ne change pas de dossier à la racine
+  - ferme toujours la connexion et remonte l'erreur, sans le mot de passe
+- **publishRemote en HTTP PUT (#1331)**
+  - envoie le XML en PUT vers \<dossier\>/\<fichier\> avec authentification Basic
+  - sans identifiant complet, n'envoie pas d'en-tête Authorization
+  - remonte le code HTTP en cas d'échec, sans le mot de passe
+- **publishRemote : URL refusée (#1331)**
+  - ne se connecte pas si le schéma est refusé
+
+</details>
+
+<details>
+<summary><code>src/main/publication/gregUpload.test.ts</code> — 8 tests</summary>
+
+- **parseGregRequest (#1328)**
+  - accepte une requête bien formée
+  - refuse un nom de fichier qui sort du dossier attendu
+  - refuse un champ inconnu ou manquant
+  - ignore les champs supplémentaires (jamais transmis)
+  - refuse un XML vide ou une requête non objet
+- **publishToGreg (#1328)**
+  - envoie le fichier puis valide le formulaire, dans cet ordre
+  - s'arrête à la première étape en erreur HTTP
+  - remonte une erreur réseau sans lever d'exception
 
 </details>
 
@@ -5685,13 +5703,18 @@ Unitaires : 602 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useExport.test.tsx</code> — 4 tests</summary>
+<summary><code>src/renderer/hooks/useExport.test.tsx</code> — 8 tests</summary>
 
 - **exportFencersList**
   - écrit un contenu FFF et notifie le succès
   - écrit un contenu TXT incluant le titre de la compétition
   - n’écrit rien si la boîte de dialogue est annulée
   - notifie une erreur si l’écriture échoue
+- **exportResultsXML : publication par le contrat (#1981 lot 4)**
+  - GREG : commande publishResults, sans XML ni window.electronAPI
+  - GREG périodique : aucun toast de succès
+  - FTP : coordonnées du dépôt transmises au moteur
+  - refus du moteur : message pour l’opérateur
 
 </details>
 
