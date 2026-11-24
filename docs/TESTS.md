@@ -3789,7 +3789,7 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 <summary><code>src/main/ipc/dbHandlers.test.ts</code> — 2 tests</summary>
 
 - **bus d’événements db (#1298)**
-  - emitCompetitionEvent diffuse aux fenêtres
+  - emitCompetitionEvent publie sur le bus du contrat, plus sur un canal IPC (ADR-0010)
   - lot N (docs/adr/0024) : plus aucun canal d’écriture de l’épreuve par le préload
 
 </details>
@@ -5610,7 +5610,7 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 
 - **restoreState**
   - marque isLoaded même sans electronAPI
-  - restaure l’état depuis la DB avec mapping de phase
+  - restaure l’état lu par getCompetitionState (plus de repli db.getSessionState)
 - **projection du moteur (docs/adr/0017, étape 4a)**
   - restaure par getCompetitionState
   - relit sur journal:appended plus récent, ignore une révision déjà lue
