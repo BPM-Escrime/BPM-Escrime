@@ -246,7 +246,7 @@ contrat ([ADR-0005](docs/adr/0005-journal-un-fait-un-chemin.md), [ADR-0008](docs
 |---|---|---|
 | `rendererImports` (main, shared, database → renderer) | ~~1~~ **0** (lot 3) | `main/domain/sport.ts` importait le tableau et le classement du renderer |
 | `featuresImports` (main, shared, database → features) | ~~4~~ **0** (lot 3) | `teamArena.ts`, `teamRelayDevice.ts`, `teamPdf.ts`, `cardSystem.ts` importaient les règles d'équipes et de pénalités, parties dans `shared/domain/teams` et `shared/domain/penalties` |
-| `electronApiCalls` (renderer hors `src/renderer/api`, et features → `window.electronAPI`) | 126 | 117 dans `src/renderer`, 9 dans `src/features` |
+| `electronApiCalls` (renderer hors `src/renderer/api`, et features → `window.electronAPI`) ; à 0, remplacé par la règle ESLint `no-restricted-syntax` (ADR-0030) | 126 | 117 dans `src/renderer`, 9 dans `src/features` |
 
 ### 9.2 Classement du renderer
 
