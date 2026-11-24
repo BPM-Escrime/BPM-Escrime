@@ -14,7 +14,7 @@
   "featuresImports": 0,
   "electronApiCalls": 29,
   "electronApiUses": 61,
-  "ipcChannels": 65,
+  "ipcChannels": 61,
   "directDbWrites": 5,
   "remoteUnescaped": 0,
   "remoteHardLocale": 3,

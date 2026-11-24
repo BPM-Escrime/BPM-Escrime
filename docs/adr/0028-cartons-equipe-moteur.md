@@ -361,6 +361,12 @@ un fait journalisé partout ou nulle part ([ADR-0005](0005-journal-un-fait-un-ch
 | C4  | Migration 49 (`team_id` nullable), `givePassivityCard`, noir P qui décide la rencontre, appareil : P-card → commande, ACK au noir P                                                                                                                      | Noir P depuis le simulateur Cyrano : rencontre décidée, ACK, rejeu sans écart      |
 | N   | Retrait de `createTeamMatchCard`, `createTeamBoutCard`, `getTeamMatchCards`, `getTeamBoutCards` du préload, des canaux `db:*` et de `DatabaseManager` (le moteur lit le dépôt). Cliquets abaissés                                                        | Critères ci-dessous                                                                |
 
+Lot N fait (2026-11-24) : les quatre opérations sortent du préload (`dbApi.ts`, type
+`DatabaseAPI`), des canaux `db:*` (`dbHandlers.ts`) et des façades de `DatabaseManager` ; le moteur
+et l'arène lisent le dépôt (`ctx.db.teams.getTeamBoutCards`, `getTeamMatchCards`). Cliquets :
+`ipcChannels` 65 → 61 ; `electronApiCalls` (−1), `electronApiUses` (−4) et `directDbWrites` (−2)
+avaient déjà été abaissés par les lots C2 et C3.
+
 **Critères d'acceptation** :
 
 - `grep -n "electronAPI" src/renderer/components/TeamManagerView.tsx` est vide.

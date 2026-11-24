@@ -6,7 +6,6 @@
 
 import type { SettingsAPI } from './settingsApi';
 import {
-  Card,
   Competition,
   Match,
   Pool,
@@ -378,27 +377,6 @@ export interface DatabaseAPI {
 
   // État de l'épreuve hors moteur (lecture seule ; écrit par le moteur seul, docs/adr/0024)
   getSessionState: (competitionId: string) => Promise<SessionState | null>;
-
-  // Cartons d'équipe : hors du moteur (docs/adr/0024, « Hors de cette ADR »)
-  createTeamMatchCard: (
-    matchId: string,
-    teamId: string,
-    type: 'white' | 'yellow' | 'red' | 'black',
-    reason: string
-  ) => Promise<{ id: string }>;
-  getTeamMatchCards: (matchId: string) => Promise<
-    Array<{
-      id: string;
-      matchId: string;
-      teamId: string;
-      type: string;
-      reason: string;
-      createdAt: string;
-    }>
-  >;
-  /** Cartons individuels des relais par équipes, persistés (#1086) */
-  createTeamBoutCard: (boutId: string, card: Card) => Promise<{ id: string }>;
-  getTeamBoutCards: (matchId: string) => Promise<Array<{ boutId: string; card: Card }>>;
 }
 
 export interface FileAPI {

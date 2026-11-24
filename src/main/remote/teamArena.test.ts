@@ -325,7 +325,7 @@ d('Arène équipe des tablettes par les commandes (docs/adr/0024, lot E4)', () =
       [fx.teamAId, 'white'],
       [fx.teamBId, 'black'],
     ]);
-    expect(fx.db.getTeamMatchCards(fx.matchId)).toHaveLength(2);
+    expect(fx.db.teams.getTeamMatchCards(fx.matchId)).toHaveLength(2);
     expect(fx.divergences()).toEqual([]);
   });
 });
