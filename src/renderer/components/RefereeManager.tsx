@@ -111,7 +111,7 @@ export const RefereeManagerComponent: React.FC<RefereeManagerProps> = ({
     const next = resolveRefereeing(competition.settings?.refereeing);
     setConfig(toConfig(next));
     setNeutrality(next.neutrality);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- savedKey résume competition.settings.refereeing : relu quand le réglage enregistré change
   }, [savedKey]);
   /** Enregistre un réglage par le moteur (fusion côté moteur) ; l'écran affiche l'échec */
   const saveRefereeing = (patch: RefereeingSettings) => {

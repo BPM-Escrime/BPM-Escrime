@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 83 | 908 |
+| `src/shared/utils/` | 84 | 912 |
 | `src/shared/services/` | 8 | 87 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 40 | 482 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **607** | **4713** |
+| **Total** | **608** | **4717** |
 
-Unitaires : 589 fichiers, 4663 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -580,6 +580,17 @@ Unitaires : 589 fichiers, 4663 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - exporte un JSON parsable
 - **trim à 100 entrées**
   - ne conserve que les 100 dernières
+
+</details>
+
+<details>
+<summary><code>src/shared/utils/escapeHtml.test.ts</code> — 4 tests</summary>
+
+- **escapeHtml (src/shared/utils)**
+  - échappe & \< \> " ' et \`
+  - null et undefined donnent une chaîne vide, 0 reste 0
+  - même résultat que escHtml de src/remote/common.js
+  - aucune copie locale dans app.js, bookToc.ts, clubLoanContract.ts
 
 </details>
 

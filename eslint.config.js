@@ -36,7 +36,6 @@ module.exports = [
       'dist',
       'node_modules',
       'release',
-      'src/examples',
       '**/*.js',
       '!src/remote/**/*.js',
       '**/*.cjs',
@@ -116,6 +115,12 @@ module.exports = [
     // Les fichiers de tests peuvent dépasser le budget (tables de cas)
     files: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}', 'e2e/**/*.ts'],
     rules: { 'max-lines': 'off' },
+  },
+  {
+    // Typage (#2198) : pas de `any` dans le partagé ni le serveur distant (données des tablettes)
+    files: ['src/shared/**/*.{ts,tsx}', 'src/main/remote/**/*.ts'],
+    ignores: ['**/*.test.{ts,tsx}', '**/__tests__/**'],
+    rules: { '@typescript-eslint/no-explicit-any': 'error' },
   },
   {
     // Serveur distant (score en direct) : pas d'E/S fs synchrone, elle bloque la boucle

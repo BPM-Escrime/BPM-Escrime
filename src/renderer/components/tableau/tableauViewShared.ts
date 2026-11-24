@@ -41,8 +41,8 @@ export interface TableauViewProps {
     matchId: string,
     oldArena: number | null,
     newArena: number | null,
-    fencerA?: any,
-    fencerB?: any
+    fencerA?: Fencer | null,
+    fencerB?: Fencer | null
   ) => void;
   onMatchRefereeChange?: (matchId: string, refereeId: string | null) => void;
   /**

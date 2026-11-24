@@ -3,14 +3,10 @@
  * Licensed under GPL-3.0
  */
 
-export function escHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+import { escapeHtml as escHtml } from '../escapeHtml';
+
+/** Échappement HTML commun (#2204) : réexporté pour les générateurs PDF */
+export { escHtml };
 
 /** Pages occupées par la page de garde et le sommaire, avant la première section */
 export const BOOK_FRONT_PAGES = 2;

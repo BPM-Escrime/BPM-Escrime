@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Competition, Pool, Match, MatchStatus, Weapon } from '../../shared/types';
+import { Competition, Fencer, Pool, Match, MatchStatus, Weapon } from '../../shared/types';
 import { formatIndex } from '../../shared/utils/poolCalculations';
 import {
   PANEL_TITLE,
@@ -23,12 +23,18 @@ import { useTranslation } from '../hooks/useTranslation';
 import { Award, ChartColumn, Medal, Swords, Trophy } from 'lucide-react';
 import { Icon } from './common/Icon';
 
+/** Ligne du classement final affichée en direct */
+interface LiveFinalResult {
+  fencer?: Pick<Fencer, 'firstName' | 'lastName' | 'club'>;
+  round?: number;
+}
+
 interface LiveDashboardProps {
   competition: Competition;
   pools: Pool[];
   currentPhase: 'pools' | 'tableau' | 'results';
   tableauMatches?: Match[];
-  finalResults?: any[];
+  finalResults?: LiveFinalResult[];
   weapon?: Weapon;
 }
 
@@ -428,7 +434,7 @@ const TableauView_: React.FC<{ matches: Match[] }> = ({ matches }) => {
 };
 
 // Final Ranking View
-const FinalRankingView_: React.FC<{ results: any[] }> = ({ results }) => {
+const FinalRankingView_: React.FC<{ results: LiveFinalResult[] }> = ({ results }) => {
   const { t } = useTranslation();
   return (
     <div className="ld-card ld-card--flush">

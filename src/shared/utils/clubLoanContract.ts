@@ -4,6 +4,7 @@
  * Licensed under GPL-3.0
  */
 import type { ClubLoan } from '../types/club';
+import { escapeHtml } from './escapeHtml';
 
 export interface LoanContractLabels {
   title: string;
@@ -29,18 +30,8 @@ export interface LoanContractLabels {
   none: string;
 }
 
-const ESC: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-};
-
-/** Échappement HTML des données saisies (noms, remarques) */
-export function escapeLoanHtml(v: unknown): string {
-  return String(v ?? '').replace(/[&<>"']/g, ch => ESC[ch] ?? ch);
-}
+/** Échappement HTML des données saisies (noms, remarques) : règle commune (#2204) */
+export const escapeLoanHtml = escapeHtml;
 
 /** Page HTML A4 du contrat de prêt, prête pour la boîte d'impression */
 export function buildLoanContractHtml(

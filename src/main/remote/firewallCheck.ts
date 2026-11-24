@@ -160,8 +160,7 @@ export function parseFirewallOutput(
   let raw: RawFirewallData;
   try {
     // Sortie PowerShell : forme connue (voir buildFirewallScript), validée par analyzeFirewall
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const parsed: Record<string, any> = JSON.parse(json);
+    const parsed: Record<string, unknown> = JSON.parse(json);
     if (typeof parsed.fatal === 'string') {
       return unreadable(port, `Erreur PowerShell : ${parsed.fatal}`);
     }
@@ -197,9 +196,10 @@ function unreadable(port: number, detail: string): FirewallDiagnosis {
   };
 }
 
-function toArray<T>(value: T | T[] | null | undefined): T[] {
+/** Sortie PowerShell : objet seul ou tableau ; forme validée ensuite par analyzeFirewall */
+function toArray<T>(value: unknown): T[] {
   if (value === null || value === undefined) return [];
-  return Array.isArray(value) ? value : [value];
+  return (Array.isArray(value) ? value : [value]) as T[];
 }
 
 /**

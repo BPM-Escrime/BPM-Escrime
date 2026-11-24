@@ -144,7 +144,7 @@ export async function startSession(
     const realMatches: SessionMatch[] = [];
     for (const m of matchesFromRenderer) {
       if (m.__poolFencers && m.poolId) {
-        fencerOrderMap.set(m.poolId, m.fencers);
+        fencerOrderMap.set(m.poolId, m.fencers ?? []);
         if (m.poolNumber != null) poolNumberMap.set(m.poolId, m.poolNumber);
       } else if (!m.__poolFencers) {
         realMatches.push(m as SessionMatch);
@@ -317,8 +317,8 @@ export async function startSession(
       poolId: poolId,
       fencerA: firstMatch.fencerA!,
       fencerB: firstMatch.fencerB!,
-      scoreA: firstMatch.scoreA?.value ?? 0,
-      scoreB: firstMatch.scoreB?.value ?? 0,
+      scoreA: (typeof firstMatch.scoreA === 'object' && firstMatch.scoreA?.value) || 0,
+      scoreB: (typeof firstMatch.scoreB === 'object' && firstMatch.scoreB?.value) || 0,
       status: 'not_started',
       startTime: null,
       endTime: null,
@@ -367,8 +367,8 @@ export async function startSession(
       if (!queuesByArena.has(targetArenaId)) continue; // hors plage → ignorer
       queuesByArena.get(targetArenaId)!.push({
         id: match.id,
-        fencerA: match.fencerA,
-        fencerB: match.fencerB,
+        fencerA: match.fencerA!,
+        fencerB: match.fencerB!,
         scoreA: 0,
         scoreB: 0,
         status: 'not_started',
