@@ -8,7 +8,6 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 import type {
   ElectronAPI,
-  CompetitionEventType,
   UpdateInfo,
   UpdateProgressEvent,
   ProxySettingsDTO,
@@ -189,9 +188,6 @@ const electronApi = {
     subscribe('update:available', callback),
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) =>
     subscribe('update:progress', callback),
-  onCompetitionEvent: (
-    callback: (event: { type: CompetitionEventType; competitionId?: string }) => void
-  ) => subscribe('competition:event', callback),
   getLogo: () => ipcRenderer.invoke('app:getLogo'),
   getLogos: () => ipcRenderer.invoke('app:getLogos'),
   saveLogos: (logos: { id: string; name: string; data: string }[]) =>

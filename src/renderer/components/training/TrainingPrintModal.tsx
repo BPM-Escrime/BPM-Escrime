@@ -9,6 +9,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { buildQrSheetsHTML, type QrCard } from '../ArenaQrCodesModal';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
+import { usePlatform } from '../../platform/PlatformContext';
 
 export interface TrainingQrSelection {
   kiosk: boolean;
@@ -59,6 +60,7 @@ interface Props {
 
 const TrainingPrintModal: React.FC<Props> = ({ serverUrl, strips, onClose }) => {
   const { t } = useTranslation();
+  const platform = usePlatform();
   const [sel, setSel] = useState<TrainingQrSelection>({
     kiosk: true,
     referees: true,
@@ -95,15 +97,14 @@ const TrainingPrintModal: React.FC<Props> = ({ serverUrl, strips, onClose }) => 
           }),
         }))
       );
-      const res = await window.electronAPI?.file?.printHtml?.(
+      await platform.print(
         buildQrSheetsHTML(
           cards,
           count >= 4 ? 4 : count >= 2 ? 2 : 1,
           t('trainingPanel.print_title')
         )
       );
-      if (res && !res.success) setError(t('trainingPanel.print_error'));
-      else onClose();
+      onClose();
     } catch {
       setError(t('trainingPanel.print_error'));
     } finally {

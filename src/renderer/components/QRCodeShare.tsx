@@ -16,6 +16,8 @@ import { Icon } from './common/Icon';
 import { buildQrSheetsHTML } from './ArenaQrCodesModal';
 import { ipcErrorText } from '../services/ipcError';
 import { useRemoteApi } from '../api/remoteApi';
+import { usePlatform } from '../platform/PlatformContext';
+import { PlatformError } from '../../shared/platform/platforms';
 
 type QRMode = 'results' | 'checkin';
 
@@ -34,6 +36,7 @@ const QRCodeShare_: React.FC<QRCodeShareProps> = ({
   const remote = useRemoteApi();
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
   const { showToast } = useToast();
+  const platform = usePlatform();
   const [activeMode, setActiveMode] = useState<QRMode>(initialMode);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(true);
@@ -102,11 +105,18 @@ const QRCodeShare_: React.FC<QRCodeShareProps> = ({
         1,
         competition.title
       );
-      const res = await window.electronAPI?.file?.printHtml?.(html);
-      if (res && !res.success) throw new Error(ipcErrorText(t, res, t('qrShare.print_error')));
+      await platform.print(html);
     } catch (err) {
       logger.error(LogCategory.UI, 'Erreur impression QR', err as Error);
-      showToast(err instanceof Error ? err.message : t('qrShare.print_error'), 'error');
+      const fallback = t('qrShare.print_error');
+      showToast(
+        err instanceof PlatformError
+          ? ipcErrorText(t, { error: err.detail }, fallback)
+          : err instanceof Error
+            ? err.message
+            : fallback,
+        'error'
+      );
     }
   };
 

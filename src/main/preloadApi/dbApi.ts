@@ -16,12 +16,4 @@ export const dbApi = {
   getPoolsByPhase: (phaseId: string) => ipcRenderer.invoke('db:getPoolsByPhase', phaseId),
   getPhasesByCompetition: (competitionId: string) =>
     ipcRenderer.invoke('db:getPhasesByCompetition', competitionId),
-
-  // État de l'épreuve hors moteur (lecture seule)
-  getSessionState: (competitionId: string) => {
-    if (!competitionId || typeof competitionId !== 'string') {
-      throw new Error('Competition ID is required and must be a string');
-    }
-    return ipcRenderer.invoke('db:getSessionState', competitionId);
-  },
 } satisfies DatabaseAPI;
