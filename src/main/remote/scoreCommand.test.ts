@@ -1,6 +1,6 @@
 /**
  * Fin de match distante par recordScore (#1980, ADR-0005), base SQLite réelle :
- * tablette et appareil de piste écrivent par le moteur, repli sur le chemin historique.
+ * tablette et appareil de piste écrivent par le moteur ; tout refus est rendu, sans repli (#2151).
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseManager } from '../../database';
@@ -118,18 +118,22 @@ d('recordFinishedScore', () => {
     expect(last(db.getScoreAuditLog(`${comp.id}-${semi.matchId}`))?.changedBy).toBe('device');
   });
 
-  it('match inconnu, sans épreuve : chemin historique provisoire ; règle : refus (#2151)', () => {
+  it('match inconnu, sans épreuve, règle : refus rendu, rien d’écrit (#2151, étape 3)', () => {
     const comp = setup(4);
     generatePools({ db }, comp.id, { poolCount: 1 });
     const m = listMatches({ db }, comp.id, { state: 'ready' })[0];
     const base = { matchId: m.matchId, scoreA: 5, scoreB: 2, winner: 'A' as const };
     expect(recordFinishedScore(db, { ...base, competitionId: null, source: 'tablet' })).toEqual({
-      kind: 'fallback',
-      code: 'no_competition',
+      kind: 'refused',
+      code: 'competition_not_found',
+      message: 'Aucune épreuve en cours',
     });
     expect(
       recordFinishedScore(db, { ...base, competitionId: comp.id, matchId: 'x', source: 'tablet' })
-    ).toMatchObject({ kind: 'fallback', code: 'match_not_found' });
+    ).toMatchObject({ kind: 'refused', code: 'match_not_found' });
+    expect(
+      recordFinishedScore(db, { ...base, competitionId: 'absente', source: 'tablet' })
+    ).toMatchObject({ kind: 'refused', code: 'competition_not_found' });
     // Score hors bornes : refusé, plus de repli qui l'écrirait quand même
     expect(
       recordFinishedScore(db, { ...base, scoreA: 9, competitionId: comp.id, source: 'tablet' })
@@ -190,7 +194,7 @@ d('recordFinishedScore', () => {
       type: 'FencerReinstated',
       source: 'tablet',
     });
-    // Rien à annuler : chemin historique
+    // Rien à annuler : refusé
     expect(reinstateByCommand(db, comp.id, culprit)).toBe(false);
   });
 });

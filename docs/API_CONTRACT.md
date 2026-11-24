@@ -353,13 +353,19 @@ places ») ; les équipes gardent leur modèle de relais. Une seule écriture po
   et un refus (score maximal dépassé, égalité impossible…) vaut NAK, l'arbitre corrige puis
   valide à nouveau.
 
+Plus de chemin historique pour les fins de match distantes (#2151, étape 3) : tout refus de
+`recordScore` (règle du score, `match_not_found`, `competition_not_found`…) laisse la base
+intacte ; la tablette reçoit `409 score_refused` avec le code, l'appareil NAK, le DT corrige au
+poste. Le serveur distant n'écrit plus de match ni de tireur lui-même (cliquet `directDbWrites`
+à 0).
+
 Journal des scores (`score_audit_log`) inchangé pour l'utilisateur : `ui`, nom de l'arbitre avec
 l'adresse de la tablette, `device`, `mcp`. Le journal d'épreuve ne porte que l'identifiant de
 l'arbitre (RGPD).
 
-Restent sur le chemin historique (saisie locale de l'écran, ou écriture directe du serveur) : épreuves
-par équipes, égalité sans vainqueur sur la feuille de poule, scores en cours et synchronisation hors ligne des
-tablettes (`updateMatchScore`).
+Restent hors `recordScore` : scores en cours et synchronisation hors ligne des tablettes
+(`updateMatchScore`) ; les épreuves par équipes ont leurs commandes (`recordRelayScore`,
+[ADR-0024](adr/0024-tableaux-separes-equipes-moteur.md)).
 
 Retrait d'un tireur ([ADR-0016](adr/0016-retrait-reintegration-tireur.md)) : étape 1 faite, règle
 unique `planWithdrawal` / `planReinstatement` (`shared/domain/fencers/withdrawal.ts`), commandes

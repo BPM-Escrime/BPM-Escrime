@@ -16,7 +16,6 @@ import type { PoolRouteContext } from './poolRoutes';
 import { baseArenaId, matchesTakenBySiblings } from '../arenaSlots';
 import { getSharedMainWindow } from '../../mainWindowRef';
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
-import { emitCompetitionEvent } from '../../ipc/dbHandlers';
 import { recordRemoteEvent } from '../remoteEvents';
 import {
   decideMatchWinner,
@@ -369,6 +368,14 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
         return res.status(409).json(scoreRefusal(check));
       }
 
+      // Refus du moteur après coup (course) : score en mémoire d'avant rétabli, 409 (#2151)
+      const scoresBefore = ctx.sessionMatchScores.get(matchId);
+      const refuse = (outcome: Parameters<typeof scoreRefusal>[0]) => {
+        if (scoresBefore) ctx.sessionMatchScores.set(matchId, scoresBefore);
+        else ctx.sessionMatchScores.delete(matchId);
+        return res.status(409).json(scoreRefusal(outcome));
+      };
+
       // Exclu sur carton noir : statut d'avant la fin (annulation du carton), pour savoir ensuite
       // si le moteur l'a exclu (recordScore avec statut, docs/adr/0016)
       const culpritRef: FinishedMatchView | undefined = dbMatch || inMemoryMatch || undefined;
@@ -433,7 +440,8 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
         } else {
           // Match non trouvé dans une arène active : notifier quand même le renderer
           // (cas où l'arbitre soumet depuis referee.html mais l'arène a déjà changé)
-          // Score par la commande recordScore (#1980) ; carton noir : score et exclusion ensemble
+          // Score par la commande recordScore (#1980) ; carton noir : score et exclusion ensemble.
+          // Refus (course après le contrôle) : rien d'écrit, refus rendu (#2151, étape 3)
           const outcome = recordFinishedScore(ctx.db, {
             competitionId: ctx.session?.competitionId,
             matchId,
@@ -443,16 +451,7 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
             source: 'tablet',
             ...(blackCarded ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
           });
-          // Chemin historique provisoire (#2151, étape 2) : match absent de la session
-          if (outcome.kind === 'fallback') {
-            ctx.db.updateMatch(matchId, {
-              scoreA: scoreAObj,
-              scoreB: scoreBObj,
-              status: MatchStatus.FINISHED,
-            });
-            emitCompetitionEvent('matches:changed', ctx.session?.competitionId);
-          }
-          const recorded = outcome.kind !== 'fallback';
+          if (outcome.kind === 'refused') return refuse(outcome);
           const mainWin = getSharedMainWindow();
           if (mainWin) {
             const isTableauMatch = !dbMatch.poolId;
@@ -465,7 +464,7 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
               winner: winner as 'A' | 'B' | null,
               poolId: dbMatch.poolId ?? null,
               isTableau: isTableauMatch,
-              recorded,
+              recorded: true,
             });
             logger.info(
               LogCategory.NETWORK,
@@ -493,22 +492,21 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
             break;
           }
         }
-        if (!arenaFoundForInMemory) {
-          // Match en mémoire non trouvé dans une arène : notifier quand même le renderer
+        if (!arenaFoundForInMemory && !ctx.isTrainingMode) {
+          // Match hors arène : score par le moteur ; refus (course) rendu, rien d'écrit (#2151)
+          const outcome = recordFinishedScore(ctx.db, {
+            competitionId: ctx.session?.competitionId,
+            matchId,
+            scoreA,
+            scoreB,
+            winner: winner as 'A' | 'B' | null,
+            source: 'tablet',
+            ...(blackCarded ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
+          });
+          if (outcome.kind === 'refused') return refuse(outcome);
           const mainWin = getSharedMainWindow();
           if (mainWin) {
             const sm = ctx.sessionMatches.find(m => m.id === matchId);
-            // Écrit ou refusé par le moteur : l'écran n'applique pas le score lui-même
-            const recorded =
-              recordFinishedScore(ctx.db, {
-                competitionId: ctx.session?.competitionId,
-                matchId,
-                scoreA,
-                scoreB,
-                winner: winner as 'A' | 'B' | null,
-                source: 'tablet',
-                ...(blackCarded ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
-              }).kind !== 'fallback';
             notifyScreen({
               kind: 'match_finished',
               competitionId: ctx.session?.competitionId ?? null,
@@ -518,7 +516,8 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
               winner: winner as 'A' | 'B' | null,
               poolId: sm?.poolId ?? null,
               isTableau: sm?.isTableau ?? false,
-              recorded,
+              // Écrit par le moteur : l'écran relit la session
+              recorded: true,
             });
             logger.info(
               LogCategory.NETWORK,
@@ -535,19 +534,23 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
           blackCarded === 'A'
             ? (matchObj?.fencerA?.id ?? matchObj?.fencerAId)
             : (matchObj?.fencerB?.id ?? matchObj?.fencerBId);
-        if (culpritId) {
+        const previousStatus = culpritId
+          ? (culpritStatusBefore ?? ctx.db.getFencer(culpritId)?.status)
+          : undefined;
+        // Exclusion écrite par le moteur avec le score (docs/adr/0016) ; sinon (score refusé
+        // après coup, tireur déjà exclu, entraînement) rien à mémoriser ni à notifier (#2151)
+        const engineExcluded =
+          !!culpritId &&
+          previousStatus !== FencerStatus.EXCLUDED &&
+          ctx.db.getFencer(culpritId)?.status === FencerStatus.EXCLUDED;
+        if (culpritId && !engineExcluded) {
+          logger.warn(
+            LogCategory.NETWORK,
+            `[RemoteScoreServer] Carton noir : exclusion de ${culpritId} non écrite par le moteur`
+          );
+        }
+        if (culpritId && engineExcluded) {
           try {
-            const previousStatus = culpritStatusBefore ?? ctx.db.getFencer(culpritId)?.status;
-            // Exclusion déjà écrite par le moteur avec le score (docs/adr/0016) ?
-            const engineExcluded =
-              previousStatus !== FencerStatus.EXCLUDED &&
-              ctx.db.getFencer(culpritId)?.status === FencerStatus.EXCLUDED;
-            if (!engineExcluded) {
-              ctx.db.updateFencer(culpritId, {
-                status: FencerStatus.EXCLUDED,
-                exclusionReason: 'black_card',
-              });
-            }
             // Mémoriser le carton noir pour permettre son annulation depuis la tablette
             const culpritObj = blackCarded === 'A' ? matchObj?.fencerA : matchObj?.fencerB;
             const opponentObj = blackCarded === 'A' ? matchObj?.fencerB : matchObj?.fencerA;
@@ -575,7 +578,7 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
                 matchId,
                 reason: 'black_card',
                 // Retrait écrit par le moteur : l'écran relit, sans rien appliquer
-                recorded: engineExcluded,
+                recorded: true,
               });
               // Carton noir → appel DT automatique (rapport fédéral)
               const culprit = blackCarded === 'A' ? matchObj?.fencerA : matchObj?.fencerB;

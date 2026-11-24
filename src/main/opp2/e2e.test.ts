@@ -37,6 +37,13 @@ vi.mock('../ipc/dbHandlers', async importOriginal => ({
   ...(await importOriginal<typeof import('../ipc/dbHandlers')>()),
   emitCompetitionEvent: vi.fn(),
 }));
+// Score par le moteur (recordScore, #2151) : accepté ici (base factice sans session ni journal),
+// fin acceptée ou refusée sur base réelle dans remote/finishByEngine.test.ts
+vi.mock('../remote/scoreCommand', async orig => ({
+  ...(await orig<typeof import('../remote/scoreCommand')>()),
+  checkFinishedScore: () => ({ kind: 'accepted' }),
+  recordFinishedScore: () => ({ kind: 'accepted' }),
+}));
 vi.mock('http', () => ({
   createServer: vi
     .fn()

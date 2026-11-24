@@ -22,7 +22,6 @@ import type { RegistrationRouteContext } from './registrationRoutes';
 import { baseArenaId } from '../arenaSlots';
 import { getSharedMainWindow } from '../../mainWindowRef';
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
-import { emitCompetitionEvent } from '../../ipc/dbHandlers';
 import { notifyScreen } from '../remoteActivity';
 
 /** Tireur d'une poule tel que transmis par le renderer. */
@@ -291,36 +290,9 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
           ipAddress: clientIp,
         },
       });
+      // Refus (règle, match absent de la session, épreuve introuvable) : rien d'écrit, le DT
+      // corrige au poste ; plus de chemin historique (#2151, étape 3)
       if (outcome.kind === 'refused') return res.status(409).json(scoreRefusal(outcome));
-      // Chemin historique provisoire (#2151, étape 2) : match absent de la session
-      const recorded = outcome.kind === 'accepted';
-      if (!recorded) {
-        ctx.db.updateMatch(matchId, {
-          scoreA: scoreAObj,
-          scoreB: scoreBObj,
-          status: MatchStatus.FINISHED,
-        });
-        emitCompetitionEvent('matches:changed', ctx.session?.competitionId);
-      }
-
-      if (!recorded)
-        try {
-          ctx.db.logScoreChange({
-            matchId,
-            poolId,
-            previousScoreA: previousMatch?.scoreA ?? null,
-            previousScoreB: previousMatch?.scoreB ?? null,
-            newScoreA: scoreAObj,
-            newScoreB: scoreBObj,
-            changedBy: resolvedRef?.name ?? bodyRefereeId ?? 'referee',
-            reason: 'pool_remote_entry',
-            refereeId: resolvedRef?.id ?? bodyRefereeId,
-            refereeName: resolvedRef?.name,
-            ipAddress: clientIp,
-          });
-        } catch {
-          /* non bloquant */
-        }
 
       // Mettre à jour le score en mémoire (pour les matchs du renderer non persistés en DB)
       ctx.sessionMatchScores.set(matchId, {
@@ -366,7 +338,8 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
           scoreB: scoreBObj.value as number,
           poolId,
           isTableau: false,
-          recorded,
+          // Écrit par le moteur : l'écran relit la session
+          recorded: true,
         });
       }
 
