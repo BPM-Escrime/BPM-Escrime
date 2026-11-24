@@ -402,7 +402,7 @@ d(
 
     it('cartons en base après redémarrage (#2182) : arène rouverte, rejeu sans écart', () => {
       const [, fencerB] = fx.relay(1);
-      expect(fx.db.getTeamBoutCards(fx.matchId)).toEqual([
+      expect(fx.db.teams.getTeamBoutCards(fx.matchId)).toEqual([
         {
           boutId: fx.boutId(1),
           card: expect.objectContaining({ fencerId: fencerB, type: 'RED', group: null }),

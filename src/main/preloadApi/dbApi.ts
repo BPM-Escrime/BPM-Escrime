@@ -24,16 +24,4 @@ export const dbApi = {
     }
     return ipcRenderer.invoke('db:getSessionState', competitionId);
   },
-
-  // Cartons d'équipe : hors du moteur, décision à prendre (docs/adr/0024, « Hors de cette ADR »)
-  createTeamMatchCard: (
-    matchId: string,
-    teamId: string,
-    type: 'white' | 'yellow' | 'red' | 'black',
-    reason: string
-  ) => ipcRenderer.invoke('db:createTeamMatchCard', matchId, teamId, type, reason),
-  getTeamMatchCards: (matchId: string) => ipcRenderer.invoke('db:getTeamMatchCards', matchId),
-  createTeamBoutCard: (boutId: string, card: unknown) =>
-    ipcRenderer.invoke('db:createTeamBoutCard', boutId, card),
-  getTeamBoutCards: (matchId: string) => ipcRenderer.invoke('db:getTeamBoutCards', matchId),
 } satisfies DatabaseAPI;
