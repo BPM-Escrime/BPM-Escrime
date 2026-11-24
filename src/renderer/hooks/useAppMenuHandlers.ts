@@ -2,12 +2,14 @@
  * BPM - Escrime - Événements du menu natif et des fichiers pour l'App (#1897)
  * Extrait d'App.tsx : un seul abonnement au montage, désabonnement ciblé (#1894).
  * Les handlers sont lus via une ref : toujours la dernière version, sans réabonnement.
+ * Menu et fichiers par `usePlatform().desktop` (ADR-0030) : rien hors application de bureau.
  * Licensed under GPL-3.0
  */
 
 import { useEffect, useRef } from 'react';
 import { logger, LogCategory } from '@shared/services/logger';
 import type { ToastType } from '../components/Toast';
+import { usePlatform } from '../platform/PlatformContext';
 
 export interface AppMenuHandlers {
   onNewCompetition: () => void;
@@ -44,32 +46,29 @@ export async function announceOpenedCompetitions(
 export function useAppMenuHandlers(handlers: AppMenuHandlers): void {
   const ref = useRef(handlers);
   ref.current = handlers;
+  const desktop = usePlatform().desktop;
 
   useEffect(() => {
-    const api = window.electronAPI;
-    if (!api) return;
+    if (!desktop) return;
     const h = () => ref.current;
-    const unsubscribers: Array<(() => void) | void> = [
-      api.onMenuNewCompetition(() => h().onNewCompetition()),
-      api.onMenuReportIssue(() => h().onReportIssue()),
-      api.onShowAbout(() => h().onAbout()),
-      api.onFileOpened(async (filepath: string, competitionIds?: string[]) => {
-        logger.debug(LogCategory.UI, 'Fichier .BPM ouvert', { filepath, competitionIds });
-        await announceOpenedCompetitions(h(), competitionIds);
+    const unsubscribers = [
+      desktop.onMenu('newCompetition', () => h().onNewCompetition()),
+      desktop.onMenu('reportIssue', () => h().onReportIssue()),
+      desktop.onMenu('about', () => h().onAbout()),
+      desktop.onCompetitionFileOpened(({ competitionIds }) => {
+        logger.debug(LogCategory.UI, 'Fichier .BPM ouvert', { competitionIds });
+        void announceOpenedCompetitions(h(), competitionIds);
       }),
-      api.privacy?.onEncryptedBpmRequest?.((fileName, content) =>
-        h().onEncryptedFile?.(fileName, content)
-      ),
-      api.onFileSaved(async (filepath: string) => {
-        logger.debug(LogCategory.UI, 'Fichier sauvegardé', { filepath });
+      desktop.onEncryptedFileOpened(({ name, content }) => h().onEncryptedFile?.(name, content)),
+      desktop.onMenu('save', () => h().showToast('Sauvegarde effectuée', 'success')),
+      desktop.onMenu('openSettings', () => h().onOpenSettings()),
+      desktop.onAutosave(({ ok }) => {
+        if (ok) logger.debug(LogCategory.UI, 'Autosave OK');
+        else h().showToast('Échec de la sauvegarde automatique', 'error');
       }),
-      api.onMenuSave(() => h().showToast('Sauvegarde effectuée', 'success')),
-      api.onMenuOpenSettings(() => h().onOpenSettings()),
-      api.onAutosaveCompleted(() => logger.debug(LogCategory.UI, 'Autosave OK')),
-      api.onAutosaveFailed(() => h().showToast('Échec de la sauvegarde automatique', 'error')),
     ];
     return () => {
-      for (const off of unsubscribers) if (typeof off === 'function') off();
+      for (const off of unsubscribers) off();
     };
-  }, []);
+  }, [desktop]);
 }

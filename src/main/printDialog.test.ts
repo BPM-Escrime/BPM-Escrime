@@ -231,7 +231,7 @@ describe('enregistrement PDF (#1214)', () => {
   it('rend avec les réglages puis écrit au chemin choisi', async () => {
     const deps = makeDeps();
     const res = await savePdf(deps, '<p>a</p>', { scale: 50 }, 'Poule 1');
-    expect(res).toEqual({ success: true, path: '/tmp/x.pdf' });
+    expect(res).toEqual({ success: true });
     expect(deps.chooseSavePath).toHaveBeenCalledWith('Poule 1.pdf');
     expect(deps.renderPdf).toHaveBeenCalledWith(
       '<p>a</p>',

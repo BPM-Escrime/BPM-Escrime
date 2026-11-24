@@ -7,6 +7,8 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { TranslationProvider } from '../contexts/TranslationContext';
+import { PlatformProvider } from '../platform/PlatformContext';
+import { BrowserPlatform } from '../../shared/platform/platforms';
 import { DtApp } from './DtApp';
 import { browserLanguage } from './dtFormat';
 import './dt.css';
@@ -22,9 +24,12 @@ try {
 
 const root = document.getElementById('root');
 if (root) {
+  // Navigateur : pas de fonctions de bureau (ADR-0030), langue reprise du navigateur
   createRoot(root).render(
-    <TranslationProvider>
-      <DtApp />
-    </TranslationProvider>
+    <PlatformProvider platform={new BrowserPlatform()}>
+      <TranslationProvider>
+        <DtApp />
+      </TranslationProvider>
+    </PlatformProvider>
   );
 }

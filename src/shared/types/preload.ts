@@ -6,7 +6,6 @@
 
 import type { SettingsAPI } from './settingsApi';
 import { Competition, Pool, Score, Phase, FencerCompetitionStats } from '../types';
-import type { PrivacyAPI } from './privacy';
 import type { McpScreenEvent } from './mcp';
 export type { ClubMemberReport } from './club';
 
@@ -230,16 +229,6 @@ export interface DialogSaveOptions {
 }
 
 // ============================================================================
-// Menu Event Types
-// ============================================================================
-
-export interface MenuEventData {
-  format?: string;
-  filepath?: string;
-  content?: string;
-}
-
-// ============================================================================
 // Version Info Types
 // ============================================================================
 
@@ -405,20 +394,21 @@ export interface MenuAPI {
   onMenuAddReferee: (callback: () => void) => () => void;
   onMenuNextPhase: (callback: () => void) => () => void;
   onMenuExport: (callback: (format: string) => void) => () => void;
-  onMenuImport: (
-    callback: (format: string, filepath: string, content: string) => void
-  ) => () => void;
+  /** Nom du fichier choisi (jamais son chemin) et son contenu texte (ADR-0030) */
+  onMenuImport: (callback: (format: string, name: string, content: string) => void) => () => void;
   onMenuOpenSettings: (callback: () => void) => () => void;
   onMenuReportIssue: (callback: () => void) => () => void;
   onShowAbout: (callback: () => void) => () => void;
-  /** competitionIds : compétitions fusionnées depuis le .bpm ouvert (#1117) */
-  onFileOpened: (callback: (filepath: string, competitionIds?: string[]) => void) => () => void;
+  /** Compétitions fusionnées depuis le .bpm ouvert par Fichier → Ouvrir (#1117) */
+  onFileOpened: (callback: (competitionIds: string[]) => void) => () => void;
+  /** Fichier → Ouvrir a choisi une archive chiffrée : nom et contenu base64 (ADR-0021) */
+  onEncryptedFileOpened: (callback: (fileName: string, content: string) => void) => () => void;
   /** Compétition affichée : « Enregistrer sous » l'exporte seule */
-  setCurrentCompetition?: (competitionId: string | null) => void;
-  onFileSaved: (callback: (filepath: string) => void) => () => void;
+  setCurrentCompetition: (competitionId: string | null) => void;
   onAutosaveCompleted: (callback: () => void) => () => void;
   onAutosaveFailed: (callback: () => void) => () => void;
-  onDbReady: (callback: () => void) => void;
+  /** Résolue quand la base est ouverte (db:ready retenu par le préload), tout de suite après */
+  whenDbReady: () => Promise<void>;
 }
 
 export interface UtilityAPI {
@@ -573,7 +563,7 @@ export interface PrintDialogAPI {
     html: string,
     settings?: Partial<PrintDialogSettings>,
     title?: string
-  ) => Promise<{ success: boolean; canceled?: boolean; path?: string; error?: string }>;
+  ) => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
   /** Boîte d'impression native du système (secours) */
   systemDialog: (html: string) => Promise<{ success: boolean; error?: string }>;
   /** Enregistre la fenêtre qui traite les demandes `file.printHtml` (null = désenregistrer) */
@@ -594,7 +584,6 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   dialog: DialogAPI;
   updater: UpdaterAPI;
   backup: BackupAPI;
-  privacy: PrivacyAPI;
   greg: GregAPI;
   ftp: FtpAPI;
   crypto: CryptoAPI;

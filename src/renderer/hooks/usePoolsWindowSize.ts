@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import type { Pool } from '../../shared/types';
 import type { Phase } from './useCompetitionSession';
 import type { useColumnVisibility } from './useColumnVisibility';
+import { usePlatform } from '../platform/PlatformContext';
 
 interface UsePoolsWindowSizeParams {
   poolsViewMode: 'grid' | 'single';
@@ -34,8 +35,11 @@ export function usePoolsWindowSize({
   poolsRef.current = pools;
   const singlePoolIndexRef = useRef(singlePoolIndex);
   singlePoolIndexRef.current = singlePoolIndex;
+  // Fenêtre de l'application de bureau seulement (ADR-0030) : rien dans le navigateur
+  const desktop = usePlatform().desktop;
 
   useEffect(() => {
+    if (!desktop) return;
     if (poolsViewMode !== 'single' || currentPhase !== 'pools') return;
     const pool = poolsRef.current[singlePoolIndexRef.current];
     if (!pool) return;
@@ -59,6 +63,6 @@ export function usePoolsWindowSize({
       (fencerCount + 1) * POOL_CELL + CHROME_HEIGHT
     );
 
-    window.electronAPI?.setWindowSize(Math.round(width), Math.round(height));
-  }, [poolsViewMode, currentPhase, getVisibleColumns, isLaserSabre]);
+    void desktop.setWindowSize(Math.round(width), Math.round(height));
+  }, [desktop, poolsViewMode, currentPhase, getVisibleColumns, isLaserSabre]);
 }

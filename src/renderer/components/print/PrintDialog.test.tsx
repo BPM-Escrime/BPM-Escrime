@@ -32,6 +32,8 @@ vi.mock('./pdfjsLoader', () => ({
 
 import PrintDialog from './PrintDialog';
 import PrintDialogHost from './PrintDialogHost';
+import { PlatformProvider } from '../../platform/PlatformContext';
+import { fakeDesktop, fakePlatform } from '../../../shared/platform/testing';
 import { isValidPageRanges, pageRangesBeyond, PRINT_SETTINGS_KEY } from './printSettings';
 
 const api = {
@@ -52,14 +54,21 @@ beforeEach(() => {
   ]);
   api.render.mockResolvedValue({ success: true, data: new Uint8Array([37, 80, 68, 70]) });
   api.execute.mockResolvedValue({ success: true });
-  api.savePdf.mockResolvedValue({ success: true, path: '/x.pdf' });
+  api.savePdf.mockResolvedValue({ success: true });
   api.systemDialog.mockResolvedValue({ success: true });
-  (window as unknown as { electronAPI: unknown }).electronAPI = { printDialog: api };
 });
+
+/** Hôte rendu avec un bureau simulé dont la boîte d'impression est `api` */
+const renderHost = () =>
+  render(
+    <PlatformProvider platform={fakePlatform({ desktop: fakeDesktop({ printDialog: api }) })}>
+      <PrintDialogHost />
+    </PlatformProvider>
+  );
 
 const open = async (html = '<html><title>Poule 1</title></html>') => {
   const onDone = vi.fn();
-  render(<PrintDialog html={html} onDone={onDone} />);
+  render(<PrintDialog html={html} printDialog={api} onDone={onDone} />);
   // Aperçu généré (3 pages) : boutons d'action activés
   await waitFor(() => expect(screen.getByText('print.pages_count:3')).toBeInTheDocument());
   return onDone;
@@ -176,7 +185,7 @@ describe('PrintDialog (#1214)', () => {
   });
 
   it('fermeture après aperçu : libère pdf.js sans planter (croix ou Annuler)', async () => {
-    const { unmount } = render(<PrintDialog html="<p>a</p>" onDone={vi.fn()} />);
+    const { unmount } = render(<PrintDialog html="<p>a</p>" printDialog={api} onDone={vi.fn()} />);
     await waitFor(() => expect(screen.getByText('print.print')).toBeEnabled());
     expect(() => unmount()).not.toThrow();
     expect(taskDestroy).toHaveBeenCalled();
@@ -184,7 +193,7 @@ describe('PrintDialog (#1214)', () => {
 
   it('aperçu en échec : impression et enregistrement restent possibles', async () => {
     api.render.mockResolvedValue({ success: false, error: 'boom' });
-    render(<PrintDialog html="<p>a</p>" onDone={vi.fn()} />);
+    render(<PrintDialog html="<p>a</p>" printDialog={api} onDone={vi.fn()} />);
     expect(await screen.findByText('print.preview_failed')).toBeInTheDocument();
     expect(screen.getByText('print.print')).toBeEnabled();
     expect(screen.getByText('print.save_pdf')).toBeEnabled();
@@ -193,7 +202,7 @@ describe('PrintDialog (#1214)', () => {
 
 describe('PrintDialogHost (#1214)', () => {
   it('enregistre le gestionnaire, ouvre la boîte à la demande et renvoie le résultat', async () => {
-    render(<PrintDialogHost />);
+    renderHost();
     expect(api.setHandler).toHaveBeenCalledTimes(1);
     const handler = api.setHandler.mock.calls[0][0] as (html: string) => Promise<unknown>;
     let result: Promise<unknown>;
@@ -207,9 +216,19 @@ describe('PrintDialogHost (#1214)', () => {
   });
 
   it('désenregistre le gestionnaire au démontage', () => {
-    const { unmount } = render(<PrintDialogHost />);
+    const { unmount } = renderHost();
     unmount();
     expect(api.setHandler).toHaveBeenLastCalledWith(null);
+  });
+
+  it('sans bureau (navigateur, vue DT) : ne rend rien, aucun gestionnaire', () => {
+    const { container } = render(
+      <PlatformProvider platform={fakePlatform()}>
+        <PrintDialogHost />
+      </PlatformProvider>
+    );
+    expect(container).toBeEmptyDOMElement();
+    expect(api.setHandler).not.toHaveBeenCalled();
   });
 });
 

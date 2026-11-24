@@ -44,6 +44,7 @@ import { CompetitionViewSkeleton } from './components/Skeleton';
 import { ToastProvider, useToast } from './components/Toast';
 import { OperationProvider, useOperation } from './components/common/OperationProgress';
 import PrintDialogHost from './components/print/PrintDialogHost';
+import { PlatformProvider, usePlatform } from './platform/PlatformContext';
 import { ConfirmProvider, useConfirm } from './components/ConfirmDialog';
 import { TranslationProvider, useTranslation } from './contexts/TranslationContext';
 import { executeSlashCommand, SHOW_SHORTCUTS_EVENT } from './services/slashCommands';
@@ -222,11 +223,12 @@ const AppContent: React.FC = () => {
   );
 
   // Compétition affichée → main (« Enregistrer sous » l'exporte seule, #1117)
+  const desktop = usePlatform().desktop;
   useEffect(() => {
-    window.electronAPI?.setCurrentCompetition?.(
+    desktop?.setCurrentCompetition(
       view === 'competition' && currentCompetition ? currentCompetition.id : null
     );
-  }, [view, currentCompetition]);
+  }, [desktop, view, currentCompetition]);
 
   const openClub = useCallback(() => {
     setClubTabOpen(true);
@@ -524,16 +526,19 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // Plateforme au-dessus de la traduction : la langue initiale vient du bureau (ADR-0030)
   return (
-    <TranslationProvider>
-      <ToastProvider>
-        <ConfirmProvider>
-          <OperationProvider>
-            <AppContent />
-          </OperationProvider>
-        </ConfirmProvider>
-      </ToastProvider>
-    </TranslationProvider>
+    <PlatformProvider>
+      <TranslationProvider>
+        <ToastProvider>
+          <ConfirmProvider>
+            <OperationProvider>
+              <AppContent />
+            </OperationProvider>
+          </ConfirmProvider>
+        </ToastProvider>
+      </TranslationProvider>
+    </PlatformProvider>
   );
 };
 

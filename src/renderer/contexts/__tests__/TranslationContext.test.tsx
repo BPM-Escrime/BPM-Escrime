@@ -6,6 +6,8 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import { TranslationProvider, useTranslation, type Language } from '../TranslationContext';
 import { getActiveLocale } from '@shared/utils/localeFormat';
 import { eventfulBridge } from '../../testUtils/stationBridge';
+import { PlatformProvider } from '../../platform/PlatformContext';
+import { fakeDesktop, fakePlatform } from '../../../shared/platform/testing';
 
 let api: ReturnType<typeof useTranslation>;
 function Probe() {
@@ -124,5 +126,39 @@ describe('TranslationContext : réglages changés par l’agent (#1880)', () => 
     await screen.findByText('fr');
     unmount();
     expect(unsubscribe).toHaveBeenCalled();
+  });
+});
+
+describe('TranslationContext : langue du bureau (ADR-0030)', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('langue initiale du bureau, menu natif prévenu au changement', async () => {
+    localStorage.setItem('bellepoule-language', 'fr');
+    const desktop = fakeDesktop({ initialLanguage: 'de' });
+    render(
+      <PlatformProvider platform={fakePlatform({ desktop })}>
+        <TranslationProvider>
+          <Probe />
+        </TranslationProvider>
+      </PlatformProvider>
+    );
+    await screen.findByText('de');
+    expect(localStorage.getItem('bellepoule-language')).toBe('de');
+    await act(() => api.changeLanguage('en'));
+    expect(desktop.notifyLanguageChanged).toHaveBeenCalledWith('en');
+  });
+
+  it('sans bureau (navigateur, vue DT) : langue du localStorage, aucune erreur', async () => {
+    localStorage.setItem('bellepoule-language', 'es');
+    render(
+      <PlatformProvider platform={fakePlatform()}>
+        <TranslationProvider>
+          <Probe />
+        </TranslationProvider>
+      </PlatformProvider>
+    );
+    await screen.findByText('es');
+    await act(() => api.changeLanguage('it'));
+    expect(screen.getByTestId('lang').textContent).toBe('it');
   });
 });

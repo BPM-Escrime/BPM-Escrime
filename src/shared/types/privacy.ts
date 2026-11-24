@@ -81,14 +81,3 @@ export interface RetentionPurgeResult {
   competitions: number;
   members: number;
 }
-
-/**
- * Seul avis du RGPD resté dans le préload : Fichier → Ouvrir (menu natif, ADR-0021) a choisi une
- * archive .bpm chiffrée. L'écran demande le mot de passe puis l'ouvre par le contrat
- * (openCompetitionFile, contenu + mot de passe). Export JSON d'une personne (getPersonData) et
- * archives chiffrées (getEncryptedCompetitionFile) passent par le contrat d'API.
- */
-export interface PrivacyAPI {
-  /** Nom du fichier et contenu base64 de l'archive chiffrée choisie par le menu */
-  onEncryptedBpmRequest: (callback: (fileName: string, content: string) => void) => () => void;
-}

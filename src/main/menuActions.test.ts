@@ -46,7 +46,8 @@ describe('createMenuActions (#1341)', () => {
     await actions.handleSaveAs();
     expect(showSaveDialog.mock.calls[0][1].defaultPath).toBe('Open Paris2026.bpm');
     expect(db.exportCompetitionToFile).toHaveBeenCalledWith('c1', '/tmp/x.bpm');
-    expect(send).toHaveBeenCalledWith('file:saved', '/tmp/x.bpm');
+    // Plus d'avis file:saved : le chemin ne va pas au renderer (ADR-0030)
+    expect(send).not.toHaveBeenCalled();
   });
 
   it('sans compétition courante : export global', async () => {
