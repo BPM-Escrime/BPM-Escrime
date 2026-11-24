@@ -98,7 +98,13 @@ export function reloadTeamArenaMatch(ctx: TeamArenaContext, state: TeamArenaStat
   state.currentBoutIndex = currentRelayIndex(detail);
   Object.assign(state, recordedCards(ctx, state.matchId));
   state.withdrawnTeams = withdrawnTeamsOf(ctx, state.competitionId, [state.teamAId, state.teamBId]);
+  state.revision = journalRevision(ctx, state.competitionId);
   return true;
+}
+
+/** Révision du journal de l'épreuve (0 sans journal) : point de reprise de l'arène (#2267) */
+function journalRevision(ctx: TeamArenaContext, competitionId: string): number {
+  return ctx.db.eventLog?.getRevision(competitionId) ?? 0;
 }
 
 /** Côté prioritaire désigné à égalité au dernier relais (minute supplémentaire, t.41.5) */
@@ -328,6 +334,7 @@ export function setTeamArenaMatch(
     liveScoreB: reopened ? reopened.scoreB : 0,
     elapsedAccumulatedSec: 0,
     timerStartedAt: null,
+    revision: journalRevision(ctx, detail.competitionId),
   });
   broadcastTeamArena(ctx, arenaId);
   return true;

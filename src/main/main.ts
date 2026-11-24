@@ -27,6 +27,7 @@ import { createSplashWindow, saveLanguageToFile, splashConfirmPromise } from './
 import { createTrainingPort } from './trainingPort';
 import { dayStripServer } from './remote/stripHandover';
 import { watchStripPlans } from './remote/stripPlan';
+import { watchTeamArenas } from './remote/teamArenaSync';
 import { createClubStation } from './clubPort';
 import { createStationPort } from './stationPort';
 import { applyStoredPrivacySettings, createPrivacyHandlers } from './ipc/privacyHandlers';
@@ -160,6 +161,8 @@ const stationServices = createStationPort({
 });
 // Plan des pistes (docs/adr/0015) : envoyé au serveur distant de l'épreuve à chaque changement
 watchStripPlans(db, id => remoteServers.get(id)?.server);
+// Arènes équipe : rafraîchies après toute commande d'équipe, d'où qu'elle vienne (#2267)
+watchTeamArenas(id => remoteServers.get(id)?.server.teamArenaCtx);
 // Contrat d'API unique (#1981) : api:invoke / api:subscribe
 registerApiHandlers({
   db,

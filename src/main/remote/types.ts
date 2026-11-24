@@ -142,4 +142,6 @@ export interface TeamArenaState {
   deviceCards?: Record<string, { cardsA: string[]; cardsB: string[] }>;
   /** Appareil de piste relié à l'arène équipe : maître et en ligne → tablette verrouillée */
   cyrano?: ArenaCyranoLink | null;
+  /** Révision du journal relue par l'arène : commandes d'ailleurs suivies au-delà (#2267) */
+  revision?: number;
 }
