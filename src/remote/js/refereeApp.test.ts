@@ -392,3 +392,69 @@ describe('appareil de piste maître (#1829) : chrono du serveur et cartons verro
     expect([...app.cardsA, ...app.cardsB]).toEqual(['yellow']);
   });
 });
+
+describe('Sabre Laser : cartons chrono en marche et mort subite au carton (#2254)', () => {
+  type Laser = {
+    currentMatch: { id: string } | null;
+    matchStatus: string;
+    isModernFencing: boolean;
+    isLaserSabre: boolean;
+    cardAnnounceEnabled: boolean;
+    timerRunning: boolean;
+    scoreA: number;
+    scoreB: number;
+    cardsA: string[];
+    cardsB: string[];
+    isSuddenDeath: boolean;
+    overtimeType: string | null;
+    handleCardButtonPress: (fencer: string, cardType: string) => void;
+    addCard: (fencer: string, cardType: string) => void;
+    updateCardButtons: () => void;
+  };
+  const running = async (session: Record<string, unknown>) => {
+    const loaded = await loadReferee(session);
+    const app = (loaded.dom.window as unknown as { refereeApp: Laser }).refereeApp;
+    app.currentMatch = { id: 'm1' };
+    app.matchStatus = 'in_progress';
+    app.cardAnnounceEnabled = false;
+    app.timerRunning = true;
+    app.updateCardButtons();
+    return { app, ...loaded };
+  };
+
+  it('Laser, chrono en marche : boutons actifs, carton jaune enregistré (+3 adverse)', async () => {
+    const { app, dom, errors } = await running({ weapon: 'L' });
+    expect(app.isModernFencing).toBe(false);
+    const btn = dom.window.document.querySelector('.card-btn') as HTMLButtonElement;
+    expect(btn.disabled).toBe(false);
+    const before = app.scoreA + app.scoreB;
+    app.handleCardButtonPress('A', 'yellow');
+    expect([...app.cardsA, ...app.cardsB]).toEqual(['yellow']);
+    expect(app.scoreA + app.scoreB).toBe(before + 3);
+    expect(app.timerRunning).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
+  it('olympique, chrono en marche : boutons grisés, carton refusé (#1826)', async () => {
+    const { app, dom } = await running({ weapon: 'E' });
+    expect(app.isModernFencing).toBe(true);
+    const btn = dom.window.document.querySelector('.card-btn') as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    app.handleCardButtonPress('A', 'yellow');
+    expect([...app.cardsA, ...app.cardsB]).toEqual([]);
+  });
+
+  it('Laser : un carton qui porte les deux tireurs à 10 déclenche la mort subite challenger', async () => {
+    const { app, errors } = await running({ weapon: 'L' });
+    expect(app.isLaserSabre).toBe(true);
+    app.timerRunning = false;
+    app.scoreA = 7;
+    app.scoreB = 10;
+    // Fencer réel (sans orientation) : jaune à B → +3 à A
+    app.addCard('B', 'yellow');
+    expect([app.scoreA, app.scoreB]).toEqual([10, 10]);
+    expect(app.isSuddenDeath).toBe(true);
+    expect(app.overtimeType).toBe('challenger');
+    expect(errors).toEqual([]);
+  });
+});

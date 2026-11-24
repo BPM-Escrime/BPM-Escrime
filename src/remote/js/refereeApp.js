@@ -1036,9 +1036,14 @@ class RefereeApp extends RefereeAppBase {
     this.updateCardButtons();
   }
 
-  // Pas de carton chrono en marche ; actifs à l'arrêt et à 00:00 (#1826)
+  // Olympique : pas de carton chrono en marche ; actifs à l'arrêt et à 00:00 (#1826).
+  // Sabre Laser : cartons chrono en marche (#2254)
   updateCardButtons() {
-    const locked = BPRefereeControls.cardButtonsLocked(this.matchStatus, this.timerRunning);
+    const locked = BPRefereeControls.cardButtonsLocked(
+      this.matchStatus,
+      this.timerRunning,
+      this.isModernFencing
+    );
     document.querySelectorAll('.card-btn').forEach(btn => {
       btn.disabled = locked;
     });

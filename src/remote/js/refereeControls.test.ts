@@ -112,10 +112,15 @@ describe('refereeControls.js chrono et repos', () => {
     expect(R.scoreButtonsLocked('in_progress')).toBe(false);
   });
 
-  it('cardButtonsLocked : chrono en marche (#1826)', () => {
-    expect(R.cardButtonsLocked('in_progress', true)).toBe(true);
-    expect(R.cardButtonsLocked('in_progress', false)).toBe(false);
-    expect(R.cardButtonsLocked('finished', false)).toBe(true);
+  it('cardButtonsLocked : chrono en marche, escrime olympique (#1826)', () => {
+    expect(R.cardButtonsLocked('in_progress', true, true)).toBe(true);
+    expect(R.cardButtonsLocked('in_progress', false, true)).toBe(false);
+    expect(R.cardButtonsLocked('finished', false, true)).toBe(true);
+  });
+
+  it('cardButtonsLocked : Sabre Laser, cartons chrono en marche (#2254)', () => {
+    expect(R.cardButtonsLocked('in_progress', true, false)).toBe(false);
+    expect(R.cardButtonsLocked('finished', true, false)).toBe(true);
   });
 
   it('cardButtonsLocked : actifs avant le départ du chrono (#1936)', () => {
