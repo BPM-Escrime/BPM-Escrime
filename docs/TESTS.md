@@ -106,13 +106,13 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 23 | 278 |
-| `src/main/` | 155 | 1324 |
+| `src/main/` | 154 | 1328 |
 | `src/renderer/services/` | 14 | 69 |
 | `src/renderer/hooks/` | 39 | 201 |
-| `src/renderer/components/` | 133 | 718 |
+| `src/renderer/components/` | 133 | 721 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 419 |
-| `src/renderer/api/` | 10 | 45 |
+| `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 43 | 523 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **616** | **4786** |
+| **Total** | **615** | **4794** |
 
-Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 597 fichiers, 4744 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3157,17 +3157,15 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/diagnosticReport.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/diagnosticReport.test.ts</code> — 4 tests</summary>
 
 - **buildDiagnosticReport (#1326)**
   - ne garde que la liste blanche de champs
   - sérialise la date en ISO et conserve les versions
 - **diagnosticFileName (#1326)**
   - produit un nom de fichier horodaté sans caractères interdits
-- **exportDiagnosticReport (#1326)**
-  - écrit le JSON au chemin choisi avec le nom proposé
-  - signale une annulation sans rien écrire
-  - renvoie une erreur lisible si l'écriture échoue
+- **diagnosticReportFile (#1326)**
+  - nom proposé horodaté et JSON indenté terminé par un saut de ligne
 
 </details>
 
@@ -3297,7 +3295,7 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/dataFiles.test.ts</code> — 9 tests</summary>
+<summary><code>src/main/engine/commands/dataFiles.test.ts</code> — 12 tests</summary>
 
 - getCompetitionFile rend une base SQLite autonome, rouverte par openCompetitionFile
 - archive chiffrée : mot de passe requis, faux, puis bon ; mot de passe trop court refusé
@@ -3308,6 +3306,9 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - export puis import : photo appliquée au tireur de même licence
 - sauvegarde .bpclub rechargée ; club déjà présent : club\_exists, sauf replace
 - photos du club par licence
+- grille → classeur en base64, relu à l’identique
+- droits : club:read pour le tableur, station:admin pour le diagnostic, jamais sur le réseau
+- cellule d’un autre type ou trop de colonnes : invalid\_input
 
 </details>
 
@@ -3613,7 +3614,7 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/station.test.ts</code> — 26 tests</summary>
+<summary><code>src/main/engine/commands/station.test.ts</code> — 32 tests</summary>
 
 - lit les valeurs par défaut, modifie puis relit
 - refuse une clé inconnue ou les dossiers de l’agent (schéma), une valeur invalide (dépôt)
@@ -3638,8 +3639,14 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - conservation : candidats échus, application aux seuls identifiants listés
 - sans port du poste : réglages indisponibles, droits des personnes fonctionnent
 - état, réglages, jeton, journal : par le port du serveur
+- bibliothèque : vide, puis enregistrée dans logos.json sans doublon d’id
+- logo qui n’est pas une image, ou plus de 20 logos : invalid\_input
+- logo actif : ancien logo.dat repris en base une fois, puis supprimé
+- système par défaut, manuel normalisé et enregistré, essai par le port
+- adresse invalide ou avec identifiants : station\_refused, réglage inchangé
+- contenu JSON en base64, nom horodaté, liste blanche de champs
 - **contrat du poste**
-  - 50 opérations, chacune avec son gestionnaire
+  - 55 opérations, chacune avec son gestionnaire
 - **listPlaceSuggestions (docs/adr/0026)**
   - texte nettoyé transmis au port, langue par défaut fr
   - texte trop court : refus du contrat ; poste sans service : indisponible
@@ -3841,16 +3848,6 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - envoie le fichier puis valide le formulaire, dans cet ordre
   - s'arrête à la première étape en erreur HTTP
   - remonte une erreur réseau sans lever d'exception
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/logoTtsHandlers.test.ts</code> — 3 tests</summary>
-
-- **registerLogoTtsHandlers (#1341)**
-  - enregistre les canaux de lecture des logos et de la synthèse vocale
-  - getLogos : fichier absent → liste vide
-  - saveLogos : entrée non tableau refusée
 
 </details>
 
@@ -5935,7 +5932,7 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 ### `src/renderer/components/`
 
 <details>
-<summary><code>src/renderer/components/AboutModal.test.tsx</code> — 5 tests</summary>
+<summary><code>src/renderer/components/AboutModal.test.tsx</code> — 7 tests</summary>
 
 - **AboutModal**
   - affiche le titre et la licence
@@ -5943,6 +5940,8 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - affiche un placeholder de version sans electronAPI
   - affiche la version récupérée via electronAPI
   - affiche le suffixe -dev.N pour un build du canal dev
+  - sans poste : pas de bouton de diagnostic
+  - rapport de diagnostic : contenu du poste enregistré par la plateforme
 
 </details>
 
@@ -6583,12 +6582,13 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/__tests__/ProxySettingsSection.test.tsx</code> — 4 tests</summary>
+<summary><code>src/renderer/components/__tests__/ProxySettingsSection.test.tsx</code> — 5 tests</summary>
 
 - **ProxySettingsSection**
   - système / aucun : appliqué immédiatement
   - manuel : serveur + exclusions envoyés au clic sur Appliquer
-  - refus du main → message d’adresse invalide
+  - sans poste : section masquée
+  - refus du poste → message d’adresse invalide
   - test de connexion : route affichée
 
 </details>
@@ -8787,12 +8787,13 @@ Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/api/stationApi.test.ts</code> — 4 tests</summary>
+<summary><code>src/renderer/api/stationApi.test.ts</code> — 5 tests</summary>
 
 - **createStationApi : entrées du contrat**
   - %s _(each)_
   - couvre toutes les méthodes de l’écran
   - toutes les opérations station:admin du contrat sont appelées par l’écran
+  - un logo qui n’est pas une image est refusé par le contrat
   - une entrée hors bornes est refusée par le contrat
 
 </details>
