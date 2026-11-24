@@ -7,7 +7,6 @@
 import { useEffect, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Pool, PoolRanking } from '../../shared/types';
-import { logger, LogCategory } from '@shared/services/logger';
 import type {
   ConsolationBracket,
   FinalResult,
@@ -83,7 +82,7 @@ export function useCompetitionRestore({
   setPoolsLaunched,
 }: UseCompetitionRestoreParams) {
   // État de l'épreuve relu (getCompetitionState), écrit par le moteur seul
-  const { isLoaded, restoredState } = useCompetitionSession({ competitionId });
+  const { isLoaded, restoredState, preparedPools } = useCompetitionSession({ competitionId });
 
   // Synchroniser le nombre d'arènes avec le nombre de poules.
   // Ne se déclenche que lorsque le nombre de poules change : un nombre de pistes choisi par
@@ -177,8 +176,9 @@ export function useCompetitionRestore({
   ]);
 
   // Préparation non lancée : tirage du poste (posteUiState), sinon celui qu'une version
-  // précédente écrivait en base (lecture seule). Guard : pas si l'état relu a déjà des poules
-  // (appliquées par l'effet [restoredState, isLoaded] dans le même cycle de rendu).
+  // précédente écrivait en base (lecture seule : preparedPools de getCompetitionState).
+  // Guard : pas si l'état relu a déjà des poules (appliquées par l'effet
+  // [restoredState, isLoaded] dans le même cycle de rendu).
   useEffect(() => {
     if (!isLoaded || pools.length > 0) return;
     if (restoredState?.pools && restoredState.pools.length > 0) return;
@@ -187,29 +187,8 @@ export function useCompetitionRestore({
       setPools(draft);
       return;
     }
-    if (!window.electronAPI?.db) return;
-    let cancelled = false;
-    window.electronAPI.db
-      .getPhasesByCompetition(competitionId)
-      .then(phases => {
-        if (cancelled) return [];
-        const poolPhase = phases.find((p: { type: string }) => p.type === 'pool');
-        return poolPhase ? window.electronAPI.db.getPoolsByPhase(poolPhase.id) : [];
-      })
-      .then(dbPools => {
-        if (!cancelled && dbPools.length > 0) setPools(dbPools);
-      })
-      .catch((e: unknown) =>
-        logger.warn(
-          LogCategory.DATABASE,
-          'DB pool fallback failed',
-          e instanceof Error ? e : undefined
-        )
-      );
-    return () => {
-      cancelled = true;
-    };
-  }, [isLoaded, pools.length, competitionId, restoredState]);
+    if (preparedPools.length > 0) setPools(preparedPools);
+  }, [isLoaded, pools.length, competitionId, restoredState, preparedPools]);
 
   return { isLoaded, restoredState };
 }

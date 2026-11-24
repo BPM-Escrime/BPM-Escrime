@@ -33,6 +33,29 @@ export interface ExportResultsOptions {
   logo?: string | null;
 }
 
+/** XML BPM - Escrime/FFE des résultats, depuis l'état en base (export, publication GREG / FTP) */
+export function resultsXml(data: ReturnType<typeof resultsData>): string {
+  return exportResultsXMLFFE(
+    data.competition as Competition,
+    data.overallRanking,
+    data.finalResults,
+    data.pools,
+    data.tableauMatches.map(m => ({
+      round: m.round,
+      fencerA: m.fencerA ? { ref: m.fencerA.ref } : null,
+      fencerB: m.fencerB ? { ref: m.fencerB.ref } : null,
+      scoreA: m.scoreA,
+      scoreB: m.scoreB,
+      isBye: m.isBye,
+      arena: m.arena ?? null,
+      referee: m.referee ? { id: m.referee.id } : null,
+      referees: m.referees?.map(r => ({ id: r.id })),
+    })),
+    data.fencers,
+    data.referees
+  );
+}
+
 export async function exportResults(
   ctx: CommandContext,
   competitionId: string,
@@ -59,25 +82,7 @@ export async function exportResults(
   let content: string | Uint8Array;
   switch (options.format) {
     case 'xml':
-      content = exportResultsXMLFFE(
-        competition,
-        data.overallRanking,
-        data.finalResults,
-        data.pools,
-        data.tableauMatches.map(m => ({
-          round: m.round,
-          fencerA: m.fencerA ? { ref: m.fencerA.ref } : null,
-          fencerB: m.fencerB ? { ref: m.fencerB.ref } : null,
-          scoreA: m.scoreA,
-          scoreB: m.scoreB,
-          isBye: m.isBye,
-          arena: m.arena ?? null,
-          referee: m.referee ? { id: m.referee.id } : null,
-          referees: m.referees?.map(r => ({ id: r.id })),
-        })),
-        data.fencers,
-        data.referees
-      );
+      content = resultsXml(data);
       break;
     case 'fff':
       content = encodeFFFWin1252(exportResultsToFFF(competition, data.finalResults));

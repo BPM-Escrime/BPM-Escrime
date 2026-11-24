@@ -9,7 +9,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { ElectronAPI, UpdateInfo, UpdateProgressEvent } from '../shared/types/preload';
 
 import { setPrintRequestHandler, type PrintRequestHandler } from './preloadApi/printHandler';
-import { dbApi } from './preloadApi/dbApi';
 import { fileApi } from './preloadApi/fileApi';
 import { dialogApi } from './preloadApi/dialogApi';
 import { subscribe } from './preloadApi/subscribe';
@@ -22,9 +21,6 @@ import { createDbReady } from './preloadApi/dbReady';
 const electronApi = {
   // Contrat d'API unique (#1981) : préférer BpmClient (src/renderer/api) à cet accès direct
   api: apiBridge,
-
-  // Database operations with validation
-  db: dbApi,
 
   // File operations with validation
   file: fileApi,
@@ -123,16 +119,6 @@ const electronApi = {
       }
       return ipcRenderer.invoke('updater:setChannel', channel);
     },
-  },
-
-  // Publication des résultats sur GREG (escrime-info.com), envoi fait par le main (#1328)
-  greg: {
-    publish: (request: unknown) => ipcRenderer.invoke('greg:publish', request),
-  },
-
-  // Connecteur FTP/FTPS : dépôt du fichier de résultats (#1331)
-  ftp: {
-    publish: (request: unknown) => ipcRenderer.invoke('ftp:publish', request),
   },
 
   // Chiffrement OS (safeStorage) pour secrets locaux

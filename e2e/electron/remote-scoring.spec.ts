@@ -18,7 +18,9 @@ type Journal = {
 
 async function competitionId(win: Page): Promise<string> {
   return win.evaluate(async title => {
-    const comps = await window.electronAPI.db.getAllCompetitions();
+    const env = await window.electronAPI.api.invoke('listCompetitions', {});
+    if (!env.ok) throw new Error(env.error.message);
+    const comps = env.data as Array<{ id: string; title: string }>;
     return comps.find(c => c.title === title)!.id;
   }, TITLE);
 }

@@ -20,7 +20,8 @@ test.describe('Poules (application Electron)', () => {
   }) => {
     await expect(win.getByLabel(/contre .*, saisir le score/)).toHaveCount(30);
     const events = await win.evaluate(async () => {
-      const comps = await window.electronAPI.db.getAllCompetitions();
+      const listed = await window.electronAPI.api.invoke('listCompetitions', {});
+      const comps = (listed.ok ? listed.data : []) as Array<{ id: string; title: string }>;
       const id = comps.find(c => c.title === 'E2E Poules')!.id;
       const env = await window.electronAPI.api.invoke('getCompetitionEvents', {
         competitionId: id,

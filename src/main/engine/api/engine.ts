@@ -84,7 +84,7 @@ import { signMatchSheet, signPoolSheet } from '../commands/signatures';
 import { recordMatchEvents, replaceSimulatedMatchEvents } from '../commands/simulation';
 import { excludeFromSeason, includeInSeason, resetSeason } from '../commands/season';
 import { getCompetitionOrThrow } from '../commands/competitions';
-import { readSession } from '../commands/sessionView';
+import { readPools, readSession } from '../commands/sessionView';
 import { competitionState } from '../commands/competitionState';
 import { v4 as uuidv4 } from 'uuid';
 import type { StoredJournalEvent } from '../../../database/repos/eventLogRepo';
@@ -248,10 +248,13 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   getCompetitionState: (ctx, { competitionId }) => {
     const comp = getCompetitionOrThrow(ctx, competitionId);
     const session = readSession(ctx, competitionId);
+    const state = competitionState(session, comp, teamsState(ctx, comp));
     return {
       revision: ctx.db.eventLog.getRevision(competitionId),
       sessionRevision: typeof session.revision === 'number' ? session.revision : 0,
-      state: competitionState(session, comp, teamsState(ctx, comp)),
+      state,
+      // Poules d'une préparation écrite en base par une version précédente (lecture seule)
+      preparedPools: state?.pools.length ? [] : readPools(ctx, competitionId),
     };
   },
   getMatchHistory: (ctx, { competitionId, matchId }) => {

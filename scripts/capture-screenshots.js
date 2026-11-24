@@ -292,7 +292,7 @@ async function main() {
 
     // Pilotage : l'épreuve en cours garde la piste 3 (les autres passées en manuel pour elle)
     await win.evaluate(async () => {
-      const [comp] = await window.electronAPI.db.getAllCompetitions();
+      const [comp] = (await window.electronAPI.api.invoke('listCompetitions', {})).data;
       await window.electronAPI.api.invoke('updateCompetitionSettings', {
         competitionId: comp.id,
         settings: { manualStrips: [1, 2, 4, 5, 6] },
@@ -335,14 +335,13 @@ async function main() {
 
     // Journées multi-épreuves : 2e épreuve, journée commune, arbitres partagés
     await win.evaluate(async fencers => {
-      const db = window.electronAPI.db;
       // Journée : par le contrat d'API (docs/adr/0022)
       const call = async (name, input) => {
         const r = await window.electronAPI.api.invoke(name, input);
         if (!r.ok) throw new Error(`${name} : ${r.error.message}`);
         return r.data;
       };
-      const [first] = await db.getAllCompetitions();
+      const [first] = await call('listCompetitions', {});
       const { competitionId: secondId } = await call('createCompetition', {
         title: 'Challenge de la Ville — Fleuret U17',
         date: '2026-11-14',

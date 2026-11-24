@@ -19,6 +19,7 @@ import type { BackupDirDTO, ProxySettingsDTO } from '../../../shared/types/syste
 import type { LogoLibraryEntry } from '../../../shared/types/appSettings';
 import type { DiagnosticInput } from '../../diagnosticReport';
 import type { PlaceSuggestion } from '../../../shared/domain/places/placeSearch';
+import type { GregFormFields } from '../../../shared/utils/gregPublication';
 import type { PrivacySettings } from '../../../shared/types/privacy';
 import type { CustomTheme, FirewallDiagnosis } from '../../../shared/types/remote';
 import type { RemoteServerInfo, TtsConfig } from '../../../shared/types/preload';
@@ -263,6 +264,12 @@ export interface DevicesPort {
   };
 }
 
+/** Résultat d'un envoi vers un serveur externe ; `error` : message ou code du dépôt */
+export interface SendResult {
+  success: boolean;
+  error?: string;
+}
+
 /** Services du poste (réglages, thèmes, RGPD, agent, journée) : ce qui dépasse la base */
 export interface StationPort {
   /** Dossiers accessibles à l'agent tant que l'opérateur n'en a pas choisi */
@@ -310,6 +317,21 @@ export interface StationPort {
       query: string,
       language: string
     ): Promise<{ suggestions: PlaceSuggestion[]; unavailable: boolean }>;
+  };
+  /**
+   * Publication des résultats (#1981 lot 4, docs/adr/0022) : envoi vers GREG, dépôt FTP / FTPS
+   * / HTTP PUT. XML déjà construit par le moteur. Absent : tests, MCP ; la commande répond
+   * « indisponible ». Le mot de passe n'est ni logué ni renvoyé.
+   */
+  publication?: {
+    greg(request: { fileName: string; xml: string; fields: GregFormFields }): Promise<SendResult>;
+    remote(request: {
+      fileName: string;
+      xml: string;
+      url: string;
+      user: string;
+      password: string;
+    }): Promise<SendResult>;
   };
   /** Bibliothèque de logos (<userData>/logos.json) ; le logo actif est le paramètre `logo` */
   logos: {

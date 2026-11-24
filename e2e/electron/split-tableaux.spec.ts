@@ -20,7 +20,10 @@ async function poolsPlayed(win: Page): Promise<void> {
       return env.data as Record<string, unknown>;
     };
     try {
-      const comps = await window.electronAPI.db.getAllCompetitions();
+      const comps = (await call('listCompetitions', {})) as unknown as Array<{
+        id: string;
+        title: string;
+      }>;
       const competitionId = comps.find(c => c.title === title)!.id;
       await call('updateCompetitionSettings', {
         competitionId,
@@ -151,7 +154,10 @@ test('tableaux séparés : groupe extrait en épreuve séparée', async ({ win }
       if (!env.ok) throw new Error(`${name} : ${env.error?.message}`);
       return env.data as Record<string, unknown>;
     };
-    const comps = await window.electronAPI.db.getAllCompetitions();
+    const comps = (await call('listCompetitions', {})) as unknown as Array<{
+      id: string;
+      title: string;
+    }>;
     const source = comps.find(c => c.title === title)!;
     const target = comps.find(c => c.title === `${title} – Dames`)!;
     const state = (await call('getCompetitionState', { competitionId: target.id })).state as {

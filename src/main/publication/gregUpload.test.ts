@@ -1,8 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('electron', () => ({ ipcMain: { handle: vi.fn() } }));
-
-import { parseGregRequest, publishToGreg, type GregPublishRequest } from './gregHandlers';
+import { parseGregRequest, publishToGreg, type GregPublishRequest } from './gregUpload';
 
 const fields = {
   type_competition: 'CompetitionIndividuelle',

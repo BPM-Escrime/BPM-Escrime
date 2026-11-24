@@ -1,10 +1,10 @@
 /**
- * BPM - Escrime - Canal IPC `greg:publish` : envoi des résultats vers GREG (escrime-info.com) (#1328)
+ * BPM - Escrime - Envoi des résultats vers GREG (escrime-info.com) (#1328)
  * Deux étapes comme l'ancien `GregUploader` : envoi du fichier, puis validation du formulaire.
- * Le renderer ne peut pas appeler un hôte externe (CSP) : l'envoi part du main.
+ * Appelé par le port du poste (`ctx.station.publication`) pour la commande publishResults
+ * (#1981 lot 4, docs/adr/0022) : le XML est construit par le moteur depuis la base.
  * Licensed under GPL-3.0
  */
-import { ipcMain } from 'electron';
 import {
   GREG_FIELD_NAMES,
   GREG_UPLOAD_URL,
@@ -26,7 +26,7 @@ export interface GregPublishResult {
   error?: string;
 }
 
-/** Valide la requête venue du renderer : seuls les champs connus, un nom de fichier sûr, un XML borné */
+/** Valide la requête (défense en profondeur, le moteur l'a construite) : seuls les champs connus, un nom de fichier sûr, un XML borné */
 export function parseGregRequest(raw: unknown): GregPublishRequest | string {
   if (!raw || typeof raw !== 'object') return 'invalid_request';
   const { fileName, xml, fields } = raw as Record<string, unknown>;
@@ -85,10 +85,3 @@ export async function publishToGreg(
     return { success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
   }
 }
-
-// Enregistrement à l'import : `main.ts` n'a qu'à importer ce module (quota de lignes du main)
-ipcMain.handle('greg:publish', async (_, raw: unknown): Promise<GregPublishResult> => {
-  const request = parseGregRequest(raw);
-  if (typeof request === 'string') return { success: false, error: request };
-  return publishToGreg(request);
-});

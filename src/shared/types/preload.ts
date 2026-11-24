@@ -4,7 +4,7 @@
  * Licensed under GPL-3.0
  */
 
-import { Competition, Pool, Score, Phase, FencerCompetitionStats } from '../types';
+import { Score, FencerCompetitionStats } from '../types';
 import type { McpScreenEvent } from './mcp';
 export type { ClubMemberReport } from './club';
 
@@ -345,15 +345,6 @@ export interface TVCommand {
 // ============================================================================
 
 type CardRef = { matchId: string; fencerId: string; cardType: string };
-export interface DatabaseAPI {
-  // Competitions
-  getAllCompetitions: () => Promise<Competition[]>;
-
-  // Poules d'une préparation écrite par une version précédente (lecture seule)
-  getPoolsByPhase: (phaseId: string) => Promise<Pool[]>;
-  getPhasesByCompetition: (competitionId: string) => Promise<Phase[]>;
-}
-
 export interface FileAPI {
   export: (filepath: string) => Promise<FileSaveResult>;
   import: (filepath: string) => Promise<FileOpenResult>;
@@ -534,26 +525,6 @@ export interface PrintDialogSettings {
   scale: number;
 }
 
-/** Publication GREG (escrime-info.com) : fichier XML + champs du formulaire (#1328) */
-export interface GregAPI {
-  publish: (request: {
-    fileName: string;
-    xml: string;
-    fields: Record<string, string>;
-  }) => Promise<{ success: boolean; error?: string }>;
-}
-
-/** Connecteur FTP/FTPS : dépôt du fichier de résultats (#1331) */
-export interface FtpAPI {
-  publish: (request: {
-    fileName: string;
-    xml: string;
-    url: string;
-    user: string;
-    password: string;
-  }) => Promise<{ success: boolean; error?: string }>;
-}
-
 export interface PrintDialogAPI {
   getPrinters: () => Promise<{ name: string; displayName: string; isDefault: boolean }[]>;
   render: (
@@ -584,12 +555,9 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   /** Contrat d'API (#1981) */
   api: import('../api/client').ApiBridge;
   printDialog: PrintDialogAPI;
-  db: DatabaseAPI;
   file: FileAPI;
   dialog: DialogAPI;
   updater: UpdaterAPI;
-  greg: GregAPI;
-  ftp: FtpAPI;
   crypto: CryptoAPI;
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void;
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) => () => void;
