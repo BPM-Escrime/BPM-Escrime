@@ -339,7 +339,7 @@ export function useRemoteServerState(ctx: Ctx) {
     });
   }, [pendingDeMatches, isRemoteActive, session]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reconnexion ou démarrage à l'activation du mode distant seulement
   useEffect(() => {
     if (!isRemoteActive) return;
     // Si une session est déjà active (retour sur l'onglet après navigation), on reconnecte

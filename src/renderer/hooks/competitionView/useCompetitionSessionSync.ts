@@ -219,9 +219,12 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     },
     [localForfeit, updateFencer, pools]
   );
-  const localReinstate = (fencerId: string) => {
-    updateFencer(fencerId, { status: FencerStatus.CHECKED_IN, exclusionReason: null });
-  };
+  const localReinstate = useCallback(
+    (fencerId: string) => {
+      updateFencer(fencerId, { status: FencerStatus.CHECKED_IN, exclusionReason: null });
+    },
+    [updateFencer]
+  );
 
   // Un fait, un chemin (#1980, ADR-0005) : scores saisis à l'écran par recordScore
   const recordScreenScore = useRecordScore(competition.id);
@@ -364,8 +367,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
       if (outcome === 'local') localWithdraw(input.fencerId, input.reason, input.blackCard);
       return outcome;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fencerWithdrawal, pools]
+    [fencerWithdrawal, localWithdraw]
   );
 
   const handleReinstateFencer = useCallback(
@@ -374,8 +376,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
       if (outcome === 'local') localReinstate(fencerId);
       return outcome;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fencerWithdrawal]
+    [fencerWithdrawal, localReinstate]
   );
 
   /** Statut posé depuis la liste d'appel : abandon, forfait, ou réactivation d'un tireur retiré */

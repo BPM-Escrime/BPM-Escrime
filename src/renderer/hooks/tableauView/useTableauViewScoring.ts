@@ -137,7 +137,7 @@ export function useTableauViewScoring(ctx: Ctx) {
       onComplete(calculateFinalResults(matches, ranking, tableauSize));
     }
     // calculateFinalResults et onComplete sont stables pendant la phase tableau
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- déclenché par les matchs ; ranking, tableauSize, playAllPositions et onComplete lus à jour à ce moment
   }, [matches, readOnly]);
 
   // NB : la synchronisation tablette → tableau (event match:finished) est gérée
@@ -167,7 +167,7 @@ export function useTableauViewScoring(ctx: Ctx) {
     if (needsConsolation && consolationBrackets.length === 0) return; // pas encore créés
     if (consolationBrackets.some(b => !b.isComplete)) return;
     onComplete(buildCombinedResults(matches, consolationBrackets, ranking));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- déclenché par les matchs et consolations ; ranking, tableauSize et onComplete lus à jour à ce moment
   }, [matches, consolationBrackets, playAllPositions]);
 
   // Mode playAllPositions : créer les brackets de consolation quand un round du tableau principal se complète
@@ -176,7 +176,7 @@ export function useTableauViewScoring(ctx: Ctx) {
     setConsolationBrackets(
       prevBrackets => syncConsolationBrackets(matches, prevBrackets, tableauSize, ranking).brackets
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ranking lu à jour quand les matchs changent
   }, [matches, tableauSize, playAllPositions]);
 
   // Gagnants des barrages → placer dans le tableau principal
@@ -184,7 +184,7 @@ export function useTableauViewScoring(ctx: Ctx) {
     if (!playAllPositions || tableauSize === 0) return;
     const updatedMatches = matches.map(m => ({ ...m }));
     if (placeBarrageWinners(updatedMatches, tableauSize)) onMatchesChange(updatedMatches);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- déclenché par les gagnants des barrages seulement ; onMatchesChange recréée par le parent
   }, [
     matches
       .filter(m => m.round === tableauSize * 2)

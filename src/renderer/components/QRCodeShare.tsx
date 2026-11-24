@@ -42,7 +42,7 @@ const QRCodeShare_: React.FC<QRCodeShareProps> = ({
 
   useEffect(() => {
     generateQRCode();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- génération relancée par compétition et mode ; generateQRCode recréée à chaque rendu
   }, [competition.id, activeMode]);
 
   const generateQRCode = async () => {
