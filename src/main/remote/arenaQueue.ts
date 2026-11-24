@@ -327,8 +327,8 @@ export function updateMatchArena(
         matchToMove = {
           id: sm.id,
           poolId: sm.poolId,
-          fencerA: fencerA ?? sm.fencerA,
-          fencerB: fencerB ?? sm.fencerB,
+          fencerA: fencerA ?? sm.fencerA!,
+          fencerB: fencerB ?? sm.fencerB!,
           scoreA: 0,
           scoreB: 0,
           status: 'not_started',
@@ -338,8 +338,8 @@ export function updateMatchArena(
       } else {
         matchToMove = {
           id: sm.id,
-          fencerA: fencerA ?? sm.fencerA,
-          fencerB: fencerB ?? sm.fencerB,
+          fencerA: fencerA ?? sm.fencerA!,
+          fencerB: fencerB ?? sm.fencerB!,
           scoreA: 0,
           scoreB: 0,
           status: 'not_started',
@@ -613,8 +613,8 @@ export function refreshDeMatches(
     const referee = ctx.resolveDeMatchReferee(match);
     queuesByArena.get(targetArenaId)!.push({
       id: match.id,
-      fencerA: match.fencerA,
-      fencerB: match.fencerB,
+      fencerA: match.fencerA!,
+      fencerB: match.fencerB!,
       scoreA: 0,
       scoreB: 0,
       status: 'not_started',

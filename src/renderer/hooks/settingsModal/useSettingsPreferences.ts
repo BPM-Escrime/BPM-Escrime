@@ -160,7 +160,7 @@ export function useSettingsPreferences(ctx: Ctx) {
       }
     });
     return () => unsub();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chargement de la bibliothèque de logos et abonnement au montage seulement
   }, []);
 
   // Liste des voix disponibles (peut arriver de façon asynchrone)

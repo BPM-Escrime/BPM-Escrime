@@ -353,7 +353,7 @@ export function useTableauViewState(ctx: Ctx) {
         notifyArenaDiff(updated);
       }
     }
-  }, [playableMatchCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [playableMatchCount]); // eslint-disable-line react-hooks/exhaustive-deps -- déclenché par un nouveau tour jouable seulement, pas par chaque score
 
   const handleAutoAssignToggle = useCallback(
     (enabled: boolean) => {

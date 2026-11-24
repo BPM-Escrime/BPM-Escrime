@@ -28,7 +28,7 @@ export function useStateGroup<S extends object>(initial: S): StateGroup<S> {
           (value: unknown) => dispatch({ key: k, value }),
         ])
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setters stables : `initial` lu au premier rendu, clés constantes
     []
   );
   return { ...state, ...setters } as StateGroup<S>;

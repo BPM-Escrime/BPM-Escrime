@@ -32,7 +32,7 @@ export function useModalFlags<K extends string>(keys: readonly K[]): ModalFlags<
           (value: SetStateAction<boolean>) => dispatch({ key: k, value }),
         ])
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setters stables : clés constantes
     []
   );
   return { ...state, ...setters } as ModalFlags<K>;

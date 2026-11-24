@@ -394,7 +394,7 @@ export function useRemoteServerActions(ctx: Ctx) {
     if (!appliedCommonPassword || !session || arenaCount <= prev) return;
     const added = Array.from({ length: arenaCount - prev }, (_, i) => prev + i + 1);
     void applyCommonArenaPassword(appliedCommonPassword, added);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- déclenché par l'ajout de pistes seulement (#988)
   }, [arenaCount]);
   const stripStart = effectiveCommittedStart;
   const arenaUrls = stripNumbers(stripStart, arenaCount).map(n => ({

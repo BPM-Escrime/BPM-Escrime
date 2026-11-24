@@ -165,7 +165,7 @@ export function useCompetitionCore(ctx: Ctx) {
     const { poolSizeMin, poolSizeMax } = competition.settings ?? {};
     if (poolSizeMin) setMinFencersPerPool(poolSizeMin);
     if (poolSizeMax) setMaxFencersPerPool(poolSizeMax);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- formulaPoolSize résume competition.settings.poolSize* : suit la formule, pas la préparation
   }, [formulaPoolSize]);
 
   // Compétition couplée (#1241)

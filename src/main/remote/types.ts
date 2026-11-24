@@ -5,7 +5,14 @@
  */
 
 import type { ArenaCyranoLink } from '../../shared/types/remote';
-import { CardReason, FencerStatus, Weapon, type Score } from '../../shared/types';
+import {
+  CardReason,
+  FencerStatus,
+  Weapon,
+  type Fencer,
+  type Referee,
+  type Score,
+} from '../../shared/types';
 
 /** Match transmis par le renderer (poules ou tableau) ; champs optionnels selon l'origine. */
 export interface SessionMatch {
@@ -15,8 +22,36 @@ export interface SessionMatch {
   pool?: { id: string };
   isTableau?: boolean;
   number?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- champs libres issus du renderer
-  [key: string]: any;
+  fencerA?: Fencer | null;
+  fencerB?: Fencer | null;
+  scoreA?: SessionScore;
+  scoreB?: SessionScore;
+  maxScore?: number;
+  round?: number;
+  position?: number;
+  tableId?: string;
+  strip?: number;
+  /** Arbitre : `{ id, name }` depuis le renderer, `Referee` depuis la base */
+  referee?: Referee | { id: string; name: string };
+  refereeId?: string;
+  /** Mode expert : plusieurs arbitres (lus par refereeResolver) */
+  referees?: unknown[];
+  poolNumber?: number | null;
+  /** Arène affectée par le renderer (tableau) */
+  arena?: number;
+  updatedAt?: Date | string;
+  /** Marqueur `__poolFencers` : ordre des tireurs de la poule, porté par `fencers` */
+  __poolFencers?: boolean;
+  fencers?: Fencer[];
+}
+
+/** Arbitre d'un match de session ramené à la forme `{ id, name }` de l'arène */
+export function toArenaReferee(referee: NonNullable<SessionMatch['referee']>): {
+  id: string;
+  name: string;
+} {
+  if ('name' in referee) return { id: referee.id, name: referee.name };
+  return { id: referee.id, name: [referee.lastName, referee.firstName].filter(Boolean).join(' ') };
 }
 
 /** Élément de liste envoyé par le renderer : match (poule ou tableau) ou marqueur `__poolFencers` */
