@@ -10,6 +10,8 @@ import type { QoS } from './mqttPacket';
 import type {
   PisteDisplay,
   PisteDisplaySide,
+  PisteRecord,
+  PisteRecordFencer,
   PisteFencerStatus,
   PisteFencingState,
 } from '../piste/types';
@@ -46,6 +48,17 @@ export function parseOpp2Topic(topic: string): Opp2Topic | null {
   return { piste, role: role as Opp2Role, message };
 }
 
+/**
+ * Droit de publication d'un client réseau du broker intégré (spéc. § 30.3, rôle dans le sujet) :
+ * `software/*` réservé à BPM - Escrime (bus interne, sans socket). Un appareil, une
+ * télécommande ou une feuille de match ne peut ni annoncer un faux logiciel, ni envoyer
+ * ACK / NAK, ni réécrire le créneau. Hors espace `openpiste/` : permis.
+ */
+export function opp2ClientMayPublish(topic: string): boolean {
+  const parts = topic.split('/');
+  return !(parts[0] === OPP2_ROOT && parts.length >= 3 && parts[2] === 'software');
+}
+
 /** QoS et retenue des messages publiés par le logiciel (spéc. § 6). */
 export const SOFTWARE_PUBLISH: Record<string, { qos: QoS; retain: boolean }> = {
   connection: { qos: 1, retain: true },
@@ -54,6 +67,7 @@ export const SOFTWARE_PUBLISH: Record<string, { qos: QoS; retain: boolean }> = {
   score: { qos: 1, retain: false },
   clock: { qos: 1, retain: false },
   control: { qos: 1, retain: false },
+  uw2f: { qos: 1, retain: false },
   record: { qos: 1, retain: true },
 };
 
@@ -189,6 +203,63 @@ const scoreSide = (s: PisteDisplaySide): Record<string, unknown> => ({
 /** `software/score` : score et cartons déjà donnés (match repris, correction de la tablette). */
 export function buildScoreBody(d: PisteDisplay): Record<string, unknown> {
   return { right: scoreSide(d.right), left: scoreSide(d.left), priority: 'N' };
+}
+
+/** Cartons P déjà donnés → ordinal OPP2 (0 à 5, même lecture que Cyrano, spéc. § 19) */
+export function opp2PCardOrdinal(s: Pick<PisteDisplaySide, 'pRed' | 'pBlack'>): number {
+  const black = s.pBlack ?? 0;
+  const red = s.pRed ?? 0;
+  if (black > 0) return black >= 2 ? 5 : 4;
+  if (red > 0) return red >= 2 ? 3 : 2;
+  return 0;
+}
+
+/**
+ * `software/uw2f` : cartons P à reprendre (match rappelé, appareil redémarré) ; null s'il n'y
+ * a rien à reprendre. Minuteur de non-combativité inconnu de BPM - Escrime : repart de zéro.
+ */
+export function buildUw2fBody(d: PisteDisplay): Record<string, unknown> | null {
+  const right = opp2PCardOrdinal(d.right);
+  const left = opp2PCardOrdinal(d.left);
+  if (right === 0 && left === 0) return null;
+  return { time_ms: 0, time: '0:00', right: { p_card: right }, left: { p_card: left } };
+}
+
+/** Tireur d'un créneau : même forme que `software/fencers` */
+function recordFencer(f: PisteRecordFencer): Record<string, unknown> {
+  const name = [f.lastName?.toUpperCase(), f.firstName].filter(Boolean).join(' ');
+  return { id: f.id, name, ...nationOf(f.nat) };
+}
+
+/** `software/record` : créneau de la piste (spéc. § 17), pour écrans et feuilles de match */
+export function buildRecordBody(
+  r: PisteRecord,
+  competition: string | undefined
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    slot_id: r.slotId,
+    competition: competition ?? '',
+    phase_type: r.phaseType,
+  };
+  if (r.label) body.label = r.label;
+  if (r.activeBout !== undefined) body.active_bout = r.activeBout;
+  if (r.referee) body.referee = { id: r.referee.id, name: r.referee.name };
+  if (r.participants.length)
+    body.participants = r.participants.map((f, i) => ({ position: i + 1, ...recordFencer(f) }));
+  body.bouts = r.bouts.map(b => ({
+    id: b.id,
+    left: recordFencer(b.left),
+    right: recordFencer(b.right),
+    result: b.result
+      ? {
+          left_score: b.result.left.score,
+          right_score: b.result.right.score,
+          left_status: b.result.left.status,
+          right_status: b.result.right.status,
+        }
+      : null,
+  }));
+  return body;
 }
 
 /** `software/clock` : chrono à reprendre, toujours à l'arrêt (spéc. § 11). */

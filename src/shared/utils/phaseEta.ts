@@ -12,7 +12,7 @@
  * (adjustedDuration), matchs aberrants exclus, sans bascule brutale.
  */
 
-import { adjustedDuration, type DurationEstimate } from './matchDurations';
+import { adjustedDuration, type DurationEstimate } from '../domain/durations/matchDurations';
 
 export interface PhaseEtaInput {
   /** Durées réelles (début → fin, en ms) des matchs terminés, les plus récentes en dernier. */

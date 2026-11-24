@@ -112,6 +112,45 @@ export interface PisteDisplay {
   referee?: { id: string; name: string; nat?: string };
 }
 
+/** Tireur d'un créneau : identité seule */
+export interface PisteRecordFencer {
+  id: string;
+  lastName: string;
+  firstName: string;
+  nat?: string;
+}
+
+/** Résultat confirmé d'un match du créneau (droite = A, gauche = B) */
+export interface PisteRecordResult {
+  right: { score: number; status: 'V' | 'D' | 'A' | 'E' };
+  left: { score: number; status: 'V' | 'D' | 'A' | 'E' };
+}
+
+/** Match d'un créneau : n° tel qu'envoyé dans l'affichage (`PisteDisplay.match`) */
+export interface PisteRecordBout {
+  id: number;
+  right: PisteRecordFencer;
+  left: PisteRecordFencer;
+  result: PisteRecordResult | null;
+}
+
+/**
+ * Créneau d'une piste (#1960) : poule ou matchs de tableau confiés à l'arène, résultats
+ * confirmés. `slotId` stable pour un même créneau, même après redémarrage.
+ */
+export interface PisteRecord {
+  slotId: string;
+  phaseType: 'pool' | 'DE';
+  /** Libellé lisible (« Poule 3 », « Tableau de 32 ») */
+  label?: string;
+  /** Match en cours, seulement après NEXT / PREV de l'appareil (spéc. OPP2 § 17) */
+  activeBout?: number;
+  referee?: { id: string; name: string };
+  /** Ordre de la poule (matrice) ; vide en tableau */
+  participants: PisteRecordFencer[];
+  bouts: PisteRecordBout[];
+}
+
 /** Commande envoyée à un appareil. */
 export type PisteCommand =
   | {
@@ -120,6 +159,11 @@ export type PisteCommand =
       /** épreuve (pistes partagées) */ competition?: string;
     }
   | { kind: 'clear' }
+  /**
+   * Créneau de la piste (poule ou matchs de tableau) pour les écrans et feuilles de match
+   * (OPP2 `software/record`, #1960) ; ignoré par les pilotes sans équivalent (Cyrano).
+   */
+  | { kind: 'record'; record: PisteRecord }
   | { kind: 'ack' }
   | { kind: 'nak' }
   /**
@@ -183,6 +227,8 @@ export interface PisteDriver {
   findAllByArena(arena: number): PisteLink[];
   /** Envoie une commande ; false si la piste est inconnue ou le pilote arrêté. */
   send(piste: string, command: PisteCommand): boolean;
+  /** Le protocole publie le créneau de la piste (`record`, OPP2) : absent = jamais */
+  wantsRecord?(piste: string): boolean;
   /**
    * Identifiant d'un tireur tel que l'appareil le renverra (troncature du protocole) ;
    * `piste` désigne le pilote quand plusieurs protocoles coexistent (#1960).

@@ -24,20 +24,27 @@ describe('restoreState', () => {
     expect(result.current.restoredState).toBeNull();
   });
 
-  it('restaure l’état depuis la DB avec mapping de phase', async () => {
-    const getSessionState = vi.fn(async () => ({
-      currentPhase: 5, // tableau
-      pools: [{ id: 'p' }],
-      uiState: { currentPoolRound: 3 },
-      skipPoolPhase: true,
-    }));
+  it('restaure l’état lu par getCompetitionState (plus de repli db.getSessionState)', async () => {
+    const { BpmClientProvider } = await import('../api/BpmClientContext');
+    const getSessionState = vi.fn(async () => ({ currentPhase: 1 }));
     (window as any).electronAPI = { db: { getSessionState } };
-    const { result } = renderHook(() => useCompetitionSession(baseProps()));
+    const query = vi.fn(async () => ({
+      revision: 0,
+      sessionRevision: 0,
+      state: { currentPhase: 5, pools: [{ id: 'p' }], currentPoolRound: 3, skipPoolPhase: true },
+    }));
+    const client = { call: vi.fn(), query, subscribe: vi.fn(() => () => undefined) };
+    const { result } = renderHook(() => useCompetitionSession(baseProps()), {
+      wrapper: ({ children }) => (
+        <BpmClientProvider client={client as never}>{children}</BpmClientProvider>
+      ),
+    });
     await waitFor(() => expect(result.current.restoredState).not.toBeNull());
     expect(result.current.restoredState!.currentPhase).toBe(5);
     expect(result.current.restoredState!.currentPoolRound).toBe(3);
     expect(result.current.restoredState!.skipPoolPhase).toBe(true);
     expect(result.current.restoredState!.pools).toHaveLength(1);
+    expect(getSessionState).not.toHaveBeenCalled();
   });
 });
 
@@ -149,9 +156,8 @@ describe('lot N (docs/adr/0017, 0024) : l’écran n’écrit plus l’état, to
   it('aucune écriture de l’état, ni pendant la saisie ni à la fermeture', async () => {
     const saveSessionState = vi.fn(async () => ({}));
     const saveSessionStateSync = vi.fn(() => true);
-    const getSessionState = vi.fn(async () => null);
     (window as any).electronAPI = {
-      db: { saveSessionState, saveSessionStateSync, getSessionState },
+      db: { saveSessionState, saveSessionStateSync },
     };
     const view = renderHook(() => useCompetitionSession(baseProps()));
     await waitFor(() => expect(view.result.current.isLoaded).toBe(true));

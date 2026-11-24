@@ -10,6 +10,8 @@ import { useTranslation } from '../contexts/TranslationContext';
 import { useToast } from './Toast';
 import { savePDF } from '../../shared/utils/pdfExport/core';
 import { ipcErrorText } from '../services/ipcError';
+import { usePlatform } from '../platform/PlatformContext';
+import { PlatformError } from '../../shared/platform/platforms';
 import { Button } from './common/Button';
 
 export interface ArenaQrTarget {
@@ -109,6 +111,7 @@ const ArenaQrCodesModal: React.FC<ArenaQrCodesModalProps> = ({
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
   const { showToast } = useToast();
   const { t } = useTranslation();
+  const platform = usePlatform();
   const [withReferee, setWithReferee] = useState(true);
   const [withMatches, setWithMatches] = useState(false);
   const [withFencers, setWithFencers] = useState(false);
@@ -156,11 +159,17 @@ const ArenaQrCodesModal: React.FC<ArenaQrCodesModalProps> = ({
       if (mode === 'pdf') {
         await savePDF(html, 'qr-codes-pistes.pdf');
       } else {
-        const res = await window.electronAPI?.file?.printHtml?.(html);
-        if (res && !res.success) throw new Error(ipcErrorText(t, res, "Échec de l'impression"));
+        await platform.print(html);
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Erreur QR Codes', 'error');
+      showToast(
+        err instanceof PlatformError
+          ? ipcErrorText(t, { error: err.detail }, "Échec de l'impression")
+          : err instanceof Error
+            ? err.message
+            : 'Erreur QR Codes',
+        'error'
+      );
     } finally {
       setBusy(false);
     }

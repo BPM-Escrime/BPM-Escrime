@@ -15,6 +15,7 @@ import type { AppSettings, VenueInput } from '../../shared/types/appSettings';
 import type { CustomTheme } from '../../shared/types/remote';
 import type { DayRefereeInput, StripRule } from '../../shared/types/eventDay';
 import type { PrivacyPersonRef, PrivacySettings } from '../../shared/types/privacy';
+import { weaponCode, type DurationKey } from '../../shared/domain/durations/matchDurations';
 import { useBpmClient } from './BpmClientContext';
 import { defaultBpmClient } from './IpcClient';
 
@@ -23,7 +24,9 @@ export const stationAvailable = (): boolean =>
   typeof window !== 'undefined' && !!window.electronAPI?.api;
 
 /** Paramètres du poste modifiables par l'écran (les dossiers de l'agent ont leurs opérations) */
-export type StationSettingsPatch = Partial<Omit<AppSettings, 'agentFolders'>>;
+export type StationSettingsPatch = Partial<Omit<AppSettings, 'agentFolders' | 'matchDurations'>>;
+
+type WeaponCode = 'E' | 'F' | 'S' | 'L' | 'C';
 
 export function createStationApi(client: BpmClient) {
   const q = client.query.bind(client);
@@ -37,7 +40,7 @@ export function createStationApi(client: BpmClient) {
       importLegacy: (values: Record<string, string | null>, mode: 'missing' | 'write') =>
         c('importLegacySettings', { values, mode }),
       resolve: (
-        key: keyof AppSettings | 'stripCount',
+        key: Exclude<keyof AppSettings, 'matchDurations'> | 'stripCount',
         scope?: { competitionId?: string; eventDayId?: string }
       ) => q('getResolvedSetting', { key, ...scope }),
       listVenues: () => q('listVenues', {}),
@@ -90,6 +93,18 @@ export function createStationApi(client: BpmClient) {
     backup: {
       getDir: () => q('getBackupDir', {}),
       resetDir: () => c('resetBackupDir', {}),
+    },
+    /** Durées de match de référence (#1965) */
+    durations: {
+      get: () => q('getMatchDurations', {}),
+      setChangeover: (changeoverMs: number) => c('updateMatchDurationSettings', { changeoverMs }),
+      setOverride: (key: DurationKey, medianMs: number | null) =>
+        c('updateMatchDurationSettings', {
+          override: { key: { ...key, weapon: weaponCode(key.weapon) as WeaponCode }, medianMs },
+        }),
+      resetHistory: () => c('resetMatchDurationHistory', {}),
+      /** Durées d'une épreuve versées à l'historique (fait aussi à la fin du tableau) */
+      recordHistory: (competitionId: string) => c('recordMatchDurationHistory', { competitionId }),
     },
     /** RGPD (#1882) : droits des personnes, conservation, noms sur le réseau */
     privacy: {

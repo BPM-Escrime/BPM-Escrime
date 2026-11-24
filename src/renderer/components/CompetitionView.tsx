@@ -49,6 +49,7 @@ import type { CompetitionViewProps } from './competition/competitionViewTypes';
 import { useCompetitionPhaseFlow } from '../hooks/competitionView/useCompetitionPhaseFlow';
 import { useCompetitionSessionSync } from '../hooks/competitionView/useCompetitionSessionSync';
 import { useCompetitionCore } from '../hooks/competitionView/useCompetitionCore';
+import { useBlackCardReportRequest } from '../hooks/competitionView/useBlackCardReportRequest';
 import QuestSection from './competition/QuestSection';
 import PoolsPhase from './competition/PoolsPhase';
 import RankingPhase from './competition/RankingPhase';
@@ -258,6 +259,13 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     handleEditFencer,
     handleGoToRanking,
   } = { ...props, ...competitionCore, ...competitionSessionSync, ...competitionPhaseFlow };
+  // Rapport de carton noir demandé depuis l'appel DT (#2190)
+  useBlackCardReportRequest(
+    competition,
+    fencers,
+    [...poolHistory.flat(), ...pools],
+    tableauMatches
+  );
 
   const rankingNextRound =
     !isLastPoolRound && pools.length > 0 && canAdvanceFromPools

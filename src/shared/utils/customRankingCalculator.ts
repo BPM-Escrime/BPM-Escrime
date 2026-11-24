@@ -20,7 +20,7 @@ import {
 
 import { FencerStatus } from '../types';
 import { calculateFencerPoolStats } from './poolCalculations';
-import { referenceDuration } from './matchDurations';
+import { referenceDuration, type DurationSources } from '../domain/durations/matchDurations';
 
 // ============================================================================
 // Comparateur dynamique
@@ -290,16 +290,21 @@ function estimateMatchDuration(
   weapon: string,
   phase: 'pool' | 'tableau',
   maxScore: number,
-  timerSeconds: number
+  timerSeconds: number,
+  sources: DurationSources = {}
 ): number {
-  return referenceDuration({ weapon, phase, maxScore }, { timerSeconds }).medianMs / 60_000;
+  return (
+    referenceDuration({ weapon, phase, maxScore }, { ...sources, timerSeconds }).medianMs / 60_000
+  );
 }
 
 export function simulateFormula(
   fencerCount: number,
   formula: CustomFormulaConfig,
   /** Code arme (E, F, S, L, C) : défaut C, durée depuis le chrono et le score */
-  weapon = 'C'
+  weapon = 'C',
+  /** Réglages du DT et historique du poste (#1965) ; absent : valeurs par défaut */
+  sources: DurationSources = {}
 ): FormulaSimulation {
   const phases: FormulaPhaseSimulation[] = [];
   const warnings: string[] = [];
@@ -314,7 +319,13 @@ export function simulateFormula(
       const cfg = node.config as CustomPoolRoundConfig;
       const poolSizes = calcPoolSizes(currentFencers, cfg.minPoolSize, cfg.maxPoolSize);
       const matchCount = calcPoolMatchCount(poolSizes);
-      const minutesPerMatch = estimateMatchDuration(weapon, 'pool', cfg.maxScore, cfg.timerSeconds);
+      const minutesPerMatch = estimateMatchDuration(
+        weapon,
+        'pool',
+        cfg.maxScore,
+        cfg.timerSeconds,
+        sources
+      );
       const phaseMinutes = matchCount * minutesPerMatch;
 
       if (poolSizes.some(s => s < 3)) {
@@ -355,7 +366,8 @@ export function simulateFormula(
         weapon,
         'tableau',
         (node.config as CustomDEConfig).maxScore,
-        (node.config as CustomDEConfig).timerSeconds
+        (node.config as CustomDEConfig).timerSeconds,
+        sources
       );
 
       phases.push({

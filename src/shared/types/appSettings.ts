@@ -5,6 +5,12 @@
  * Licensed under GPL-3.0
  */
 
+import {
+  DEFAULT_DURATION_CONFIG,
+  validateDurationConfig,
+  type MatchDurationConfig,
+} from '../domain/durations/matchDurations';
+
 /** Paramètres du poste, clé → type de la valeur */
 export interface AppSettings {
   /** Langue de l'interface (fr, en, de, zh-HK…) */
@@ -24,6 +30,8 @@ export interface AppSettings {
   agentFolders: string[];
   /** Économie d'encre à l'impression : fonds retirés, texte et traits en noir (PDF compris) */
   inkSaving: boolean;
+  /** Durées de match : réglages du DT, historique du poste, changement de piste (#1965) */
+  matchDurations: MatchDurationConfig;
 }
 
 export type AppSettingKey = keyof AppSettings;
@@ -37,6 +45,7 @@ export const APP_SETTINGS_DEFAULTS: Readonly<AppSettings> = Object.freeze({
   remoteInterface: '0.0.0.0',
   agentFolders: [],
   inkSaving: false,
+  matchDurations: DEFAULT_DURATION_CONFIG,
 });
 
 export const APP_SETTING_KEYS = Object.keys(APP_SETTINGS_DEFAULTS) as AppSettingKey[];
@@ -83,6 +92,8 @@ export function validateAppSetting<K extends AppSettingKey>(
     case 'inkSaving':
       if (typeof value !== 'boolean') fail('booléen');
       return value as AppSettings[K];
+    case 'matchDurations':
+      return validateDurationConfig(value) as AppSettings[K];
     case 'agentFolders':
       if (
         !Array.isArray(value) ||

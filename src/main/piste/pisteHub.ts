@@ -20,6 +20,8 @@ import type { ArenaMatch, ArenaUpdate } from '../../shared/types/remote';
 import { resolveCyranoPhases, type MatchCoordsSource } from '../cyrano/matchCoords';
 import type { CyranoNatSource } from '../cyrano/names';
 import { buildMatchDisplay } from './matchDisplay';
+import { buildPisteRecord } from './pisteRecord';
+import { getArenaSlot } from '../remote/arenaSlot';
 import { toCyranoWeapon } from '../cyrano/disp';
 import { logger, LogCategory } from '../../shared/services/logger';
 import { ArenaInputGate } from './arenaInputGate';
@@ -130,6 +132,12 @@ export class PisteHub {
    * match envoyé par une épreuve reprend la main.
    */
   private panelHeld = new Set<string>();
+  /** Dernier créneau publié, par piste (OPP2 `software/record`) : pas de renvoi à l'identique */
+  private records = new Map<string, string>();
+  /** NEXT / PREV de l'appareil en attente : le match affiché ensuite devient le match actif */
+  private navigated = new Set<string>();
+  /** Match actif du créneau, par piste : fixé après NEXT / PREV, retiré à l'ACK (spéc. OPP2 § 17) */
+  private activeBouts = new Map<string, string>();
 
   constructor(
     driver: PisteDriver,
@@ -519,12 +527,18 @@ export class PisteHub {
     const match = update.match;
     const view = this.device.get(piste.piste);
     if (!match) {
+      this.navigated.delete(piste.piste);
       if (view?.matchId === null) return;
       this.device.set(piste.piste, { matchId: null });
       this.driver.send(piste.piste, { kind: 'clear' });
       return;
     }
-    if (isFinished(match, update.status)) return;
+    if (isFinished(match, update.status)) {
+      // Fin enregistrée par la tablette : résultat dans le créneau
+      if (this.activeBouts.get(piste.piste) === match.id) this.activeBouts.delete(piste.piste);
+      this.publishRecord(piste.piste);
+      return;
+    }
 
     const scoreA = update.scoreA ?? match.scoreA;
     const scoreB = update.scoreB ?? match.scoreB;
@@ -574,6 +588,36 @@ export class PisteHub {
     this.device.delete(piste);
     this.applied.delete(piste);
     this.alerts.delete(piste);
+    this.records.delete(piste);
+  }
+
+  /**
+   * Créneau de la piste (poule ou matchs de tableau, résultats confirmés) pour les écrans et
+   * feuilles de match (OPP2 `software/record`, #1960). Pilotes sans créneau, relais par
+   * équipes, piste manuelle : rien. Publié seulement s'il a changé.
+   */
+  publishRecord(piste: string): void {
+    if (!this.driver.wantsRecord?.(piste)) return;
+    const status = this.driver.findPiste(piste);
+    if (!status?.arena || this.modeOf(status) === 'manual') return;
+    const remote = this.remoteFor(status);
+    if (!remote?.arenaQueueCtx || this.relayFor(remote, status)) return;
+    const arenaId = `arena${status.arena}`;
+    const slot = getArenaSlot(remote.arenaQueueCtx, arenaId);
+    if (!slot) return;
+    const current = remote.getArena(arenaId)?.currentMatch;
+    const record = buildPisteRecord({
+      slot,
+      arenaId,
+      competitionId: remote.getSession()?.competitionId,
+      activeMatchId: this.activeBouts.get(piste),
+      referee: current?.referee,
+      options: this.opts,
+      coordsSource: this.coordsSource,
+    });
+    const key = JSON.stringify(record);
+    if (this.records.get(piste) === key) return;
+    if (this.driver.send(piste, { kind: 'record', record })) this.records.set(piste, key);
   }
 
   private sendMatch(
@@ -615,6 +659,8 @@ export class PisteHub {
     });
     this.panelHeld.delete(piste);
     logger.info(LogCategory.NETWORK, `Cyrano: DISP → ${piste} (match ${match.id})`);
+    if (this.navigated.delete(piste)) this.activeBouts.set(piste, match.id);
+    this.publishRecord(piste);
   }
 
   private handleState(piste: PisteLink, state: PisteState): void {
@@ -786,6 +832,9 @@ export class PisteHub {
     this.acked.set(piste.piste, match.id);
     this.applied.delete(piste.piste);
     remote.handleArenaControl(this.deviceSocket(piste), { arenaId, action: 'finish' });
+    // Résultat confirmé dans le créneau ; plus de match actif jusqu'au prochain NEXT
+    this.activeBouts.delete(piste.piste);
+    this.publishRecord(piste.piste);
   }
 
   /**
@@ -810,10 +859,12 @@ export class PisteHub {
         LogCategory.NETWORK,
         `Cyrano: NEXT sur piste ${piste.piste} refusé — match ${match.id} non terminé, DISP renvoyé`
       );
+      this.navigated.add(piste.piste);
       this.sendMatch(piste.piste, match, match.scoreA, match.scoreB);
       return;
     }
     this.device.delete(piste.piste);
+    this.navigated.add(piste.piste);
     remote.handleArenaControl(this.deviceSocket(piste), { arenaId, action: 'next' });
     logger.info(LogCategory.NETWORK, `Cyrano: NEXT sur piste ${piste.piste} → arène ${arenaId}`);
   }
@@ -837,6 +888,7 @@ export class PisteHub {
     const arenaId = `arena${piste.arena}`;
     const before = remote.getArena(arenaId)?.currentMatch;
     this.device.delete(piste.piste);
+    this.navigated.add(piste.piste);
     remote.handleArenaControl(this.deviceSocket(piste), { arenaId, action: 'prev' });
     const recalled = remote.getArena(arenaId)?.currentMatch;
     if (recalled && recalled !== before) {

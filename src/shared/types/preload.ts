@@ -5,16 +5,7 @@
  */
 
 import type { SettingsAPI } from './settingsApi';
-import {
-  Competition,
-  Match,
-  Pool,
-  PoolSnapshot,
-  Score,
-  Phase,
-  FencerCompetitionStats,
-} from '../types';
-import type { MatchSignatureRequest, ArenaUpdate } from './remote';
+import { Competition, Pool, Score, Phase, FencerCompetitionStats } from '../types';
 import type { PrivacyAPI } from './privacy';
 import type { McpScreenEvent } from './mcp';
 export type { ClubMemberReport } from './club';
@@ -374,9 +365,6 @@ export interface DatabaseAPI {
   // Poules d'une préparation écrite par une version précédente (lecture seule)
   getPoolsByPhase: (phaseId: string) => Promise<Pool[]>;
   getPhasesByCompetition: (competitionId: string) => Promise<Phase[]>;
-
-  // État de l'épreuve hors moteur (lecture seule ; écrit par le moteur seul, docs/adr/0024)
-  getSessionState: (competitionId: string) => Promise<SessionState | null>;
 }
 
 export interface FileAPI {
@@ -627,10 +615,6 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   settings: SettingsAPI;
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void;
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) => () => void;
-  /** Bus d'événements de données main → renderer (#1298) */
-  onCompetitionEvent: (
-    callback: (event: { type: CompetitionEventType; competitionId?: string }) => void
-  ) => () => void;
   notifyLanguageChanged: (lang: string) => void;
   /** Écran de démarrage affiché ou non (préférence persistée côté main) */
   splash?: {

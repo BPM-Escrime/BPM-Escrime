@@ -95,8 +95,8 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 84 | 912 |
-| `src/shared/services/` | 8 | 87 |
+| `src/shared/utils/` | 83 | 900 |
+| `src/shared/services/` | 9 | 89 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
 | Feature `latefencers` (`src/features/latefencers/`) | 1 | 14 |
@@ -105,11 +105,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 22 | 275 |
-| `src/main/` | 152 | 1301 |
-| `src/renderer/services/` | 13 | 62 |
-| `src/renderer/hooks/` | 40 | 203 |
-| `src/renderer/components/` | 132 | 711 |
+| `src/database/` | 23 | 278 |
+| `src/main/` | 155 | 1324 |
+| `src/renderer/services/` | 14 | 69 |
+| `src/renderer/hooks/` | 39 | 201 |
+| `src/renderer/components/` | 133 | 718 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 419 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 40 | 482 |
+| `src/shared/domain/` | 43 | 523 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **608** | **4717** |
+| **Total** | **616** | **4786** |
 
-Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -960,26 +960,6 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/matchDurations.test.ts</code> — 13 tests</summary>
-
-- **matchDurations (#1965)**
-  - valeurs par défaut : poule d’épée 3 min 30, tableau de sabre 8 min
-  - score différent : durée proportionnelle (relais 45 touches)
-  - arme L / C : depuis le chrono et le score, jamais 0
-  - priorité : réglage \> historique (≥ 30 matchs) \> défaut
-  - clé précise sans valeur : remonte à la clé plus large
-  - mélange : suit la formule avec 0, 3, 5, 10 et 20 matchs mesurés
-  - fenêtre glissante de 20 matchs
-  - match de 25 min (blessure) ou de 10 s : sans effet
-  - fourchette : 80ᵉ centile ≥ médiane
-  - agrégats : médiane, 80ᵉ centile et nombre par clé, sans donnée personnelle
-  - code arme depuis un libellé
-  - fin de phase et simulation : même durée pour la même clé
-  - fin de phase avec référence : mesuré dès 3 matchs, aberrants exclus
-
-</details>
-
-<details>
 <summary><code>src/shared/utils/matchReplay.test.ts</code> — 7 tests</summary>
 
 - **buildMatchReplay (#1074)**
@@ -1079,10 +1059,11 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/pdfExport/blackCardReportPdf.test.ts</code> — 1 test</summary>
+<summary><code>src/shared/utils/pdfExport/blackCardReportPdf.test.ts</code> — 2 tests</summary>
 
 - **generateBlackCardReportHTML (#1829, annexe 14 FFE)**
   - une page par tireur exclu, champs pré-remplis et échappés
+  - motifs de l’arme à cocher, cumul et autre ; source du journal (#2190)
 
 </details>
 
@@ -1845,6 +1826,15 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/services/keyValueStore.test.ts</code> — 2 tests</summary>
+
+- **keyValueStore (#2203)**
+  - localStorage du navigateur par défaut
+  - stockage injecté : le code partagé écrit dedans, pas dans localStorage
+
+</details>
+
+<details>
 <summary><code>src/shared/services/logger.test.ts</code> — 7 tests</summary>
 
 - **logger - enregistrement**
@@ -2366,6 +2356,16 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - sans salle : salle par défaut créée, pistes reprises et normalisées
   - journée → salle de la journée, épreuve sans journée → salle par défaut, rien d’écrasé
   - cyrano\_pistes vide : aucune salle créée
+
+</details>
+
+<details>
+<summary><code>src/database/migrations/stripPlans.test.ts</code> — 3 tests</summary>
+
+- **migration 50 : plan des pistes par épreuve**
+  - base 49 : piste de départ reprise de session\_state, valeurs invalides ignorées
+  - base vierge : table créée, vide, valeurs par défaut
+  - rejouée sur une base déjà migrée : sans effet
 
 </details>
 
@@ -3376,6 +3376,16 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/matchDurations.test.ts</code> — 4 tests</summary>
+
+- sans donnée : valeurs par défaut (poule d’épée 3:30, tableau de sabre 8:00)
+- réglage du DT : l’emporte, puis retiré ; changement de piste enregistré
+- refuse une durée hors bornes (schéma)
+- historique : épreuve sans match mesuré, épreuve inconnue refusée, réinitialisation
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/passivityCards.test.ts</code> — 7 tests</summary>
 
 - jaune P, rouge P (sans touche), noir P : rencontre décidée au score, même commandId, rejeu
@@ -3629,10 +3639,29 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - sans port du poste : réglages indisponibles, droits des personnes fonctionnent
 - état, réglages, jeton, journal : par le port du serveur
 - **contrat du poste**
-  - 46 opérations, chacune avec son gestionnaire
+  - 50 opérations, chacune avec son gestionnaire
 - **listPlaceSuggestions (docs/adr/0026)**
   - texte nettoyé transmis au port, langue par défaut fr
   - texte trop court : refus du contrat ; poste sans service : indisponible
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/strips.test.ts</code> — 13 tests</summary>
+
+- plan par défaut sans ligne ; épreuve inconnue refusée
+- setStripStart : écrit, journalise, signale ; même valeur : rien
+- setStripAvailability : panne puis remise en service, journal et rejeu sans écart
+- rejeu : un plan changé hors commande est un écart
+- eventDayId : la panne vaut pour toutes les épreuves de la journée, un commandId
+- journée : une runCommand par épreuve, journal:appended pour chacune, commandId repris
+- journée : rejouer le même commandId ne réécrit rien (command\_already\_applied)
+- journée : une épreuve en échec au milieu → aucune écriture, aucun événement
+- journée : expectedRevision refusé (une révision par épreuve)
+- refus : journée inconnue, ni ou les deux identifiants, piste hors bornes
+- outils MCP : lecture du plan, écriture par la même commande
+- serveur distant : reçoit le plan relu après la commande (écran ou MCP)
+- suppression de l’épreuve et archive .bpm : parcours générique de competition\_id
 
 </details>
 
@@ -3760,7 +3789,7 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 <summary><code>src/main/ipc/dbHandlers.test.ts</code> — 2 tests</summary>
 
 - **bus d’événements db (#1298)**
-  - emitCompetitionEvent diffuse aux fenêtres
+  - emitCompetitionEvent publie sur le bus du contrat, plus sur un canal IPC (ADR-0010)
   - lot N (docs/adr/0024) : plus aucun canal d’écriture de l’épreuve par le préload
 
 </details>
@@ -3998,7 +4027,7 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/opp2/driver.test.ts</code> — 8 tests</summary>
+<summary><code>src/main/opp2/driver.test.ts</code> — 11 tests</summary>
 
 - **pilote OPP2 (#1960)**
   - démarrage : BPM - Escrime annoncé (retenu), appareil en ligne via apparatus/connection
@@ -4006,18 +4035,22 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - doublon QoS 1 écarté ; redémarrage (seq plus petit, ts plus récent) accepté
   - END + état E : une seule fin proposée ; NEXT / PREV ; piste inconnue relevée
   - affichage : software/fencers, match, score, clock ; Id attendus dans l’état ; ACK / NAK
+  - cartons P repris : software/uw2f (ordinal 0 à 5), absent sans carton P
+  - créneau : software/record retenu, épreuve du dernier affichage ; wantsRecord
   - inversion gaucher par l’arbitre : apparatus/fencers échange les Id
   - reprise après coupure : états retenus relus au démarrage
 - **plusieurs protocoles (#1960)**
+  - créneau : seul le pilote OPP2 le demande
   - chaque piste routée vers son pilote ; Id tronqué selon le protocole de la piste
 
 </details>
 
 <details>
-<summary><code>src/main/opp2/e2e.test.ts</code> — 5 tests</summary>
+<summary><code>src/main/opp2/e2e.test.ts</code> — 6 tests</summary>
 
 - **OPP2 bout en bout : broker MQTT réel, appareil simulé (#1960)**
   - affichage reçu par l’appareil : tireurs (Id complets), arme, poule et match
+  - software/record : créneau de la poule, sans résultat ni match actif
   - assaut et touches : l’arène suit l’appareil
   - END valide → ACK, match terminé ; NEXT → match suivant
   - END à égalité sans priorité → NAK, match non terminé
@@ -4042,12 +4075,13 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/opp2/mqttBroker.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/opp2/mqttBroker.test.ts</code> — 5 tests</summary>
 
 - **broker MQTT intégré (#1960)**
   - messages retenus livrés à l’abonnement, réseau et interne
   - dernière volonté publiée sur coupure brutale, pas sur DISCONNECT
   - authentification et droit de publication par rôle
+  - règle par défaut (main.ts) : software/\* réservé au logiciel, will compris
   - paquet invalide : connexion coupée
 
 </details>
@@ -4061,6 +4095,15 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - flux morcelé puis groupé
   - paquet trop volumineux ou type inconnu : erreur de protocole
   - jokers + et #
+
+</details>
+
+<details>
+<summary><code>src/main/opp2/simulatorDevice.test.ts</code> — 2 tests</summary>
+
+- **appareil OPP2 simulé (scripts/lib/opp2Device.js)**
+  - match reçu (fencers + match + uw2f), touches, END → ACK, NEXT
+  - créneau software/record noté ; débranchement → hors ligne
 
 </details>
 
@@ -4762,11 +4805,12 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/stripHandover.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/remote/stripHandover.test.ts</code> — 7 tests</summary>
 
 - **stripHandover — travail en attente et piste libérée (#1878)**
   - poule sans piste : accueillie sur une piste hors de la plage de l’épreuve
   - épreuve sur les pistes 3–4 : la poule sans piste attend, jamais placée sur une piste masquée
+  - piste indisponible au plan en base, même inconnue du serveur (docs/adr/0015)
   - piste sous la plage de l’épreuve ou indisponible
   - poule en file derrière une piste occupée : installée sur la piste libre, qui la garde
   - match de tableau en file derrière une piste occupée : déplacé sur la piste libre
@@ -4775,17 +4819,14 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/stripPlan.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/remote/stripPlan.test.ts</code> — 4 tests</summary>
 
-- **normalizeStripPlan**
-  - valeurs par défaut pour une entrée invalide
-  - trie, déduplique et filtre les pistes indisponibles
 - **visibleArenas**
   - masque les arènes avant la piste de départ
   - tout visible par défaut
-- **nextFreeStrip (#1878)**
-  - première piste libre dans l’intervalle, hors pistes prises ou indisponibles
-  - aucune piste libre dans l’intervalle : null (la poule attend)
+- **envoi du plan au serveur distant (docs/adr/0015)**
+  - pushStripPlan : plan relu en base, sans date
+  - watchStripPlans : strips:changed → serveur de l’épreuve ; autres signaux ignorés
 
 </details>
 
@@ -5221,11 +5262,14 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/services/blackCardReport.test.ts</code> — 2 tests</summary>
+<summary><code>src/renderer/services/blackCardReport.test.ts</code> — 5 tests</summary>
 
 - **buildBlackCardEntries (#1829)**
   - match de la sanction : celui qui porte le carton noir en base
   - aucun exclu : rien
+  - journal : match, heure et source du retrait sur carton noir (#2190)
+  - appel DT : tireur demandé, même pas encore exclu
+  - motifs du 4e groupe par règlement
 
 </details>
 
@@ -5295,6 +5339,17 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - resolveConflict("local") écrase le serveur avec la version locale
   - resolveConflict("remote") accepte la version serveur et met en cache
   - resolveConflict échoue si le conflit est introuvable
+
+</details>
+
+<details>
+<summary><code>src/renderer/services/preferences.test.ts</code> — 4 tests</summary>
+
+- **preferences (#2203)**
+  - valeurs par défaut sans clé enregistrée
+  - écrit et relit sous les clés existantes
+  - logo null → clé retirée
+  - stockage qui lève (navigation privée) : défauts, aucune exception
 
 </details>
 
@@ -5528,12 +5583,13 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionRestore.phase.test.tsx</code> — 3 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionRestore.phase.test.tsx</code> — 4 tests</summary>
 
 - **onglet restauré (docs/adr/0017)**
   - chargement de l’épreuve : onglet de la session
   - relecture après une commande : onglet du poste conservé
   - chargement : onglet du poste s’il ne devance pas la phase de l’épreuve
+  - second chargement complet (effets rejoués) : réglages du poste appliqués une seule fois
 
 </details>
 
@@ -5554,7 +5610,7 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 
 - **restoreState**
   - marque isLoaded même sans electronAPI
-  - restaure l’état depuis la DB avec mapping de phase
+  - restaure l’état lu par getCompetitionState (plus de repli db.getSessionState)
 - **projection du moteur (docs/adr/0017, étape 4a)**
   - restaure par getCompetitionState
   - relit sur journal:appended plus récent, ignore une révision déjà lue
@@ -5827,16 +5883,6 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - expose les valeurs initiales et accepte valeur ou fonction
   - garde des setters stables
   - gère les Set immuables
-
-</details>
-
-<details>
-<summary><code>src/renderer/hooks/useStripPlanSync.test.tsx</code> — 3 tests</summary>
-
-- **useStripPlanSync**
-  - envoie le plan quand la session est active
-  - ne fait rien sans session active
-  - renvoie le plan quand les pistes indisponibles changent
 
 </details>
 
@@ -6387,7 +6433,7 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/SettingsModal.test.tsx</code> — 7 tests</summary>
+<summary><code>src/renderer/components/SettingsModal.test.tsx</code> — 8 tests</summary>
 
 - **SettingsModal**
   - affiche un onglet par section et seulement le contenu de l'onglet actif
@@ -6398,6 +6444,7 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **SettingsModal – export / import des paramètres**
   - importe un fichier JSON (logo inclus) et met à jour le stockage
   - signale un fichier invalide
+  - stockage du navigateur bloqué (navigation privée) : la modale reste utilisable (#2203)
 
 </details>
 
@@ -6513,13 +6560,14 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/__tests__/DTCallNotification.test.tsx</code> — 4 tests</summary>
+<summary><code>src/renderer/components/__tests__/DTCallNotification.test.tsx</code> — 5 tests</summary>
 
 - **DTCallNotification — abandon (#2000)**
   - affiche « Abandon — NOM Prénom (à confirmer par le DT) » et le bouton d'enregistrement
   - pas de bouton d'abandon pour un carton noir
   - le bouton demande l'abandon du tireur à la compétition puis solde l'appel
   - sans compétition ouverte pour traiter l'abandon, l'appel reste affiché
+  - carton noir : le bouton demande le rapport fédéral du tireur (#2190)
 
 </details>
 
@@ -7288,12 +7336,16 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/remote/StripPlanCard.test.tsx</code> — 7 tests</summary>
+<summary><code>src/renderer/components/remote/StripPlanCard.test.tsx</code> — 10 tests</summary>
 
 - **StripPlanCard**
   - est replié par défaut puis affiche les pistes de l’intervalle
-  - passe une piste en indisponible (rouge) et la persiste
-  - recharge les pistes indisponibles d’une compétition
+  - passe une piste en indisponible par la commande du moteur, sans localStorage
+- **useStripPlan (docs/adr/0015)**
+  - lit le plan du moteur, puis le relit sur strips:changed (autre poste, MCP)
+  - setStart passe par setStripStart
+  - reprise unique : pistes et piste de départ du poste envoyées, clés effacées
+  - reprise : piste de départ déjà écrite en base gardée, ancienne clé effacée
 - **répartition automatique avec pistes indisponibles**
   - availableStrips exclut les indisponibles, sans jamais renvoyer une liste vide
   - stripAtIndex tourne sur les pistes disponibles
@@ -7539,6 +7591,16 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - tient compte du zoom
   - contenu plus petit que la vue : reste visible
   - laisse un pan valide inchangé
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/themeEditor/themeEditor.test.tsx</code> — 2 tests</summary>
+
+- **themeTargetConfig (#2200)**
+  - piste par défaut, kiosque à part
+- **VarRow (#2200)**
+  - ligne texte : libellé affiché, saisie transmise
 
 </details>
 
@@ -9027,6 +9089,32 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/durations/matchDurations.test.ts</code> — 18 tests</summary>
+
+- **matchDurations (#1965)**
+  - valeurs par défaut : poule d’épée 3 min 30, tableau de sabre 8 min
+  - score différent : durée proportionnelle (relais 45 touches)
+  - arme L / C : depuis le chrono et le score, jamais 0
+  - priorité : réglage \> historique (≥ 30 matchs) \> défaut
+  - clé précise sans valeur : remonte à la clé plus large
+  - mélange : suit la formule avec 0, 3, 5, 10 et 20 matchs mesurés
+  - fenêtre glissante de 20 matchs
+  - match de 25 min (blessure) ou de 10 s : sans effet
+  - fourchette : 80ᵉ centile ≥ médiane
+  - agrégats : médiane, 80ᵉ centile et nombre par clé, sans donnée personnelle
+  - code arme depuis un libellé
+  - fin de phase et simulation : même durée pour la même clé
+  - fin de phase avec référence : mesuré dès 3 matchs, aberrants exclus
+- **paramétrage du poste et historique (#1965, lot 3)**
+  - occupation de la piste (début → fin), sinon chrono de la tablette, sinon rien
+  - agrégats d’une épreuve : clé arme · sexe · catégorie · score, aberrants exclus, sans donnée personnelle
+  - historique : apport d’une épreuve remplacé, fusion pondérée, seuil de 30 matchs
+  - réglage du DT posé puis retiré ; validation du paramètre enregistré
+  - table de l’écran : clés par défaut, puis réglages et historique
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/fencers/withdrawal.test.ts</code> — 6 tests</summary>
 
 - **planWithdrawal**
@@ -9215,6 +9303,47 @@ Unitaires : 590 fichiers, 4667 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - Photon : adresse sans nom → nom = adresse
   - Géoplateforme : lieu (tableaux) et adresse
   - réponse invalide → liste vide ; doublons retirés
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/planning/dayPlanner.test.ts</code> — 14 tests</summary>
+
+- **splitPools / tableauRounds**
+  - répartit en poules équilibrées
+  - ne compte pas les exempts
+- **planDay**
+  - donne une fin estimée à chaque épreuve et occupe les 4 pistes
+  - ne met jamais deux blocs sur la même piste en même temps
+  - sépare deux tours d’une même épreuve du temps de repos
+  - ne commence pas une épreuve avant son scratch
+  - respecte les réservations de pistes (#1878)
+  - alerte quand aucune piste n’autorise un bloc
+  - alerte et réduit les pistes quand les arbitres de l’arme manquent
+  - ignore les arbitres d’une autre arme
+  - recalage en direct : un retard sur les poules décale le tableau, sans toucher aux blocs commencés
+  - les durées mesurées allongent l’estimation
+  - épreuve en élimination directe seule, finale sur une piste
+  - est déterministe
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/planning/stripPlan.test.ts</code> — 9 tests</summary>
+
+- **normalizeStripPlan**
+  - valeurs par défaut pour une entrée invalide
+  - trie, déduplique et filtre les pistes indisponibles
+- **withStripAvailability**
+  - marque et remet en service, liste triée
+  - rien ne change : null
+- **nextFreeStrip (#1878)**
+  - première piste libre dans l’intervalle, hors pistes prises ou indisponibles
+  - aucune piste libre dans l’intervalle : null (la poule attend)
+- **distributeArenasRoundRobin**
+  - tourne sur les pistes disponibles de l’intervalle
+  - saute exemptions, matchs joués, matchs incomplets et ceux que le filtre écarte
+  - aucune piste : rien ne change
 
 </details>
 

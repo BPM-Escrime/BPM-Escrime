@@ -455,7 +455,30 @@
     "backup_imported": "已匯入 {{count}} 項設定。",
     "backup_invalid": "檔案無效：需要 BPM - Escrime 設定匯出檔。",
     "webhook_test": "測試",
-    "webhook_testing": "測試中…"
+    "webhook_testing": "測試中…",
+    "durations_title": "比賽時長",
+    "durations_hint": "按劍種、階段及分數設定參考值：先用裁判長設定，否則用本機紀錄（至少 30 場），否則用預設值。用於階段完結時間、賽制模擬及指標。留空：不設定。",
+    "durations_weapon": "劍種",
+    "durations_phase": "階段",
+    "durations_score": "分數",
+    "durations_scope": "性別 · 組別",
+    "durations_reference": "參考值",
+    "durations_measured": "實測（本機）",
+    "durations_setting": "裁判長設定",
+    "durations_phase_pool": "小組賽",
+    "durations_phase_tableau": "淘汰賽",
+    "durations_phase_team_relay": "接力",
+    "durations_all": "全部",
+    "durations_basis_default": "預設",
+    "durations_basis_history": "紀錄",
+    "durations_basis_setting": "裁判長設定",
+    "durations_basis_live": "即時",
+    "durations_matches": "{{count}} 場",
+    "durations_changeover": "換劍道時間",
+    "durations_competitions": "紀錄：{{count}} 個比賽",
+    "durations_reset": "重設紀錄",
+    "durations_reset_confirm": "刪除本機的比賽時長紀錄？裁判長設定會保留。",
+    "durations_error": "時長無效：格式 m:ss，至少 30 秒"
   },
   "actions": {
     "undo": "復原",
@@ -3150,7 +3173,9 @@
     "resolve": "DT 已出發 — 已解決",
     "abandon": "棄權",
     "abandon_note": "（須由 DT 確認）",
-    "confirm_abandon": "記錄棄權"
+    "confirm_abandon": "記錄棄權",
+    "black_card_report": "黑牌報告 (PDF)",
+    "black_card_report_title": "預先填寫的取消資格報告，須於 48 小時內寄交 FFE（附件 14）"
   },
   "qrShare": {
     "generating": "正在產生二維碼…",

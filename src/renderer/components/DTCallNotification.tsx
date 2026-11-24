@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { formatTime } from '../../shared/utils/localeFormat';
-import { requestConfirmAbandon } from '../services/dtCallEvents';
+import { requestBlackCardReport, requestConfirmAbandon } from '../services/dtCallEvents';
 import { useRemoteApi } from '../api/remoteApi';
 
 interface DTCallEntry {
@@ -136,6 +136,15 @@ const DTCallNotification: React.FC = () => {
             </div>
           )}
           <div className="dt-call-notification-5">{formatTime(call.timestamp)}</div>
+          {call.reason === 'black_card' && (
+            <button
+              onClick={() => requestBlackCardReport(call.fencerId ?? null, call.competitionId)}
+              className="dt-call-notification-confirm"
+              title={t('dtCall.black_card_report_title')}
+            >
+              {t('dtCall.black_card_report')}
+            </button>
+          )}
           {call.reason === 'abandon' && call.fencerId && (
             <button
               onClick={() => confirmAbandon(call)}

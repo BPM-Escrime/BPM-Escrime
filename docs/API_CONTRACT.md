@@ -563,7 +563,7 @@ l'absence de moteur (`unavailable`, hors Electron) : affichage en mémoire, rien
 Import fédéral : équipes par `registerTeam` et `assignTeamFencer`. Tirage de la préparation des
 poules (avant « Lancer ») : travail du poste (`posteUiState`, `readPoolDraft`), plus écrit en
 base ; un tirage écrit par une version précédente est relu (lecture seule). Restent en `db.*` :
-lectures (`getSessionState`, `getPhasesByCompetition`, `getPoolsByPhase`) ; cartons d'équipe par
+lectures (`getPhasesByCompetition`, `getPoolsByPhase` ; l'état : `getCompetitionState`) ; cartons d'équipe par
 les commandes du moteur, canaux `db:*` retirés ([ADR-0028](adr/0028-cartons-equipe-moteur.md),
 lot N). Rejeu par format (deux groupes, épreuve séparée, relais FIE, arène Sabre Laser) :
 `src/main/engine/commands/replayFormats.test.ts`.

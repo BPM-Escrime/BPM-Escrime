@@ -15,6 +15,7 @@ import { portOf, refuse, type StationHandler } from './stationSupport';
 import { resolveSetting, type ResolvableKey } from './settings';
 import { eventDayHandlers } from './eventDay';
 import { privacyHandlers } from './privacy';
+import { matchDurationHandlers } from './matchDurations';
 import { normalizePlaceQuery } from '../../../shared/domain/places/placeSearch';
 
 /** Valeurs localStorage (clé historique → texte) converties en paramètres typés */
@@ -143,4 +144,5 @@ export const stationHandlers = {
   ...settingsHandlers,
   ...eventDayHandlers,
   ...privacyHandlers,
+  ...matchDurationHandlers,
 };

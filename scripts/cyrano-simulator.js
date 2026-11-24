@@ -8,6 +8,10 @@
  *                                    [--port 50101] [--piste 1] [--protocol EFP1.1]
  *                                    [--bind 127.0.0.2]
  *                                    [--replay journal.log [--speed 1]]
+ *   node scripts/cyrano-simulator.js --opp2 [--piste 3] [--broker 127.0.0.1] [--broker-port 1883]
+ *                                    [--username u --password p] [--tls]
+ * --opp2 : appareil OPP2 (JSON sur MQTT, #1960) sur le broker du logiciel (intégré, port 1883) ;
+ *   mêmes commandes, plus `unplug` (débranchement : dernière volonté publiée par le broker).
  * --bind : adresse locale de l'appareil. Le logiciel identifie une piste par son IP :
  *   plusieurs simulateurs sur un même poste → une adresse de bouclage chacun (Linux :
  *   127.0.0.2, 127.0.0.3… sans configuration ; macOS : `sudo ifconfig lo0 alias 127.0.0.2`).
@@ -28,6 +32,7 @@ const fs = require('fs');
 const dgram = require('dgram');
 const readline = require('readline');
 const { CyranoDevice, COMMANDS } = require('./lib/cyranoDevice');
+const { Opp2Device } = require('./lib/opp2Device');
 const {
   parseCyranoLog,
   replayPistes,
@@ -94,14 +99,24 @@ function runReplay(file) {
 }
 
 function runDevice() {
-  const device = new CyranoDevice({
-    server: opt('server', '127.0.0.1'),
-    serverPort: Number(opt('server-port', 50100)),
-    port: Number(opt('port', 50101)),
-    protocol: opt('protocol', 'EFP1.1'),
-    piste: opt('piste', '1'),
-    bind: opt('bind', undefined),
-  });
+  const opp2 = args.includes('--opp2');
+  const device = opp2
+    ? new Opp2Device({
+        piste: opt('piste', '1'),
+        broker: opt('broker', '127.0.0.1'),
+        brokerPort: args.includes('--broker-port') ? Number(opt('broker-port')) : undefined,
+        username: opt('username', undefined),
+        password: opt('password', undefined),
+        tls: args.includes('--tls'),
+      })
+    : new CyranoDevice({
+        server: opt('server', '127.0.0.1'),
+        serverPort: Number(opt('server-port', 50100)),
+        port: Number(opt('port', 50101)),
+        protocol: opt('protocol', 'EFP1.1'),
+        piste: opt('piste', '1'),
+        bind: opt('bind', undefined),
+      });
 
   device.on('log', ({ dir, text }) => {
     const prefix = dir === 'out' ? '→ ' : dir === 'in' ? '← ' : '  ';
@@ -112,9 +127,11 @@ function runDevice() {
     .start()
     .then(() => {
       process.stdout.write(
-        `Simulateur Cyrano ${device.protocol} — piste ${device.piste}, écoute UDP ${device.bind ?? '*'}:${device.port}, ` +
-          `logiciel ${device.server}:${device.serverPort}\n` +
-          `Commandes : ${[...COMMANDS, 'show', 'quit'].join(' ')}\n`
+        (opp2
+          ? `Simulateur OPP2 — piste ${device.piste}, broker ${device.broker}:${device.port}\n`
+          : `Simulateur Cyrano ${device.protocol} — piste ${device.piste}, écoute UDP ${device.bind ?? '*'}:${device.port}, ` +
+            `logiciel ${device.server}:${device.serverPort}\n`) +
+          `Commandes : ${[...COMMANDS, 'show', ...(opp2 ? ['unplug'] : []), 'quit'].join(' ')}\n`
       );
       const rl = readline.createInterface({ input: process.stdin });
       rl.on('line', line => {
@@ -122,13 +139,23 @@ function runDevice() {
         if (!cmd) return;
         if (cmd === 'quit') {
           device.stop();
-          process.exit(0);
+          setTimeout(() => process.exit(0), 100);
+          return;
+        }
+        if (opp2 && cmd === 'unplug') {
+          device.unplug();
+          process.stdout.write('  appareil débranché (dernière volonté) ; quit pour sortir\n');
+          return;
         }
         if (!device.command(cmd)) process.stdout.write('  commande inconnue\n');
       });
     })
     .catch(err => {
-      process.stderr.write(`Impossible d'écouter sur ${device.bind ?? '*'}:${device.port} : ${err.message}\n`);
+      process.stderr.write(
+        opp2
+          ? `Broker ${device.broker}:${device.port} injoignable : ${err.message}\n`
+          : `Impossible d'écouter sur ${device.bind ?? '*'}:${device.port} : ${err.message}\n`
+      );
       process.exit(1);
     });
 }

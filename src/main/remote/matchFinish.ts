@@ -152,6 +152,8 @@ function applyDeviceExclusion(
     competitionId: ctx.session?.competitionId ?? null,
     timestamp: Date.now(),
     reason: 'black_card',
+    // Rapport fédéral proposé depuis l'appel (#2190)
+    fencerId: culprit.id,
     fencerName: `${culprit.lastName ?? ''} ${culprit.firstName ?? ''}`.trim() || null,
   });
 }
