@@ -347,7 +347,7 @@ places ») ; les équipes gardent leur modèle de relais. Une seule écriture po
   après écriture de la sauvegarde en attente ; l'écran relit la session (`session:changed`) ;
 - les tablettes : fin de match (`finishArenaMatch`, fin hors arène) et feuille de poule, par
   `recordFinishedScore` (`src/main/remote/scoreCommand.ts`, `invokeCommandSync`) ; l'avis
-  `match_finished` (abonnement `onRemoteActivity`) porte `recorded: true` et l'écran n'applique plus le score lui-même ;
+  l'avis `match_finished` (abonnement `onRemoteActivity`) n'est qu'une notification : l'écran n'applique jamais le score (#2229) ;
 - les appareils de piste (Cyrano, OPP2), par la même fin de match (source `cyrano`). L'ACK
   attend la commande : le score est contrôlé par `recordScore` en simulation (`checkArenaFinish`)
   et un refus (score maximal dépassé, égalité impossible…) vaut NAK, l'arbitre corrige puis
@@ -380,7 +380,7 @@ par l'appareil (statut E) passent par `recordScore` avec `specialStatus: 'exclus
 l'appareil confirmé par le DT par `withdrawFencer` ; abandon / forfait / exclusion sur la feuille
 de poule par `recordScore` ; annulation du carton noir par `reinstateFencer`
 (`reinstateByCommand`), le match interrompu étant rouvert par l'arène. les avis `fencer_excluded` et
-`fencer_reinstated` (`onRemoteActivity`) portent `recorded` : l'écran relit au lieu d'appliquer. Les trois PR
+`fencer_reinstated` (`onRemoteActivity`) sont de simples notifications : l'écran relit, sans rien appliquer (#2229). Les trois PR
 se mergent ensemble.
 
 Projections ([ADR-0017](adr/0017-projections-etat-epreuve.md)) : étape 4a faite. L'écran lit

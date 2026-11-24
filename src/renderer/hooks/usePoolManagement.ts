@@ -5,8 +5,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { Pool, Fencer, MatchStatus, FencerStatus, PoolRanking, Score } from '../../shared/types';
-import { logger, LogCategory } from '@shared/services/logger';
+import { Pool, Fencer, MatchStatus, PoolRanking } from '../../shared/types';
 import { useToast } from '../components/Toast';
 import { mergeRoundRankings } from '../../shared/utils/poolRounds';
 import {
@@ -19,7 +18,6 @@ import {
 } from '../../shared/utils/poolOrchestration';
 import { useTranslation } from './useTranslation';
 import { areAllPoolsComplete as allPoolsComplete } from '../../shared/domain/pools/poolCompletion';
-import { winnerByScore } from '../../shared/domain/match/matchEndValidation';
 
 interface UsePoolManagementProps {
   isLaserSabre: boolean;
@@ -278,173 +276,6 @@ export const usePoolManagement = ({
     [isLaserSabre, computeOverallRankingAllRounds, showToast, t]
   );
 
-  // Mettre à jour un match depuis une source externe (serveur distant)
-  const updateMatchFromRemote = useCallback(
-    (
-      matchId: string,
-      scoreA: number,
-      scoreB: number,
-      status: MatchStatus,
-      winnerOverride?: 'A' | 'B',
-      loserMark?: 'abandon' | 'exclusion'
-    ) => {
-      setPools(prevPools => {
-        const updatedPools = [...prevPools];
-        let matchFound = false;
-
-        for (let poolIdx = 0; poolIdx < updatedPools.length; poolIdx++) {
-          const pool = updatedPools[poolIdx];
-          for (let matchIdx = 0; matchIdx < pool.matches.length; matchIdx++) {
-            if (pool.matches[matchIdx].id === matchId) {
-              matchFound = true;
-              const match = pool.matches[matchIdx];
-              // Le vainqueur transmis par le serveur fait foi, comme au tableau : tirage au sort
-              // (scores égaux), mais aussi abandon / exclusion signalés par l'appareil de piste
-              // (#1720), où le perdant peut mener au score
-              const winner = winnerOverride ?? winnerByScore(scoreA, scoreB);
-
-              // Abandon / exclusion du perdant signalés par l'appareil : marque conservée,
-              // sinon l'annulation des résultats (#1144) ne s'applique pas (#1829)
-              const markA = !!winner && winner !== 'A' && loserMark !== undefined;
-              const markB = !!winner && winner !== 'B' && loserMark !== undefined;
-              const updatedPool = { ...pool };
-              const updatedMatches = [...pool.matches];
-              updatedMatches[matchIdx] = {
-                ...match,
-                scoreA: {
-                  value: scoreA,
-                  isVictory: winner === 'A',
-                  isAbstention: markA && loserMark === 'abandon',
-                  isExclusion: markA && loserMark === 'exclusion',
-                  isForfait: false,
-                },
-                scoreB: {
-                  value: scoreB,
-                  isVictory: winner === 'B',
-                  isAbstention: markB && loserMark === 'abandon',
-                  isExclusion: markB && loserMark === 'exclusion',
-                  isForfait: false,
-                },
-                status,
-                updatedAt: new Date(),
-              };
-              updatedPool.matches = updatedMatches;
-              updatedPool.updatedAt = new Date();
-              updatedPool.ranking = computePoolRanking(updatedPool);
-              updatedPools[poolIdx] = updatedPool;
-              break;
-            }
-          }
-          if (matchFound) break;
-        }
-
-        if (!matchFound) {
-          logger.warn(LogCategory.UI, '[usePoolManagement] Match non trouvé', { matchId });
-          return prevPools;
-        }
-
-        // Recalculer le classement général (tous les tours cumulés)
-        const newOverallRanking = computeOverallRankingAllRounds(updatedPools);
-        setOverallRanking(newOverallRanking);
-
-        logger.debug(
-          LogCategory.UI,
-          `[usePoolManagement] Match ${matchId} mis à jour depuis remote: ${scoreA}-${scoreB}`
-        );
-        return updatedPools;
-      });
-    },
-    [computePoolRanking, computeOverallRankingAllRounds]
-  );
-
-  // Synchroniser les données des tireurs (ex: photo) dans les matches de poule
-  // Annulation d'un carton noir distant : réintègre le combattant, rouvre le match
-  // interrompu (score conservé) et libère ses matchs marqués « exclusion »
-  const handleBlackCardCancelled = useCallback(
-    (
-      fencerId: string,
-      matchId: string,
-      restoredStatus: FencerStatus,
-      scoreA: number,
-      scoreB: number
-    ) => {
-      const reopened = (value: number): Score => ({
-        value,
-        isVictory: false,
-        isAbstention: false,
-        isExclusion: false,
-        isForfait: false,
-      });
-      setPools(prevPools => {
-        let changed = false;
-        const updatedPools = prevPools.map(pool => {
-          const hasFencer =
-            pool.fencers.some(f => f.id === fencerId) ||
-            pool.matches.some(m => m.fencerA?.id === fencerId || m.fencerB?.id === fencerId);
-          if (!hasFencer) return pool;
-          changed = true;
-
-          const restore = <T extends Fencer | null | undefined>(f: T): T =>
-            f && f.id === fencerId
-              ? ({ ...f, status: restoredStatus, exclusionReason: null } as T)
-              : f;
-
-          const newMatches = pool.matches.map(match => {
-            const isFencerA = match.fencerA?.id === fencerId;
-            const isFencerB = match.fencerB?.id === fencerId;
-            if (!isFencerA && !isFencerB) return match;
-            const base = {
-              ...match,
-              fencerA: restore(match.fencerA),
-              fencerB: restore(match.fencerB),
-            };
-
-            if (match.id === matchId) {
-              return {
-                ...base,
-                scoreA: reopened(scoreA),
-                scoreB: reopened(scoreB),
-                status: MatchStatus.IN_PROGRESS,
-                updatedAt: new Date(),
-              };
-            }
-            // Matchs suivants marqués non disputés suite à l'exclusion → à nouveau jouables
-            const myScore = isFencerA ? match.scoreA : match.scoreB;
-            const oppScore = isFencerA ? match.scoreB : match.scoreA;
-            if (
-              myScore?.isExclusion &&
-              !oppScore?.isAbstention &&
-              !oppScore?.isForfait &&
-              !oppScore?.isExclusion
-            ) {
-              return {
-                ...base,
-                scoreA: null,
-                scoreB: null,
-                status: MatchStatus.NOT_STARTED,
-                updatedAt: new Date(),
-              };
-            }
-            return base;
-          });
-
-          const newPool = {
-            ...pool,
-            fencers: pool.fencers.map(restore),
-            matches: newMatches,
-            updatedAt: new Date(),
-          };
-          newPool.ranking = computePoolRanking(newPool);
-          return newPool;
-        });
-        if (!changed) return prevPools;
-        setOverallRanking(computeOverallRankingAllRounds(updatedPools));
-        return updatedPools;
-      });
-    },
-    [computePoolRanking, computeOverallRankingAllRounds]
-  );
-
   const syncFencersToPool = useCallback((updatedFencers: Fencer[]) => {
     if (updatedFencers.length === 0) return;
     const fencerMap = new Map(updatedFencers.map(f => [f.id, f]));
@@ -483,7 +314,6 @@ export const usePoolManagement = ({
     updateScore,
     resetMatch,
     cancelMatch,
-    updateMatchFromRemote,
     nextPoolRound,
     areAllPoolsComplete,
     getPoolStats,
@@ -492,7 +322,6 @@ export const usePoolManagement = ({
     computeOverallRankingAllRounds,
     currentOverallRanking,
     handleFencerForfeit,
-    handleBlackCardCancelled,
     syncFencersToPool,
   };
 };

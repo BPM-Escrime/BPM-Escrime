@@ -173,8 +173,8 @@ export interface ArenaMatch {
    */
   deviceEnd?: { winner?: 'A' | 'B'; reason?: 'priority' | 'abandon' | 'exclusion' };
   /**
-   * Carton noir donné par la tablette à la fin du match : l'exclusion suit le chemin
-   * historique (avis fencer_excluded), le score n'est pas écrit par recordScore (#1980).
+   * Carton noir donné par la tablette à la fin du match : score et retrait écrits ensemble par
+   * recordScore (specialStatus exclusion, blackCard) ; l'avis fencer_excluded suit.
    */
   blackCardFencer?: 'A' | 'B';
   /**
@@ -310,15 +310,12 @@ export type RemoteActivity = RemoteActivityBase &
         isTableau?: boolean;
         /** Motif de fin signalé par l'appareil de piste : le perdant porte l'abandon / l'exclusion */
         deviceReason?: 'priority' | 'abandon' | 'exclusion';
-        /** Score écrit par recordScore : l'écran relit la session */
-        recorded?: boolean;
       }
     | {
         kind: 'fencer_excluded';
         fencerId: string;
         matchId: string;
         reason?: 'black_card';
-        recorded?: boolean;
       }
     | {
         kind: 'fencer_reinstated';
@@ -327,7 +324,6 @@ export type RemoteActivity = RemoteActivityBase &
         status: string;
         scoreA: number;
         scoreB: number;
-        recorded?: boolean;
       }
     | { kind: 'checkin_updated'; person: 'fencer' | 'referee'; id: string; present: boolean }
     | { kind: 'referee_changed'; matchId: string; refereeId: string }
