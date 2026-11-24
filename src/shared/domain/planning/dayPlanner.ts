@@ -19,7 +19,7 @@ import {
   weaponCode,
   type DurationPhase,
   type DurationSources,
-} from '../../utils/matchDurations';
+} from '../durations/matchDurations';
 import { DEFAULT_STRIP_RULE, stripAllows } from '../../utils/stripRules';
 
 const MIN = 60_000;

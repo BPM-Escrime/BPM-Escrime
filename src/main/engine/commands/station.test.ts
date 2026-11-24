@@ -550,8 +550,8 @@ describe('contrat du poste', () => {
     n => contract[n].permission === 'station:admin' && !(n in fileOperations)
   );
 
-  it('46 opérations, chacune avec son gestionnaire', () => {
-    expect(ops).toHaveLength(46);
+  it('50 opérations, chacune avec son gestionnaire', () => {
+    expect(ops).toHaveLength(50);
     for (const name of ops) expect(typeof handlers[name], name).toBe('function');
   });
 });
