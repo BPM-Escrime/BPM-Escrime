@@ -14,6 +14,8 @@ import { Weapon, Gender, Category, type Competition } from '../../shared/types';
 import { stationElectron } from '../testUtils/stationBridge';
 import { PlatformProvider } from '../platform/PlatformContext';
 import { fakeDesktop, fakePlatform } from '../../shared/platform/testing';
+import { ApiError } from '../../shared/api/client';
+import { ToastProvider } from './Toast';
 
 const competition = {
   id: 'c1',
@@ -167,9 +169,15 @@ describe('CompetitionPropertiesModal', () => {
     const renderWith = (desktop: ReturnType<typeof fakeDesktop> | false, onSave = vi.fn()) => {
       (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({ backup });
       return render(
-        <PlatformProvider platform={fakePlatform({ desktop })}>
-          <CompetitionPropertiesModal competition={competition} onSave={onSave} onClose={vi.fn()} />
-        </PlatformProvider>
+        <ToastProvider>
+          <PlatformProvider platform={fakePlatform({ desktop })}>
+            <CompetitionPropertiesModal
+              competition={competition}
+              onSave={onSave}
+              onClose={vi.fn()}
+            />
+          </PlatformProvider>
+        </ToastProvider>
       );
     };
 
@@ -188,6 +196,35 @@ describe('CompetitionPropertiesModal', () => {
       await waitFor(() => expect(shown).not.toHaveTextContent('/media/usb/Open'));
       save();
       expect(onSave.mock.calls[0][0].settings).not.toHaveProperty('backupDir');
+      delete (window as { electronAPI?: unknown }).electronAPI;
+    });
+
+    describe.each([
+      ['dir_not_found', 'Dossier introuvable : /media/usb/Open'],
+      ['station_refused', "Impossible d'écrire dans ce dossier : /media/usb/Open"],
+      ['competition_not_found', "Le dossier n'a pas pu être enregistré"],
+    ] as const)('refus %s (#2260)', (code, message) => {
+      it("toast d'erreur, dossier affiché inchangé", async () => {
+        backup.setCompetitionDir.mockRejectedValueOnce(new ApiError(code, 'refusé'));
+        const desktop = fakeDesktop({ pickDirectory: vi.fn(async () => '/media/usb/Open') });
+        renderWith(desktop);
+        const shown = await screen.findByTestId('competition-backup-dir');
+        await waitFor(() => expect(shown).toHaveTextContent('/srv/ancien'));
+        fireEvent.click(screen.getByText('Choisir le dossier…'));
+        expect(await screen.findByRole('alert')).toHaveTextContent(message);
+        expect(shown).toHaveTextContent('/srv/ancien');
+        expect(shown).not.toHaveTextContent('/media/usb/Open');
+        delete (window as { electronAPI?: unknown }).electronAPI;
+      });
+    });
+
+    it("succès : pas de toast d'erreur", async () => {
+      const desktop = fakeDesktop({ pickDirectory: vi.fn(async () => '/media/usb/Open') });
+      renderWith(desktop);
+      const shown = await screen.findByTestId('competition-backup-dir');
+      fireEvent.click(screen.getByText('Choisir le dossier…'));
+      await waitFor(() => expect(shown).toHaveTextContent('/media/usb/Open'));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       delete (window as { electronAPI?: unknown }).electronAPI;
     });
 

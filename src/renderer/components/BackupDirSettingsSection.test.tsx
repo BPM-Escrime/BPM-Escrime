@@ -12,6 +12,8 @@ import BackupDirSettingsSection from './BackupDirSettingsSection';
 import { stationElectron } from '../testUtils/stationBridge';
 import { PlatformProvider } from '../platform/PlatformContext';
 import { fakeDesktop, fakePlatform, type FakeDesktop } from '../../shared/platform/testing';
+import { ApiError } from '../../shared/api/client';
+import { ToastProvider } from './Toast';
 
 const DEFAULT = { dir: '/home/dt/Documents/BPM - Escrime', isDefault: true };
 let backup: Record<string, ReturnType<typeof vi.fn>>;
@@ -33,9 +35,11 @@ afterEach(() => {
 
 const renderSection = (bureau = true) =>
   render(
-    <PlatformProvider platform={fakePlatform({ desktop: bureau ? desktop : false })}>
-      <BackupDirSettingsSection />
-    </PlatformProvider>
+    <ToastProvider>
+      <PlatformProvider platform={fakePlatform({ desktop: bureau ? desktop : false })}>
+        <BackupDirSettingsSection />
+      </PlatformProvider>
+    </ToastProvider>
   );
 
 describe('BackupDirSettingsSection', () => {
@@ -60,6 +64,28 @@ describe('BackupDirSettingsSection', () => {
     fireEvent.click(await screen.findByText('Choisir le dossier…'));
     await waitFor(() => expect(desktop.pickDirectory).toHaveBeenCalled());
     expect(backup.setDir).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['dir_not_found', 'Dossier introuvable : /media/usb/Sauvegardes'],
+    ['station_refused', "Impossible d'écrire dans ce dossier : /media/usb/Sauvegardes"],
+    ['internal', "Le dossier n'a pas pu être enregistré"],
+  ] as const)('refus %s (#2260) : toast d’erreur, dossier affiché inchangé', async (code, text) => {
+    backup.setDir.mockRejectedValueOnce(new ApiError(code, 'refusé'));
+    renderSection();
+    fireEvent.click(await screen.findByText('Choisir le dossier…'));
+    expect(await screen.findByRole('alert')).toHaveTextContent(text);
+    expect(screen.getByTestId('backup-dir-path')).toHaveTextContent(DEFAULT.dir);
+    expect(screen.getByTestId('backup-dir-path')).not.toHaveTextContent('/media/usb');
+  });
+
+  it('succès : pas de toast d’erreur', async () => {
+    renderSection();
+    fireEvent.click(await screen.findByText('Choisir le dossier…'));
+    await waitFor(() =>
+      expect(screen.getByTestId('backup-dir-path')).toHaveTextContent('/media/usb/Sauvegardes')
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('sans bureau : dossier affiché, bouton de choix absent', async () => {
