@@ -145,8 +145,6 @@ function applyDeviceExclusion(
       fencerId: culprit.id,
       matchId: match.id,
       reason: 'black_card',
-      // Retrait écrit par le moteur : l'écran relit tireurs et session, sans rien appliquer
-      recorded: true,
     });
   }
   recordRemoteEvent(ctx, {
@@ -509,8 +507,6 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): Fini
       poolId: finishedMatch.poolId,
       isTableau: finishedMatch.isTableau ?? false,
       deviceReason: finishedMatch.deviceEnd?.reason,
-      // Écrit par le moteur : l'écran relit la session au lieu d'appliquer le score
-      recorded: true,
     });
     logger.info(
       LogCategory.NETWORK,

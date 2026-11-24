@@ -479,7 +479,6 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
               winner: winner as 'A' | 'B' | null,
               poolId: dbMatch.poolId ?? null,
               isTableau: isTableauMatch,
-              recorded: true,
             });
             logger.info(
               LogCategory.NETWORK,
@@ -525,8 +524,6 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
               winner: winner as 'A' | 'B' | null,
               poolId: sm?.poolId ?? null,
               isTableau: sm?.isTableau ?? false,
-              // Écrit par le moteur : l'écran relit la session
-              recorded: true,
             });
             logger.info(
               LogCategory.NETWORK,
@@ -586,8 +583,6 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
                 fencerId: culpritId,
                 matchId,
                 reason: 'black_card',
-                // Retrait écrit par le moteur : l'écran relit, sans rien appliquer
-                recorded: true,
               });
               // Carton noir → appel DT automatique (rapport fédéral)
               const culprit = blackCarded === 'A' ? matchObj?.fencerA : matchObj?.fencerB;

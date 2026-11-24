@@ -13,7 +13,6 @@ import {
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getDefaultMaxScores } from '../../../shared/utils/defaultMaxScores';
 import { Fencer, FencerStatus, Weapon } from '../../../shared/types';
-import { TableauMatch, ConsolationBracket } from '../../../shared/domain/tableau/tableauTypes';
 import { useToast } from '../../components/Toast';
 import { useConfirm } from '../../components/ConfirmDialog';
 import { useTranslation } from '../useTranslation';
@@ -123,12 +122,6 @@ export function useCompetitionCore(ctx: Ctx) {
     referees,
     setReferees,
   } = useStateGroup(CV_DATA_INIT);
-  // Refs pour connaître la présence d'un match dans le tableau/consolante de façon synchrone
-  // (mises à jour distantes : éviter le warning "Match non trouvé" côté poule pour les matchs DE)
-  const tableauMatchesRef = useRef<TableauMatch[]>([]);
-  const consolationBracketsRef = useRef<ConsolationBracket[]>([]);
-  tableauMatchesRef.current = tableauMatches;
-  consolationBracketsRef.current = consolationBrackets;
   const handleAppelStateChange = useCallback((f: Fencer[], cols: string[]) => {
     setAppelFencers(f);
     setAppelVisibleColumns(cols);
@@ -226,13 +219,11 @@ export function useCompetitionCore(ctx: Ctx) {
     updateScore,
     resetMatch,
     cancelMatch,
-    updateMatchFromRemote,
     nextPoolRound,
     computePoolRanking,
     computeOverallRanking,
     areAllPoolsComplete,
     handleFencerForfeit,
-    handleBlackCardCancelled,
     syncFencersToPool,
   } = usePoolManagement({ isLaserSabre, poolMaxScore, showToast });
 
@@ -357,8 +348,6 @@ export function useCompetitionCore(ctx: Ctx) {
     setTableauEditUnlocked,
     referees,
     setReferees,
-    tableauMatchesRef,
-    consolationBracketsRef,
     handleAppelStateChange,
     rapieresState,
     setRapieresState,
@@ -417,13 +406,11 @@ export function useCompetitionCore(ctx: Ctx) {
     updateScore,
     resetMatch,
     cancelMatch,
-    updateMatchFromRemote,
     nextPoolRound,
     computePoolRanking,
     computeOverallRanking,
     areAllPoolsComplete,
     handleFencerForfeit,
-    handleBlackCardCancelled,
     syncFencersToPool,
     poolCardSize,
     setPoolCardSize,

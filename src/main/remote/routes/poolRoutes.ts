@@ -338,8 +338,6 @@ export function registerPoolRoutes(ctx: PoolRouteContext): void {
           scoreB: scoreBObj.value as number,
           poolId,
           isTableau: false,
-          // Écrit par le moteur : l'écran relit la session
-          recorded: true,
         });
       }
 
