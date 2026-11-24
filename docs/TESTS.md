@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 22 | 275 |
-| `src/main/` | 151 | 1295 |
+| `src/main/` | 152 | 1301 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 132 | 711 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 40 | 482 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **606** | **4712** |
+| **Total** | **607** | **4718** |
 
-Unitaires : 588 fichiers, 4662 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 589 fichiers, 4668 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2997,8 +2997,8 @@ Unitaires : 588 fichiers, 4662 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - sabre laser : champ arme vide dans le DISP
   - END à égalité avec priorité : vainqueur = tireur prioritaire, inversion comprise
   - END à égalité, A à gauche après inversion, priorité à droite → B
-  - END sur abandon : l’adversaire gagne même mené au score, abandon marqué
-  - END sur exclusion (statut E) : tireur exclu comme pour un carton noir, annulable (#1829)
+  - END sur abandon : l’adversaire gagne même mené au score, le DT décide du retrait
+  - END sur exclusion (statut E) : exclusion par le moteur avec le score, rien d’écrit en direct (#2151)
   - END sur abandon : aucune exclusion automatique, le DT est sollicité
   - END sur exclusion : exclusion marquée sur le tireur exclu
   - journal des scores : auteur « device » pour l’appareil, « referee » pour la tablette
@@ -4526,6 +4526,19 @@ Unitaires : 588 fichiers, 4662 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/remote/finishByEngine.test.ts</code> — 6 tests</summary>
+
+- tablette, fin d’arène : score écrit par recordScore, journal sans écart
+- feuille de poule, match absent de la session : 409 match\_not\_found, rien d’écrit
+- tablette, fin d’arène refusée par une règle : 409, match non terminé, rien d’écrit
+- fin d’arène refusée par le moteur après le contrôle : 409 à la tablette, arène en cours, rien d’écrit
+- **appareil de piste Cyrano (maître)**
+  - END valide : ACK, score écrit par le moteur (source cyrano), journal sans écart
+  - END d’un match absent de la session : NAK, rien d’écrit, match non terminé
+
+</details>
+
+<details>
 <summary><code>src/main/remote/firewallCheck.test.ts</code> — 17 tests</summary>
 
 - **analyzeFirewall**
@@ -4718,7 +4731,7 @@ Unitaires : 588 fichiers, 4662 tests. E2E : 18 fichiers, 50 tests (comptage stat
 
 - tablette : session, journal (identifiant de l’arbitre), audit (nom, adresse)
 - appareil de piste : match de tableau par son identifiant composite
-- match inconnu, sans épreuve : chemin historique provisoire ; règle : refus (#2151)
+- match inconnu, sans épreuve, règle : refus rendu, rien d’écrit (#2151, étape 3)
 - contrôle sans écriture (appareil de piste) : refus motivé, rien au journal
 - carton noir de la tablette : score et exclusion en une commande, annulation par le moteur
 - **sessionMatchId**
