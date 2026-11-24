@@ -1,7 +1,7 @@
 # ADR-0030 — Les fonctions de l'application de bureau passent par `PlatformServices.desktop`
 
 - **Statut** : Proposée
-- **Date** : 2026-11-24
+- **Date** : 2026-11-24 ; questions tranchées par le mainteneur le 2026-11-24 (PR #2251)
 - **Tickets** : #1981 (lot 4, suite), épique #1978 ; complète [ADR-0021](0021-services-plateforme.md)
 
 ## Contexte
@@ -135,6 +135,9 @@ interface DesktopServices {
   `printDialog.savePdf` ne rend plus le chemin du PDF.
 - **Abonnements** : chaque `on…` rend sa fonction de désabonnement. Elle retire **son** écouteur
   seulement (#1894) ; jamais `removeAllListeners`. Un `useEffect` la rend telle quelle.
+- **Mise à jour** : ses préférences (vérification automatique, canal, dossier de téléchargement)
+  restent **hors du contrat**, dans `desktop.updater`. Elles ne concernent que l'application
+  installée sur ce poste : ni réseau, ni vue DT, ni outil MCP.
 - **Démarrage** : `whenReady()` remplace `onDbReady` et son délai de secours d'une seconde. Le
   préload retient que `db:ready` est passé, pour qu'un appel tardif soit résolu tout de suite.
   Aucun nouveau canal.
@@ -147,22 +150,51 @@ interface DesktopServices {
   fonction n'existe que sur le bureau.
 - Le choix n'écrit rien. L'écran envoie ensuite le chemin à une commande du contrat :
 
-| Réglage                             | Commande                                                   | Droit                               |
-| ----------------------------------- | ---------------------------------------------------------- | ----------------------------------- |
-| Dossier de sauvegarde du poste      | `setBackupDir { path }` (pendant de `resetBackupDir`)      | `station:admin`                     |
-| Dossier de l'agent                  | `addAgentFolder { path }` (pendant de `removeAgentFolder`) | `station:admin`                     |
-| Dossier de sauvegarde d'une épreuve | `updateCompetitionSettings` (champ `backupDir`, existant)  | droit de l'épreuve (voir questions) |
+| Réglage                             | Commande                                                   | Droit           |
+| ----------------------------------- | ---------------------------------------------------------- | --------------- |
+| Dossier de sauvegarde du poste      | `setBackupDir { path }` (pendant de `resetBackupDir`)      | `station:admin` |
+| Dossier de l'agent                  | `addAgentFolder { path }` (pendant de `removeAgentFolder`) | `station:admin` |
+| Dossier de sauvegarde d'une épreuve | `setCompetitionBackupDir { competitionId, path }`          | `station:admin` |
 
 - Le handler vérifie le chemin : absolu, dossier existant. Sinon `dir_not_found` (code existant du
   catalogue, [ADR-0009](0009-codes-erreur.md)). Pour la sauvegarde, il vérifie aussi qu'on peut y
   écrire.
-- `setBackupDir` et `addAgentFolder` sont des fonctions du poste (ADR-0022) : jamais servies sur
-  le réseau ni à la vue DT, sans journal, **sans outil MCP**. Un agent ne peut pas élargir lui-même
-  la liste des dossiers qu'il a le droit de lire.
+- `setBackupDir`, `setCompetitionBackupDir` et `addAgentFolder` sont des fonctions du poste
+  (ADR-0022) : jamais servies sur le réseau ni à la vue DT, sans journal, **sans outil MCP**. Un
+  agent ne peut pas élargir lui-même la liste des dossiers qu'il a le droit de lire.
 - Côté main, un seul canal générique `dialog:pickDirectory` remplace `backup:chooseDir`,
   `backup:pickCompetitionDir` et `settings:addAgentFolder` : trois canaux en moins, un en plus.
 - Exception : `updater.chooseDownloadDir` garde choix et écriture dans le main. La mise à jour
   reste entièrement hors du contrat ; aucun autre chemin n'écrit ce réglage.
+
+### Dossier de sauvegarde d'une épreuve : un réglage du poste
+
+- Un chemin n'a de sens que sur le poste qui l'a choisi. Avec le multi-poste (#1982,
+  [ADR-0029](https://github.com/BPM-Escrime/BPM-Escrime/pull/2246)), un champ de l'épreuve serait
+  lu ou écrit par un autre poste, où ce dossier n'existe pas. Le dossier dédié d'une épreuve devient
+  donc un **réglage du poste, par épreuve**, et non plus un champ de l'épreuve.
+- Il est rangé avec le dossier de sauvegarde du poste (`<userData>/backup-settings.json`, lu par
+  `backupSettings.ts`), dans une table `épreuve → dossier`.
+- Opérations du contrat ([ADR-0008](0008-nommage-contrat.md)), dans `contractStation.ts`, droit
+  `station:admin`, jamais sur le réseau, sans outil MCP :
+  - `setCompetitionBackupDir { competitionId, path }` : refus `competition_not_found` ou
+    `dir_not_found` ;
+  - `resetCompetitionBackupDir { competitionId }` : retour au dossier du poste ;
+  - la lecture reste `getBackupDir`, enrichie du dossier propre à chaque épreuve (ou une requête
+    `getCompetitionBackupDir { competitionId }`, au choix de la PR 3c).
+- La sauvegarde automatique (`autosaveBackup.ts`) et « Enregistrer sous » (`menuActions.ts`,
+  dossier proposé) lisent ce réglage du poste, et non plus `competition.settings.backupDir`.
+- **Champ actuel `settings.backupDir`** (`competitionSchema.ts`, `Competition.settings`) :
+  - **reprise** au premier démarrage de la version qui livre 3c : pour chaque épreuve qui en a un,
+    le poste copie le chemin dans son réglage, s'il désigne un dossier existant ; sinon il l'ignore
+    et le trace ;
+  - le champ sort ensuite de `updateCompetitionSettings` : l'écran ne l'écrit plus, une valeur reçue
+    est rejetée par le schéma ;
+  - une archive `.bpm` venue d'un autre poste peut encore le porter : il est ignoré, jamais repris
+    (chemin d'une autre machine) ;
+  - le nettoyage de la clé dans le JSON `settings` des épreuves existantes est une écriture de
+    données en masse : **à signaler** dans la PR 3c. Si elle passe par une migration, celle-ci cite
+    cette ADR ([ADR-0011](0011-migrations-schema-3-0.md)). Rien n'est codé ici.
 
 ### Vue DT et navigateur
 
@@ -184,17 +216,18 @@ interface DesktopServices {
   le désabonnement retire le bon écouteur ; `whenReady` se résout avant comme après `db:ready`.
 - Chaque écran migré a un test « sans bureau » : rendu avec `desktop` absent, bouton masqué, pas
   d'erreur.
-- Les deux commandes ont leurs tests d'engine : chemin valide, dossier absent (`dir_not_found`),
+- Les commandes de dossier ont leurs tests d'engine : chemin valide, dossier absent (`dir_not_found`),
   refus hors poste local (test de l'ADR-0022), absence d'outil MCP, nommage
-  (`contractNaming.test.ts`).
+  (`contractNaming.test.ts`). La reprise de `settings.backupDir` a son test (dossier existant
+  repris, dossier absent ignoré).
 
 ### Découpage
 
-| PR  | Contenu                                                                                                                                                                                                                                                    |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3a  | `DesktopServices`, `ElectronDesktop`, `fakePlatform`. Migration : version, écran de démarrage, mise à jour (`AboutModal`, `ReportIssueModal`, `UpdateMenuButton`, `UpdateNotification`, `slashCommands`, `useSettingsHandlers`, `useSettingsPreferences`). |
-| 3b  | Menu, fichiers ouverts, sauvegarde automatique, `whenReady`, `setCurrentCompetition`, `setWindowSize`, langue (`useAppMenuHandlers`, `useMenuEvents`, `App.tsx`, `useAppGlobalEffects`, `usePoolsWindowSize`, `TranslationContext`), impression native.    |
-| 3c  | `pickDirectory`, canal `dialog:pickDirectory`, commandes `setBackupDir` et `addAgentFolder`, retrait des trois anciens canaux (`BackupDirSettingsSection`, `CompetitionPropertiesModal`, `McpSettingsSection`), `npm run docs:mcp`.                        |
+| PR  | Contenu                                                                                                                                                                                                                                                                                                                      |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3a  | `DesktopServices`, `ElectronDesktop`, `fakePlatform`. Migration : version, écran de démarrage, mise à jour (`AboutModal`, `ReportIssueModal`, `UpdateMenuButton`, `UpdateNotification`, `slashCommands`, `useSettingsHandlers`, `useSettingsPreferences`).                                                                   |
+| 3b  | Menu, fichiers ouverts, sauvegarde automatique, `whenReady`, `setCurrentCompetition`, `setWindowSize`, langue (`useAppMenuHandlers`, `useMenuEvents`, `App.tsx`, `useAppGlobalEffects`, `usePoolsWindowSize`, `TranslationContext`), impression native.                                                                      |
+| 3c  | `pickDirectory`, canal `dialog:pickDirectory`, commandes `setBackupDir`, `setCompetitionBackupDir`, `resetCompetitionBackupDir` et `addAgentFolder`, reprise de `settings.backupDir`, retrait des trois anciens canaux (`BackupDirSettingsSection`, `CompetitionPropertiesModal`, `McpSettingsSection`), `npm run docs:mcp`. |
 
 Chaque PR fait baisser `electronApiCalls` et `electronApiUses` d'autant ; 3c fait aussi baisser
 `ipcChannels` de 2. Elles relèvent de l'épique #1978 : brouillon, sans auto-merge, revue du
@@ -208,6 +241,8 @@ mainteneur (ADR-0001).
 - Aucun chemin ne traverse `DesktopServices`, sauf le retour de `pickDirectory`.
 - Aucun nouveau canal `ipcMain` hors `dialog:pickDirectory` ; plus d'écriture de réglage par
   `backup:chooseDir` ni `settings:addAgentFolder`.
+- Plus aucune lecture de `competition.settings.backupDir` dans `src/main` ; le dossier d'une
+  épreuve vient du réglage du poste.
 - Application installée : même comportement (menus, mise à jour, version, écran de démarrage,
   taille des poules, impression, choix de dossier). Les E2E Electron passent.
 - Navigateur de développement et vue DT : boutons de bureau absents, aucune erreur dans la
@@ -221,13 +256,40 @@ mainteneur (ADR-0001).
   d'écriture : le contrat.
 - `src/shared/platform` grossit. C'est voulu : c'est le seul lieu qui connaît le préload, hors
   transport du contrat.
-- **Cliquets** : quand les lots 1, 2 et 3 auront ramené `electronApiCalls` et `electronApiUses` à
-  0, on rend la règle **stricte** : toute occurrence de `window.electronAPI` hors de
-  `src/shared/platform` et `src/renderer/api` fait échouer la CI. Le périmètre compté ne change
-  pas d'ici là ; on n'élargit pas l'exemption.
+- **Cliquets, puis règle ESLint** : le cliquet `electronApiCalls` / `electronApiUses` reste le
+  compteur tant qu'il n'est pas à 0. Le périmètre compté ne change pas d'ici là ; on n'élargit
+  pas l'exemption. Quand il atteint 0, la même PR :
+  - ajoute une règle ESLint **bloquante** (niveau `error`, donc vue par `lint:errors`) ;
+  - retire les deux compteurs de `check-quality-ratchet.js` et de `quality-baseline.json` ;
+  - met à jour la partie fixe de `scripts/generate-tests-doc.js`.
+- **Forme de la règle** (`eslint.config.*`, bloc « Couches (#1979) ») :
+
+```js
+{
+  files: ['src/renderer/**/*.{ts,tsx}', 'src/features/**/*.{ts,tsx}', 'src/shared/**/*.{ts,tsx}'],
+  ignores: ['src/shared/platform/**', 'src/renderer/api/**', ...LAYER_TESTS],
+  rules: {
+    'no-restricted-syntax': ['error', {
+      selector: "MemberExpression[property.name='electronAPI'], ObjectPattern > Property[key.name='electronAPI']",
+      message: 'Pont Electron : usePlatform() (desktop) ou client du contrat (docs/adr/0030).',
+    }],
+  },
+}
+```
+
+- Le sélecteur prend aussi `window?.electronAPI`, les transtypages (`(window as …).electronAPI`)
+  et la déstructuration (`const { electronAPI } = window`), que `no-restricted-properties`
+  (`object: 'window'`) laisserait passer. Ce bloc précède celui de `src/shared/domain` : en
+  configuration à plat, le dernier bloc remplace les options d'une même règle, et le domaine
+  interdit déjà `window` en entier.
+- Avant d'activer la règle, `src/shared` doit être propre lui aussi : `bookPdf.ts` (impression),
+  `cloudSyncService.ts` (`crypto.*`, voir ci-dessous). Les tests (`LAYER_TESTS`) gardent le droit
+  de simuler le préload.
 - Ce qui reste hors de cette ADR : logos et synthèse vocale (`getLogo`, `getLogos`, `saveLogos`,
-  `getTtsConfig`), proxy, diagnostic, `greg`, `ftp`, `crypto` (`safeStorage`), et les lectures
-  `db.*` restantes. Ils suivent les lots 1 et 2 (contrat, ADR-0022) ou une décision à part.
+  `getTtsConfig`), proxy, diagnostic, `greg`, `ftp`, et les lectures `db.*` restantes. Ils suivent
+  les lots 1 et 2 (contrat, ADR-0022).
+- **`safeStorage`** (`crypto.*`, utilisé par `cloudSyncService`) : décision à part, **ticket à
+  ouvrir**. Il bloque la règle ESLint tant que `cloudSyncService` lit le préload.
 
 ## Alternatives écartées
 
@@ -250,14 +312,15 @@ mainteneur (ADR-0001).
 - **Un `onMenu(kind, cb)` à charge utile non typée** — chaque appelant transtyperait ; la table
   `MenuEvents` donne le bon type par action.
 
-## Questions ouvertes
+## Questions tranchées (2026-11-24)
 
-1. **Préférences de mise à jour** (vérification auto, canal, dossier de téléchargement) : hors du
-   contrat, comme proposé, ou dans `contractStation` (`station:admin`) ?
-2. **Dossier de sauvegarde d'une épreuve** : avec le multi-poste (#1982, ADR-0029), un autre poste
-   pourrait écrire par `updateCompetitionSettings` un chemin du poste principal. Réserver ce champ
-   à `station:admin` en local, ou en faire un réglage du poste par épreuve ?
-3. **`safeStorage`** (`crypto.*`, utilisé par `cloudSyncService`) : un membre `desktop.secureStorage`
-   ici, ou une décision à part ?
-4. **Règle stricte finale** : cliquet à 0 bloquant, ou règle ESLint dans `lint:errors`
-   (`no-restricted-syntax` sur `window.electronAPI` hors des deux dossiers) ?
+Le mainteneur a tranché les quatre questions de la PR #2251 :
+
+1. **Préférences de mise à jour** (vérification automatique, canal, dossier de téléchargement) :
+   **hors du contrat**, dans `desktop.updater`. Poste local seulement, ni réseau ni MCP.
+2. **Dossier de sauvegarde d'une épreuve** : **réglage du poste, par épreuve**, écrit par
+   `setCompetitionBackupDir`, et non plus un champ de l'épreuve écrit par
+   `updateCompetitionSettings` (§ « Dossier de sauvegarde d'une épreuve : un réglage du poste »).
+3. **`safeStorage`** : **hors de cette ADR**, décision à part (ticket à ouvrir).
+4. **Règle finale** : **règle ESLint bloquante** dans `lint:errors`, qui prend le relais du
+   cliquet à 0 (§ « Conséquences »).
