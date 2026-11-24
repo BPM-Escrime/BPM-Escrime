@@ -28,6 +28,15 @@ const NO_APP_IN_DOMAIN = {
 };
 const LAYER_FILES = ['src/main/**/*.ts', 'src/shared/**/*.ts', 'src/database/**/*.ts'];
 const LAYER_TESTS = ['**/*.test.ts', '**/__tests__/**'];
+// Pont Electron (docs/adr/0030) : seuls `src/shared/platform` (ElectronPlatform), `src/renderer/api`
+// (transport du contrat) et les tests lisent `electronAPI`. Une même règle `no-restricted-syntax`
+// déclarée dans un bloc plus tardif remplace les options des blocs précédents : tout bloc qui
+// recouvre ces fichiers reprend ELECTRON_API_SYNTAX (voir `src/shared/domain`).
+const ELECTRON_API_SYNTAX = {
+  selector:
+    "MemberExpression[property.name='electronAPI'], ObjectPattern > Property[key.name='electronAPI']",
+  message: 'Pont Electron : usePlatform() (desktop) ou client du contrat (docs/adr/0030).',
+};
 const restrict = (...patterns) => ({ 'no-restricted-imports': ['error', { patterns }] });
 
 module.exports = [
@@ -151,6 +160,20 @@ module.exports = [
     ignores: LAYER_TESTS,
     rules: restrict(NO_RENDERER, NO_FEATURES),
   },
+  // Pont Electron (docs/adr/0030) : remplace le cliquet electronApiCalls / electronApiUses.
+  // Avant le bloc de `src/shared/domain`, qui redéclare no-restricted-syntax (dernier bloc gagnant).
+  {
+    files: ['src/renderer/**/*.{ts,tsx}', 'src/features/**/*.{ts,tsx}', 'src/shared/**/*.{ts,tsx}'],
+    ignores: [
+      'src/shared/platform/**',
+      'src/shared/types/**',
+      'src/renderer/api/**',
+      ...LAYER_TESTS,
+      '**/*.test.tsx',
+      'src/renderer/testUtils/**',
+    ],
+    rules: { 'no-restricted-syntax': ['error', ELECTRON_API_SYNTAX] },
+  },
   {
     files: ['src/shared/domain/**/*.ts'],
     ignores: LAYER_TESTS,
@@ -185,6 +208,7 @@ module.exports = [
           selector: "NewExpression[callee.name='Date'][arguments.length=0]",
           message: 'Domaine pur : recevoir l’heure en paramètre (docs/adr/0002).',
         },
+        ELECTRON_API_SYNTAX,
       ],
     },
   },

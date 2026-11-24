@@ -12,8 +12,6 @@
   "unnamedButton": 0,
   "rendererImports": 0,
   "featuresImports": 0,
-  "electronApiCalls": 0,
-  "electronApiUses": 0,
   "ipcChannels": 41,
   "directDbWrites": 0,
   "depsUnjustified": 0,

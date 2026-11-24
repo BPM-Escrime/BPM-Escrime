@@ -41,7 +41,7 @@ Give answer. Stop.
 - Nommage (ADR-0008) : commande = verbe + objet, requête `get…`/`list…`, abonnement `on…`, outil MCP = même nom en snake_case. Événement du journal au passé, PascalCase, identifiants seulement (ADR-0007)
 - Erreur → code du catalogue `src/shared/api/errors.ts` (ADR-0009) : snake_case, anglais, message en français ; réutiliser un code existant, sinon l'ajouter avec sa catégorie puis `npm run docs:mcp` (docs/API_CONTRACT.md)
 - Migration → ADR acceptée citée dans `description` (`docs/adr/00NN`, ADR-0011) ; une migration mergée ne se modifie plus
-- Garde-fous CI : `lint:errors`, `check:quality` (`electronApiUses`, `ipcChannels`, `directDbWrites`…), `contractNaming.test.ts`, `migrationsAdr.test.ts`. Ne jamais relever une référence pour passer
+- Garde-fous CI : `lint:errors` (dont l'interdiction de `electronAPI` hors `src/shared/platform` et `src/renderer/api`, ADR-0030), `check:quality` (`ipcChannels`, `directDbWrites`…), `contractNaming.test.ts`, `migrationsAdr.test.ts`. Ne jamais relever une référence pour passer
 - Revue a posteriori : `adr-review.yml` (hebdo) commente l'issue « Revue ADR hebdomadaire ». Pas de CODEOWNERS ni de revue obligatoire du mainteneur
 
 ## Routage des modèles – coût
