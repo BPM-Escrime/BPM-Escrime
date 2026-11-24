@@ -10,7 +10,7 @@ import Modal from './common/Modal';
 import { useToast } from './Toast';
 import { getActiveLocale } from '../../shared/utils/localeFormat';
 import { Button } from './common/Button';
-import { defaultPlatform } from '../platform/PlatformContext';
+import { usePlatform } from '../platform/PlatformContext';
 
 interface ReportIssueModalProps {
   onClose: () => void;
@@ -25,6 +25,8 @@ interface VersionInfo {
 const ReportIssueModal: React.FC<ReportIssueModalProps> = ({ onClose }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const platform = usePlatform();
+  const desktop = platform.desktop;
   const [issueType, setIssueType] = useState<'bug' | 'feature'>('bug');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -33,16 +35,12 @@ const ReportIssueModal: React.FC<ReportIssueModalProps> = ({ onClose }) => {
 
   useEffect(() => {
     // Récupérer les infos de version
-    if (window.electronAPI?.getVersionInfo) {
-      window.electronAPI
-        .getVersionInfo()
-        .then((info: VersionInfo) => {
-          setVersionInfo(info);
-        })
-        .catch(() => {
-          setVersionInfo({ version: '1.0.0', build: 0, date: 'Inconnue' });
-        });
-    }
+    desktop
+      ?.getVersionInfo()
+      .then(setVersionInfo)
+      .catch(() => {
+        setVersionInfo({ version: '1.0.0', build: 0, date: 'Inconnue' });
+      });
 
     // Récupérer les infos système
     const userAgent = navigator.userAgent || '';
@@ -58,7 +56,7 @@ const ReportIssueModal: React.FC<ReportIssueModalProps> = ({ onClose }) => {
     }
 
     setSystemInfo(os);
-  }, []);
+  }, [desktop]);
 
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -105,7 +103,7 @@ _Issue créée automatiquement depuis BPM - Escrime_`;
     const githubUrl = `https://github.com/BPM-Escrime/BPM-Escrime/issues/new?${params.toString()}`;
 
     // Ouvrir dans le navigateur
-    defaultPlatform.openExternal(githubUrl);
+    platform.openExternal(githubUrl);
 
     onClose();
   };

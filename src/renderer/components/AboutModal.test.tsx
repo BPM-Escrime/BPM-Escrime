@@ -13,6 +13,7 @@ import AboutModal from './AboutModal';
 import { fakeApiBridge } from '../testUtils/apiBridge';
 import { PlatformProvider } from '../platform/PlatformContext';
 import type { PlatformServices } from '../../shared/platform/PlatformServices';
+import { fakeDesktop, fakePlatform } from '../../shared/platform/testing';
 
 afterEach(() => {
   delete (window as any).electronAPI;
@@ -37,25 +38,42 @@ describe('AboutModal', () => {
     expect(screen.getByText('v…')).toBeInTheDocument();
   });
 
-  it('affiche la version récupérée via electronAPI', async () => {
-    (window as any).electronAPI = {
+  it('sans bureau (navigateur, vue DT) : pas de lecture de version, pas d’erreur', () => {
+    render(
+      <PlatformProvider platform={fakePlatform()}>
+        <AboutModal onClose={vi.fn()} />
+      </PlatformProvider>
+    );
+    expect(screen.getByText('v…')).toBeInTheDocument();
+  });
+
+  it('affiche la version récupérée par le bureau', async () => {
+    const desktop = fakeDesktop({
       getVersionInfo: vi.fn(async () => ({ version: '1.2.3', build: 42, date: '2026-01-01' })),
-    };
-    render(<AboutModal onClose={vi.fn()} />);
+    });
+    render(
+      <PlatformProvider platform={fakePlatform({ desktop })}>
+        <AboutModal onClose={vi.fn()} />
+      </PlatformProvider>
+    );
     await waitFor(() => expect(screen.getByText('v1.2.3')).toBeInTheDocument());
     expect(screen.getByText('#42')).toBeInTheDocument();
   });
 
   it('affiche le suffixe -dev.N pour un build du canal dev', async () => {
-    (window as any).electronAPI = {
+    const desktop = fakeDesktop({
       getVersionInfo: vi.fn(async () => ({
         version: '1.2.3',
         build: 42,
         date: '2026-01-01',
-        channel: 'dev',
+        channel: 'dev' as const,
       })),
-    };
-    render(<AboutModal onClose={vi.fn()} />);
+    });
+    render(
+      <PlatformProvider platform={fakePlatform({ desktop })}>
+        <AboutModal onClose={vi.fn()} />
+      </PlatformProvider>
+    );
     await waitFor(() => expect(screen.getByText('v1.2.3-dev.42')).toBeInTheDocument());
   });
 
@@ -67,7 +85,6 @@ describe('AboutModal', () => {
   it('rapport de diagnostic : contenu du poste enregistré par la plateforme', async () => {
     const report = '{"schemaVersion":1}\n';
     (window as any).electronAPI = {
-      getVersionInfo: vi.fn(async () => ({ version: '1.2.3', build: 42, date: '2026-01-01' })),
       api: fakeApiBridge({
         getDiagnosticReport: async () => ({
           fileName: 'bpm-escrime-diagnostic-20261124T100000.json',

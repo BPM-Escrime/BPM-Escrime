@@ -16,6 +16,8 @@ import {
 } from './slashCommands';
 import type { Competition } from '../../shared/types';
 import { remoteElectron } from '../testUtils/remoteBridge';
+import { defaultPlatform } from '../platform/PlatformContext';
+import { fakeDesktop } from '../../shared/platform/testing';
 
 const t = (k: string, p?: Record<string, string | number>) => (p ? `${k} ${JSON.stringify(p)}` : k);
 
@@ -79,23 +81,27 @@ describe('slashCommands – analyse', () => {
 });
 
 describe('slashCommands – exécution', () => {
-  const updater = {
-    check: vi.fn(),
-    setSilentMode: vi.fn().mockResolvedValue({ success: true, silent: true }),
-    downloadAndInstall: vi.fn().mockResolvedValue({ success: true }),
-    setChannel: vi.fn().mockResolvedValue({ success: true, channel: 'dev' }),
-    setAutoCheck: vi.fn().mockResolvedValue({ success: true, enabled: false }),
-  };
+  const desktop = fakeDesktop();
+  const updater = desktop.updater;
   const remote = { getServerInfo: vi.fn() };
+  let desktopSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (window as unknown as { electronAPI: unknown }).electronAPI = remoteElectron(remote, {
-      updater,
-    });
+    // Mise à jour par le bureau de la plateforme par défaut (ADR-0030), serveur distant par le contrat
+    desktopSpy = vi.spyOn(defaultPlatform, 'desktop', 'get').mockReturnValue(desktop);
+    (window as unknown as { electronAPI: unknown }).electronAPI = remoteElectron(remote);
   });
   afterEach(() => {
+    desktopSpy.mockRestore();
     delete (window as unknown as { electronAPI?: unknown }).electronAPI;
+  });
+
+  it('/update sans bureau (navigateur, vue DT) : indisponible, rien d’appelé', async () => {
+    desktopSpy.mockReturnValue(undefined);
+    const res = await executeSlashCommand('/update', makeCtx());
+    expect(res).toEqual({ ok: false, message: 'slashCommands.unavailable' });
+    expect(updater.check).not.toHaveBeenCalled();
   });
 
   it('/update quiet active le mode silencieux, /update quiet off le coupe', async () => {
@@ -106,7 +112,7 @@ describe('slashCommands – exécution', () => {
   });
 
   it('/update vérifie et signale une version disponible', async () => {
-    updater.check.mockResolvedValue({ hasUpdate: true, latestVersion: '9.9.9' });
+    updater.check.mockResolvedValue({ hasUpdate: true, latestVersion: '9.9.9' } as never);
     const listener = vi.fn();
     window.addEventListener('bp:show-update', listener);
     const res = await executeSlashCommand('/update', makeCtx());

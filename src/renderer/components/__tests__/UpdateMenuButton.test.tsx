@@ -4,9 +4,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import fs from 'fs';
 import path from 'path';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render as renderRaw, screen } from '@testing-library/react';
 import UpdateMenuButton from '../UpdateMenuButton';
 import UpdateNotification from '../UpdateNotification';
+import { PlatformProvider } from '../../platform/PlatformContext';
+import { fakeDesktop, fakePlatform } from '../../../shared/platform/testing';
 
 vi.mock('../Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../hooks/useTranslation', () => import('../../testUtils/i18nMock'));
@@ -21,22 +23,32 @@ const INFO = {
 };
 
 describe('UpdateMenuButton — bouton clignotant de l’en-tête', () => {
-  let listeners: Array<(info: typeof INFO) => void>;
+  let desktop: ReturnType<typeof fakeDesktop>;
   let check: ReturnType<typeof vi.fn>;
   let getAutoCheck: ReturnType<typeof vi.fn>;
+  const listeners = {
+    forEach: (fn: (l: (info: typeof INFO) => void) => void) =>
+      fn(info => desktop.emitUpdateAvailable(info)),
+  };
+  const render = (ui: React.ReactElement) =>
+    renderRaw(<PlatformProvider platform={fakePlatform({ desktop })}>{ui}</PlatformProvider>);
 
   beforeEach(() => {
-    listeners = [];
     check = vi.fn().mockResolvedValue({ ...INFO, hasUpdate: false });
     getAutoCheck = vi.fn().mockResolvedValue({ enabled: true });
-    (window as unknown as { electronAPI: unknown }).electronAPI = {
-      onUpdateAvailable: (cb: (info: typeof INFO) => void) => {
-        listeners.push(cb);
-        return () => {};
-      },
-      onUpdateProgress: () => () => {},
-      updater: { downloadAndInstall: vi.fn(), check, getAutoCheck },
-    };
+    desktop = fakeDesktop({
+      updater: { downloadAndInstall: vi.fn(), check, getAutoCheck } as never,
+    });
+  });
+
+  it('sans bureau (navigateur, vue DT) : aucun bouton de mise à jour', () => {
+    const { container } = renderRaw(
+      <PlatformProvider platform={fakePlatform()}>
+        <UpdateMenuButton />
+      </PlatformProvider>
+    );
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
   it('« À jour » après vérification ; clic → revérifie', async () => {

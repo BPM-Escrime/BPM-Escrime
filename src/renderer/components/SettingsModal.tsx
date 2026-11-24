@@ -32,13 +32,16 @@ import {
   SettingsItemId,
   SETTINGS_SECTIONS,
   SECTION_STORAGE_KEY,
+  isSettingsItemAvailable,
   loadActiveSection,
   normalizeSearch,
+  type SettingsSectionDef,
   TTS_THRESHOLDS,
   type SettingsModalProps,
 } from './settingsModal.helpers';
 import { useSettingsHandlers } from '../hooks/settingsModal/useSettingsHandlers';
 import { useSettingsPreferences } from '../hooks/settingsModal/useSettingsPreferences';
+import { usePlatform } from '../platform/PlatformContext';
 
 const SettingsModal: React.FC<SettingsModalProps> = (props: SettingsModalProps) => {
   const settingsPreferences = useSettingsPreferences({ ...props });
@@ -113,21 +116,26 @@ const SettingsModal: React.FC<SettingsModalProps> = (props: SettingsModalProps) 
   const normalizedQuery = normalizeSearch(query.trim());
   const searching = normalizedQuery.length > 0;
 
+  // Mise à jour et écran de démarrage : seulement dans l'application de bureau (ADR-0030)
+  const desktop = usePlatform().desktop;
+
   const visibleSections = useMemo(() => {
+    const available = (items: SettingsSectionDef['items']) =>
+      items.filter(item => isSettingsItemAvailable(item.id, desktop !== undefined));
     if (!searching) {
       const section = SETTINGS_SECTIONS.find(s => s.id === activeSection) ?? SETTINGS_SECTIONS[0];
-      return [{ section, items: section.items }];
+      return [{ section, items: available(section.items) }];
     }
     return SETTINGS_SECTIONS.map(section => {
       const sectionLabel = t(section.labelKey);
-      const items = section.items.filter(item =>
+      const items = available(section.items).filter(item =>
         normalizeSearch([sectionLabel, ...item.keys.map(k => t(k))].join(' ')).includes(
           normalizedQuery
         )
       );
       return { section, items };
     }).filter(entry => entry.items.length > 0);
-  }, [searching, activeSection, normalizedQuery, t]);
+  }, [searching, activeSection, normalizedQuery, t, desktop]);
 
   const matchCount = (id: SettingsSectionId): number =>
     visibleSections.find(entry => entry.section.id === id)?.items.length ?? 0;
@@ -434,18 +442,20 @@ const SettingsModal: React.FC<SettingsModalProps> = (props: SettingsModalProps) 
                 <span style={TOGGLE_LABEL}>{t('settings.animations_disable')}</span>
               </label>
             </div>
-            <div className="form-group">
-              <label style={BOLD}>{t('settings.splash_title')}</label>
-              <p style={HINT}>{t('settings.splash_hint')}</p>
-              <label className="u-row cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={splashEnabled}
-                  onChange={e => handleSplashEnabledChange(e.target.checked)}
-                />
-                <span style={TOGGLE_LABEL}>{t('settings.splash_enable')}</span>
-              </label>
-            </div>
+            {desktop && (
+              <div className="form-group">
+                <label style={BOLD}>{t('settings.splash_title')}</label>
+                <p style={HINT}>{t('settings.splash_hint')}</p>
+                <label className="u-row cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={splashEnabled}
+                    onChange={e => handleSplashEnabledChange(e.target.checked)}
+                  />
+                  <span style={TOGGLE_LABEL}>{t('settings.splash_enable')}</span>
+                </label>
+              </div>
+            )}
           </>
         );
       case 'updates':

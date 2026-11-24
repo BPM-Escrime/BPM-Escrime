@@ -40,6 +40,7 @@ import { useSettingsPreferences } from './useSettingsPreferences';
 import { useRemoteApi } from '../../api/remoteApi';
 import { stationAvailable, useStationApi } from '../../api/stationApi';
 import { getPref, setPref, safeStorage } from '../../services/preferences';
+import { usePlatform } from '../../platform/PlatformContext';
 
 type Ctx = SettingsModalProps & ReturnType<typeof useSettingsPreferences>;
 
@@ -47,6 +48,7 @@ type Ctx = SettingsModalProps & ReturnType<typeof useSettingsPreferences>;
 export function useSettingsHandlers(ctx: Ctx) {
   const remote = useRemoteApi();
   const station = useStationApi();
+  const desktop = usePlatform().desktop;
   const {
     setLogo,
     setLogos,
@@ -215,22 +217,21 @@ export function useSettingsHandlers(ctx: Ctx) {
 
   const handleSplashEnabledChange = (enabled: boolean) => {
     setSplashEnabledState(enabled);
-    window.electronAPI?.splash?.setEnabled?.(enabled).catch(() => {
+    desktop?.setSplashEnabled(enabled).catch(() => {
       setSplashEnabledState(!enabled);
     });
   };
 
   const handleUpdateAutoCheckChange = (enabled: boolean) => {
     setUpdateAutoCheck(enabled);
-    window.electronAPI?.updater?.setAutoCheck?.(enabled).catch(() => {
+    desktop?.updater.setAutoCheck(enabled).catch(() => {
       setUpdateAutoCheck(!enabled);
     });
   };
 
   const handleChooseUpdateDir = () => {
-    const updater = window.electronAPI?.updater;
-    updater
-      ?.chooseDownloadDir?.()
+    desktop?.updater
+      .chooseDownloadDir()
       .then(r => {
         if (r.success && r.dir) setUpdateDir({ dir: r.dir, isDefault: false });
       })
@@ -240,9 +241,8 @@ export function useSettingsHandlers(ctx: Ctx) {
   };
 
   const handleResetUpdateDir = () => {
-    const updater = window.electronAPI?.updater;
-    updater
-      ?.resetDownloadDir?.()
+    desktop?.updater
+      .resetDownloadDir()
       .then(r => {
         if (r.success && r.dir) setUpdateDir({ dir: r.dir, isDefault: true });
       })
@@ -254,7 +254,7 @@ export function useSettingsHandlers(ctx: Ctx) {
   const handleUpdateChannelChange = (channel: 'stable' | 'dev') => {
     const previous = updateChannel;
     setUpdateChannel(channel);
-    window.electronAPI?.updater?.setChannel?.(channel).catch(() => {
+    desktop?.updater.setChannel(channel).catch(() => {
       setUpdateChannel(previous);
     });
   };

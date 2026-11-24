@@ -8,10 +8,12 @@ import { Competition } from '../../shared/types';
 import { useTranslation } from '../contexts/TranslationContext';
 import { ArrowRight, Plus, Settings, Trophy } from 'lucide-react';
 import { Icon } from './common/Icon';
+import { usePlatform } from '../platform/PlatformContext';
 import { getPhaseTargets, selectPhase } from './competition/phaseRegistry';
 import { categoryLabel } from '../../shared/utils/categoryLabel';
 import {
   SETTINGS_SECTIONS,
+  isSettingsItemAvailable,
   normalizeSearch,
   type SettingsSectionId,
 } from './settingsModal.helpers';
@@ -125,6 +127,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
   );
 
   // Mémoïsé pour éviter le recalcul à chaque changement de selectedIndex
+  const hasDesktop = usePlatform().desktop !== undefined;
   const filtered = useMemo(() => {
     if (isSlash) {
       return matchSlashCommands(query).map<Command>(def => ({
@@ -148,6 +151,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
     const settingCommands: Command[] = SETTINGS_SECTIONS.flatMap(section => {
       const sectionLabel = t(section.labelKey);
       return section.items
+        .filter(item => isSettingsItemAvailable(item.id, hasDesktop))
         .filter(item =>
           normalizeSearch([sectionLabel, ...item.keys.map(k => t(k))].join(' ')).includes(nq)
         )
@@ -163,7 +167,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
         }));
     });
     return [...commands, ...settingCommands];
-  }, [query, allCommands, isSlash, runSlash, t, onClose, onOpenSettings]);
+  }, [query, allCommands, isSlash, runSlash, t, onClose, onOpenSettings, hasDesktop]);
 
   useEffect(() => {
     setSelectedIndex(0);

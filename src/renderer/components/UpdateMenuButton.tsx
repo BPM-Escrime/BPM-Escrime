@@ -9,6 +9,7 @@ import { CheckCircle2, Download, RefreshCw } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import type { UpdateInfo } from '../../shared/types/preload';
 import { Button } from './common/Button';
+import { usePlatform } from '../platform/PlatformContext';
 
 /** Événement fenêtre écouté par UpdateNotification pour se réafficher (detail : UpdateInfo). */
 export const SHOW_UPDATE_EVENT = 'bp:show-update';
@@ -19,13 +20,13 @@ const UpdateMenuButton: React.FC = () => {
   const { t } = useTranslation();
   const [status, setStatus] = useState<Status>('unknown');
   const [info, setInfo] = useState<UpdateInfo | null>(null);
+  const desktop = usePlatform().desktop;
 
   const check = useCallback(async () => {
-    const updater = window.electronAPI?.updater;
-    if (!updater?.check) return;
+    if (!desktop) return;
     setStatus('checking');
     try {
-      const res = await updater.check();
+      const res = await desktop.updater.check();
       if (res?.hasUpdate) {
         setInfo(res);
         setStatus('available');
@@ -33,24 +34,24 @@ const UpdateMenuButton: React.FC = () => {
     } catch {
       setStatus('unknown');
     }
-  }, []);
+  }, [desktop]);
 
   useEffect(() => {
-    const api = window.electronAPI;
-    const off = api?.onUpdateAvailable?.(next => {
+    const off = desktop?.onUpdateAvailable(next => {
       if (!next?.hasUpdate) return;
       setInfo(next);
       setStatus('available');
     });
     // Vérification au lancement, sauf si l'utilisateur l'a désactivée (Préférences)
     void (async () => {
-      const auto = await api?.updater?.getAutoCheck?.().catch(() => null);
+      const auto = await desktop?.updater.getAutoCheck().catch(() => null);
       if (auto?.enabled !== false) await check();
     })();
     return () => off?.();
-  }, [check]);
+  }, [check, desktop]);
 
-  if (!window.electronAPI?.updater) return null;
+  // Hors application de bureau (navigateur, vue DT) : pas de mise à jour
+  if (!desktop) return null;
 
   if (status === 'available' && info) {
     const title = t('updateNotif.menuTitle', { version: info.latestVersion });
