@@ -14,7 +14,7 @@
   "featuresImports": 0,
   "electronApiCalls": 0,
   "electronApiUses": 0,
-  "ipcChannels": 44,
+  "ipcChannels": 41,
   "directDbWrites": 0,
   "depsUnjustified": 0,
   "remoteUnescaped": 0,

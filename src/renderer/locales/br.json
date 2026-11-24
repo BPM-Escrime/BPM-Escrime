@@ -2901,17 +2901,6 @@
     "add_error": "Fazi en ur ouzhpennañ : {{msg}}",
     "unknown_error": "Fazi dianav"
   },
-  "conflicts": {
-    "title": "Tabutoù kempredañ ({{n}})",
-    "type_competition": "Kenstrivadeg",
-    "type_fencer": "C'hoarier",
-    "type_match": "Emgann",
-    "local": "Lec'hel",
-    "remote": "A-bell",
-    "keep_local": "Mirout al lec'hel",
-    "keep_remote": "Mirout an a-bell",
-    "none": "Tabut ebet da ziskoulmañ."
-  },
   "updateNotif": {
     "title": "Hizivadur da gaout !",
     "version": "Stumm",

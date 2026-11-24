@@ -2901,17 +2901,6 @@
     "add_error": "Errore durante l'aggiunta: {{msg}}",
     "unknown_error": "Errore sconosciuto"
   },
-  "conflicts": {
-    "title": "Conflitti di sincronizzazione ({{n}})",
-    "type_competition": "Competizione",
-    "type_fencer": "Schermidore",
-    "type_match": "Incontro",
-    "local": "Locale",
-    "remote": "Remoto",
-    "keep_local": "Mantieni locale",
-    "keep_remote": "Mantieni remoto",
-    "none": "Nessun conflitto da risolvere."
-  },
   "updateNotif": {
     "title": "Aggiornamento disponibile!",
     "version": "Versione",

@@ -90,4 +90,10 @@ export interface DesktopServices {
    * setCompetitionBackupDir, addAgentFolder).
    */
   pickDirectory(request?: { title?: string }): Promise<string | null>;
+
+  /**
+   * Nombre de pages que prend ce HTML une fois imprimé (sommaire du dossier PDF, #1325) ; null si
+   * le comptage a échoué ou n'est pas disponible. Aucun fichier : le contenu seul traverse.
+   */
+  countHtmlPages?(html: string): Promise<number | null>;
 }

@@ -64,6 +64,20 @@ describe('ElectronDesktop', () => {
     expect(off).toHaveBeenCalledTimes(2);
   });
 
+  it('countHtmlPages : nombre de pages, null si absent, en échec ou à zéro (#2252)', async () => {
+    const { api } = fakePreload();
+    const count = vi.fn(async (_html: string) => ({ success: true, pages: 4 }));
+    const d = new ElectronDesktop(() => ({ ...api, file: { countHtmlPages: count } }) as never);
+    await expect(d.countHtmlPages('<p>x</p>')).resolves.toBe(4);
+    expect(count).toHaveBeenCalledWith('<p>x</p>');
+    count.mockResolvedValueOnce({ success: false, pages: 2 });
+    await expect(d.countHtmlPages('x')).resolves.toBeNull();
+    count.mockResolvedValueOnce({ success: true, pages: 0 });
+    await expect(d.countHtmlPages('x')).resolves.toBeNull();
+    const sans = new ElectronDesktop(() => ({ ...api, file: {} }) as never);
+    await expect(sans.countHtmlPages('x')).resolves.toBeNull();
+  });
+
   it('rien n’est lu au chargement : le préload est lu à l’appel', () => {
     const accessor = vi.fn(() => fakePreload().api as never);
     const d = new ElectronDesktop(accessor);

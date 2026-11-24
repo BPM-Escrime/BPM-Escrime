@@ -2901,17 +2901,6 @@
     "add_error": "Error while adding: {{msg}}",
     "unknown_error": "Unknown error"
   },
-  "conflicts": {
-    "title": "Sync conflicts ({{n}})",
-    "type_competition": "Competition",
-    "type_fencer": "Fencer",
-    "type_match": "Bout",
-    "local": "Local",
-    "remote": "Remote",
-    "keep_local": "Keep local",
-    "keep_remote": "Keep remote",
-    "none": "No conflict to resolve."
-  },
   "updateNotif": {
     "title": "Update available!",
     "version": "Version",

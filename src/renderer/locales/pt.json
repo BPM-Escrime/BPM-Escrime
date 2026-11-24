@@ -2901,17 +2901,6 @@
     "add_error": "Erro ao adicionar: {{msg}}",
     "unknown_error": "Erro desconhecido"
   },
-  "conflicts": {
-    "title": "Conflitos de sincronização ({{n}})",
-    "type_competition": "Competição",
-    "type_fencer": "Esgrimista",
-    "type_match": "Combate",
-    "local": "Local",
-    "remote": "Remoto",
-    "keep_local": "Manter local",
-    "keep_remote": "Manter remoto",
-    "none": "Nenhum conflito a resolver."
-  },
   "updateNotif": {
     "title": "Atualização disponível!",
     "version": "Versão",

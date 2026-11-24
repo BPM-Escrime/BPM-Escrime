@@ -198,7 +198,6 @@ Shared (src/shared/)
 │   └── remote.ts             # Remote server types
 ├── api/                      # contract.ts (opérations zod : commandes, requêtes, abonnements), client.ts (BpmClient, ApiError) — #1981
 ├── services/
-│   ├── cloudSyncService.ts    # Dropbox/Google Drive/OneDrive (AES-GCM encrypted)
 │   ├── errorService.ts
 │   ├── ffeConnectService.ts   # FFE (Fédération Française d'Escrime) integration
 │   ├── logger.ts              # Logging service
@@ -223,7 +222,6 @@ Shared (src/shared/)
     ├── bulkImport.ts             # Bulk fencer import
     ├── fileParser.ts + fileParser/  # XML / FFE / Engarde / TXT / ranking parsing
     ├── pdfExport/                # pool, tableau, bracket tree, ranking, results, appel, referee comments
-    ├── conflictResolution.ts     # Merge conflict resolution for cloud sync
     ├── errorLogger.ts            # Structured error logging
     ├── fencerExport.ts           # Fencer data export helpers
     ├── multiFormatExport.ts      # Multi-format export (CSV, JSON, XML)
@@ -272,7 +270,6 @@ Database (src/database/)
    - serveur distant (start/stop, session, pistes, thèmes, mots de passe, clients) : plus de groupe `remote.*`, opérations du contrat `remoteOperations` (`contractRemote.ts`, droit `remote:admin`), écran `useRemoteApi` (`src/renderer/api/remoteApi.ts`) ; avis des tablettes par `onRemoteActivity` / `onRemoteClients`
    - serveur d'entraînement (démarrage, session, thème, historique, écrans de démo) : plus de groupe `training.*`, opérations du contrat `trainingOperations` (`contractTraining.ts`, droit `remote:admin`), écran `useTrainingApi` (`src/renderer/api/trainingApi.ts`) ; avis de match fini par `onTrainingActivity`
    - `updater.*` – Auto-update control ; version, écran de démarrage et mise à jour : plus d'appel direct de l'écran, `usePlatform().desktop` (`DesktopServices`, `src/shared/platform`, absent hors Electron, ADR-0030)
-   - `crypto.*` – safeStorage protect/unprotect
    - appareils de piste Cyrano et OPP2 (déclaration sur la salle, salle de l'épreuve, pistes manuelles, start/stop, statuts, journal) : plus de groupes `cyrano.*` / `opp2.*`, opérations du contrat `devicesOperations` (`contractDevices.ts`, droit `remote:admin`, ADR-0023), écran `useDevicesApi` (`src/renderer/api/devicesApi.ts`)
    - Mode Club : plus de groupe `club.*`, opérations du contrat (`contractClub.ts`, ADR-0022) ; photos ZIP et sauvegardes `.bpclub` par les fichiers de données
    - fichiers de données (.bpm en clair ou chiffré, .bpf, photos ZIP, .bpclub) : opérations du contrat `fileOperations` (`contractFiles.ts`, contenu base64, jamais de chemin), écran `useFilesApi` / `saveDataFile` / `openDataFile` (`src/renderer/api/filesApi.ts`) et `usePlatform()` (ADR-0021)

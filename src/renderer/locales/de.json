@@ -2901,17 +2901,6 @@
     "add_error": "Fehler beim Hinzufügen: {{msg}}",
     "unknown_error": "Unbekannter Fehler"
   },
-  "conflicts": {
-    "title": "Synchronisierungskonflikte ({{n}})",
-    "type_competition": "Wettkampf",
-    "type_fencer": "Fechter",
-    "type_match": "Gefecht",
-    "local": "Lokal",
-    "remote": "Entfernt",
-    "keep_local": "Lokal behalten",
-    "keep_remote": "Entfernt behalten",
-    "none": "Keine Konflikte zu lösen."
-  },
   "updateNotif": {
     "title": "Update verfügbar!",
     "version": "Version",

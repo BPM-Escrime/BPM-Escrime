@@ -33,7 +33,6 @@ import { applyStoredPrivacySettings, createPrivacyHandlers } from './ipc/privacy
 import { startRemoteServer } from './remoteLifecycle';
 import { createRemoteAdminPort } from './remotePort';
 import type { RemoteScoreServer } from './remoteScoreServer';
-import { registerCryptoHandlers } from './ipc/cryptoHandlers';
 import { registerUpdaterHandlers } from './ipc/updaterHandlers';
 import { collectDiagnosticInput } from './diagnosticInput';
 import { importLegacyLogoFile } from './logoLibraryStore';
@@ -354,7 +353,6 @@ const mcp = createMcpController({
 /** Démarrage du MCP à l'ouverture de la base (un seul démarrage, attendu en --headless) */
 let mcpReady: ReturnType<typeof mcp.apply> | null = null;
 
-registerCryptoHandlers();
 registerUpdaterHandlers({ getAutoUpdater: () => autoUpdater });
 
 // App info handlers

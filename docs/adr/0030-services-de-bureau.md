@@ -324,3 +324,25 @@ Le mainteneur a tranché les quatre questions de la PR #2251 :
 3. **`safeStorage`** : **hors de cette ADR**, décision à part (#2252).
 4. **Règle finale** : **règle ESLint bloquante** dans `lint:errors`, qui prend le relais du
    cliquet à 0 (§ « Conséquences »).
+
+## Amendement (#2252)
+
+Décision du mainteneur : au lieu d'une ADR dédiée à `safeStorage`, le code mort qui l'utilisait
+depuis l'interface est retiré.
+
+- **`safeStorage` n'est plus utilisé par l'interface.** Les canaux `crypto:isAvailable`,
+  `crypto:protect`, `crypto:unprotect` et le groupe `crypto` du préload disparaissent (3 canaux :
+  `ipcChannels` 44 → 41). `DesktopServices` n'a pas de service de chiffrement.
+- **La synchronisation cloud est retirée.** `cloudSyncService` (Dropbox, Google Drive, OneDrive),
+  jamais instancié, part avec `conflictResolution`, `ConflictResolutionModal` et les clés de
+  locale `conflicts.*`. Si une synchronisation cloud revient, ses secrets restent dans le main
+  (comme `clubSync.ts` du Mode Club) et passent par une ADR.
+- **Inchangés** : la clé SQLCipher de la base (`dbKey.ts`, `safeStorage` côté main), les archives
+  `.bpm` chiffrées (`bpmCrypto.ts`), le jeton MCP et le Mode Club.
+- **Comptage de pages du dossier PDF** : `bookPdf.ts` lisait `window.electronAPI.file`. Il passe
+  par `desktop.countHtmlPages(html)` (méthode optionnelle, `null` si indisponible ; le canal
+  `file:countHtmlPages` reste). Sans bureau, le sommaire n'a pas de numéros de page.
+- **Cliquet** : `electronApiCalls` / `electronApiUses` couvrent aussi `src/shared` (hors
+  `src/shared/platform`, `src/shared/types` et les tests), casts et `globalThis` compris ;
+  référence à 0. `src/shared` est propre : la règle ESLint bloquante (« Conséquences ») peut être
+  activée.

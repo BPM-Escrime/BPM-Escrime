@@ -2901,17 +2901,6 @@
     "add_error": "Erreur lors de l'ajout : {{msg}}",
     "unknown_error": "Erreur inconnue"
   },
-  "conflicts": {
-    "title": "Conflits de synchronisation ({{n}})",
-    "type_competition": "Compétition",
-    "type_fencer": "Tireur",
-    "type_match": "Match",
-    "local": "Local",
-    "remote": "Distant",
-    "keep_local": "Garder local",
-    "keep_remote": "Garder distant",
-    "none": "Aucun conflit à résoudre."
-  },
   "updateNotif": {
     "title": "Mise à jour disponible !",
     "version": "Version",
