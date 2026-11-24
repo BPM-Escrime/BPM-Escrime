@@ -13,6 +13,7 @@ import {
   Volume2,
   type LucideIcon,
 } from 'lucide-react';
+import { PREFS } from '../services/preferences';
 
 // Organisation des paramètres : sections (onglets) → réglages.
 // `keys` = clés de traduction parcourues par la recherche.
@@ -238,18 +239,18 @@ export function resizeLogo(file: File): Promise<string> {
   });
 }
 
-export const WEBHOOK_STORAGE_KEY = 'bellepoule-webhook-url';
+export const WEBHOOK_STORAGE_KEY = PREFS.webhookUrl.key;
 
-export const AUDIT_LOG_KEY = 'bellepoule-audit-log-enabled';
+export const AUDIT_LOG_KEY = PREFS.auditLog.key;
 
-export const TTS_CONFIG_KEY = 'bellepoule-tts-config';
+export const TTS_CONFIG_KEY = PREFS.ttsConfig.key;
 
-export const QUICK_MOUSE_KEY = 'bellepoule-quick-mouse-scoring';
+export const QUICK_MOUSE_KEY = PREFS.quickMouseScoring.key;
 
-export const SIMPLIFIED_INPUT_KEY = 'bellepoule-simplified-input-mode';
+export const SIMPLIFIED_INPUT_KEY = PREFS.simplifiedInput.key;
 
 /** Saisie enchaînée : après chaque score, la modale de la case suivante s'ouvre (activée par défaut) */
-export const CHAINED_INPUT_KEY = 'bellepoule-chained-input-mode';
+export const CHAINED_INPUT_KEY = PREFS.chainedInput.key;
 
 /**
  * Saisie des poules : saisie simplifiée OU saisie enchaînée, jamais les deux.

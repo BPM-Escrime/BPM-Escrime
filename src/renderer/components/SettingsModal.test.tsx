@@ -85,4 +85,21 @@ describe('SettingsModal – export / import des paramètres', () => {
     fireEvent.change(screen.getByTestId('settings-import-input'), { target: { files: [file] } });
     expect(await screen.findByText(/Fichier invalide/)).toBeInTheDocument();
   });
+
+  it('stockage du navigateur bloqué (navigation privée) : la modale reste utilisable (#2203)', () => {
+    const boom = () => {
+      throw new DOMException('denied', 'SecurityError');
+    };
+    const spies = [
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(boom),
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(boom),
+    ];
+    try {
+      renderModal();
+      fireEvent.click(screen.getByRole('tab', { name: /Notifications/ }));
+      expect(screen.getByText('Notifications webhook')).toBeInTheDocument();
+    } finally {
+      spies.forEach(sp => sp.mockRestore());
+    }
+  });
 });

@@ -11,7 +11,6 @@ import { isConfettiDisabled } from '../../components/Confetti';
 import { loadUiScale, type UiScale } from '../../services/uiScale';
 import { loadUiDensity, type UiDensity } from '../../services/uiDensity';
 import {
-  LOGO_STORAGE_KEY,
   type LogoEntry,
   loadLogoLibrary,
   saveLogoLibraryLocal,
@@ -20,15 +19,12 @@ import {
 } from '../../services/logoLibrary';
 import {
   loadTtsConfig,
-  WEBHOOK_STORAGE_KEY,
-  AUDIT_LOG_KEY,
-  TTS_CONFIG_KEY,
-  QUICK_MOUSE_KEY,
   readInputModes,
   TtsConfig,
   type SettingsModalProps,
 } from '../../components/settingsModal.helpers';
 import { useRemoteApi } from '../../api/remoteApi';
+import { getPref, setPref, safeStorage } from '../../services/preferences';
 
 type Ctx = SettingsModalProps;
 
@@ -45,29 +41,27 @@ export function useSettingsPreferences(ctx: Ctx) {
     language: language,
     theme: theme,
   });
-  const [logo, setLogo] = useState<string | null>(() => localStorage.getItem(LOGO_STORAGE_KEY));
+  const [logo, setLogo] = useState<string | null>(() => getPref('logo'));
   const [logos, setLogos] = useState<LogoEntry[]>(() =>
-    ensureActiveInLibrary(loadLogoLibrary(), localStorage.getItem(LOGO_STORAGE_KEY))
+    ensureActiveInLibrary(loadLogoLibrary(), getPref('logo'))
   );
   const [isDragging, setIsDragging] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Activé par défaut (journal désactivable explicitement, pas activable par défaut négatif)
-  const [auditLogEnabled, setAuditLogEnabled] = useState<boolean>(
-    () => localStorage.getItem(AUDIT_LOG_KEY) !== 'false'
-  );
+  const [auditLogEnabled, setAuditLogEnabled] = useState<boolean>(() => getPref('auditLog'));
 
-  const [quickMouseScoring, setQuickMouseScoring] = useState<boolean>(
-    () => localStorage.getItem(QUICK_MOUSE_KEY) === 'true'
+  const [quickMouseScoring, setQuickMouseScoring] = useState<boolean>(() =>
+    getPref('quickMouseScoring')
   );
 
   const [simplifiedInputMode, setSimplifiedInputMode] = useState<boolean>(
-    () => readInputModes(localStorage).simplified
+    () => readInputModes(safeStorage).simplified
   );
 
   const [chainedInputMode, setChainedInputMode] = useState<boolean>(
-    () => readInputModes(localStorage).chained
+    () => readInputModes(safeStorage).chained
   );
 
   const [uiScale, setUiScale] = useState<UiScale>(() => loadUiScale());
@@ -108,9 +102,7 @@ export function useSettingsPreferences(ctx: Ctx) {
         // updater indisponible (dev / tests)
       });
   }, []);
-  const [webhookUrl, setWebhookUrl] = useState<string>(
-    () => localStorage.getItem(WEBHOOK_STORAGE_KEY) ?? ''
-  );
+  const [webhookUrl, setWebhookUrl] = useState<string>(() => getPref('webhookUrl'));
   const [webhookTestStatus, setWebhookTestStatus] = useState<
     'idle' | 'testing' | 'success' | 'error'
   >('idle');
@@ -124,14 +116,14 @@ export function useSettingsPreferences(ctx: Ctx) {
     setSettings(prev => ({ ...prev, language, theme }));
   }, [language, theme]);
 
-  // Sync persisted logo from main process if localStorage is empty
+  // Logo enregistré par le main si le poste n'en a pas
   useEffect(() => {
     if (!logo) {
       const api = window.electronAPI;
       api?.getLogo?.().then((persisted: string | null) => {
         if (persisted) {
           setLogo(persisted);
-          localStorage.setItem(LOGO_STORAGE_KEY, persisted);
+          setPref('logo', persisted);
         }
       });
     }
@@ -145,7 +137,7 @@ export function useSettingsPreferences(ctx: Ctx) {
         setLogos(prev => {
           const ids = new Set(disk.map(l => l.id));
           const merged = sanitizeLogoLibrary([...disk, ...prev.filter(l => !ids.has(l.id))]);
-          const withActive = ensureActiveInLibrary(merged, localStorage.getItem(LOGO_STORAGE_KEY));
+          const withActive = ensureActiveInLibrary(merged, getPref('logo'));
           saveLogoLibraryLocal(withActive);
           return withActive;
         });
@@ -154,9 +146,9 @@ export function useSettingsPreferences(ctx: Ctx) {
         /* bibliothèque optionnelle */
       });
     const unsub = remote.onActivity('logo_loaded', undefined, ({ logo: persisted }) => {
-      if (persisted && !localStorage.getItem(LOGO_STORAGE_KEY)) {
+      if (persisted && !getPref('logo')) {
         setLogo(persisted);
-        localStorage.setItem(LOGO_STORAGE_KEY, persisted);
+        setPref('logo', persisted);
       }
     });
     return () => unsub();
@@ -178,7 +170,7 @@ export function useSettingsPreferences(ctx: Ctx) {
   const persistTtsConfig = useCallback(
     (next: TtsConfig) => {
       setTtsConfig(next);
-      localStorage.setItem(TTS_CONFIG_KEY, JSON.stringify(next));
+      setPref('ttsConfig', JSON.stringify(next));
       void remote.setTtsConfig(next);
     },
     [remote]

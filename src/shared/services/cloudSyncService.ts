@@ -114,7 +114,7 @@ export class CloudSyncService {
 
     // 1. Clé déjà chiffrée par l'OS
     if (secureAvailable && crypto) {
-      const enc = localStorage.getItem(secureKey);
+      const enc = keyValueStore().getItem(secureKey);
       if (enc) {
         const plain = await crypto.unprotect(enc).catch(() => null);
         if (plain) return JSON.parse(plain) as JsonWebKey;
@@ -122,13 +122,13 @@ export class CloudSyncService {
     }
 
     // 2. Migration : ancienne clé en clair -> chiffrer puis effacer le clair
-    const legacy = localStorage.getItem(legacyKey);
+    const legacy = keyValueStore().getItem(legacyKey);
     if (legacy) {
       if (secureAvailable && crypto) {
         const enc = await crypto.protect(legacy).catch(() => null);
         if (enc) {
-          localStorage.setItem(secureKey, enc);
-          localStorage.removeItem(legacyKey);
+          keyValueStore().setItem(secureKey, enc);
+          keyValueStore().removeItem(legacyKey);
         }
       }
       return JSON.parse(legacy) as JsonWebKey;
@@ -143,7 +143,7 @@ export class CloudSyncService {
     if (secureAvailable && crypto) {
       const enc = await crypto.protect(JSON.stringify(jwk)).catch(() => null);
       if (enc) {
-        localStorage.setItem(secureKey, enc);
+        keyValueStore().setItem(secureKey, enc);
         return jwk;
       }
     }
@@ -152,7 +152,7 @@ export class CloudSyncService {
       LogCategory.SYSTEM,
       'Clé AES stockée en clair dans localStorage (safeStorage indisponible)'
     );
-    localStorage.setItem(legacyKey, JSON.stringify(jwk));
+    keyValueStore().setItem(legacyKey, JSON.stringify(jwk));
     return jwk;
   }
 
@@ -777,6 +777,7 @@ export class CloudSyncService {
 
 // React Hook for cloud sync
 import { useState, useEffect, useCallback } from 'react';
+import { keyValueStore } from './keyValueStore';
 
 export function useCloudSync(config: CloudSyncConfig) {
   const [service] = useState(() => new CloudSyncService(config));
