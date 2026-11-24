@@ -56,14 +56,14 @@ function recordedCards(
   matchId: string
 ): { fencerCards: TeamArenaFencerCard[]; cards: TeamArenaCard[] } {
   return {
-    fencerCards: ctx.db.getTeamBoutCards(matchId).map(({ boutId, card }) => ({
+    fencerCards: ctx.db.teams.getTeamBoutCards(matchId).map(({ boutId, card }) => ({
       id: card.id,
       boutId,
       fencerId: card.fencerId,
       type: card.type,
       reason: (card.reason ?? null) as CardReason | null,
     })),
-    cards: ctx.db.getTeamMatchCards(matchId) as TeamArenaCard[],
+    cards: ctx.db.teams.getTeamMatchCards(matchId) as TeamArenaCard[],
   };
 }
 

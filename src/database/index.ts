@@ -949,30 +949,6 @@ export class DatabaseManager {
     return this.teams.getTeamMatchesByCompetition(...args);
   }
 
-  public createTeamMatchCard(
-    ...args: Parameters<TeamRepo['createTeamMatchCard']>
-  ): ReturnType<TeamRepo['createTeamMatchCard']> {
-    return this.teams.createTeamMatchCard(...args);
-  }
-
-  public createTeamBoutCard(
-    ...args: Parameters<TeamRepo['createTeamBoutCard']>
-  ): ReturnType<TeamRepo['createTeamBoutCard']> {
-    return this.teams.createTeamBoutCard(...args);
-  }
-
-  public getTeamBoutCards(
-    ...args: Parameters<TeamRepo['getTeamBoutCards']>
-  ): ReturnType<TeamRepo['getTeamBoutCards']> {
-    return this.teams.getTeamBoutCards(...args);
-  }
-
-  public getTeamMatchCards(
-    ...args: Parameters<TeamRepo['getTeamMatchCards']>
-  ): ReturnType<TeamRepo['getTeamMatchCards']> {
-    return this.teams.getTeamMatchCards(...args);
-  }
-
   public getTeamMatchDetail(
     ...args: Parameters<TeamRepo['getTeamMatchDetail']>
   ): ReturnType<TeamRepo['getTeamMatchDetail']> {

@@ -390,7 +390,7 @@ describe('DatabaseManager', () => {
         resultingExclusion: false,
       } as any;
       mockDb.prepare.mockReturnValue(makeStmt({ run }));
-      manager.createTeamBoutCard('b1', card);
+      manager.teams.createTeamBoutCard('b1', card);
       expect(run).toHaveBeenCalledWith(
         'c1',
         'tm1',
@@ -405,7 +405,7 @@ describe('DatabaseManager', () => {
           all: vi.fn().mockReturnValue([{ bout_id: 'b1', card_json: JSON.stringify(card) }]),
         })
       );
-      const [row] = manager.getTeamBoutCards('tm1');
+      const [row] = manager.teams.getTeamBoutCards('tm1');
       expect(row.boutId).toBe('b1');
       expect(row.card.type).toBe('YELLOW');
       expect(row.card.timestamp).toBeInstanceOf(Date);
