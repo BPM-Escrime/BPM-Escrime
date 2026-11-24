@@ -20,7 +20,7 @@ Nix de `flake.nix`. Ce n'est pas une dépendance des builds par plateforme.
 | Doc i18n | `npm run check:i18n-doc` | `docs/I18N.md` pas à jour, ou clé `data-i18n` d'une page distante absente de `src/remote/i18n.js` |
 | Doc Socket.IO | `npm run check:socket-doc` | `docs/SOCKET_EVENTS.md` pas à jour, ou événement émis par une page sans écouteur serveur |
 | Doc MCP | dans `npm run test:run` (`src/main/mcp/mcpDoc.test.ts`) ; seul : `npm run check:mcp-doc` | référence des outils de `docs/MCP.md` pas à jour vs leurs schémas (`npm run docs:mcp` pour régénérer, #1880) |
-| Cliquet qualité | `npm run check:quality` | hausse du nombre de textes JSX en dur, `any`, `console.*`, `style={{…}}` (#1157), `fontSize` en px (#1156), locale `'fr'` en dur (#1160), messages d'erreur serveur en clair (#1159), emoji en tête de texte d’interface ou de libellé de locale, ou emoji dans les pages distantes `src/remote` (#1532), ou couleur hexadécimale en dur dans les pages distantes `src/remote` (hors `tokens.css`, #1538), sonde de débogage `DIAGNOSTIC` / `remote:diag` restée dans `src` (#1773), fichiers de `src/main`, `src/shared` ou `src/database` qui importent `src/renderer` (`rendererImports`) ou `src/features` (`featuresImports`), fichiers de l'interface qui appellent `window.electronAPI` directement (`electronApiCalls`, #1979), chaque appel de `window.electronAPI` ou de `useElectronDB()` dans l'interface (`electronApiUses`), canaux `ipcMain.handle` / `ipcMain.on` de `src/main` (`ipcChannels`, ADR-0005 et 0018), écritures directes en base (`…db….createX(`, `updateX`, `setX`…) dans `src/main/remote` et `src/main/mcp` (`directDbWrites`, #2134, #2151), désactivation de `react-hooks/exhaustive-deps` sans raison après « -- » (`depsUnjustified`, #2201), ou fichier source > 1500 lignes (exceptions plafonnées, #1155) vs `scripts/quality-baseline.json` ; en CI, une baisse non verrouillée échoue aussi (`--update` pour verrouiller, #1895) |
+| Cliquet qualité | `npm run check:quality` | hausse du nombre de textes JSX en dur, `any`, `console.*`, `style={{…}}` (#1157), `fontSize` en px (#1156), locale `'fr'` en dur (#1160), messages d'erreur serveur en clair (#1159), emoji en tête de texte d’interface ou de libellé de locale, ou emoji dans les pages distantes `src/remote` (#1532), ou couleur hexadécimale en dur dans les pages distantes `src/remote` (hors `tokens.css`, #1538), sonde de débogage `DIAGNOSTIC` / `remote:diag` restée dans `src` (#1773), fichiers de `src/main`, `src/shared` ou `src/database` qui importent `src/renderer` (`rendererImports`) ou `src/features` (`featuresImports`), fichiers de l'interface ou de `src/shared` (hors `src/shared/platform` et `src/shared/types`) qui appellent `window.electronAPI` directement (`electronApiCalls`, #1979, #2252), chaque appel de `window.electronAPI` ou de `useElectronDB()` dans l'interface (`electronApiUses`), canaux `ipcMain.handle` / `ipcMain.on` de `src/main` (`ipcChannels`, ADR-0005 et 0018), écritures directes en base (`…db….createX(`, `updateX`, `setX`…) dans `src/main/remote` et `src/main/mcp` (`directDbWrites`, #2134, #2151), désactivation de `react-hooks/exhaustive-deps` sans raison après « -- » (`depsUnjustified`, #2201), ou fichier source > 1500 lignes (exceptions plafonnées, #1155) vs `scripts/quality-baseline.json` ; en CI, une baisse non verrouillée échoue aussi (`--update` pour verrouiller, #1895) |
 | Lint (erreurs) | `npm run lint:errors` (`eslint . --quiet`) | erreur ESLint : import d'une couche interdite (`src/main`, `src/shared`, `src/database` → `src/renderer` ou `src/features` ; `src/shared/domain` → React, Electron, Node, base ; dans le domaine, `Date.now`, `new Date()`, `Math.random`, `window`, `document`, `localStorage` interdits ; #1979, `docs/adr/0002`), `alert`/`confirm`, E/S fs synchrone dans le serveur distant (#1776). Les avertissements n'échouent pas |
 | E2E (PR) | job `e2e` : `npx playwright install --with-deps chromium` puis `xvfb-run -a npm run test:e2e` (build compris) | un test Playwright échoue : interface dans le navigateur (`chromium`) ou application Electron réelle (`electron`) ; rapport `playwright-report` en artefact (#2045) |
 | Build Nix | `nix build .#default` (job `nix-build`) | le paquet `flake.nix` ne build pas : `npmDepsHash` périmé vs `package-lock.json`, dépendance native cassée, etc. |
@@ -95,8 +95,8 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 83 | 900 |
-| `src/shared/services/` | 9 | 89 |
+| `src/shared/utils/` | 83 | 887 |
+| `src/shared/services/` | 8 | 83 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
 | Feature `latefencers` (`src/features/latefencers/`) | 1 | 14 |
@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 23 | 278 |
-| `src/main/` | 156 | 1352 |
+| `src/main/` | 155 | 1348 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 134 | 736 |
@@ -120,10 +120,10 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 44 | 534 |
-| `src/shared/platform/` | 3 | 31 |
-| **Total** | **621** | **4883** |
+| `src/shared/platform/` | 3 | 32 |
+| **Total** | **619** | **4861** |
 
-Unitaires : 603 fichiers, 4833 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 601 fichiers, 4811 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -398,38 +398,6 @@ Unitaires : 603 fichiers, 4833 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - progression par trimestre, chronologique
   - progression par saison : un seul groupe
   - winnerFromScore
-
-</details>
-
-<details>
-<summary><code>src/shared/utils/conflictResolution.test.ts</code> — 20 tests</summary>
-
-- **resolveConflict**
-  - **Cas sans conflit**
-    - retourne local si remote est null
-    - retourne remote si local est null
-    - retourne local si les deux sont null
-    - retourne local si timestamps identiques
-  - **Résolution de conflits**
-    - préfère la version la plus récente (local)
-    - préfère la version la plus récente (remote)
-  - **Gestion des timestamps manquants**
-    - gère local sans timestamp
-    - gère remote sans timestamp
-    - préfère local si aucun timestamp
-- **mergeActionsById**
-  - fusionne des listes sans doublons
-  - garde la version la plus récente en cas de doublon
-  - garde la version locale si plus récente
-  - gère les listes vides
-  - préserve tous les items sans timestamp en cas de conflit
-- **detectConflicts**
-  - détecte les items uniquement locaux
-  - détecte les items uniquement distants
-  - détecte les conflits (timestamps différents)
-  - ne détecte pas de conflit si timestamps identiques
-  - gère les listes vides
-  - cas complexe avec tous types
 
 </details>
 
@@ -1064,6 +1032,21 @@ Unitaires : 603 fichiers, 4833 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **generateBlackCardReportHTML (#1829, annexe 14 FFE)**
   - une page par tireur exclu, champs pré-remplis et échappés
   - motifs de l’arme à cocher, cumul et autre ; source du journal (#2190)
+
+</details>
+
+<details>
+<summary><code>src/shared/utils/pdfExport/bookPdf.test.ts</code> — 7 tests</summary>
+
+- **countSectionPages**
+  - sans bureau (navigateur) : undefined
+  - préload sans comptage : undefined
+  - une valeur par section, dans l’ordre
+  - un échec ou une exception : undefined
+- **exportBookPDF**
+  - avec comptage : numéros de page au sommaire (2 pages de garde + sommaire)
+  - sans comptage : sommaire sans numéros, PDF produit quand même
+  - sans donnée : erreur explicite
 
 </details>
 
@@ -1781,20 +1764,6 @@ Unitaires : 603 fichiers, 4833 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 ### `src/shared/services/`
-
-<details>
-<summary><code>src/shared/services/cloudSyncService.test.ts</code> — 6 tests</summary>
-
-- **compression (round-trip)**
-  - compresse puis décompresse vers la donnée d’origine
-  - renvoie la donnée telle quelle si compression désactivée
-  - decompressData laisse passer un JSON non préfixé
-- **chiffrement (round-trip AES-GCM)**
-  - chiffre puis déchiffre vers la donnée d’origine
-  - ne chiffre pas sans clé
-  - ne chiffre pas si encryptData=false
-
-</details>
 
 <details>
 <summary><code>src/shared/services/errorService.test.ts</code> — 6 tests</summary>
@@ -3809,17 +3778,6 @@ Unitaires : 603 fichiers, 4833 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - décode chaque fichier du .zip avec son propre encodage
   - accepte des fichiers isolés et ignore les extensions inconnues
   - refuse un fichier texte trop volumineux
-
-</details>
-
-<details>
-<summary><code>src/main/ipc/cryptoHandlers.test.ts</code> — 4 tests</summary>
-
-- **registerCryptoHandlers (#1341)**
-  - enregistre les trois canaux crypto:\*
-  - protect / unprotect font l’aller-retour en base64
-  - renvoie null sans chiffrement disponible
-  - refuse les entrées non-chaîne
 
 </details>
 
@@ -10028,12 +9986,13 @@ Unitaires : 603 fichiers, 4833 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/platform/desktop.test.ts</code> — 19 tests</summary>
+<summary><code>src/shared/platform/desktop.test.ts</code> — 20 tests</summary>
 
 - **ElectronDesktop**
   - chaque méthode appelle la bonne fonction du préload
   - écran de démarrage : actif par défaut sans groupe splash, erreur si non enregistré
   - abonnements : rend le désabonnement du préload, sans removeAllListeners
+  - countHtmlPages : nombre de pages, null si absent, en échec ou à zéro (#2252)
   - rien n’est lu au chargement : le préload est lu à l’appel
 - **PlatformServices.desktop**
   - Electron : desktop présent et capabilities.updater vrai
