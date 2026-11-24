@@ -14,6 +14,7 @@ import { Category, Gender, Weapon, type Fencer } from '../../../shared/types';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
 import { ApiError } from '../../../shared/api/client';
+import { xlsxToRows } from '../../xlsxToCsv';
 
 // Base native (VACUUM INTO, ATTACH), comme database/bpmSnapshot.test.ts
 const d = describe;
@@ -224,5 +225,29 @@ d('Mode Club', () => {
     const content = (await zip.generateAsync({ type: 'nodebuffer' })).toString('base64');
     const r = await run('importClubPhotos', { clubId: club.id, content });
     expect(r).toMatchObject({ matched: 1, total: 1 });
+  });
+});
+
+d('Tableur .xlsx (ex-canal file:writeSpreadsheet)', () => {
+  it('grille → classeur en base64, relu à l’identique', async () => {
+    const { content } = await run('getSpreadsheetFile', {
+      rows: [
+        ['Article', 'Prix'],
+        ['Masque', 120],
+      ],
+      sheetName: 'Inventaire',
+    });
+    expect(await xlsxToRows(Buffer.from(content, 'base64'))).toEqual([
+      ['Article', 'Prix'],
+      ['Masque', '120'],
+    ]);
+  });
+
+  it('cellule d’un autre type ou trop de colonnes : invalid_input', async () => {
+    expect((await refusal(run('getSpreadsheetFile', { rows: [[{ x: 1 }]] }))).code).toBe(
+      'invalid_input'
+    );
+    const wide = [Array.from({ length: 201 }, () => 'x')];
+    expect((await refusal(run('getSpreadsheetFile', { rows: wide }))).code).toBe('invalid_input');
   });
 });

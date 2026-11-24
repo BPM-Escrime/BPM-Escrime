@@ -1,7 +1,8 @@
 /**
  * BPM - Escrime - Poste : appels de l'écran au contrat d'API (#1981 lot 2, docs/adr/0022)
  * Un seul endroit traduit les appels de l'écran (arguments positionnels, mêmes noms que les
- * anciens groupes settings, themes, eventDay, privacy et mcp de window.electronAPI) en
+ * anciens groupes settings, themes, eventDay, privacy, mcp et proxy, et des logos de
+ * window.electronAPI) en
  * opérations du contrat (entrées nommées, shared/api/contractStation.ts). Hors Electron, le
  * client lève ApiError('unavailable') : `stationAvailable()` dit s'il y a un poste à piloter.
  * Restent en IPC le dialogue natif d'ajout d'un dossier de l'agent (settings.addAgentFolder)
@@ -11,7 +12,8 @@
  */
 import { useMemo } from 'react';
 import type { BpmClient } from '../../shared/api/client';
-import type { AppSettings, VenueInput } from '../../shared/types/appSettings';
+import type { AppSettings, LogoLibraryEntry, VenueInput } from '../../shared/types/appSettings';
+import type { ProxySettingsDTO } from '../../shared/types/systemSettings';
 import type { CustomTheme } from '../../shared/types/remote';
 import type { DayRefereeInput, StripRule } from '../../shared/types/eventDay';
 import type { PrivacyPersonRef, PrivacySettings } from '../../shared/types/privacy';
@@ -55,6 +57,17 @@ export function createStationApi(client: BpmClient) {
       /** Langue ou thème changés hors de l'écran (agent) : à relire. Renvoie la désinscription. */
       onChanged: (callback: () => void) =>
         client.subscribe('onStationSettingsChanged', {}, () => callback()),
+    },
+    /** Bibliothèque de logos du poste ; le logo actif est `settings.get().logo` */
+    logos: {
+      list: () => q('getLogoLibrary', {}),
+      save: (logos: LogoLibraryEntry[]) => c('updateLogoLibrary', { logos }),
+    },
+    /** Proxy réseau du poste (session Electron) ; adresse refusée : ApiError station_refused */
+    proxy: {
+      get: () => q('getProxySettings', {}),
+      update: (settings: ProxySettingsDTO) => c('updateProxySettings', settings),
+      test: () => c('testProxy', {}),
     },
     /** Bibliothèque de thèmes d'écrans */
     themes: {

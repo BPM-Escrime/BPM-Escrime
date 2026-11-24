@@ -53,6 +53,19 @@ export const APP_SETTING_KEYS = Object.keys(APP_SETTINGS_DEFAULTS) as AppSetting
 /** Taille max du logo (data URL), alignée sur l'import de logo des Paramètres */
 export const MAX_LOGO_CHARS = 4 * 1024 * 1024;
 
+/** Logos de la bibliothèque du poste (<userData>/logos.json), le logo actif compris */
+export const MAX_LOGO_LIBRARY = 20;
+/** Nom d'un logo de la bibliothèque (caractères) */
+export const MAX_LOGO_NAME = 80;
+
+/** Logo de la bibliothèque du poste : le logo actif est `AppSettings.logo` (docs/adr/0022) */
+export interface LogoLibraryEntry {
+  id: string;
+  name: string;
+  /** data URL `data:image/…` */
+  data: string;
+}
+
 const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
 
 /**

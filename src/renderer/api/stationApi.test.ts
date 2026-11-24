@@ -66,6 +66,18 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
   ['settings.searchPlaces', () => api.settings.searchPlaces('gymnase', 'fr')],
   ['settings.getAgentFolders', () => api.settings.getAgentFolders()],
   ['settings.removeAgentFolder', () => api.settings.removeAgentFolder('/media/usb')],
+  ['logos.list', () => api.logos.list()],
+  [
+    'logos.save',
+    () => api.logos.save([{ id: 'logo-1', name: 'Club', data: 'data:image/png;base64,AAAA' }]),
+  ],
+  ['proxy.get', () => api.proxy.get()],
+  [
+    'proxy.update',
+    () => api.proxy.update({ mode: 'manual', server: 'proxy.club.fr:3128', bypass: '*.local' }),
+  ],
+  ['proxy.update (système)', () => api.proxy.update({ mode: 'system' })],
+  ['proxy.test', () => api.proxy.test()],
   ['themes.list', () => api.themes.list()],
   ['themes.save', () => api.themes.save(theme)],
   ['themes.delete', () => api.themes.delete('custom-1')],
@@ -172,6 +184,12 @@ describe('createStationApi : entrées du contrat', () => {
       n => contract[n].permission === 'station:admin' && !(n in fileOperations)
     );
     expect(declared.filter(n => !used.has(n))).toEqual([]);
+  });
+
+  it('un logo qui n’est pas une image est refusé par le contrat', async () => {
+    await expect(
+      api.logos.save([{ id: 'x', name: 'Script', data: 'javascript:alert(1)' }])
+    ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 
   it('une entrée hors bornes est refusée par le contrat', async () => {

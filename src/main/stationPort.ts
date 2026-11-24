@@ -3,8 +3,10 @@
  * Branche sur le CommandContext ce que les opérations du poste ne peuvent pas faire seules :
  * thèmes d'écrans (<userData>/themes.json), réglages RGPD (<userData>/privacy-settings.json),
  * serveur MCP, pistes de la journée en temps réel (serveurs distants des épreuves), dossiers
- * par défaut de l'agent, recherche de lieu (docs/adr/0026). Remplace les canaux `settings:*`, `themes:*`, `eventDay:*`,
- * `privacy:*` et `mcp:*` migrés.
+ * par défaut de l'agent, recherche de lieu (docs/adr/0026), bibliothèque de logos
+ * (<userData>/logos.json), proxy réseau (session Electron, fourni par main.ts), données du rapport
+ * de diagnostic. Remplace les canaux `settings:*`, `themes:*`, `eventDay:*`, `privacy:*`,
+ * `mcp:*`, `proxy:*`, `app:getLogos`, `app:saveLogos` et `diagnostic:exportReport` migrés.
  * Licensed under GPL-3.0
  */
 import type { DatabaseManager } from '../database';
@@ -20,6 +22,7 @@ import { createDayStripService, type DayStripServiceContext } from './remote/day
 import type { createMcpController } from './mcp/mcpController';
 import { resolveBackupDir, writeBackupSettings } from './backupSettings';
 import { createPlaceSearch } from './placeSearch';
+import { createLogoLibraryStore } from './logoLibraryStore';
 
 export interface StationPortOptions {
   db: DatabaseManager;
@@ -32,6 +35,10 @@ export interface StationPortOptions {
   /** Épreuve ouverte à l'écran ou servie aux tablettes (#1882) */
   isCompetitionBusy: (competitionId: string) => boolean;
   getServer: DayStripServiceContext['getServer'];
+  /** Proxy réseau appliqué à la session Electron (proxySession.ts) */
+  proxy: StationPort['proxy'];
+  /** Données techniques du rapport de diagnostic (diagnosticInput.ts) */
+  diagnostics: StationPort['diagnostics'];
 }
 
 export interface StationServices {
@@ -69,6 +76,9 @@ export function createStationPort(opts: StationPortOptions): StationServices {
       },
     },
     places: { search: createPlaceSearch() },
+    logos: createLogoLibraryStore(opts.userDataDir),
+    proxy: opts.proxy,
+    diagnostics: opts.diagnostics,
     dayStrips,
   };
   return { port, stop: () => dayStrips.dispose() };

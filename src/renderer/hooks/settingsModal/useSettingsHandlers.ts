@@ -38,6 +38,7 @@ import {
 } from '../../components/settingsModal.helpers';
 import { useSettingsPreferences } from './useSettingsPreferences';
 import { useRemoteApi } from '../../api/remoteApi';
+import { stationAvailable, useStationApi } from '../../api/stationApi';
 import { getPref, setPref, safeStorage } from '../../services/preferences';
 
 type Ctx = SettingsModalProps & ReturnType<typeof useSettingsPreferences>;
@@ -45,6 +46,7 @@ type Ctx = SettingsModalProps & ReturnType<typeof useSettingsPreferences>;
 /** Gestionnaires de la fenêtre de paramètres : logos, webhook, préférences, sauvegarde et import (extrait de SettingsModal, #1599) */
 export function useSettingsHandlers(ctx: Ctx) {
   const remote = useRemoteApi();
+  const station = useStationApi();
   const {
     setLogo,
     setLogos,
@@ -80,7 +82,7 @@ export function useSettingsHandlers(ctx: Ctx) {
     onClose,
   } = ctx;
 
-  // Logo actif : préférence du poste (PDF/kiosque) + logo.dat + serveurs distants
+  // Logo actif : copie locale (PDF) + paramètre du poste en base et serveurs distants (setRemoteLogo)
   const setActiveLogo = useCallback(
     (data: string | null) => {
       setLogo(data);
@@ -94,13 +96,22 @@ export function useSettingsHandlers(ctx: Ctx) {
     [remote]
   );
 
-  const persistLogos = useCallback((next: LogoEntry[]) => {
-    setLogos(next);
-    saveLogoLibraryLocal(next);
-    window.electronAPI?.saveLogos?.(next)?.catch?.(() => {
-      /* persistance disque indisponible */
-    });
-  }, []);
+  // Bibliothèque : copie locale + bibliothèque du poste (updateLogoLibrary, docs/adr/0022)
+  const persistLogos = useCallback(
+    (next: LogoEntry[]) => {
+      setLogos(next);
+      saveLogoLibraryLocal(next);
+      if (!stationAvailable()) return;
+      station.logos.save(next).catch((err: unknown) => {
+        logger.warn(
+          LogCategory.UI,
+          'Bibliothèque de logos non enregistrée',
+          err instanceof Error ? err : undefined
+        );
+      });
+    },
+    [setLogos, station]
+  );
 
   const applyLogo = useCallback(
     async (file: File) => {

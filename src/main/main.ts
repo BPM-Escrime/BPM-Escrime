@@ -30,16 +30,16 @@ import { watchStripPlans } from './remote/stripPlan';
 import { createClubStation } from './clubPort';
 import { createStationPort } from './stationPort';
 import { applyStoredPrivacySettings, createPrivacyHandlers } from './ipc/privacyHandlers';
-import { registerLogoTtsHandlers } from './ipc/logoTtsHandlers';
 import { startRemoteServer } from './remoteLifecycle';
 import { createRemoteAdminPort } from './remotePort';
 import type { RemoteScoreServer } from './remoteScoreServer';
 import { registerCryptoHandlers } from './ipc/cryptoHandlers';
 import { registerUpdaterHandlers } from './ipc/updaterHandlers';
-import { createDiagnosticDeps, registerDiagnosticHandlers } from './ipc/diagnosticHandlers';
+import { collectDiagnosticInput } from './diagnosticInput';
+import { importLegacyLogoFile } from './logoLibraryStore';
 import { getVersionInfo } from './versionInfo';
 import { readUpdaterSettings, resolveChannel } from './updaterSettings';
-import { applyStoredProxySettings, registerProxyHandlers } from './ipc/proxyHandlers';
+import { applyStoredProxySettings, createProxyService } from './proxySession';
 import { registerBackupHandlers } from './ipc/backupHandlers';
 import { resolveBackupDir } from './backupSettings';
 import { runBackupAutosave } from './autosaveBackup';
@@ -138,6 +138,8 @@ const stationServices = createStationPort({
   documentsDir: () => app.getPath('documents'),
   defaultAgentFolders,
   mcp: () => mcp,
+  proxy: createProxyService(() => app.getPath('userData')),
+  diagnostics: () => collectDiagnosticInput(getVersionInfo),
   // Compétition ouverte ou servie aux tablettes : anonymisation / effacement refusés (#1882)
   isCompetitionBusy: id => id === menuActions.getCurrentCompetitionId() || remoteServers.has(id),
   getServer: id => {
@@ -346,12 +348,7 @@ registerSettingsHandlers({ db, defaultAgentFolders, getMainWindow: () => mainWin
 
 registerCryptoHandlers();
 registerUpdaterHandlers({ getAutoUpdater: () => autoUpdater });
-registerProxyHandlers();
 registerBackupHandlers();
-
-registerDiagnosticHandlers(createDiagnosticDeps({ getWindow: () => mainWindow, getVersionInfo }));
-
-registerLogoTtsHandlers();
 
 // App info handlers
 ipcMain.handle('app:getVersionInfo', async () => {
@@ -437,6 +434,8 @@ async function openDatabase(): Promise<void> {
   logger.info(LogCategory.SYSTEM, 'Base de données ouverte:', db.getPath());
   // Noms abrégés sur le réseau + purge automatique des données échues (RGPD, #1882)
   applyStoredPrivacySettings(db, userDataPath);
+  // Logo actif : ancien fichier logo.dat repris en base, seule source (docs/adr/0022)
+  importLegacyLogoFile(db, userDataPath);
 }
 
 // Autosave every 2 minutes
@@ -469,7 +468,7 @@ const startAutosave = () => {
 app.whenReady().then(async () => {
   eventLoopMonitor.start();
   // Proxy réseau choisi dans les Paramètres, avant tout accès réseau
-  await applyStoredProxySettings();
+  await applyStoredProxySettings(app.getPath('userData'));
 
   if (cli.headless) {
     app.dock?.hide();

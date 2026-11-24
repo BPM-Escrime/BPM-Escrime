@@ -3,8 +3,7 @@
  * après crash, menu natif au chargement) — extraite de main.ts, #1341.
  * Licensed under GPL-3.0
  */
-import { app, BrowserWindow, shell, screen } from 'electron';
-import * as fs from 'fs';
+import { BrowserWindow, shell, screen } from 'electron';
 import * as path from 'path';
 import { getUiLanguage, setUiLanguage } from './menuLabels';
 import { closeSplash } from './splash';
@@ -18,7 +17,6 @@ import {
   permissionCheckUrl,
 } from './windowSecurity';
 import { logger, LogCategory } from '../shared/services/logger';
-import { publishRemoteActivity } from './engine/api/events';
 
 export interface MainWindowContext {
   initialLang?: string;
@@ -172,16 +170,5 @@ export function createMainWindow({
       }
     }
     buildMenu(getUiLanguage());
-
-    // Restore persisted logo and sync to renderer localStorage if not already set
-    const logoPath = path.join(app.getPath('userData'), 'logo.dat');
-    fs.promises
-      .readFile(logoPath, 'utf-8')
-      .then(logo => {
-        if (logo) publishRemoteActivity({ kind: 'logo_loaded', competitionId: null, logo });
-      })
-      .catch(() => {
-        /* logo optionnel */
-      });
   });
 }

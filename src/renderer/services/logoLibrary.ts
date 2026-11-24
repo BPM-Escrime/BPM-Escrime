@@ -1,20 +1,20 @@
 /**
  * BPM - Escrime - Bibliothèque de logos (plusieurs logos, un seul actif)
- * Le logo actif reste stocké sous `bellepoule-logo` (+ logo.dat côté main) :
+ * Le logo actif est le paramètre du poste `logo` (getStationSettings, en base), recopié sous
+ * `bellepoule-logo` pour les PDF ; la bibliothèque est enregistrée sur le poste
+ * (getLogoLibrary / updateLogoLibrary, docs/adr/0022), copie locale sous `bellepoule-logos`.
  * PDF, kiosque et écrans distants n'ont pas à connaître la bibliothèque.
  * Licensed under GPL-3.0
  */
+import { MAX_LOGO_LIBRARY, MAX_LOGO_NAME } from '../../shared/types/appSettings';
+import type { LogoLibraryEntry } from '../../shared/types/appSettings';
 import { PREFS } from './preferences';
 
 export const LOGO_STORAGE_KEY = PREFS.logo.key;
 export const LOGO_LIBRARY_KEY = 'bellepoule-logos';
-export const LOGO_LIBRARY_MAX = 20;
+export const LOGO_LIBRARY_MAX = MAX_LOGO_LIBRARY;
 
-export interface LogoEntry {
-  id: string;
-  name: string;
-  data: string;
-}
+export type LogoEntry = LogoLibraryEntry;
 
 function isLogoEntry(v: unknown): v is LogoEntry {
   if (!v || typeof v !== 'object') return false;
@@ -35,7 +35,7 @@ export function sanitizeLogoLibrary(raw: unknown): LogoEntry[] {
   for (const v of raw) {
     if (!isLogoEntry(v) || seen.has(v.id)) continue;
     seen.add(v.id);
-    out.push({ id: v.id, name: v.name.slice(0, 80), data: v.data });
+    out.push({ id: v.id, name: v.name.slice(0, MAX_LOGO_NAME), data: v.data });
     if (out.length >= LOGO_LIBRARY_MAX) break;
   }
   return out;
@@ -54,7 +54,7 @@ export function saveLogoLibraryLocal(list: LogoEntry[]): void {
   try {
     localStorage.setItem(LOGO_LIBRARY_KEY, JSON.stringify(list));
   } catch {
-    /* quota dépassé : la copie disque (logos.json) reste la référence */
+    /* quota dépassé : la bibliothèque du poste (getLogoLibrary) reste la référence */
   }
 }
 

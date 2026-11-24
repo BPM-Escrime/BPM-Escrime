@@ -12,8 +12,8 @@
  * commandes (recordScore, clearScore…), qui journalisent.
  *
  * Sorties typées par les interfaces de shared/types (z.custom, sans contrôle à l'exécution).
- * Hors contrat : les canaux app:getLogo, app:getLogos, app:saveLogos et app:getTtsConfig
- * (fichiers du poste lus au démarrage de l'écran).
+ * Logo actif : paramètre du poste `logo` (getStationSettings) ; bibliothèque de logos :
+ * getLogoLibrary / updateLogoLibrary (contractStation.ts).
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';
@@ -508,7 +508,7 @@ export const remoteOperations = {
   }),
   setRemoteLogo: command({
     description:
-      'Logo des affichages distants et des impressions (data URL ; null : retiré) : enregistré sur le poste et poussé à tous les serveurs actifs.',
+      'Logo des affichages distants et des impressions (data URL ; null : retiré) : enregistré dans les paramètres du poste (logo de getStationSettings) et poussé à tous les serveurs actifs.',
     input: z.object({ logo: z.string().max(MAX_LOGO_CHARS).nullable() }),
     output: Nothing,
     permission: 'remote:admin',

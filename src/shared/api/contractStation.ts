@@ -8,15 +8,20 @@
  * Sorties typées par les interfaces de shared/types (z.custom, sans contrôle à l'exécution).
  * Hors contrat, car ils ouvrent un dialogue natif ou portent un chemin de fichier (ADR-0021) :
  * settings.addAgentFolder, privacy.exportPerson, exportEncryptedBpm, openEncryptedBpm,
- * cancelEncryptedBpm.
+ * cancelEncryptedBpm. Proxy réseau : pas d'identifiants dans l'adresse (refusés par le poste).
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';
 import { command, CompetitionId, Id, query, subscription } from './contractDef';
 import { StripDeviceSchema } from './contractDevices';
 import { Weapon } from '../types';
-import { MAX_LOGO_CHARS, MAX_VENUE_STRIPS } from '../types/appSettings';
-import type { AppSettings, Venue } from '../types/appSettings';
+import {
+  MAX_LOGO_CHARS,
+  MAX_LOGO_LIBRARY,
+  MAX_LOGO_NAME,
+  MAX_VENUE_STRIPS,
+} from '../types/appSettings';
+import type { AppSettings, LogoLibraryEntry, Venue } from '../types/appSettings';
 import type { AgentFolders } from '../types/settingsApi';
 import type { DurationRow } from '../domain/durations/matchDurations';
 import type { CustomTheme } from '../types/remote';
@@ -37,7 +42,7 @@ import type {
   RetentionPurgeResult,
 } from '../types/privacy';
 import type { McpLogEntry, McpStatus } from '../types/mcp';
-import type { BackupDirDTO } from '../types/systemSettings';
+import type { BackupDirDTO, ProxySettingsDTO } from '../types/systemSettings';
 import {
   PLACE_QUERY_MAX,
   PLACE_QUERY_MIN,
@@ -95,6 +100,23 @@ const VenueInputSchema = z.object({
   stripCount: z.number().int().min(0).max(MAX_VENUE_STRIPS).optional(),
   strips: z.array(VenueStripSchema).max(MAX_VENUE_STRIPS).optional(),
   isDefault: z.boolean().optional(),
+});
+
+/** Logo de la bibliothèque du poste ; le logo actif reste le paramètre `logo` */
+const LogoEntrySchema = z.strictObject({
+  id: z.string().min(1).max(200),
+  name: z.string().max(MAX_LOGO_NAME),
+  data: z
+    .string()
+    .max(MAX_LOGO_CHARS)
+    .refine(v => v.startsWith('data:image/'), 'data URL d’image attendue'),
+});
+
+/** Proxy réseau du poste : serveur et exclusions normalisés par le poste (sans identifiants) */
+const ProxySettingsSchema = z.strictObject({
+  mode: z.enum(['system', 'direct', 'manual']),
+  server: z.string().max(300).optional(),
+  bypass: z.string().max(2000).optional(),
 });
 
 /** Valeurs de localStorage (clé historique → texte, null : effacée) */
@@ -250,6 +272,42 @@ export const stationOperations = {
       'Retire un dossier de la liste de l’agent. L’ajout passe par le dialogue natif du poste (canal settings:addAgentFolder).',
     input: z.object({ folder: z.string().max(1024) }),
     output: z.custom<AgentFolders>(),
+    permission: 'station:admin',
+  }),
+  // ── Bibliothèque de logos (<userData>/logos.json) ; logo actif : paramètre `logo` ──
+  getLogoLibrary: query({
+    description:
+      'Logos enregistrés sur le poste (nom et data URL) ; le logo actif est le paramètre logo de getStationSettings.',
+    input: z.object({}),
+    output: z.custom<LogoLibraryEntry[]>(),
+    permission: 'station:admin',
+  }),
+  updateLogoLibrary: command({
+    description: `Remplace la bibliothèque de logos du poste (${MAX_LOGO_LIBRARY} au plus, doublons d’id ignorés) ; renvoie la bibliothèque enregistrée.`,
+    input: z.object({ logos: z.array(LogoEntrySchema).max(MAX_LOGO_LIBRARY) }),
+    output: z.custom<LogoLibraryEntry[]>(),
+    permission: 'station:admin',
+  }),
+  // ── Proxy réseau du poste : session Electron (mises à jour, webhooks, recherche de lieu) ──
+  getProxySettings: query({
+    description:
+      'Proxy réseau du poste : system (celui du système), direct (aucun) ou manual (serveur et exclusions).',
+    input: z.object({}),
+    output: z.custom<ProxySettingsDTO>(),
+    permission: 'station:admin',
+  }),
+  updateProxySettings: command({
+    description:
+      'Applique et enregistre le proxy réseau du poste (connexions ouvertes coupées) ; renvoie le réglage normalisé. Serveur invalide (hôte:port, schéma http, https, socks4 ou socks5, sans identifiants) : station_refused.',
+    input: ProxySettingsSchema,
+    output: z.custom<ProxySettingsDTO>(),
+    permission: 'station:admin',
+  }),
+  testProxy: command({
+    description:
+      'Essaie le proxy réseau du poste sur GitHub : route résolue (« DIRECT », « PROXY hôte:port »…) et réussite de la requête.',
+    input: z.object({}),
+    output: z.object({ ok: z.boolean(), resolved: z.string() }),
     permission: 'station:admin',
   }),
   onStationSettingsChanged: subscription({

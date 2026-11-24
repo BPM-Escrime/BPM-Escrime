@@ -24,6 +24,8 @@ import {
   writePrivacySettings,
 } from '../../privacySettings';
 import { resolveBackupDir, writeBackupSettings } from '../../backupSettings';
+import { createLogoLibraryStore, importLegacyLogoFile } from '../../logoLibraryStore';
+import { readProxySettings, sanitizeProxySettings, writeProxySettings } from '../../proxySettings';
 import type { CommandContext, StationPort } from './context';
 import { handlers, invoke, subscribe } from '../api/engine';
 import { publishCompetitionEvent } from '../api/events';
@@ -89,6 +91,33 @@ function stationPort(): StationPort {
         unavailable: false,
       }),
     },
+    logos: createLogoLibraryStore(() => dir),
+    // Proxy : fichier réel, sans session Electron (appliqué par proxySession.ts)
+    proxy: {
+      settings: () => readProxySettings(dir),
+      update: async input => {
+        const settings = sanitizeProxySettings(input);
+        if (settings) writeProxySettings(dir, settings);
+        return settings;
+      },
+      test: async () => ({ ok: true, resolved: 'PROXY proxy.club.fr:3128' }),
+    },
+    diagnostics: () => ({
+      appVersion: '3.0.0',
+      build: 2096,
+      channel: 'dev',
+      platform: 'linux',
+      arch: 'x64',
+      osRelease: '6.8.0',
+      locale: 'fr',
+      electronVersion: '45.0.0',
+      chromeVersion: '140',
+      nodeVersion: '24.0.0',
+      uptimeSeconds: 12,
+      memoryRssMb: 200,
+      activeRemoteServers: 0,
+      generatedAt: new Date('2026-11-24T10:00:00.000Z'),
+    }),
     dayStrips: createDayStripService({ db, getServer: () => undefined }),
   };
 }
@@ -550,8 +579,8 @@ describe('contrat du poste', () => {
     n => contract[n].permission === 'station:admin' && !(n in fileOperations)
   );
 
-  it('50 opérations, chacune avec son gestionnaire', () => {
-    expect(ops).toHaveLength(50);
+  it('55 opérations, chacune avec son gestionnaire', () => {
+    expect(ops).toHaveLength(55);
     for (const name of ops) expect(typeof handlers[name], name).toBe('function');
   });
 });
@@ -569,5 +598,89 @@ describe('listPlaceSuggestions (docs/adr/0026)', () => {
       suggestions: [],
       unavailable: true,
     });
+  });
+});
+
+const PNG = 'data:image/png;base64,iVBORw0KGgo=';
+
+d('Poste : logos (docs/adr/0022)', () => {
+  it('bibliothèque : vide, puis enregistrée dans logos.json sans doublon d’id', async () => {
+    expect(await op('getLogoLibrary')).toEqual([]);
+    const saved = await op('updateLogoLibrary', {
+      logos: [
+        { id: 'a', name: 'Club', data: PNG },
+        { id: 'a', name: 'Doublon', data: PNG },
+        { id: 'b', name: 'Ligue', data: PNG },
+      ],
+    });
+    expect(saved.map((l: { id: string }) => l.id)).toEqual(['a', 'b']);
+    expect(await op('getLogoLibrary')).toEqual(saved);
+    expect(JSON.parse(fs.readFileSync(path.join(dir, 'logos.json'), 'utf-8'))).toEqual(saved);
+  });
+
+  it('logo qui n’est pas une image, ou plus de 20 logos : invalid_input', async () => {
+    const bad = { id: 'x', name: 'x', data: 'javascript:alert(1)' };
+    expect((await refusal(op('updateLogoLibrary', { logos: [bad] }))).code).toBe('invalid_input');
+    const many = Array.from({ length: 21 }, (_, i) => ({ id: `l${i}`, name: 'L', data: PNG }));
+    expect((await refusal(op('updateLogoLibrary', { logos: many }))).code).toBe('invalid_input');
+    expect((await refusal(op('getLogoLibrary', {}, { db }))).code).toBe('unavailable');
+  });
+
+  it('logo actif : ancien logo.dat repris en base une fois, puis supprimé', async () => {
+    fs.writeFileSync(path.join(dir, 'logo.dat'), PNG, 'utf-8');
+    importLegacyLogoFile(db, dir);
+    expect((await op('getStationSettings')).logo).toBe(PNG);
+    expect(fs.existsSync(path.join(dir, 'logo.dat'))).toBe(false);
+    // Logo retiré depuis : un ancien fichier ne le ramène pas
+    await op('updateStationSettings', { logo: null });
+    fs.writeFileSync(path.join(dir, 'logo.dat'), PNG, 'utf-8');
+    importLegacyLogoFile(db, dir);
+    expect((await op('getStationSettings')).logo).toBeNull();
+  });
+});
+
+d('Poste : proxy réseau', () => {
+  it('système par défaut, manuel normalisé et enregistré, essai par le port', async () => {
+    expect(await op('getProxySettings')).toEqual({ mode: 'system' });
+    expect(
+      await op('updateProxySettings', {
+        mode: 'manual',
+        server: 'proxy.club.fr:3128',
+        bypass: '*.local; 192.168.0.0/16',
+      })
+    ).toEqual({
+      mode: 'manual',
+      server: 'http://proxy.club.fr:3128',
+      bypass: '*.local,192.168.0.0/16',
+    });
+    expect((await op('getProxySettings')).server).toBe('http://proxy.club.fr:3128');
+    expect(await op('testProxy')).toEqual({ ok: true, resolved: 'PROXY proxy.club.fr:3128' });
+  });
+
+  it('adresse invalide ou avec identifiants : station_refused, réglage inchangé', async () => {
+    for (const server of ['nope', 'http://dt:secret@proxy.club.fr:3128']) {
+      const e = await refusal(op('updateProxySettings', { mode: 'manual', server }));
+      expect(e.code).toBe('station_refused');
+    }
+    expect(await op('getProxySettings')).toEqual({ mode: 'system' });
+    expect((await refusal(op('updateProxySettings', { mode: 'pac' }))).code).toBe('invalid_input');
+    expect((await refusal(op('testProxy', {}, { db }))).code).toBe('unavailable');
+  });
+});
+
+d('Poste : rapport de diagnostic', () => {
+  it('contenu JSON en base64, nom horodaté, liste blanche de champs', async () => {
+    const file = await op('getDiagnosticReport');
+    expect(file.fileName).toBe('bpm-escrime-diagnostic-20261124T100000.json');
+    const report = JSON.parse(Buffer.from(file.content, 'base64').toString('utf-8'));
+    expect(report.app).toEqual({ version: '3.0.0', build: 2096, channel: 'dev' });
+    expect(Object.keys(report).sort()).toEqual([
+      'app',
+      'generatedAt',
+      'runtime',
+      'schemaVersion',
+      'system',
+    ]);
+    expect((await refusal(op('getDiagnosticReport', {}, { db }))).code).toBe('unavailable');
   });
 });

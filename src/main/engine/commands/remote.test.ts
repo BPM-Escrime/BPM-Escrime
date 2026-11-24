@@ -552,13 +552,13 @@ describe('note d’organisation et avis', () => {
     });
     publishRemoteActivity(finished('c1'));
     publishRemoteActivity(finished('c2'));
-    publishRemoteActivity({ kind: 'logo_loaded', competitionId: null, logo: 'data:image/png;x' });
+    publishRemoteActivity(finished(null));
     offC1();
     publishRemoteActivity(finished('c1'));
     offAll();
     expect(forC1.map(e => `${e.kind}:${e.competitionId}`)).toEqual([
       'match_finished:c1',
-      'logo_loaded:null',
+      'match_finished:null',
     ]);
     expect(forAll).toHaveLength(4);
   });
@@ -664,6 +664,9 @@ describe('réglages valables pour tous les serveurs', () => {
   });
 
   it('logo et synthèse vocale : validés puis confiés au port', async () => {
+    // Logo actif : paramètre du poste en base (seule source), puis serveurs actifs
+    const updateSettings = vi.fn();
+    ctx = { ...ctx, db: { ...(ctx.db as object), settings: { updateSettings } } as never };
     const logo = vi.spyOn(ctx.remote!.admin!, 'setLogo');
     const tts = vi.spyOn(ctx.remote!.admin!, 'setTtsConfig');
     await invoke(ctx, 'setRemoteLogo', { logo: 'data:image/png;base64,AAA' });
@@ -671,6 +674,10 @@ describe('réglages valables pour tous les serveurs', () => {
     const config = { voiceName: null, rate: 1, announce: { '30': true, '0': false } };
     await invoke(ctx, 'setTtsConfig', { config });
     expect(logo.mock.calls).toEqual([['data:image/png;base64,AAA'], [null]]);
+    expect(updateSettings.mock.calls).toEqual([
+      [{ logo: 'data:image/png;base64,AAA' }],
+      [{ logo: null }],
+    ]);
     expect(tts).toHaveBeenCalledWith(config);
     expect(await refusal('setTtsConfig', { config: { ...config, rate: 12 } })).toBe(
       'invalid_input'
