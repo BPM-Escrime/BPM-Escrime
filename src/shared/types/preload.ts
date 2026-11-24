@@ -4,7 +4,6 @@
  * Licensed under GPL-3.0
  */
 
-import type { SettingsAPI } from './settingsApi';
 import { Competition, Pool, Score, Phase, FencerCompetitionStats } from '../types';
 import type { McpScreenEvent } from './mcp';
 export type { ClubMemberReport } from './club';
@@ -263,8 +262,7 @@ export interface UpdateProgressEvent {
   currentBuild?: number;
 }
 
-export type { ProxySettingsDTO, BackupDirDTO, BackupAPI } from './systemSettings';
-import type { BackupAPI } from './systemSettings';
+export type { ProxySettingsDTO, BackupDirDTO } from './systemSettings';
 
 export interface UpdaterAPI {
   check: () => Promise<UpdateInfo | null>;
@@ -384,6 +382,13 @@ export interface DialogAPI {
   openFile: (options: DialogOpenOptions) => Promise<FileOpenResult | null>;
   /** Choisit le .zip de l'extranet (ou .xml / .fff / .txt) ; fichiers décodés un par un */
   saveFile: (options: DialogSaveOptions) => Promise<FileSaveResult | null>;
+  /** Choix d'un dossier du poste ; chemin absolu, null si annulé. N'écrit rien (docs/adr/0030) */
+  pickDirectory: (request?: PickDirectoryRequest) => Promise<string | null>;
+}
+
+/** Titre du dialogue de choix d'un dossier */
+export interface PickDirectoryRequest {
+  title?: string;
 }
 
 export interface MenuAPI {
@@ -583,11 +588,9 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   file: FileAPI;
   dialog: DialogAPI;
   updater: UpdaterAPI;
-  backup: BackupAPI;
   greg: GregAPI;
   ftp: FtpAPI;
   crypto: CryptoAPI;
-  settings: SettingsAPI;
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void;
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) => () => void;
   notifyLanguageChanged: (lang: string) => void;

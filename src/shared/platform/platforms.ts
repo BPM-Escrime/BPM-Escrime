@@ -126,6 +126,10 @@ export class ElectronDesktop implements DesktopServices {
   get printDialog(): DesktopPrintDialog {
     return this.api().printDialog;
   }
+
+  async pickDirectory(request?: { title?: string }): Promise<string | null> {
+    return (await this.api().dialog.pickDirectory(request)) ?? null;
+  }
 }
 
 type SimpleMenuKind = Exclude<keyof MenuEvents, 'export' | 'import'>;

@@ -65,6 +65,7 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
   ['settings.deleteVenue', () => api.settings.deleteVenue('v1')],
   ['settings.searchPlaces', () => api.settings.searchPlaces('gymnase', 'fr')],
   ['settings.getAgentFolders', () => api.settings.getAgentFolders()],
+  ['settings.addAgentFolder', () => api.settings.addAgentFolder('/media/usb')],
   ['settings.removeAgentFolder', () => api.settings.removeAgentFolder('/media/usb')],
   ['logos.list', () => api.logos.list()],
   [
@@ -113,7 +114,11 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
   ['eventDay.setStripRule (levée)', () => api.eventDay.setStripRule('d1', 2, null)],
   ['eventDay.setAutoAssign', () => api.eventDay.setAutoAssign('d1', true)],
   ['backup.getDir', () => api.backup.getDir()],
+  ['backup.setDir', () => api.backup.setDir('/media/usb')],
   ['backup.resetDir', () => api.backup.resetDir()],
+  ['backup.getCompetitionDir', () => api.backup.getCompetitionDir('c1')],
+  ['backup.setCompetitionDir', () => api.backup.setCompetitionDir('c1', '/media/usb')],
+  ['backup.resetCompetitionDir', () => api.backup.resetCompetitionDir('c1')],
   ['privacy.getSettings', () => api.privacy.getSettings()],
   [
     'privacy.setSettings',

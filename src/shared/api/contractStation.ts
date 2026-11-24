@@ -6,9 +6,11 @@
  * sur le réseau (WS_READ_PERMISSIONS) et pas d'outil MCP : l'agent a ses outils d'administration
  * propres, qui n'exposent ni jeton ni réglage du serveur MCP (docs/adr/0022).
  * Sorties typées par les interfaces de shared/types (z.custom, sans contrôle à l'exécution).
- * Hors contrat, car ils ouvrent un dialogue natif ou portent un chemin de fichier (ADR-0021) :
- * settings.addAgentFolder, privacy.exportPerson, exportEncryptedBpm, openEncryptedBpm,
- * cancelEncryptedBpm. Proxy réseau : pas d'identifiants dans l'adresse (refusés par le poste).
+ * Dossiers (docs/adr/0030) : choisis par `PlatformServices.desktop.pickDirectory` (dialogue
+ * natif, sans écriture), puis enregistrés par setBackupDir, setCompetitionBackupDir et
+ * addAgentFolder ; un agent ne peut pas élargir lui-même ses dossiers.
+ * Hors contrat, car ils portent un chemin de fichier (ADR-0021) : privacy.exportPerson,
+ * exportEncryptedBpm, openEncryptedBpm, cancelEncryptedBpm. Proxy réseau : pas d'identifiants dans l'adresse (refusés par le poste).
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';
@@ -51,6 +53,10 @@ import {
 
 const Short = z.string().max(200);
 const Nothing = z.void();
+/** Dossier du poste choisi par desktop.pickDirectory (docs/adr/0030) ; vérifié par le poste */
+const DirPath = z.string().min(1).max(1024).describe('Chemin absolu d’un dossier du poste');
+/** Dossier propre d'une épreuve sur ce poste ; null : dossier du poste */
+const CompetitionBackupDirSchema = z.object({ dir: z.string().nullable() });
 
 // ─── Identifiants ────────────────────────────────────────────────────────────
 
@@ -61,7 +67,7 @@ const DayRefereeId = Id.describe('Identifiant de l’arbitre de la journée (lis
 
 // ─── Réglages du poste et salles ─────────────────────────────────────────────
 
-/** Paramètres du poste modifiables ; `agentFolders` passe par removeAgentFolder et le dialogue natif */
+/** Paramètres du poste modifiables ; `agentFolders` passe par addAgentFolder et removeAgentFolder */
 const SettingsPatchSchema = z
   .strictObject({
     language: z.string().max(10),
@@ -246,7 +252,7 @@ export const stationOperations = {
     output: z.array(z.string()),
     permission: 'station:admin',
   }),
-  // ── Dossier de sauvegarde (#2134) : choix par le sélecteur natif (backup:chooseDir) ──
+  // ── Dossiers du poste (#2134, docs/adr/0030) : chemin choisi par desktop.pickDirectory ──
   getBackupDir: query({
     description:
       'Dossier des sauvegardes automatiques et de « Enregistrer » ; isDefault : pas de réglage, <Documents>/BPM - Escrime.',
@@ -254,10 +260,38 @@ export const stationOperations = {
     output: z.custom<BackupDirDTO>(),
     permission: 'station:admin',
   }),
+  setBackupDir: command({
+    description:
+      'Fixe le dossier de sauvegarde du poste : chemin absolu d’un dossier existant et inscriptible (dir_not_found sinon) ; renvoie le dossier effectif.',
+    input: z.object({ path: DirPath }),
+    output: z.custom<BackupDirDTO>(),
+    permission: 'station:admin',
+  }),
   resetBackupDir: command({
-    description: 'Revient au dossier de sauvegarde par défaut ; renvoie le dossier effectif.',
+    description:
+      'Revient au dossier de sauvegarde par défaut ; renvoie le dossier effectif. Dossiers propres des épreuves gardés.',
     input: z.object({}),
     output: z.custom<BackupDirDTO>(),
+    permission: 'station:admin',
+  }),
+  getCompetitionBackupDir: query({
+    description:
+      'Dossier propre d’une épreuve sur ce poste (sauvegarde automatique, « Enregistrer sous ») ; null : dossier du poste.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: CompetitionBackupDirSchema,
+    permission: 'station:admin',
+  }),
+  setCompetitionBackupDir: command({
+    description:
+      'Fixe le dossier propre d’une épreuve sur ce poste : chemin absolu d’un dossier existant et inscriptible (dir_not_found sinon).',
+    input: z.object({ competitionId: CompetitionId, path: DirPath }),
+    output: CompetitionBackupDirSchema,
+    permission: 'station:admin',
+  }),
+  resetCompetitionBackupDir: command({
+    description: 'Retire le dossier propre d’une épreuve : retour au dossier du poste.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: CompetitionBackupDirSchema,
     permission: 'station:admin',
   }),
   listAgentFolders: query({
@@ -267,9 +301,15 @@ export const stationOperations = {
     output: z.custom<AgentFolders>(),
     permission: 'station:admin',
   }),
-  removeAgentFolder: command({
+  addAgentFolder: command({
     description:
-      'Retire un dossier de la liste de l’agent. L’ajout passe par le dialogue natif du poste (canal settings:addAgentFolder).',
+      'Ajoute un dossier à la liste de l’agent : chemin absolu d’un dossier existant (dir_not_found sinon) ; sans effet s’il y est déjà.',
+    input: z.object({ path: DirPath }),
+    output: z.custom<AgentFolders>(),
+    permission: 'station:admin',
+  }),
+  removeAgentFolder: command({
+    description: 'Retire un dossier de la liste de l’agent.',
     input: z.object({ folder: z.string().max(1024) }),
     output: z.custom<AgentFolders>(),
     permission: 'station:admin',

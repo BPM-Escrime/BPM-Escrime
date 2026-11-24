@@ -18,6 +18,8 @@ export interface MenuActionsContext {
   onEncryptedBpm?: (filepath: string) => Promise<void> | void;
   /** Dossier de sauvegarde par défaut (Paramètres → Sauvegarde) */
   getBackupDir?: () => string;
+  /** Dossier propre d'une épreuve sur ce poste, null sinon (docs/adr/0030) */
+  getCompetitionBackupDir?: (competitionId: string) => string | null;
 }
 
 export function createMenuActions({
@@ -25,9 +27,10 @@ export function createMenuActions({
   getMainWindow,
   onEncryptedBpm,
   getBackupDir,
+  getCompetitionBackupDir,
 }: MenuActionsContext) {
   /** Chemin proposé par « Enregistrer sous » : dossier de sauvegarde + nom */
-  const defaultSavePath = (fileName: string, dedicatedDir?: string): string =>
+  const defaultSavePath = (fileName: string, dedicatedDir?: string | null): string =>
     path.join(dedicatedDir || (getBackupDir ? getBackupDir() : '.'), fileName);
 
   function startRemoteScoreServer(): void {
@@ -108,7 +111,7 @@ export function createMenuActions({
       title: L.saveTitle,
       defaultPath: defaultSavePath(
         competitionFileName(competition.title),
-        competition.settings?.backupDir
+        getCompetitionBackupDir?.(competitionId)
       ),
       filters: [{ name: L.filterBpm, extensions: ['bpm'] }],
     });

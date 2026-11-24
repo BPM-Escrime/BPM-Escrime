@@ -1,7 +1,8 @@
 /**
  * BPM - Escrime - Paramètres → Système → Agent IA (MCP) (#1880)
  * Serveur MCP intégré : activation, port, jeton, configuration du client, dossiers
- * accessibles à l'agent (fichiers d'import lus, exports écrits).
+ * accessibles à l'agent (fichiers d'import lus, exports écrits). Ajout d'un dossier :
+ * `desktop.pickDirectory`, puis commande addAgentFolder (docs/adr/0030).
  * Licensed under GPL-3.0
  */
 
@@ -13,6 +14,7 @@ import type { AgentFolders } from '../../shared/types/settingsApi';
 import { HINT, BOLD, TOGGLE_LABEL } from './settingsModal.styles';
 import { Button } from './common/Button';
 import { useStationApi } from '../api/stationApi';
+import { usePlatform } from '../platform/PlatformContext';
 
 /** Configuration à coller dans `.mcp.json` (Claude Code, plugin bpm-escrime) */
 export function mcpClientConfig(status: Pick<McpStatus, 'port' | 'token'>): string {
@@ -42,6 +44,7 @@ const McpSettingsSection: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [folders, setFolders] = useState<AgentFolders>({ folders: [], defaults: [] });
   const { mcp: api, settings: settingsApi } = useStationApi();
+  const { desktop } = usePlatform();
 
   const apply = (s: McpStatus) => {
     setStatus(s);
@@ -62,7 +65,6 @@ const McpSettingsSection: React.FC = () => {
       .catch(() => undefined);
   }, [settingsApi]);
 
-  /** Ajout par boîte de dialogue native du main ; retrait immédiat */
   const [log, setLog] = useState<McpLogEntry[]>([]);
   const refreshLog = () =>
     void api
@@ -71,8 +73,16 @@ const McpSettingsSection: React.FC = () => {
       .catch(() => undefined);
   useEffect(refreshLog, [api]);
 
-  const changeFolders = (action: Promise<AgentFolders> | undefined) =>
-    void action?.then(setFolders).catch(() => undefined);
+  const changeFolders = (action: Promise<AgentFolders>) =>
+    void action.then(setFolders).catch(() => undefined);
+  /** Dossier choisi dans le dialogue du poste (rien d'écrit), puis ajouté par le contrat */
+  const addFolder = () =>
+    changeFolders(
+      (async () => {
+        const dir = await desktop?.pickDirectory({ title: t('settings.mcp_folder_add') });
+        return dir ? settingsApi.addAgentFolder(dir) : folders;
+      })()
+    );
   /** Réglage ou jeton changé : l'état du serveur affiché est celui que rend le main */
   const change = (action: Promise<McpStatus>) => void action.then(apply).catch(() => undefined);
 
@@ -174,14 +184,13 @@ const McpSettingsSection: React.FC = () => {
                   </li>
                 ))}
           </ul>
-          <div className="u-row">
-            <Button
-              type="button"
-              onClick={() => changeFolders(window.electronAPI?.settings?.addAgentFolder())}
-            >
-              {t('settings.mcp_folder_add')}
-            </Button>
-          </div>
+          {desktop && (
+            <div className="u-row">
+              <Button type="button" onClick={addFolder}>
+                {t('settings.mcp_folder_add')}
+              </Button>
+            </div>
+          )}
           <div className="u-row">
             <label style={BOLD}>{t('settings.mcp_log_title')}</label>
             <Button type="button" variant="ghost" onClick={refreshLog}>

@@ -276,3 +276,20 @@ describe('fakeDesktop (lot 3b)', () => {
     expect(d.listenerCount()).toBe(0);
   });
 });
+
+describe('pickDirectory (lot 3c, docs/adr/0030)', () => {
+  it('ElectronDesktop : relais vers dialog.pickDirectory du préload, null si annulé', async () => {
+    const pickDirectory = vi.fn(async () => '/home/dt/Sauvegardes' as string | null);
+    const d = new ElectronDesktop(() => ({ dialog: { pickDirectory } }) as never);
+    await expect(d.pickDirectory({ title: 'Dossier' })).resolves.toBe('/home/dt/Sauvegardes');
+    expect(pickDirectory).toHaveBeenCalledWith({ title: 'Dossier' });
+    pickDirectory.mockResolvedValueOnce(null);
+    await expect(d.pickDirectory()).resolves.toBeNull();
+  });
+
+  it('fakeDesktop : annulé par défaut, remplaçable', async () => {
+    await expect(fakeDesktop().pickDirectory()).resolves.toBeNull();
+    const d = fakeDesktop({ pickDirectory: vi.fn(async () => '/x') });
+    await expect(d.pickDirectory()).resolves.toBe('/x');
+  });
+});

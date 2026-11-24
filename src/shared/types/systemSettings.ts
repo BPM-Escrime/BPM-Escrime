@@ -18,10 +18,3 @@ export interface BackupDirDTO {
   /** true : pas de réglage, dossier `<Documents>/BPM - Escrime` */
   isDefault: boolean;
 }
-
-export interface BackupAPI {
-  /** Ouvre le sélecteur de dossier natif ; annulation = dossier inchangé */
-  chooseDir: () => Promise<BackupDirDTO>;
-  /** Dossier dédié à une compétition (sélecteur natif, sans enregistrer) ; null si annulé */
-  pickCompetitionDir: () => Promise<string | null>;
-}

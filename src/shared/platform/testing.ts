@@ -38,6 +38,8 @@ export interface FakeDesktop extends Omit<DesktopServices, 'updater' | 'printDia
   setCurrentCompetition: Mock<DesktopServices['setCurrentCompetition']>;
   setWindowSize: Mock<DesktopServices['setWindowSize']>;
   notifyLanguageChanged: Mock<DesktopServices['notifyLanguageChanged']>;
+  /** Choix d'un dossier : null (annulé) par défaut ; `pickDirectory.mockResolvedValue('/x')` */
+  pickDirectory: Mock<DesktopServices['pickDirectory']>;
   /** Appelle les abonnés de onMenu(kind) encore inscrits */
   emitMenu<K extends keyof MenuEvents>(kind: K, ...payload: MenuPayload<K>): void;
   emitCompetitionFileOpened(competitionIds: string[]): void;
@@ -128,6 +130,7 @@ export function fakeDesktop(
     setWindowSize: vi.fn(async () => undefined),
     initialLanguage: null,
     notifyLanguageChanged: vi.fn(),
+    pickDirectory: vi.fn(async () => null),
     emitMenu: (kind, ...payload) => menu(kind).emit(payload[0]),
     emitCompetitionFileOpened: competitionIds => opened.emit({ competitionIds }),
     emitEncryptedFileOpened: opened_ => encrypted.emit(opened_),

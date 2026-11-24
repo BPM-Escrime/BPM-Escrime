@@ -3,7 +3,7 @@
  * Licensed under GPL-3.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import {
   HINT,
@@ -22,6 +22,8 @@ import {
   CompetitionSettings,
 } from '../../shared/types';
 import { useTranslation } from '../hooks/useTranslation';
+import { useStationApi } from '../api/stationApi';
+import { usePlatform } from '../platform/PlatformContext';
 import { GREG_DEFAULT_LEVEL, GREG_LEVELS, GregLevel } from '../../shared/utils/gregPublication';
 import { createDefaultCustomFormula } from '../../shared/utils/tournamentTemplates';
 import {
@@ -83,16 +85,33 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
     competition.settings?.trainerCommentsEnabled ?? false
   );
   const [expertMode, setExpertMode] = useState(competition.settings?.expertMode ?? true);
-  // Dossier dédié aux sauvegardes de cette compétition (facultatif, vide = dossier global)
-  const [backupDir, setBackupDir] = useState(competition.settings?.backupDir ?? '');
+  // Dossier propre de l'épreuve sur ce poste (docs/adr/0030) : réglage du poste, enregistré
+  // dès le choix par le contrat ; vide = dossier du poste. Section absente hors bureau et à
+  // la création (épreuve sans identifiant : réglable ensuite dans ses propriétés).
+  const station = useStationApi();
+  const { desktop: platformDesktop } = usePlatform();
+  const desktop = competition.id ? platformDesktop : undefined;
+  const [backupDir, setBackupDir] = useState('');
+  useEffect(() => {
+    if (!desktop) return;
+    station.backup
+      .getCompetitionDir(competition.id)
+      .then(r => setBackupDir(r.dir ?? ''))
+      .catch(() => undefined);
+  }, [desktop, station, competition.id]);
   // Niveau GREG de la publication des résultats (#1328) ; absent = Autre
   const [gregLevel, setGregLevel] = useState<GregLevel>(
     competition.settings?.gregLevel ?? GREG_DEFAULT_LEVEL
   );
-  const chooseBackupDir = () => {
-    void window.electronAPI?.backup?.pickCompetitionDir?.().then(dir => {
-      if (dir) setBackupDir(dir);
-    });
+  const chooseBackupDir = async () => {
+    const dir = await desktop?.pickDirectory({ title: t('properties.backup_dir_choose') });
+    if (!dir) return;
+    const r = await station.backup.setCompetitionDir(competition.id, dir);
+    setBackupDir(r.dir ?? '');
+  };
+  const clearBackupDir = async () => {
+    const r = await station.backup.resetCompetitionDir(competition.id);
+    setBackupDir(r.dir ?? '');
   };
   const [maxRefereesPerPool, setMaxRefereesPerPool] = useState(
     competition.settings?.maxRefereesPerPool ?? 1
@@ -125,8 +144,6 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
       blackCardEnabled,
       trainerCommentsEnabled,
       expertMode,
-      // Vide = pas de dossier dédié : clé retirée (JSON), le dossier global s'applique
-      backupDir: backupDir || undefined,
       gregLevel,
       ...(expertMode ? { maxRefereesPerPool, maxRefereesPerMatch } : {}),
       ...(weapon === Weapon.CUSTOM ? { customFormula } : {}),
@@ -162,23 +179,33 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
   function renderGeneral() {
     return (
       <div>
-        <div className="form-group">
-          <label>{t('properties.backup_dir_label')}</label>
-          <p style={HINT}>{t('properties.backup_dir_hint')}</p>
-          <p style={HINT} data-testid="competition-backup-dir">
-            <code>{backupDir || t('properties.backup_dir_none')}</code>
-          </p>
-          <div className="u-row">
-            <Button type="button" style={SM} onClick={chooseBackupDir}>
-              {t('properties.backup_dir_choose')}
-            </Button>
-            {backupDir && (
-              <Button type="button" style={SM} onClick={() => setBackupDir('')}>
-                {t('properties.backup_dir_clear')}
+        {desktop && (
+          <div className="form-group">
+            <label>{t('properties.backup_dir_label')}</label>
+            <p style={HINT}>{t('properties.backup_dir_hint')}</p>
+            <p style={HINT} data-testid="competition-backup-dir">
+              <code>{backupDir || t('properties.backup_dir_none')}</code>
+            </p>
+            <div className="u-row">
+              <Button
+                type="button"
+                style={SM}
+                onClick={() => void chooseBackupDir().catch(() => undefined)}
+              >
+                {t('properties.backup_dir_choose')}
               </Button>
-            )}
+              {backupDir && (
+                <Button
+                  type="button"
+                  style={SM}
+                  onClick={() => void clearBackupDir().catch(() => undefined)}
+                >
+                  {t('properties.backup_dir_clear')}
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
         <div className="form-group">
           <label htmlFor="title">{t('competition.title')}</label>
           <input
