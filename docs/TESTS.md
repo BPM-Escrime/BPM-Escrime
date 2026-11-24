@@ -107,9 +107,9 @@ npm run e2e:debug                                 # mode debug
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 23 | 278 |
 | `src/main/` | 154 | 1328 |
-| `src/renderer/services/` | 14 | 69 |
+| `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 39 | 201 |
-| `src/renderer/components/` | 133 | 721 |
+| `src/renderer/components/` | 133 | 727 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 423 |
 | `src/renderer/api/` | 10 | 46 |
@@ -120,10 +120,10 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 44 | 534 |
-| `src/shared/platform/` | 2 | 12 |
-| **Total** | **616** | **4809** |
+| `src/shared/platform/` | 3 | 22 |
+| **Total** | **617** | **4826** |
 
-Unitaires : 598 fichiers, 4759 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5382,7 +5382,7 @@ Unitaires : 598 fichiers, 4759 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/services/slashCommands.test.ts</code> — 14 tests</summary>
+<summary><code>src/renderer/services/slashCommands.test.ts</code> — 15 tests</summary>
 
 - **slashCommands – analyse**
   - parse le nom et les arguments
@@ -5391,6 +5391,7 @@ Unitaires : 598 fichiers, 4759 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - résout la sélection : gabarit, saisie ou complétion
   - toutes les commandes ont une description i18n
 - **slashCommands – exécution**
+  - /update sans bureau (navigateur, vue DT) : indisponible, rien d’appelé
   - /update quiet active le mode silencieux, /update quiet off le coupe
   - /update vérifie et signale une version disponible
   - /update channel et /update auto
@@ -5932,13 +5933,14 @@ Unitaires : 598 fichiers, 4759 tests. E2E : 18 fichiers, 50 tests (comptage stat
 ### `src/renderer/components/`
 
 <details>
-<summary><code>src/renderer/components/AboutModal.test.tsx</code> — 7 tests</summary>
+<summary><code>src/renderer/components/AboutModal.test.tsx</code> — 8 tests</summary>
 
 - **AboutModal**
   - affiche le titre et la licence
   - bouton fermer déclenche onClose
   - affiche un placeholder de version sans electronAPI
-  - affiche la version récupérée via electronAPI
+  - sans bureau (navigateur, vue DT) : pas de lecture de version, pas d’erreur
+  - affiche la version récupérée par le bureau
   - affiche le suffixe -dev.N pour un build du canal dev
   - sans poste : pas de bouton de diagnostic
   - rapport de diagnostic : contenu du poste enregistré par la plateforme
@@ -6432,13 +6434,15 @@ Unitaires : 598 fichiers, 4759 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/SettingsModal.test.tsx</code> — 8 tests</summary>
+<summary><code>src/renderer/components/SettingsModal.test.tsx</code> — 10 tests</summary>
 
 - **SettingsModal**
   - affiche un onglet par section et seulement le contenu de l'onglet actif
   - change d'onglet et mémorise le choix
   - rouvre sur le dernier onglet utilisé
   - la recherche filtre toutes les sections (insensible aux accents)
+  - écran de démarrage : réglage présent avec le bureau
+  - sans bureau : ni réglage de mise à jour ni écran de démarrage
   - affiche un message si aucun résultat
 - **SettingsModal – export / import des paramètres**
   - importe un fichier JSON (logo inclus) et met à jour le stockage
@@ -6642,9 +6646,10 @@ Unitaires : 598 fichiers, 4759 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/__tests__/UpdateMenuButton.test.tsx</code> — 6 tests</summary>
+<summary><code>src/renderer/components/__tests__/UpdateMenuButton.test.tsx</code> — 7 tests</summary>
 
 - **UpdateMenuButton — bouton clignotant de l’en-tête**
+  - sans bureau (navigateur, vue DT) : aucun bouton de mise à jour
   - « À jour » après vérification ; clic → revérifie
   - « Mise à jour dispo » clignotant dès update:available
   - vérification au lancement désactivée : pas de requête, bouton « Vérifier »
@@ -6655,9 +6660,11 @@ Unitaires : 598 fichiers, 4759 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/__tests__/UpdateNotification.test.tsx</code> — 6 tests</summary>
+<summary><code>src/renderer/components/__tests__/UpdateNotification.test.tsx</code> — 8 tests</summary>
 
 - **UpdateNotification — mise à jour intégrée**
+  - sans bureau : aucun abonnement, rien ne s’affiche
+  - se désabonne au démontage (ses écouteurs seulement)
   - s’affiche sur update:available et installe sans ouvrir le navigateur
   - affiche la progression du téléchargement
   - téléchargement lancé depuis le menu : bannière + barre de progression sans update:available
@@ -9935,6 +9942,25 @@ Unitaires : 598 fichiers, 4759 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **base64**
   - aller-retour exact sur tous les octets, identique à Buffer
   - contenu de plus d’un bloc (découpage sans dépassement de pile)
+
+</details>
+
+<details>
+<summary><code>src/shared/platform/desktop.test.ts</code> — 10 tests</summary>
+
+- **ElectronDesktop**
+  - chaque méthode appelle la bonne fonction du préload
+  - écran de démarrage : actif par défaut sans groupe splash, erreur si non enregistré
+  - abonnements : rend le désabonnement du préload, sans removeAllListeners
+  - rien n’est lu au chargement : le préload est lu à l’appel
+- **PlatformServices.desktop**
+  - Electron : desktop présent et capabilities.updater vrai
+  - navigateur : desktop absent et capabilities.updater faux
+  - plateforme par défaut : suit le préload, même objet d’un accès à l’autre
+- **fakePlatform**
+  - sans desktop : navigateur
+  - avec desktop : appels enregistrés, événements émis aux abonnés encore inscrits
+  - fakeDesktop : une méthode se remplace, le reste garde sa valeur par défaut
 
 </details>
 
