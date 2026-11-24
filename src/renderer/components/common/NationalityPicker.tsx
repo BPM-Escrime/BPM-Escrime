@@ -31,7 +31,7 @@ const NationalityPicker: React.FC<NationalityPickerProps> = ({ value, onChange }
     const idx = countries.findIndex(c => c.code === value);
     setActive(idx >= 0 ? idx : 0);
     listRef.current?.focus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sélection initiale à l'ouverture seulement, pas à chaque frappe
   }, [open]);
 
   useEffect(() => {

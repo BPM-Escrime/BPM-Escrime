@@ -432,16 +432,15 @@ const KioskDisplay: React.FC<KioskDisplayProps> = ({
       pools.length > 0 && pools.every(p => p.matches.every(m => m.status === MatchStatus.FINISHED));
     if (allDone) return 'ranking';
     return 'pools';
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- vue initiale calculée au montage seulement
 
   const [currentView, setCurrentView] = useState<KioskView>(initialView);
 
   // Auto-switch vers tableau quand les matchs d'élimination arrivent (changement de phase en direct)
   useEffect(() => {
-    if (tableauMatches.length > 0 && currentView !== 'tableau') {
-      setCurrentView('tableau');
-    }
-  }, [tableauMatches.length]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Même valeur → React ignore la mise à jour : pas besoin de lire currentView
+    if (tableauMatches.length > 0) setCurrentView('tableau');
+  }, [tableauMatches.length]);
 
   const [menuVisible, setMenuVisible] = useState(true);
   const menuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

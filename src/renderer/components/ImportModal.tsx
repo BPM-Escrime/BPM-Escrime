@@ -88,7 +88,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
       setSelectedReferees(onImportReferees ? new Set(refs.map((_, i) => i)) : new Set());
       setView(parseResult.fencers.length === 0 && refs.length > 0 ? 'referees' : 'fencers');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- analyse relancée sur le fichier et le format seulement ; onImportReferees ne change pas le résultat
   }, [format, content, isRankingImport]);
 
   const referees = result?.referees ?? [];
