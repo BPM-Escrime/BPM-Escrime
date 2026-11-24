@@ -122,7 +122,8 @@ export const fileOperations = {
       sheetName: z.string().max(100).optional(),
     }),
     output: z.object({ content: z.string() }),
-    permission: 'station:admin',
+    // Mise en forme de lignes : compte du Mode Club sans administration du poste
+    permission: 'club:read',
   }),
 
   // ── Mode Club ──

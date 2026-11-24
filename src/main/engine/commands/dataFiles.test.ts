@@ -15,6 +15,9 @@ import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
 import { ApiError } from '../../../shared/api/client';
 import { xlsxToRows } from '../../xlsxToCsv';
+import { contract } from '../../../shared/api/contract';
+import { STATION_PERMISSIONS } from '../../../shared/api/contractDef';
+import { WS_READ_PERMISSIONS } from '../api/wsAdapter';
 
 // Base native (VACUUM INTO, ATTACH), comme database/bpmSnapshot.test.ts
 const d = describe;
@@ -241,6 +244,13 @@ d('Tableur .xlsx (ex-canal file:writeSpreadsheet)', () => {
       ['Article', 'Prix'],
       ['Masque', '120'],
     ]);
+  });
+
+  it('droits : club:read pour le tableur, station:admin pour le diagnostic, jamais sur le réseau', () => {
+    expect(contract.getSpreadsheetFile.permission).toBe('club:read');
+    expect(contract.getDiagnosticReport.permission).toBe('station:admin');
+    expect(STATION_PERMISSIONS.has('club:read')).toBe(true);
+    expect(WS_READ_PERMISSIONS.has('club:read')).toBe(false);
   });
 
   it('cellule d’un autre type ou trop de colonnes : invalid_input', async () => {
