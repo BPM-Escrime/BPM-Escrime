@@ -137,7 +137,8 @@ export async function teamRelayFixture(
       return compareWithState(
         projectCompetition(db.eventLog.getSince(comp.id)),
         { ...stateView({}, c.settings), teams: teamStateView(ctx, c) },
-        {}
+        // Statuts des tireurs : retrait par un carton noir (docs/adr/0028)
+        Object.fromEntries(db.getFencersByCompetition(comp.id).map(f => [f.id, f.status]))
       );
     },
   };

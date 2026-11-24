@@ -11,13 +11,8 @@
  */
 
 import React from 'react';
-import { Card, CardReason } from '../../shared/types';
-import {
-  TeamRow,
-  TeamMatchRow,
-  TeamBoutRow,
-  TeamMatchCardRow,
-} from '../../shared/domain/teams/team.types';
+import { CardReason } from '../../shared/types';
+import { TeamRow, TeamMatchRow, TeamBoutRow } from '../../shared/domain/teams/team.types';
 import {
   TeamTargetRule,
   calculateTableSize,
@@ -25,7 +20,8 @@ import {
   resolveTeamTableauSlot,
 } from '../../shared/domain/teams/teamCalculations';
 import { LaserArenaBoutCap } from '../../shared/domain/teams/laserArenaCalculations';
-import TeamPoolView, { CardTarget, RelayHandlers } from './TeamPoolView';
+import TeamPoolView, { CardHandlers, CardTarget, RelayHandlers } from './TeamPoolView';
+import type { RelayCardDTO, TeamCardDTO, TeamWithdrawalDTO } from '../hooks/useTeamCompetition';
 import { useTranslation } from '../contexts/TranslationContext';
 
 interface Props {
@@ -41,7 +37,7 @@ interface Props {
   onToggleScoring: (matchId: string) => void;
   onScoreBout: (bout: TeamBoutRow, side: 'A' | 'B' | 'double', points?: number) => void;
   relay: RelayHandlers;
-  boutCards: Record<string, Card[]>;
+  boutCards: Record<string, RelayCardDTO[]>;
   cardTarget: CardTarget | null;
   onSetCardTarget: (target: CardTarget | null) => void;
   selectedReason: CardReason | '';
@@ -50,12 +46,9 @@ interface Props {
   onGenerate: () => void;
   isLaserArena?: boolean;
   boutCap?: LaserArenaBoutCap;
-  matchCards?: Record<string, TeamMatchCardRow[]>;
-  onAddTeamCard?: (
-    matchId: string,
-    teamId: string,
-    type: 'white' | 'yellow' | 'red' | 'black'
-  ) => void;
+  matchCards?: Record<string, TeamCardDTO[]>;
+  cards?: CardHandlers;
+  withdrawn?: Record<string, TeamWithdrawalDTO>;
   onAssignArena?: (matchId: string, arenaId: string) => void;
 }
 
@@ -91,7 +84,8 @@ const TeamTableauView: React.FC<Props> = ({
   isLaserArena,
   boutCap,
   matchCards,
-  onAddTeamCard,
+  cards,
+  withdrawn,
   onAssignArena,
 }) => {
   const { t } = useTranslation();
@@ -196,7 +190,8 @@ const TeamTableauView: React.FC<Props> = ({
                   isLaserArena={isLaserArena}
                   boutCap={boutCap}
                   matchCards={matchCards}
-                  onAddTeamCard={onAddTeamCard}
+                  cards={cards}
+                  withdrawn={withdrawn}
                   onAssignArena={onAssignArena}
                 />
               );

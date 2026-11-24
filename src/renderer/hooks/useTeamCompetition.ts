@@ -3,9 +3,10 @@
  * Lecture : bloc « teams » de getCompetitionState (équipes, rencontres, relais, classement de
  * poule), relu après chaque commande et sur les signaux de l'épreuve (onCompetitionEvents :
  * tablettes, appareils, MCP). Écriture : commandes du contrat seulement (inscription,
- * composition, tirages, relais, remplacement). Le moteur fait foi : aucun total ni avancement
- * du tableau calculé ici. Refus : code du catalogue traduit (errors.<code>), sinon message du
- * moteur.
+ * composition, tirages, relais, remplacement, cartons, retrait d'une équipe). Le moteur fait
+ * foi : aucun total, avancement du tableau ni barème de carton calculé ici. Cartons (docs/adr/0028,
+ * lot C2) : lus dans le bloc (bouts[].cards, teamCards, withdrawn), rangés par relais et par
+ * rencontre. Refus : code du catalogue traduit (errors.<code>), sinon message du moteur.
  * Licensed under GPL-3.0
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -18,13 +19,18 @@ import type { TeamMatchRow, TeamRow } from '../../shared/domain/teams/team.types
 
 type MatchDTO = TeamsStateDTO['poolMatches'][number];
 export type TeamPoolRankingDTO = TeamsStateDTO['poolRanking'][number];
+/** Carton individuel d'un relais, tel que le moteur le rend (points et exclusion compris) */
+export type RelayCardDTO = MatchDTO['bouts'][number]['cards'][number];
+/** Carton E d'une rencontre (arène Sabre Laser) */
+export type TeamCardDTO = MatchDTO['teamCards'][number];
+export type TeamWithdrawalDTO = TeamsStateDTO['withdrawn'][number];
 
 /** Rencontre du moteur au format des vues (TeamPoolView, exports PDF) */
 const toRow = (m: MatchDTO): TeamMatchRow => ({
   ...m,
   poolNumber: m.poolNumber ?? undefined,
   position: m.position ?? undefined,
-  bouts: m.bouts.map(b => ({ ...b })),
+  bouts: m.bouts.map(({ cards: _cards, ...b }) => b),
 });
 
 export interface TeamCompetitionData {
@@ -32,6 +38,12 @@ export interface TeamCompetitionData {
   poolMatches: TeamMatchRow[];
   tableauMatches: TeamMatchRow[];
   poolRanking: TeamPoolRankingDTO[];
+  /** Cartons individuels par relais (bouts[].id) */
+  relayCards: Record<string, RelayCardDTO[]>;
+  /** Cartons E par rencontre */
+  teamCards: Record<string, TeamCardDTO[]>;
+  /** Équipes retirées (abandon) ou exclues (noir individuel), par équipe */
+  withdrawn: Record<string, TeamWithdrawalDTO>;
 }
 
 const EMPTY: TeamCompetitionData = {
@@ -39,7 +51,24 @@ const EMPTY: TeamCompetitionData = {
   poolMatches: [],
   tableauMatches: [],
   poolRanking: [],
+  relayCards: {},
+  teamCards: {},
+  withdrawn: {},
 };
+
+/** Bloc « teams » au format de l'écran */
+function fromBlock(block: TeamsStateDTO): TeamCompetitionData {
+  const all = [...block.poolMatches, ...block.tableauMatches];
+  return {
+    teams: block.teams.map(team => ({ ...team, fencers: team.fencers.map(f => ({ ...f })) })),
+    poolMatches: block.poolMatches.map(toRow),
+    tableauMatches: block.tableauMatches.map(toRow),
+    poolRanking: block.poolRanking,
+    relayCards: Object.fromEntries(all.flatMap(m => m.bouts.map(b => [b.id, b.cards]))),
+    teamCards: Object.fromEntries(all.map(m => [m.id, m.teamCards])),
+    withdrawn: Object.fromEntries(block.withdrawn.map(w => [w.teamId, w])),
+  };
+}
 
 /** Signal de l'épreuve qui peut changer le bloc « teams » */
 const RELOAD_ON = new Set(['session:changed', 'journal:appended']);
@@ -58,19 +87,7 @@ export function useTeamCompetition(competitionId: string) {
       const { state } = await client.query('getCompetitionState', { competitionId });
       if (!alive.current) return;
       const block = state?.teams;
-      setData(
-        block
-          ? {
-              teams: block.teams.map(team => ({
-                ...team,
-                fencers: team.fencers.map(f => ({ ...f })),
-              })),
-              poolMatches: block.poolMatches.map(toRow),
-              tableauMatches: block.tableauMatches.map(toRow),
-              poolRanking: block.poolRanking,
-            }
-          : EMPTY
-      );
+      setData(block ? fromBlock(block) : EMPTY);
     } catch (e) {
       if (alive.current) showToast((e as Error).message, 'error');
     } finally {

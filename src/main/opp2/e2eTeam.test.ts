@@ -4,7 +4,9 @@
  * (arène équipe `/equipe2`) ↔ commandes du moteur, base SQLite réelle. Scénario : 9 relais
  * joués à l'appareil (recordRelayScore, source opp2), END au-delà du palier → NAK, PREV →
  * reopenRelay, fin de rencontre, journal rejoué sans écart. Tableau : dernier relais à
- * égalité, NAK sans priorité, ACK avec la priorité de l'appareil (t.41.5, #2191).
+ * égalité, NAK sans priorité, ACK avec la priorité de l'appareil (t.41.5, #2191). Cartons
+ * (docs/adr/0028, lot C3) : END au palier + 1 sans rouge → NAK ; rouge de l'appareil enregistré
+ * par giveRelayCard (source opp2), puis END au palier + 1 → ACK ; carton relu au redémarrage.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 
@@ -107,16 +109,24 @@ class Opp2Apparatus {
     const payload = { protocol: 'OPP2', version: '1.0', seq: ++this.seq, ts: Date.now(), ...body };
     return this.client.publish(this.topic(m), JSON.stringify(payload), { qos: 1, retain });
   }
-  /** Score cumulé de l'équipe affichée à droite (A) et à gauche (B), priorité R / L / N */
-  score(right: number, left: number, priority: 'N' | 'R' | 'L' = 'N'): Promise<void> {
-    const s = (n: number) => ({
+  /**
+   * Score cumulé de l'équipe affichée à droite (A) et à gauche (B), priorité R / L / N ;
+   * cartons rouges montrés à droite / à gauche
+   */
+  score(
+    right: number,
+    left: number,
+    priority: 'N' | 'R' | 'L' = 'N',
+    reds: { right?: number; left?: number } = {}
+  ): Promise<void> {
+    const s = (n: number, red = 0) => ({
       score: n,
       status: 'U',
       yellow_card: false,
-      red_cards: 0,
+      red_cards: red,
       black_card: false,
     });
-    return this.send('score', { right: s(right), left: s(left), priority });
+    return this.send('score', { right: s(right, reds.right), left: s(left, reds.left), priority });
   }
   /** Relais affiché par le logiciel (`software/match`, round) */
   relay(): number {
@@ -344,6 +354,102 @@ d(
       const decided = journal('TeamMatchDecided');
       expect(decided).toHaveLength(2);
       expect(decided[1]).toMatchObject({ source: 'opp2' });
+      expect(fx.divergences()).toEqual([]);
+    });
+  }
+);
+
+d(
+  'OPP2 bout en bout : cartons de l’appareil par giveRelayCard (ADR-0028, lot C3)',
+  { timeout: 60_000 },
+  () => {
+    let fx: TeamRelayFixture;
+    let broker: MqttBroker;
+    let remote: RemoteScoreServer;
+    let device: Opp2Apparatus;
+    let driver: Opp2PisteDriver;
+    let hub: PisteHub;
+    const team = () => remote.teamArenaCtx.teamArenaState.get('4')!;
+    const control = () => device.last('control')?.command;
+    const bout = (n: number) => fx.db.teams.getTeamMatch(fx.matchId)!.bouts[n - 1];
+    const journal = (type: string) =>
+      fx.db.eventLog.getSince(fx.competitionId).filter(e => e.type === type);
+
+    /** END du relais en cours : réponse ACK / NAK */
+    async function end(): Promise<unknown> {
+      const before = device.count('control');
+      await device.send('state', { state: 'H' });
+      await device.send('control', { command: 'END' });
+      await device.send('state', { state: 'E' });
+      await until(() => device.count('control') > before);
+      const answer = control();
+      await device.send('state', { state: 'W' });
+      return answer;
+    }
+
+    beforeAll(async () => {
+      fx = await teamRelayFixture({ weapon: Weapon.EPEE });
+      remote = new RemoteScoreServer(fx.db, 8066);
+      broker = new MqttBroker({ host: '127.0.0.1' });
+      const port = await broker.start(0);
+      driver = new Opp2PisteDriver(broker);
+      driver.setPistes([{ piste: '4', arena: 4 }]);
+      driver.start();
+      hub = new PisteHub(driver, () => remote);
+      hub.attach();
+      remote.cyranoTeamHook = id => hub.onTeamArenaUpdate(id, remote);
+      device = new Opp2Apparatus(port, '4');
+      await device.start();
+      await until(() => driver.findPiste('4')?.status === 'online');
+      await device.send('state', { state: 'W' });
+      remote.setTeamArenaMatch('4', fx.matchId, false);
+      await until(() => device.relay() === 1 && device.last('match')?.type === 'T');
+    });
+
+    afterAll(async () => {
+      device?.client.destroy();
+      driver?.stop();
+      await broker?.stop();
+      fx?.db.close();
+    });
+
+    it('END au palier + 1 sans rouge : NAK, rien d’enregistré', async () => {
+      await device.send('state', { state: 'F' });
+      await device.score(5, 2);
+      await until(() => team().liveScoreA === 5 && team().liveScoreB === 2);
+      await device.score(6, 2);
+      expect(await end()).toBe('NAK');
+      expect(bout(1).status).not.toBe('finished');
+      expect(journal('RelayScoreRecorded')).toHaveLength(0);
+      expect(journal('RelayCardGiven')).toHaveLength(0);
+    });
+
+    it('rouge de l’appareil → giveRelayCard (opp2), END au palier + 1 → ACK (t.41.1)', async () => {
+      const [, fencerB] = fx.relay(1);
+      await device.send('state', { state: 'F' });
+      // Rouge au tireur de gauche (équipe B) : touche de pénalisation pour l'équipe A
+      await device.score(6, 2, 'N', { left: 1 });
+      await until(() => team().liveScoreA === 6);
+      expect(journal('RelayCardGiven')).toEqual([
+        expect.objectContaining({
+          source: 'opp2',
+          payload: expect.objectContaining({ fencerId: fencerB, type: 'RED', reason: null }),
+        }),
+      ]);
+      expect(await end()).toBe('ACK');
+      await until(() => device.relay() === 2);
+      expect(bout(1)).toMatchObject({ status: 'finished', scoreA: 6, scoreB: 2 });
+      // Le même rouge, renvoyé à chaque état, n'est enregistré qu'une fois
+      expect(journal('RelayCardGiven')).toHaveLength(1);
+    });
+
+    it('cartons en base après redémarrage (#2182) : arène rouverte, rejeu sans écart', () => {
+      const [, fencerB] = fx.relay(1);
+      const restarted = new RemoteScoreServer(fx.db, 8067);
+      expect(restarted.setTeamArenaMatch('4', fx.matchId, false)).toBe(true);
+      expect(restarted.teamArenaCtx.teamArenaState.get('4')!.fencerCards).toEqual([
+        expect.objectContaining({ boutId: fx.boutId(1), fencerId: fencerB, type: 'RED' }),
+      ]);
       expect(fx.divergences()).toEqual([]);
     });
   }
