@@ -1295,4 +1295,38 @@ export const ALL_MIGRATIONS: Migration[] = [
       db.run(`ALTER TABLE competitions ADD COLUMN arena_plan TEXT`);
     },
   },
+  {
+    version: 49,
+    description:
+      'Cartons P (non-combativité) des rencontres par équipes : team_match_cards.team_id nullable, carton donné aux deux équipes (docs/adr/0028)',
+    up(db) {
+      // SQLite ne relâche pas un NOT NULL : table reconstruite à l'identique, team_id nullable.
+      // Clé étrangère vers teams conservée (vérifiée quand la valeur n'est pas nulle), cascade
+      // sur team_matches conservée, lignes recopiées (ordre rowid gardé), index recréé.
+      // Lignes orphelines (rencontre ou équipe disparue sous foreign_keys = OFF) : non
+      // recopiées, sinon la copie échouerait sous foreign_keys = ON et la base ne s'ouvrirait plus.
+      db.run(`
+        CREATE TABLE team_match_cards_v49 (
+          id TEXT PRIMARY KEY,
+          match_id TEXT NOT NULL,
+          team_id TEXT,
+          type TEXT NOT NULL,
+          reason TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (match_id) REFERENCES team_matches(id) ON DELETE CASCADE,
+          FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+        )
+      `);
+      db.run(`
+        INSERT INTO team_match_cards_v49 (id, match_id, team_id, type, reason, created_at)
+        SELECT id, match_id, team_id, type, reason, created_at FROM team_match_cards
+        WHERE match_id IN (SELECT id FROM team_matches)
+          AND (team_id IS NULL OR team_id IN (SELECT id FROM teams))
+        ORDER BY rowid
+      `);
+      db.run(`DROP TABLE team_match_cards`);
+      db.run(`ALTER TABLE team_match_cards_v49 RENAME TO team_match_cards`);
+      db.run(`CREATE INDEX IF NOT EXISTS idx_team_match_cards_match ON team_match_cards(match_id)`);
+    },
+  },
 ];
