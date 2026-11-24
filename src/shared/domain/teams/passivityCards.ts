@@ -14,9 +14,9 @@
 
 import type { ApiErrorCode } from '../../api/errors';
 import { Weapon } from '../../types';
-import { passivityWinner } from '../match/matchEndValidation';
+import { passivityCardAllowed, passivityWinner } from '../match/matchEndValidation';
 import { getWeaponCardConfig } from '../penalties/cards';
-import { teamMatchOutcome, type RelayScore } from './relay';
+import { relayCumulative, teamMatchOutcome, type RelayScore } from './relay';
 import { PASSIVITY_STEPS, type PassivityCardType } from './passivityCardTypes';
 
 export {
@@ -44,6 +44,10 @@ export interface PassivityMeeting {
   /** Classement des deux équipes (1 = meilleur) ; null : inconnu */
   rankA: number | null;
   rankB: number | null;
+  /** Cible finale de la rencontre (45 par défaut) : pas de carton P à cible − 1 partout */
+  target?: number | null;
+  /** Score cumulé affiché, relais en cours compris ; absent : cumul des relais terminés */
+  liveScore?: { scoreA: number; scoreB: number } | null;
 }
 
 export interface PassivityCardInput {
@@ -66,7 +70,10 @@ export interface PassivityCard {
 
 export type PassivityRefusal = {
   ok: false;
-  code: Extract<ApiErrorCode, 'unsupported_format' | 'match_finished' | 'draw_needs_winner'>;
+  code: Extract<
+    ApiErrorCode,
+    'unsupported_format' | 'match_finished' | 'passivity_at_last_touch' | 'draw_needs_winner'
+  >;
 };
 
 export type PassivityResult =
@@ -80,6 +87,16 @@ export type PassivityResult =
       winner: { side: 'A' | 'B'; decide: boolean } | null;
     }
   | PassivityRefusal;
+
+/** Score cumulé de la rencontre : relais terminés, plus le relais en cours tel qu'enregistré */
+function meetingScore(relays: readonly RelayScore[]): { scoreA: number; scoreB: number } {
+  const done = relayCumulative(relays);
+  const live = relays.filter(r => !r.finished);
+  return {
+    scoreA: done.scoreA + live.reduce((n, r) => n + r.scoreA, 0),
+    scoreB: done.scoreB + live.reduce((n, r) => n + r.scoreB, 0),
+  };
+}
 
 /** Vainqueur du noir P : score cumulé des relais terminés, puis classement (t.124.2.c) */
 export function passivityMeetingWinner(meeting: PassivityMeeting): 'A' | 'B' | null {
@@ -96,8 +113,9 @@ export function passivityMeetingWinner(meeting: PassivityMeeting): 'A' | 'B' | n
 /**
  * Carton P suivant de la rencontre. Refus : arme sans carton P (`unsupported_format`), noir P
  * déjà donné, rencontre décidée avant son dernier relais ou terminée et rencontre suivante
- * commencée, noir P contraire au résultat enregistré (`match_finished`), égalité de score et
- * de classement (`draw_needs_winner`, à trancher par le Directoire technique).
+ * commencée, noir P contraire au résultat enregistré (`match_finished`), score à une touche de
+ * la cible finale des deux côtés, 44:44 (`passivity_at_last_touch`, t.124.3), égalité de score
+ * et de classement (`draw_needs_winner`, à trancher par le Directoire technique).
  */
 export function passivityCardFor(input: PassivityCardInput): PassivityResult {
   const { id, at, meeting, prior, weapon } = input;
@@ -109,6 +127,10 @@ export function passivityCardFor(input: PassivityCardInput): PassivityResult {
   const allRelaysDone = meeting.relays.length > 0 && meeting.relays.every(r => r.finished);
   if (meeting.finished && (!allRelaysDone || meeting.nextMatchStarted)) {
     return { ok: false, code: 'match_finished' };
+  }
+  const score = meeting.liveScore ?? meetingScore(meeting.relays);
+  if (!passivityCardAllowed({ ...score, scoreLimit: meeting.target })) {
+    return { ok: false, code: 'passivity_at_last_touch' };
   }
   const type = PASSIVITY_STEPS[step];
   const card = { id, matchId: meeting.matchId, type, createdAt: at.toISOString() };

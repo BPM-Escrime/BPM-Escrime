@@ -367,6 +367,56 @@ describe('appareil de piste maître (#1829) : chrono du serveur et cartons verro
     expect(errors).toEqual([]);
   });
 
+  it('pas de carton P à 14:14 : score limite reçu du serveur (t.124.3, #2214)', async () => {
+    const { dom, errors } = await loadReferee();
+    const app = (
+      dom.window as unknown as {
+        refereeApp: App & { scoreA: number; scoreB: number; scoreLimit: number };
+      }
+    ).refereeApp;
+    app.handleArenaUpdate({ scoreLimit: 15 });
+    expect(app.scoreLimit).toBe(15);
+    app.currentMatch = { id: 'm1' };
+    app.matchStatus = 'in_progress';
+    app.isModernFencing = true;
+    app.scoreA = 14;
+    app.scoreB = 14;
+    app.addPassivityCard();
+    expect([app.cardsA, app.cardsB, app.scoreA, app.scoreB]).toEqual([[], [], 14, 14]);
+    app.scoreB = 13;
+    app.addPassivityCard();
+    expect(app.cardsA).toEqual(['p-yellow']);
+    expect(errors).toEqual([]);
+  });
+
+  it('noir P à égalité : rang du tableau en cours reçu du serveur (FFE dès M15, #2214)', async () => {
+    const { dom } = await loadReferee();
+    const app = (
+      dom.window as unknown as {
+        refereeApp: App & {
+          scoreA: number;
+          scoreB: number;
+          currentMatch: Record<string, unknown> | null;
+          confirmFinishWithCoinFlip: (winner: string) => void;
+          finishByPassivity: () => void;
+        };
+      }
+    ).refereeApp;
+    const winners: string[] = [];
+    app.confirmFinishWithCoinFlip = winner => void winners.push(winner);
+    app.currentMatch = {
+      id: 'm1',
+      fencerA: { id: 'a', initialRanking: 1 },
+      fencerB: { id: 'b', initialRanking: 20 },
+    };
+    app.scoreA = 6;
+    app.scoreB = 6;
+    app.finishByPassivity();
+    app.handleArenaUpdate({ passivityRanks: { A: 12, B: 5 } });
+    app.finishByPassivity();
+    expect(winners).toEqual(['A', 'B']);
+  });
+
   it('carton noir refusé par le serveur (409, appareil maître devenu en ligne) : le combat continue', async () => {
     const { dom, emittedData } = await loadReferee();
     const w = dom.window as unknown as { refereeApp: App; fetch: unknown };

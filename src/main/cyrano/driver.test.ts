@@ -137,7 +137,7 @@ describe('Conversion affichage → DISP', () => {
     referee: { id: 'r1', name: 'ARBITRE' },
   };
 
-  it('individuel : chrono m:ss, cartons, carton P (rouge = 2, noir = 4)', () => {
+  it('individuel : chrono m:ss, cartons, carton P (jaune = 1, rouge = 2, noir = 4)', () => {
     const d = pisteDisplayToDisp(display);
     expect(d).toMatchObject({
       phase: '1',
@@ -153,6 +153,8 @@ describe('Conversion affichage → DISP', () => {
     expect(d.right).not.toHaveProperty('pCard');
     const black = pisteDisplayToDisp({ ...display, left: { ...display.left, pRed: 2, pBlack: 1 } });
     expect(black.left?.pCard).toBe(4);
+    const yellow = pisteDisplayToDisp({ ...display, right: { ...display.right, pYellow: 1 } });
+    expect(yellow.right?.pCard).toBe(1);
   });
 
   it('équipes : Type=T, Round = n° du relais, phase / poule / match omis', () => {

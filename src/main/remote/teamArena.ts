@@ -271,10 +271,17 @@ export function giveTeamArenaPassivityCard(
 ): TeamCommandOutcome<'givePassivityCard'> {
   const state = ctx.teamArenaState.get(arenaId);
   if (!state) return NO_ARENA;
+  // Score affiché, relais en cours compris : pas de carton P à 44:44 (t.124.3, #2214)
+  const current = state.bouts[state.currentBoutIndex] ?? null;
+  const { cumulA, cumulB } = relayCumul(state.bouts, current, state.liveScoreA, state.liveScoreB);
   const outcome = runTeamCommand(
     ctx.db,
     'givePassivityCard',
-    { competitionId: state.competitionId, matchId: state.matchId },
+    {
+      competitionId: state.competitionId,
+      matchId: state.matchId,
+      liveScore: { scoreA: cumulA, scoreB: cumulB },
+    },
     source,
     dryRun
   );

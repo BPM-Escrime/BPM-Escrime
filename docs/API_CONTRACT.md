@@ -107,6 +107,7 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `team_incomplete` | rule | Équipe sans tous ses titulaires au tirage |
 | `relay_out_of_order` | rule | Relais hors ordre : précédents non terminés ou déjà terminé |
 | `match_finished` | rule | Rencontre terminée : carton refusé |
+| `passivity_at_last_touch` | rule | Carton P refusé à une touche du score final des deux côtés (14:14, 44:44 ; t.124.3) |
 | `team_withdrawn` | rule | Équipe retirée ou exclue : plus de relais ni de carton |
 | `no_reserve` | rule | Équipe sans remplaçant |
 | `reserve_used` | rule | Remplaçant déjà entré dans la rencontre |

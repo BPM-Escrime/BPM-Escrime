@@ -257,6 +257,11 @@ vainqueur imposé par un noir P.
   (`p_yellow`, `p_red`, `p_black`), motif `passivity`. La migration 49 rend `team_id` nullable
   (§ 9, amendement du 2026-11-24). Un carton E a toujours une équipe ; un lecteur des cartons E
   écarte les lignes à `team_id` nul ou à `type` en `p_`.
+- Amendement du 2026-11-25 (#2214) : aucun carton P à une touche de la cible finale des deux
+  côtés, 44:44 (t.124.3), refus `passivity_at_last_touch`. Le moteur ne connaît que les relais
+  enregistrés : `givePassivityCard` accepte un `liveScore?: { scoreA, scoreB }` facultatif, score
+  cumulé affiché relais en cours compris (arène équipe, appareil) ; sans lui, cumul des relais
+  enregistrés. Le carton reste un fait du moteur ; `liveScore` n'est pas journalisé.
 
 ### 6. Journal
 

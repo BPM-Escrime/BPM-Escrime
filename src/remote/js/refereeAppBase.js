@@ -71,6 +71,8 @@ class RefereeAppBase {
     this.customScoring = null; // Système de score de la formule personnalisée (#1125)
     this.isModernFencing = false; // Épée, fleuret, sabre (règles olympiques)
     this.restSeconds = 0; // Repos entre périodes (paramètre compétition, 0 = désactivé, #1134)
+    this.scoreLimit = 0; // Score limite du match envoyé par le serveur (0 = inconnu, #2214)
+    this.passivityRanks = null; // Rangs du tableau en cours pour le noir P (FFE M15+, #2214)
     this.isSuddenDeath = false;
     this.waitingOvertimeStart = false;
     this.waitingCoinFlip = false;
@@ -979,6 +981,16 @@ class RefereeAppBase {
       return;
     }
     if (this.matchStatus === 'finished') return;
+    // Aucun carton P à une touche du score limite des deux côtés, 14:14 (t.124.3)
+    const allowed = BPRefereeCards.passivityCardAllowed({
+      scoreA: this.scoreA,
+      scoreB: this.scoreB,
+      scoreLimit: this.scoreLimit,
+    });
+    if (!allowed) {
+      this.showNotification(window.T('referee.passivity_last_touch'));
+      return;
+    }
     const given = this.cardsA.filter(c => PASSIVITY_CARDS.includes(c)).length;
     const card = BPRefereeCards.nextPassivityCard(given);
     if (!card) return;
@@ -1030,14 +1042,16 @@ class RefereeAppBase {
     this.showNotification(window.T('referee.passivity_undone'));
   }
 
-  // P-noir : vainqueur = score le plus haut ; à égalité, le mieux classé au départ ;
-  // sans classement, tirage au sort
+  // P-noir : vainqueur = score le plus haut ; à égalité, le mieux classé au départ (rang du
+  // tableau en cours dès M15, FFE) ; sans classement, tirage au sort
   finishByPassivity() {
+    const ranks = this.passivityRanks;
+    const withSeed = (f, seed) => (ranks ? { ...(f || {}), tableauSeed: seed } : f);
     const r = BPRefereeCards.passivityWinner({
       scoreA: this.scoreA,
       scoreB: this.scoreB,
-      fencerA: this.currentMatch?.fencerA,
-      fencerB: this.currentMatch?.fencerB,
+      fencerA: withSeed(this.currentMatch?.fencerA, ranks?.A),
+      fencerB: withSeed(this.currentMatch?.fencerB, ranks?.B),
     });
     if (r.action === 'finish') {
       this.confirmFinishWithCoinFlip(r.winner, window.T(r.reasonKey));

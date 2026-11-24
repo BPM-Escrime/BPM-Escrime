@@ -192,10 +192,14 @@ export function crossedSabreBreak(
 
 // ── Carton P noir (passivité) ────────────────────────────────────────────────
 
-/** Tireur tel que transmis à la tablette (classement initial ou courant) */
+/**
+ * Tireur tel que transmis à la tablette (classement initial ou courant). `tableauSeed` : rang
+ * du tirage du tableau en cours, fourni quand la règle FFE s'applique (`passivityUsesTableauSeed`).
+ */
 export interface RankedFencer {
   initialRanking?: number | string | null;
   ranking?: number | string | null;
+  tableauSeed?: number | string | null;
 }
 
 export type PassivityOutcome =
@@ -206,8 +210,40 @@ export type PassivityOutcome =
     }
   | { action: 'tiebreak' };
 
+/** Catégories sans la règle FFE du tableau en cours (avant M15) */
+const BEFORE_M15: readonly string[] = ['U9', 'U11', 'U13'];
+
 /**
- * P-noir : vainqueur = score le plus haut ; à égalité, le mieux classé au départ ;
+ * Noir P à égalité de score, base du classement (FFE, règlement de l'arbitrage 2026-2027,
+ * 4.3.2) : dès M15, au tableau, le classement initial **du tableau en cours** (rang du
+ * tirage) ; sinon (poule, M13 et moins, catégorie inconnue), le classement initial (t.124).
+ */
+export function passivityUsesTableauSeed(s: {
+  isTableau: boolean;
+  category?: string | null;
+}): boolean {
+  return s.isTableau && !!s.category && !BEFORE_M15.includes(s.category);
+}
+
+/**
+ * Carton P permis au score (t.124.3) : aucun à une touche du score limite des deux côtés
+ * (14:14 à 15 touches ; en relais, 44:44 au score cumulé, limite = cible finale). Limite
+ * inconnue, nulle ou infinie : permis.
+ * Copie servie aux tablettes : `src/remote/js/refereeCards.js`, parité testée.
+ */
+export function passivityCardAllowed(s: {
+  scoreA: number;
+  scoreB: number;
+  scoreLimit?: number | null;
+}): boolean {
+  const limit = s.scoreLimit;
+  if (typeof limit !== 'number' || !Number.isFinite(limit) || limit <= 1) return true;
+  return !(s.scoreA === limit - 1 && s.scoreB === limit - 1);
+}
+
+/**
+ * P-noir : vainqueur = score le plus haut ; à égalité, le mieux classé au départ : rang du
+ * tableau en cours s'il est fourni pour l'un des deux tireurs, sinon classement initial ;
  * sans classement (ou classements égaux), tirage au sort.
  * Copie servie aux tablettes : `src/remote/js/refereeCards.js` (`passivityWinner`), tenue
  * identique par un test de parité.
@@ -225,10 +261,13 @@ export function passivityWinner(s: {
       reasonKey: 'referee.reason_passivity',
     };
   }
-  const rankOf = (f: RankedFencer | null | undefined): number | null => {
-    const r = Number(f?.initialRanking ?? f?.ranking);
+  const valid = (v: unknown): number | null => {
+    const r = Number(v);
     return Number.isFinite(r) && r > 0 ? r : null;
   };
+  const bySeed = valid(s.fencerA?.tableauSeed) !== null || valid(s.fencerB?.tableauSeed) !== null;
+  const rankOf = (f: RankedFencer | null | undefined): number | null =>
+    valid(bySeed ? f?.tableauSeed : (f?.initialRanking ?? f?.ranking));
   const rA = rankOf(s.fencerA);
   const rB = rankOf(s.fencerB);
   if (rA !== null || rB !== null) {

@@ -40,22 +40,48 @@ describe('pisteState', () => {
     expect(mapPisteSides(st('7ca21969', 'ffffffff'), match, cyranoFencerId)).toBeNull();
   });
 
-  it('sideCards : jaune, rouges, puis rouges et noirs P (jaune P non repris)', () => {
+  it('sideCards : jaune, rouges, puis cartons P au niveau montré (jaune P → rouge P → noir P, #2214)', () => {
     expect(sideCards({})).toEqual([]);
     expect(sideCards({ yellowCards: 1, redCards: 2 })).toEqual(['yellow', 'red', 'red']);
-    expect(sideCards({ pYellow: 1 })).toEqual([]);
-    expect(sideCards({ pRed: 2 })).toEqual(['p-red', 'p-red']);
-    expect(sideCards({ yellowCards: 1, pBlack: 1 })).toEqual(['yellow', 'p-black']);
+    expect(sideCards({ pYellow: 1 })).toEqual(['p-yellow']);
+    expect(sideCards({ pRed: 1 })).toEqual(['p-yellow', 'p-red']);
+    expect(sideCards({ pRed: 2 })).toEqual(['p-yellow', 'p-red', 'p-red']);
+    expect(sideCards({ yellowCards: 1, pBlack: 1 })).toEqual([
+      'yellow',
+      'p-yellow',
+      'p-red',
+      'p-black',
+    ]);
   });
 
   it('cardCounts : cartons d’arène → compteurs à afficher', () => {
-    expect(cardCounts(undefined)).toEqual({ yellowCards: 0, redCards: 0, pRed: 0, pBlack: 0 });
-    expect(cardCounts(['yellow', 'red', 'red', 'p-red', 'p-black'])).toEqual({
+    expect(cardCounts(undefined)).toEqual({
+      yellowCards: 0,
+      redCards: 0,
+      pYellow: 0,
+      pRed: 0,
+      pBlack: 0,
+    });
+    expect(cardCounts(['yellow', 'red', 'red', 'p-yellow', 'p-red', 'p-black'])).toEqual({
       yellowCards: 1,
       redCards: 2,
+      pYellow: 1,
       pRed: 1,
       pBlack: 1,
     });
+  });
+
+  it('cartons P : aller-retour arène → appareil → arène stable (#2214)', () => {
+    for (const list of [['p-yellow'], ['p-yellow', 'p-red'], ['p-yellow', 'p-red', 'p-black']]) {
+      const c = cardCounts(list);
+      // L'appareil renvoie le niveau le plus haut seulement
+      const shown = c.pBlack
+        ? { pBlack: c.pBlack }
+        : c.pRed
+          ? { pRed: c.pRed }
+          : { pYellow: c.pYellow };
+      expect(sideCards(shown)).toEqual(list);
+    }
   });
 
   it('isActiveState : assaut, halte, pause', () => {

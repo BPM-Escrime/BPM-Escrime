@@ -179,6 +179,7 @@
   'referee.opp_plus5': '對手 +5 分',
   'referee.passivity_yellow': '消極：黃 P，雙方各受警告',
   'referee.passivity_red': '消極：紅 P，雙方各 +1 分',
+  'referee.passivity_last_touch': '雙方都只差一劍時不出 P 牌（14:14）',
   'referee.no_card_to_remove': '沒有可撤銷的罰牌',
   'referee.passivity_undone': '已撤銷最後一張消極牌',
   'referee.undo_white': '已撤銷最後一張白牌',

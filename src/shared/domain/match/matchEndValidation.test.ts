@@ -7,6 +7,8 @@ import {
   crossedScoreLimit,
   decideMatchWinner,
   isAcceptableScore,
+  passivityCardAllowed,
+  passivityUsesTableauSeed,
   passivityWinner,
   resolveScoreLimit,
   validateMatchEnd,
@@ -220,5 +222,52 @@ describe('passivityWinner (P-noir)', () => {
     expect(passivityWinner({ scoreA: 2, scoreB: 2, fencerA: {}, fencerB: {} })).toEqual({
       action: 'tiebreak',
     });
+  });
+
+  it('FFE dès M15 : rang du tableau en cours, pas le classement initial de l’épreuve (#2214)', () => {
+    // A mieux classé à l'épreuve, B mieux placé au tirage du tableau : B gagne
+    const fa = { initialRanking: 1, tableauSeed: 9 };
+    const fb = { initialRanking: 30, tableauSeed: 4 };
+    expect(passivityWinner({ scoreA: 7, scoreB: 7, fencerA: fa, fencerB: fb })).toEqual({
+      action: 'finish',
+      winner: 'B',
+      reasonKey: 'referee.reason_passivity_seed',
+    });
+    // Rang du tableau connu d'un seul côté : il gagne (l'autre n'a pas de rang sur cette base)
+    expect(
+      passivityWinner({ scoreA: 7, scoreB: 7, fencerA: { initialRanking: 1 }, fencerB: fb })
+    ).toMatchObject({ winner: 'B' });
+    // Score différent : le classement ne joue pas
+    expect(passivityWinner({ scoreA: 8, scoreB: 7, fencerA: fa, fencerB: fb })).toMatchObject({
+      winner: 'A',
+    });
+  });
+});
+
+describe('passivityUsesTableauSeed (FFE, règlement de l’arbitrage 4.3.2)', () => {
+  it('tableau dès M15 seulement', () => {
+    expect(passivityUsesTableauSeed({ isTableau: true, category: Category.U15 })).toBe(true);
+    expect(passivityUsesTableauSeed({ isTableau: true, category: Category.SENIOR })).toBe(true);
+    expect(passivityUsesTableauSeed({ isTableau: true, category: Category.V2 })).toBe(true);
+    expect(passivityUsesTableauSeed({ isTableau: true, category: Category.U13 })).toBe(false);
+    expect(passivityUsesTableauSeed({ isTableau: true, category: null })).toBe(false);
+    expect(passivityUsesTableauSeed({ isTableau: false, category: Category.SENIOR })).toBe(false);
+  });
+});
+
+describe('passivityCardAllowed (t.124.3)', () => {
+  it('aucun carton P à limite − 1 des deux côtés (14:14, 44:44)', () => {
+    expect(passivityCardAllowed({ scoreA: 14, scoreB: 14, scoreLimit: 15 })).toBe(false);
+    expect(passivityCardAllowed({ scoreA: 44, scoreB: 44, scoreLimit: 45 })).toBe(false);
+    expect(passivityCardAllowed({ scoreA: 14, scoreB: 13, scoreLimit: 15 })).toBe(true);
+    expect(passivityCardAllowed({ scoreA: 13, scoreB: 13, scoreLimit: 15 })).toBe(true);
+    expect(passivityCardAllowed({ scoreA: 9, scoreB: 9, scoreLimit: 10 })).toBe(false);
+  });
+
+  it('limite inconnue, nulle ou infinie : permis', () => {
+    expect(passivityCardAllowed({ scoreA: 14, scoreB: 14 })).toBe(true);
+    expect(passivityCardAllowed({ scoreA: 14, scoreB: 14, scoreLimit: null })).toBe(true);
+    expect(passivityCardAllowed({ scoreA: 0, scoreB: 0, scoreLimit: 0 })).toBe(true);
+    expect(passivityCardAllowed({ scoreA: 14, scoreB: 14, scoreLimit: Infinity })).toBe(true);
   });
 });

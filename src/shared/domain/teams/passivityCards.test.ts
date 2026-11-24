@@ -80,6 +80,23 @@ describe('passivityCardFor', () => {
     expect(give(0, { finished: true, winner: 'A' })).toEqual({ ok: false, code: 'match_finished' });
   });
 
+  it('aucun carton P à cible finale − 1 des deux côtés, 44:44 (t.124.3, #2214)', () => {
+    const at4444 = { target: 45, liveScore: { scoreA: 44, scoreB: 44 } };
+    expect(give(0, at4444)).toEqual({ ok: false, code: 'passivity_at_last_touch' });
+    expect(give(2, at4444)).toEqual({ ok: false, code: 'passivity_at_last_touch' });
+    expect(give(0, { target: 45, liveScore: { scoreA: 44, scoreB: 43 } })).toMatchObject({
+      ok: true,
+    });
+    // Sans score affiché : relais terminés + relais en cours enregistré
+    const relays = [
+      { order: 8, scoreA: 40, scoreB: 40, finished: true },
+      { order: 9, scoreA: 4, scoreB: 4, finished: false },
+    ];
+    expect(give(0, { target: 45, relays })).toEqual({ ok: false, code: 'passivity_at_last_touch' });
+    // Cible inconnue : permis
+    expect(give(0, { liveScore: { scoreA: 44, scoreB: 44 } })).toMatchObject({ ok: true });
+  });
+
   it('Sabre Laser et arme à la carte : pas de carton P', () => {
     expect(give(0, {}, Weapon.LASER)).toEqual({ ok: false, code: 'unsupported_format' });
     expect(give(0, {}, Weapon.CUSTOM)).toEqual({ ok: false, code: 'unsupported_format' });

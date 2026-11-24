@@ -182,6 +182,7 @@
   'referee.opp_plus5': "+5 poent d'an enebour",
   'referee.passivity_yellow': "Didalvoudegezh: P-melen, kemenn d'an daou emganner",
   'referee.passivity_red': 'Didalvoudegezh: P-ruz, +1 poent da bep emganner',
+  'referee.passivity_last_touch': 'Karten P ebet pa vez an daou emganner un taol diouzh an dibenn (14:14)',
   'referee.no_card_to_remove': 'Kartenn ebet da lemel',
   'referee.passivity_undone': 'Kartenn didalvoudegezh diwezhañ nullet',
   'referee.undo_white': 'Kartenn wenn diwezhañ nullet',

@@ -182,6 +182,7 @@
   'referee.opp_plus5': "+5 punti all'avversario",
   'referee.passivity_yellow': 'Passività: P-giallo, avvertimento a entrambi gli schermidori',
   'referee.passivity_red': 'Passività: P-rosso, +1 punto a ciascuno schermidore',
+  'referee.passivity_last_touch': 'Nessun cartellino P quando entrambi gli schermidori sono a una stoccata dalla fine (14:14)',
   'referee.no_card_to_remove': 'Nessun cartellino da rimuovere',
   'referee.passivity_undone': 'Ultimo cartellino di passività annullato',
   'referee.undo_white': 'Ultimo cartellino bianco annullato',

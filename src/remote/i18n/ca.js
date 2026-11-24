@@ -184,6 +184,7 @@
   'referee.opp_plus5': "+5 punts per a l'adversari",
   'referee.passivity_yellow': 'Passivitat: P-groga, advertiment a tots dos tiradors',
   'referee.passivity_red': 'Passivitat: P-vermella, +1 punt per a cada tirador',
+  'referee.passivity_last_touch': 'Cap targeta P quan tots dos tiradors són a un tocat del final (14:14)',
   'referee.no_card_to_remove': 'Cap targeta per retirar',
   'referee.passivity_undone': 'Última targeta de passivitat anul·lada',
   'referee.undo_white': 'Última targeta blanca anul·lada',

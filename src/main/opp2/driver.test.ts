@@ -199,7 +199,7 @@ describe('pilote OPP2 (#1960)', () => {
     expect(driver.send('4', { kind: 'ack' })).toBe(false);
   });
 
-  it('cartons P repris : software/uw2f (ordinal 0 à 5), absent sans carton P', () => {
+  it('cartons P repris : software/uw2f (ordinal 0 à 5, jaune P = 1), absent sans carton P', () => {
     driver.start();
     const out = softwareMessages();
     driver.send('3', { kind: 'display', display: DISPLAY });
@@ -213,6 +213,16 @@ describe('pilote OPP2 (#1960)', () => {
       },
     });
     expect(out.uw2f).toMatchObject({ time_ms: 0, right: { p_card: 3 }, left: { p_card: 4 } });
+    // Jaune P seul (#2214) : ordinal 1
+    driver.send('3', {
+      kind: 'display',
+      display: {
+        ...DISPLAY,
+        right: { ...DISPLAY.right, pYellow: 1 },
+        left: { ...DISPLAY.left, pYellow: 1 },
+      },
+    });
+    expect(out.uw2f).toMatchObject({ right: { p_card: 1 }, left: { p_card: 1 } });
     expect(broker.getRetained(T('uw2f', 'software'))).toBeUndefined();
   });
 

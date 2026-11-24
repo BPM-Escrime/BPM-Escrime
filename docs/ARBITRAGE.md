@@ -154,7 +154,14 @@ Premier écran affiché à l'ouverture.
   les points accordés. Appui long sur **P** : retire le dernier carton de passivité.
 - **Vainqueur du P-noir** : meilleur score ; à égalité, le mieux classé au départ ; sinon
   tirage au sort (`passivityWinner`, `src/shared/domain/match/matchEndValidation.ts` ; copie servie
-  aux tablettes dans `src/remote/js/refereeCards.js`, parité testée).
+  aux tablettes dans `src/remote/js/refereeCards.js`, parité testée). Au tableau, dès M15 (FFE,
+  règlement de l'arbitrage 4.3.2), « au départ » = rang du tirage **du tableau en cours**, envoyé
+  par le serveur (`passivityRanks` de la mise à jour d'arène, `passivityUsesTableauSeed`) ; en
+  poule, en M13 et moins, ou sans rang du tirage, classement initial de l'épreuve.
+- **Pas de carton P à 14:14** (t.124.3) : à une touche du score limite des deux côtés, **P** est
+  refusé avec un message (`passivityCardAllowed`, score limite `scoreLimit` envoyé par le
+  serveur dans la mise à jour d'arène). Relais par équipes : même règle à 44:44 (cible finale
+  − 1), refusée par le moteur (`passivity_at_last_touch`).
 - **Carton noir** : visible seulement si `blackCardEnabled` (paramètre compétition,
   désactivé par défaut). Fenêtre de confirmation → match perdu, tireur **exclu** de la
   compétition (statut `EXCLUDED`, motif enregistré), **DT appelé automatiquement**.

@@ -29,6 +29,7 @@ export interface TrainingSessionContext {
   sessionKioskViews: S['sessionKioskViews'];
   sessionMatches: S['sessionMatches'];
   sessionModernRules: S['sessionModernRules'];
+  sessionCategory: S['sessionCategory'];
   sessionPoolMaxScore: S['sessionPoolMaxScore'];
   sessionPoolTimerSeconds: S['sessionPoolTimerSeconds'];
   sessionRefereeFeatureEnabled: S['sessionRefereeFeatureEnabled'];
@@ -82,6 +83,7 @@ export async function startTrainingSession(
   ctx.sessionTableMaxScore = null;
   ctx.sessionRestSeconds = 0;
   ctx.sessionModernRules = ['E', 'F', 'S'].includes(weapon ?? '');
+  ctx.sessionCategory = null;
   ctx.trainingCustomRules = {
     matchDurationSeconds: duration,
     allowedZones: customRules?.allowedZones ?? [],
@@ -158,6 +160,7 @@ export const TRAINING_SESSION_CONTEXT_KEYS = {
     'sessionKioskViews',
     'sessionMatches',
     'sessionModernRules',
+    'sessionCategory',
     'sessionPoolMaxScore',
     'sessionPoolTimerSeconds',
     'sessionRefereeFeatureEnabled',

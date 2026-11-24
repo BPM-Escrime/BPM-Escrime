@@ -30,6 +30,9 @@ export interface SessionMatch {
   round?: number;
   position?: number;
   tableId?: string;
+  /** Rangs du tirage du tableau (1er tour, #1996) : noir P à égalité, FFE dès M15 (#2214) */
+  seedA?: number | null;
+  seedB?: number | null;
   strip?: number;
   /** Arbitre : `{ id, name }` depuis le renderer, `Referee` depuis la base */
   referee?: Referee | { id: string; name: string };

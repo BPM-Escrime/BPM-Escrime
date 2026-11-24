@@ -41,6 +41,7 @@ export interface SessionSettingsContext {
   sessionCardAnnounce: S['sessionCardAnnounce'];
   sessionKioskViews: S['sessionKioskViews'];
   sessionModernRules: S['sessionModernRules'];
+  sessionCategory: S['sessionCategory'];
   sessionPoolMaxScore: S['sessionPoolMaxScore'];
   sessionPoolTimerSeconds: S['sessionPoolTimerSeconds'];
   sessionRestSeconds: S['sessionRestSeconds'];
@@ -147,6 +148,7 @@ export function applyCompetitionSettings(
   ctx.sessionTableMaxScore = settings?.defaultTableMaxScore ?? null;
   ctx.sessionRestSeconds = Math.max(0, settings?.restTimeSeconds ?? 60);
   ctx.sessionModernRules = usesModernRules(competition.weapon, competition.settings);
+  ctx.sessionCategory = competition.category ?? null;
 }
 
 /** Relit les réglages de la compétition à chaud (propriétés modifiées en cours de session) */
@@ -337,6 +339,7 @@ export const SESSION_SETTINGS_CONTEXT_KEYS = {
     'sessionCardAnnounce',
     'sessionKioskViews',
     'sessionModernRules',
+    'sessionCategory',
     'sessionPoolMaxScore',
     'sessionPoolTimerSeconds',
     'sessionRestSeconds',

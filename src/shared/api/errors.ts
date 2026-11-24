@@ -97,6 +97,10 @@ export const ERRORS = {
   team_incomplete: e('rule', 'Équipe sans tous ses titulaires au tirage'),
   relay_out_of_order: e('rule', 'Relais hors ordre : précédents non terminés ou déjà terminé'),
   match_finished: e('rule', 'Rencontre terminée : carton refusé'),
+  passivity_at_last_touch: e(
+    'rule',
+    'Carton P refusé à une touche du score final des deux côtés (14:14, 44:44 ; t.124.3)'
+  ),
   team_withdrawn: e('rule', 'Équipe retirée ou exclue : plus de relais ni de carton'),
   no_reserve: e('rule', 'Équipe sans remplaçant'),
   reserve_used: e('rule', 'Remplaçant déjà entré dans la rencontre'),

@@ -183,6 +183,7 @@
   'referee.opp_plus5': '+5 points for the opponent',
   'referee.passivity_yellow': 'Passivity: yellow P, warning to both fencers',
   'referee.passivity_red': 'Passivity: red P, +1 point to each fencer',
+  'referee.passivity_last_touch': 'No P card when both fencers are one touch from the end (14:14)',
   'referee.no_card_to_remove': 'No card to remove',
   'referee.passivity_undone': 'Last passivity card cancelled',
   'referee.undo_white': 'Last white card cancelled',

@@ -1103,6 +1103,9 @@ class RefereeApp extends RefereeAppBase {
       this.restSeconds = Math.max(0, data.restSeconds);
       this.updateRestButton();
     }
+    // Score limite et rangs du tableau en cours : cartons P (t.124.3, FFE M15+, #2214)
+    if (typeof data.scoreLimit === 'number') this.scoreLimit = data.scoreLimit;
+    if (data.passivityRanks !== undefined) this.passivityRanks = data.passivityRanks;
 
     if (data.trainingCustomRules !== undefined) {
       this.trainingCustomRules = data.trainingCustomRules;

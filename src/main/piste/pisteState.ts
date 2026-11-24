@@ -2,7 +2,7 @@
  * BPM - Escrime - Lecture d'un état d'appareil rapporté au match de l'arène (#1829)
  * Indépendant du protocole :
  * - côtés droite / gauche → tireurs A / B par identifiant, jamais par position (inversion) ;
- * - cartons au format des arènes (`yellow`, `red`, `p-red`, `p-black`) ;
+ * - cartons au format des arènes (`yellow`, `red`, `p-yellow`, `p-red`, `p-black`) ;
  * - validation de fin : règles uniques de `shared/utils/matchEndValidation.ts`.
  * Licensed under GPL-3.0
  */
@@ -64,14 +64,19 @@ export function mapPisteSides(
 
 /**
  * Cartons d'un côté au format des arènes, dans l'ordre d'attribution : jaune, rouges, puis
- * cartons P (rouge P, noir P ; le jaune P, sans effet sur le score, n'est pas repris).
+ * cartons P. L'appareil montre un niveau (Cyrano P-card, OPP2 `p_card`), pas un cumul : la
+ * suite t.124 étant jaune P → rouge P → noir P, un rouge P montré vaut jaune P puis rouge P,
+ * un noir P vaut jaune P, rouge P puis noir P (#2214).
  */
 export function sideCards(f: PisteSideState): string[] {
   const cards: string[] = [];
   if ((f.yellowCards ?? 0) > 0) cards.push('yellow');
   for (let i = 0; i < Math.min(f.redCards ?? 0, 99); i++) cards.push('red');
-  for (let i = 0; i < Math.min(f.pRed ?? 0, 2); i++) cards.push('p-red');
-  for (let i = 0; i < Math.min(f.pBlack ?? 0, 2); i++) cards.push('p-black');
+  const pBlack = Math.min(f.pBlack ?? 0, 2);
+  const pRed = pBlack > 0 ? Math.max(1, Math.min(f.pRed ?? 0, 2)) : Math.min(f.pRed ?? 0, 2);
+  if (pRed > 0 || (f.pYellow ?? 0) > 0) cards.push('p-yellow');
+  for (let i = 0; i < pRed; i++) cards.push('p-red');
+  for (let i = 0; i < pBlack; i++) cards.push('p-black');
   return cards;
 }
 
@@ -79,12 +84,14 @@ export function sideCards(f: PisteSideState): string[] {
 export function cardCounts(list: readonly string[] | undefined): {
   yellowCards: number;
   redCards: number;
+  pYellow: number;
   pRed: number;
   pBlack: number;
 } {
   return {
     yellowCards: list?.includes('yellow') ? 1 : 0,
     redCards: list?.filter(c => c === 'red').length ?? 0,
+    pYellow: list?.includes('p-yellow') ? 1 : 0,
     pRed: list?.filter(c => c === 'p-red').length ?? 0,
     pBlack: list?.filter(c => c === 'p-black').length ?? 0,
   };
