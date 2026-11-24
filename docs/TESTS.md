@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 84 | 912 |
+| `src/shared/utils/` | 83 | 900 |
 | `src/shared/services/` | 9 | 89 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 23 | 278 |
-| `src/main/` | 153 | 1313 |
-| `src/renderer/services/` | 14 | 66 |
+| `src/main/` | 155 | 1324 |
+| `src/renderer/services/` | 14 | 69 |
 | `src/renderer/hooks/` | 39 | 201 |
-| `src/renderer/components/` | 133 | 717 |
+| `src/renderer/components/` | 133 | 718 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 419 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 41 | 491 |
+| `src/shared/domain/` | 43 | 523 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **613** | **4751** |
+| **Total** | **616** | **4786** |
 
-Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 598 fichiers, 4736 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -960,26 +960,6 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/matchDurations.test.ts</code> — 13 tests</summary>
-
-- **matchDurations (#1965)**
-  - valeurs par défaut : poule d’épée 3 min 30, tableau de sabre 8 min
-  - score différent : durée proportionnelle (relais 45 touches)
-  - arme L / C : depuis le chrono et le score, jamais 0
-  - priorité : réglage \> historique (≥ 30 matchs) \> défaut
-  - clé précise sans valeur : remonte à la clé plus large
-  - mélange : suit la formule avec 0, 3, 5, 10 et 20 matchs mesurés
-  - fenêtre glissante de 20 matchs
-  - match de 25 min (blessure) ou de 10 s : sans effet
-  - fourchette : 80ᵉ centile ≥ médiane
-  - agrégats : médiane, 80ᵉ centile et nombre par clé, sans donnée personnelle
-  - code arme depuis un libellé
-  - fin de phase et simulation : même durée pour la même clé
-  - fin de phase avec référence : mesuré dès 3 matchs, aberrants exclus
-
-</details>
-
-<details>
 <summary><code>src/shared/utils/matchReplay.test.ts</code> — 7 tests</summary>
 
 - **buildMatchReplay (#1074)**
@@ -1079,10 +1059,11 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/pdfExport/blackCardReportPdf.test.ts</code> — 1 test</summary>
+<summary><code>src/shared/utils/pdfExport/blackCardReportPdf.test.ts</code> — 2 tests</summary>
 
 - **generateBlackCardReportHTML (#1829, annexe 14 FFE)**
   - une page par tireur exclu, champs pré-remplis et échappés
+  - motifs de l’arme à cocher, cumul et autre ; source du journal (#2190)
 
 </details>
 
@@ -3395,6 +3376,16 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/matchDurations.test.ts</code> — 4 tests</summary>
+
+- sans donnée : valeurs par défaut (poule d’épée 3:30, tableau de sabre 8:00)
+- réglage du DT : l’emporte, puis retiré ; changement de piste enregistré
+- refuse une durée hors bornes (schéma)
+- historique : épreuve sans match mesuré, épreuve inconnue refusée, réinitialisation
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/passivityCards.test.ts</code> — 7 tests</summary>
 
 - jaune P, rouge P (sans touche), noir P : rencontre décidée au score, même commandId, rejeu
@@ -3648,7 +3639,7 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - sans port du poste : réglages indisponibles, droits des personnes fonctionnent
 - état, réglages, jeton, journal : par le port du serveur
 - **contrat du poste**
-  - 46 opérations, chacune avec son gestionnaire
+  - 50 opérations, chacune avec son gestionnaire
 - **listPlaceSuggestions (docs/adr/0026)**
   - texte nettoyé transmis au port, langue par défaut fr
   - texte trop court : refus du contrat ; poste sans service : indisponible
@@ -4036,7 +4027,7 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/opp2/driver.test.ts</code> — 8 tests</summary>
+<summary><code>src/main/opp2/driver.test.ts</code> — 11 tests</summary>
 
 - **pilote OPP2 (#1960)**
   - démarrage : BPM - Escrime annoncé (retenu), appareil en ligne via apparatus/connection
@@ -4044,18 +4035,22 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - doublon QoS 1 écarté ; redémarrage (seq plus petit, ts plus récent) accepté
   - END + état E : une seule fin proposée ; NEXT / PREV ; piste inconnue relevée
   - affichage : software/fencers, match, score, clock ; Id attendus dans l’état ; ACK / NAK
+  - cartons P repris : software/uw2f (ordinal 0 à 5), absent sans carton P
+  - créneau : software/record retenu, épreuve du dernier affichage ; wantsRecord
   - inversion gaucher par l’arbitre : apparatus/fencers échange les Id
   - reprise après coupure : états retenus relus au démarrage
 - **plusieurs protocoles (#1960)**
+  - créneau : seul le pilote OPP2 le demande
   - chaque piste routée vers son pilote ; Id tronqué selon le protocole de la piste
 
 </details>
 
 <details>
-<summary><code>src/main/opp2/e2e.test.ts</code> — 5 tests</summary>
+<summary><code>src/main/opp2/e2e.test.ts</code> — 6 tests</summary>
 
 - **OPP2 bout en bout : broker MQTT réel, appareil simulé (#1960)**
   - affichage reçu par l’appareil : tireurs (Id complets), arme, poule et match
+  - software/record : créneau de la poule, sans résultat ni match actif
   - assaut et touches : l’arène suit l’appareil
   - END valide → ACK, match terminé ; NEXT → match suivant
   - END à égalité sans priorité → NAK, match non terminé
@@ -4080,12 +4075,13 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/opp2/mqttBroker.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/opp2/mqttBroker.test.ts</code> — 5 tests</summary>
 
 - **broker MQTT intégré (#1960)**
   - messages retenus livrés à l’abonnement, réseau et interne
   - dernière volonté publiée sur coupure brutale, pas sur DISCONNECT
   - authentification et droit de publication par rôle
+  - règle par défaut (main.ts) : software/\* réservé au logiciel, will compris
   - paquet invalide : connexion coupée
 
 </details>
@@ -4099,6 +4095,15 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - flux morcelé puis groupé
   - paquet trop volumineux ou type inconnu : erreur de protocole
   - jokers + et #
+
+</details>
+
+<details>
+<summary><code>src/main/opp2/simulatorDevice.test.ts</code> — 2 tests</summary>
+
+- **appareil OPP2 simulé (scripts/lib/opp2Device.js)**
+  - match reçu (fencers + match + uw2f), touches, END → ACK, NEXT
+  - créneau software/record noté ; débranchement → hors ligne
 
 </details>
 
@@ -5257,11 +5262,14 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/services/blackCardReport.test.ts</code> — 2 tests</summary>
+<summary><code>src/renderer/services/blackCardReport.test.ts</code> — 5 tests</summary>
 
 - **buildBlackCardEntries (#1829)**
   - match de la sanction : celui qui porte le carton noir en base
   - aucun exclu : rien
+  - journal : match, heure et source du retrait sur carton noir (#2190)
+  - appel DT : tireur demandé, même pas encore exclu
+  - motifs du 4e groupe par règlement
 
 </details>
 
@@ -6552,13 +6560,14 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/__tests__/DTCallNotification.test.tsx</code> — 4 tests</summary>
+<summary><code>src/renderer/components/__tests__/DTCallNotification.test.tsx</code> — 5 tests</summary>
 
 - **DTCallNotification — abandon (#2000)**
   - affiche « Abandon — NOM Prénom (à confirmer par le DT) » et le bouton d'enregistrement
   - pas de bouton d'abandon pour un carton noir
   - le bouton demande l'abandon du tireur à la compétition puis solde l'appel
   - sans compétition ouverte pour traiter l'abandon, l'appel reste affiché
+  - carton noir : le bouton demande le rapport fédéral du tireur (#2190)
 
 </details>
 
@@ -9080,6 +9089,32 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/durations/matchDurations.test.ts</code> — 18 tests</summary>
+
+- **matchDurations (#1965)**
+  - valeurs par défaut : poule d’épée 3 min 30, tableau de sabre 8 min
+  - score différent : durée proportionnelle (relais 45 touches)
+  - arme L / C : depuis le chrono et le score, jamais 0
+  - priorité : réglage \> historique (≥ 30 matchs) \> défaut
+  - clé précise sans valeur : remonte à la clé plus large
+  - mélange : suit la formule avec 0, 3, 5, 10 et 20 matchs mesurés
+  - fenêtre glissante de 20 matchs
+  - match de 25 min (blessure) ou de 10 s : sans effet
+  - fourchette : 80ᵉ centile ≥ médiane
+  - agrégats : médiane, 80ᵉ centile et nombre par clé, sans donnée personnelle
+  - code arme depuis un libellé
+  - fin de phase et simulation : même durée pour la même clé
+  - fin de phase avec référence : mesuré dès 3 matchs, aberrants exclus
+- **paramétrage du poste et historique (#1965, lot 3)**
+  - occupation de la piste (début → fin), sinon chrono de la tablette, sinon rien
+  - agrégats d’une épreuve : clé arme · sexe · catégorie · score, aberrants exclus, sans donnée personnelle
+  - historique : apport d’une épreuve remplacé, fusion pondérée, seuil de 30 matchs
+  - réglage du DT posé puis retiré ; validation du paramètre enregistré
+  - table de l’écran : clés par défaut, puis réglages et historique
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/fencers/withdrawal.test.ts</code> — 6 tests</summary>
 
 - **planWithdrawal**
@@ -9268,6 +9303,28 @@ Unitaires : 595 fichiers, 4701 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - Photon : adresse sans nom → nom = adresse
   - Géoplateforme : lieu (tableaux) et adresse
   - réponse invalide → liste vide ; doublons retirés
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/planning/dayPlanner.test.ts</code> — 14 tests</summary>
+
+- **splitPools / tableauRounds**
+  - répartit en poules équilibrées
+  - ne compte pas les exempts
+- **planDay**
+  - donne une fin estimée à chaque épreuve et occupe les 4 pistes
+  - ne met jamais deux blocs sur la même piste en même temps
+  - sépare deux tours d’une même épreuve du temps de repos
+  - ne commence pas une épreuve avant son scratch
+  - respecte les réservations de pistes (#1878)
+  - alerte quand aucune piste n’autorise un bloc
+  - alerte et réduit les pistes quand les arbitres de l’arme manquent
+  - ignore les arbitres d’une autre arme
+  - recalage en direct : un retard sur les poules décale le tableau, sans toucher aux blocs commencés
+  - les durées mesurées allongent l’estimation
+  - épreuve en élimination directe seule, finale sur une piste
+  - est déterministe
 
 </details>
 
