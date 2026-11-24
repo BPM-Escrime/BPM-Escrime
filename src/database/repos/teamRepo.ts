@@ -499,7 +499,7 @@ export class TeamRepo {
   public getTeamBoutCards(matchId: string): Array<{ boutId: string; card: Card }> {
     if (!this.sql.db) return [];
     const rows = this.sql.queryAll<{ bout_id: string; card_json: string }>(
-      'SELECT bout_id, card_json FROM team_bout_cards WHERE match_id = ? ORDER BY created_at',
+      'SELECT bout_id, card_json FROM team_bout_cards WHERE match_id = ? ORDER BY created_at, rowid',
       [matchId]
     );
     return rows.map(r => {
@@ -521,7 +521,7 @@ export class TeamRepo {
   }> {
     if (!this.sql.db) return [];
     const rows = this.sql.queryAll<SqlRow>(
-      'SELECT * FROM team_match_cards WHERE match_id = ? ORDER BY created_at',
+      'SELECT * FROM team_match_cards WHERE match_id = ? ORDER BY created_at, rowid',
       [matchId]
     );
     return rows.map(r => ({
@@ -561,9 +561,10 @@ export class TeamRepo {
     if (!this.sql.db) return { matchCards: [], boutCards: [] };
     const scope = 'match_id IN (SELECT id FROM team_matches WHERE competition_id = ?)';
     const matchCards = this.sql
-      .queryAll<SqlRow>(`SELECT * FROM team_match_cards WHERE ${scope} ORDER BY created_at, id`, [
-        competitionId,
-      ])
+      .queryAll<SqlRow>(
+        `SELECT * FROM team_match_cards WHERE ${scope} ORDER BY created_at, rowid`,
+        [competitionId]
+      )
       .map(r => ({
         id: r.id as string,
         matchId: r.match_id as string,
@@ -574,7 +575,7 @@ export class TeamRepo {
       }));
     const boutCards = this.sql
       .queryAll<{ bout_id: string; card_json: string }>(
-        `SELECT bout_id, card_json FROM team_bout_cards WHERE ${scope} ORDER BY created_at, id`,
+        `SELECT bout_id, card_json FROM team_bout_cards WHERE ${scope} ORDER BY created_at, rowid`,
         [competitionId]
       )
       .map(r => {
