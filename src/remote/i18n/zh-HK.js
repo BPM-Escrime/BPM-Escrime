@@ -177,6 +177,7 @@
   'referee.opp_plus1': '對手 +1 分',
   'referee.opp_plus3': '對手 +3 分',
   'referee.opp_plus5': '對手 +5 分',
+  'referee.passivity_yellow': '消極：黃 P，雙方各受警告',
   'referee.passivity_red': '消極：紅 P，雙方各 +1 分',
   'referee.no_card_to_remove': '沒有可撤銷的罰牌',
   'referee.passivity_undone': '已撤銷最後一張消極牌',

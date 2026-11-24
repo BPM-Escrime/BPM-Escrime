@@ -338,6 +338,35 @@ describe('appareil de piste maître (#1829) : chrono du serveur et cartons verro
     expect(emittedData).toContainEqual(expect.objectContaining({ action: 'update_score' }));
   });
 
+  it('non-combativité : jaune P, rouge P (+1 chacun), puis noir P (t.124, #2214)', async () => {
+    const { dom, errors } = await loadReferee();
+    const app = (dom.window as unknown as { refereeApp: App & { scoreA: number; scoreB: number } })
+      .refereeApp;
+    app.currentMatch = { id: 'm1' };
+    app.matchStatus = 'in_progress';
+    app.isModernFencing = true;
+    app.scoreA = 3;
+    app.scoreB = 2;
+    app.addPassivityCard();
+    expect([app.cardsA, app.cardsB, app.scoreA, app.scoreB]).toEqual([
+      ['p-yellow'],
+      ['p-yellow'],
+      3,
+      2,
+    ]);
+    app.addPassivityCard();
+    expect([app.cardsA, app.cardsB, app.scoreA, app.scoreB]).toEqual([
+      ['p-yellow', 'p-red'],
+      ['p-yellow', 'p-red'],
+      4,
+      3,
+    ]);
+    app.addPassivityCard();
+    expect(app.cardsA).toEqual(['p-yellow', 'p-red', 'p-black']);
+    expect(app.cardsB).toEqual(['p-yellow', 'p-red', 'p-black']);
+    expect(errors).toEqual([]);
+  });
+
   it('carton noir refusé par le serveur (409, appareil maître devenu en ligne) : le combat continue', async () => {
     const { dom, emittedData } = await loadReferee();
     const w = dom.window as unknown as { refereeApp: App; fetch: unknown };

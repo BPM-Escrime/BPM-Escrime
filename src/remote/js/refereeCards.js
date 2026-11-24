@@ -65,10 +65,12 @@
     return cardType === 'red' ? [100, 50, 100] : cardType === 'yellow' ? 80 : 40;
   }
 
-  /** Prochain carton de passivité selon le nombre déjà décerné : P-rouge, P-noir, ou rien (>= 2) */
+  /** Suite des cartons de non-combativité (FIE t.124.1 et t.124.2) : jaune P, rouge P, noir P */
+  const PASSIVITY_SEQUENCE = ['p-yellow', 'p-red', 'p-black'];
+
+  /** Prochain carton de passivité selon le nombre déjà décerné, ou rien (>= 3) */
   function nextPassivityCard(given) {
-    if (given >= 2) return null;
-    return given === 0 ? 'p-red' : 'p-black';
+    return PASSIVITY_SEQUENCE[given] ?? null;
   }
 
   /**

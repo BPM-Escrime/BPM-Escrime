@@ -13,13 +13,13 @@ installation. Un arbitre = une arène (ou piste) = une URL.
 
 ## 1. Accès
 
-| Élément | Valeur |
-|---|---|
-| URL arbitre | `https://<IP-organisateur>:8066/arene{N}/arbitre` |
-| Alias acceptés | `/arena{N}/referee`, `/arene{N}/referee`, `/arbitre/{N}`, `/arbitre/arene{N}` |
-| Écran d'arène associé | `/arene{N}` (même N) |
-| Protocole | HTTPS par défaut (certificat auto-signé), HTTP si désactivé dans la saisie distante |
-| Port | 8066 par défaut ; port libre suivant si occupé |
+| Élément               | Valeur                                                                              |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| URL arbitre           | `https://<IP-organisateur>:8066/arene{N}/arbitre`                                   |
+| Alias acceptés        | `/arena{N}/referee`, `/arene{N}/referee`, `/arbitre/{N}`, `/arbitre/arene{N}`       |
+| Écran d'arène associé | `/arene{N}` (même N)                                                                |
+| Protocole             | HTTPS par défaut (certificat auto-signé), HTTP si désactivé dans la saisie distante |
+| Port                  | 8066 par défaut ; port libre suivant si occupé                                      |
 
 1. L'organisateur démarre la **Saisie distante** et affiche le **QR code** de l'arène.
 2. L'arbitre scanne le QR code (ou tape l'URL).
@@ -99,16 +99,16 @@ Premier écran affiché à l'ouverture.
 
 ### 3.1 En-tête
 
-| Icône | Fonction |
-|---|---|
-| ⇄ | Inverse rouge/vert à l'écran (tireurs changés de côté). Mémorisé pour le match. |
-| 👁 | Mode daltonien : vert → bleu. Persistant (`localStorage bp_colorblind`, ou `?cb=1` dans l'URL). |
-| ● / texte | État de connexion Socket.IO (Connecté / Déconnecté). |
-| 📴 N | Hors-ligne : N actions en attente de synchronisation. |
-| ⟳ Sync... | Synchronisation de la file hors-ligne en cours. |
-| 🔋 N% | Batterie faible (badge rouge) ; niveau remonté à l'organisateur. |
-| 📣 | **Appel DT** (Directoire Technique). Tap court = appel, appui long = annulation. Notification dans l'application organisateur. |
-| 📋 | Journal du match (`/arene{N}/journal`) : chronologie touches / cartons / sorties. |
+| Icône     | Fonction                                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| ⇄         | Inverse rouge/vert à l'écran (tireurs changés de côté). Mémorisé pour le match.                                                |
+| 👁         | Mode daltonien : vert → bleu. Persistant (`localStorage bp_colorblind`, ou `?cb=1` dans l'URL).                                |
+| ● / texte | État de connexion Socket.IO (Connecté / Déconnecté).                                                                           |
+| 📴 N      | Hors-ligne : N actions en attente de synchronisation.                                                                          |
+| ⟳ Sync... | Synchronisation de la file hors-ligne en cours.                                                                                |
+| 🔋 N%     | Batterie faible (badge rouge) ; niveau remonté à l'organisateur.                                                               |
+| 📣        | **Appel DT** (Directoire Technique). Tap court = appel, appui long = annulation. Notification dans l'application organisateur. |
+| 📋        | Journal du match (`/arene{N}/journal`) : chronologie touches / cartons / sorties.                                              |
 
 ### 3.2 Côtés et couleurs
 
@@ -120,10 +120,10 @@ Premier écran affiché à l'ouverture.
 ### 3.3 Boutons de touche
 
 | Bouton | Sabre Laser (`L`) | Escrime olympique (`E`/`F`/`S`) |
-|---|---|---|
-| **+1** | Zone A = 1 pt | 1 touche |
-| **+3** | Zone B = 3 pts | masqué |
-| **+5** | Zone C = 5 pts | masqué |
+| ------ | ----------------- | ------------------------------- |
+| **+1** | Zone A = 1 pt     | 1 touche                        |
+| **+3** | Zone B = 3 pts    | masqué                          |
+| **+5** | Zone C = 5 pts    | masqué                          |
 
 - **Appui court** : ajoute les points.
 - **Appui long (0,8 s)** : retire les points (correction).
@@ -135,13 +135,13 @@ Premier écran affiché à l'ouverture.
 
 ### 3.4 Boutons de carton
 
-| Bouton | Sabre Laser | Escrime olympique |
-|---|---|---|
-| **B** (blanc) | Avertissement. 2ᵉ blanc → jaune automatique. | Remplacé par **P** (passivité). |
-| **J** (jaune) | +3 pts à l'adversaire. 2ᵉ faute de groupe 2 → rouge. | Fautes du 1ᵉʳ groupe FIE. Avertissement, 0 pt (t.162.1). Jaune après jaune/rouge → rouge (t.165). |
-| **R** (rouge) | +5 pts à l'adversaire. | Fautes des 2ᵉ et 3ᵉ groupes FIE. +1 touche à l'adversaire (t.162.2). |
-| **N** (noir) | Exclusion (si option activée). | Exclusion (si option activée). |
-| **P** (passivité) | — | 1ᵉʳ : P-rouge aux deux tireurs, +1 chacun. 2ᵉ : P-noir, fin du combat. |
+| Bouton            | Sabre Laser                                          | Escrime olympique                                                                                            |
+| ----------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **B** (blanc)     | Avertissement. 2ᵉ blanc → jaune automatique.         | Remplacé par **P** (passivité).                                                                              |
+| **J** (jaune)     | +3 pts à l'adversaire. 2ᵉ faute de groupe 2 → rouge. | Fautes du 1ᵉʳ groupe FIE. Avertissement, 0 pt (t.162.1). Jaune après jaune/rouge → rouge (t.165).            |
+| **R** (rouge)     | +5 pts à l'adversaire.                               | Fautes des 2ᵉ et 3ᵉ groupes FIE. +1 touche à l'adversaire (t.162.2).                                         |
+| **N** (noir)      | Exclusion (si option activée).                       | Exclusion (si option activée).                                                                               |
+| **P** (passivité) | —                                                    | 1ᵉʳ : P-jaune aux deux tireurs (avertissement). 2ᵉ : P-rouge, +1 chacun. 3ᵉ : P-noir, fin du combat (t.124). |
 
 - **Barème du Sabre Laser** (+3 / +5) : **provisoire**, en attendant l'arbitrage de #2208 (les
   livrets ASL-FFE 2026-2027 ne le donnent pas). Le domaine applique le même barème
@@ -166,22 +166,22 @@ Si l'option **annonce des cartons** est active (`cardAnnounce`), un appui sur B/
 la liste des motifs. Le carton réellement donné dépend du groupe de faute et de
 l'historique du tireur :
 
-| Groupe (Sabre Laser) | Progression | Exemples |
-|---|---|---|
-| 1 | Blanc → Jaune → Jaune | Contre-attaque, touche lourde, sortie sans autorisation, commencer avant « Combattez ! » |
-| 2 | Jaune → Rouge → Rouge | Acte violent, touche d'estoc, sortie volontaire pour éviter une touche, bras non armé |
-| 3 | Rouge direct | Combat non loyal, comportement antisportif, trouble de l'ordre |
+| Groupe (Sabre Laser) | Progression           | Exemples                                                                                 |
+| -------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| 1                    | Blanc → Jaune → Jaune | Contre-attaque, touche lourde, sortie sans autorisation, commencer avant « Combattez ! » |
+| 2                    | Jaune → Rouge → Rouge | Acte violent, touche d'estoc, sortie volontaire pour éviter une touche, bras non armé    |
+| 3                    | Rouge direct          | Combat non loyal, comportement antisportif, trouble de l'ordre                           |
 
 En escrime olympique (épée, fleuret, sabre) : groupes et motifs du tableau t.170 du règlement
 technique FIE, numérotation FIE portée sur la feuille (t.163). Pas de blanc. **J** ouvre les
 fautes du 1ᵉʳ groupe, **R** celles des 2ᵉ et 3ᵉ groupes ; le 4ᵉ groupe passe par **N**.
 
-| Groupe (FIE) | Progression | Exemples |
-|---|---|---|
-| 1 (t.165) | Jaune (0 pt) → Rouge à chaque nouvelle faute du groupe ; rouge d'emblée après un rouge du 2ᵉ ou 3ᵉ groupe | Abandon de la piste, corps à corps, tourner le dos, sortie latérale, refus d'obéissance |
-| 2 (t.166) | Rouge dès la 1ʳᵉ faute | Bras non armé, touche hors de l'adversaire, acte violent, lâcher l'arme |
-| 3 (t.167) | Rouge → Noir à la récidive | Trouble de l'ordre sur la piste, combat non loyal, comportement antisportif |
-| 4 (t.169) | Noir | Refus du salut, collusion, fraude, matériel aménagé |
+| Groupe (FIE) | Progression                                                                                               | Exemples                                                                                |
+| ------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 1 (t.165)    | Jaune (0 pt) → Rouge à chaque nouvelle faute du groupe ; rouge d'emblée après un rouge du 2ᵉ ou 3ᵉ groupe | Abandon de la piste, corps à corps, tourner le dos, sortie latérale, refus d'obéissance |
+| 2 (t.166)    | Rouge dès la 1ʳᵉ faute                                                                                    | Bras non armé, touche hors de l'adversaire, acte violent, lâcher l'arme                 |
+| 3 (t.167)    | Rouge → Noir à la récidive                                                                                | Trouble de l'ordre sur la piste, combat non loyal, comportement antisportif             |
+| 4 (t.169)    | Noir                                                                                                      | Refus du salut, collusion, fraude, matériel aménagé                                     |
 
 La tablette donne le rouge au 3ᵉ groupe ; à la récidive, l'arbitre donne le noir par **N**.
 Le domaine (`determineCardType`, `src/shared/utils/cardSystem.ts`, cartons des relais par
@@ -192,11 +192,11 @@ jaune (Sabre Laser). « ✕ Annuler » = carton donné sans annonce.
 
 ### 3.5 Chronomètre
 
-| Geste | Effet |
-|---|---|
-| Tap sur l'affichage ou **▶️ Démarrer** | Démarre le match (1ʳᵉ fois) puis pause/reprise. |
-| Appui long (0,8 s) sur l'affichage | Remise à zéro du chrono (sort de la mort subite). |
-| 🔇 Voix | Minuteur vocal (TTS) : « Une minute », « Trente secondes », « Dix secondes », 5-4-3-2-1, « Temps ! ». Paliers et voix réglés dans l'application. |
+| Geste                                  | Effet                                                                                                                                            |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tap sur l'affichage ou **▶️ Démarrer** | Démarre le match (1ʳᵉ fois) puis pause/reprise.                                                                                                  |
+| Appui long (0,8 s) sur l'affichage     | Remise à zéro du chrono (sort de la mort subite).                                                                                                |
+| 🔇 Voix                                | Minuteur vocal (TTS) : « Une minute », « Trente secondes », « Dix secondes », 5-4-3-2-1, « Temps ! ». Paliers et voix réglés dans l'application. |
 
 - Durée : `defaultPoolTimerSeconds` en poule, `defaultTableTimerSeconds` en tableau
   (180 s par défaut). Mode entraînement : durée personnalisée.
@@ -212,12 +212,12 @@ jaune (Sabre Laser). « ✕ Annuler » = carton donné sans annonce.
 
 ### 3.6 Fin de temps, temps supplémentaire, mort subite
 
-| Situation | Sabre Laser | Escrime olympique |
-|---|---|---|
-| Temps écoulé, scores différents | « ⏰ Temps écoulé ! » → arbitre appuie **🏁 Terminer** | idem |
-| Temps écoulé, **égalité** | Bouton **⏱ Lancer 30s** | Bouton **⏱ Lancer 1 min** |
-| Fin du temps supplémentaire, égalité | **Tirage au sort** 🪙 | **Tirage au sort** 🪙 |
-| Les deux tireurs ≥ 10 pts | **Mort subite Challenger** : zone C (+5) uniquement | — |
+| Situation                            | Sabre Laser                                            | Escrime olympique         |
+| ------------------------------------ | ------------------------------------------------------ | ------------------------- |
+| Temps écoulé, scores différents      | « ⏰ Temps écoulé ! » → arbitre appuie **🏁 Terminer** | idem                      |
+| Temps écoulé, **égalité**            | Bouton **⏱ Lancer 30s**                                | Bouton **⏱ Lancer 1 min** |
+| Fin du temps supplémentaire, égalité | **Tirage au sort** 🪙                                  | **Tirage au sort** 🪙     |
+| Les deux tireurs ≥ 10 pts            | **Mort subite Challenger** : zone C (+5) uniquement    | —                         |
 
 - Mort subite Challenger + temps supplémentaire peuvent se cumuler
   (`challenger_supplementary`) : 30 s, zone C uniquement.
@@ -233,10 +233,10 @@ vainqueur.
 
 **🚪 Sortie rouge** / **🚪 Sortie verte** : pénalise le tireur sorti.
 
-| Arme | Points à l'adversaire |
-|---|---|
-| Sabre Laser | +3 |
-| Escrime olympique | +1 |
+| Arme              | Points à l'adversaire |
+| ----------------- | --------------------- |
+| Sabre Laser       | +3                    |
+| Escrime olympique | +1                    |
 
 Enregistrée dans `match_arena_exits`, annoncée à l'arène si l'annonce est active.
 
@@ -277,7 +277,7 @@ et dans l'application organisateur).
 
 Dernier match de la poule terminé → overlay plein écran **POULE TERMINÉE** :
 
-- **✍️ SIGNATURE** → `/arene{N}/poule` : feuille de poule (onglets *Tableau* / *Matchs*),
+- **✍️ SIGNATURE** → `/arene{N}/poule` : feuille de poule (onglets _Tableau_ / _Matchs_),
   chaque tireur signe au doigt. Signatures stockées dans `pool_signatures`.
   Toutes les signatures enregistrées → poule verrouillée : plus de re-signature
   (boutons désactivés, API `409 signatures_locked`).
@@ -299,22 +299,22 @@ Dernier match de la poule terminé → overlay plein écran **POULE TERMINÉE** 
 
 ## 6. Interfaces voisines
 
-| URL | Rôle |
-|---|---|
-| `/arene{N}` | Écran d'arène (TV) : score, chrono, cartons, photos, annonces, tirage au sort. |
-| `/arene{N}/public` | Vue spectateurs sur smartphone. |
-| `/arene{N}/overlay` | Overlay streaming OBS/vMix (configurateur : `/overlay-config`). |
-| `/arene{N}/matchs` | Ordre des matchs de l'arène. |
-| `/arene{N}/poule` | Feuille de poule + signatures (auth arène). |
-| `/arene{N}/journal` | Journal du match courant. |
+| URL                  | Rôle                                                                                                                                           |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/arene{N}`          | Écran d'arène (TV) : score, chrono, cartons, photos, annonces, tirage au sort.                                                                 |
+| `/arene{N}/public`   | Vue spectateurs sur smartphone.                                                                                                                |
+| `/arene{N}/overlay`  | Overlay streaming OBS/vMix (configurateur : `/overlay-config`).                                                                                |
+| `/arene{N}/matchs`   | Ordre des matchs de l'arène.                                                                                                                   |
+| `/arene{N}/poule`    | Feuille de poule + signatures (auth arène).                                                                                                    |
+| `/arene{N}/journal`  | Journal du match courant.                                                                                                                      |
 | `/equipe{N}/arbitre` | Tablette **Sabre Laser équipe** (format arène) : compteur d'assaut plafonné (5 touches / 3 min), « Relais suivant → », cartons d'équipe « E ». |
-| `/equipe{N}` | Écran d'arène équipe. |
-| `/poule-ocr` | Saisie d'une feuille de poule par photo (OCR Tesseract). |
-| `/formateur` | Formateurs : commentaires sur les arbitres (mot de passe dédié). |
-| `/appel` | Pointage tireurs/arbitres sur tablette (mot de passe obligatoire). |
-| `/inscription` | Pré-inscription tireur. |
-| `/kiosk` | Affichage public (TV) : tableau, poules, classement. |
-| `/lobby` | Salle d'attente (page d'accueil `/`). |
+| `/equipe{N}`         | Écran d'arène équipe.                                                                                                                          |
+| `/poule-ocr`         | Saisie d'une feuille de poule par photo (OCR Tesseract).                                                                                       |
+| `/formateur`         | Formateurs : commentaires sur les arbitres (mot de passe dédié).                                                                               |
+| `/appel`             | Pointage tireurs/arbitres sur tablette (mot de passe obligatoire).                                                                             |
+| `/inscription`       | Pré-inscription tireur.                                                                                                                        |
+| `/kiosk`             | Affichage public (TV) : tableau, poules, classement.                                                                                           |
+| `/lobby`             | Salle d'attente (page d'accueil `/`).                                                                                                          |
 
 Appareils de piste (Favero, SG…) via le protocole Cyrano : voir [CYRANO.md](CYRANO.md).
 Appareil **maître et en ligne** : l'appareil fait foi. La tablette ne peut plus ajouter ni points
@@ -334,20 +334,20 @@ tireur A puis du tireur B (caméra ou code en clair, chaque carte peut être pas
 Socket.IO — événement unique `arena_control` `{ arenaId, action, ... }` (auth par cookie
 d'arène, sauf `toggle_swap`).
 
-| `action` | Émis par | Effet serveur |
-|---|---|---|
-| `select_match` | tablette | Assigne le match à l'arène, remet cartons/touches/sorties à zéro. |
-| `start` / `pause` | tablette | Statut de l'arène. |
-| `update_score` | tablette | Scores, cartons, zones touchées, état mort subite (anti-rebond). Appareil maître en ligne : cartons ajoutés ignorés, tablette resynchronisée. |
-| `update_timer` / `pause_timer` / `reset_timer` | tablette | Diffusion du chrono ; dernier chrono sauvegardé avec l'arène (reprise au redémarrage). |
-| `waiting_overtime` | tablette | Égalité en attente de temps supplémentaire. |
-| `coin_flip` | tablette | Animation de tirage au sort sur l'arène. |
-| `add_card`, `arena_exit` | tablette | Cartons / sorties (`add_card` refusé si l'appareil maître est en ligne). |
-| `card_announcement`, `exit_announcement` | tablette | Annonce à l'écran d'arène. |
-| `dt_call` / `dt_cancel` | tablette | Notification DT dans l'application. |
-| `change_referee` | tablette | Change l'arbitre du match. |
-| `finish`, `next`, `reset_scores` | tablette | Fin, match suivant, remise à zéro. |
-| `toggle_swap` | arène | Inverse l'affichage. |
+| `action`                                       | Émis par | Effet serveur                                                                                                                                 |
+| ---------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `select_match`                                 | tablette | Assigne le match à l'arène, remet cartons/touches/sorties à zéro.                                                                             |
+| `start` / `pause`                              | tablette | Statut de l'arène.                                                                                                                            |
+| `update_score`                                 | tablette | Scores, cartons, zones touchées, état mort subite (anti-rebond). Appareil maître en ligne : cartons ajoutés ignorés, tablette resynchronisée. |
+| `update_timer` / `pause_timer` / `reset_timer` | tablette | Diffusion du chrono ; dernier chrono sauvegardé avec l'arène (reprise au redémarrage).                                                        |
+| `waiting_overtime`                             | tablette | Égalité en attente de temps supplémentaire.                                                                                                   |
+| `coin_flip`                                    | tablette | Animation de tirage au sort sur l'arène.                                                                                                      |
+| `add_card`, `arena_exit`                       | tablette | Cartons / sorties (`add_card` refusé si l'appareil maître est en ligne).                                                                      |
+| `card_announcement`, `exit_announcement`       | tablette | Annonce à l'écran d'arène.                                                                                                                    |
+| `dt_call` / `dt_cancel`                        | tablette | Notification DT dans l'application.                                                                                                           |
+| `change_referee`                               | tablette | Change l'arbitre du match.                                                                                                                    |
+| `finish`, `next`, `reset_scores`               | tablette | Fin, match suivant, remise à zéro.                                                                                                            |
+| `toggle_swap`                                  | arène    | Inverse l'affichage.                                                                                                                          |
 
 Diffusion vers les écrans : `arena:{id}:update`, `arena:{id}:card_announcement`,
 `arena:{id}:exit_announcement`, `arena:{id}:coin_flip`, `server:command` (thèmes,
