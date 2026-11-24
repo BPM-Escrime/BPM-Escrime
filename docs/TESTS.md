@@ -106,12 +106,12 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 23 | 278 |
-| `src/main/` | 155 | 1348 |
+| `src/main/` | 155 | 1350 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
-| `src/renderer/components/` | 134 | 742 |
+| `src/renderer/components/` | 135 | 748 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
-| `src/remote/` | 60 | 423 |
+| `src/remote/` | 60 | 427 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 44 | 534 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **619** | **4867** |
+| **Total** | **620** | **4879** |
 
-Unitaires : 601 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 602 fichiers, 4829 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -4825,7 +4825,7 @@ Unitaires : 601 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/teamArena.test.ts</code> — 7 tests</summary>
+<summary><code>src/main/remote/teamArena.test.ts</code> — 9 tests</summary>
 
 - relais FIE complet : 9 relais par la tablette, rencontre terminée, rejeu sans écart
 - relais au-delà du palier : refusé par le moteur, motif rendu à la tablette, rien d’écrit
@@ -4834,6 +4834,8 @@ Unitaires : 601 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - carton de relais : escalade par giveRelayCard, palier dépassé d’un rouge, rejeu sans écart
 - carton noir de relais (escrime olympique) : tireur retiré, équipe exclue, rencontre décidée
 - carton E (arène Sabre Laser) : giveTeamCard, équipe étrangère refusée (#2183), noir accepté (#2186)
+- carton P (relais FIE) : jaune P, rouge P, noir P confirmé puis rencontre décidée (#2227)
+- carton P : refusé quand l’appareil maître fait foi, absent en Sabre Laser (#2227)
 
 </details>
 
@@ -6514,6 +6516,19 @@ Unitaires : 601 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - affiche les noms des tireurs et ouvre la saisie de score au clic sur un match
   - saisir un score fait avancer le vainqueur au tour suivant
   - playAllPositions : notifie les brackets de consolation sans erreur
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/TeamManagerViewPassivity.test.tsx</code> — 6 tests</summary>
+
+- **TeamManagerView — cartons P (#2227)**
+  - relais FIE : jaune P envoyé sans confirmation (essai à blanc puis commande)
+  - relais Sabre Laser : pas de bouton carton P
+  - arène Sabre Laser : pas de bouton carton P
+  - noir P : confirmation avec rappel du relais en cours ; refus = rien envoyé
+  - noir P confirmé : commande envoyée, rencontre décidée annoncée
+  - cartons P listés ; jaune et rouge P annulables (cancelTeamCard), noir P non
 
 </details>
 
@@ -8738,11 +8753,16 @@ Unitaires : 601 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/teamRefereeLock.test.ts</code> — 2 tests</summary>
+<summary><code>src/remote/teamRefereeLock.test.ts</code> — 6 tests</summary>
 
 - **tablette équipe — verrou appareil maître**
   - maître et en ligne : bandeau, ajouts bloqués avec notification, retrait permis
   - afficheur ou hors ligne : tablette libre
+- **tablette équipe — cartons P (relais FIE, #2227)**
+  - relais FIE : bouton qui envoie la commande, cartons P affichés
+  - Sabre Laser (passivityEnabled faux) : pas de bouton carton P
+  - noir P : confirmation explicite avant envoi, annulable
+  - appareil maître et en ligne : carton P bloqué avec notification
 
 </details>
 
