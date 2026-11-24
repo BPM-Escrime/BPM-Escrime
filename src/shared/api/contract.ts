@@ -1429,17 +1429,17 @@ export const contract = {
   getCompetitionState: query({
     description:
       'État de l’épreuve tenu par le moteur (docs/adr/0017) : poules, tours, tableau, tableaux de classement, classements, phase. ' +
-      '« revision » : révision du journal, à comparer au signal journal:appended pour savoir s’il faut relire.',
+      '« revision » : révision du journal, à comparer au signal journal:appended pour savoir s’il faut relire. « preparedPools » : poules écrites en base par une version précédente (lecture seule), vide si l’état a des poules.',
     input: z.object({ competitionId: CompetitionId }),
     output: z.object({
       revision: z.number().int(),
       /** Compteur de l'état de session (sauvegarde de l'écran, jusqu'à l'étape 4c de l'ADR-0017) */
       sessionRevision: z.number().int(),
       state: CompetitionStateSchema.nullable(),
+      preparedPools: z.array(z.custom<Pool>()),
     }),
     permission: 'competition:read',
   }),
-
   getMatchHistory: query({
     description:
       'Historique d’un match dans le journal de l’épreuve : auteur, source, heure de chaque score passé par recordScore (écran, tablettes, appareils de piste, agent). ' +

@@ -138,7 +138,7 @@ npm run e2e:debug       # Playwright debug mode
 ```
 Main Process (src/main/)
 ├── main.ts                  # Window management, menu (i18n: fr/en/de), IPC handlers, DB lifecycle
-├── ipc/                     # Handlers IPC extraits : dbHandlers (db:*), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:* restants : export JSON d'une personne et .bpm chiffrés ; le reste du RGPD par le contrat) — registerXxxHandlers(ctx) ; réglages du poste, salles, thèmes, journée multi-épreuves (#1714, #1878), RGPD, agent MCP, proxy, logos et rapport de diagnostic : contrat (`contractStation.ts`, `contractFiles.ts`, ADR-0022), port `ctx.station` (`stationPort.ts`) ; serveur d'entraînement : contrat (`contractTraining.ts`, ADR-0022), port `ctx.training` (`trainingPort.ts`, registre et liaison fenêtre : `trainingServer.ts`)
+├── ipc/                     # Handlers IPC extraits : dbHandlers (événements de données, plus de canal db:*), clubHandlers (Mode Club #1872 : photos et sauvegardes .bpclub ; le reste par le contrat, ADR-0022), privacyHandlers (privacy:* restants : export JSON d'une personne et .bpm chiffrés ; le reste du RGPD par le contrat) — registerXxxHandlers(ctx) ; réglages du poste, salles, thèmes, journée multi-épreuves (#1714, #1878), RGPD, agent MCP, proxy, logos et rapport de diagnostic : contrat (`contractStation.ts`, `contractFiles.ts`, ADR-0022), port `ctx.station` (`stationPort.ts`) ; serveur d'entraînement : contrat (`contractTraining.ts`, ADR-0022), port `ctx.training` (`trainingPort.ts`, registre et liaison fenêtre : `trainingServer.ts`)
 ├── menuLabels.ts            # Libellés du menu natif (fr/en/de/zh-HK)
 ├── remoteRegistry.ts        # Serveurs distants actifs (remoteServers, ports, stopRemoteServer)
 ├── trainingServer.ts / trainingPort.ts  # Serveur d'entraînement : identité `__training__`, arrêt, liaison à la fenêtre principale (trainingServer) ; port `ctx.training` du contrat (registre, certificat, voix, écrans de démo), ADR-0022 — ex-canaux training:*
@@ -265,7 +265,8 @@ Database (src/database/)
 4. **State**: Zustand stores per feature module (`src/features/*/hooks/use*Store.ts`). App-level state in `App.tsx` via `useState`/`useReducer`.
 
 5. **IPC API Groups** (`window.electronAPI`):
-   - `db.*` – Competition, Fencer, Match, Pool, Session operations
+   - plus de groupe `db.*` : lectures et écritures de l'épreuve par le contrat (`useBpmClient()`)
+   - publication des résultats GREG / FTP : commande `publishResults` (`contractPublication.ts`, droit `station:admin`, XML construit par le moteur ; envoi `src/main/publication/`), plus de groupes `greg.*` / `ftp.*`
    - `file.*` – Export, import, write file content
    - `dialog.*` – Open/save file dialogs
    - serveur distant (start/stop, session, pistes, thèmes, mots de passe, clients) : plus de groupe `remote.*`, opérations du contrat `remoteOperations` (`contractRemote.ts`, droit `remote:admin`), écran `useRemoteApi` (`src/renderer/api/remoteApi.ts`) ; avis des tablettes par `onRemoteActivity` / `onRemoteClients`

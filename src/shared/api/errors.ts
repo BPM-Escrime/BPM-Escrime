@@ -124,7 +124,10 @@ export const ERRORS = {
   training_already_started: e('rule', 'Serveur d’entraînement déjà démarré'),
   invalid_theme: e('rule', 'Thème d’entraînement inconnu ou personnalisé'),
   strip_not_found: e('not_found', 'Piste introuvable sur le serveur distant'),
-  invalid_url: e('rule', 'URL refusée (https vers un hôte public requis)'),
+  invalid_url: e(
+    'rule',
+    'URL refusée (webhook : https vers un hôte public ; dépôt des résultats : ftp, ftps, http ou https sans identifiants)'
+  ),
   remote_refused: e('rule', 'Serveur distant : demande refusée (message pour l’opérateur)'),
   weak_password: e('rule', 'Mot de passe trop court'),
   password_required: e('rule', 'Archive chiffrée : mot de passe requis'),
@@ -134,6 +137,11 @@ export const ERRORS = {
   device_refused: e(
     'rule',
     'Appareils de piste (Cyrano, OPP2) : demande refusée (message pour l’opérateur)'
+  ),
+  not_publishable: e('rule', 'Épreuve non publiable sur GREG (arme, catégorie ou lieu)'),
+  publication_failed: e(
+    'rule',
+    'Publication des résultats impossible : serveur ou réseau (message pour l’opérateur)'
   ),
   station_refused: e(
     'rule',

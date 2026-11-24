@@ -10,7 +10,8 @@ const TITLE = 'E2E Retrait';
 
 async function journalTypes(win: Page): Promise<string[]> {
   return win.evaluate(async title => {
-    const comps = await window.electronAPI.db.getAllCompetitions();
+    const listed = await window.electronAPI.api.invoke('listCompetitions', {});
+    const comps = (listed.ok ? listed.data : []) as Array<{ id: string; title: string }>;
     const id = comps.find(c => c.title === title)!.id;
     const env = await window.electronAPI.api.invoke('getCompetitionEvents', {
       competitionId: id,

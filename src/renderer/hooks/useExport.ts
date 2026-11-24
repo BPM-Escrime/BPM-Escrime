@@ -23,12 +23,7 @@ import {
 
 import { computePoolStrips } from '../../shared/utils/poolStrips';
 import { useStripAvailability } from './useStripAvailability';
-import {
-  buildGregFields,
-  gregFileName,
-  isGregUrl,
-  toNativeRootTag,
-} from '../../shared/utils/gregPublication';
+import { useBpmClient } from '../api/BpmClientContext';
 import type { PoolStripQr } from '../../shared/utils/pdfExport';
 import { withMatchCards } from '../services/poolCards';
 
@@ -96,6 +91,7 @@ export const useExport = ({
 }: UseExportProps) => {
   const poolTemplate = usePdfTemplateStore(s => s.templates.pool);
   const platform = usePlatform();
+  const client = useBpmClient();
 
   // Helper pour télécharger un fichier
   const downloadFile = useCallback((content: string, filename: string, mimeType: string) => {
@@ -360,7 +356,8 @@ export const useExport = ({
     [competition.title, downloadFile, showToast]
   );
 
-  // Export XML FFE (fichier), ou publication du même XML sur GREG (#1328) ou un serveur distant (#1331)
+  // Export XML FFE (fichier) ; publication sur GREG (#1328) ou un serveur distant (#1331) par le
+  // contrat : le moteur construit le XML depuis la base et l'envoie (publishResults, ADR-0022)
   const exportResultsXML = useCallback(
     async (
       poolRanking: PoolRanking[],
@@ -368,6 +365,20 @@ export const useExport = ({
       pools?: Pool[],
       target: XmlExportTarget = 'file'
     ) => {
+      if (target !== 'file') {
+        try {
+          const result = await client.call('publishResults', {
+            competitionId: competition.id,
+            target: typeof target === 'object' ? { ftp: target.ftp } : 'greg',
+          });
+          if (result.target === 'ftp') showToast('Résultats envoyés sur le serveur FTP', 'success');
+          else if (target !== 'greg-auto') showToast('Résultats envoyés à GREG', 'success');
+        } catch (error) {
+          logger.error(LogCategory.UI, 'Publication des résultats échouée', error as Error);
+          showToast(error instanceof Error ? error.message : 'Publication échouée', 'error');
+        }
+        return;
+      }
       try {
         const xml = exportResultsXMLFFE(
           competition,
@@ -378,54 +389,15 @@ export const useExport = ({
           fencers,
           referees
         );
-        // Comme l'ancien BPM - Escrime : une adresse escrime-info.com part toujours vers GREG (sans identifiant)
-        if (
-          target === 'greg' ||
-          target === 'greg-auto' ||
-          (typeof target === 'object' && isGregUrl(target.ftp.url))
-        ) {
-          const api = window.electronAPI?.greg;
-          if (!api) throw new Error('Publication GREG indisponible dans cette version');
-          const result = await api.publish({
-            fileName: gregFileName(competition.title),
-            xml: toNativeRootTag(xml, competition.isTeamEvent),
-            fields: { ...buildGregFields(competition) },
-          });
-          if (result.success) {
-            if (target !== 'greg-auto') showToast('Résultats envoyés à GREG', 'success');
-          } else
-            showToast(
-              `Échec de la publication GREG : ${result.error ?? 'erreur inconnue'}`,
-              'error'
-            );
-          return;
-        }
-        if (typeof target === 'object') {
-          const api = window.electronAPI?.ftp;
-          if (!api) throw new Error('Connecteur FTP indisponible dans cette version');
-          const result = await api.publish({
-            fileName: gregFileName(competition.title),
-            xml: toNativeRootTag(xml, competition.isTeamEvent),
-            url: target.ftp.url,
-            user: target.ftp.user,
-            password: target.ftp.password,
-          });
-          if (result.success) showToast('Résultats envoyés sur le serveur FTP', 'success');
-          else showToast(`Échec de l'envoi FTP : ${result.error ?? 'erreur inconnue'}`, 'error');
-          return;
-        }
         const filename = `resultats_${competition.title.replace(/[^a-z0-9]/gi, '_')}.xml`;
         downloadFile(xml, filename, 'application/xml');
         showToast('Export XML FFE réussi', 'success');
       } catch (error) {
         logger.error(LogCategory.UI, 'Export XML failed', error as Error);
-        showToast(
-          error instanceof Error && target !== 'file' ? error.message : 'Export XML échoué',
-          'error'
-        );
+        showToast('Export XML échoué', 'error');
       }
     },
-    [competition, downloadFile, showToast, tableauMatches, fencers, referees]
+    [client, competition, downloadFile, showToast, tableauMatches, fencers, referees]
   );
 
   // Export statistiques détaillées CSV

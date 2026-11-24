@@ -114,11 +114,15 @@ interface FetchedState {
   state: (Partial<CompetitionStateDTO> & Pick<CompetitionStateDTO, 'currentPoolRound'>) | null;
   sessionRevision: number;
   revision: number;
+  /** Poules écrites en base par une version précédente (lecture seule) */
+  preparedPools: Pool[];
 }
 
 export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [restoredState, setRestoredState] = useState<Partial<SessionState> | null>(null);
+  // Préparation écrite en base par une version précédente, lue au chargement (getCompetitionState)
+  const [preparedPools, setPreparedPools] = useState<Pool[]>([]);
   // Révision du bloc chargé : une relecture sur signal ne l'applique que s'il a changé
   const revisionRef = useRef(0);
   // Révision du journal de l'état chargé (getCompetitionState, docs/adr/0017)
@@ -135,7 +139,12 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
     try {
       const r = await client.query('getCompetitionState', { competitionId: props.competitionId });
       if (r && typeof r === 'object' && typeof r.revision === 'number') {
-        return { state: r.state, sessionRevision: r.sessionRevision, revision: r.revision };
+        return {
+          state: r.state,
+          sessionRevision: r.sessionRevision,
+          revision: r.revision,
+          preparedPools: Array.isArray(r.preparedPools) ? r.preparedPools : [],
+        };
       }
     } catch (e) {
       const code = (e as { code?: string }).code;
@@ -155,6 +164,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
           journalRevisionRef.current = Math.max(journalRevisionRef.current, fetched.revision);
           if (onlyIfChanged && fetched.sessionRevision === revisionRef.current) return;
           revisionRef.current = fetched.sessionRevision;
+          if (!onlyIfChanged) setPreparedPools(fetched.preparedPools);
         }
         const state = fetched?.state;
         if (state) {
@@ -247,6 +257,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
   return {
     isLoaded,
     restoredState,
+    preparedPools,
     restoreState,
   };
 };

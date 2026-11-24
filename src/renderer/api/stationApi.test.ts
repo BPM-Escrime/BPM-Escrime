@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { contract, type OperationName } from '../../shared/api/contract';
 import { fileOperations } from '../../shared/api/contractFiles';
+import { publicationOperations } from '../../shared/api/contractPublication';
 import type { ApiBridge } from '../../shared/api/client';
 import { Weapon } from '../../shared/types';
 import { IpcClient } from './IpcClient';
@@ -184,9 +185,13 @@ describe('createStationApi : entrées du contrat', () => {
     }
     api.settings.onChanged(() => undefined);
     used.add('onStationSettingsChanged');
-    // Fichiers de données : appelés par filesApi (filesApi.test.ts)
+    // Fichiers de données : appelés par filesApi (filesApi.test.ts) ; publication des
+    // résultats : appelée par useExport (useExport.test.tsx)
     const declared = (Object.keys(contract) as OperationName[]).filter(
-      n => contract[n].permission === 'station:admin' && !(n in fileOperations)
+      n =>
+        contract[n].permission === 'station:admin' &&
+        !(n in fileOperations) &&
+        !(n in publicationOperations)
     );
     expect(declared.filter(n => !used.has(n))).toEqual([]);
   });

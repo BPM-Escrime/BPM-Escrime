@@ -106,3 +106,32 @@ Une PR par groupe, chacune avec la baisse des cliquets `electronApiCalls` et `ip
 - **Un seul fichier de contrat** : `contract.ts` est déjà au plafond de 1 500 lignes.
 - **Journaliser les réglages** : le journal de l'épreuve resterait mélangé à l'administration du
   poste, et le rejeu devrait les ignorer.
+
+## Amendement (#1981 lot 4)
+
+Décisions du mainteneur à la mise en œuvre du lot 4 de #1981.
+
+### Publication des résultats vers GREG et FTP
+
+- La publication des résultats (GREG, escrime-info.com ; dépôt FTP, FTPS ou HTTP PUT) est une
+  fonction du poste, par la commande `publishResults { competitionId, target }` du contrat
+  (`contractPublication.ts`), avec `target` = `'greg'` ou `{ ftp: { url, user, password } }`.
+  Nom : verbe et objet ([ADR-0008](0008-nommage-contrat.md)), une seule commande pour les deux
+  destinations, comme l'unique bouton de l'écran.
+- Le **moteur construit le XML** depuis l'état en base (même XML que l'export FFE, racine native
+  des épreuves par équipes) : l'écran n'envoie plus de fichier. Une adresse escrime-info.com
+  part toujours vers GREG.
+- L'envoi passe par le port `ctx.station.publication`, branché par `main.ts` ; absent (tests,
+  MCP), la commande répond `unavailable`.
+- Droit `station:admin` : jamais servie sur le réseau ni à la vue DT, **pas d'outil MCP**, pas
+  de journal (effet externe, pas un fait de l'épreuve).
+- Le mot de passe du dépôt n'est jamais journalisé, logué ni renvoyé : il est masqué dans tout
+  message d'échec.
+- Refus : `invalid_url` (adresse de dépôt), `not_publishable` (arme, catégorie ou lieu refusés
+  par GREG), `publication_failed` (serveur ou réseau, message pour l'opérateur).
+- Les canaux `greg:publish` et `ftp:publish` disparaissent.
+
+### Poules préparées
+
+- `getCompetitionState` rend aussi `preparedPools` : poules écrites en base par une version
+  précédente (lecture seule), vide si l'état a ses poules. Les canaux `db:*` disparaissent.

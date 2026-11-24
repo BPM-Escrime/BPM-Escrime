@@ -1,14 +1,17 @@
 /**
- * BPM - Escrime - Canal IPC `ftp:publish` : dépôt du fichier de résultats sur un serveur distant (#1331)
+ * BPM - Escrime - Dépôt du fichier de résultats sur un serveur distant (#1331)
  * Équivalent de l'ancien `FileUploader` (libcurl) : le fichier est déposé dans le dossier indiqué par l'URL.
  * - ftp:// et ftps:// : protocole FTP (basic-ftp)
  * - http:// et https:// : HTTP PUT vers `<dossier>/<fichier>`, comme l'ancien BPM - Escrime avec escrime-info.com
- * Le renderer ne fait aucun appel réseau : l'envoi part du main.
+ * Appelé par le port du poste (`ctx.station.publication`) pour la commande publishResults
+ * (#1981 lot 4, docs/adr/0022). Le mot de passe n'est jamais journalisé ni logué.
  * Licensed under GPL-3.0
  */
-import { ipcMain } from 'electron';
 import { Client } from 'basic-ftp';
 import { Readable } from 'stream';
+import { parseRemoteUrl, type RemoteTarget } from './remoteUrl';
+
+export { parseRemoteUrl, type RemoteTarget };
 
 const TIMEOUT_MS = 20_000;
 const MAX_XML_CHARS = 20 * 1024 * 1024;
@@ -43,50 +46,7 @@ export interface FtpClientLike {
   close(): void;
 }
 
-export type RemoteTarget =
-  | { kind: 'ftp'; host: string; port?: number; secure: boolean; directory: string }
-  | { kind: 'http'; directoryUrl: URL };
-
-/** Valide une URL de dépôt : schéma ftp/ftps/http/https, hôte explicite, aucun identifiant dans l'URL */
-export function parseRemoteUrl(raw: string): RemoteTarget | string {
-  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(raw)?.[1]?.toLowerCase();
-  if (!scheme || !['ftp', 'ftps', 'http', 'https'].includes(scheme)) return 'invalid_url_scheme';
-  // « ftp:///dir » serait lu par l'analyseur comme hôte « dir » : on exige un hôte explicite
-  if (!/^[a-z]+:\/\/[^/]/i.test(raw)) return 'invalid_url';
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    return 'invalid_url';
-  }
-  if (!url.hostname) return 'invalid_url';
-  if (url.username || url.password) return 'credentials_in_url';
-
-  let directory: string;
-  try {
-    directory = decodeURIComponent(url.pathname) || '/';
-  } catch {
-    return 'invalid_url';
-  }
-  if (directory.includes('\0')) return 'invalid_url';
-
-  if (url.protocol === 'http:' || url.protocol === 'https:') {
-    const directoryUrl = new URL(url.href);
-    directoryUrl.pathname = directory.endsWith('/') ? directory : `${directory}/`;
-    directoryUrl.search = '';
-    directoryUrl.hash = '';
-    return { kind: 'http', directoryUrl };
-  }
-  return {
-    kind: 'ftp',
-    host: url.hostname,
-    port: url.port ? Number(url.port) : undefined,
-    secure: url.protocol === 'ftps:',
-    directory,
-  };
-}
-
-/** Valide la requête venue du renderer : URL, identifiants bornés, nom de fichier sûr, XML borné */
+/** Valide la requête (défense en profondeur, le moteur l'a construite) : URL, identifiants bornés, nom de fichier sûr, XML borné */
 export function parseFtpRequest(raw: unknown): FtpPublishRequest | string {
   if (!raw || typeof raw !== 'object') return 'invalid_request';
   const { fileName, xml, url, user, password } = raw as Record<string, unknown>;
@@ -167,9 +127,3 @@ export async function publishRemote(
   }
   return uploadOverFtp(request, target, options.createClient ?? defaultClient);
 }
-
-ipcMain.handle('ftp:publish', async (_, raw: unknown): Promise<FtpPublishResult> => {
-  const request = parseFtpRequest(raw);
-  if (typeof request === 'string') return { success: false, error: request };
-  return publishRemote(request);
-});

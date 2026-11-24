@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Readable } from 'stream';
 
-vi.mock('electron', () => ({ ipcMain: { handle: vi.fn() } }));
 vi.mock('basic-ftp', () => ({ Client: class {} }));
 
 import {
@@ -10,7 +9,7 @@ import {
   publishRemote,
   type FtpClientLike,
   type FtpPublishRequest,
-} from './ftpHandlers';
+} from './ftpUpload';
 
 const request: FtpPublishRequest = {
   fileName: 'resultats_test.xml',

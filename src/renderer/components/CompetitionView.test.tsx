@@ -63,7 +63,11 @@ const competition = (settings: Record<string, unknown> = {}): Competition =>
   }) as unknown as Competition;
 
 /** API Electron factice : toute méthode existe et résout une valeur neutre. */
-function mockElectronAPI(fencers: Fencer[], session: unknown = null) {
+function mockElectronAPI(
+  fencers: Fencer[],
+  session: unknown = null,
+  preparedPools: unknown[] = []
+) {
   const overrides: Record<string, (...args: any[]) => unknown> = {
     getFencersByCompetition: () => fencers,
     getPhasesByCompetition: () => [],
@@ -87,7 +91,7 @@ function mockElectronAPI(fencers: Fencer[], session: unknown = null) {
         },
       }
     );
-  const groups = ['db', 'file', 'dialog', 'updater', 'crypto', 'remote', 'training', 'themes'];
+  const groups = ['file', 'dialog', 'updater', 'crypto', 'remote', 'training', 'themes'];
   (window as any).electronAPI = {
     ...Object.fromEntries(groups.map(g => [g, group()])),
     // Contrat d'API (#1981) : enveloppe de succès, appels relevés sous « api:<opération> »
@@ -120,7 +124,7 @@ function mockElectronAPI(fencers: Fencer[], session: unknown = null) {
                 ? fencers
                 : // État de l'épreuve par le contrat (docs/adr/0017) : bloc du bouchon
                   name === 'getCompetitionState'
-                  ? { state: session, sessionRevision: 0, revision: 0 }
+                  ? { state: session, sessionRevision: 0, revision: 0, preparedPools }
                   : null,
         });
       },
@@ -253,20 +257,12 @@ describe('CompetitionView', () => {
       fencers: all.filter((_, i) => i % 2 === n),
       matches: [],
     }));
-    const calls = mockElectronAPI(all);
-    const db = (window as any).electronAPI.db;
-    const getPoolsByPhase = vi.fn(async () => dbPools);
-    (window as any).electronAPI.db = new Proxy(db, {
-      get: (t, key) =>
-        key === 'getPhasesByCompetition'
-          ? async () => [{ id: 'ph1', type: 'pool' }]
-          : key === 'getPoolsByPhase'
-            ? getPoolsByPhase
-            : t[key as string],
-    });
+    // Poules relues par getCompetitionState (preparedPools), plus par window.electronAPI.db
+    const calls = mockElectronAPI(all, null, dbPools);
+    expect((window as any).electronAPI.db).toBeUndefined();
     renderView();
     await screen.findByText('Nom1');
-    await waitFor(() => expect(getPoolsByPhase).toHaveBeenCalled());
+    await waitFor(() => expect(calls['api:getCompetitionState']?.length).toBeGreaterThan(0));
     const resume = document.querySelector('[data-tour="generate-pools"]') as HTMLElement;
     await waitFor(() => expect(resume).toHaveTextContent('Aller à la préparation'));
     expect(calls.createPool ?? []).toHaveLength(0);

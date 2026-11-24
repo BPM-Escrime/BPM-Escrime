@@ -444,7 +444,7 @@ d('getCompetitionState (docs/adr/0017, étape 4a)', () => {
   it('projection du moteur avec la révision du journal ; null avant ouverture', async () => {
     const comp = await setup(4);
     const empty = (await invoke(ctx, 'getCompetitionState', { competitionId: comp.id })) as any;
-    expect(empty).toEqual({ revision: 0, sessionRevision: 0, state: null });
+    expect(empty).toEqual({ revision: 0, sessionRevision: 0, state: null, preparedPools: [] });
     generatePools(ctx, comp.id, { poolCount: 1 });
     const m = listMatches(ctx, comp.id, { state: 'ready' })[0];
     recordScore(ctx, comp.id, { matchId: m.matchId, scoreA: 5, scoreB: 1 });

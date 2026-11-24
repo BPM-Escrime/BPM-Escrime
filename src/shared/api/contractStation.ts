@@ -16,6 +16,7 @@
 import { z } from 'zod';
 import { command, CompetitionId, Id, query, subscription } from './contractDef';
 import { StripDeviceSchema } from './contractDevices';
+import { publicationOperations } from './contractPublication';
 import { Weapon } from '../types';
 import {
   MAX_LOGO_CHARS,
@@ -667,4 +668,7 @@ export const stationOperations = {
     output: z.custom<McpLogEntry[]>(),
     permission: 'station:admin',
   }),
+
+  // ── Publication des résultats (GREG, FTP) : XML construit par le moteur ──
+  ...publicationOperations,
 } as const;

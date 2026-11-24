@@ -5,8 +5,9 @@
  * serveur MCP, pistes de la journée en temps réel (serveurs distants des épreuves), dossiers
  * par défaut de l'agent, recherche de lieu (docs/adr/0026), bibliothèque de logos
  * (<userData>/logos.json), proxy réseau (session Electron, fourni par main.ts), données du rapport
- * de diagnostic. Remplace les canaux `settings:*`, `themes:*`, `eventDay:*`, `privacy:*`,
- * `mcp:*`, `proxy:*`, `app:getLogos`, `app:saveLogos` et `diagnostic:exportReport` migrés.
+ * de diagnostic, publication des résultats (GREG, dépôt FTP / HTTP). Remplace les canaux `settings:*`, `themes:*`, `eventDay:*`, `privacy:*`,
+ * `mcp:*`, `proxy:*`, `app:getLogos`, `app:saveLogos`, `diagnostic:exportReport`,
+ * `greg:publish` et `ftp:publish` migrés.
  * Licensed under GPL-3.0
  */
 import type { DatabaseManager } from '../database';
@@ -28,6 +29,8 @@ import {
 } from './backupSettings';
 import { createPlaceSearch } from './placeSearch';
 import { createLogoLibraryStore } from './logoLibraryStore';
+import { parseGregRequest, publishToGreg } from './publication/gregUpload';
+import { parseFtpRequest, publishRemote } from './publication/ftpUpload';
 
 export interface StationPortOptions {
   db: DatabaseManager;
@@ -88,6 +91,21 @@ export function createStationPort(opts: StationPortOptions): StationServices {
       setCompetitionDir: (id, dir) => setCompetitionBackupDir(opts.userDataDir(), id, dir),
     },
     places: { search: createPlaceSearch() },
+    // Requête revérifiée (nom de fichier, taille du XML, champs) avant tout envoi
+    publication: {
+      greg: async raw => {
+        const request = parseGregRequest(raw);
+        return typeof request === 'string'
+          ? { success: false, error: request }
+          : publishToGreg(request);
+      },
+      remote: async raw => {
+        const request = parseFtpRequest(raw);
+        return typeof request === 'string'
+          ? { success: false, error: request }
+          : publishRemote(request);
+      },
+    },
     logos: createLogoLibraryStore(opts.userDataDir),
     proxy: opts.proxy,
     diagnostics: opts.diagnostics,
