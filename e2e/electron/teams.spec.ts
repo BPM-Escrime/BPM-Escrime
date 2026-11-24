@@ -311,3 +311,58 @@ test('équipes : relais FIE joués sur la tablette /equipe1/arbitre par le moteu
     await browser.close();
   }
 });
+
+test('équipes : carton donné à l’écran, vu sur la tablette sans renvoi de la rencontre (#2267)', async ({
+  win,
+}, testInfo) => {
+  test.setTimeout(120_000);
+  const port = 18000 + (testInfo.workerIndex % 50) * 20 + 9;
+  await win
+    .getByRole('button', { name: /nouvelle comp[eé]tition/i })
+    .first()
+    .click();
+  await win.getByLabel('Titre').fill(TITLE);
+  await win.getByText('Compétition par équipes').click();
+  await win.getByRole('button', { name: /cr[eé]er la comp[eé]tition/i }).click();
+  await expect(win.getByRole('heading', { name: 'Appel' })).toBeVisible();
+  const id = await competitionId(win);
+  await teamsComposed(win, id);
+  await win.getByRole('button', { name: /Composer les équipes/ }).click();
+  await expect(win.getByText('Bravo', { exact: true }).first()).toBeVisible();
+  await win.getByRole('button', { name: 'Générer la poule' }).click();
+  await expect(win.getByRole('button', { name: 'Scorer' }).first()).toBeVisible();
+  const read = await api<TeamsRead>(win, 'getCompetitionState', { competitionId: id });
+  const matchId = (read.state.teams.poolMatches[0] as TeamMatch & { id: string }).id;
+  await api(win, 'startRemoteServer', { competitionId: id, port, useHttps: false });
+  const info = await api<{ port: number }>(win, 'getRemoteServerInfo', { competitionId: id });
+  await api(win, 'setTeamArenaMatch', {
+    competitionId: id,
+    arenaId: '1',
+    matchId,
+    isLaserPoints: false,
+  });
+
+  const browser = await chromium.launch();
+  try {
+    const tablet = await browser.newPage();
+    await tablet.goto(`http://127.0.0.1:${info.port}/equipe1/arbitre`);
+    await expect(tablet.locator('#zones-a .touch-btn')).toBeEnabled();
+    await expect(tablet.locator('#cards-log-a svg')).toHaveCount(0);
+
+    // Carton du tireur A au relais 1, donné à l'écran (giveRelayCard, source screen)
+    await win.getByRole('button', { name: 'Scorer' }).first().click();
+    await win.getByRole('button', { name: 'Ajouter un carton' }).first().click();
+    const reason = win.getByRole('combobox', { name: '-- motif --' });
+    await reason.selectOption('fie_body_contact');
+    await reason.locator('..').getByRole('button', { name: 'Ajouter', exact: true }).click();
+    await expect(win.getByText('Carton enregistré')).toBeVisible();
+    // Tablette rafraîchie par le journal, sans renvoi de la rencontre à l'arène
+    await expect(tablet.locator('#cards-log-a svg')).toHaveCount(1);
+
+    // Carton P par le contrat (écran, MCP) : affiché aussi
+    await api(win, 'givePassivityCard', { competitionId: id, matchId });
+    await expect(tablet.locator('#passivity-log .p-card')).toHaveCount(1);
+  } finally {
+    await browser.close();
+  }
+});
