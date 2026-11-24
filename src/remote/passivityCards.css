@@ -1,0 +1,24 @@
+/**
+ * BPM - Escrime - Cartons de non-combativité (jaune P, rouge P, noir P ; FIE t.124), communs à la
+ * tablette et à l'écran d'arène. Chargée après le <style> de referee.html et arena.html
+ * (extrait pour le plafond de lignes, #2214).
+ * Licensed under GPL-3.0
+ */
+
+.card-p-yellow {
+  background: var(--tw-amber-400);
+  color: var(--tw-amber-800);
+  border: 2px dashed var(--color-warning);
+}
+
+.card-p-red {
+  background: var(--red-500);
+  color: white;
+  border: 2px dashed var(--tw-red-900);
+}
+
+.card-p-black {
+  background: var(--c-111111);
+  color: white;
+  border: 2px dashed var(--tw-gray-400);
+}

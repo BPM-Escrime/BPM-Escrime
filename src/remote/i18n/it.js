@@ -180,6 +180,7 @@
   'referee.opp_plus1': "+1 punto all'avversario",
   'referee.opp_plus3': "+3 punti all'avversario",
   'referee.opp_plus5': "+5 punti all'avversario",
+  'referee.passivity_yellow': 'Passività: P-giallo, avvertimento a entrambi gli schermidori',
   'referee.passivity_red': 'Passività: P-rosso, +1 punto a ciascuno schermidore',
   'referee.no_card_to_remove': 'Nessun cartellino da rimuovere',
   'referee.passivity_undone': 'Ultimo cartellino di passività annullato',

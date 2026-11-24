@@ -181,6 +181,7 @@
   'referee.opp_plus1': "+1 point pour l'adversaire",
   'referee.opp_plus3': "+3 points pour l'adversaire",
   'referee.opp_plus5': "+5 points pour l'adversaire",
+  'referee.passivity_yellow': 'Passivité : P-jaune, avertissement aux deux tireurs',
   'referee.passivity_red': 'Passivité : P-rouge, +1 point à chaque tireur',
   'referee.no_card_to_remove': 'Aucun carton à retirer',
   'referee.passivity_undone': 'Dernier carton de passivité annulé',

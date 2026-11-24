@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { passivityWinner as sharedPassivityWinner } from '../../shared/domain/match/matchEndValidation';
 import { CARD_REASON_LABELS } from '../../shared/utils/cardSystem';
+import { PASSIVITY_STEPS } from '../../shared/domain/teams/passivityCardTypes';
 import {
   buildCard,
   getReasonsByGroupForWeapon,
@@ -81,10 +82,16 @@ describe('refereeCards.js cartons', () => {
 });
 
 describe('refereeCards.js passivité', () => {
-  it('nextPassivityCard : rouge, noir, puis plus rien', () => {
-    expect(C.nextPassivityCard(0)).toBe('p-red');
-    expect(C.nextPassivityCard(1)).toBe('p-black');
-    expect(C.nextPassivityCard(2)).toBeNull();
+  it('nextPassivityCard : jaune, rouge, noir, puis plus rien (FIE t.124, #2214)', () => {
+    expect(C.nextPassivityCard(0)).toBe('p-yellow');
+    expect(C.nextPassivityCard(1)).toBe('p-red');
+    expect(C.nextPassivityCard(2)).toBe('p-black');
+    expect(C.nextPassivityCard(3)).toBeNull();
+  });
+
+  it('nextPassivityCard : même suite que les relais par équipes du domaine', () => {
+    const seq = [0, 1, 2].map(n => C.nextPassivityCard(n));
+    expect(seq).toEqual(PASSIVITY_STEPS.map(t => `p-${t}`));
   });
 
   it('passivityWinner : score, puis classement initial, puis tirage', () => {

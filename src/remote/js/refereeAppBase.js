@@ -965,8 +965,8 @@ class RefereeAppBase {
     );
   }
 
-  // Carton de passivité : décerné aux deux tireurs, hors cumul des cartons classiques.
-  // P-rouge : un point à chaque tireur ; P-noir : fin du combat (#1026)
+  // Carton de passivité : décerné aux deux tireurs, hors cumul des cartons classiques (FIE t.124).
+  // P-jaune : avertissement ; P-rouge : un point à chaque tireur ; P-noir : fin du combat (#2214)
   addPassivityCard() {
     if (!this.currentMatch) return;
     if (this.cyranoCardLocked()) return;
@@ -976,23 +976,26 @@ class RefereeAppBase {
     }
     if (this.matchStatus === 'finished') return;
     const given = this.cardsA.filter(c => PASSIVITY_CARDS.includes(c)).length;
-    if (!BPRefereeCards.nextPassivityCard(given)) return;
+    const card = BPRefereeCards.nextPassivityCard(given);
+    if (!card) return;
     this.pushHistory('card');
     if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-    if (given === 0) {
-      this.cardsA.push('p-red');
-      this.cardsB.push('p-red');
-      this.scoreA += 1;
-      this.scoreB += 1;
+    this.cardsA.push(card);
+    this.cardsB.push(card);
+    if (card !== 'p-black') {
+      if (card === 'p-red') {
+        this.scoreA += 1;
+        this.scoreB += 1;
+      }
       this.updateScores();
       this.updateCardsDisplay();
       this.broadcastUpdate();
       this.saveScore();
-      this.showNotification(window.T('referee.passivity_red'));
+      this.showNotification(
+        window.T(card === 'p-red' ? 'referee.passivity_red' : 'referee.passivity_yellow')
+      );
       return;
     }
-    this.cardsA.push('p-black');
-    this.cardsB.push('p-black');
     this.updateCardsDisplay();
     this.broadcastUpdate();
     this.saveScore();

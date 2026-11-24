@@ -182,6 +182,7 @@
   'referee.opp_plus1': '+1 очко сопернику',
   'referee.opp_plus3': '+3 очка сопернику',
   'referee.opp_plus5': '+5 очков сопернику',
+  'referee.passivity_yellow': 'Пассивность: жёлтая P, предупреждение обоим фехтовальщикам',
   'referee.passivity_red': 'Пассивность: красная P, +1 очко каждому фехтовальщику',
   'referee.no_card_to_remove': 'Нет карточки для отмены',
   'referee.passivity_undone': 'Последняя карточка за пассивность отменена',

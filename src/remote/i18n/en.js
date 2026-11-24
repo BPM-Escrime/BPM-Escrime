@@ -181,6 +181,7 @@
   'referee.opp_plus1': '+1 point for the opponent',
   'referee.opp_plus3': '+3 points for the opponent',
   'referee.opp_plus5': '+5 points for the opponent',
+  'referee.passivity_yellow': 'Passivity: yellow P, warning to both fencers',
   'referee.passivity_red': 'Passivity: red P, +1 point to each fencer',
   'referee.no_card_to_remove': 'No card to remove',
   'referee.passivity_undone': 'Last passivity card cancelled',

@@ -180,6 +180,7 @@
   'referee.opp_plus1': "+1 poent d'an enebour",
   'referee.opp_plus3': "+3 foent d'an enebour",
   'referee.opp_plus5': "+5 poent d'an enebour",
+  'referee.passivity_yellow': "Didalvoudegezh: P-melen, kemenn d'an daou emganner",
   'referee.passivity_red': 'Didalvoudegezh: P-ruz, +1 poent da bep emganner',
   'referee.no_card_to_remove': 'Kartenn ebet da lemel',
   'referee.passivity_undone': 'Kartenn didalvoudegezh diwezhañ nullet',

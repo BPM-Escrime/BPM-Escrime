@@ -211,7 +211,7 @@ const FAULT_REASONS_OLYMPIC = [
   },
 ];
 
-const PASSIVITY_CARDS = ['p-red', 'p-black'];
+const PASSIVITY_CARDS = ['p-yellow', 'p-red', 'p-black'];
 const isStandardCard = c => !PASSIVITY_CARDS.includes(c);
 // Array.prototype.findLastIndex absent des tablettes anciennes
 const lastIndexWhere = (arr, pred) => {

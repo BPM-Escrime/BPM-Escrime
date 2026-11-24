@@ -35,7 +35,8 @@ describe('refereeFaults.js', () => {
   });
 
   it('cartons de passivité vs standard', () => {
-    expect(F.PASSIVITY_CARDS).toEqual(['p-red', 'p-black']);
+    expect(F.PASSIVITY_CARDS).toEqual(['p-yellow', 'p-red', 'p-black']);
+    expect(F.isStandardCard('p-yellow')).toBe(false);
     expect(F.isStandardCard('yellow')).toBe(true);
     expect(F.isStandardCard('p-red')).toBe(false);
   });
