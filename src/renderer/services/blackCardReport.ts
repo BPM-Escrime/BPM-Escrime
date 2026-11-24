@@ -19,7 +19,8 @@ import { isBlackCardExcluded } from '../../shared/domain/fencers/fencerStatus';
 import { getReasonsByGroupForWeapon } from '../../shared/domain/penalties/cards';
 import { CARD_REASON_LABELS } from '../../shared/utils/cardSystem';
 import type { BpmClient } from '../../shared/api/client';
-import { JOURNAL_EVENT, type EventSource } from '../../shared/api/events';
+// Types seuls : le module des schémas (zod) reste hors du chargement initial (budget du bundle)
+import type { EventSource } from '../../shared/api/events';
 import { defaultBpmClient } from '../api/IpcClient';
 
 interface Candidate {
@@ -70,7 +71,7 @@ async function readJournalBlackCards(
       .catch(() => null);
     if (!page) return found;
     for (const ev of page.events) {
-      if (ev.type !== JOURNAL_EVENT.fencerWithdrawn || !ev.payload.blackCard) continue;
+      if (ev.type !== 'FencerWithdrawn' || !ev.payload.blackCard) continue;
       found.set(ev.payload.fencerId, {
         matchId: ev.payload.matchId,
         at: new Date(ev.at),
