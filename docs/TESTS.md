@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 155 | 1348 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
-| `src/renderer/components/` | 134 | 736 |
+| `src/renderer/components/` | 134 | 742 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 423 |
 | `src/renderer/api/` | 10 | 46 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 44 | 534 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **619** | **4861** |
+| **Total** | **619** | **4867** |
 
-Unitaires : 601 fichiers, 4811 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 601 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -6032,11 +6032,13 @@ Unitaires : 601 fichiers, 4811 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/BackupDirSettingsSection.test.tsx</code> — 3 tests</summary>
+<summary><code>src/renderer/components/BackupDirSettingsSection.test.tsx</code> — 5 tests</summary>
 
 - **BackupDirSettingsSection**
   - choix du dossier puis setBackupDir : chemin affiché, retour au défaut
   - choix annulé : rien n’est enregistré
+  - refus %s (#2260) : toast d’erreur, dossier affiché inchangé _(each)_
+  - succès : pas de toast d’erreur
   - sans bureau : dossier affiché, bouton de choix absent
 
 </details>
@@ -6106,7 +6108,7 @@ Unitaires : 601 fichiers, 4811 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/CompetitionPropertiesModal.test.tsx</code> — 13 tests</summary>
+<summary><code>src/renderer/components/CompetitionPropertiesModal.test.tsx</code> — 15 tests</summary>
 
 - **CompetitionPropertiesModal**
   - affiche 3 onglets verticaux, sans « Configuration » (#2013)
@@ -6121,8 +6123,11 @@ Unitaires : 601 fichiers, 4811 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - enregistre les valeurs saisies dans les autres onglets
   - **dossier propre de l’épreuve sur ce poste (docs/adr/0030)**
     - lu sur le poste, choisi puis enregistré par la commande, retiré ; pas dans l’épreuve
+    - succès : pas de toast d'erreur
     - à la création (épreuve sans identifiant) : section absente, rien n’est lu
     - sans bureau : section absente, enregistrement possible
+    - **refus %s (#2260)** _(each)_
+      - toast d'erreur, dossier affiché inchangé
 
 </details>
 
@@ -6337,7 +6342,7 @@ Unitaires : 601 fichiers, 4811 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/McpSettingsSection.test.tsx</code> — 7 tests</summary>
+<summary><code>src/renderer/components/McpSettingsSection.test.tsx</code> — 9 tests</summary>
 
 - **McpSettingsSection**
   - configuration du client : URL locale et jeton porteur
@@ -6346,6 +6351,8 @@ Unitaires : 601 fichiers, 4811 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - journal vide : message
   - dossiers de l’agent : défauts, choix du dossier puis commande addAgentFolder, retrait
   - choix annulé : rien n’est ajouté
+  - refus %s (#2260) : toast d’erreur, liste inchangée _(each)_
+  - succès : pas de toast d’erreur
   - sans bureau (navigateur, vue DT) : bouton d’ajout absent, liste affichée
 
 </details>
