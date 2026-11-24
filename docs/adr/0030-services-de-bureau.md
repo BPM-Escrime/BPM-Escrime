@@ -1,6 +1,6 @@
 # ADR-0030 — Les fonctions de l'application de bureau passent par `PlatformServices.desktop`
 
-- **Statut** : Proposée
+- **Statut** : Acceptée (2026-11-24, lots 3a–3c et 4 de #1981 livrés : #2257, #2258, #2259, #2261 ; amendement #2262)
 - **Date** : 2026-11-24 ; questions tranchées par le mainteneur le 2026-11-24 (PR #2251)
 - **Tickets** : #1981 (lot 4, suite), épique #1978 ; complète [ADR-0021](0021-services-plateforme.md)
 
