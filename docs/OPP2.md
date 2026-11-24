@@ -17,6 +17,7 @@ Appareil OPP2 ──MQTT──▶ broker intégré ──▶ Opp2PisteDriver ─
 | `mqttPacket.ts`           | Codec MQTT 3.1.1 (CONNECT … DISCONNECT), découpage du flux TCP, jokers `+` / `#`.                                                                                                                                                                        |
 | `mqttBroker.ts`           | Broker intégré, dans le processus main : messages retenus, dernière volonté, QoS 0 / 1 (QoS 2 accepté en entrée), keepalive. Sessions toujours propres. Crochets `authenticate` / `authorizePublish`. BPM - Escrime s'y branche sans socket (`Opp2Bus`). |
 | `mqttClient.ts`           | Client MQTT minimal : appareil simulé des tests, futur raccordement à un broker externe.                                                                                                                                                                 |
+| `../piste/pisteRecord.ts` | Créneau de la piste (`PisteRecord`) construit depuis `getArenaSlot` (`../remote/arenaSlot.ts`) : poule de la piste ou matchs de tableau, n° de match identiques à l'affichage.                                                                           |
 | `codec.ts`                | Sujets `openpiste/{piste}/{rôle}/{message}`, construction des messages `software/*`.                                                                                                                                                                     |
 | `driver.ts`               | `Opp2PisteDriver` : implémente `PisteDriver`.                                                                                                                                                                                                            |
 | `../piste/multiDriver.ts` | `MultiPisteDriver` : plusieurs pilotes derrière un seul `PisteHub`. Une piste appartient au premier pilote qui la déclare : un même n° de piste ne peut pas être Cyrano et OPP2.                                                                         |
@@ -32,6 +33,8 @@ Pas de dépendance npm ajoutée.
 | `display` : score et cartons repris                                           | → appareil | `software/score`                                                                         |
 | `display` : chrono d'un match rappelé                                         | → appareil | `software/clock` (toujours `running: false`)                                             |
 | `clear`                                                                       | → appareil | `software/fencers` vide                                                                  |
+| `display` : cartons P déjà donnés                                             | → appareil | `software/uw2f` (ordinal 0 à 5 ; seulement s'il y en a, minuteur à 0)                    |
+| `record` : créneau de la piste                                                | → tous     | `software/record` (retenu) — voir ci-dessous                                             |
 | `ack` / `nak`                                                                 | → appareil | `software/control` `ACK` / `NAK`                                                         |
 | Présence de BPM - Escrime                                                     | → tous     | `software/connection` (retenu) au démarrage, `online: false` à l'arrêt                   |
 | `state` : état F / H / P / W / E                                              | ← appareil | `apparatus/state`                                                                        |
@@ -61,6 +64,17 @@ Pas de dépendance npm ajoutée.
   l'appareil et ignorés par BPM - Escrime.
 - Messages sans équivalent dans le modèle commun, ignorés : `blade_contact`, `video_review`,
   `scoresheet/*`.
+- Créneau `software/record` (spéc. § 17), publié par le `PisteHub` pour chaque piste OPP2 (ni
+  relais par équipes, ni piste manuelle), seulement s'il a changé :
+  - poule de la piste : `participants` (ordre de la poule) et tous ses matchs (vague active),
+    dans l'ordre de passage ; tableau : match courant et file de l'arène ;
+  - `bouts[].id` = n° de match de `software/match` ; `result` rempli dès la fin enregistrée
+    (ACK de l'appareil ou fin saisie sur la tablette) : `V` / `D`, `A` (abandon), `E` (exclusion) ;
+  - `active_bout` seulement après `NEXT` / `PREV` de l'appareil, retiré à l'ACK ;
+  - `slot_id` : empreinte stable de l'épreuve et de la poule (ou de l'arène en tableau), à la
+    forme d'un UUID ; `referee` = arbitre du match courant.
+- Droits (spéc. § 30.3) : un client réseau du broker intégré ne publie jamais sous
+  `openpiste/+/software/#` (dernière volonté comprise) ; BPM - Escrime publie par le bus interne.
 - Relais par équipes : mêmes règles que Cyrano ([CYRANO.md](CYRANO.md) § 2 octies) ; jaune et
   rouges d'`apparatus/score` pas encore enregistrés pour le tireur dans la rencontre →
   `giveRelayCard` (type seul, source `opp2`), avant le contrôle de la fin du relais
@@ -90,6 +104,25 @@ ou `club_abbr`, Id vide) et `software/match` (arme seule) ; remise à blanc = `s
 vide. Accusé : l'écho `apparatus/fencers` portant les noms envoyés (reçu) ; `apparatus/state`
 actif (refusé) ; rien sous 8 s (sans réponse). OPP2 ne renvoie pas l'arme.
 
+## Simulateur et télécommande web
+
+Appareil OPP2 simulé : `scripts/lib/opp2Device.js` (même appareil que le simulateur Cyrano, transport
+MQTT, client sans dépendance `scripts/lib/mqttLite.js`). Démarrer d'abord le broker (Appareils de
+piste → OPP2), puis :
+
+```bash
+npm run cyrano:sim -- --opp2 --piste 3 [--broker 127.0.0.1] [--broker-port 1883]
+```
+
+```bash
+npm run cyrano:remote -- --opp2 3,4 [--count 2]
+```
+
+Mêmes commandes que Cyrano (`next`, `begin`, `r+`, `end`…) ; `unplug` (console) ou « Débrancher »
+(page) coupe la connexion : le broker publie la dernière volonté, la piste passe hors ligne.
+« Rebrancher » : reprise depuis les messages retenus. Le créneau reçu (`software/record`) s'affiche
+dans le journal de la piste.
+
 ## Tests
 
 - `mqttPacket.test.ts`, `mqttBroker.test.ts` : codec, retenus, dernière volonté, authentification,
@@ -97,18 +130,17 @@ actif (refusé) ; rien sous 8 s (sans réponse). OPP2 ne renvoie pas l'arme.
 - `driver.test.ts` : conversions, doublons, fin unique, affichage, inversion gaucher, reprise,
   routage Cyrano + OPP2.
 - `e2e.test.ts` : broker TCP réel, appareil simulé sur la piste 3, piste Cyrano déclarée à côté :
-  affichage, touches, `END` → `ACK`, `NEXT`, égalité → `NAK`, coupure, retour en ligne.
+  affichage, créneau (`software/record` : sans résultat, résultat après ACK, match actif après
+  NEXT), touches, `END` → `ACK`, `NEXT`, égalité → `NAK`, coupure, retour en ligne.
+- `simulatorDevice.test.ts` : simulateur des scripts contre le broker et le pilote réels.
 - `e2eTeam.test.ts` : relais par équipes par les commandes du moteur (source `opp2`), priorité à
   égalité, rouge de l'appareil puis `END` au palier + 1 → `ACK` (sans rouge → `NAK`), cartons
   relus après redémarrage, rejeu sans écart.
 
 ## Reste à faire (#1960)
 
-1. Écran : colonne **Protocole** dans la table des appareils, réglages du broker, persistance de
-   la table des pistes OPP2.
-2. `software/record` (liste des matchs de la piste, résultats confirmés), `software/uw2f`.
-3. Simulateur et télécommande web en mode OPP2 (`npm run cyrano:sim`, `cyrano:remote`).
-4. Demande de vidéo, motifs de cartons saisis par la feuille de match (`scoresheet/event`).
-5. Sécurité : TLS (8883), identifiants par appareil, droits par rôle (crochets du broker déjà en
-   place), broker externe (client `mqttClient.ts` à brancher sur `Opp2Bus`), appairage par
-   certificat (spéc. § 30.5).
+1. Demande de vidéo, motifs de cartons saisis par la feuille de match (`scoresheet/event`) :
+   où les garder (journal de l'épreuve ?) — décision à prendre par ADR.
+2. Sécurité : TLS (8883), identifiants par appareil (droit limité à sa piste), broker externe
+   (client `mqttClient.ts` à brancher sur `Opp2Bus`), appairage par certificat (spéc. § 30.5) —
+   stockage des secrets sur la salle : ADR.

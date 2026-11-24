@@ -250,6 +250,22 @@ describe(
       expect(arena().currentMatch?.id).toBe(pm(1, ID.ef, ID.ab).id);
     });
 
+    it('software/record : créneau de la poule, sans résultat ni match actif', async () => {
+      await until(() => device.count('record') >= 1);
+      const r = device.last('record') as Record<string, unknown> & {
+        bouts: { id: number; right: { id: string }; result: unknown }[];
+        participants: { position: number; id: string }[];
+      };
+      expect(r).toMatchObject({ protocol: 'OPP2', phase_type: 'pool', label: 'Poule 2' });
+      expect(r.slot_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      expect(r.active_bout).toBeUndefined();
+      expect(r.bouts.map(b => [b.id, b.right.id, b.result])).toEqual([
+        [1, ID.ef, null],
+        [2, ID.de, null],
+      ]);
+      expect(r.participants.map(p => p.position)).toEqual([1, 2, 3, 4]);
+    });
+
     it('assaut et touches : l’arène suit l’appareil', async () => {
       await device.send('state', { state: 'F' });
       await device.touch('right');
@@ -268,12 +284,30 @@ describe(
       expect(device.count('control')).toBe(1);
       await until(() => arena().status === 'finished');
       expect(arena().currentMatch).toMatchObject({ scoreA: 2, scoreB: 1 });
+      // Résultat confirmé dans le créneau (même slot_id)
+      const slot = device.last('record')!.slot_id;
+      await until(
+        () => (device.last('record') as { bouts: { result: unknown }[] }).bouts[0].result !== null
+      );
+      expect(device.last('record')).toMatchObject({
+        slot_id: slot,
+        bouts: [
+          {
+            id: 1,
+            result: { right_score: 2, left_score: 1, right_status: 'V', left_status: 'D' },
+          },
+          { id: 2, result: null },
+        ],
+      });
+      expect(device.last('record')!.active_bout).toBeUndefined();
       await device.send('state', { state: 'W' });
       device.score = { right: 0, left: 0 };
       await device.publishScore();
       await device.send('control', { command: 'NEXT' });
       await until(() => fencerIds()[0] === ID.de);
       expect(arena().currentMatch?.id).toBe(pm(2, ID.de, ID.bc).id);
+      // Match demandé par l'appareil : actif dans le créneau
+      await until(() => device.last('record')?.active_bout === 2);
     });
 
     it('END à égalité sans priorité → NAK, match non terminé', async () => {

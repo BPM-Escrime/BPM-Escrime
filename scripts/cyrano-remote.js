@@ -9,6 +9,10 @@
  *                         [--server 127.0.0.1] [--server-port 50100] [--ui-port 5099]
  * --count N : pistes 1 à N, appareil N sur 127.0.0.N, port 50100 + N (défaut : 3).
  *   --pistes donne la liste exacte et l'emporte sur --count.
+ *   npm run cyrano:remote -- --opp2 3,4 [--broker 127.0.0.1] [--broker-port 1883]
+ *                            [--username u --password p] [--tls]
+ * --opp2 : pistes OPP2 (JSON sur MQTT, #1960, scripts/lib/opp2Device.js) sur le broker du
+ *   logiciel, à côté des pistes Cyrano (`--count 0` : OPP2 seul). Bouton « Débrancher ».
  *
  * Chaque piste = un appareil simulé (scripts/lib/cyranoDevice.js) sur sa propre adresse de
  * bouclage : le logiciel identifie une piste par son IP. Page : http://127.0.0.1:5099
@@ -16,6 +20,7 @@
  */
 const http = require('http');
 const { CyranoDevice, COMMANDS } = require('./lib/cyranoDevice');
+const { Opp2Device } = require('./lib/opp2Device');
 
 const args = process.argv.slice(2);
 const opt = (name, def) => {
@@ -27,17 +32,31 @@ const SERVER = opt('server', '127.0.0.1');
 const SERVER_PORT = Number(opt('server-port', 50100));
 const UI_PORT = Number(opt('ui-port', 5099));
 const COUNT = Number(opt('count', 3));
-if (!Number.isInteger(COUNT) || COUNT < 1 || COUNT > 254) {
-  throw new Error(`--count : « ${opt('count')} », entier de 1 à 254 attendu`);
+if (!Number.isInteger(COUNT) || COUNT < 0 || COUNT > 254) {
+  throw new Error(`--count : « ${opt('count')} », entier de 0 à 254 attendu`);
 }
+const OPP2_PISTES = (opt('opp2', '') || '')
+  .split(',')
+  .map(p => p.trim())
+  .filter(Boolean);
+const BROKER = {
+  broker: opt('broker', '127.0.0.1'),
+  brokerPort: args.includes('--broker-port') ? Number(opt('broker-port')) : undefined,
+  username: opt('username', undefined),
+  password: opt('password', undefined),
+  tls: args.includes('--tls'),
+};
 const defaultPistes = Array.from({ length: COUNT }, (_, k) => `${k + 1}@127.0.0.${k + 1}:${50101 + k}`).join(',');
 const PISTES = opt('pistes', defaultPistes)
   .split(',')
+  .filter(spec => spec.trim())
   .map(spec => {
     const m = /^([^@]+)@([^:]+):(\d+)$/.exec(spec.trim());
     if (!m) throw new Error(`--pistes : « ${spec} » attendu au format piste@ip:port`);
     return { piste: m[1], bind: m[2], port: Number(m[3]) };
-  });
+  })
+  // Une piste OPP2 n'est pas aussi Cyrano
+  .filter(p => !OPP2_PISTES.includes(p.piste));
 
 const devices = new Map();
 const clients = new Set();
@@ -193,6 +212,8 @@ function createCard(snap) {
   const pc = group('PC',
     button(p, 'PREVIOUS', 'prev', 'g'), button(p, 'BEGIN', 'begin', 'g'), button(p, 'NEXT', 'next', 'g'),
     button(p, 'VALIDATE', 'end', 'end'), button(p, 'RAZ appareil', 'raz', 'raz'));
+  // OPP2 : débranchement (dernière volonté publiée par le broker) et retour
+  if (snap.protocol === 'OPP2') pc.append(button(p, 'Débrancher', 'unplug', 'raz'), button(p, 'Rebrancher', 'replug', 'g'));
   const log = el('div', 'log');
   const body = el('div', 'body');
   body.append(meta, pc, fencers, chrono, weapon, log);
@@ -282,7 +303,7 @@ const server = http.createServer((req, res) => {
       Connection: 'keep-alive',
     });
     res.write(
-      `data: ${JSON.stringify({ type: 'hello', server: `${SERVER}:${SERVER_PORT}`, pistes: PISTES.length })}\n\n`
+      `data: ${JSON.stringify({ type: 'hello', server: `${SERVER}:${SERVER_PORT}`, pistes: PISTES.length + OPP2_PISTES.length })}\n\n`
     );
     for (const d of devices.values()) {
       res.write(`data: ${JSON.stringify({ type: 'state', snap: d.snapshot() })}\n\n`);
@@ -294,6 +315,12 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && url.pathname === '/cmd') {
     const device = devices.get(url.searchParams.get('piste') ?? '');
     const cmd = url.searchParams.get('c') ?? '';
+    if (device instanceof Opp2Device && (cmd === 'unplug' || cmd === 'replug')) {
+      if (cmd === 'unplug') device.unplug();
+      else if (!device.client) device.start().catch(err => device.note(`broker injoignable : ${err.message}`));
+      res.writeHead(204);
+      return res.end();
+    }
     const ok = !!device && COMMANDS.includes(cmd) && device.command(cmd);
     res.writeHead(ok ? 204 : 400);
     return res.end();
@@ -318,10 +345,28 @@ const server = http.createServer((req, res) => {
     }
     devices.set(d.piste, d);
   }
+  for (const piste of OPP2_PISTES) {
+    const d = new Opp2Device({ ...BROKER, piste });
+    d.on('log', entry => broadcast({ type: 'log', piste: d.piste, entry }));
+    d.on('change', () => broadcast({ type: 'state', snap: d.snapshot() }));
+    try {
+      await d.start();
+    } catch (err) {
+      process.stderr.write(
+        `Piste OPP2 ${piste} : broker ${d.broker}:${d.port} injoignable (${err.message}). ` +
+          'Le broker OPP2 est-il démarré (Appareils de piste → OPP2) ?\n'
+      );
+      process.exit(1);
+    }
+    devices.set(d.piste, d);
+  }
   server.listen(UI_PORT, '127.0.0.1', () => {
     process.stdout.write(
       `Télécommande Cyrano : http://127.0.0.1:${UI_PORT}  (logiciel ${SERVER}:${SERVER_PORT})\n` +
-        PISTES.map(p => `  piste ${p.piste} → ${p.bind}:${p.port}`).join('\n') +
+        [
+          ...PISTES.map(p => `  piste ${p.piste} → ${p.bind}:${p.port}`),
+          ...OPP2_PISTES.map(p => `  piste ${p} → OPP2, broker ${BROKER.broker}`),
+        ].join('\n') +
         '\n'
     );
   });
