@@ -1,10 +1,11 @@
 /**
  * Tests : pont du contrat d'API (window.electronAPI.api) à partir de fonctions par opération.
- * Une erreur levée (Error) devient une enveloppe { ok: false } ; une autre valeur levée est
- * propagée telle quelle, comme un transport en panne.
+ * Une erreur levée (Error) devient une enveloppe { ok: false } (code `internal`, ou celui d'une
+ * ApiError levée : refus d'une commande) ; une autre valeur levée est propagée telle quelle,
+ * comme un transport en panne.
  * Licensed under GPL-3.0
  */
-import type { ApiBridge } from '../../shared/api/client';
+import { ApiError, type ApiBridge } from '../../shared/api/client';
 
 export type ApiHandlers = Record<string, (input: Record<string, unknown>) => unknown>;
 
@@ -21,8 +22,10 @@ export function fakeApiBridge(handlers: ApiHandlers): ApiBridge {
       try {
         return { ok: true, data: await handler(input as Record<string, unknown>) };
       } catch (e) {
-        if (e instanceof Error)
-          return { ok: false, error: { code: 'internal', message: e.message } };
+        if (e instanceof Error) {
+          const code = e instanceof ApiError ? e.code : 'internal';
+          return { ok: false, error: { code, message: e.message } };
+        }
         throw e;
       }
     },

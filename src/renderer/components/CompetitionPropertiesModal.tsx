@@ -24,6 +24,7 @@ import {
 import { useTranslation } from '../hooks/useTranslation';
 import { useStationApi } from '../api/stationApi';
 import { usePlatform } from '../platform/PlatformContext';
+import { useDirectoryRefusal } from '../hooks/useDirectoryRefusal';
 import { GREG_DEFAULT_LEVEL, GREG_LEVELS, GregLevel } from '../../shared/utils/gregPublication';
 import { createDefaultCustomFormula } from '../../shared/utils/tournamentTemplates';
 import {
@@ -90,6 +91,7 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
   // la création (épreuve sans identifiant : réglable ensuite dans ses propriétés).
   const station = useStationApi();
   const { desktop: platformDesktop } = usePlatform();
+  const refuseDir = useDirectoryRefusal();
   const desktop = competition.id ? platformDesktop : undefined;
   const [backupDir, setBackupDir] = useState('');
   useEffect(() => {
@@ -103,15 +105,25 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
   const [gregLevel, setGregLevel] = useState<GregLevel>(
     competition.settings?.gregLevel ?? GREG_DEFAULT_LEVEL
   );
+  // Refus de la commande : toast, le dossier affiché reste le précédent (#2260)
   const chooseBackupDir = async () => {
-    const dir = await desktop?.pickDirectory({ title: t('properties.backup_dir_choose') });
-    if (!dir) return;
-    const r = await station.backup.setCompetitionDir(competition.id, dir);
-    setBackupDir(r.dir ?? '');
+    let dir: string | null | undefined;
+    try {
+      dir = await desktop?.pickDirectory({ title: t('properties.backup_dir_choose') });
+      if (!dir) return;
+      const r = await station.backup.setCompetitionDir(competition.id, dir);
+      setBackupDir(r.dir ?? '');
+    } catch (e) {
+      refuseDir(e, dir);
+    }
   };
   const clearBackupDir = async () => {
-    const r = await station.backup.resetCompetitionDir(competition.id);
-    setBackupDir(r.dir ?? '');
+    try {
+      const r = await station.backup.resetCompetitionDir(competition.id);
+      setBackupDir(r.dir ?? '');
+    } catch (e) {
+      refuseDir(e);
+    }
   };
   const [maxRefereesPerPool, setMaxRefereesPerPool] = useState(
     competition.settings?.maxRefereesPerPool ?? 1
@@ -187,19 +199,11 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
               <code>{backupDir || t('properties.backup_dir_none')}</code>
             </p>
             <div className="u-row">
-              <Button
-                type="button"
-                style={SM}
-                onClick={() => void chooseBackupDir().catch(() => undefined)}
-              >
+              <Button type="button" style={SM} onClick={() => void chooseBackupDir()}>
                 {t('properties.backup_dir_choose')}
               </Button>
               {backupDir && (
-                <Button
-                  type="button"
-                  style={SM}
-                  onClick={() => void clearBackupDir().catch(() => undefined)}
-                >
+                <Button type="button" style={SM} onClick={() => void clearBackupDir()}>
                   {t('properties.backup_dir_clear')}
                 </Button>
               )}

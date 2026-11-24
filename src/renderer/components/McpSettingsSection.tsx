@@ -15,6 +15,7 @@ import { HINT, BOLD, TOGGLE_LABEL } from './settingsModal.styles';
 import { Button } from './common/Button';
 import { useStationApi } from '../api/stationApi';
 import { usePlatform } from '../platform/PlatformContext';
+import { useDirectoryRefusal } from '../hooks/useDirectoryRefusal';
 
 /** Configuration à coller dans `.mcp.json` (Claude Code, plugin bpm-escrime) */
 export function mcpClientConfig(status: Pick<McpStatus, 'port' | 'token'>): string {
@@ -45,6 +46,7 @@ const McpSettingsSection: React.FC = () => {
   const [folders, setFolders] = useState<AgentFolders>({ folders: [], defaults: [] });
   const { mcp: api, settings: settingsApi } = useStationApi();
   const { desktop } = usePlatform();
+  const refuse = useDirectoryRefusal();
 
   const apply = (s: McpStatus) => {
     setStatus(s);
@@ -75,14 +77,19 @@ const McpSettingsSection: React.FC = () => {
 
   const changeFolders = (action: Promise<AgentFolders>) =>
     void action.then(setFolders).catch(() => undefined);
-  /** Dossier choisi dans le dialogue du poste (rien d'écrit), puis ajouté par le contrat */
-  const addFolder = () =>
-    changeFolders(
-      (async () => {
-        const dir = await desktop?.pickDirectory({ title: t('settings.mcp_folder_add') });
-        return dir ? settingsApi.addAgentFolder(dir) : folders;
-      })()
-    );
+  /**
+   * Dossier choisi dans le dialogue du poste (rien d'écrit), puis ajouté par le contrat.
+   * Refus : toast, la liste affichée ne change pas (#2260).
+   */
+  const addFolder = async () => {
+    let dir: string | null | undefined;
+    try {
+      dir = await desktop?.pickDirectory({ title: t('settings.mcp_folder_add') });
+      if (dir) setFolders(await settingsApi.addAgentFolder(dir));
+    } catch (e) {
+      refuse(e, dir);
+    }
+  };
   /** Réglage ou jeton changé : l'état du serveur affiché est celui que rend le main */
   const change = (action: Promise<McpStatus>) => void action.then(apply).catch(() => undefined);
 
@@ -186,7 +193,7 @@ const McpSettingsSection: React.FC = () => {
           </ul>
           {desktop && (
             <div className="u-row">
-              <Button type="button" onClick={addFolder}>
+              <Button type="button" onClick={() => void addFolder()}>
                 {t('settings.mcp_folder_add')}
               </Button>
             </div>

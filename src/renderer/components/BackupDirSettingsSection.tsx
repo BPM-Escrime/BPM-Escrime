@@ -11,6 +11,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import type { BackupDirDTO } from '../../shared/types/preload';
 import { useStationApi } from '../api/stationApi';
 import { usePlatform } from '../platform/PlatformContext';
+import { useDirectoryRefusal } from '../hooks/useDirectoryRefusal';
 import { HINT, BOLD, SMALL_BTN } from './settingsModal.styles';
 import { Button } from './common/Button';
 
@@ -18,6 +19,7 @@ const BackupDirSettingsSection: React.FC = () => {
   const { t } = useTranslation();
   const station = useStationApi();
   const { desktop } = usePlatform();
+  const refuse = useDirectoryRefusal();
   const [info, setInfo] = useState<BackupDirDTO | null>(null);
 
   useEffect(() => {
@@ -30,13 +32,22 @@ const BackupDirSettingsSection: React.FC = () => {
 
   if (!info) return null;
 
-  // Le choix n'écrit rien : le chemin passe ensuite par la commande du contrat
+  // Le choix n'écrit rien : le chemin passe ensuite par la commande du contrat. Refus : toast,
+  // le dossier affiché reste le précédent (#2260).
   const choose = async () => {
-    const dir = await desktop?.pickDirectory({ title: t('settings.backup_dir_choose') });
-    if (dir) setInfo(await station.backup.setDir(dir));
+    let dir: string | null | undefined;
+    try {
+      dir = await desktop?.pickDirectory({ title: t('settings.backup_dir_choose') });
+      if (dir) setInfo(await station.backup.setDir(dir));
+    } catch (e) {
+      refuse(e, dir);
+    }
   };
   const reset = () => {
-    void station.backup.resetDir().then(setInfo);
+    void station.backup
+      .resetDir()
+      .then(setInfo)
+      .catch(e => refuse(e));
   };
 
   return (
@@ -49,7 +60,7 @@ const BackupDirSettingsSection: React.FC = () => {
       </p>
       <div className="u-row">
         {desktop && (
-          <Button style={SMALL_BTN} onClick={() => void choose().catch(() => undefined)}>
+          <Button style={SMALL_BTN} onClick={() => void choose()}>
             {t('settings.backup_dir_choose')}
           </Button>
         )}

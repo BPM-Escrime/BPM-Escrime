@@ -13,6 +13,8 @@ import type { McpStatus } from '../../shared/types/mcp';
 import { stationElectron } from '../testUtils/stationBridge';
 import { PlatformProvider } from '../platform/PlatformContext';
 import { fakeDesktop, fakePlatform, type FakeDesktop } from '../../shared/platform/testing';
+import { ApiError } from '../../shared/api/client';
+import { ToastProvider } from './Toast';
 
 const status: McpStatus = {
   enabled: true,
@@ -48,9 +50,11 @@ afterEach(cleanup);
 /** Rendu dans l'application de bureau (défaut) ou dans un navigateur (`bureau` faux) */
 const renderSection = (bureau = true) =>
   render(
-    <PlatformProvider platform={fakePlatform({ desktop: bureau ? desktop : false })}>
-      <McpSettingsSection />
-    </PlatformProvider>
+    <ToastProvider>
+      <PlatformProvider platform={fakePlatform({ desktop: bureau ? desktop : false })}>
+        <McpSettingsSection />
+      </PlatformProvider>
+    </ToastProvider>
   );
 
 describe('McpSettingsSection', () => {
@@ -117,6 +121,26 @@ describe('McpSettingsSection', () => {
     await waitFor(() => expect(desktop.pickDirectory).toHaveBeenCalled());
     expect(settings.addAgentFolder).not.toHaveBeenCalled();
     expect(screen.getByText('/home/dt/Documents')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['dir_not_found', 'Dossier introuvable : /media/usb'],
+    ['station_refused', "Impossible d'écrire dans ce dossier : /media/usb"],
+    ['internal', "Le dossier n'a pas pu être enregistré"],
+  ] as const)('refus %s (#2260) : toast d’erreur, liste inchangée', async (code, text) => {
+    settings.addAgentFolder.mockRejectedValueOnce(new ApiError(code, 'refusé'));
+    renderSection();
+    fireEvent.click(await screen.findByText('Ajouter un dossier'));
+    expect(await screen.findByRole('alert')).toHaveTextContent(text);
+    expect(screen.getByText('/home/dt/Documents')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Retirer /media/usb')).not.toBeInTheDocument();
+  });
+
+  it('succès : pas de toast d’erreur', async () => {
+    renderSection();
+    fireEvent.click(await screen.findByText('Ajouter un dossier'));
+    expect(await screen.findByText('/media/usb')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('sans bureau (navigateur, vue DT) : bouton d’ajout absent, liste affichée', async () => {
