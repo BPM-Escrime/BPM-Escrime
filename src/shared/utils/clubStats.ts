@@ -9,6 +9,7 @@ import type {
   ClubMemberStats,
   ClubPeriod,
   ClubPeriodKind,
+  ClubZoneCounts,
 } from '../types/club';
 
 /** Premier mois de la saison sportive (septembre) */
@@ -64,6 +65,11 @@ export function periodOf(date: string, kind: ClubPeriodKind): ClubPeriod {
 
 const finished = (b: ClubBout): boolean => b.status === 'finished';
 
+/** Ajoute les zones d'un combat (« ABAC ») aux comptes ; autres lettres ignorées */
+function addZones(counts: ClubZoneCounts, zones: string | undefined): void {
+  for (const z of zones ?? '') if (z === 'A' || z === 'B' || z === 'C') counts[z]++;
+}
+
 /** Statistiques d'un membre sur les combats terminés fournis */
 export function computeMemberStats(memberId: string, bouts: readonly ClubBout[]): ClubMemberStats {
   const s: ClubMemberStats = {
@@ -77,6 +83,8 @@ export function computeMemberStats(memberId: string, bouts: readonly ClubBout[])
     touchesReceived: 0,
     indice: 0,
     sessions: 0,
+    zonesScored: { A: 0, B: 0, C: 0 },
+    zonesReceived: { A: 0, B: 0, C: 0 },
   };
   const sessions = new Set<string>();
   for (const b of bouts) {
@@ -86,6 +94,8 @@ export function computeMemberStats(memberId: string, bouts: readonly ClubBout[])
     s.bouts++;
     s.touchesScored += isA ? b.scoreA : b.scoreB;
     s.touchesReceived += isA ? b.scoreB : b.scoreA;
+    addZones(s.zonesScored, isA ? b.zonesA : b.zonesB);
+    addZones(s.zonesReceived, isA ? b.zonesB : b.zonesA);
     if (b.winnerId === memberId) s.victories++;
     else if (b.winnerId) s.defeats++;
     else s.draws++;

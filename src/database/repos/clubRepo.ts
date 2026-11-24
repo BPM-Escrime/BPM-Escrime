@@ -158,8 +158,19 @@ interface BoutRow {
   started_at: string | null;
   finished_at: string | null;
   duration: number | null;
+  zones_a?: string | null;
+  zones_b?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** Zones de touche gardées : lettres A/B/C, 200 au plus (docs/adr/0031) */
+const MAX_ZONES = 200;
+export function boutZones(list: readonly unknown[]): string {
+  return list
+    .filter((z): z is 'A' | 'B' | 'C' => z === 'A' || z === 'B' || z === 'C')
+    .slice(0, MAX_ZONES)
+    .join('');
 }
 
 const ENTRY_MODES: readonly ClubEntryMode[] = ['referee', 'self', 'master'];
@@ -261,6 +272,8 @@ function rowToBout(r: BoutRow): ClubBout {
     startedAt: opt(r.started_at),
     finishedAt: opt(r.finished_at),
     duration: opt(r.duration),
+    zonesA: opt(r.zones_a),
+    zonesB: opt(r.zones_b),
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -866,7 +879,9 @@ export class ClubRepo {
 
   private attendees(sessionId: string): string[] {
     return this.sql
-      .queryAll<{ member_id: string }>(
+      .queryAll<{
+        member_id: string;
+      }>(
         'SELECT member_id FROM club_attendance WHERE session_id = ? ORDER BY checked_in_at, member_id',
         [sessionId]
       )
@@ -1371,9 +1386,12 @@ export class ClubRepo {
         : undefined;
     const winnerId = explicit ?? winnerFromScore(b.memberAId, b.memberBId, scoreA, scoreB);
     const now = new Date().toISOString();
+    // Zones de la tablette (docs/adr/0031) ; saisie sans zones : celles déjà enregistrées
+    const zones = (list: readonly string[] | undefined, old: string | undefined) =>
+      list ? boutZones(list) : (old ?? null);
     this.sql.run(
       `UPDATE club_bouts SET score_a = ?, score_b = ?, winner_id = ?, status = 'finished',
-         entry_mode = ?, duration = ?, started_at = COALESCE(started_at, ?),
+         entry_mode = ?, duration = ?, zones_a = ?, zones_b = ?, started_at = COALESCE(started_at, ?),
          finished_at = COALESCE(finished_at, ?), updated_at = ? WHERE id = ?`,
       [
         scoreA,
@@ -1381,6 +1399,8 @@ export class ClubRepo {
         winnerId,
         result.entryMode ? entryMode(result.entryMode) : b.entryMode,
         optInt(result.duration, 0, 86400) ?? b.duration ?? null,
+        zones(result.zonesA, b.zonesA),
+        zones(result.zonesB, b.zonesB),
         now,
         now,
         now,

@@ -289,6 +289,12 @@ export interface ClubBout {
   finishedAt?: string;
   /** Durée en secondes */
   duration?: number;
+  /**
+   * Zones des touches portées par A / B (Sabre Laser, tablette) : une lettre A/B/C par touche,
+   * dans l'ordre. Absent : zones inconnues (docs/adr/0031)
+   */
+  zonesA?: string;
+  zonesB?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -309,6 +315,9 @@ export interface ClubBoutResult {
   winnerId?: string | null;
   entryMode?: ClubEntryMode;
   duration?: number;
+  /** Zones des touches portées par A / B (tablette, docs/adr/0031) ; absent : inchangées */
+  zonesA?: readonly string[];
+  zonesB?: readonly string[];
 }
 
 /** Filtre des combats (bornes incluses, dates AAAA-MM-JJ) */
@@ -348,6 +357,16 @@ export interface ClubMemberStats {
   indice: number;
   /** Nombre de séances distinctes avec au moins un combat */
   sessions: number;
+  /** Touches portées / reçues par zone (Sabre Laser, combats dont les zones sont connues) */
+  zonesScored: ClubZoneCounts;
+  zonesReceived: ClubZoneCounts;
+}
+
+/** Nombre de touches par zone (A = 1 pt, B = 3 pts, C = 5 pts) */
+export interface ClubZoneCounts {
+  A: number;
+  B: number;
+  C: number;
 }
 
 /** Face-à-face entre deux membres */

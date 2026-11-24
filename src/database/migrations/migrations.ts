@@ -1356,4 +1356,19 @@ export const ALL_MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 51,
+    description:
+      'Mode Club : zones de touche des combats (Sabre Laser), club_bouts.zones_a et zones_b (docs/adr/0031)',
+    up(db) {
+      // Lettres A/B/C des touches portées par chaque membre, dans l'ordre ; NULL = inconnues
+      for (const col of ['zones_a', 'zones_b']) {
+        try {
+          db.run(`ALTER TABLE club_bouts ADD COLUMN ${col} TEXT`);
+        } catch {
+          /* colonne déjà présente */
+        }
+      }
+    },
+  },
 ];

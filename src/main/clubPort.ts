@@ -7,6 +7,7 @@
  */
 import { BrowserWindow, dialog } from 'electron';
 import type { DatabaseManager } from '../database';
+import { Weapon } from '../shared/types';
 import type { ClubPort } from './engine/commands/context';
 import { publishClubSynced } from './engine/api/events';
 import { ClubSyncService } from './clubSync';
@@ -28,11 +29,16 @@ export function onClubRemoteFinish(db: DatabaseManager, record: TrainingFinishRe
   if (!boutId) return;
   const bout = db.club.getBout(boutId);
   if (!bout || bout.status === 'cancelled') return;
+  const isLaser = (bout.weapon ?? record.weapon) === Weapon.LASER;
   db.club.finishBout(boutId, {
     scoreA: record.scoreA,
     scoreB: record.scoreB,
     entryMode: 'referee',
     duration: record.durationSec,
+    // Zones de la tablette, Sabre Laser seulement : ailleurs chaque touche vaut « A » (docs/adr/0031)
+    ...(isLaser && record.touches
+      ? { zonesA: record.touches.touchesA, zonesB: record.touches.touchesB }
+      : {}),
   });
 }
 

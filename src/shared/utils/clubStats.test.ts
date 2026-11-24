@@ -97,6 +97,8 @@ describe('Mode Club : statistiques (#1872)', () => {
       touchesReceived: 13,
       indice: 3,
       sessions: 3,
+      zonesScored: { A: 0, B: 0, C: 0 },
+      zonesReceived: { A: 0, B: 0, C: 0 },
     });
   });
 
@@ -151,5 +153,20 @@ describe('Mode Club : statistiques (#1872)', () => {
     expect(winnerFromScore('a', 'b', 5, 2)).toBe('a');
     expect(winnerFromScore('a', 'b', 1, 2)).toBe('b');
     expect(winnerFromScore('a', 'b', 3, 3)).toBeNull();
+  });
+});
+
+describe('Mode Club : zones de touche Sabre Laser (docs/adr/0031)', () => {
+  it('portées et reçues par zone, côté A ou B, zones inconnues et autres lettres ignorées', () => {
+    const bouts = [
+      bout('alice', 'bob', 9, 6, '2026-11-16', { zonesA: 'ACB', zonesB: 'BB' }),
+      bout('bob', 'alice', 5, 2, '2026-11-16', { zonesA: 'C', zonesB: 'AXA' }),
+      bout('alice', 'carl', 5, 1),
+      bout('alice', 'bob', 0, 0, '2026-11-16', { status: 'cancelled', zonesA: 'CCC' }),
+    ];
+    const s = computeMemberStats('alice', bouts);
+    expect(s.zonesScored).toEqual({ A: 3, B: 1, C: 1 });
+    expect(s.zonesReceived).toEqual({ A: 0, B: 2, C: 1 });
+    expect(computeMemberStats('bob', bouts).zonesReceived).toEqual({ A: 3, B: 1, C: 1 });
   });
 });

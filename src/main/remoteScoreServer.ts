@@ -317,6 +317,7 @@ export class RemoteScoreServer {
     scoreB: number;
     durationSec: number;
     finishedAt: string;
+    touches?: { touchesA: string[]; touchesB: string[] }; // zones A/B/C, Mode Club (ADR-0031)
   }> = [];
   private trainingCustomRules: {
     matchDurationSeconds: number;

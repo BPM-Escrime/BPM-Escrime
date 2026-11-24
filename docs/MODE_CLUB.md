@@ -143,6 +143,10 @@ cours (plage début → fin modifiable, retenue pour la séance), recherche, car
   proposées limitées aux cours de ces catégories).
 - Par tireur : combats, V / D / nuls, % de victoires, TD / TR / indice, séances,
   progression (jour, mois, trimestre, saison), face-à-face, remarques reçues.
+- Sabre Laser : mannequins des touches **portées** et **reçues** par zone (A = 1 pt, B = 3 pts,
+  C = 5 pts) sur la fiche membre. Zones relevées par la tablette arbitre seulement
+  (`club_bouts.zones_a` / `zones_b`, [ADR-0031](adr/0031-zones-de-touche-combats-club.md)) ;
+  saisie manuelle et combats antérieurs : pas de zones.
 
 ## 6. Bibliothèque d'exercices
 
