@@ -321,6 +321,6 @@ Le mainteneur a tranché les quatre questions de la PR #2251 :
 2. **Dossier de sauvegarde d'une épreuve** : **réglage du poste, par épreuve**, écrit par
    `setCompetitionBackupDir`, et non plus un champ de l'épreuve écrit par
    `updateCompetitionSettings` (§ « Dossier de sauvegarde d'une épreuve : un réglage du poste »).
-3. **`safeStorage`** : **hors de cette ADR**, décision à part (ticket à ouvrir).
+3. **`safeStorage`** : **hors de cette ADR**, décision à part (#2252).
 4. **Règle finale** : **règle ESLint bloquante** dans `lint:errors`, qui prend le relais du
    cliquet à 0 (§ « Conséquences »).
