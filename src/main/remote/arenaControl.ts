@@ -3,6 +3,7 @@
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */
+import { scoreRefusal } from './scoreCommand';
 import type { Socket } from 'socket.io';
 import { ArenaMatch } from '../../shared/types/remote';
 import { sanitizeAnnouncement } from './announcement';
@@ -199,7 +200,14 @@ export function handleArenaControl(
         data.fightSeconds < 6 * 3600
       )
         arena.currentMatch.fightSeconds = Math.round(data.fightSeconds);
-      ctx.finishArenaMatch(data.arenaId);
+      {
+        // Refus du moteur (#2151) : rien d'écrit, match en cours, événements gardés, refus rendu
+        const refusal = ctx.finishArenaMatch(data.arenaId);
+        if (refusal) {
+          socket.emit('error', { message: refusal.message, ...scoreRefusal(refusal) });
+          break;
+        }
+      }
       ctx.arenaCards.set(data.arenaId, { cardsA: [], cardsB: [] });
       ctx.arenaTouches.set(data.arenaId, { touchesA: [], touchesB: [] });
       ctx.arenaExits.set(data.arenaId, []);

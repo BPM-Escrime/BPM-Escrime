@@ -4,6 +4,7 @@
  */
 
 import { checkFinishedScore, recordFinishedScore, scoreRefusal } from '../scoreCommand';
+import type { FinishRefusal } from '../matchFinish';
 import { FencerStatus, MatchStatus, type Match } from '../../../shared/types';
 import type {
   Arena,
@@ -37,7 +38,7 @@ export interface MatchRouteContext extends PoolRouteContext {
     arenaId: string,
     fencerId: string
   ): { success: true; matchId: string } | { success: false; status: number; error: string };
-  finishArenaMatch(arenaId: string): void;
+  finishArenaMatch(arenaId: string): FinishRefusal | null;
   formatFencerName(fencer: unknown): string;
   getArenaBlackCards(arenaId: string): BlackCardRecord[];
   guestQueue(arenaId: string): ArenaMatch[];
@@ -375,6 +376,30 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
         else ctx.sessionMatchScores.delete(matchId);
         return res.status(409).json(scoreRefusal(outcome));
       };
+      // Fin sur l'arène du match : score final de la tablette puis finishArenaMatch. Refus du
+      // moteur (même après le contrôle ci-dessus) : arène rétablie, match en cours (#2151)
+      const finishOnArena = (arenaId: string, withFight: boolean): FinishRefusal | null => {
+        const current = ctx.arenas.get(arenaId)!.currentMatch!;
+        const before = {
+          scoreA: current.scoreA,
+          scoreB: current.scoreB,
+          fightSeconds: current.fightSeconds,
+          blackCardFencer: current.blackCardFencer,
+        };
+        current.scoreA = scoreA;
+        current.scoreB = scoreB;
+        if (
+          withFight &&
+          Number.isFinite(fightSeconds) &&
+          fightSeconds > 0 &&
+          fightSeconds < 6 * 3600
+        )
+          current.fightSeconds = Math.round(fightSeconds);
+        if (blackCarded) current.blackCardFencer = blackCarded;
+        const refusal = ctx.finishArenaMatch(arenaId);
+        if (refusal) Object.assign(current, before);
+        return refusal;
+      };
 
       // Exclu sur carton noir : statut d'avant la fin (annulation du carton), pour savoir ensuite
       // si le moteur l'a exclu (recordScore avec statut, docs/adr/0016)
@@ -423,20 +448,10 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
         // Mettre à jour le score en mémoire de l'arène pour que le broadcast
         // finishArenaMatch envoie le vrai score (pas 0-0) à l'affichage, puis
         // libérer l'arène exactement comme le fait la console arbitre.
-        let arenaToFinish: string | null = null;
-        for (const [arenaId, arena] of ctx.arenas) {
-          if (arena.currentMatch && arena.currentMatch.id === matchId) {
-            arena.currentMatch.scoreA = scoreA;
-            arena.currentMatch.scoreB = scoreB;
-            if (Number.isFinite(fightSeconds) && fightSeconds > 0 && fightSeconds < 6 * 3600)
-              arena.currentMatch.fightSeconds = Math.round(fightSeconds);
-            if (blackCarded) arena.currentMatch.blackCardFencer = blackCarded;
-            arenaToFinish = arenaId;
-            break;
-          }
-        }
-        if (arenaToFinish) {
-          ctx.finishArenaMatch(arenaToFinish);
+        const onArena = [...ctx.arenas.entries()].find(([, a]) => a.currentMatch?.id === matchId);
+        if (onArena) {
+          const refusal = finishOnArena(onArena[0], true);
+          if (refusal) return refuse(refusal);
         } else {
           // Match non trouvé dans une arène active : notifier quand même le renderer
           // (cas où l'arbitre soumet depuis referee.html mais l'arène a déjà changé)
@@ -481,18 +496,12 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
           status: MatchStatus.FINISHED,
         });
         // Mettre à jour les scores de l'arène puis terminer le match via l'IPC
-        let arenaFoundForInMemory = false;
-        for (const [arenaId, arena] of ctx.arenas) {
-          if (arena.currentMatch && arena.currentMatch.id === matchId) {
-            arena.currentMatch.scoreA = scoreA;
-            arena.currentMatch.scoreB = scoreB;
-            if (blackCarded) arena.currentMatch.blackCardFencer = blackCarded;
-            ctx.finishArenaMatch(arenaId);
-            arenaFoundForInMemory = true;
-            break;
-          }
+        const onArena = [...ctx.arenas.entries()].find(([, a]) => a.currentMatch?.id === matchId);
+        if (onArena) {
+          const refusal = finishOnArena(onArena[0], false);
+          if (refusal) return refuse(refusal);
         }
-        if (!arenaFoundForInMemory && !ctx.isTrainingMode) {
+        if (!onArena && !ctx.isTrainingMode) {
           // Match hors arène : score par le moteur ; refus (course) rendu, rien d'écrit (#2151)
           const outcome = recordFinishedScore(ctx.db, {
             competitionId: ctx.session?.competitionId,

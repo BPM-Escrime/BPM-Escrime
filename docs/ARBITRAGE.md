@@ -257,8 +257,10 @@ le score (rouge – vert).
   sinon priorité → enregistrement par la commande `recordScore` du moteur (session, base et
   journal), diffusion `match_finished`. Scores hors 0–50 refusés (`invalid_scores`). Score refusé
   par le moteur (règle du score, tableau tiré, tour suivant joué, match absent de la session) :
-  `409 score_refused` avec le code, rien n'est écrit, le match reste en cours ; le DT corrige au
-  poste (#2151).
+  `409 score_refused` avec le code et le message, rien n'est écrit, le match reste en cours ; le DT
+  corrige au poste (#2151). Vaut aussi pour un refus à l'écriture après le contrôle préalable :
+  l'arène n'est pas avancée (score et état d'avant rétablis). `POST /api/arenas/:id/finish` rend
+  le même 409 ; l'action socket `finish` répond par `error` (`score_refused`, `code`, `message`).
   Un match validé par erreur se rappelle par PREV : bouton **Match précédent** de la liste des
   matchs (dans les 3 min suivant la fin, aucun combat en cours), le serveur répond par un succès ou
   par le motif du refus (notification).

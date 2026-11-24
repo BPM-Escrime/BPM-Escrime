@@ -34,6 +34,18 @@ vi.mock('../ipc/dbHandlers', async importOriginal => ({
   ...(await importOriginal<typeof import('../ipc/dbHandlers')>()),
   emitCompetitionEvent: vi.fn(),
 }));
+// Refus forcé de l'écriture (course après le contrôle) : contrôle réel, écriture refusée
+const forced = vi.hoisted(() => ({ refuse: false }));
+vi.mock('./scoreCommand', async orig => {
+  const real = await orig<typeof import('./scoreCommand')>();
+  return {
+    ...real,
+    recordFinishedScore: (...args: Parameters<typeof real.recordFinishedScore>) =>
+      forced.refuse
+        ? { kind: 'refused' as const, code: 'next_match_played', message: 'Tour suivant joué' }
+        : real.recordFinishedScore(...args),
+  };
+});
 vi.mock('http', () => ({
   createServer: vi
     .fn()
@@ -65,7 +77,8 @@ function handler(method: string, path: string) {
   const app = (remote as unknown as { app: { router?: any; _router?: any } }).app;
   const stack = (app.router ?? app._router)?.stack ?? [];
   const layer = stack.find((l: any) => l?.route?.path === path && l.route.methods?.[method]);
-  return layer?.route?.stack?.[0]?.handle;
+  // Dernier maillon : la route, après ses intergiciels (requireArenaAuth)
+  return layer?.route?.stack?.at(-1)?.handle;
 }
 
 /** Matchs de la poule tels que l'écran les envoie au démarrage de la saisie distante */
@@ -119,7 +132,10 @@ beforeEach(async () => {
   vi.spyOn(remote as any, 'hasAnyValidToken').mockReturnValue(true);
   vi.spyOn(remote as any, 'loadSessionReferees').mockReturnValue([]);
 });
-afterEach(() => db.close());
+afterEach(() => {
+  forced.refuse = false;
+  db.close();
+});
 
 d('fin de match distante par le moteur, sans repli (#2151)', () => {
   it('tablette, fin d’arène : score écrit par recordScore, journal sans écart', async () => {
@@ -176,6 +192,54 @@ d('fin de match distante par le moteur, sans repli (#2151)', () => {
     expect(res.json.mock.calls[0][0]).toMatchObject({ code: 'score_above_max' });
     expect(revision()).toBe(before);
     expect(remote.getArena('arena1')!.status).not.toBe('finished');
+  });
+
+  it('fin d’arène refusée par le moteur après le contrôle : 409 à la tablette, arène en cours, rien d’écrit', async () => {
+    await remote.startSession(competitionId, 1, rendererMatches() as never);
+    const arena = remote.getArena('arena1')!;
+    const current = arena.currentMatch!;
+    const before = revision();
+    forced.refuse = true;
+    const res = makeRes();
+    await handler('post', '/api/matches/:matchId/finish')(
+      makeReq({ method: 'POST', params: { matchId: current.id }, body: { scoreA: 5, scoreB: 3 } }),
+      res,
+      vi.fn()
+    );
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json.mock.calls[0][0]).toEqual({
+      error: 'score_refused',
+      code: 'next_match_played',
+      detail: 'Tour suivant joué',
+    });
+    expect(arena.status).not.toBe('finished');
+    expect(arena.currentMatch).toMatchObject({ id: current.id, scoreA: 0, scoreB: 0 });
+    expect(arena.currentMatch?.status).not.toBe('finished');
+    expect((remote as any).sessionMatchScores.get(current.id)?.status).not.toBe('finished');
+    expect(revision()).toBe(before);
+    expect(listMatches({ db }, competitionId).find(m => m.matchId === current.id)?.state).not.toBe(
+      'done'
+    );
+    // Fin directe de l'arène (API des pistes) : même refus
+    const direct = makeRes();
+    handler('post', '/api/arenas/:arenaId/finish')(
+      makeReq({ method: 'POST', params: { arenaId: 'arena1' } }),
+      direct,
+      vi.fn()
+    );
+    expect(direct.status).toHaveBeenCalledWith(409);
+    expect(arena.status).not.toBe('finished');
+    // Refus levé : la même fin passe
+    forced.refuse = false;
+    const ok = makeRes();
+    await handler('post', '/api/matches/:matchId/finish')(
+      makeReq({ method: 'POST', params: { matchId: current.id }, body: { scoreA: 5, scoreB: 3 } }),
+      ok,
+      vi.fn()
+    );
+    expect(ok.status).not.toHaveBeenCalledWith(409);
+    expect(revision()).toBe(before + 1);
+    expect(divergences()).toEqual([]);
   });
 
   describe('appareil de piste Cyrano (maître)', () => {
