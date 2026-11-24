@@ -111,7 +111,7 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 132 | 711 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
-| `src/remote/` | 60 | 417 |
+| `src/remote/` | 60 | 419 |
 | `src/renderer/api/` | 10 | 45 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 40 | 482 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **606** | **4710** |
+| **Total** | **606** | **4712** |
 
-Unitaires : 588 fichiers, 4660 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 588 fichiers, 4662 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8161,7 +8161,7 @@ Unitaires : 588 fichiers, 4660 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeApp.test.ts</code> — 15 tests</summary>
+<summary><code>src/remote/js/refereeApp.test.ts</code> — 16 tests</summary>
 
 - **refereeApp.js dans referee.html**
   - referee.html ne contient plus de script inline
@@ -8181,13 +8181,14 @@ Unitaires : 588 fichiers, 4660 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - chrono local prioritaire sur celui du serveur
   - maître en ligne : ajout de carton bloqué (classique, P, noir), rien n’est envoyé
   - maître en ligne : retrait d’un carton permis pour corriger
+  - non-combativité : jaune P, rouge P (+1 chacun), puis noir P (t.124, #2214)
   - carton noir refusé par le serveur (409, appareil maître devenu en ligne) : le combat continue
   - appareil hors ligne : ajout de carton de nouveau permis
 
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeCards.test.ts</code> — 12 tests</summary>
+<summary><code>src/remote/js/refereeCards.test.ts</code> — 13 tests</summary>
 
 - **refereeCards.js cartons**
   - modernYellowOrRed : rouge si déjà jaune ou rouge
@@ -8196,7 +8197,8 @@ Unitaires : 588 fichiers, 4660 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - cardEffect : moderne, jaune sans point, rouge +1
   - cardVibration
 - **refereeCards.js passivité**
-  - nextPassivityCard : rouge, noir, puis plus rien
+  - nextPassivityCard : jaune, rouge, noir, puis plus rien (FIE t.124, #2214)
+  - nextPassivityCard : même suite que les relais par équipes du domaine
   - passivityWinner : score, puis classement initial, puis tirage
   - passivityWinner : parité avec le module partagé (matchEndValidation.ts, #1829)
   - cardFromGroup olympique : parité avec determineCardType (domain/penalties/cards.ts, #2207)
