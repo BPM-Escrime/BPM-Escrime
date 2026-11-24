@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 43 | 523 |
+| `src/shared/domain/` | 44 | 534 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **615** | **4798** |
+| **Total** | **616** | **4809** |
 
-Unitaires : 597 fichiers, 4748 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 598 fichiers, 4759 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -9577,6 +9577,25 @@ Unitaires : 597 fichiers, 4748 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **roadmap : relecture**
   - aller-retour JSON
   - rejette un autre fichier, nettoie les champs
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/stations/stations.test.ts</code> — 11 tests</summary>
+
+- **bail par épreuve**
+  - libre, tenu, orphelin après 60 s sans battement
+  - prendre : libre ou déjà à soi ; refusé chez un autre poste, même orphelin
+  - battement : le poste revient, l’épreuve orpheline redevient tenue
+  - rendre : seul le poste qui tient le bail
+  - transfert : le nouveau poste tient, l’ancien perd l’orchestration
+- **rôles et droits**
+  - seul admin a les fonctions du poste
+  - pointage : pointe sans bail, ne saisit pas de score
+  - assistant : saisit, ne génère pas de tirage, reste dans ses épreuves
+  - DT d’épreuve : orchestre avec le bail, lit l’autre épreuve sans pouvoir y écrire
+  - DT général : gère les baux, transfère au lieu de passer outre
+  - arbitre : saisie limitée à son arène ; public : lecture seule
 
 </details>
 
