@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 83 | 887 |
+| `src/shared/utils/` | 83 | 888 |
 | `src/shared/services/` | 8 | 83 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -105,11 +105,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 23 | 278 |
-| `src/main/` | 156 | 1355 |
+| `src/database/` | 24 | 281 |
+| `src/main/` | 156 | 1356 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
-| `src/renderer/components/` | 135 | 748 |
+| `src/renderer/components/` | 135 | 749 |
 | E2E Playwright (`e2e/`) | 18 | 51 |
 | `src/remote/` | 60 | 427 |
 | `src/renderer/api/` | 10 | 46 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 44 | 534 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **621** | **4885** |
+| **Total** | **622** | **4891** |
 
-Unitaires : 603 fichiers, 4834 tests. E2E : 18 fichiers, 51 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -382,7 +382,7 @@ Unitaires : 603 fichiers, 4834 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/clubStats.test.ts</code> — 12 tests</summary>
+<summary><code>src/shared/utils/clubStats.test.ts</code> — 13 tests</summary>
 
 - **Mode Club : périodes (#1872)**
   - valide les dates ISO
@@ -398,6 +398,8 @@ Unitaires : 603 fichiers, 4834 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - progression par trimestre, chronologique
   - progression par saison : un seul groupe
   - winnerFromScore
+- **Mode Club : zones de touche Sabre Laser (docs/adr/0031)**
+  - portées et reçues par zone, côté A ou B, zones inconnues et autres lettres ignorées
 
 </details>
 
@@ -2310,6 +2312,15 @@ Unitaires : 603 fichiers, 4834 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/database/migrations/clubBoutZones.test.ts</code> — 2 tests</summary>
+
+- **migration 51 : zones de touche des combats du club**
+  - base 50 : combat existant gardé, zones nulles, puis écrites
+  - rejouée sans erreur (colonnes déjà présentes)
+
+</details>
+
+<details>
 <summary><code>src/database/migrations/migrationsAdr.test.ts</code> — 2 tests</summary>
 
 - **migrations et ADR (ADR-0011)**
@@ -2396,7 +2407,7 @@ Unitaires : 603 fichiers, 4834 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/database/repos/clubRepo.test.ts</code> — 46 tests</summary>
+<summary><code>src/database/repos/clubRepo.test.ts</code> — 47 tests</summary>
 
 - **ClubRepo (#1872)**
   - **membres**
@@ -2439,6 +2450,7 @@ Unitaires : 603 fichiers, 4834 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - **combats**
     - contrôles à la création
     - cycle : départ, score en cours, fin
+    - zones de touche (docs/adr/0031) : lettres A/B/C gardées, conservées sans nouvelles zones
     - correction après coup + vainqueur explicite
     - piste occupée : second combat refusé, libérée une fois terminé
     - annulé : non terminable
@@ -2795,10 +2807,11 @@ Unitaires : 603 fichiers, 4834 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/clubPort.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/clubPort.test.ts</code> — 3 tests</summary>
 
 - **clubPort (#1872, docs/adr/0022)**
   - score de la tablette → combat club terminé (saisie arbitre), autres matchs ignorés
+  - zones de la tablette gardées en Sabre Laser seulement (docs/adr/0031)
   - combat annulé : score ignoré
 
 </details>
@@ -6898,13 +6911,14 @@ Unitaires : 603 fichiers, 4834 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/club/ClubStatsPanel.test.tsx</code> — 3 tests</summary>
+<summary><code>src/renderer/components/club/ClubStatsPanel.test.tsx</code> — 4 tests</summary>
 
 - **scopeFilter**
   - saison, trimestre, mois, séance, tout
 - **ClubStatsPanel**
   - classement de la saison, changement de période
   - fiche membre : progression par trimestre et face-à-face
+  - fiche membre Sabre Laser : mannequins des touches portées et reçues (docs/adr/0031)
 
 </details>
 
