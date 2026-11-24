@@ -111,7 +111,7 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/hooks/` | 39 | 201 |
 | `src/renderer/components/` | 133 | 721 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
-| `src/remote/` | 60 | 419 |
+| `src/remote/` | 60 | 423 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 43 | 523 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **615** | **4794** |
+| **Total** | **615** | **4798** |
 
-Unitaires : 597 fichiers, 4744 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 597 fichiers, 4748 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8240,7 +8240,7 @@ Unitaires : 597 fichiers, 4744 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeApp.test.ts</code> — 16 tests</summary>
+<summary><code>src/remote/js/refereeApp.test.ts</code> — 19 tests</summary>
 
 - **refereeApp.js dans referee.html**
   - referee.html ne contient plus de script inline
@@ -8263,6 +8263,10 @@ Unitaires : 597 fichiers, 4744 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - non-combativité : jaune P, rouge P (+1 chacun), puis noir P (t.124, #2214)
   - carton noir refusé par le serveur (409, appareil maître devenu en ligne) : le combat continue
   - appareil hors ligne : ajout de carton de nouveau permis
+- **Sabre Laser : cartons chrono en marche et mort subite au carton (#2254)**
+  - Laser, chrono en marche : boutons actifs, carton jaune enregistré (+3 adverse)
+  - olympique, chrono en marche : boutons grisés, carton refusé (#1826)
+  - Laser : un carton qui porte les deux tireurs à 10 déclenche la mort subite challenger
 
 </details>
 
@@ -8303,7 +8307,7 @@ Unitaires : 597 fichiers, 4744 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeControls.test.ts</code> — 12 tests</summary>
+<summary><code>src/remote/js/refereeControls.test.ts</code> — 13 tests</summary>
 
 - **refereeControls.js controlButtonsState**
   - tirage du prioritaire : tout verrouillé
@@ -8315,7 +8319,8 @@ Unitaires : 597 fichiers, 4744 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **refereeControls.js chrono et repos**
   - timerClasses
   - scoreButtonsLocked
-  - cardButtonsLocked : chrono en marche (#1826)
+  - cardButtonsLocked : chrono en marche, escrime olympique (#1826)
+  - cardButtonsLocked : Sabre Laser, cartons chrono en marche (#2254)
   - cardButtonsLocked : actifs avant le départ du chrono (#1936)
   - canStartRest : toutes les conditions requises
   - referee.html charge le module et délègue
