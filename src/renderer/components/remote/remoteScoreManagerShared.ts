@@ -28,7 +28,7 @@ export interface RemoteSession {
   strips: Array<{
     number: number;
     status: 'available' | 'occupied' | 'maintenance';
-    currentMatch?: any;
+    currentMatch?: unknown;
     assignedReferee?: string;
   }>;
   isRunning: boolean;

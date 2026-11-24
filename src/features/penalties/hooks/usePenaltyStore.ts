@@ -114,7 +114,7 @@ export const usePenaltyStore = create<PenaltyState & PenaltyActions>()(
             const blackCards = fencerPenalties.filter(p => p.cardType === CardType.BLACK).length;
 
             return {
-              fencer: { id: fencerId } as any, // Would fetch actual fencer
+              fencer: { id: fencerId },
               penalties: fencerPenalties,
               whiteCards,
               yellowCards,
@@ -177,7 +177,7 @@ export const usePenaltyStore = create<PenaltyState & PenaltyActions>()(
               byFencer,
               byMatch,
               mostPenalizedFencer: mostPenalizedFencerId
-                ? ({ id: mostPenalizedFencerId } as any)
+                ? { id: mostPenalizedFencerId }
                 : undefined,
               mostCommonReason,
             };

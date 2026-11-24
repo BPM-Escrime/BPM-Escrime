@@ -49,7 +49,7 @@ export function useCompetitionImport({
   }, [competition]);
 
   const handleImportFencers = async (importedFencers: Partial<Fencer>[]) => {
-    await bulkAddFencers(importedFencers as any);
+    await bulkAddFencers(importedFencers);
     setImportData(null);
   };
 

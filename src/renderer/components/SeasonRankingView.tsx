@@ -178,9 +178,7 @@ export const SeasonRankingView: React.FC<SeasonRankingViewProps> = ({
   };
 
   const alreadyAdded = new Set(competitions.map(c => c.competitionId));
-  const questComps = availableCompetitions.filter(
-    c => (c.weapon === 'L' || (c as any).questEnabled) && !alreadyAdded.has(c.id)
-  );
+  const questComps = availableCompetitions.filter(c => c.weapon === 'L' && !alreadyAdded.has(c.id));
 
   const Th: React.FC<{ k: keyof SeasonEntry; label: React.ReactNode; title?: string }> = ({
     k,

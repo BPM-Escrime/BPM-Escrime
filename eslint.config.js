@@ -118,6 +118,12 @@ module.exports = [
     rules: { 'max-lines': 'off' },
   },
   {
+    // Typage (#2198) : pas de `any` dans le partagé ni le serveur distant (données des tablettes)
+    files: ['src/shared/**/*.{ts,tsx}', 'src/main/remote/**/*.ts'],
+    ignores: ['**/*.test.{ts,tsx}', '**/__tests__/**'],
+    rules: { '@typescript-eslint/no-explicit-any': 'error' },
+  },
+  {
     // Serveur distant (score en direct) : pas d'E/S fs synchrone, elle bloque la boucle
     // d'événements des tablettes et arènes (#1776). Lecture au démarrage seulement
     // (htmlLoader, i18nBundle, middleware), puis service depuis la mémoire.

@@ -765,7 +765,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
       {modals.showAddFencerModal && (
         <AddFencerModal
           onClose={() => modals.setShowAddFencerModal(false)}
-          onAdd={fencer => addFencer(fencer as any)}
+          onAdd={addFencer}
           competitionGender={competition.gender}
         />
       )}
