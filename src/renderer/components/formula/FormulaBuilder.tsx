@@ -3,6 +3,7 @@
  * Composant principal du créateur de formule à la carte.
  */
 
+import { useDurationSources } from '../../hooks/useDurationSources';
 import React, { useMemo, useState, memo } from 'react';
 import {
   CompetitionSpecialMode,
@@ -116,7 +117,11 @@ const FormulaBuilder_: React.FC<Props> = ({
   const [templateModal, setTemplateModal] = useState<'save' | 'load' | null>(null);
   const [specialMenuOpen, setSpecialMenuOpen] = useState(false);
 
-  const simulation = useMemo(() => simulateFormula(fencerCount, formula), [fencerCount, formula]);
+  const durationSources = useDurationSources();
+  const simulation = useMemo(
+    () => simulateFormula(fencerCount, formula, undefined, durationSources),
+    [fencerCount, formula, durationSources]
+  );
 
   const updatePhase = (index: number, node: FormulaPhaseNode) => {
     const phases = [...formula.phases];

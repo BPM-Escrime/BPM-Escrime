@@ -2,14 +2,22 @@ import { describe, expect, it } from 'vitest';
 import {
   adjustedDuration,
   aggregateDurations,
+  competitionDurationRecords,
+  DEFAULT_DURATION_CONFIG,
+  durationSources,
+  durationTable,
+  occupancyMs,
   percentile,
   referenceDuration,
   weaponCode,
+  validateDurationConfig,
   widenKey,
+  withCompetitionHistory,
+  withDurationOverride,
   type DurationKey,
 } from './matchDurations';
-import { estimatePhaseEta } from './phaseEta';
-import { simulateFormula } from './customRankingCalculator';
+import { estimatePhaseEta } from '../../utils/phaseEta';
+import { simulateFormula } from '../../utils/customRankingCalculator';
 
 const MIN = 60_000;
 const epeePool: DurationKey = { weapon: 'E', phase: 'pool', maxScore: 5 };
@@ -177,5 +185,97 @@ describe('matchDurations (#1965)', () => {
     });
     expect(eta.basis).toBe('measured');
     expect(eta.perMatchMs).toBeCloseTo(3.875 * MIN + MIN);
+  });
+});
+
+describe('paramétrage du poste et historique (#1965, lot 3)', () => {
+  const MIN2 = 60_000;
+  const comp = {
+    weapon: 'E',
+    gender: 'M',
+    category: 'SENIOR',
+    settings: { defaultPoolMaxScore: 5, defaultTableMaxScore: 15 },
+  };
+  const at = (min: number) => new Date(Date.UTC(2026, 10, 24, 9, 0) + min * MIN2).toISOString();
+  const timing = (poolId: string | null, tableId: string | null, start: number, end: number) => ({
+    poolId,
+    tableId,
+    startTime: at(start),
+    endTime: at(end),
+    duration: null,
+  });
+
+  it('occupation de la piste (début → fin), sinon chrono de la tablette, sinon rien', () => {
+    expect(occupancyMs(timing('p', null, 0, 4))).toBe(4 * MIN2);
+    expect(
+      occupancyMs({ poolId: 'p', tableId: null, startTime: null, endTime: null, duration: 150 })
+    ).toBe(150_000);
+    expect(
+      occupancyMs({ poolId: 'p', tableId: null, startTime: null, endTime: null, duration: null })
+    ).toBeNull();
+  });
+
+  it('agrégats d’une épreuve : clé arme · sexe · catégorie · score, aberrants exclus, sans donnée personnelle', () => {
+    const records = competitionDurationRecords(comp, [
+      timing('p', null, 0, 4),
+      timing('p', null, 4, 8),
+      timing('p', null, 8, 33), // blessure : 25 min > 3 × 3:30
+      timing(null, 't', 40, 52),
+    ]);
+    expect(records).toHaveLength(2);
+    expect(records[0]).toEqual({
+      key: { weapon: 'E', gender: 'M', category: 'SENIOR', phase: 'pool', maxScore: 5 },
+      medianMs: 4 * MIN2,
+      p80Ms: 4 * MIN2,
+      samples: 2,
+    });
+    expect(records[1]).toMatchObject({ key: { phase: 'tableau', maxScore: 15 }, samples: 1 });
+    expect(JSON.stringify(records)).not.toMatch(/fencer|name/i);
+  });
+
+  it('historique : apport d’une épreuve remplacé, fusion pondérée, seuil de 30 matchs', () => {
+    const key = { weapon: 'E', phase: 'pool' as const, maxScore: 5 };
+    let config = withCompetitionHistory(DEFAULT_DURATION_CONFIG, 'c1', [
+      { key, medianMs: 4 * MIN2, p80Ms: 5 * MIN2, samples: 20 },
+    ]);
+    config = withCompetitionHistory(config, 'c2', [
+      { key, medianMs: 5 * MIN2, p80Ms: 6 * MIN2, samples: 20 },
+    ]);
+    expect(referenceDuration(key, durationSources(config))).toMatchObject({
+      medianMs: 4.5 * MIN2,
+      p80Ms: 5.5 * MIN2,
+      basis: 'history',
+      samples: 40,
+    });
+    // c2 réenregistrée : remplacée, pas ajoutée → 20 + 5 < 30 : valeur par défaut
+    config = withCompetitionHistory(config, 'c2', [{ key, medianMs: 5 * MIN2, samples: 5 }]);
+    expect(Object.keys(config.history)).toEqual(['c1', 'c2']);
+    expect(referenceDuration(key, durationSources(config)).basis).toBe('default');
+  });
+
+  it('réglage du DT posé puis retiré ; validation du paramètre enregistré', () => {
+    const key = { weapon: 'S', phase: 'tableau' as const, maxScore: 15, gender: 'F' };
+    const set = withDurationOverride(DEFAULT_DURATION_CONFIG, key, 7 * MIN2);
+    expect(referenceDuration(key, durationSources(set))).toMatchObject({
+      medianMs: 7 * MIN2,
+      basis: 'setting',
+    });
+    expect(withDurationOverride(set, key, null).overrides).toEqual([]);
+    expect(validateDurationConfig(set)).toEqual(set);
+    expect(validateDurationConfig({})).toEqual(DEFAULT_DURATION_CONFIG);
+    expect(() => validateDurationConfig({ overrides: [{ key, medianMs: -1 }] })).toThrow(
+      /matchDurations/
+    );
+    expect(() => validateDurationConfig({ changeoverMs: 'x' })).toThrow();
+  });
+
+  it('table de l’écran : clés par défaut, puis réglages et historique', () => {
+    const key = { weapon: 'S', phase: 'tableau' as const, maxScore: 15, gender: 'F' };
+    const rows = durationTable(withDurationOverride(DEFAULT_DURATION_CONFIG, key, 7 * MIN2));
+    expect(rows).toHaveLength(7);
+    expect(rows.find(r => r.key.weapon === 'E' && r.key.phase === 'pool')?.reference.medianMs).toBe(
+      3.5 * MIN2
+    );
+    expect(rows.find(r => r.key.gender === 'F')?.override?.medianMs).toBe(7 * MIN2);
   });
 });

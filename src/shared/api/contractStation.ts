@@ -18,6 +18,7 @@ import { Weapon } from '../types';
 import { MAX_LOGO_CHARS, MAX_VENUE_STRIPS } from '../types/appSettings';
 import type { AppSettings, Venue } from '../types/appSettings';
 import type { AgentFolders } from '../types/settingsApi';
+import type { DurationRow } from '../domain/durations/matchDurations';
 import type { CustomTheme } from '../types/remote';
 import type {
   DayReferee,
@@ -98,6 +99,23 @@ const VenueInputSchema = z.object({
 
 /** Valeurs de localStorage (clé historique → texte, null : effacée) */
 const LegacyValuesSchema = z.record(z.string().max(100), z.string().max(MAX_LOGO_CHARS).nullable());
+
+// ─── Durées de match (#1965) ─────────────────────────────────────────────────
+
+const DurationKeySchema = z.strictObject({
+  weapon: z.enum(['E', 'F', 'S', 'L', 'C']),
+  gender: z.string().max(32).optional(),
+  category: z.string().max(32).optional(),
+  phase: z.enum(['pool', 'tableau', 'team_relay']),
+  maxScore: z.number().int().min(1).max(100),
+});
+
+const MatchDurationsView = z.object({
+  changeoverMs: z.number(),
+  /** Épreuves comptées dans l'historique du poste */
+  competitions: z.number().int(),
+  rows: z.custom<DurationRow[]>(),
+});
 
 // ─── Thèmes d'écrans ─────────────────────────────────────────────────────────
 
@@ -266,6 +284,44 @@ export const stationOperations = {
     description: 'Désigne la salle par défaut.',
     input: z.object({ venueId: VenueId }),
     output: Nothing,
+    permission: 'station:admin',
+  }),
+
+  // ── Durées de match (#1965) : référence réglage du DT > historique (≥ 30 matchs) > défaut ──
+  getMatchDurations: query({
+    description:
+      'Durées de match de référence du poste par arme, phase, score, sexe et catégorie : référence effective, historique mesuré, réglage du DT, changement de piste.',
+    input: z.object({}),
+    output: MatchDurationsView,
+    permission: 'station:admin',
+  }),
+  updateMatchDurationSettings: command({
+    description:
+      'Règle le changement de piste et/ou la durée de référence d’une clé (medianMs null : réglage retiré, retour à l’historique ou au défaut).',
+    input: z.object({
+      changeoverMs: z.number().int().min(0).max(3_600_000).optional(),
+      override: z
+        .object({
+          key: DurationKeySchema,
+          medianMs: z.number().int().min(30_000).max(14_400_000).nullable(),
+        })
+        .optional(),
+    }),
+    output: MatchDurationsView,
+    permission: 'station:admin',
+  }),
+  recordMatchDurationHistory: command({
+    description:
+      'Ajoute à l’historique du poste les durées mesurées d’une épreuve (médiane, 80ᵉ centile, nombre de matchs par clé, sans donnée personnelle) ; remplace son apport précédent. Fait aussi à la fin du tableau.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.object({ samples: z.number().int(), keys: z.number().int() }),
+    permission: 'station:admin',
+  }),
+  resetMatchDurationHistory: command({
+    description:
+      'Efface l’historique des durées de match du poste ; les réglages du DT sont gardés.',
+    input: z.object({}),
+    output: MatchDurationsView,
     permission: 'station:admin',
   }),
 

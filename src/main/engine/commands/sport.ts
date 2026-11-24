@@ -12,6 +12,7 @@
  * séparés après les poules : un tableau par groupe (docs/adr/0024, groupTableaux.ts).
  * Licensed under GPL-3.0
  */
+import { recordMatchDurationHistorySafely } from './matchDurations';
 import { v4 as uuidv4 } from 'uuid';
 import {
   FencerStatus,
@@ -1238,6 +1239,8 @@ function recordBracketScore(
   if (!input.dryRun) {
     emitSession(ctx, comp.id);
     if (input.specialStatus) ctx.emitChange?.({ scope: 'fencers', competitionIds: [comp.id] });
+    // Tableau terminé : durées mesurées versées à l'historique du poste (#1965)
+    if (done) recordMatchDurationHistorySafely(ctx, comp.id);
   }
   return {
     dryRun: !!input.dryRun,
