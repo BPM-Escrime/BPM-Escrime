@@ -78,7 +78,7 @@ const BASELINE = path.join(__dirname, 'quality-baseline.json');
 const SOURCE_RE = /\.tsx?$/;
 const MAX_LINES = 1500;
 const LINE_RE = /\.(tsx?|html|js|css)$/;
-const EXCLUDE_RE = /(\.test\.tsx?$|\.spec\.tsx?$|\.d\.ts$|[\\/]__tests__[\\/]|[\\/]examples[\\/])/;
+const EXCLUDE_RE = /(\.test\.tsx?$|\.spec\.tsx?$|\.d\.ts$|[\\/]__tests__[\\/])/;
 const COUNTERS = [
   'jsxText',
   'jsxAttr',
