@@ -3150,7 +3150,9 @@
     "resolve": "DT a caminho — Resolvido",
     "abandon": "Desistência",
     "abandon_note": "(a confirmar pelo DT)",
-    "confirm_abandon": "Registar a desistência"
+    "confirm_abandon": "Registar a desistência",
+    "black_card_report": "Relatório de cartão preto (PDF)",
+    "black_card_report_title": "Relatório de exclusão pré-preenchido a enviar à FFE em 48 h (anexo 14)"
   },
   "qrShare": {
     "generating": "A gerar o código QR…",

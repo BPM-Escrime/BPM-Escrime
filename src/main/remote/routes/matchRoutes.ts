@@ -604,6 +604,7 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
                 competitionId: ctx.session?.competitionId ?? null,
                 timestamp: Date.now(),
                 reason: 'black_card',
+                fencerId: culprit?.id ?? null,
                 fencerName: culprit
                   ? `${culprit.lastName ?? ''} ${culprit.firstName ?? ''}`.trim()
                   : null,

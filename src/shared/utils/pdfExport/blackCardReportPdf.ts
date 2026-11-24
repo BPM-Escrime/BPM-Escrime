@@ -1,7 +1,7 @@
 /**
  * BPM - Escrime - Rapport d'exclusion (carton noir) pré-rempli pour la FFE (#1829)
- * Une page par tireur exclu : compétition, tireur, circonstances du match ; motif, témoins et
- * signatures restent à compléter à la main. Document fédéral : rédigé en français.
+ * Une page par tireur exclu : compétition, tireur, circonstances du match (heure et source du
+ * journal, docs/adr/0028) ; motif à cocher par le DT (#2190), faits, témoins et signatures à la main. Document fédéral : rédigé en français.
  * À adresser sous 48 h à competitions@ffescrime.fr (règlement FFE, annexe 14).
  * Licensed under GPL-3.0
  */
@@ -19,6 +19,8 @@ export interface BlackCardReportEntry {
   referee?: string;
   /** Horodatage du carton (ou de la fin du match) */
   at?: Date;
+  /** Origine de l'enregistrement (journal) : « Tablette d'arbitre », « Appareil de piste »… */
+  source?: string;
 }
 
 export interface BlackCardReportCompetition {
@@ -29,7 +31,12 @@ export interface BlackCardReportCompetition {
   weapon?: string;
   category?: string;
   gender?: string;
+  /** Motifs du carton noir de l'arme (4e groupe), cochés à la main par le DT (#2190) */
+  reasons?: string[];
 }
+
+/** Motifs toujours proposés, quelle que soit l'arme */
+const COMMON_REASONS = ['Cumul de cartons (rouge du 3e groupe déjà reçu)'];
 
 const WEAPONS: Record<string, string> = {
   E: 'Épée',
@@ -97,10 +104,19 @@ export function generateBlackCardReportHTML(
       ${row('Piste', e.strip)}
       ${row('Heure', fmtTime(e.at))}
       ${row('Arbitre', e.referee)}
+      ${row('Enregistré depuis', e.source)}
     </table>
 
-    <h2>Motif et déroulement des faits</h2>
-    <div class="lines">${'<div class="line"></div>'.repeat(7)}</div>
+    <h2>Motif (à cocher)</h2>
+    <ul class="reasons">
+      ${[...(competition.reasons ?? []), ...COMMON_REASONS]
+        .map(r => `<li><span class="box"></span>${escHtml(r)}</li>`)
+        .join('')}
+      <li><span class="box"></span>Autre : <span class="blank"></span></li>
+    </ul>
+
+    <h2>Déroulement des faits</h2>
+    <div class="lines">${'<div class="line"></div>'.repeat(5)}</div>
 
     <h2>Témoins</h2>
     <div class="lines">${'<div class="line"></div>'.repeat(2)}</div>
@@ -127,6 +143,9 @@ export function generateBlackCardReportHTML(
     table.kv th { width: 38%; text-align: left; font-weight: 600; padding: 1.2mm 2mm; background: #f3f4f6; border: 1px solid #d1d5db; }
     table.kv td { padding: 1.2mm 2mm; border: 1px solid #d1d5db; }
     .blank { display: inline-block; min-width: 50mm; border-bottom: 1px dotted #9ca3af; height: 3.5mm; }
+    ul.reasons { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 6mm; font-size: 9pt; }
+    ul.reasons li { break-inside: avoid; padding: 0.8mm 0; display: flex; align-items: center; gap: 2mm; }
+    .box { flex: none; width: 3.2mm; height: 3.2mm; border: 1px solid #374151; }
     .lines .line { border-bottom: 1px solid #9ca3af; height: 7mm; }
     .signatures { display: flex; gap: 10mm; margin-top: 8mm; }
     .signatures > div { flex: 1; }

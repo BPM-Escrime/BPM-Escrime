@@ -7,8 +7,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import DTCallNotification from '../DTCallNotification';
-import { DT_CONFIRM_ABANDON_EVENT } from '../../services/dtCallEvents';
-import type { DtConfirmAbandonDetail } from '../../services/dtCallEvents';
+import { DT_BLACK_CARD_REPORT_EVENT, DT_CONFIRM_ABANDON_EVENT } from '../../services/dtCallEvents';
+import type { DtBlackCardReportDetail, DtConfirmAbandonDetail } from '../../services/dtCallEvents';
 import type { DTCallEvent } from '../../../shared/types/remote';
 import { remoteElectron } from '../../testUtils/remoteBridge';
 
@@ -82,5 +82,21 @@ describe('DTCallNotification — abandon (#2000)', () => {
     });
     expect(acknowledgeDTCall).not.toHaveBeenCalled();
     expect(screen.getByText("Enregistrer l'abandon")).toBeInTheDocument();
+  });
+
+  it('carton noir : le bouton demande le rapport fédéral du tireur (#2190)', () => {
+    const received: DtBlackCardReportDetail[] = [];
+    const onReport = (e: Event) => received.push({ ...(e as CustomEvent).detail });
+    window.addEventListener(DT_BLACK_CARD_REPORT_EVENT, onReport);
+    try {
+      render(<DTCallNotification />);
+      act(() => emitCall({ ...abandonCall, reason: 'black_card' }));
+      fireEvent.click(screen.getByText('Rapport carton noir (PDF)'));
+      expect(received).toEqual([{ fencerId: 'f9', competitionId: 'c1', handled: false }]);
+      // L'appel reste affiché : le DT le solde lui-même
+      expect(acknowledgeDTCall).not.toHaveBeenCalled();
+    } finally {
+      window.removeEventListener(DT_BLACK_CARD_REPORT_EVENT, onReport);
+    }
   });
 });

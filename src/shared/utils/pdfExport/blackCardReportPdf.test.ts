@@ -27,4 +27,17 @@ describe('generateBlackCardReportHTML (#1829, annexe 14 FFE)', () => {
     // Champs absents : ligne à compléter
     expect(html).toContain('<span class="blank"></span>');
   });
+
+  it('motifs de l’arme à cocher, cumul et autre ; source du journal (#2190)', () => {
+    const html = generateBlackCardReportHTML(
+      { title: 'Open', reasons: ['Refus du salut', 'Fraude <x>'] },
+      [{ fencer: { lastName: 'Dupont' }, source: 'Tablette d’arbitre' }]
+    );
+    expect(html.match(/<span class="box"><\/span>/g)).toHaveLength(4);
+    expect(html).toContain('Refus du salut');
+    expect(html).toContain('Fraude &lt;x&gt;');
+    expect(html).toContain('Cumul de cartons');
+    expect(html).toContain('Autre :');
+    expect(html).toContain('Tablette d’arbitre');
+  });
 });
