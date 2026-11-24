@@ -51,6 +51,7 @@ import { CyranoServer } from './cyrano/server';
 import { CyranoPisteDriver } from './cyrano/driver';
 import { MqttBroker } from './opp2/mqttBroker';
 import { Opp2PisteDriver } from './opp2/driver';
+import { opp2ClientMayPublish } from './opp2/codec';
 import { MultiPisteDriver } from './piste/multiDriver';
 import { PisteHub } from './piste/pisteHub';
 import { createDevicesPort, manualStripsOf } from './devicesPort';
@@ -198,7 +199,8 @@ registerWindowPrintHandlers({ getMainWindow: () => mainWindow });
 // Cyrano scoring machine integration (#1720)
 const cyranoServer = new CyranoServer();
 // Appareils OPP2 (JSON sur MQTT) : broker intégré, démarré à la demande (#1960)
-const opp2Broker = new MqttBroker();
+// Rôle dans le sujet (spéc. § 30.3) : seul BPM - Escrime publie `software/*`
+const opp2Broker = new MqttBroker({ authorizePublish: (_, topic) => opp2ClientMayPublish(topic) });
 const opp2Driver = new Opp2PisteDriver(opp2Broker, {
   software: { name: 'BPM - Escrime', version: app.getVersion() },
 });

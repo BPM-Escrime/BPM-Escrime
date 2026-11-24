@@ -199,6 +199,74 @@ describe('pilote OPP2 (#1960)', () => {
     expect(driver.send('4', { kind: 'ack' })).toBe(false);
   });
 
+  it('cartons P repris : software/uw2f (ordinal 0 à 5), absent sans carton P', () => {
+    driver.start();
+    const out = softwareMessages();
+    driver.send('3', { kind: 'display', display: DISPLAY });
+    expect(out.uw2f).toBeUndefined();
+    driver.send('3', {
+      kind: 'display',
+      display: {
+        ...DISPLAY,
+        right: { ...DISPLAY.right, pRed: 2 },
+        left: { ...DISPLAY.left, pBlack: 1 },
+      },
+    });
+    expect(out.uw2f).toMatchObject({ time_ms: 0, right: { p_card: 3 }, left: { p_card: 4 } });
+    expect(broker.getRetained(T('uw2f', 'software'))).toBeUndefined();
+  });
+
+  it('créneau : software/record retenu, épreuve du dernier affichage ; wantsRecord', () => {
+    expect(driver.wantsRecord('3')).toBe(false);
+    driver.start();
+    expect(driver.wantsRecord('3')).toBe(true);
+    expect(driver.wantsRecord('9')).toBe(false);
+    driver.send('3', { kind: 'display', display: DISPLAY, competition: 'EPEE-H' });
+    const f = { id: 'a', lastName: 'Martin', firstName: 'Paul', nat: 'FRA' };
+    const g = { id: 'b', lastName: 'Koch', firstName: 'Anna', nat: 'CE Berlin' };
+    driver.send('3', {
+      kind: 'record',
+      record: {
+        slotId: 'slot-1',
+        phaseType: 'pool',
+        label: 'Poule 2',
+        activeBout: 1,
+        referee: { id: 'r1', name: 'J. Smith' },
+        participants: [f, g],
+        bouts: [
+          {
+            id: 1,
+            right: f,
+            left: g,
+            result: { right: { score: 5, status: 'V' }, left: { score: 3, status: 'D' } },
+          },
+        ],
+      },
+    });
+    const r = JSON.parse(broker.getRetained(T('record', 'software'))!.toString());
+    expect(r).toMatchObject({
+      protocol: 'OPP2',
+      slot_id: 'slot-1',
+      competition: 'EPEE-H',
+      phase_type: 'pool',
+      label: 'Poule 2',
+      active_bout: 1,
+      referee: { id: 'r1', name: 'J. Smith' },
+      participants: [
+        { position: 1, id: 'a', name: 'MARTIN Paul', nation: 'FRA' },
+        { position: 2, id: 'b', name: 'KOCH Anna', nation: '', club_abbr: 'CE Berlin' },
+      ],
+      bouts: [
+        {
+          id: 1,
+          right: { id: 'a' },
+          left: { id: 'b' },
+          result: { right_score: 5, left_score: 3, right_status: 'V', left_status: 'D' },
+        },
+      ],
+    });
+  });
+
   it('inversion gaucher par l’arbitre : apparatus/fencers échange les Id', () => {
     driver.start();
     driver.send('3', { kind: 'display', display: DISPLAY });
@@ -224,6 +292,16 @@ describe('pilote OPP2 (#1960)', () => {
 });
 
 describe('plusieurs protocoles (#1960)', () => {
+  it('créneau : seul le pilote OPP2 le demande', () => {
+    const broker = new MqttBroker();
+    const opp2 = new Opp2PisteDriver(broker);
+    opp2.setPistes([{ piste: '3', arena: 3 }]);
+    opp2.start();
+    const multi = new MultiPisteDriver([opp2]);
+    expect(multi.wantsRecord('3')).toBe(true);
+    expect(multi.wantsRecord('1')).toBe(false);
+  });
+
   it('chaque piste routée vers son pilote ; Id tronqué selon le protocole de la piste', () => {
     const broker = new MqttBroker();
     const opp2 = new Opp2PisteDriver(broker);

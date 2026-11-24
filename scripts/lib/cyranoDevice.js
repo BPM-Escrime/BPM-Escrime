@@ -476,4 +476,4 @@ class CyranoDevice extends EventEmitter {
   }
 }
 
-module.exports = { CyranoDevice, COMMANDS };
+module.exports = { CyranoDevice, COMMANDS, emptyFencer, fmtWatch };
