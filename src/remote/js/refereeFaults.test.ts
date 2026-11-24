@@ -26,16 +26,17 @@ describe('refereeFaults.js', () => {
     }
   });
 
-  it('clés de faute uniques et groupes olympiques 2-3', () => {
+  it('clés de faute uniques et groupes olympiques 1-3 (numérotation FIE, #2207)', () => {
     const keys = [...F.FAULT_REASONS, ...F.FAULT_REASONS_OLYMPIC].flatMap((g: Group) =>
       g.faults.map(f => f.key)
     );
     expect(new Set(keys).size).toBe(keys.length);
-    expect(F.FAULT_REASONS_OLYMPIC.map((g: Group) => g.group)).toEqual([2, 3]);
+    expect(F.FAULT_REASONS_OLYMPIC.map((g: Group) => g.group)).toEqual([1, 2, 3]);
   });
 
   it('cartons de passivité vs standard', () => {
-    expect(F.PASSIVITY_CARDS).toEqual(['p-red', 'p-black']);
+    expect(F.PASSIVITY_CARDS).toEqual(['p-yellow', 'p-red', 'p-black']);
+    expect(F.isStandardCard('p-yellow')).toBe(false);
     expect(F.isStandardCard('yellow')).toBe(true);
     expect(F.isStandardCard('p-red')).toBe(false);
   });

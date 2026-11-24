@@ -71,6 +71,23 @@ export interface TeamMatchFact {
   round: number | null;
   position: number | null;
   relays: Array<{ relayId: string; order: number; fencerAId: string; fencerBId: string }>;
+  /** Rencontre créée après le premier carton du journal (docs/adr/0028 § 10) */
+  afterCards?: boolean;
+}
+
+/**
+ * Carton E (TeamCardGiven), carton individuel d'un relais (RelayCardGiven) ou carton P
+ * (PassivityCardGiven : ni équipe ni tireur, type `p_…`), docs/adr/0028
+ */
+export interface TeamCardFact {
+  cardId: string;
+  matchId: string;
+  type: string;
+  /** Carton E : équipe sanctionnée */
+  teamId?: string;
+  /** Carton individuel : relais et tireur */
+  relayId?: string;
+  fencerId?: string;
 }
 
 /** Épreuve par équipes : poules tirées et rencontres créées (docs/adr/0024) */
@@ -84,6 +101,14 @@ export interface TeamsFact {
   relayResults: Record<string, { matchId: string; scoreA: number; scoreB: number }>;
   /** Rencontres terminées : vainqueur (null : égalité en poule), par rencontre */
   decisions: Record<string, string | null>;
+  /** Cartons non annulés, dans l'ordre du journal (docs/adr/0028) */
+  cards: TeamCardFact[];
+  /** Rencontres dont le journal porte un carton, donné ou annulé */
+  cardMatchIds: string[];
+  /** Le journal porte au moins un événement de carton (lot C1 et après) */
+  cardsJournaled: boolean;
+  /** Équipes retirées ou exclues (TeamWithdrawn), par équipe */
+  withdrawn: Record<string, { matchId: string; reason: 'exclusion' | 'abandon' }>;
 }
 
 export interface TeamTableauSlotFact {
@@ -389,6 +414,12 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
       case JOURNAL_EVENT.relayReopened:
       case JOURNAL_EVENT.teamMatchDecided:
       case JOURNAL_EVENT.teamFencerSubstituted:
+      case JOURNAL_EVENT.teamCardGiven:
+      case JOURNAL_EVENT.relayCardGiven:
+      case JOURNAL_EVENT.passivityCardGiven:
+      case JOURNAL_EVENT.teamCardCancelled:
+      case JOURNAL_EVENT.relayCardCancelled:
+      case JOURNAL_EVENT.teamWithdrawn:
         facts.teams = projectTeamEvent(facts.teams, event);
         break;
       case JOURNAL_EVENT.rapieresWaveLaunched:

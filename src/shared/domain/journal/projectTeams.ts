@@ -1,13 +1,14 @@
 /**
  * BPM - Escrime - Rejeu des faits d'une épreuve par équipes (docs/adr/0024, lots E1 et E2)
  * Poules d'équipes, tableau, rencontres et leurs relais, score de chaque relais, rencontres
- * terminées, remplaçants. Les dérivés (cumul, classement de poule, avancement du tableau) se
+ * terminées, remplaçants, cartons (E, relais, P) et équipes retirées (docs/adr/0028). Les dérivés (cumul, classement de poule, avancement du tableau) se
  * recalculent ; seul le retrait de la rencontre suivante à la réouverture d'un relais suit la
  * règle du moteur (reopenRelay : rencontre suivante pas encore commencée, donc retirée).
  * Licensed under GPL-3.0
  */
 import { JOURNAL_EVENT, type JournalEventBody } from '../../api/events';
 import type { TeamsFact } from './projectCompetition';
+import { PASSIVITY_TYPE_PREFIX } from '../teams/passivityCardTypes';
 
 type TeamEvent = Extract<
   JournalEventBody,
@@ -19,7 +20,13 @@ type TeamEvent = Extract<
       | typeof JOURNAL_EVENT.relayScoreRecorded
       | typeof JOURNAL_EVENT.relayReopened
       | typeof JOURNAL_EVENT.teamMatchDecided
-      | typeof JOURNAL_EVENT.teamFencerSubstituted;
+      | typeof JOURNAL_EVENT.teamFencerSubstituted
+      | typeof JOURNAL_EVENT.teamCardGiven
+      | typeof JOURNAL_EVENT.relayCardGiven
+      | typeof JOURNAL_EVENT.passivityCardGiven
+      | typeof JOURNAL_EVENT.teamCardCancelled
+      | typeof JOURNAL_EVENT.relayCardCancelled
+      | typeof JOURNAL_EVENT.teamWithdrawn;
   }
 >;
 
@@ -29,7 +36,17 @@ const empty = (): TeamsFact => ({
   tableau: null,
   relayResults: {},
   decisions: {},
+  cards: [],
+  cardMatchIds: [],
+  cardsJournaled: false,
+  withdrawn: {},
 });
+
+/** Rencontre dont le journal porte un carton (docs/adr/0028 § 10) */
+function markCardMatch(teams: TeamsFact, matchId: string) {
+  teams.cardsJournaled = true;
+  if (!teams.cardMatchIds.includes(matchId)) teams.cardMatchIds.push(matchId);
+}
 
 /** Rencontres retirées avec leurs résultats */
 function dropMatches(teams: TeamsFact, drop: (m: TeamsFact['matches'][number]) => boolean) {
@@ -40,6 +57,9 @@ function dropMatches(teams: TeamsFact, drop: (m: TeamsFact['matches'][number]) =
     if (gone.has(r.matchId)) delete teams.relayResults[relayId];
   }
   for (const id of gone) delete teams.decisions[id];
+  // Cartons retirés avec leur rencontre (tables : deleteTeamMatches)
+  teams.cards = teams.cards.filter(c => !gone.has(c.matchId));
+  teams.cardMatchIds = teams.cardMatchIds.filter(id => !gone.has(id));
 }
 
 /** Applique un fait d'équipe ; rend les faits mis à jour */
@@ -58,8 +78,13 @@ export function projectTeamEvent(current: TeamsFact | null, event: TeamEvent): T
       break;
     case JOURNAL_EVENT.teamMatchScheduled: {
       const p = event.payload;
+      const afterCards = teams.cardsJournaled;
       dropMatches(teams, m => m.matchId === p.matchId);
-      teams.matches.push({ ...p, relays: p.relays.map(r => ({ ...r })) });
+      teams.matches.push({
+        ...p,
+        relays: p.relays.map(r => ({ ...r })),
+        ...(afterCards ? { afterCards } : {}),
+      });
       break;
     }
     case JOURNAL_EVENT.relayScoreRecorded: {
@@ -90,6 +115,36 @@ export function projectTeamEvent(current: TeamsFact | null, event: TeamEvent): T
       if (!m) break;
       const key = teamId === m.teamAId ? 'fencerAId' : 'fencerBId';
       for (const r of m.relays) if (relayIds.includes(r.relayId)) r[key] = inFencerId;
+      break;
+    }
+    // Cartons (docs/adr/0028) : rangés par rencontre, retirés à l'annulation
+    case JOURNAL_EVENT.teamCardGiven: {
+      const { matchId, teamId, cardId, type } = event.payload;
+      markCardMatch(teams, matchId);
+      teams.cards.push({ cardId, matchId, teamId, type });
+      break;
+    }
+    case JOURNAL_EVENT.relayCardGiven: {
+      const { matchId, relayId, fencerId, cardId, type } = event.payload;
+      markCardMatch(teams, matchId);
+      teams.cards.push({ cardId, matchId, relayId, fencerId, type });
+      break;
+    }
+    case JOURNAL_EVENT.passivityCardGiven: {
+      // Carton P : aux deux équipes, sans équipe ni tireur ; type rangé en table (`p_…`)
+      const { matchId, cardId, type } = event.payload;
+      markCardMatch(teams, matchId);
+      teams.cards.push({ cardId, matchId, type: `${PASSIVITY_TYPE_PREFIX}${type}` });
+      break;
+    }
+    case JOURNAL_EVENT.teamCardCancelled:
+    case JOURNAL_EVENT.relayCardCancelled:
+      markCardMatch(teams, event.payload.matchId);
+      teams.cards = teams.cards.filter(c => c.cardId !== event.payload.cardId);
+      break;
+    case JOURNAL_EVENT.teamWithdrawn: {
+      const { teamId, matchId, reason } = event.payload;
+      teams.withdrawn[teamId] = { matchId, reason };
       break;
     }
   }

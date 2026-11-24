@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { createRequire } from 'module';
 
 // #1213 : libellés envoyés en français par le serveur, traduits côté page
 const read = (f: string) => readFileSync(join(__dirname, f), 'utf8');
@@ -22,26 +23,24 @@ describe('kiosk.html : noms de poule traduits (#1213)', () => {
 
 describe('referee.html : raisons de carton avancé traduites (#1213)', () => {
   const html = read('referee.html') + read('js/refereeApp.js') + read('js/refereeAppBase.js'); // page + script extrait (#1600)
-  const faults = read('js/refereeFaults.js'); // données extraites de referee.html (#1401)
-  const keys = [...faults.matchAll(/\{ key: '(referee\.fault_[a-z]+_\d_\d{2})', fr: /g)].map(
-    m => m[1]
-  );
-  const groupKeys = [...faults.matchAll(/labelKey: '(referee\.fault_group_[a-z]+_\d)'/g)].map(
-    m => m[1]
-  );
+  // données extraites de referee.html (#1401) ; motifs olympiques FIE (#2207)
+  const F = createRequire(import.meta.url)('./js/refereeFaults.js');
+  type Group = { labelKey: string; faults: { key: string; fr: string }[] };
+  const groups: Group[] = [...F.FAULT_REASONS, ...F.FAULT_REASONS_OLYMPIC];
+  const faults = groups.flatMap(g => g.faults);
+  const keys = faults.map(f => f.key);
+  const groupKeys = groups.map(g => g.labelKey);
 
   it('chaque raison a une clé et la valeur enregistrée reste en français', () => {
-    expect(keys.length).toBe(47);
-    expect(groupKeys.length).toBe(5);
+    expect(keys.length).toBe(51);
+    expect(groupKeys.length).toBe(6);
     expect(html).toContain('btn.textContent = window.T(fault.key)');
     expect(html).toContain('this.confirmReasonSelector(fault.fr, group, fencer)');
   });
 
   it('le texte français de la clé = valeur enregistrée', () => {
     const fr = loadLocale('fr');
-    for (const m of faults.matchAll(/\{ key: '([^']+)', fr: (['"])(.*?)\2 \}/g)) {
-      expect(fr[m[1]]).toBe(m[3].replace(/\\"/g, '"'));
-    }
+    for (const f of faults) expect(fr[f.key], f.key).toBe(f.fr);
   });
 
   it.each(['en', 'de', 'es', 'ca', 'br', 'zh-HK'])('%s : toutes les raisons traduites', lang => {

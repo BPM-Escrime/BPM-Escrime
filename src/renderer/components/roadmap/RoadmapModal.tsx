@@ -382,7 +382,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onClose, competition
                 </button>
               ))}
             </div>
-            {tab !== 'style' && <VariableChips vars={vars} />}
+            {tab !== 'style' && <VariableChips vars={vars} onGoTo={goToVariable} />}
             {tab === 'essentials' && (
               <RoadmapInfoForm
                 info={doc.info}

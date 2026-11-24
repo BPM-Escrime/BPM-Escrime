@@ -125,12 +125,48 @@ describe('relay : score et vainqueur d’un relais (docs/adr/0024, lot E2)', () 
 
   it('palier du relais FIE : cumul plafonné à ordre × 5 ; arène : 5 par assaut', () => {
     const rule = relayRuleOf(Weapon.EPEE, { minTeamSize: 3 });
-    expect(rule).toEqual({ stepSize: 5, target: 45 });
+    expect(rule).toEqual({ stepSize: 5, target: 45, mode: 'touches', fie: true });
     const done = relays([5, 3]);
     expect(relayScoreAboveMax(done, 2, 5, 7, 'fie-relay', rule)).toBe(false);
+    // t.41.1 : palier + 1 seulement avec une touche de pénalisation (rouge adverse) du relais
     expect(relayScoreAboveMax(done, 2, 6, 0, 'fie-relay', rule)).toBe(true);
+    expect(relayScoreAboveMax(done, 2, 6, 0, 'fie-relay', rule, { A: 1, B: 0 })).toBe(false);
+    expect(relayScoreAboveMax(done, 2, 7, 0, 'fie-relay', rule, { A: 1, B: 0 })).toBe(true);
+    expect(relayScoreAboveMax(done, 2, 7, 0, 'fie-relay', rule, { A: 2, B: 0 })).toBe(false);
+    expect(relayScoreAboveMax(done, 2, 6, 0, 'fie-relay', rule, { A: 0, B: 1 })).toBe(true);
+    expect(relayScoreAboveMax([], 1, 6, 6, 'fie-relay', rule)).toBe(true);
+    expect(relayScoreAboveMax([], 1, 6, 6, 'fie-relay', rule, { A: 1, B: 1 })).toBe(false);
+    expect(relayScoreAboveMax(relays(...Array(8).fill([5, 5])), 9, 6, 0, 'fie-relay', rule)).toBe(
+      true
+    );
+    expect(
+      relayScoreAboveMax(relays(...Array(8).fill([5, 5])), 9, 6, 0, 'fie-relay', rule, {
+        A: 1,
+        B: 0,
+      })
+    ).toBe(false);
     expect(relayScoreAboveMax([], 1, 5, 5, 'laser-arena', rule)).toBe(false);
     expect(relayScoreAboveMax([], 1, 6, 0, 'laser-arena', rule)).toBe(true);
+  });
+
+  it('Sabre Laser en touches, arme à la carte : pas de dépassement (t.41.1 est FIE, #2208)', () => {
+    for (const weapon of [Weapon.LASER, Weapon.CUSTOM]) {
+      const rule = relayRuleOf(weapon, { minTeamSize: 3 });
+      expect(rule.fie).toBe(false);
+      expect(relayScoreAboveMax([], 1, 5, 2, 'fie-relay', rule)).toBe(false);
+      expect(relayScoreAboveMax([], 1, 6, 0, 'fie-relay', rule)).toBe(true);
+    }
+  });
+
+  it('Sabre Laser en points : dernière touche jusqu’à 5 points au-delà du palier − 1 (#2188)', () => {
+    const rule = relayRuleOf(Weapon.LASER, { minTeamSize: 3, laserTeamMode: 'points' });
+    expect(rule.mode).toBe('points');
+    expect(relayScoreAboveMax([], 1, 9, 2, 'fie-relay', rule)).toBe(false);
+    expect(relayScoreAboveMax([], 1, 10, 2, 'fie-relay', rule)).toBe(true);
+    expect(relayScoreAboveMax([], 1, 9, 9, 'fie-relay', rule)).toBe(true);
+    // Arène en points : 5 touches, chacune jusqu'à 5 points
+    expect(relayScoreAboveMax([], 1, 25, 0, 'laser-arena', rule)).toBe(false);
+    expect(relayScoreAboveMax([], 1, 26, 0, 'laser-arena', rule)).toBe(true);
   });
 
   it('vainqueur : meneur au cumul en relais FIE, score de l’assaut en arène', () => {

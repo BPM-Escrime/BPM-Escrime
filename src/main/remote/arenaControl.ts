@@ -3,6 +3,7 @@
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */
+import { scoreRefusal } from './scoreCommand';
 import type { Socket } from 'socket.io';
 import { ArenaMatch } from '../../shared/types/remote';
 import { sanitizeAnnouncement } from './announcement';
@@ -17,6 +18,7 @@ import {
   isDeviceSocket,
 } from './cyranoLock';
 import { notifyScreen } from './remoteActivity';
+import { toArenaReferee } from './types';
 import { assignMatchRefereeByCommand } from './scoreCommand';
 
 type S = RemoteScoreServer;
@@ -117,7 +119,7 @@ export function handleArenaControl(
       if (data.match) {
         const m = data.match;
         ctx.logDiag(
-          `[select_match] arena=${data.arenaId} matchId=${m.id} isTableau=${(m as any).isTableau}`
+          `[select_match] arena=${data.arenaId} matchId=${m.id} isTableau=${m.isTableau}`
         );
         // Restaurer isTableau depuis sessionMatches car la tablette ne le transmet pas
         const sessionMatch = ctx.sessionMatches.find(sm => sm.id === m.id);
@@ -155,7 +157,7 @@ export function handleArenaControl(
             // masquage RGPD est actif, ils ne doivent pas remplacer les vrais (#1882)
             ...(sessionMatch?.fencerA ? { fencerA: sessionMatch.fencerA } : {}),
             ...(sessionMatch?.fencerB ? { fencerB: sessionMatch.fencerB } : {}),
-            ...(sessionMatch?.referee ? { referee: sessionMatch.referee } : {}),
+            ...(sessionMatch?.referee ? { referee: toArenaReferee(sessionMatch.referee) } : {}),
             isTableau: m.isTableau ?? sessionMatch?.isTableau ?? false,
             scoreA:
               typeof (m.scoreA as unknown) === 'object'
@@ -199,7 +201,14 @@ export function handleArenaControl(
         data.fightSeconds < 6 * 3600
       )
         arena.currentMatch.fightSeconds = Math.round(data.fightSeconds);
-      ctx.finishArenaMatch(data.arenaId);
+      {
+        // Refus du moteur (#2151) : rien d'écrit, match en cours, événements gardés, refus rendu
+        const refusal = ctx.finishArenaMatch(data.arenaId);
+        if (refusal) {
+          socket.emit('error', { message: refusal.message, ...scoreRefusal(refusal) });
+          break;
+        }
+      }
       ctx.arenaCards.set(data.arenaId, { cardsA: [], cardsB: [] });
       ctx.arenaTouches.set(data.arenaId, { touchesA: [], touchesB: [] });
       ctx.arenaExits.set(data.arenaId, []);

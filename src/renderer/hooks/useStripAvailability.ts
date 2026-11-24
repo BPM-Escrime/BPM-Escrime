@@ -64,6 +64,6 @@ export function useStripPlanSync(
   useEffect(() => {
     if (!active) return;
     void remote.setStripPlan(competitionId, { start, unavailable: [...unavailable] });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- key résume `unavailable` (tableau recréé à chaque rendu)
   }, [competitionId, active, start, key]);
 }

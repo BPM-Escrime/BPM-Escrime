@@ -1,24 +1,34 @@
 /**
- * Tests unitaires pour le système de cartons FFE Sabre Laser
+ * Tests unitaires des cartons individuels (docs/adr/0028, lot D) : Sabre Laser (FFE) et
+ * escrime olympique (FIE), `buildCard` à identifiant et heure injectés.
  * BPM - Escrime
  */
 
 import { describe, it, expect } from 'vitest';
 import {
   determineCardType,
-  createCard,
-  getReasonsByGroup,
+  buildCard,
   getCardsForFencer,
   isFencerExcluded,
   getWeaponCardConfig,
   getAvailableReasons,
   getReasonsByGroupForWeapon,
   WEAPON_CARD_CONFIGS,
-  CARD_REASON_LABELS,
-  CARD_GROUP_LABELS,
-} from './cardSystem';
-import { Card, CardGroup, CardReason, Weapon } from '../types';
-import { CardType } from '../domain/penalties/penalty.types';
+} from './cards';
+import { CARD_REASON_LABELS } from '../../utils/cardSystem';
+import { Card, CardGroup, CardReason, Weapon } from '../../types';
+import { CardType } from './penalty.types';
+
+const AT = new Date('2026-11-23T10:00:00Z');
+let seq = 0;
+/** Carton construit avec un identifiant et une heure fixes (le domaine ne tire rien) */
+const createCard = (
+  matchId: string,
+  fencerId: string,
+  reason: CardReason,
+  previousCards: Card[],
+  weapon?: Weapon
+): Card => buildCard({ id: `c${++seq}`, at: AT, matchId, fencerId, reason, previousCards, weapon });
 
 // ============================================================================
 // Helper pour créer des cartons de test
@@ -29,13 +39,13 @@ const createMockCard = (
   type: CardType = CardType.YELLOW,
   fencerId: string = 'f1'
 ): Card => ({
-  id: `card-${Date.now()}`,
+  id: `card-${++seq}`,
   matchId: 'm1',
   fencerId,
   type,
   reason: CardReason.EARLY_START,
   group,
-  timestamp: new Date(),
+  timestamp: AT,
   pointsAwarded: type === CardType.RED ? 1 : 0,
   resultingExclusion: type === CardType.BLACK,
 });
@@ -187,15 +197,23 @@ describe("determineCardType - Système d'escalade FFE", () => {
 });
 
 // ============================================================================
-// Tests pour createCard
+// Tests pour buildCard
 // ============================================================================
 
-describe('createCard', () => {
-  it('crée un carton avec un ID unique', () => {
-    const card1 = createCard('m1', 'f1', CardReason.EARLY_START, []);
-    const card2 = createCard('m1', 'f1', CardReason.EARLY_START, []);
-
-    expect(card1.id).not.toBe(card2.id);
+describe('buildCard', () => {
+  it('déterministe : identifiant et heure injectés, rien de tiré', () => {
+    const input = {
+      id: 'card-1',
+      at: AT,
+      matchId: 'm1',
+      fencerId: 'f1',
+      reason: CardReason.EARLY_START,
+      previousCards: [],
+    };
+    const card = buildCard(input);
+    expect(card).toEqual(buildCard(input));
+    expect(card.id).toBe('card-1');
+    expect(card.timestamp).toBe(AT);
   });
 
   it('associe correctement le match et le tireur', () => {
@@ -217,23 +235,24 @@ describe('createCard', () => {
     expect(cardG4.group).toBe(CardGroup.GROUP_4);
   });
 
-  it('ajoute un timestamp', () => {
-    const before = new Date();
-    const card = createCard('m1', 'f1', CardReason.LATE_STOP, []);
-    const after = new Date();
-
-    expect(card.timestamp.getTime()).toBeGreaterThanOrEqual(before.getTime());
-    expect(card.timestamp.getTime()).toBeLessThanOrEqual(after.getTime());
+  it('carton sans groupe (appareil de piste) : ignoré par l’escalade du groupe', () => {
+    const device = [{ type: CardType.YELLOW, group: null }];
+    expect(determineCardType(CardReason.FIE_BODY_CONTACT, device, Weapon.EPEE).type).toBe(
+      CardType.YELLOW
+    );
+    expect(determineCardType(CardReason.EARLY_START, device, Weapon.LASER).type).toBe(
+      CardType.WHITE
+    );
   });
 });
 
 // ============================================================================
-// Tests pour getReasonsByGroup
+// Tests pour getReasonsByGroupForWeapon (Sabre Laser)
 // ============================================================================
 
-describe('getReasonsByGroup', () => {
+describe('getReasonsByGroupForWeapon (Sabre Laser)', () => {
   it('retourne les 4 groupes', () => {
-    const groups = getReasonsByGroup();
+    const groups = getReasonsByGroupForWeapon(Weapon.LASER);
 
     expect(Object.keys(groups)).toHaveLength(4);
     expect(groups[CardGroup.GROUP_1]).toBeDefined();
@@ -243,7 +262,7 @@ describe('getReasonsByGroup', () => {
   });
 
   it('Groupe 1 contient les bonnes raisons', () => {
-    const groups = getReasonsByGroup();
+    const groups = getReasonsByGroupForWeapon(Weapon.LASER);
 
     expect(groups[CardGroup.GROUP_1]).toContain(CardReason.EARLY_START);
     expect(groups[CardGroup.GROUP_1]).toContain(CardReason.LATE_STOP);
@@ -252,7 +271,7 @@ describe('getReasonsByGroup', () => {
   });
 
   it('Groupe 4 contient les exclusions directes', () => {
-    const groups = getReasonsByGroup();
+    const groups = getReasonsByGroupForWeapon(Weapon.LASER);
 
     expect(groups[CardGroup.GROUP_4]).toContain(CardReason.REFUSAL);
     expect(groups[CardGroup.GROUP_4]).toContain(CardReason.CHEATING);
@@ -331,18 +350,9 @@ describe('Labels français', () => {
     });
   });
 
-  it('tous les groupes ont un label', () => {
-    const groups = Object.values(CardGroup).filter(v => typeof v === 'number');
-
-    groups.forEach(group => {
-      expect(CARD_GROUP_LABELS[group as CardGroup]).toBeDefined();
-    });
-  });
-
   it('les labels sont en français', () => {
     expect(CARD_REASON_LABELS[CardReason.EARLY_START]).toBe('Départ anticipé');
     expect(CARD_REASON_LABELS[CardReason.CHEATING]).toBe('Tricherie');
-    expect(CARD_GROUP_LABELS[CardGroup.GROUP_1]).toContain('Jaune');
   });
 });
 
@@ -373,7 +383,9 @@ describe('Dissociation par arme', () => {
       const reasons = getAvailableReasons(Weapon.LASER);
       expect(reasons).toContain(CardReason.EARLY_START);
       expect(reasons).toContain(CardReason.CHEATING);
-      expect(reasons.length).toBe(Object.values(CardReason).length);
+      // Les 17 motifs du Sabre Laser, sans les motifs olympiques (#2207)
+      expect(reasons.length).toBe(17);
+      expect(reasons.some(r => r.startsWith('fie_'))).toBe(false);
     });
 
     it("retourne des raisons pour l'épée", () => {
@@ -425,14 +437,14 @@ describe('Dissociation par arme', () => {
     });
 
     it('raison non applicable retourne BLANC (0 point)', () => {
-      // Simule une arme dont COUNTER_ATTACK n'est pas dans le reasonToGroup
-      const originalConfig = { ...WEAPON_CARD_CONFIGS[Weapon.EPEE] };
+      // Simule une arme dont COUNTER_ATTACK n'est pas dans le reasonToGroup (escalade Sabre Laser)
+      const originalConfig = { ...WEAPON_CARD_CONFIGS[Weapon.LASER] };
       const reasonToGroupWithout: Partial<Record<CardReason, CardGroup>> = {
         ...originalConfig.reasonToGroup,
       };
       delete reasonToGroupWithout[CardReason.COUNTER_ATTACK];
 
-      WEAPON_CARD_CONFIGS[Weapon.EPEE] = {
+      WEAPON_CARD_CONFIGS[Weapon.LASER] = {
         ...originalConfig,
         availableReasons: originalConfig.availableReasons.filter(
           r => r !== CardReason.COUNTER_ATTACK
@@ -440,17 +452,17 @@ describe('Dissociation par arme', () => {
         reasonToGroup: reasonToGroupWithout,
       };
 
-      const result = determineCardType(CardReason.COUNTER_ATTACK, [], Weapon.EPEE);
+      const result = determineCardType(CardReason.COUNTER_ATTACK, [], Weapon.LASER);
       expect(result.type).toBe(CardType.WHITE);
       expect(result.points).toBe(0);
       expect(result.shouldExclude).toBe(false);
 
       // Restore
-      WEAPON_CARD_CONFIGS[Weapon.EPEE] = originalConfig;
+      WEAPON_CARD_CONFIGS[Weapon.LASER] = originalConfig;
     });
   });
 
-  describe('createCard avec weapon param', () => {
+  describe('buildCard avec weapon param', () => {
     it("crée un carton avec l'arme courante", () => {
       const card = createCard('m1', 'f1', CardReason.ESTOC, [], Weapon.LASER);
       expect(card.group).toBe(CardGroup.GROUP_2);
@@ -461,4 +473,196 @@ describe('Dissociation par arme', () => {
       expect(card.group).toBe(CardGroup.GROUP_2);
     });
   });
+});
+
+// ============================================================================
+// Escrime olympique : règlement technique FIE, t.162 à t.170 (#2207)
+// ============================================================================
+
+const OLYMPIC = [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE];
+
+/** Rejoue une suite de fautes d'un même tireur et rend les cartons obtenus */
+const replay = (weapon: Weapon, reasons: CardReason[]): Card[] => {
+  const cards: Card[] = [];
+  for (const reason of reasons) cards.push(createCard('m1', 'f1', reason, cards, weapon));
+  return cards;
+};
+
+const G1 = CardReason.FIE_BODY_CONTACT;
+const G1b = CardReason.FIE_TURNING_BACK;
+const G2 = CardReason.FIE_UNARMED_ARM;
+const G3 = CardReason.FIE_UNFAIR_FIGHT;
+const G3b = CardReason.FIE_UNSPORTING;
+const G4 = CardReason.FIE_REFUSAL_TO_SALUTE;
+
+describe.each(OLYMPIC)('Escrime olympique (%s) : cartons FIE', weapon => {
+  it('jaune = avertissement, 0 point (t.162.1)', () => {
+    const r = determineCardType(G1, [], weapon);
+    expect(r).toEqual({ type: CardType.YELLOW, shouldExclude: false, points: 0 });
+  });
+
+  it('1er groupe : jaune, puis rouge (+1) à chaque nouvelle faute du groupe (t.165)', () => {
+    const cards = replay(weapon, [G1, G1b, G1, CardReason.FIE_DISOBEDIENCE]);
+    expect(cards.map(c => c.type)).toEqual([
+      CardType.YELLOW,
+      CardType.RED,
+      CardType.RED,
+      CardType.RED,
+    ]);
+    expect(cards.map(c => c.pointsAwarded)).toEqual([0, 1, 1, 1]);
+    expect(cards.every(c => c.group === CardGroup.GROUP_1)).toBe(true);
+  });
+
+  it("1er groupe : rouge d'emblée après un rouge du 2e groupe (t.165)", () => {
+    const cards = replay(weapon, [G2, G1]);
+    expect(cards.map(c => c.type)).toEqual([CardType.RED, CardType.RED]);
+    expect(cards[1].group).toBe(CardGroup.GROUP_1);
+    expect(cards[1].pointsAwarded).toBe(1);
+  });
+
+  it("1er groupe : rouge d'emblée après un rouge du 3e groupe (t.165)", () => {
+    expect(replay(weapon, [G3, G1]).map(c => c.type)).toEqual([CardType.RED, CardType.RED]);
+  });
+
+  it('2e groupe : rouge dès la 1re faute, puis rouge (t.166)', () => {
+    const cards = replay(weapon, [G2, CardReason.FIE_HIT_OFF_TARGET, G2]);
+    expect(cards.map(c => c.type)).toEqual([CardType.RED, CardType.RED, CardType.RED]);
+    expect(cards.map(c => c.pointsAwarded)).toEqual([1, 1, 1]);
+    expect(cards.every(c => c.group === CardGroup.GROUP_2 && !c.resultingExclusion)).toBe(true);
+  });
+
+  it('2e groupe : rouge même après un jaune du 1er groupe', () => {
+    expect(replay(weapon, [G1, G2]).map(c => c.type)).toEqual([CardType.YELLOW, CardType.RED]);
+  });
+
+  it('3e groupe : rouge, puis noir à la récidive (t.167)', () => {
+    const cards = replay(weapon, [G3, G3b]);
+    expect(cards.map(c => c.type)).toEqual([CardType.RED, CardType.BLACK]);
+    expect(cards[0].pointsAwarded).toBe(1);
+    expect(cards[1].resultingExclusion).toBe(true);
+    expect(cards[1].pointsAwarded).toBe(0);
+  });
+
+  it('3e groupe : rouge à la 1re faute même après des rouges du 1er ou du 2e groupe (t.167.1)', () => {
+    expect(replay(weapon, [G1, G1, G2, G3]).map(c => c.type)).toEqual([
+      CardType.YELLOW,
+      CardType.RED,
+      CardType.RED,
+      CardType.RED,
+    ]);
+  });
+
+  it('4e groupe : noir dès la 1re faute (t.169)', () => {
+    const r = determineCardType(G4, [], weapon);
+    expect(r).toEqual({ type: CardType.BLACK, shouldExclude: true, points: 0 });
+  });
+
+  it('aucun carton blanc, quel que soit le motif ou l’historique', () => {
+    const reasons = Object.values(CardReason);
+    for (const reason of reasons) {
+      for (const history of [[], replay(weapon, [G1]), replay(weapon, [G2, G3])]) {
+        expect(determineCardType(reason, history, weapon).type).not.toBe(CardType.WHITE);
+      }
+    }
+  });
+
+  it('motifs du tableau t.170 seulement, ni motif du Sabre Laser', () => {
+    const reasons = getAvailableReasons(weapon);
+    expect(reasons.length).toBeGreaterThan(0);
+    expect(reasons.every(r => r.startsWith('fie_'))).toBe(true);
+    const groups = getReasonsByGroupForWeapon(weapon);
+    for (const g of [CardGroup.GROUP_1, CardGroup.GROUP_2, CardGroup.GROUP_3, CardGroup.GROUP_4]) {
+      expect(groups[g].length).toBeGreaterThan(0);
+    }
+    expect(groups[CardGroup.GROUP_1]).toContain(CardReason.FIE_LEAVING_PISTE);
+    expect(groups[CardGroup.GROUP_1]).toContain(CardReason.FIE_BODY_CONTACT);
+    expect(groups[CardGroup.GROUP_2]).toContain(CardReason.FIE_VIOLENT_ACT);
+    expect(groups[CardGroup.GROUP_3]).toContain(CardReason.FIE_UNSPORTING);
+    expect(groups[CardGroup.GROUP_4]).toContain(CardReason.FIE_COLLUSION);
+  });
+
+  it('chaque motif olympique a un libellé français', () => {
+    for (const r of getAvailableReasons(weapon)) expect(CARD_REASON_LABELS[r]).toBeTruthy();
+  });
+});
+
+describe('Escrime olympique : motifs propres à une arme (t.170 1.10 et 1.12)', () => {
+  it('pointe sur la piste : fleuret et épée ; coquille et croisement : sabre', () => {
+    expect(getAvailableReasons(Weapon.EPEE)).toContain(CardReason.FIE_POINT_ON_PISTE);
+    expect(getAvailableReasons(Weapon.FOIL)).toContain(CardReason.FIE_POINT_ON_PISTE);
+    expect(getAvailableReasons(Weapon.SABRE)).not.toContain(CardReason.FIE_POINT_ON_PISTE);
+    expect(getAvailableReasons(Weapon.SABRE)).toContain(CardReason.FIE_SABRE_FORWARD_CROSS);
+    expect(getAvailableReasons(Weapon.EPEE)).not.toContain(CardReason.FIE_SABRE_FORWARD_CROSS);
+  });
+
+  it("motif hors liste (ancien motif du Sabre Laser) : groupe d'origine, escalade FIE, jamais de blanc", () => {
+    const card = createCard('m1', 'f1', CardReason.EARLY_START, [], Weapon.EPEE);
+    expect(card.type).toBe(CardType.YELLOW);
+    expect(card.group).toBe(CardGroup.GROUP_1);
+    expect(card.pointsAwarded).toBe(0);
+  });
+});
+
+// ============================================================================
+// Sabre Laser et arme à la carte : escalade inchangée (#2209) ; barème Sabre Laser provisoire
+// jaune +3 / rouge +5 (#2208), arme à la carte inchangée
+// ============================================================================
+
+describe('Sabre Laser et arme à la carte', () => {
+  const LASER_GROUPS: Record<string, CardGroup> = {
+    early_start: CardGroup.GROUP_1,
+    late_stop: CardGroup.GROUP_1,
+    body_contact: CardGroup.GROUP_1,
+    counter_attack: CardGroup.GROUP_1,
+    target_substitution: CardGroup.GROUP_1,
+    voluntary_drop: CardGroup.GROUP_1,
+    time_wasting: CardGroup.GROUP_1,
+    non_compliant_gear: CardGroup.GROUP_1,
+    estoc: CardGroup.GROUP_2,
+    unarmed_hand: CardGroup.GROUP_2,
+    voluntary_exit: CardGroup.GROUP_2,
+    heavy_hit: CardGroup.GROUP_2,
+    brutality: CardGroup.GROUP_3,
+    dangerous: CardGroup.GROUP_3,
+    refusal: CardGroup.GROUP_4,
+    unsportsmanlike: CardGroup.GROUP_4,
+    cheating: CardGroup.GROUP_4,
+  };
+
+  it.each([Weapon.LASER, Weapon.CUSTOM])('%s : motifs, groupes, barème', weapon => {
+    const config = getWeaponCardConfig(weapon);
+    expect(config.availableReasons).toEqual(Object.keys(LASER_GROUPS));
+    expect(config.reasonToGroup).toEqual(LASER_GROUPS);
+    expect(config.scoreImpact).toEqual(
+      weapon === Weapon.LASER
+        ? { white: 0, yellow: 3, red: 5, black: 0 }
+        : { white: 0, yellow: 1, red: 1, black: 0 }
+    );
+    expect(config.escalation).toBeUndefined();
+  });
+
+  it.each([Weapon.LASER, Weapon.CUSTOM, undefined])(
+    '%s : escalade blanc → jaune, jaune → rouge, rouge → noir',
+    weapon => {
+      const seq = (reasons: CardReason[]) => {
+        const cards: Card[] = [];
+        for (const r of reasons) cards.push(createCard('m1', 'f1', r, cards, weapon));
+        return cards.map(c => `${c.type.toLowerCase()}:${c.pointsAwarded}`);
+      };
+      // Sabre Laser : jaune +3, rouge +5 (provisoire, #2208) ; sinon +1 / +1
+      const [y, r] = weapon === Weapon.LASER ? [3, 5] : [1, 1];
+      expect(seq([CardReason.EARLY_START, CardReason.LATE_STOP, CardReason.BODY_CONTACT])).toEqual([
+        'white:0',
+        `yellow:${y}`,
+        `yellow:${y}`,
+      ]);
+      expect(seq([CardReason.ESTOC, CardReason.HEAVY_HIT, CardReason.ESTOC])).toEqual([
+        `yellow:${y}`,
+        `red:${r}`,
+        `red:${r}`,
+      ]);
+      expect(seq([CardReason.BRUTALITY, CardReason.DANGEROUS])).toEqual([`red:${r}`, 'black:0']);
+      expect(seq([CardReason.CHEATING])).toEqual(['black:0']);
+    }
+  );
 });

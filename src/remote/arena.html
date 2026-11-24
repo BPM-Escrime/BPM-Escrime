@@ -676,19 +676,6 @@
         border: 2px solid var(--color-black);
       }
 
-      /* Cartons de passivité (escrime olympique, #1026) */
-      .card-p-red {
-        background: var(--red-500);
-        color: white;
-        border: 2px dashed var(--tw-red-900);
-      }
-
-      .card-p-black {
-        background: var(--c-111111);
-        color: white;
-        border: 2px dashed var(--tw-gray-400);
-      }
-
       .score-big {
         font-family: 'DSEG7Classic', monospace;
         font-size: var(--score-font-size, clamp(7rem, 23vw, 44vh));
@@ -1318,7 +1305,7 @@
       body.colorblind .score-big.red { text-shadow: 0 0 6px rgba(249, 115, 22, 0.95), 0 0 18px var(--score-red-glow); }
       .arena-resting-label { position: fixed; top: 0.4rem; right: 1rem; padding: 0.3rem 1.2rem; font-size: 1.4rem; border-radius: 1rem; background: var(--color-warning); color: var(--color-black); font-weight: 700; z-index: 200; } /* Repos appareil de piste (état P, #2000) : masqué via l'attribut hidden */
       @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; } }
-    </style>
+    </style><link rel="stylesheet" href="/passivityCards.css" />
   </head>
   <body>
     <!-- Overlay tirage au sort (pièce 3D) -->

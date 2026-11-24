@@ -3,6 +3,7 @@
  * Licensed under GPL-3.0
  */
 
+import { scoreRefusal } from '../scoreCommand';
 import type express from 'express';
 import type { Arena, ArenaMatch, OrgNote, RemoteSession } from '../../../shared/types/remote';
 import type { CustomScoringConfig } from '../../../shared/types';
@@ -323,7 +324,9 @@ export function registerApiRoutes(ctx: ApiRouteContext): void {
   });
 
   ctx.app.post('/api/arenas/:arenaId/finish', ctx.requireArenaAuth, (req, res) => {
-    ctx.finishArenaMatch(req.params.arenaId);
+    // Refus du moteur : rien d'écrit, match en cours, refus rendu (#2151)
+    const refusal = ctx.finishArenaMatch(req.params.arenaId);
+    if (refusal) return res.status(409).json(scoreRefusal(refusal));
     res.json({ success: true });
   });
 

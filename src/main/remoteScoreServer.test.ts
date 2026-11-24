@@ -46,26 +46,27 @@ vi.mock('http', () => ({
 // Réintégration par la commande reinstateFencer (docs/adr/0016) : simulée ici, la base de
 // test n'a pas de journal (#2134 : plus d'écriture directe en repli)
 const reinstateByCommand = vi.hoisted(() => vi.fn(() => true));
-// Contrôle du score par le moteur (#2151) : remplaçable par test, réel sinon
+// Score par le moteur (#2151) : la base de test n'a ni session ni journal, la commande est
+// simulée (acceptée, ou refusée par test) ; le moteur est couvert sur base réelle
+// (remote/finishByEngine.test.ts, remote/scoreCommand.test.ts)
 const scoreCheck = vi.hoisted(() => ({ refuse: null as null | { code: string; message: string } }));
 vi.mock('./remote/scoreCommand', async orig => {
   const real = await orig<typeof import('./remote/scoreCommand')>();
+  const outcome = () =>
+    scoreCheck.refuse
+      ? { kind: 'refused' as const, ...scoreCheck.refuse }
+      : { kind: 'accepted' as const };
   return {
     ...real,
     reinstateByCommand,
-    checkFinishedScore: (...args: Parameters<typeof real.checkFinishedScore>) =>
-      scoreCheck.refuse
-        ? { kind: 'refused' as const, ...scoreCheck.refuse }
-        : real.checkFinishedScore(...args),
-    recordFinishedScore: (...args: Parameters<typeof real.recordFinishedScore>) =>
-      scoreCheck.refuse
-        ? { kind: 'refused' as const, ...scoreCheck.refuse }
-        : real.recordFinishedScore(...args),
+    checkFinishedScore: outcome,
+    recordFinishedScore: outcome,
   };
 });
 
 import { createServer } from 'http';
 import { RemoteScoreServer } from './remoteScoreServer';
+import type { Fencer } from '../shared/types';
 import { setUiLanguage } from './menuLabels';
 import { mockDb, makeReq, makeRes } from './__tests__/remoteServerTestkit';
 
@@ -571,7 +572,7 @@ describe('RemoteScoreServer', () => {
   });
 
   describe('piste assignée aux poules (pool.strip)', () => {
-    const f = (id: string) => ({ id, firstName: id, lastName: id });
+    const f = (id: string) => ({ id, firstName: id, lastName: id }) as Fencer;
     const poolMatches = (poolId: string) => [
       {
         id: `${poolId}-m1`,
@@ -630,7 +631,7 @@ describe('RemoteScoreServer', () => {
   });
 
   describe('plusieurs poules sur la même piste (#1826)', () => {
-    const f = (id: string) => ({ id, firstName: id, lastName: id });
+    const f = (id: string) => ({ id, firstName: id, lastName: id }) as Fencer;
     const pm = (poolId: string, n: number) => ({
       id: `${poolId}-m${n}`,
       poolId,
@@ -697,7 +698,7 @@ describe('RemoteScoreServer', () => {
   });
 
   describe('réassignation manuelle de piste (#1037)', () => {
-    const f = (id: string) => ({ id, firstName: id, lastName: id });
+    const f = (id: string) => ({ id, firstName: id, lastName: id }) as Fencer;
     const pm = (poolId: string, n: number) => ({
       id: `${poolId}-m${n}`,
       poolId,
@@ -842,8 +843,8 @@ describe('RemoteScoreServer', () => {
   });
 
   describe("arbitre des matchs de tableau assigné depuis l'appli (#977)", () => {
-    const fA = { id: 'a', lastName: 'Dupont', firstName: 'Jean' };
-    const fB = { id: 'b', lastName: 'Martin', firstName: 'Paul' };
+    const fA = { id: 'a', lastName: 'Dupont', firstName: 'Jean' } as Fencer;
+    const fB = { id: 'b', lastName: 'Martin', firstName: 'Paul' } as Fencer;
     const de = (id: string, arena: number, referee?: any) => ({
       id,
       round: 8,

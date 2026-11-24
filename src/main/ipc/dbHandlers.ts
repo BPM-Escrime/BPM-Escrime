@@ -5,7 +5,6 @@
 import { BrowserWindow, ipcMain } from 'electron';
 import type { DatabaseManager } from '../../database';
 import type { RemoteScoreServer } from '../remoteScoreServer';
-import type { Card } from '../../shared/types';
 import type { CompetitionEventType } from '../../shared/types/preload';
 import { publishCompetitionEvent } from '../engine/api/events';
 
@@ -41,32 +40,5 @@ export function registerDbHandlers({ db }: DbHandlersContext): void {
 
   ipcMain.handle('db:getPhasesByCompetition', async (_, competitionId) => {
     return db.getPhasesByCompetition(competitionId);
-  });
-
-  // Cartons d'équipe : hors du moteur (docs/adr/0024, « Hors de cette ADR »)
-  ipcMain.handle(
-    'db:createTeamMatchCard',
-    async (
-      _,
-      matchId: string,
-      teamId: string,
-      type: 'white' | 'yellow' | 'red' | 'black',
-      reason: string
-    ) => {
-      return db.createTeamMatchCard(matchId, teamId, type, reason);
-    }
-  );
-
-  ipcMain.handle('db:getTeamMatchCards', async (_, matchId: string) => {
-    return db.getTeamMatchCards(matchId);
-  });
-
-  // Cartons individuels des relais par équipes (#1086)
-  ipcMain.handle('db:createTeamBoutCard', async (_, boutId: string, card: Card) => {
-    return db.createTeamBoutCard(boutId, card);
-  });
-
-  ipcMain.handle('db:getTeamBoutCards', async (_, matchId: string) => {
-    return db.getTeamBoutCards(matchId);
   });
 }

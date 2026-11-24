@@ -12,7 +12,7 @@ import { Category, FencerStatus, Gender, Weapon } from '../../../shared/types';
 import { buildMatchScores, validatePoolScore } from '../../../shared/utils/poolOrchestration';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
 import type { DomainChange, CommandContext } from './context';
-import { buildBracket, generatePools, listMatches, recordScore } from './sport';
+import { buildBracket, effectiveSettings, generatePools, listMatches, recordScore } from './sport';
 import { assignPoolReferees } from './refereeing';
 import { getBracket, getPoolRanking } from './sessionView';
 import { exportResults } from './exportResults';
@@ -86,6 +86,12 @@ describe('validation des scores de poule (identique à l’écran)', () => {
   const base = { maxScore: 5, isLaserSabre: false, tieByVictory: true };
   it('score max, égalité, vainqueur contraire', () => {
     expect(validatePoolScore({ ...base, scoreA: 6, scoreB: 2 })).toBe('score_above_max');
+    // Sabre Laser : plafond du réglage, 25 par défaut (provisoire, #2208)
+    const laser = { ...base, isLaserSabre: true, tieByVictory: false, maxScore: 25 };
+    expect(validatePoolScore({ ...laser, scoreA: 19, scoreB: 14 })).toBeNull();
+    expect(validatePoolScore({ ...laser, scoreA: 25, scoreB: 20 })).toBeNull();
+    expect(validatePoolScore({ ...laser, scoreA: 26, scoreB: 10 })).toBe('score_above_max');
+    expect(validatePoolScore({ ...laser, maxScore: 0, scoreA: 40, scoreB: 10 })).toBeNull();
     expect(validatePoolScore({ ...base, scoreA: 3, scoreB: 3 })).toBe('draw_needs_winner');
     expect(validatePoolScore({ ...base, scoreA: 3, scoreB: 3, priority: 'A' })).toBeNull();
     // Règlement o.17 : pas d'égalité au score max, même avec vainqueur (#1990)
@@ -256,13 +262,33 @@ d('déroulé complet piloté hors écran', () => {
     expect(bracket.qualified).toBe(4);
   });
 
-  it('Sabre Laser : scores max effectifs de l’écran (21 en poule)', async () => {
+  it('Sabre Laser : score max 25 par défaut en poule et au tableau, réglable (#2208)', async () => {
     const comp = await setup(4, Weapon.LASER);
+    expect(effectiveSettings(db.getCompetition(comp.id)!)).toMatchObject({
+      poolMaxScore: 25,
+      tableMaxScore: 25,
+    });
     generatePools(ctx, comp.id, { poolCount: 1 });
-    const m = listMatches(ctx, comp.id, { state: 'ready' })[0];
-    expect(() =>
-      recordScore(ctx, comp.id, { matchId: m.matchId, scoreA: 8, scoreB: 3 })
-    ).not.toThrow();
+    const pool = listMatches(ctx, comp.id, { state: 'ready' }).filter(m => m.kind === 'pool');
+    const score = (matchId: string, scoreA: number, scoreB: number) =>
+      recordScore(ctx, comp.id, { matchId, scoreA, scoreB });
+    expect(() => score(pool[0].matchId, 26, 10)).toThrow(/score_above_max/);
+    score(pool[0].matchId, 15, 10);
+    score(pool[1].matchId, 19, 14);
+    score(pool[2].matchId, 25, 20);
+    // Réglage relevé à 30 (formule) : 28-10 accepté
+    await invoke(ctx, 'updateCompetitionSettings', {
+      competitionId: comp.id,
+      settings: { defaultPoolMaxScore: 30, defaultTableMaxScore: 30 },
+    } as never);
+    score(pool[3].matchId, 28, 10);
+    for (const m of listMatches(ctx, comp.id, { state: 'ready' }).filter(x => x.kind === 'pool')) {
+      score(m.matchId, 15, 3);
+    }
+    buildBracket(ctx, comp.id, { thirdPlaceMatch: false });
+    const semi = listMatches(ctx, comp.id, { state: 'ready' })[0];
+    expect(() => score(semi.matchId, 31, 10)).toThrow(/30 touches maximum/);
+    score(semi.matchId, 28, 14);
   });
 
   it('tableau terminé : phase Résultats', async () => {

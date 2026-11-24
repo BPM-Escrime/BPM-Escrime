@@ -114,7 +114,7 @@ export const isLaser = (c: Competition) => c.weapon === Weapon.LASER;
 
 /**
  * Réglages effectifs, comme l'écran (useCompetitionCore) : formule personnalisée prioritaire,
- * scores max par défaut selon arme et catégorie (Sabre Laser : 21 / illimité). 0 = illimité.
+ * scores max par défaut selon arme et catégorie (Sabre Laser : 25 / 25, #2208). 0 = illimité.
  */
 export function effectiveSettings(comp: Competition) {
   const eff = resolveCompetitionSettings(comp.weapon, comp.settings);
@@ -1130,6 +1130,7 @@ function recordBracketScore(
     throw new CommandError('score_invalid', 'Score refusé : score_invalid');
   }
   const max = effectiveSettings(comp).tableMaxScore;
+  // Sabre Laser compris : réglage de l'épreuve, 25 par défaut (provisoire, #2208)
   if (!input.specialStatus && max > 0 && (scoreA > max || scoreB > max)) {
     throw new CommandError('score_above_max', `Score refusé : ${max} touches maximum`);
   }

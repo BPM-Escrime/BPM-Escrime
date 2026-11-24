@@ -206,11 +206,13 @@ d('recordRelayScore : rencontre FIE complète par les commandes (docs/adr/0024, 
       ...extra,
     });
     await reject('recordRelayScore', rec(2, 1, 1)).toMatchObject({ code: 'relay_out_of_order' });
-    await reject('recordRelayScore', rec(1, 6, 0)).toMatchObject({ code: 'score_above_max' });
+    await reject('recordRelayScore', rec(1, 7, 0)).toMatchObject({ code: 'score_above_max' });
+    // t.41.1 : au-delà du palier seulement avec un carton rouge dans le relais
+    await reject('recordRelayScore', rec(1, 6, 6)).toMatchObject({ code: 'score_above_max' });
     await call('recordRelayScore', rec(1, 5, 2));
     await reject('recordRelayScore', rec(1, 5, 2)).toMatchObject({ code: 'relay_out_of_order' });
     // Palier du relais 2 : 10 au cumul
-    await reject('recordRelayScore', rec(2, 6, 0)).toMatchObject({ code: 'score_above_max' });
+    await reject('recordRelayScore', rec(2, 7, 0)).toMatchObject({ code: 'score_above_max' });
     await reject('recordRelayScore', rec(10, 0, 0)).toMatchObject({ code: 'match_not_found' });
     await reject('recordRelayScore', { ...rec(2, 0, 0), matchId: 'x' }).toMatchObject({
       code: 'match_not_found',

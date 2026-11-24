@@ -8,6 +8,13 @@
  */
 import { z } from 'zod';
 import { command, CommandId, CompetitionId, DryRun, Id } from './contractDef';
+import {
+  PassivityCardSchema,
+  RelayCardSchema,
+  teamCardOperations,
+  TeamCardSchema,
+  TeamWithdrawalSchema,
+} from './contractTeamCards';
 
 const ExpectedRevision = z
   .number()
@@ -42,6 +49,8 @@ const TeamRelaySchema = z.object({
   maxScore: z.number().int(),
   status: z.string(),
   winnerId: z.string().nullable(),
+  /** Cartons individuels du relais (docs/adr/0028) */
+  cards: z.array(RelayCardSchema),
 });
 
 const TeamMatchSchema = z.object({
@@ -61,6 +70,10 @@ const TeamMatchSchema = z.object({
   winnerId: z.string().nullable(),
   currentBoutIndex: z.number().int(),
   bouts: z.array(TeamRelaySchema),
+  /** Cartons E de la rencontre (arène Sabre Laser, docs/adr/0028) */
+  teamCards: z.array(TeamCardSchema),
+  /** Cartons P de la rencontre, donnés aux deux équipes (relais FIE, t.124, docs/adr/0028) */
+  passivityCards: z.array(PassivityCardSchema),
 });
 
 export const TeamsStateSchema = z.object({
@@ -93,6 +106,8 @@ export const TeamsStateSchema = z.object({
       tied: z.boolean(),
     })
   ),
+  /** Équipes retirées ou exclues (docs/adr/0028) : hors classement de poule */
+  withdrawn: z.array(TeamWithdrawalSchema),
 });
 export type TeamsStateDTO = z.infer<typeof TeamsStateSchema>;
 
@@ -255,7 +270,7 @@ export const teamRelayOperations = {
     description:
       'Épreuve par équipes : enregistre le score d’un relais (le score du relais, pas le cumul) et le termine. Le cumul, le vainqueur du relais et celui de la rencontre se calculent. ' +
       'Dernier relais : rencontre terminée ; égalité au tableau → « winner » requis (minute avec priorité), en poule → égalité. Au tableau, la rencontre suivante est créée dès que ses deux équipes sont connues. ' +
-      'Refus : rencontre inconnue (match_not_found), relais déjà terminé ou précédents non terminés (relay_out_of_order), cumul au-delà du palier du relais FIE ou assaut au-delà de 5 en arène (score_above_max), égalité sans vainqueur au tableau (draw_needs_winner), vainqueur contraire au score (winner_contradicts_score). ' +
+      'Refus : rencontre inconnue (match_not_found), relais déjà terminé ou précédents non terminés (relay_out_of_order), cumul au-delà du palier du relais FIE (armes olympiques : d’autant de touches que de cartons rouges adverses du relais, t.41.1 ; Sabre Laser en points : de 4 points) ou assaut au-delà du plafond en arène (score_above_max), égalité sans vainqueur au tableau (draw_needs_winner), vainqueur contraire au score (winner_contradicts_score), équipe retirée ou exclue (team_withdrawn). ' +
       'Journal : RelayScoreRecorded, puis TeamMatchDecided et TeamMatchScheduled selon le cas.',
     input: z.object({
       competitionId: CompetitionId,
@@ -290,7 +305,7 @@ export const teamRelayOperations = {
   reopenRelay: command({
     description:
       'Épreuve par équipes : rouvre le dernier relais terminé d’une rencontre pour correction (son score est gardé comme score en cours). La rencontre repasse en cours ; au tableau, la rencontre suivante pas encore commencée est retirée. ' +
-      'Refus : rencontre inconnue (match_not_found), aucun relais terminé (relay_out_of_order), rencontre suivante du tableau commencée (next_match_played). ' +
+      'Refus : rencontre inconnue (match_not_found), aucun relais terminé (relay_out_of_order), rencontre suivante du tableau commencée (next_match_played), équipe retirée ou exclue (team_withdrawn). ' +
       'Journal : RelayReopened.',
     input: z.object({
       competitionId: CompetitionId,
@@ -342,5 +357,9 @@ export const teamRelayOperations = {
   }),
 };
 
-/** Opérations des épreuves par équipes : inscription, poules (E1), relais et tableau (E2) */
-export const teamOperations = { ...teamSetupOperations, ...teamRelayOperations };
+/** Opérations des épreuves par équipes : inscription, poules (E1), relais et tableau (E2), cartons */
+export const teamOperations = {
+  ...teamSetupOperations,
+  ...teamRelayOperations,
+  ...teamCardOperations,
+};

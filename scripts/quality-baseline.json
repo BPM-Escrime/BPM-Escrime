@@ -1,7 +1,7 @@
 {
   "jsxText": 0,
   "jsxAttr": 0,
-  "any": 25,
+  "any": 0,
   "console": 4,
   "inlineStyle": 279,
   "fontSizePx": 0,
@@ -12,10 +12,11 @@
   "unnamedButton": 0,
   "rendererImports": 0,
   "featuresImports": 0,
-  "electronApiCalls": 30,
-  "electronApiUses": 65,
-  "ipcChannels": 65,
-  "directDbWrites": 7,
+  "electronApiCalls": 29,
+  "electronApiUses": 61,
+  "ipcChannels": 61,
+  "directDbWrites": 0,
+  "depsUnjustified": 0,
   "remoteUnescaped": 0,
   "remoteHardLocale": 3,
   "remoteHardColor": 0,
@@ -26,8 +27,8 @@
     "src/renderer/styles/design.css": 2024,
     "src/renderer/styles/main.css": 2994,
     "src/renderer/components/wiki/wikiData.ts": 2035,
-    "src/remote/arena.html": 1531,
+    "src/remote/arena.html": 1518,
     "src/remote/kiosk.html": 1673,
-    "src/remote/referee.html": 1762
+    "src/remote/referee.html": 1749
   }
 }

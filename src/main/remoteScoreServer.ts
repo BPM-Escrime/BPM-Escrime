@@ -143,6 +143,7 @@ import {
   checkArenaFinish,
   recallPrevMatch,
   recallPrevMatchResult,
+  type FinishRefusal,
   type MatchFinishContext,
   MATCH_FINISH_CONTEXT_KEYS,
 } from './remote/matchFinish';
@@ -1030,7 +1031,7 @@ export class RemoteScoreServer {
     else logger.debug(NET, msg);
   }
 
-  public finishArenaMatch(arenaId: string): void {
+  public finishArenaMatch(arenaId: string): FinishRefusal | null {
     return finishArenaMatch(this.matchFinishCtx, arenaId);
   }
 

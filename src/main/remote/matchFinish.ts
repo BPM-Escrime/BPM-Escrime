@@ -3,9 +3,7 @@
  * Extrait de RemoteScoreServer : l'état reste dans le serveur, exposé par accesseurs (contexte).
  * Licensed under GPL-3.0
  */
-import { FencerStatus, MatchStatus } from '../../shared/types';
 import { recordRemoteEvent } from './remoteEvents';
-import { emitCompetitionEvent } from '../ipc/dbHandlers';
 import { checkFinishedScore, recordFinishedScore, type FinishOutcome } from './scoreCommand';
 import { runRemoteCommand } from './remoteCommand';
 import type { RemoteScoreServer } from '../remoteScoreServer';
@@ -127,35 +125,18 @@ export function recallPrevMatchResult(
 }
 
 /**
- * Exclusion signalée par l'appareil (statut E, #1829) : même traitement que le carton noir de la
- * tablette (remote/routes/matchRoutes.ts) — exclusion avec motif `black_card`, donc annulable depuis
- * la tablette, notification au renderer et appel DT.
+ * Exclusion signalée par l'appareil (statut E, #1829), déjà écrite par recordScore avec le score
+ * (docs/adr/0016) : notification au renderer et appel DT, comme le carton noir de la tablette
+ * (remote/routes/matchRoutes.ts). Annulable depuis la tablette (motif `black_card`).
  */
 function applyDeviceExclusion(
   ctx: MatchFinishContext,
   arenaId: string,
   match: ArenaMatch,
-  side: 'A' | 'B',
-  /** Exclusion déjà écrite par recordScore (docs/adr/0016) : rien à réécrire */
-  recorded = false
+  side: 'A' | 'B'
 ): void {
   const culprit = side === 'A' ? match.fencerA : match.fencerB;
   if (!culprit?.id) return;
-  try {
-    if (!recorded) {
-      ctx.db.updateFencer(culprit.id, {
-        status: FencerStatus.EXCLUDED,
-        exclusionReason: 'black_card',
-      });
-    }
-  } catch (e) {
-    logger.warn(
-      LogCategory.NETWORK,
-      '[RemoteScoreServer] exclusion appareil : mise à jour échouée',
-      e
-    );
-    return;
-  }
   const mainWin = getSharedMainWindow();
   if (mainWin) {
     notifyScreen({
@@ -164,8 +145,6 @@ function applyDeviceExclusion(
       fencerId: culprit.id,
       matchId: match.id,
       reason: 'black_card',
-      // Retrait écrit par le moteur : l'écran relit tireurs et session, sans rien appliquer
-      recorded,
     });
   }
   recordRemoteEvent(ctx, {
@@ -220,19 +199,59 @@ function proposeAbandonToDT(
   });
 }
 
-export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): void {
+/** Fin d'arène refusée par le moteur : code du catalogue et message, rien d'écrit (#2151) */
+export type FinishRefusal = Extract<FinishOutcome, { kind: 'refused' }>;
+
+/**
+ * Termine le match de l'arène. Score écrit d'abord par recordScore : refus → rien d'écrit, arène
+ * laissée en cours (match non avancé), refus rendu à l'appelant (tablette : 409) ; null sinon.
+ */
+export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): FinishRefusal | null {
   const arena = ctx.arenas.get(arenaId);
   ctx.logDiag(
     `[finishArenaMatch] arena=${arenaId} hasCurrent=${!!arena?.currentMatch} status=${arena?.status} matchId=${arena?.currentMatch?.id} isTableau=${(arena?.currentMatch as { isTableau?: boolean } | undefined)?.isTableau}`
   );
-  if (!arena || !arena.currentMatch) return;
+  if (!arena || !arena.currentMatch) return null;
   // Éviter le double-déclenchement (REST + Socket.IO)
-  if (arena.status === 'finished') return;
+  if (arena.status === 'finished') return null;
+
+  const finishedMatch = { ...arena.currentMatch };
+
+  // Score par la commande recordScore (#1980, ADR-0005) : session, base, journal et audit
+  // en une transaction ; exclusion (carton noir, statut E) avec le score (docs/adr/0016).
+  // Avant tout changement d'état : un refus laisse l'arène en cours (#2151, étape 3)
+  const deviceReason = finishedMatch.deviceEnd?.reason;
+  const finishWinner = resolveFinishWinner(ctx, finishedMatch);
+  // Exclu : carton noir de la tablette, ou statut E de l'appareil (le perdant)
+  const culpritSide: 'A' | 'B' | null =
+    finishedMatch.blackCardFencer ??
+    (deviceReason === 'exclusion' && finishWinner ? (finishWinner === 'A' ? 'B' : 'A') : null);
+  const outcome = ctx.isTrainingMode
+    ? null
+    : recordFinishedScore(ctx.db, {
+        competitionId: ctx.session?.competitionId,
+        matchId: finishedMatch.id,
+        scoreA: finishedMatch.scoreA,
+        scoreB: finishedMatch.scoreB,
+        winner: culpritSide ? (culpritSide === 'A' ? 'B' : 'A') : finishWinner,
+        source: finishedMatch.deviceEnd ? 'cyrano' : 'tablet',
+        // Exclusion (carton noir) : score et retrait en une commande (docs/adr/0016). Abandon
+        // signalé par l'appareil : score seul, le DT décide du retrait (t.45.1)
+        ...(culpritSide ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
+      });
+  // Refus après le contrôle de la tablette ou de l'appareil (course, match absent de la
+  // session) : rien d'écrit, match laissé en cours ; l'arbitre ou le DT corrige
+  if (outcome?.kind === 'refused') {
+    logger.error(
+      LogCategory.NETWORK,
+      `[finishArenaMatch] ${finishedMatch.id} : score refusé par le moteur (${outcome.code}), non enregistré`
+    );
+    return outcome;
+  }
+  const recorded = outcome?.kind === 'accepted';
 
   // Réinitialiser le flag de sélection arbitre (match terminé)
   ctx.arenaRefereeSelected.set(arenaId, false);
-
-  const finishedMatch = { ...arena.currentMatch };
 
   arena.status = 'finished';
   arena.currentMatch.status = 'finished';
@@ -446,117 +465,12 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): void
     text: `${competitionName ? `${competitionName} — ` : ''}Match terminé — Piste ${arenaRef.number} — ${finishedMatch.fencerA ? `${finishedMatch.fencerA.lastName} ${finishedMatch.fencerA.firstName}` : '?'} ${finishedMatch.scoreA} – ${finishedMatch.scoreB} ${finishedMatch.fencerB ? `${finishedMatch.fencerB.lastName} ${finishedMatch.fencerB.firstName}` : '?'}`,
   });
 
-  // Score par la commande recordScore (#1980, ADR-0005) : session, base, journal et audit
-  // en une transaction. Abandon / exclusion signalés par l'appareil, carton noir de la
-  // tablette : chemin historique (statuts posés par applyDeviceExclusion, confirmation du
-  // DT ou avis fencer_excluded, appliqués par l'écran).
-  const deviceReason = finishedMatch.deviceEnd?.reason;
-  const finishWinner = resolveFinishWinner(ctx, finishedMatch);
-  // Exclu : carton noir de la tablette, ou statut E de l'appareil (le perdant)
-  const culpritSide: 'A' | 'B' | null =
-    finishedMatch.blackCardFencer ??
-    (deviceReason === 'exclusion' && finishWinner ? (finishWinner === 'A' ? 'B' : 'A') : null);
-  const outcome = ctx.isTrainingMode
-    ? null
-    : recordFinishedScore(ctx.db, {
-        competitionId: ctx.session?.competitionId,
-        matchId: finishedMatch.id,
-        scoreA: finishedMatch.scoreA,
-        scoreB: finishedMatch.scoreB,
-        winner: culpritSide ? (culpritSide === 'A' ? 'B' : 'A') : finishWinner,
-        source: finishedMatch.deviceEnd ? 'cyrano' : 'tablet',
-        // Exclusion (carton noir) : score et retrait en une commande (docs/adr/0016). Abandon
-        // signalé par l'appareil : score seul, le DT décide du retrait (t.45.1)
-        ...(culpritSide ? { specialStatus: 'exclusion' as const, blackCard: true } : {}),
-      });
-  const recorded = outcome?.kind === 'accepted';
-  // Refus d'une règle après le contrôle de la tablette ou de l'appareil (course) : rien
-  // d'écrit, l'écran n'applique rien non plus (#2151) ; le DT corrige au poste
-  if (outcome?.kind === 'refused') {
-    logger.error(
-      LogCategory.NETWORK,
-      `[finishArenaMatch] ${finishedMatch.id} : score refusé par le moteur (${outcome.code}), non enregistré`
-    );
-  }
   // Score et exclusion écrits par le moteur : appel DT et notification seulement
   if (recorded && deviceReason === 'exclusion' && culpritSide) {
-    applyDeviceExclusion(ctx, arenaId, finishedMatch, culpritSide, true);
+    applyDeviceExclusion(ctx, arenaId, finishedMatch, culpritSide);
   } else if (recorded && deviceReason === 'abandon' && finishWinner) {
     proposeAbandonToDT(ctx, arenaId, finishedMatch, finishWinner === 'A' ? 'B' : 'A');
   }
-
-  // Chemin historique provisoire (#2151, étape 2) : match absent de la session ou épreuve
-  // sans journal seulement
-  if (outcome?.kind === 'fallback')
-    try {
-      const finalMatchId = finishedMatch.id;
-      const dbMatch = ctx.db.getMatch(finalMatchId);
-      // Pour les matchs TED, l'ID en base est "${competitionId}-${matchId}"
-      const compositeId = ctx.session?.competitionId
-        ? `${ctx.session.competitionId}-${finalMatchId}`
-        : null;
-      const dbTableauMatch =
-        !dbMatch && !finishedMatch.poolId && compositeId ? ctx.db.getMatch(compositeId) : null;
-      const effectiveDbMatch = dbMatch ?? dbTableauMatch;
-      const effectiveDbId = dbMatch ? finalMatchId : compositeId;
-
-      if (effectiveDbMatch && effectiveDbId) {
-        // Fin validée sur l'appareil de piste (#1720) : priorité, abandon, exclusion
-        const deviceEnd = finishedMatch.deviceEnd;
-        let winner: 'A' | 'B' | null =
-          deviceEnd?.winner ?? winnerByScore(finishedMatch.scoreA, finishedMatch.scoreB);
-        if (!winner) {
-          const mem = ctx.sessionMatchScores.get(finishedMatch.id);
-          if (isVictory(mem?.scoreA)) winner = 'A';
-          else if (isVictory(mem?.scoreB)) winner = 'B';
-        }
-        const out = (side: 'A' | 'B', reason: 'abandon' | 'exclusion') =>
-          deviceEnd?.reason === reason && !!winner && winner !== side;
-        const scoreAObj = {
-          value: finishedMatch.scoreA,
-          isVictory: winner === 'A',
-          isAbstention: out('A', 'abandon'),
-          isExclusion: out('A', 'exclusion'),
-          isForfait: false,
-        };
-        const scoreBObj = {
-          value: finishedMatch.scoreB,
-          isVictory: winner === 'B',
-          isAbstention: out('B', 'abandon'),
-          isExclusion: out('B', 'exclusion'),
-          isForfait: false,
-        };
-        ctx.db.updateMatch(effectiveDbId, {
-          scoreA: scoreAObj,
-          scoreB: scoreBObj,
-          status: MatchStatus.FINISHED,
-        });
-        emitCompetitionEvent('matches:changed', ctx.session?.competitionId);
-        // Fin signalée par l'appareil avec un tireur exclu (statut E) ou en abandon (statut A) (#1829)
-        if (deviceEnd?.reason === 'exclusion' && winner) {
-          applyDeviceExclusion(ctx, arenaId, finishedMatch, winner === 'A' ? 'B' : 'A');
-        } else if (deviceEnd?.reason === 'abandon' && winner) {
-          proposeAbandonToDT(ctx, arenaId, finishedMatch, winner === 'A' ? 'B' : 'A');
-        }
-        ctx.db.logScoreChange({
-          matchId: effectiveDbId,
-          arenaId,
-          previousScoreA: effectiveDbMatch.scoreA ?? null,
-          previousScoreB: effectiveDbMatch.scoreB ?? null,
-          newScoreA: scoreAObj,
-          newScoreB: scoreBObj,
-          changedBy: deviceEnd ? 'device' : 'referee',
-          reason: 'arena_finish',
-          poolId: finishedMatch.poolId,
-        });
-      }
-    } catch (e) {
-      logger.warn(
-        LogCategory.NETWORK,
-        '[RemoteScoreServer] logScoreChange (finishArenaMatch) failed:',
-        e
-      );
-    }
 
   // Émettre l'event pour le renderer (pour sauvegarder le score dans les pools)
   const mainWindow = getSharedMainWindow();
@@ -593,8 +507,6 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): void
       poolId: finishedMatch.poolId,
       isTableau: finishedMatch.isTableau ?? false,
       deviceReason: finishedMatch.deviceEnd?.reason,
-      // Écrit ou refusé par le moteur : l'écran relit la session au lieu d'appliquer le score
-      recorded: !!outcome && outcome.kind !== 'fallback',
     });
     logger.info(
       LogCategory.NETWORK,
@@ -619,6 +531,7 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): void
       ctx.loadNextMatch(arenaId);
     }
   }, 3000);
+  return null;
 }
 
 /**

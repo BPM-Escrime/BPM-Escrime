@@ -7,6 +7,10 @@
  */
 import type { CompetitionSettings, CustomFormulaConfig, FormulaPhaseNode } from '../../types';
 import { MAX_POOL_ROUNDS } from './formulaDraft';
+import { FormulaScope, MAX_SCORE_LIMITS, maxScoreLimits } from './laserMaxScores';
+
+export { maxScoreLimits };
+export type { FormulaScope };
 
 export interface FormulaIssue {
   /** Réglage en cause (chemin pointé : customFormula.phases[0].config.maxScore) */
@@ -16,8 +20,8 @@ export interface FormulaIssue {
 
 /** Bornes de la formule : une seule déclaration (alignée sur database/validation.ts) */
 export const FORMULA_LIMITS = {
-  poolMaxScore: { min: 1, max: 15 },
-  tableMaxScore: { min: 1, max: 50 },
+  poolMaxScore: MAX_SCORE_LIMITS.pool,
+  tableMaxScore: MAX_SCORE_LIMITS.table,
   poolRounds: { min: 1, max: MAX_POOL_ROUNDS },
   poolSize: { min: 3, max: 64 },
   timerSeconds: { min: 1, max: 3600 },
@@ -101,12 +105,14 @@ function checkCustomFormula(out: FormulaIssue[], f: CustomFormulaConfig) {
  */
 export function validateFormulaSettings(
   settings: Partial<CompetitionSettings>,
-  fields?: ReadonlyArray<keyof CompetitionSettings>
+  fields?: ReadonlyArray<keyof CompetitionSettings>,
+  scope: FormulaScope = {}
 ): FormulaIssue[] {
   const out: FormulaIssue[] = [];
   const s = settings;
-  range(out, 'defaultPoolMaxScore', s.defaultPoolMaxScore, FORMULA_LIMITS.poolMaxScore);
-  range(out, 'defaultTableMaxScore', s.defaultTableMaxScore, FORMULA_LIMITS.tableMaxScore);
+  const scoreLimits = maxScoreLimits(scope);
+  range(out, 'defaultPoolMaxScore', s.defaultPoolMaxScore, scoreLimits.pool);
+  range(out, 'defaultTableMaxScore', s.defaultTableMaxScore, scoreLimits.table);
   range(out, 'defaultPoolTimerSeconds', s.defaultPoolTimerSeconds, FORMULA_LIMITS.timerSeconds);
   range(out, 'defaultTableTimerSeconds', s.defaultTableTimerSeconds, FORMULA_LIMITS.timerSeconds);
   range(out, 'restTimeSeconds', s.restTimeSeconds, { min: 0, max: 3600 });

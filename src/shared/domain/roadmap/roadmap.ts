@@ -103,6 +103,22 @@ export const VARIABLE_SOURCE: Record<RoadmapVariable, keyof RoadmapInfo> = {
   contact: 'contactName',
 };
 
+/** Champs qui alimentent aussi une variable sans en être la source (délai, contacts) */
+const VARIABLE_EXTRA_SOURCES: Partial<Record<keyof RoadmapInfo, RoadmapVariable[]>> = {
+  deadlineDays: ['date_limite'],
+  contactEmail: ['contact'],
+  contact2Name: ['contact'],
+  contact2Email: ['contact'],
+};
+
+/** Variables qu'un champ de l'essentiel alimente (badges du formulaire) */
+export function variablesOfField(key: keyof RoadmapInfo): RoadmapVariable[] {
+  return [
+    ...ROADMAP_VARIABLES.filter(v => VARIABLE_SOURCE[v] === key),
+    ...(VARIABLE_EXTRA_SOURCES[key] ?? []),
+  ];
+}
+
 export const emptyInfo = (): RoadmapInfo => ({
   title: '',
   edition: '',

@@ -50,46 +50,34 @@ export interface RemoteSession {
   weapon?: string;
 }
 
-export interface WebSocketMessage {
-  type:
-    | 'score_update'
-    | 'match_assigned'
-    | 'match_finished'
-    | 'referee_connected'
-    | 'referee_disconnected'
-    | 'strip_status_change'
-    | 'score_update_broadcast';
-  data: any;
+/**
+ * Avis du serveur distant vers la fenêtre principale (`remote:websocket_message`).
+ * Union discriminée par `type` : seuls les avis réellement émis sont déclarés (#2198).
+ */
+interface WebSocketMessageBase {
   timestamp: Date;
   sender: string;
 }
 
-// Interface pour l'arbitre (vue tablette)
-export interface RefereeInterface {
-  referee: RemoteReferee;
-  currentMatch: RemoteMatch | null;
-  nextMatch: RemoteMatch | null;
-  completedMatches: RemoteMatch[];
-  strip: RemoteStrip;
+export interface MatchFinishedMessage extends WebSocketMessageBase {
+  type: 'match_finished';
+  data: {
+    matchId: string;
+    scoreA: number;
+    scoreB: number;
+    winner: 'A' | 'B' | null;
+    /** Cartons tels que reçus de la tablette : contenu non fiable, non interprété ici */
+    cardsA: unknown[];
+    cardsB: unknown[];
+  };
 }
 
-// Messages client vers serveur
-export interface ClientMessage {
-  type: 'login' | 'score_update' | 'match_complete' | 'heartbeat' | 'logout';
-  data: any;
+export interface ScoreUpdateMessage extends WebSocketMessageBase {
+  type: 'score_update';
+  data: { matchId: string; scoreUpdate: RemoteScoreUpdate };
 }
 
-// Messages serveur vers client
-export interface ServerMessage {
-  type:
-    | 'login_success'
-    | 'login_error'
-    | 'match_assignment'
-    | 'score_update_broadcast'
-    | 'session_update'
-    | 'error';
-  data: any;
-}
+export type WebSocketMessage = MatchFinishedMessage | ScoreUpdateMessage;
 
 // Arena management
 /** Appareil de piste Cyrano relié à l'arène (#1829) : bandeau côté arbitre */
@@ -173,8 +161,8 @@ export interface ArenaMatch {
    */
   deviceEnd?: { winner?: 'A' | 'B'; reason?: 'priority' | 'abandon' | 'exclusion' };
   /**
-   * Carton noir donné par la tablette à la fin du match : l'exclusion suit le chemin
-   * historique (avis fencer_excluded), le score n'est pas écrit par recordScore (#1980).
+   * Carton noir donné par la tablette à la fin du match : score et retrait écrits ensemble par
+   * recordScore (specialStatus exclusion, blackCard) ; l'avis fencer_excluded suit.
    */
   blackCardFencer?: 'A' | 'B';
   /**
@@ -310,15 +298,12 @@ export type RemoteActivity = RemoteActivityBase &
         isTableau?: boolean;
         /** Motif de fin signalé par l'appareil de piste : le perdant porte l'abandon / l'exclusion */
         deviceReason?: 'priority' | 'abandon' | 'exclusion';
-        /** Score écrit par recordScore : l'écran relit la session */
-        recorded?: boolean;
       }
     | {
         kind: 'fencer_excluded';
         fencerId: string;
         matchId: string;
         reason?: 'black_card';
-        recorded?: boolean;
       }
     | {
         kind: 'fencer_reinstated';
@@ -327,7 +312,6 @@ export type RemoteActivity = RemoteActivityBase &
         status: string;
         scoreA: number;
         scoreB: number;
-        recorded?: boolean;
       }
     | { kind: 'checkin_updated'; person: 'fencer' | 'referee'; id: string; present: boolean }
     | { kind: 'referee_changed'; matchId: string; refereeId: string }

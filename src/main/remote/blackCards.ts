@@ -172,8 +172,6 @@ export function cancelBlackCard(
       status,
       scoreA,
       scoreB,
-      // Réintégration écrite par le moteur : l'écran relit tireurs et session
-      recorded: true,
     });
   }
   return { success: true, matchId };

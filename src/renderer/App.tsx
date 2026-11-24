@@ -217,7 +217,7 @@ const AppContent: React.FC = () => {
         if (res.message) showToast(res.message, res.ok ? 'success' : 'error');
       });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- commandes du menu : setters et fonctions de thème / langue stables
     [view, activeTabId, competitions, t, trainingActive, handleOpenCompetitionById]
   );
 

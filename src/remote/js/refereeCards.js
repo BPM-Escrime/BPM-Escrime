@@ -16,9 +16,14 @@
     return standardCards.some(c => c === 'yellow' || c === 'red') ? 'red' : 'yellow';
   }
 
-  /** Carton attribué selon le groupe de faute (1/2/3) et l'historique du tireur */
+  /**
+   * Carton attribué selon le groupe de faute (1/2/3) et l'historique du tireur.
+   * Escrime olympique, numérotation FIE (t.165 à t.167, #2207) : 1er groupe jaune puis rouge
+   * (rouge d'emblée après un rouge), 2e et 3e groupes rouge. La récidive du 3e groupe (noir,
+   * t.167.2) passe par le bouton N. Parité avec determineCardType (shared/domain/penalties/cards.ts) testée.
+   */
   function cardFromGroup(group, ctx) {
-    if (ctx.isModern) return group === 2 ? modernYellowOrRed(ctx.standardCards) : 'red';
+    if (ctx.isModern) return group === 1 ? modernYellowOrRed(ctx.standardCards) : 'red';
     const count = (ctx.history && ctx.history[group]) || 0;
     if (group === 1) return count === 0 ? 'white' : 'yellow'; // après blanc et jaune, toujours jaune
     if (group === 2) return count === 0 ? 'yellow' : 'red';
@@ -60,10 +65,12 @@
     return cardType === 'red' ? [100, 50, 100] : cardType === 'yellow' ? 80 : 40;
   }
 
-  /** Prochain carton de passivité selon le nombre déjà décerné : P-rouge, P-noir, ou rien (>= 2) */
+  /** Suite des cartons de non-combativité (FIE t.124.1 et t.124.2) : jaune P, rouge P, noir P */
+  const PASSIVITY_SEQUENCE = ['p-yellow', 'p-red', 'p-black'];
+
+  /** Prochain carton de passivité selon le nombre déjà décerné, ou rien (>= 3) */
   function nextPassivityCard(given) {
-    if (given >= 2) return null;
-    return given === 0 ? 'p-red' : 'p-black';
+    return PASSIVITY_SEQUENCE[given] ?? null;
   }
 
   /**

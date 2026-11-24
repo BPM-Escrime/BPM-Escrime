@@ -1,6 +1,6 @@
 # ADR-0028 — Les cartons des épreuves par équipes passent par le moteur
 
-- **Statut** : Acceptée (2026-11-23), questions tranchées par les règlements (§ « Questions tranchées »)
+- **Statut** : Acceptée (2026-11-23), questions tranchées par les règlements (§ « Questions tranchées ») ; amendée le 2026-11-24 (migration 49, cartons P)
 - **Date** : 2026-11-23
 - **Tickets** : #2100 (suite), #1980, #1981 (épique #1978)
 
@@ -49,12 +49,53 @@ de `socketHandlers.ts` comptent dans le cliquet `directDbWrites`.
 - Carton « E » : `determineTeamCardEscalation` (`shared/domain/teams/teamCardEscalation.ts`,
   pur) rend blanc pour la première désignation tardive de la rencontre, jaune ensuite (cumul sur
   les 9 assauts). Ce n'est qu'une **suggestion** surlignée à l'écran (`TeamPoolView.tsx:480`) :
-  l'écran comme la tablette enregistrent le type choisi. Rouge et noir E sont manuels ; le
-  règlement Sabre Laser ne leur donne aucun effet en points.
+  l'écran comme la tablette enregistrent le type choisi. Rouge et noir E sont manuels, sans
+  effet en points dans le code ; aucun règlement ne les définit (Livret 2 XII : compétition par
+  équipe « A venir »).
 - Carton noir : la tablette refuse le noir E si `settings.blackCardEnabled` n'est pas vrai ;
   l'écran le propose toujours. Un noir individuel issu de l'escalade passe partout.
 - Les `CardGroup` / `CardReason` de Sabre Laser (groupes de pénalités du règlement FFE 2025-2026)
-  servent à toutes les armes (`WEAPON_CARD_CONFIGS`).
+  servent à toutes les armes (`WEAPON_CARD_CONFIGS`), escalade et points compris : c'est une
+  erreur pour l'escrime olympique (#2207), et le barème du Sabre Laser n'a pas de source dans les
+  règlements 2026-2027 (#2208, #2209). Voir « Deux règlements, deux barèmes ».
+
+**Deux règlements, deux barèmes** (amendement du 2026-11-23). Les cartons des épreuves par
+équipes relèvent de deux règlements distincts, qui ne se déduisent pas l'un de l'autre :
+
+|                                   | Escrime olympique (épée, fleuret, sabre)                                                      | Sabre Laser                                                                                                           |
+| --------------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Règlement                         | FIE, règlement technique et règles d'organisation (déc. 2025) ; FFE, règlement de l'arbitrage | ASL-FFE, Livrets 0, 1, 2 (2026-2027)                                                                                  |
+| Format par équipes                | Relais FIE (o.99, t.41)                                                                       | Relais ou arène : **aucune règle fédérale** (Livret 2 XII « A venir ») ; conventions du logiciel                      |
+| Jaune                             | Avertissement, 0 touche (t.162.1)                                                             | Provisoire : **+3 points** à l'adversaire, repris de docs/ARBITRAGE.md, en attente de #2208                           |
+| Rouge                             | Une touche à l'adversaire (t.162.2)                                                           | Provisoire : **+5 points** à l'adversaire, repris de docs/ARBITRAGE.md, en attente de #2208                           |
+| Blanc                             | N'existe pas                                                                                  | Existe (ex. matériel non conforme, Livret 2 V.3.2)                                                                    |
+| Escalade par groupe               | t.165 à t.169                                                                                 | Non précisée en 2026-2027, sauf fautes particulières (V.3.2) ; à arbitrer (#2208, #2209)                              |
+| Noir                              | Exclusion ; en équipe, rencontre perdue et équipe exclue (o.99.7.b)                           | Exclusion, points des adversaires conservés (VIII.7) ; en équipe : aucune règle                                       |
+| Cartons P (non-combativité)       | t.124                                                                                         | Absents des livrets 2026-2027 (l'anti-jeu y est une faute du 1er groupe)                                              |
+| Dépassement du palier d'un relais | Une touche, avec une pénalisation simultanée (t.41.1)                                         | Points : dernière touche en cible C (Livret 2 VIII.1, par analogie) ; touches : aucun dépassement, à arbitrer (#2208) |
+
+Le domaine (lot D) porte **une configuration par règlement** ; aucune valeur, aucune escalade
+ni aucun article ne passe d'une colonne à l'autre. Les règles FIE citées plus bas (§ 3, § 4,
+§ 5 bis, questions 1 et 2) valent pour le relais FIE des armes olympiques. Pour le Sabre Laser,
+ces sections s'appliquent une fois le barème et l'escalade tranchés (#2208, #2209) ; d'ici là,
+le moteur enregistre le carton (type, motif, groupe) sans l'appliquer au score.
+
+**Barème provisoire du Sabre Laser** (décision du mainteneur, 2026-11-23, en attendant
+l'arbitrage de #2208). `WEAPON_CARD_CONFIGS[LASER].scoreImpact` reprend le barème de la tablette
+(docs/ARBITRAGE.md § 3.4, `src/remote/js/refereeCards.js`) : blanc 0 (2ᵉ blanc → jaune), jaune
+**+3 points**, rouge **+5 points**, noir exclusion ; parité domaine / tablette testée
+(`refereeCards.test.ts`). L'escalade par groupe du Sabre Laser reste celle du domaine (#2209).
+Arme à la carte (+1 / +1) et armes olympiques inchangées.
+
+**Score maximum du Sabre Laser individuel** (même décision). Le combat s'arrête à 15
+(`LASER_SCORE_LIMIT`), mais le score saisi peut dépasser 15 (touche finale en cible C, sortie
+d'arène +3, cartons). Score maximum de poule et de tableau : **25 par défaut**, réglable dans la
+formule de 15 à 50 (`maxScoreLimits`, `src/shared/domain/formula/validateFormulaSettings.ts` ;
+escrime olympique et épreuves par équipes : poule 1-15, tableau 1-50, inchangé). Ce plafond
+remplace « pas de plafond » de #2205 : `validatePoolScore` et `recordTableauScore` appliquent le
+réglage (`score_above_max`). Épreuves créées avec l'ancien repli 5 / 21 (#2174 → #2205), sans
+migration : une poule sous 15, impossible au Sabre Laser et refusée par la validation, se lit 25,
+le tableau à 21 de la même paire aussi (`readLaserMaxScores`, appelée à la lecture de l'épreuve).
 
 **Cartons individuels hors équipes, pour comparaison** : ils ne sont pas non plus des faits du
 journal. Le contrat ne les lit que (`getMatchCards`, `getCardsByMatchIds`, droit `cards:read`,
@@ -98,8 +139,16 @@ reprendront par une ADR à part.
   FFE sous 48 h avec la feuille ; à partir de M15, le noir P à égalité vise le moins bon
   classement initial **dans le tableau en cours**.
 - FFE Sabre Laser, Livret 0 (organisation 2026-2027) : le dossier de résultats joint le rapport
-  de carton noir. Le Livret 2 (combat sportif, carton E) n'est pas dans le dossier des règlements
-  relus : les règles du carton E restent celles du code actuel.
+  de carton noir.
+- FFE Sabre Laser, Livret 2 (combat sportif 2026-2027, relu le 2026-11-23) :
+  - XII « Compétition par équipe » : **« A venir. »** Aucune règle fédérale ne fixe la rencontre
+    par équipes ni le carton E (désignation tardive) : ce sont des conventions du logiciel ;
+  - carton noir (faute du 4e groupe, par exemple refus d'un défi) : « exclu de la compétition et
+    donc du classement général », les points acquis par ses adversaires sont conservés (VIII.7) ;
+    aucune disposition ne permet de désactiver le carton noir ;
+  - combats en 15 points (3 min), score pouvant atteindre 19, et un carton donnant des points à
+    l'adversaire peut le faire gagner (III, VIII.1, IX.1) ; en mort subite, les points de
+    pénalité comptent et un carton qui fait dépasser 15 termine le combat (VII.4).
 - Protocole Cyrano 1.1 : l'appareil envoie par tireur des **compteurs** (jaune 0-1, rouge 0-9,
   carton P 0-5), sans carton noir individuel ni motif ni groupe.
 
@@ -112,7 +161,7 @@ nom en snake_case :
 
 | Commande        | Entrée                                                                                                          | Règle                                                                                                                                                                                                                   |
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `giveTeamCard`  | `{ competitionId, matchId, teamId, type?, dryRun?, expectedRevision?, commandId? }`                             | Arène Sabre Laser seulement. `type` absent : celui de `determineTeamCardEscalation`. Noir refusé sans `blackCardEnabled`. L'équipe doit être de la rencontre. Motif fixe `late_designation`                             |
+| `giveTeamCard`  | `{ competitionId, matchId, teamId, type?, dryRun?, expectedRevision?, commandId? }`                             | Arène Sabre Laser seulement. `type` absent : celui de `determineTeamCardEscalation`. Noir toujours accepté (§ Questions, 4). L'équipe doit être de la rencontre. Motif fixe `late_designation`                          |
 | `giveRelayCard` | `{ competitionId, matchId, relayId, side: 'A' \| 'B', reason?, type?, dryRun?, expectedRevision?, commandId? }` | Exactement un de `reason` (écran, tablette, MCP : type calculé par l'escalade sur la rencontre) ou `type` (appareil de piste, qui n'a pas de motif). Le tireur est celui du côté dans le relais. Rencontre non terminée |
 
 Recommandation : **deux commandes** plutôt qu'une `giveCard` à cible variable. Les entrées, les
@@ -129,19 +178,22 @@ individuel ne s'annule pas ainsi (§ 4).
 ### 2. La règle dans le domaine, pure
 
 - `src/shared/domain/penalties/cards.ts` reçoit `determineCardType` et les tables de
-  `cardSystem.ts` (motif → groupe, effet par arme). `createCard` y devient
+  `cardSystem.ts`, **séparées par règlement** : FIE pour les armes olympiques (motifs t.170,
+  escalade t.165 à t.169, jaune sans touche, pas de blanc ; #2207), ASL-FFE pour le Sabre Laser
+  (barème provisoire jaune +3 / rouge +5, escalade inchangée ; arbitrage dans #2208 et #2209).
+  `createCard` y devient
   `buildCard({ id, at, … })` : identifiant et heure injectés. `cardSystem.ts` réexporte le temps
   de la migration des appelants.
 - `src/shared/domain/teams/teamCards.ts` : `relayCardFor(rencontre, côté, relais, motif |
-type, cartons de la rencontre, arme)` et `teamCardFor(rencontre, équipe, type?, cartons,
-blackCardEnabled)`. Elles rendent le carton ou un code de refus. `teamCardEscalation.ts` y est
+type, cartons de la rencontre, arme)` et `teamCardFor(rencontre, équipe, type?,
+cartons)`. Elles rendent le carton ou un code de refus. `teamCardEscalation.ts` y est
   absorbé.
 - `newDeviceCards(enregistrés, montrés)` : cartons montrés par l'appareil et pas encore
   enregistrés (compte par type, même fusion que `fencerMeetingCards`).
 
 ### 3. Effet sur le score : aucun effet automatique
 
-Recommandation : le carton **n'écrit pas** de touche. Le score du relais reste le fait de
+Recommandation, pour les deux règlements : le carton **n'écrit pas** de touche ni de point. Le score du relais reste le fait de
 `recordRelayScore`, et il contient déjà la touche de pénalité, comptée par l'arbitre sur la
 tablette ou par l'appareil. Ajouter la touche à la commande du carton la compterait deux fois.
 `pointsAwarded` reste calculé par le domaine et affiché (feuille, tablette). C'est aussi le
@@ -151,7 +203,7 @@ Option écartée : la touche du rouge ajoutée au score en direct de l'arène pa
 demande que l'appareil et la tablette cessent de la compter, ce qui touche les protocoles Cyrano
 et OPP2.
 
-Conséquence de t.41.1 et t.162.2 : `recordRelayScore` accepte un relais au-delà de son palier
+Escrime olympique, conséquence de t.41.1 et t.162.2 : `recordRelayScore` accepte un relais au-delà de son palier
 d'autant de touches que de cartons rouges donnés dans ce relais (aujourd'hui `score_above_max`),
 et une rencontre gagnée par une touche de pénalisation.
 
@@ -174,7 +226,8 @@ reason: 'abandon' }`, même événement `TeamWithdrawn`. La rencontre est perdue
 - **Noir P** (t.124) : ce n'est pas une exclusion. La rencontre est décidée pour l'équipe au
   meilleur score, ou à égalité au meilleur classement initial (FFE à partir de M15 : du tableau
   en cours) ; la perdante est classée comme ayant perdu (§ 5 bis).
-- **Noir E** : traçabilité, aucun effet (règles du code actuel, Livret 2 non relu).
+- **Noir E** : traçabilité, aucun effet (convention du logiciel : le Livret 2 renvoie la
+  compétition par équipe à plus tard).
 - Annulation d'un noir individuel : seulement par le Directoire technique, en réintégrant le
   tireur (`reinstateFencer`) et l'équipe ; le carton reste au dossier.
 
@@ -199,8 +252,11 @@ vainqueur imposé par un noir P.
 - Au noir P, le domaine désigne le vainqueur (score, puis classement initial) et la commande
   décide la rencontre (`TeamMatchDecided`). L'appareil qui envoie un noir P avec la fin de relais
   est accepté (ACK) au lieu d'un NAK.
-- Événement `PassivityCardGiven { matchId, cardId, type }`. Stockage : `team_match_cards` avec
-  `team_id` nul et `type` préfixé `p_` ; si le lot montre qu'une colonne manque, nouvelle ADR.
+- Événement `PassivityCardGiven { matchId, cardId, type }`. Stockage : `team_match_cards`, une
+  ligne par carton P, `team_id` **NULL** (carton donné aux deux équipes) et `type` préfixé `p_`
+  (`p_yellow`, `p_red`, `p_black`), motif `passivity`. La migration 49 rend `team_id` nullable
+  (§ 9, amendement du 2026-11-24). Un carton E a toujours une équipe ; un lecteur des cartons E
+  écarte les lignes à `team_id` nul ou à `type` en `p_`.
 
 ### 6. Journal
 
@@ -253,12 +309,19 @@ reprendra cette forme (`MatchCardGiven`).
 Après chaque commande, l'arène relit la rencontre et diffuse `team_arena_state`, comme pour
 `recordRelayScore`. Pas de changement de protocole des pages `/equipe{N}` ni de `teamRelayPiste`.
 
-### 9. Schéma : pas de migration
+### 9. Schéma : une migration, `team_id` nullable
 
-Les deux tables suffisent ([ADR-0011](0011-migrations-schema-3-0.md)). Le moteur écrit
+Les deux tables suffisent en colonnes ([ADR-0011](0011-migrations-schema-3-0.md)). Le moteur écrit
 `team_bout_cards.card_json` au format `Card` actuel ; `id` et `created_at` viennent de
-l'identifiant et de l'heure injectés de la commande. La source est au journal, pas en table. Si
-un lot découvre un besoin de colonne, il passe par une nouvelle ADR.
+l'identifiant et de l'heure injectés de la commande. La source est au journal, pas en table.
+
+Amendement du 2026-11-24 (lot C4) : `team_match_cards.team_id` est `NOT NULL` depuis la
+migration 15, avec une clé étrangère vers `teams` (`foreign_keys = ON`) ; le carton P sans équipe
+ne s'y range pas. **Migration 49** : la table est reconstruite à l'identique, `team_id` nullable,
+clé étrangère vers `teams(id)` conservée (vérifiée quand la valeur n'est pas nulle), cascade sur
+`team_matches` conservée, lignes recopiées, index `idx_team_match_cards_match` recréé. Options
+écartées : une ligne par équipe (deux identifiants pour un seul `cardId` de l'événement) et une
+table `team_passivity_cards` (une troisième table de cartons pour un seul type).
 
 ### 10. Cartons déjà en base
 
@@ -282,8 +345,7 @@ On ajoute ([ADR-0009](0009-codes-erreur.md), dans la PR de la commande, puis `np
 - `relay_not_found` (`not_found`) : relais inconnu dans la rencontre ;
 - `team_not_in_match` (`not_found`) : équipe étrangère à la rencontre (la tablette l'accepte
   aujourd'hui) ;
-- `match_finished` (`rule`) : rencontre terminée, carton refusé ;
-- `black_card_disabled` (`rule`) : carton noir désactivé sur l'épreuve.
+- `match_finished` (`rule`) : rencontre terminée, carton refusé.
 
 ### 12. Lots
 
@@ -296,8 +358,14 @@ un fait journalisé partout ou nulle part ([ADR-0005](0005-journal-un-fait-un-ch
 | C1  | `giveTeamCard`, `giveRelayCard`, `cancel…Card`, `withdrawTeam` (moteur, MCP), noir individuel → retrait du tireur et exclusion de l'équipe dans la transaction, palier + rouges dans `recordRelayScore`, événements, `projectTeams`, bloc `teams`, codes | Rencontre avec cartons E, jaune, rouge et noir par les commandes, rejeu sans écart |
 | C2  | Écran : `TeamManagerView` lit les cartons dans le bloc `teams` et écrit par `useBpmClient`                                                                                                                                                               | `grep electronAPI src/renderer/components/TeamManagerView.tsx` vide                |
 | C3  | Tablette (`team_card`, `team_fencer_card`) et appareils (`newDeviceCards`) par `invokeCommandSync`                                                                                                                                                       | Relais FIE depuis le simulateur Cyrano et OPP2 : cartons en base après redémarrage |
-| C4  | `givePassivityCard`, noir P qui décide la rencontre, appareil : P-card → commande, ACK au noir P                                                                                                                                                         | Noir P depuis le simulateur Cyrano : rencontre décidée, ACK, rejeu sans écart      |
+| C4  | Migration 49 (`team_id` nullable), `givePassivityCard`, noir P qui décide la rencontre, appareil : P-card → commande, ACK au noir P                                                                                                                      | Noir P depuis le simulateur Cyrano : rencontre décidée, ACK, rejeu sans écart      |
 | N   | Retrait de `createTeamMatchCard`, `createTeamBoutCard`, `getTeamMatchCards`, `getTeamBoutCards` du préload, des canaux `db:*` et de `DatabaseManager` (le moteur lit le dépôt). Cliquets abaissés                                                        | Critères ci-dessous                                                                |
+
+Lot N fait (2026-11-24) : les quatre opérations sortent du préload (`dbApi.ts`, type
+`DatabaseAPI`), des canaux `db:*` (`dbHandlers.ts`) et des façades de `DatabaseManager` ; le moteur
+et l'arène lisent le dépôt (`ctx.db.teams.getTeamBoutCards`, `getTeamMatchCards`). Cliquets :
+`ipcChannels` 65 → 61 ; `electronApiCalls` (−1), `electronApiUses` (−4) et `directDbWrites` (−2)
+avaient déjà été abaissés par les lots C2 et C3.
 
 **Critères d'acceptation** :
 
@@ -315,24 +383,33 @@ un fait journalisé partout ou nulle part ([ADR-0005](0005-journal-un-fait-un-ch
 
 ## Questions tranchées (règlements relus le 2026-11-23)
 
-1. **Touche du carton rouge** : elle s'ajoute au score de l'adversaire (t.162.2) et figure déjà
+1. **Touche du carton rouge** (escrime olympique) : elle s'ajoute au score de l'adversaire (t.162.2) et figure déjà
    dans le score que donnent la tablette et l'appareil ; le carton n'écrit pas de touche (§ 3).
    Le relais peut dépasser son palier d'autant de rouges (t.41.1).
-2. **Noir individuel** : rencontre perdue et équipe exclue sans classement final (o.99.7.b),
+2. **Noir individuel** (relais FIE, escrime olympique) : rencontre perdue et équipe exclue sans classement final (o.99.7.b),
    tireur seul suspendu (t.160), pas de remplacement. Abandon sans remplaçant : `withdrawTeam`,
    l'équipe garde sa place (o.99.7.a) (§ 4).
 3. **Annulation** : oui, dès C1, par le Directoire technique seulement (t.164, t.172) (§ 1).
-4. **Noir E et `blackCardEnabled`** : appliqué partout, écran compris, pour la cohérence ; le
-   Livret 2 Sabre Laser, absent du dossier relu, reste à vérifier.
-5. **Escalade E** : imposée sans `type`, suggérée avec `type` (comportement actuel), même
-   réserve sur le Livret 2.
+4. **Noir et `blackCardEnabled`** : aucun règlement ne permet de désactiver le carton noir
+   (FIE t.167 à t.169, Livret 2 VIII.7). `blackCardEnabled` reste un réglage d'**affichage** de
+   la tablette (bouton masqué contre les appuis involontaires) ; le moteur accepte toujours un
+   carton noir, quelle que soit la source. Pas de code `black_card_disabled`. La tablette, qui
+   refuse aujourd'hui le noir E sans ce réglage, s'aligne (#2186).
+5. **Escalade E** : le Livret 2 ne règle pas la compétition par équipe (« A venir ») ; on garde
+   le comportement actuel (imposée sans `type`, suggérée avec `type`), convention du logiciel à
+   revoir quand la FFE publiera ces règles.
 6. **Cartons de l'appareil** : enregistrés à chaque état reçu, par différence des compteurs
    Cyrano (jaune, rouge, P). Sans motif, ils n'ont pas de groupe : la feuille de rencontre les
    marque « groupe à compléter » (t.163 exige le groupe) et le Directoire technique le complète.
 7. **Cartons individuels hors équipes** : ADR suivante, même forme (`giveMatchCard`,
-   `MatchCardGiven`) ; t.163 vaut aussi pour eux.
+   `MatchCardGiven`) ; t.163 vaut aussi pour eux. Elle tiendra compte d'un écart entre règlements
+   pour le carton noir : en escrime, résultats de l'exclu annulés (o.74.3, o.79.2) ; au Sabre
+   Laser, points de ses adversaires conservés (Livret 2 VIII.7).
 8. **Épreuves en cours** : aucune règle sportive ne s'applique ; la comparaison partielle du § 10
    suffit.
+9. **Stockage des cartons P** (décision du mainteneur, 2026-11-24) : `team_match_cards` avec
+   `team_id` NULL et `type` `p_…`, après la migration 49 qui rend la colonne nullable (§ 5 bis,
+   § 9). L'événement `PassivityCardGiven { matchId, cardId, type }` est inchangé.
 
 ## Conséquences
 

@@ -965,8 +965,8 @@ class RefereeAppBase {
     );
   }
 
-  // Carton de passivité : décerné aux deux tireurs, hors cumul des cartons classiques.
-  // P-rouge : un point à chaque tireur ; P-noir : fin du combat (#1026)
+  // Carton de passivité : décerné aux deux tireurs, hors cumul des cartons classiques (FIE t.124).
+  // P-jaune : avertissement ; P-rouge : un point à chaque tireur ; P-noir : fin du combat (#2214)
   addPassivityCard() {
     if (!this.currentMatch) return;
     if (this.cyranoCardLocked()) return;
@@ -976,23 +976,26 @@ class RefereeAppBase {
     }
     if (this.matchStatus === 'finished') return;
     const given = this.cardsA.filter(c => PASSIVITY_CARDS.includes(c)).length;
-    if (!BPRefereeCards.nextPassivityCard(given)) return;
+    const card = BPRefereeCards.nextPassivityCard(given);
+    if (!card) return;
     this.pushHistory('card');
     if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-    if (given === 0) {
-      this.cardsA.push('p-red');
-      this.cardsB.push('p-red');
-      this.scoreA += 1;
-      this.scoreB += 1;
+    this.cardsA.push(card);
+    this.cardsB.push(card);
+    if (card !== 'p-black') {
+      if (card === 'p-red') {
+        this.scoreA += 1;
+        this.scoreB += 1;
+      }
       this.updateScores();
       this.updateCardsDisplay();
       this.broadcastUpdate();
       this.saveScore();
-      this.showNotification(window.T('referee.passivity_red'));
+      this.showNotification(
+        window.T(card === 'p-red' ? 'referee.passivity_red' : 'referee.passivity_yellow')
+      );
       return;
     }
-    this.cardsA.push('p-black');
-    this.cardsB.push('p-black');
     this.updateCardsDisplay();
     this.broadcastUpdate();
     this.saveScore();
@@ -1067,6 +1070,12 @@ class RefereeAppBase {
     body.innerHTML = '';
     const reasons = this.isModernFencing ? FAULT_REASONS_OLYMPIC : FAULT_REASONS;
     const filteredReasons = reasons.filter(({ group }) => {
+      if (this.isModernFencing) {
+        // Numérotation FIE (#2207) : J = 1er groupe, R = 2e et 3e groupes
+        if (originalCardType === 'yellow') return group === 1;
+        if (originalCardType === 'red') return group === 2 || group === 3;
+        return true;
+      }
       if (originalCardType === 'white') return group === 1;
       if (originalCardType === 'yellow') return group === 2;
       if (originalCardType === 'red') return group === 3;
@@ -1086,7 +1095,10 @@ class RefereeAppBase {
       titleEl.textContent = `${window.T(labelKey)} → ${previewLabel}`;
       body.appendChild(titleEl);
 
-      faults.forEach(fault => {
+      // Motif propre à certaines armes (t.170 1.10 et 1.12) : masqué pour les autres
+      const forWeapon = f =>
+        !f.weapons || !['E', 'F', 'S'].includes(this.weapon) || f.weapons.includes(this.weapon);
+      faults.filter(forWeapon).forEach(fault => {
         const btn = document.createElement('button');
         btn.className = 'reason-btn';
         btn.textContent = window.T(fault.key);
@@ -1109,7 +1121,8 @@ class RefereeAppBase {
     const history = fencer === 'A' ? this.faultHistoryA : this.faultHistoryB;
     const prevCount = history[group] || 0;
 
-    const isRevalorisation = group === 1 && prevCount === 1;
+    // Blanc devenu jaune : Sabre Laser seulement (pas de blanc en escrime olympique)
+    const isRevalorisation = !this.isModernFencing && group === 1 && prevCount === 1;
     history[group] = prevCount + 1;
 
     document.getElementById('reason-selector-overlay').classList.remove('open');

@@ -15,7 +15,7 @@
     finished: ['arena.status_finished', 'status-finished'],
   };
 
-  const KNOWN_CARDS = ['white', 'yellow', 'red', 'black', 'p-red', 'p-black'];
+  const KNOWN_CARDS = ['white', 'yellow', 'red', 'black', 'p-yellow', 'p-red', 'p-black'];
 
   function updateStatusBadge(doc, T, matchStatus) {
     const badge = doc.getElementById('match-status');

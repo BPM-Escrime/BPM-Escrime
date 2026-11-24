@@ -5,7 +5,7 @@
  */
 
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import autoTable, { type UserOptions } from 'jspdf-autotable';
 import { Pool, Match, MatchStatus } from '../types';
 import { getActiveLocale } from './localeFormat';
 import { logger, LogCategory, toError } from '../services/logger';
@@ -206,7 +206,7 @@ export class SimplePdfTemplateManager {
   /**
    * Applique le style pour les tableaux
    */
-  getTableStyles(): any {
+  getTableStyles(): UserOptions {
     const { colors, fonts } = this.currentTemplate;
 
     return {

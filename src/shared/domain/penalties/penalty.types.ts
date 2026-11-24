@@ -40,7 +40,8 @@ export interface Penalty {
 }
 
 export interface PenaltyHistory {
-  fencer: Fencer;
+  /** Seul l'identifiant est connu du store des pénalités */
+  fencer: Pick<Fencer, 'id'>;
   penalties: Penalty[];
   whiteCards: number;
   yellowCards: number;
@@ -56,7 +57,7 @@ export interface PenaltyStats {
   byReason: Record<PenaltyReason, number>;
   byFencer: Record<string, number>;
   byMatch: Record<string, number>;
-  mostPenalizedFencer?: Fencer;
+  mostPenalizedFencer?: Pick<Fencer, 'id'>;
   mostCommonReason?: PenaltyReason;
 }
 

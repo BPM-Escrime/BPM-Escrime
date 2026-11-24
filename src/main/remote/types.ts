@@ -5,7 +5,14 @@
  */
 
 import type { ArenaCyranoLink } from '../../shared/types/remote';
-import { CardReason, FencerStatus, Weapon, type Score } from '../../shared/types';
+import {
+  CardReason,
+  FencerStatus,
+  Weapon,
+  type Fencer,
+  type Referee,
+  type Score,
+} from '../../shared/types';
 
 /** Match transmis par le renderer (poules ou tableau) ; champs optionnels selon l'origine. */
 export interface SessionMatch {
@@ -15,8 +22,36 @@ export interface SessionMatch {
   pool?: { id: string };
   isTableau?: boolean;
   number?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- champs libres issus du renderer
-  [key: string]: any;
+  fencerA?: Fencer | null;
+  fencerB?: Fencer | null;
+  scoreA?: SessionScore;
+  scoreB?: SessionScore;
+  maxScore?: number;
+  round?: number;
+  position?: number;
+  tableId?: string;
+  strip?: number;
+  /** Arbitre : `{ id, name }` depuis le renderer, `Referee` depuis la base */
+  referee?: Referee | { id: string; name: string };
+  refereeId?: string;
+  /** Mode expert : plusieurs arbitres (lus par refereeResolver) */
+  referees?: unknown[];
+  poolNumber?: number | null;
+  /** Arène affectée par le renderer (tableau) */
+  arena?: number;
+  updatedAt?: Date | string;
+  /** Marqueur `__poolFencers` : ordre des tireurs de la poule, porté par `fencers` */
+  __poolFencers?: boolean;
+  fencers?: Fencer[];
+}
+
+/** Arbitre d'un match de session ramené à la forme `{ id, name }` de l'arène */
+export function toArenaReferee(referee: NonNullable<SessionMatch['referee']>): {
+  id: string;
+  name: string;
+} {
+  if ('name' in referee) return { id: referee.id, name: referee.name };
+  return { id: referee.id, name: [referee.lastName, referee.firstName].filter(Boolean).join(' ') };
 }
 
 /** Élément de liste envoyé par le renderer : match (poule ou tableau) ou marqueur `__poolFencers` */
@@ -61,13 +96,16 @@ export interface TeamArenaCard {
   createdAt: string;
 }
 
-/** Carton individuel d'un tireur pendant un relais (relais FIE, persisté — #1086) */
+/**
+ * Carton individuel d'un tireur pendant un relais (giveRelayCard, docs/adr/0028) : copie de
+ * la table relue après chaque commande. Motif nul : carton imposé par l'appareil de piste.
+ */
 export interface TeamArenaFencerCard {
   id: string;
   boutId: string;
   fencerId: string;
-  type: string; // white | yellow | red | black (escalade cardSystem)
-  reason: CardReason;
+  type: string; // WHITE | YELLOW | RED | BLACK (CardType)
+  reason: CardReason | null;
 }
 
 export interface TeamArenaState {
@@ -93,9 +131,13 @@ export interface TeamArenaState {
   elapsedAccumulatedSec: number; // temps déjà écoulé (assaut en pause)
   timerStartedAt: number | null; // epoch ms, null = chrono à l'arrêt
   cards: TeamArenaCard[];
+  /** Cartons P de la rencontre (aux deux équipes, t.124), copie de la table (docs/adr/0028 C4) */
+  passivityCards?: Array<{ id: string; type: 'yellow' | 'red' | 'black' }>;
+  /** Équipes de la rencontre retirées ou exclues (TeamWithdrawn du journal, docs/adr/0028) */
+  withdrawnTeams?: Array<{ teamId: string; reason: 'exclusion' | 'abandon' }>;
   /**
-   * Cartons montrés par l'appareil de piste, par relais (id de l'assaut) — #1829. L'appareil
-   * ne donne pas le motif : ils ne sont pas enregistrés comme cartons individuels.
+   * Cartons montrés par l'appareil de piste, par relais (id de l'assaut) — #1829. Affichage
+   * (DISP) seulement : chaque nouveau carton est enregistré par giveRelayCard (docs/adr/0028).
    */
   deviceCards?: Record<string, { cardsA: string[]; cardsB: string[] }>;
   /** Appareil de piste relié à l'arène équipe : maître et en ligne → tablette verrouillée */

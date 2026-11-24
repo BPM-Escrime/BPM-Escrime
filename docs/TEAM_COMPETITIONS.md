@@ -113,7 +113,10 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
    son score part au moteur (`recordRelayScore`). Le dernier relais terminé se rouvre
    pour correction (`reopenRelay`, score repris). « Faire entrer le remplaçant » remplace
    un tireur dans les relais à tirer (`substituteTeamFencer`). Égalité au dernier relais du
-   tableau : l'écran demande le vainqueur (minute avec priorité).
+   tableau : l'écran demande le vainqueur (minute avec priorité, t.41.5). La tablette
+   `/equipe{N}/arbitre` propose alors la priorité (équipe choisie ou tirage au sort), envoyée
+   avec la fin du relais (`winner`) ; l'appareil de piste transmet sa priorité (`Prio`
+   Cyrano, `priority` OPP2) : ACK et rencontre décidée, sans priorité NAK (#2191).
 3. **Tableau** : rien n'est créé à l'ouverture. Les poules terminées, « Générer le
    tableau » le tire (`generateTeamTableau`, têtes de série = classement de poule). Les
    tours suivants se créent dans le moteur au fur et à mesure des résultats ; « Tirer de
@@ -131,8 +134,10 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   suivant » persiste le relais (vainqueur = équipe en tête au cumul). L'application
   se met à jour au rechargement de la phase.
 - **Cartons individuels persistés** (table `team_bout_cards`) : saisis dans
-  l'application ou depuis la tablette (motif + escalade identique à l'individuel).
-  Pas d'impact automatique sur le score.
+  l'application ou depuis la tablette (motif + escalade sur la rencontre), ou montrés par
+  l'appareil de piste (jaune, rouge : type seul, groupe à compléter). Pas d'impact
+  automatique sur le score (la touche du rouge est dans le score saisi) ; noir : voir
+  ci-dessous.
 
 **Les deux formats :**
 
@@ -153,8 +158,7 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   `reopenRelay`, remplaçant → `substituteTeamFencer`), au journal sous la source `tablet`,
   `cyrano` ou `opp2`. Refus du moteur : rien d'écrit ; motif affiché sur la tablette, NAK
   sur l'appareil. Le compteur du relais en cours (touches, chrono) reste un état de
-  l'arène. Les cartons (individuels des
-  relais, « E » d'équipe) restent hors du moteur. Lot N : l'écran n'écrit plus aucun bloc de
+  l'arène. Cartons : voir ci-dessous ([ADR-0028](adr/0028-cartons-equipe-moteur.md)). Lot N : l'écran n'écrit plus aucun bloc de
   session ; l'état d'une épreuve par équipes existe dès sa création (bloc `teams` lu dans les
   tables), l'onglet rouvert est celui du poste. Abandon, forfait ou exclusion d'un tireur
   (appel) : `withdrawFencer`, statut et motif seuls, sans effet sur les rencontres (le
@@ -165,8 +169,68 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   tableau dont les poules sont finies mais pas encore créé se tire par le bouton. Le relais
   en cours est le premier non terminé : un relais terminé hors ordre par l'ancien écran se
   rouvre d'abord.
-- Sabre Laser en mode points : le compteur de l'écran s'arrête au palier du relais (une
-  zone qui le dépasserait est ramenée au palier), le moteur refusant un cumul au-delà.
+- Cartons par le moteur ([ADR-0028](adr/0028-cartons-equipe-moteur.md), lot C1) : commandes
+  `giveRelayCard` (carton d'un tireur dans un relais : `reason`, type par l'escalade sur la
+  rencontre, ou `type` imposé par l'appareil de piste), `giveTeamCard` (carton E, arène Sabre
+  Laser), `cancelRelayCard` / `cancelTeamCard` (Directoire technique : écran et MCP, jamais la
+  tablette ni l'appareil), `withdrawTeam` (abandon d'une équipe incomplète, o.99.7.a) ; outils
+  MCP du même nom en snake_case ; journal `RelayCardGiven`, `TeamCardGiven`,
+  `RelayCardCancelled`, `TeamCardCancelled`, `TeamWithdrawn`. Le bloc `teams` rend les cartons
+  (`bouts[].cards`, `teamCards`) et les équipes retirées (`withdrawn`). Un carton se donne sur le
+  relais en cours, ou sur le dernier relais terminé tant que le suivant n'a pas commencé ; le
+  dernier relais d'une rencontre terminée le reçoit encore tant que la rencontre suivante de
+  l'équipe n'a pas commencé (carton signalé après le END de l'appareil). Le carton n'écrit
+  aucune touche : la touche du rouge est dans le score saisi. Lot C2 : l'écran lit les cartons
+  dans le bloc `teams` et les écrit par ces commandes (succès affiché après la réponse du moteur,
+  motifs FIE pour les armes olympiques, motifs Sabre Laser sinon ; points rendus par le moteur).
+  Carton E : « Désignation tardive » (escalade du moteur) ou type choisi. Annulation : bouton sur
+  le carton, après confirmation (sauf noir individuel : réintégration du tireur). Bouton
+  « Abandon » (`withdrawTeam`) dans la rencontre ; équipe « Exclue » ou « N'a pas terminé »,
+  rencontres de poule annulées, rencontres à tirer non saisissables.
+- Tablette et appareils par les commandes (ADR-0028, lot C3) : `team_card` → `giveTeamCard`,
+  `team_fencer_card` → `giveRelayCard` avec le motif, source `tablet` ; refus du moteur (équipe
+  étrangère à la rencontre `team_not_in_match`, équipe exclue `team_withdrawn`, motif hors du
+  règlement…) rendu par `team_arena_error` (`card_refused`), rien d'écrit. Le noir n'est plus
+  refusé par le serveur : `blackCardEnabled` masque seulement le bouton de la tablette (#2186).
+  Noir individuel : la tablette affiche l'issue (rencontre terminée, « équipe exclue »). Appareil
+  (Cyrano, OPP2) : à chaque état reçu, chaque jaune ou rouge montré et pas encore enregistré pour
+  le tireur dans la rencontre → `giveRelayCard` avec le type, source `cyrano` / `opp2`, **avant**
+  le contrôle de la fin du relais : un relais fini au palier + 1 avec un rouge adverse est
+  acquitté (ACK), sans rouge refusé (NAK). Un carton refusé est tracé et ne change pas la réponse
+  à la fin du relais. Après chaque commande, l'arène relit la rencontre (cartons compris) et
+  diffuse `team_arena_state`.
+- Cartons P (non-combativité, t.124 ; ADR-0028, lot C4) : commande `givePassivityCard`
+  (outil MCP `give_passivity_card`), relais FIE des armes olympiques seulement (le Sabre Laser
+  n'a pas de carton P : `unsupported_format`). Le carton est donné **aux deux équipes** et
+  s'escalade sur la rencontre : jaune P, rouge P, noir P ; aucune touche écrite (la touche du
+  rouge P est dans le score saisi). Noir P : la rencontre est décidée (`TeamMatchDecided`, même
+  commande) pour l'équipe au score supérieur des **relais terminés** (enregistrer d'abord le
+  relais en cours), à égalité pour l'équipe au meilleur classement : rang du tableau (classement
+  après les poules, qui est aussi le « tableau en cours » de la FFE dès M15) ; en poule, faute de
+  classement initial d'équipe dans le logiciel, classement de poule du moment. Rencontre déjà
+  tirée jusqu'au bout : noir P accepté s'il confirme le résultat (ou s'il départage une égalité
+  de poule), refusé sinon (`match_finished`). Stockage : `team_match_cards`, `team_id` NULL,
+  `type` `p_yellow` / `p_red` / `p_black` (migration 49) ; bloc `teams` : `passivityCards`.
+  Annulation d'un jaune ou rouge P par `cancelTeamCard` (Directoire technique) ; le noir P ne
+  s'annule pas ainsi. Appareil (Cyrano P-card, OPP2 `p_card`) : jaune P et rouge P enregistrés à
+  l'état reçu (un rouge P montré d'emblée vaut jaune P puis rouge P) ; le noir P attend la fin
+  du relais : ACK, relais enregistré, puis noir P qui décide la rencontre (au lieu d'un NAK).
+  Ni la tablette équipe ni l'écran `TeamManagerView` n'ont encore de bouton carton P.
+- Carton noir individuel : le tireur est exclu (`withdrawFencer`, carton noir) dans la même
+  commande. Armes olympiques (o.99.7.b) : la rencontre est perdue et l'équipe exclue, sans
+  classement ; abandon (`withdrawTeam`) : rencontre perdue, l'équipe garde sa place (« N'a pas
+  terminé »). Dans les deux cas (o.99.8), ses rencontres de poule ne comptent plus et elle
+  n'entre pas au tableau ; elle ne tire plus (`team_withdrawn`). Sabre Laser : aucune règle
+  d'équipe (Livret 2 XII « A venir »), le tireur seul est retiré (VIII.7) ; le remplaçant entre
+  par `substituteTeamFencer`.
+- Palier du relais (#2188) : armes olympiques, chaque équipe peut le dépasser d'autant de touches
+  que de cartons rouges reçus par l'adversaire dans ce relais (FIE t.41.1 : dernière touche
+  valable et touche de pénalisation accordées ensemble ; t.162.2), jamais sans rouge. Sabre
+  Laser en mode touches et arme à la carte : aucun dépassement (t.41.1 est une règle FIE ;
+  arbitrage du Sabre Laser dans #2208). En Sabre Laser mode
+  points, la dernière touche peut le dépasser de 4 points (cible C à 5 points depuis palier − 1,
+  Livret 2 FFE) ; le compteur de l'écran est plafonné d'autant. En arène, plafond de l'assaut en
+  points : 5 touches × 5 points.
 - Moteur : une égalité au dernier relais est admise en poule (pas de vainqueur) ; au tableau,
   le vainqueur est donné (`winner`, minute avec priorité). Un relais de poule peut être
   rouvert après le tirage du tableau, qui garde son placement.

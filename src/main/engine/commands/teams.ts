@@ -23,6 +23,12 @@ import {
 } from '../../../shared/domain/teams/relay';
 import { calculateTeamPoolRanking } from '../../../shared/domain/teams/teamCalculations';
 import { calculateLaserArenaPoolRanking } from '../../../shared/domain/teams/laserArenaCalculations';
+import {
+  withoutWithdrawnTeams,
+  type TeamWithdrawal,
+} from '../../../shared/domain/teams/teamWithdrawal';
+import type { Card } from '../../../shared/types';
+import { PASSIVITY_TYPE_PREFIX } from '../../../shared/domain/teams/passivityCardTypes';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { EVENT, recordEvents } from './eventLog';
@@ -61,6 +67,18 @@ function assertBeforeDraw(ctx: CommandContext, competitionId: string): void {
       'Rencontres d’équipes déjà créées : composition figée (remplacement seulement)'
     );
   }
+}
+
+/**
+ * Équipes retirées ou exclues (docs/adr/0028 § 4), par équipe : lues dans le journal
+ * (TeamWithdrawn), faute de colonne dans les tables (pas de migration, § 9)
+ */
+export function withdrawnTeams(ctx: CommandContext, competitionId: string) {
+  const out = new Map<string, TeamWithdrawal>();
+  for (const e of ctx.db.eventLog?.getByTypes(competitionId, [EVENT.teamWithdrawn]) ?? []) {
+    if (e.type === EVENT.teamWithdrawn) out.set(e.payload.teamId, { ...e.payload });
+  }
+  return out;
 }
 
 /** L'écran relit l'état de l'épreuve, dont le bloc « teams » */
@@ -240,7 +258,27 @@ export function generateTeamPools(
 
 // ─── Lecture : bloc « teams » et vue de comparaison ─────────────────────────
 
-function matchDTO(m: TeamMatchRow & { position?: number | null }, pool: boolean) {
+type TeamCards = ReturnType<CommandContext['db']['teams']['getTeamCardsByCompetition']>;
+
+/** Carton individuel d'un relais, tel que le bloc « teams » le rend */
+export function relayCardDTO(card: Card) {
+  const c = card as Omit<Card, 'reason' | 'group'> & {
+    reason: string | null;
+    group: number | null;
+  };
+  return {
+    id: c.id,
+    fencerId: c.fencerId,
+    type: c.type as 'WHITE' | 'YELLOW' | 'RED' | 'BLACK',
+    reason: c.reason ?? null,
+    group: c.group ?? null,
+    pointsAwarded: c.pointsAwarded ?? 0,
+    excludes: !!c.resultingExclusion,
+    at: new Date(c.timestamp).toISOString(),
+  };
+}
+
+function matchDTO(m: TeamMatchRow & { position?: number | null }, pool: boolean, cards: TeamCards) {
   return {
     id: m.id,
     poolNumber: pool ? (m.poolNumber ?? 1) : null,
@@ -253,7 +291,21 @@ function matchDTO(m: TeamMatchRow & { position?: number | null }, pool: boolean)
     status: m.status,
     winnerId: m.winnerId,
     currentBoutIndex: m.currentBoutIndex,
-    bouts: m.bouts.map(b => ({ ...b })),
+    bouts: m.bouts.map(b => ({
+      ...b,
+      cards: cards.boutCards.filter(c => c.boutId === b.id).map(c => relayCardDTO(c.card)),
+    })),
+    teamCards: cards.matchCards
+      .filter(c => c.matchId === m.id)
+      .map(c => ({
+        id: c.id,
+        teamId: c.teamId,
+        type: c.type as 'white' | 'yellow' | 'red' | 'black',
+        at: c.createdAt,
+      })),
+    passivityCards: cards.passivityCards
+      .filter(c => c.matchId === m.id)
+      .map(c => ({ id: c.id, type: c.type, at: c.createdAt })),
   };
 }
 
@@ -284,17 +336,25 @@ export function teamsState(ctx: CommandContext, comp: Competition): TeamsStateDT
   const pools = ctx.db.teams.getTeamMatchesByCompetition(comp.id) as TeamMatchRow[];
   const tableau = ctx.db.teams.getTeamTableauMatches(comp.id, comp.id) as TeamMatchRow[];
   const format = teamFormatOf(comp.settings);
-  const wins = relayWins(pools);
+  const withdrawn = withdrawnTeams(ctx, comp.id);
+  // o.99.8 : rencontres de poule d'une équipe retirée annulées, équipe hors classement
+  const ranked = withoutWithdrawnTeams(teams, pools, new Set(withdrawn.keys()));
+  const wins = relayWins(ranked.matches);
   const ranking =
     format === 'laser-arena'
-      ? calculateLaserArenaPoolRanking(teams, pools)
-      : calculateTeamPoolRanking(teams, pools).map(r => ({ ...r, draws: 0, tied: false }));
+      ? calculateLaserArenaPoolRanking(ranked.teams, ranked.matches)
+      : calculateTeamPoolRanking(ranked.teams, ranked.matches).map(r => ({
+          ...r,
+          draws: 0,
+          tied: false,
+        }));
+  const cards = ctx.db.teams.getTeamCardsByCompetition(comp.id);
   return {
     format,
     teamSize: teamSizeOf(comp.settings),
     teams: teams.map(t => ({ ...t, fencers: t.fencers.map(f => ({ ...f })) })),
-    poolMatches: pools.map(m => matchDTO(m, true)),
-    tableauMatches: tableau.map(m => matchDTO(m, false)),
+    poolMatches: pools.map(m => matchDTO(m, true, cards)),
+    tableauMatches: tableau.map(m => matchDTO(m, false, cards)),
     poolRanking: ranking.map((r, i) => ({
       teamId: r.team.id,
       rank: i + 1,
@@ -307,6 +367,7 @@ export function teamsState(ctx: CommandContext, comp: Competition): TeamsStateDT
       pointsAgainst: r.pointsAgainst,
       tied: r.tied,
     })),
+    withdrawn: [...withdrawn.values()],
   };
 }
 
@@ -333,6 +394,14 @@ export function teamStateView(ctx: CommandContext, comp: Competition): TeamState
         scoreB: b.scoreB,
         finished: b.status === 'finished',
       })),
+      cards: [
+        ...m.teamCards.map(c => ({ id: c.id, type: c.type, teamId: c.teamId })),
+        // Carton P : ni équipe ni tireur, type tel que rangé en table (journal : même forme)
+        ...m.passivityCards.map(c => ({ id: c.id, type: `${PASSIVITY_TYPE_PREFIX}${c.type}` })),
+        ...m.bouts.flatMap(b =>
+          b.cards.map(c => ({ id: c.id, type: c.type, relayId: b.id, fencerId: c.fencerId }))
+        ),
+      ],
     })),
   };
 }

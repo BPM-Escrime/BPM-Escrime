@@ -8,7 +8,7 @@
  * Licensed under GPL-3.0
  */
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { PlanZoomBar, usePlanZoom } from './planZoom';
 import { technicalDimensions, type DimensionLine } from '@shared/domain/arena/arenaDimensions';
@@ -128,6 +128,10 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
 }) => {
   const { t } = useTranslation();
   const dragRef = useRef<DragState | null>(null);
+  /** Arène sélectionnée par un clic : carré de déplacement et rond de rotation */
+  const [arenaPick, setSelectedArena] = useState<number | null>(null);
+  // Un élément sélectionné l'emporte sur l'arène
+  const selectedArena = selectedId ? null : arenaPick;
   const W = room.widthM;
   const L = room.lengthM;
   const zoom = usePlanZoom(svgRef, {
@@ -139,7 +143,7 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
 
   const toMetres = (clientX: number, clientY: number): Point | null => {
     const svg = svgRef.current;
-    const ctm = svg?.getScreenCTM();
+    const ctm = svg?.getScreenCTM?.(); // absent sous jsdom
     if (!svg || !ctm) return null;
     const pt = svg.createSVGPoint();
     pt.x = clientX;
@@ -153,7 +157,10 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
   const startDrag = (e: React.PointerEvent<SVGElement>, state: DragState) => {
     e.stopPropagation();
     dragRef.current = state;
-    if ('id' in state) onSelect(state.id);
+    if ('id' in state) {
+      onSelect(state.id);
+      setSelectedArena(null);
+    }
     svgRef.current?.setPointerCapture(e.pointerId);
   };
 
@@ -252,9 +259,35 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
     if (current) onMove(item.id, current.x + delta[0], current.y + delta[1]);
   };
 
+  /** Carré de déplacement d'une arène : flèches (Maj : 1 m), R : un pas de rotation, Échap */
+  const onArenaKeyDown = (e: React.KeyboardEvent<SVGElement>, index: number, c: Point) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setSelectedArena(null);
+      return;
+    }
+    if ((e.key === 'r' || e.key === 'R') && onStepArena) {
+      e.preventDefault();
+      onStepArena(index);
+      return;
+    }
+    const step = e.shiftKey ? NUDGE_BIG_M : NUDGE_M;
+    const moves: Record<string, [number, number]> = {
+      ArrowLeft: [-step, 0],
+      ArrowRight: [step, 0],
+      ArrowUp: [0, -step],
+      ArrowDown: [0, step],
+    };
+    const delta = moves[e.key];
+    if (!delta) return;
+    e.preventDefault();
+    onMoveArena(index, c.x + delta[0], c.y + delta[1]);
+  };
+
   /** Fond du plan : désélectionne ; zoomé, glisser déplace la vue. */
   const onBackgroundPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     onSelect(null);
+    setSelectedArena(null);
     zoom.startPan(e);
   };
 
@@ -341,11 +374,17 @@ export const ArenaPlanCanvas: React.FC<ArenaPlanCanvasProps> = ({
             onRotateStep={onStepArena ? () => onStepArena(i) : undefined}
             rotateTitle={t('arenaPlanner.arena_rotate', { n: i + 1 })}
             grabTitle={t('arenaPlanner.handle_arena')}
+            selected={selectedArena === i}
             onGrab={e => {
+              // Clic : sélectionne l'arène ; glisser : la déplace
+              e.stopPropagation();
+              onSelect(null);
+              setSelectedArena(i);
               const p = toMetres(e.clientX, e.clientY);
               if (!p) return;
               startDrag(e, { mode: 'arena', index: i, dx: p.x - c.x, dy: p.y - c.y });
             }}
+            onHandleKeyDown={e => onArenaKeyDown(e, i, c)}
           />
         ))}
 

@@ -38,7 +38,7 @@ export const ClubAttendanceModal: React.FC<ClubAttendanceModalProps> = ({
   const { t } = useTranslation();
   const [range, setRange] = useState<AgeRange>({ ageFrom: session.ageFrom, ageTo: session.ageTo });
   const [search, setSearch] = useState('');
-  const present = new Set(session.attendeeIds);
+  const present = useMemo(() => new Set(session.attendeeIds), [session.attendeeIds]);
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -52,8 +52,7 @@ export const ClubAttendanceModal: React.FC<ClubAttendanceModalProps> = ({
       )
       .sort(compareByAgeCategory(m => cat.get(m.id)))
       .map(m => ({ m, cat: cat.get(m.id) }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [members, range, search, session.attendeeIds]);
+  }, [members, range, search, present]);
 
   const changeRange = (r: AgeRange) => {
     setRange(r);

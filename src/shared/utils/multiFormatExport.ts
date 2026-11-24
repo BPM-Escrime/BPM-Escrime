@@ -18,13 +18,19 @@ import { applyBlackCardRanking } from './blackCardRanking';
 import { GREG_DEFAULT_LEVEL } from './gregPublication';
 import type { TeamResultForFFF } from './fencerExport';
 
+/** Ligne du classement final lue par les exports (sous-ensemble de FinalResult) */
+export interface ExportFinalResult {
+  rank: number;
+  fencer: Fencer;
+}
+
 /**
  * Export results as HTML web page
  */
 export function exportResultsHTML(
   competition: Competition,
   poolRanking: PoolRanking[],
-  finalResults: any[]
+  finalResults: ExportFinalResult[]
 ): string {
   const html = `<!DOCTYPE html>
 <html lang="fr">
@@ -351,7 +357,7 @@ export function federalLicenceAttributes(license?: string): string {
 export function exportResultsXMLFFE(
   competition: Competition,
   poolRanking: PoolRanking[],
-  finalResults: any[],
+  finalResults: ExportFinalResult[],
   pools?: Pool[],
   tableauMatches?: TableauMatchForXML[],
   fencers?: Fencer[],

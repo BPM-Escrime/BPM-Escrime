@@ -59,6 +59,9 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `fencer_not_in_pool` | not_found | Tireur absent de cette poule |
 | `split_group_not_found` | not_found | Groupe de tableaux séparés inconnu ou extrait |
 | `team_not_found` | not_found | Équipe introuvable dans l’épreuve |
+| `team_not_in_match` | not_found | Équipe étrangère à cette rencontre |
+| `relay_not_found` | not_found | Relais inconnu dans cette rencontre |
+| `card_not_found` | not_found | Carton inconnu dans cette rencontre |
 | `withdrawal_not_found` | not_found | Aucun retrait à annuler pour ce tireur |
 | `dir_not_found` | not_found | Dossier introuvable |
 | `venue_not_found` | not_found | Salle introuvable |
@@ -102,6 +105,8 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `invalid_composition` | rule | Composition invalide |
 | `team_incomplete` | rule | Équipe sans tous ses titulaires au tirage |
 | `relay_out_of_order` | rule | Relais hors ordre : précédents non terminés ou déjà terminé |
+| `match_finished` | rule | Rencontre terminée : carton refusé |
+| `team_withdrawn` | rule | Équipe retirée ou exclue : plus de relais ni de carton |
 | `no_reserve` | rule | Équipe sans remplaçant |
 | `reserve_used` | rule | Remplaçant déjà entré dans la rencontre |
 | `no_later_relay` | rule | Plus aucun relais à tirer pour ce tireur dans la rencontre |
@@ -188,6 +193,11 @@ Ne plus ajouter d'appel direct à `window.electronAPI` pour une opération du co
 | `recordRelayScore` | commande (`score:write`) — score d'un relais (pas le cumul) ; fin de rencontre et avancement du tableau calculés ; `RelayScoreRecorded`, `TeamMatchDecided`, `TeamMatchScheduled` | `record_relay_score` |
 | `reopenRelay` | commande (`score:write`) — rouvre le dernier relais terminé (correction) ; `RelayReopened` | `reopen_relay` |
 | `substituteTeamFencer` | commande (`score:write`) — remplaçant dans les relais non terminés de la rencontre ; `TeamFencerSubstituted` | `substitute_team_fencer` |
+| `giveRelayCard` | commande (`score:write`) — carton d'un tireur (côté A/B) dans un relais : `reason` (escalade sur la rencontre) ou `type` (appareil de piste) ; relais en cours ou dernier terminé, dernier relais d'une rencontre terminée tant que la rencontre suivante de l'équipe n'a pas commencé ; noir : tireur exclu, armes olympiques : rencontre perdue et équipe exclue (o.99.7.b) ; `RelayCardGiven` ([ADR-0028](adr/0028-cartons-equipe-moteur.md)) | `give_relay_card` |
+| `giveTeamCard` | commande (`score:write`) — carton E d'une équipe de la rencontre, arène Sabre Laser seulement (escalade blanc puis jaune sans `type`) ; `TeamCardGiven` (ADR-0028) | `give_team_card` |
+| `givePassivityCard` | commande (`score:write`) — carton P (non-combativité, t.124) aux deux équipes, relais FIE des armes olympiques seulement (Sabre Laser, arme à la carte : `unsupported_format`) ; escalade jaune P, rouge P, noir P sur la rencontre, sans touche écrite ; noir P : rencontre décidée pour l'équipe au score supérieur des relais terminés, à égalité au meilleur classement (rang du tableau ; en poule, classement de poule) ; `PassivityCardGiven` (ADR-0028, lot C4) | `give_passivity_card` |
+| `cancelRelayCard` / `cancelTeamCard` | commandes (`score:write`) — annulation par le Directoire technique : écran et MCP, refus `permission_denied` depuis la tablette ou l'appareil ; noir individuel refusé (`already_withdrawn` : réintégration) ; `cancelTeamCard` annule aussi un jaune ou rouge P (noir P : `match_finished`) ; `RelayCardCancelled`, `TeamCardCancelled` (ADR-0028) | `cancel_relay_card`, `cancel_team_card` |
+| `withdrawTeam` | commande (`score:write`) — équipe incomplète qui abandonne (o.99.7.a), relais par équipes : rencontre perdue, équipe retirée (garde sa place) ; `TeamMatchDecided`, `TeamWithdrawn` (ADR-0028) | `withdraw_team` |
 | `registerReferees` / `updateRefereeDetails` / `setRefereeAvailability` / `unregisterReferee`         | commandes (`referees:write`) — inscription, identité, pointage, désinscription (refusée pendant un match arbitré) ; pas de journal ([ADR-0018](adr/0018-commandes-inscription.md))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | —                                                 |
 | `withdrawFencer`                                                                                     | commande — abandon, forfait, exclusion (carton noir) selon la phase ([ADR-0016](adr/0016-retrait-reintegration-tireur.md))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `withdraw_fencer`                                 |
 | `reinstateFencer`                                                                                    | commande — annule un retrait depuis l'instantané                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `reinstate_fencer`                                |
@@ -305,6 +315,11 @@ même identifiant (renvoi après une coupure), elle n'écrit rien et est refusé
 | `recordRelayScore` | `RelayScoreRecorded { matchId, relayId, scoreA, scoreB }` (score du relais) ; dernier relais : `TeamMatchDecided { matchId, winnerTeamId }` (null : égalité en poule) ; au tableau, `TeamMatchScheduled` des rencontres formées |
 | `reopenRelay` | `RelayReopened { matchId, relayId }` ; au rejeu, la rencontre suivante du tableau (non commencée) est retirée |
 | `substituteTeamFencer` | `TeamFencerSubstituted { matchId, teamId, outFencerId, inFencerId, relayIds }` |
+| `giveRelayCard` | `RelayCardGiven { matchId, relayId, fencerId, cardId, type, reason }` (`reason` null : appareil) ; noir : `FencerWithdrawn` (exclusion, carton noir, `forfeitedMatchIds: []`), armes olympiques : `TeamMatchDecided`, `TeamMatchScheduled` au tableau, `TeamWithdrawn { teamId, matchId, reason: 'exclusion' }`, même `commandId` |
+| `giveTeamCard` | `TeamCardGiven { matchId, teamId, cardId, type }` |
+| `givePassivityCard` | `PassivityCardGiven { matchId, cardId, type }` (`yellow` / `red` / `black`) ; noir P : `TeamMatchDecided`, `TeamMatchScheduled` au tableau, même `commandId` |
+| `cancelRelayCard` / `cancelTeamCard` | `RelayCardCancelled { matchId, relayId, cardId }`, `TeamCardCancelled { matchId, cardId }` |
+| `withdrawTeam` | `TeamMatchDecided`, `TeamMatchScheduled` au tableau, `TeamWithdrawn { teamId, matchId, reason: 'abandon' }` |
 
 - Source : `CommandContext.actor` (IPC : `screen` ; MCP : `mcp`, auteur `agent` ; défaut `engine`).
 - Une commande qui écrit rend `revision` et diffuse `{ type: 'journal:appended', competitionId, revision }`
@@ -332,19 +347,25 @@ places ») ; les équipes gardent leur modèle de relais. Une seule écriture po
   après écriture de la sauvegarde en attente ; l'écran relit la session (`session:changed`) ;
 - les tablettes : fin de match (`finishArenaMatch`, fin hors arène) et feuille de poule, par
   `recordFinishedScore` (`src/main/remote/scoreCommand.ts`, `invokeCommandSync`) ; l'avis
-  `match_finished` (abonnement `onRemoteActivity`) porte `recorded: true` et l'écran n'applique plus le score lui-même ;
+  l'avis `match_finished` (abonnement `onRemoteActivity`) n'est qu'une notification : l'écran n'applique jamais le score (#2229) ;
 - les appareils de piste (Cyrano, OPP2), par la même fin de match (source `cyrano`). L'ACK
   attend la commande : le score est contrôlé par `recordScore` en simulation (`checkArenaFinish`)
   et un refus (score maximal dépassé, égalité impossible…) vaut NAK, l'arbitre corrige puis
   valide à nouveau.
 
+Plus de chemin historique pour les fins de match distantes (#2151, étape 3) : tout refus de
+`recordScore` (règle du score, `match_not_found`, `competition_not_found`…) laisse la base
+intacte ; la tablette reçoit `409 score_refused` avec le code, l'appareil NAK, le DT corrige au
+poste. Le serveur distant n'écrit plus de match ni de tireur lui-même (cliquet `directDbWrites`
+à 0).
+
 Journal des scores (`score_audit_log`) inchangé pour l'utilisateur : `ui`, nom de l'arbitre avec
 l'adresse de la tablette, `device`, `mcp`. Le journal d'épreuve ne porte que l'identifiant de
 l'arbitre (RGPD).
 
-Restent sur le chemin historique (saisie locale de l'écran, ou écriture directe du serveur) : épreuves
-par équipes, égalité sans vainqueur sur la feuille de poule, scores en cours et synchronisation hors ligne des
-tablettes (`updateMatchScore`).
+Restent hors `recordScore` : scores en cours et synchronisation hors ligne des tablettes
+(`updateMatchScore`) ; les épreuves par équipes ont leurs commandes (`recordRelayScore`,
+[ADR-0024](adr/0024-tableaux-separes-equipes-moteur.md)).
 
 Retrait d'un tireur ([ADR-0016](adr/0016-retrait-reintegration-tireur.md)) : étape 1 faite, règle
 unique `planWithdrawal` / `planReinstatement` (`shared/domain/fencers/withdrawal.ts`), commandes
@@ -359,7 +380,7 @@ par l'appareil (statut E) passent par `recordScore` avec `specialStatus: 'exclus
 l'appareil confirmé par le DT par `withdrawFencer` ; abandon / forfait / exclusion sur la feuille
 de poule par `recordScore` ; annulation du carton noir par `reinstateFencer`
 (`reinstateByCommand`), le match interrompu étant rouvert par l'arène. les avis `fencer_excluded` et
-`fencer_reinstated` (`onRemoteActivity`) portent `recorded` : l'écran relit au lieu d'appliquer. Les trois PR
+`fencer_reinstated` (`onRemoteActivity`) sont de simples notifications : l'écran relit, sans rien appliquer (#2229). Les trois PR
 se mergent ensemble.
 
 Projections ([ADR-0017](adr/0017-projections-etat-epreuve.md)) : étape 4a faite. L'écran lit
@@ -494,6 +515,25 @@ nommés ; journal complet dès `TeamTableauGenerated` ; écarts `team_relay` (re
 son score ; un relais en cours n'est pas un fait) et `team_match_result` (rencontre terminée et
 son vainqueur), rendus sans correction.
 
+Lot C1 fait (cartons des équipes, [ADR-0028](adr/0028-cartons-equipe-moteur.md)) : commandes
+`giveRelayCard`, `giveTeamCard`, `cancelRelayCard`, `cancelTeamCard`, `withdrawTeam` ; écriture
+de `team_bout_cards` et `team_match_cards` dans la transaction (identifiant et heure de la
+commande), aucune touche écrite par un carton. `recordRelayScore` : relais FIE des armes
+olympiques au-delà du palier d'autant de touches que de cartons rouges adverses du relais
+(t.41.1) ; équipe retirée ou exclue : `team_withdrawn` (aussi `reopenRelay`). Équipe retirée :
+ses rencontres de poule ne comptent plus (o.99.8), elle n'entre pas au tableau ; liste lue dans
+le journal (`TeamWithdrawn`, pas de colonne). Bloc `teams` : `bouts[].cards`, `teamCards`,
+`withdrawn`. Rejeu : `teams.cards`, `teams.withdrawn` ; écart `team_cards` par rencontre, sauf
+une rencontre d'avant le premier carton du journal qui n'en porte aucun au journal et en a en
+table (épreuve antérieure, § 10). Codes : `team_withdrawn`, `card_not_found`. Écran (C2),
+tablette et appareils (C3) : à brancher.
+
+Lot C4 fait (cartons P, ADR-0028 § 5 bis) : migration 49 (`team_match_cards.team_id` nullable) ;
+`givePassivityCard` range le carton P avec `team_id` NULL et `type` `p_…`, les lectures des
+cartons E l'écartent. Bloc `teams` : `passivityCards` par rencontre. Rejeu : `PassivityCardGiven`
+dans `teams.cards` (type `p_…`, sans équipe ni tireur), comparé par l'écart `team_cards`.
+Appareils (Cyrano, OPP2) : cartons P → `givePassivityCard`, noir P avec la fin du relais → ACK.
+
 Lot E4 fait (tablettes et appareils) : la tablette `/equipe{N}/arbitre` (`team_advance_bout`) et
 les appareils de piste (Cyrano, OPP2 : END, PREV, demande de remplaçant) appellent
 `recordRelayScore`, `reopenRelay` et `substituteTeamFencer` par `invokeCommandSync`
@@ -518,8 +558,9 @@ l'absence de moteur (`unavailable`, hors Electron) : affichage en mémoire, rien
 Import fédéral : équipes par `registerTeam` et `assignTeamFencer`. Tirage de la préparation des
 poules (avant « Lancer ») : travail du poste (`posteUiState`, `readPoolDraft`), plus écrit en
 base ; un tirage écrit par une version précédente est relu (lecture seule). Restent en `db.*` :
-lectures (`getSessionState`, `getPhasesByCompetition`, `getPoolsByPhase`) et cartons d'équipe
-(hors ADR-0024). Rejeu par format (deux groupes, épreuve séparée, relais FIE, arène Sabre Laser) :
+lectures (`getSessionState`, `getPhasesByCompetition`, `getPoolsByPhase`) ; cartons d'équipe par
+les commandes du moteur, canaux `db:*` retirés ([ADR-0028](adr/0028-cartons-equipe-moteur.md),
+lot N). Rejeu par format (deux groupes, épreuve séparée, relais FIE, arène Sabre Laser) :
 `src/main/engine/commands/replayFormats.test.ts`.
 
 **Étape 5 commencée** : `projectCompetition(events)` (`src/shared/domain/journal`) rejoue le
