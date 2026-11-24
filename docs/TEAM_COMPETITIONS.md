@@ -198,7 +198,24 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   le contrôle de la fin du relais : un relais fini au palier + 1 avec un rouge adverse est
   acquitté (ACK), sans rouge refusé (NAK). Un carton refusé est tracé et ne change pas la réponse
   à la fin du relais. Après chaque commande, l'arène relit la rencontre (cartons compris) et
-  diffuse `team_arena_state`. Cartons P de l'appareil : lot C4.
+  diffuse `team_arena_state`.
+- Cartons P (non-combativité, t.124 ; ADR-0028, lot C4) : commande `givePassivityCard`
+  (outil MCP `give_passivity_card`), relais FIE des armes olympiques seulement (le Sabre Laser
+  n'a pas de carton P : `unsupported_format`). Le carton est donné **aux deux équipes** et
+  s'escalade sur la rencontre : jaune P, rouge P, noir P ; aucune touche écrite (la touche du
+  rouge P est dans le score saisi). Noir P : la rencontre est décidée (`TeamMatchDecided`, même
+  commande) pour l'équipe au score supérieur des **relais terminés** (enregistrer d'abord le
+  relais en cours), à égalité pour l'équipe au meilleur classement : rang du tableau (classement
+  après les poules, qui est aussi le « tableau en cours » de la FFE dès M15) ; en poule, faute de
+  classement initial d'équipe dans le logiciel, classement de poule du moment. Rencontre déjà
+  tirée jusqu'au bout : noir P accepté s'il confirme le résultat (ou s'il départage une égalité
+  de poule), refusé sinon (`match_finished`). Stockage : `team_match_cards`, `team_id` NULL,
+  `type` `p_yellow` / `p_red` / `p_black` (migration 49) ; bloc `teams` : `passivityCards`.
+  Annulation d'un jaune ou rouge P par `cancelTeamCard` (Directoire technique) ; le noir P ne
+  s'annule pas ainsi. Appareil (Cyrano P-card, OPP2 `p_card`) : jaune P et rouge P enregistrés à
+  l'état reçu (un rouge P montré d'emblée vaut jaune P puis rouge P) ; le noir P attend la fin
+  du relais : ACK, relais enregistré, puis noir P qui décide la rencontre (au lieu d'un NAK).
+  Ni la tablette équipe ni l'écran `TeamManagerView` n'ont encore de bouton carton P.
 - Carton noir individuel : le tireur est exclu (`withdrawFencer`, carton noir) dans la même
   commande. Armes olympiques (o.99.7.b) : la rencontre est perdue et l'équipe exclue, sans
   classement ; abandon (`withdrawTeam`) : rencontre perdue, l'équipe garde sa place (« N'a pas

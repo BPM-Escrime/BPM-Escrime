@@ -64,7 +64,9 @@ Pas de dépendance npm ajoutée.
 - Relais par équipes : mêmes règles que Cyrano ([CYRANO.md](CYRANO.md) § 2 octies) ; jaune et
   rouges d'`apparatus/score` pas encore enregistrés pour le tireur dans la rencontre →
   `giveRelayCard` (type seul, source `opp2`), avant le contrôle de la fin du relais
-  ([ADR-0028](adr/0028-cartons-equipe-moteur.md), lot C3).
+  ([ADR-0028](adr/0028-cartons-equipe-moteur.md), lot C3) ; cartons P d'`apparatus/uw2f`
+  (`p_card`) → `givePassivityCard`, noir P avec la fin du relais → ACK et rencontre décidée
+  (lot C4).
 
 ## Contrat d'API (ex-canaux `opp2:*`, [ADR-0023](adr/0023-appareils-de-piste-salle.md))
 

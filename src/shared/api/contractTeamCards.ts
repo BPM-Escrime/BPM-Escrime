@@ -1,8 +1,9 @@
 /**
  * BPM - Escrime - Cartons des épreuves par équipes par le moteur (docs/adr/0028, lot C1) :
  * carton E (arène Sabre Laser), carton individuel d'un relais, annulation par le Directoire
- * technique, retrait d'une équipe (o.99.7.a). Journal : TeamCardGiven, RelayCardGiven,
- * TeamCardCancelled, RelayCardCancelled, TeamWithdrawn. Schémas des cartons du bloc « teams ».
+ * technique, retrait d'une équipe (o.99.7.a), carton P (non-combativité, lot C4). Journal :
+ * TeamCardGiven, RelayCardGiven, PassivityCardGiven, TeamCardCancelled, RelayCardCancelled,
+ * TeamWithdrawn. Schémas des cartons du bloc « teams ».
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';
@@ -39,6 +40,13 @@ export const RelayCardSchema = z.object({
   group: z.number().int().nullable(),
   pointsAwarded: z.number(),
   excludes: z.boolean(),
+  at: z.string(),
+});
+
+/** Carton P d'une rencontre de relais FIE (t.124), donné aux deux équipes */
+export const PassivityCardSchema = z.object({
+  id: z.string(),
+  type: z.enum(['yellow', 'red', 'black']),
   at: z.string(),
 });
 
@@ -105,10 +113,33 @@ export const teamCardOperations = {
     mcp: { name: 'give_relay_card', title: 'Donner un carton dans un relais' },
   }),
 
+  givePassivityCard: command({
+    description:
+      'Relais FIE (épée, fleuret, sabre) : carton P (non-combativité, t.124) donné aux deux équipes, escalade sur la rencontre : jaune P, rouge P, noir P. Le rouge P n’écrit pas de touche (elle est dans le score du relais). ' +
+      'Noir P : la rencontre est décidée pour l’équipe au score supérieur des relais terminés (enregistrer d’abord le relais en cours), à égalité au meilleur classement (tableau : rang du tableau ; poule : classement de poule) — TeamMatchDecided. ' +
+      'Refus : unsupported_format (Sabre Laser, arme à la carte, épreuve individuelle), match_not_found, team_withdrawn, match_finished (noir P déjà donné, rencontre décidée ou suivante commencée, noir P contraire au résultat), draw_needs_winner. Journal : PassivityCardGiven.',
+    input: z.object(Base),
+    output: z.object({
+      dryRun: z.boolean(),
+      matchId: z.string(),
+      card: PassivityCardSchema,
+      /** Noir P : équipe gagnante de la rencontre ; null sinon */
+      winnerTeamId: z.string().nullable(),
+      /** Rencontres de tableau formées par la décision */
+      scheduledMatchIds: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'score:write',
+    mcp: { name: 'give_passivity_card', title: 'Donner un carton P (non-combativité)' },
+  }),
+
   cancelTeamCard: command({
     description:
-      'Directoire technique (écran, MCP) : annule un carton E. Refus : permission_denied (tablette, appareil), match_not_found, card_not_found. Journal : TeamCardCancelled.',
-    input: z.object({ ...Base, cardId: Id.describe('Carton E (teamCards[].id)') }),
+      'Directoire technique (écran, MCP) : annule un carton E, ou un carton P jaune ou rouge (le noir P a décidé la rencontre). Refus : permission_denied (tablette, appareil), match_not_found, card_not_found, match_finished (noir P). Journal : TeamCardCancelled.',
+    input: z.object({
+      ...Base,
+      cardId: Id.describe('Carton E ou carton P (teamCards[].id, passivityCards[].id)'),
+    }),
     output: z.object({
       dryRun: z.boolean(),
       matchId: z.string(),

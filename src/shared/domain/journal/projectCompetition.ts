@@ -75,7 +75,10 @@ export interface TeamMatchFact {
   afterCards?: boolean;
 }
 
-/** Carton E (TeamCardGiven) ou carton individuel d'un relais (RelayCardGiven), docs/adr/0028 */
+/**
+ * Carton E (TeamCardGiven), carton individuel d'un relais (RelayCardGiven) ou carton P
+ * (PassivityCardGiven : ni équipe ni tireur, type `p_…`), docs/adr/0028
+ */
 export interface TeamCardFact {
   cardId: string;
   matchId: string;
@@ -413,6 +416,7 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
       case JOURNAL_EVENT.teamFencerSubstituted:
       case JOURNAL_EVENT.teamCardGiven:
       case JOURNAL_EVENT.relayCardGiven:
+      case JOURNAL_EVENT.passivityCardGiven:
       case JOURNAL_EVENT.teamCardCancelled:
       case JOURNAL_EVENT.relayCardCancelled:
       case JOURNAL_EVENT.teamWithdrawn:

@@ -54,7 +54,7 @@ function currentRelayIndex(detail: { status: string; bouts: Array<{ status: stri
 function recordedCards(
   ctx: TeamArenaContext,
   matchId: string
-): { fencerCards: TeamArenaFencerCard[]; cards: TeamArenaCard[] } {
+): Pick<TeamArenaState, 'fencerCards' | 'cards' | 'passivityCards'> {
   return {
     fencerCards: ctx.db.teams.getTeamBoutCards(matchId).map(({ boutId, card }) => ({
       id: card.id,
@@ -64,6 +64,7 @@ function recordedCards(
       reason: (card.reason ?? null) as CardReason | null,
     })),
     cards: ctx.db.teams.getTeamMatchCards(matchId) as TeamArenaCard[],
+    passivityCards: ctx.db.teams.getPassivityCards(matchId).map(c => ({ id: c.id, type: c.type })),
   };
 }
 
@@ -240,6 +241,31 @@ export function giveTeamArenaRelayCard(
       side,
       ...given,
     },
+    source
+  );
+  if (!outcome.ok) return outcome;
+  reloadTeamArenaMatch(ctx, state);
+  if (broadcast) broadcastTeamArena(ctx, arenaId);
+  return outcome;
+}
+
+/**
+ * Carton P (non-combativité, t.124) aux deux équipes par givePassivityCard (appareil de piste,
+ * docs/adr/0028 lot C4) : escalade sur la rencontre ; le noir P la décide. Succès : rencontre
+ * relue. Refus : rien d'écrit, code rendu. `broadcast: false` : l'appelant diffuse.
+ */
+export function giveTeamArenaPassivityCard(
+  ctx: TeamArenaContext,
+  arenaId: string,
+  source: TeamSource,
+  { broadcast = true }: { broadcast?: boolean } = {}
+): TeamCommandOutcome<'givePassivityCard'> {
+  const state = ctx.teamArenaState.get(arenaId);
+  if (!state) return NO_ARENA;
+  const outcome = runTeamCommand(
+    ctx.db,
+    'givePassivityCard',
+    { competitionId: state.competitionId, matchId: state.matchId },
     source
   );
   if (!outcome.ok) return outcome;

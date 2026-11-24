@@ -3,7 +3,8 @@
  * `/equipe1` (relais FIE en direct, #1086), trames Cyrano `Type=T` injectées. Base SQLite
  * réelle : rencontre tirée par le moteur (ordre FIE des relais), fins de relais, rappel et
  * remplaçant écrits par les commandes du contrat (docs/adr/0024, lot E4) ; cartons de
- * l'appareil enregistrés par giveRelayCard avant le contrôle de la fin (docs/adr/0028, lot C3).
+ * l'appareil enregistrés par giveRelayCard avant le contrôle de la fin (docs/adr/0028, lot C3) ;
+ * cartons P par givePassivityCard, noir P avec la fin du relais → ACK et rencontre décidée (C4).
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -67,6 +68,8 @@ interface Side {
   score: number;
   y?: number;
   red?: number;
+  /** Champ P-card (0 à 5) : 1 jaune P, 2 rouge P, 4 noir P */
+  p?: number;
   reserve?: boolean;
   status?: CyranoFencer['status'];
 }
@@ -86,6 +89,7 @@ function info(
     status: f.status ?? 'U',
     yellowCards: f.y ?? 0,
     redCards: f.red ?? 0,
+    ...(f.p ? { pCard: f.p } : {}),
     reserve: f.reserve ?? false,
   });
   return buildCyrano({
@@ -293,6 +297,67 @@ d('PisteHub — relais FIE par équipes (Type=T)', () => {
       expect(journal('RelayCardGiven')).toHaveLength(0);
       expect(bout(1)).toMatchObject({ status: 'finished', scoreA: 5, scoreB: 1 });
       warn.mockRestore();
+    });
+  });
+
+  describe('cartons P de l’appareil par givePassivityCard (docs/adr/0028, lot C4)', () => {
+    const pTypes = () => journal('PassivityCardGiven').map(e => (e.payload as any).type);
+
+    it('jaune P puis rouge P à l’état reçu ; noir P avec la fin du relais : ACK, rencontre décidée au score', async () => {
+      await start();
+      device(info('H', 1, { id: r(1)[0], score: 2, p: 1 }, { id: r(1)[1], score: 1, p: 1 }));
+      expect(pTypes()).toEqual(['yellow']);
+      expect(journal('PassivityCardGiven')[0]).toMatchObject({ source: 'cyrano' });
+      device(info('H', 1, { id: r(1)[0], score: 3, p: 2 }, { id: r(1)[1], score: 1, p: 2 }));
+      expect(pTypes()).toEqual(['yellow', 'red']);
+      // DISP : carton P de la rencontre repris (rouge P), aux deux tireurs
+      expect(team().passivityCards?.map(c => c.type)).toEqual(['yellow', 'red']);
+      // Noir P montré pendant le relais : attend la fin (score du relais d'abord)
+      device(info('H', 1, { id: r(1)[0], score: 3, p: 4 }, { id: r(1)[1], score: 1, p: 4 }));
+      expect(pTypes()).toEqual(['yellow', 'red']);
+      out = [];
+      device(info('E', 1, { id: r(1)[0], score: 3, p: 4 }, { id: r(1)[1], score: 1, p: 4 }));
+      expect(out[0]).toBe('ACK');
+      expect(count('NAK')).toBe(0);
+      expect(bout(1)).toMatchObject({ status: 'finished', scoreA: 3, scoreB: 1 });
+      expect(pTypes()).toEqual(['yellow', 'red', 'black']);
+      const [black] = journal('PassivityCardGiven').slice(-1);
+      const [decided] = journal('TeamMatchDecided');
+      expect(decided).toMatchObject({
+        source: 'cyrano',
+        commandId: black.commandId,
+        payload: { winnerTeamId: fx.teamAId },
+      });
+      expect(fx.db.teams.getTeamMatch(fx.matchId)).toMatchObject({
+        status: 'finished',
+        winnerId: fx.teamAId,
+      });
+      expect(team().currentBoutIndex).toBe(-1);
+      // END répété (ACK perdu) : ACK de nouveau, rien de plus
+      device(info('E', 1, { id: r(1)[0], score: 3, p: 4 }, { id: r(1)[1], score: 1, p: 4 }));
+      expect(out[out.length - 1]).toBe('ACK');
+      expect(pTypes()).toHaveLength(3);
+      expect(fx.divergences()).toEqual([]);
+    });
+
+    it('rouge P montré d’emblée : jaune P puis rouge P dans l’escalade de la rencontre', async () => {
+      await start();
+      device(info('H', 1, { id: r(1)[0], score: 0, p: 2 }, { id: r(1)[1], score: 0, p: 2 }));
+      expect(pTypes()).toEqual(['yellow', 'red']);
+      expect(fx.divergences()).toEqual([]);
+    });
+
+    it('noir P au dernier relais à égalité (poule) : ACK au lieu de NAK, rencontre décidée au classement', async () => {
+      await start(Array.from({ length: 8 }, () => [5, 5] as [number, number]));
+      device(info('E', 9, { id: r(9)[0], score: 45, p: 4 }, { id: r(9)[1], score: 45, p: 4 }));
+      expect(count('NAK')).toBe(0);
+      expect(out).toContain('ACK');
+      expect(bout(9)).toMatchObject({ status: 'finished', scoreA: 5, scoreB: 5 });
+      expect(pTypes()).toEqual(['yellow', 'red', 'black']);
+      const m = fx.db.teams.getTeamMatch(fx.matchId)!;
+      expect(m.status).toBe('finished');
+      expect([fx.teamAId, fx.teamBId]).toContain(m.winnerId);
+      expect(fx.divergences()).toEqual([]);
     });
   });
 

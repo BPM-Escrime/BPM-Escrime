@@ -1,6 +1,33 @@
 import type { SqlRow } from './rowMappers';
 import { Card } from '../../shared/types';
 import type { SqlExecutor } from './sqlExecutor';
+import {
+  PASSIVITY_REASON,
+  PASSIVITY_TYPE_PREFIX,
+  passivityTypeOf,
+  type PassivityCardType,
+} from '../../shared/domain/teams/passivityCardTypes';
+
+/** Carton P d'une rencontre (team_match_cards, team_id NULL, docs/adr/0028 § 5 bis) */
+export interface PassivityCardRow {
+  id: string;
+  matchId: string;
+  type: PassivityCardType;
+  createdAt: string;
+}
+
+/** Lignes de team_match_cards : cartons E (équipe sanctionnée), puis cartons P (migration 49) */
+// substr plutôt que LIKE : « _ » y est un joker
+const P_TYPE = `substr(type, 1, ${PASSIVITY_TYPE_PREFIX.length}) = '${PASSIVITY_TYPE_PREFIX}'`;
+const TEAM_CARD_ONLY = `team_id IS NOT NULL AND NOT ${P_TYPE}`;
+const PASSIVITY_ONLY = `team_id IS NULL AND ${P_TYPE}`;
+
+const passivityRow = (r: SqlRow): PassivityCardRow => ({
+  id: r.id as string,
+  matchId: r.match_id as string,
+  type: passivityTypeOf(r.type as string) ?? 'yellow',
+  createdAt: r.created_at as string,
+});
 
 /** Équipes, rencontres, assauts et cartons par équipe (#1242) */
 export class TeamRepo {
@@ -521,7 +548,8 @@ export class TeamRepo {
   }> {
     if (!this.sql.db) return [];
     const rows = this.sql.queryAll<SqlRow>(
-      'SELECT * FROM team_match_cards WHERE match_id = ? ORDER BY created_at, rowid',
+      `SELECT * FROM team_match_cards WHERE match_id = ? AND ${TEAM_CARD_ONLY}
+       ORDER BY created_at, rowid`,
       [matchId]
     );
     return rows.map(r => ({
@@ -532,6 +560,36 @@ export class TeamRepo {
       reason: r.reason as string,
       createdAt: r.created_at as string,
     }));
+  }
+
+  // ── Cartons P (non-combativité) des relais par équipes (docs/adr/0028 § 5 bis) ──
+  // Même table que les cartons E : team_id NULL (carton donné aux deux équipes, migration
+  // 49), type préfixé `p_`. Les lectures des cartons E les écartent (TEAM_CARD_ONLY).
+
+  public createPassivityCard(
+    matchId: string,
+    type: 'yellow' | 'red' | 'black',
+    given: { id: string; at: string }
+  ): { id: string } {
+    if (!this.sql.db) throw new Error('Database not open');
+    this.sql.run(
+      `INSERT INTO team_match_cards (id, match_id, team_id, type, reason, created_at)
+       VALUES (?, ?, NULL, ?, ?, ?)`,
+      [given.id, matchId, `${PASSIVITY_TYPE_PREFIX}${type}`, PASSIVITY_REASON, given.at]
+    );
+    return { id: given.id };
+  }
+
+  /** Cartons P d'une rencontre, dans l'ordre d'attribution */
+  public getPassivityCards(matchId: string): PassivityCardRow[] {
+    if (!this.sql.db) return [];
+    return this.sql
+      .queryAll<SqlRow>(
+        `SELECT * FROM team_match_cards WHERE match_id = ? AND ${PASSIVITY_ONLY}
+         ORDER BY created_at, rowid`,
+        [matchId]
+      )
+      .map(passivityRow);
   }
 
   /** Carton E retiré (annulation par le Directoire technique, docs/adr/0028) */
@@ -557,12 +615,14 @@ export class TeamRepo {
       createdAt: string;
     }>;
     boutCards: Array<{ boutId: string; card: Card }>;
+    passivityCards: PassivityCardRow[];
   } {
-    if (!this.sql.db) return { matchCards: [], boutCards: [] };
+    if (!this.sql.db) return { matchCards: [], boutCards: [], passivityCards: [] };
     const scope = 'match_id IN (SELECT id FROM team_matches WHERE competition_id = ?)';
     const matchCards = this.sql
       .queryAll<SqlRow>(
-        `SELECT * FROM team_match_cards WHERE ${scope} ORDER BY created_at, rowid`,
+        `SELECT * FROM team_match_cards WHERE ${scope} AND ${TEAM_CARD_ONLY}
+         ORDER BY created_at, rowid`,
         [competitionId]
       )
       .map(r => ({
@@ -573,6 +633,13 @@ export class TeamRepo {
         reason: r.reason as string,
         createdAt: r.created_at as string,
       }));
+    const passivityCards = this.sql
+      .queryAll<SqlRow>(
+        `SELECT * FROM team_match_cards WHERE ${scope} AND ${PASSIVITY_ONLY}
+         ORDER BY created_at, rowid`,
+        [competitionId]
+      )
+      .map(passivityRow);
     const boutCards = this.sql
       .queryAll<{ bout_id: string; card_json: string }>(
         `SELECT bout_id, card_json FROM team_bout_cards WHERE ${scope} ORDER BY created_at, rowid`,
@@ -582,7 +649,7 @@ export class TeamRepo {
         const card = JSON.parse(r.card_json) as Card;
         return { boutId: r.bout_id, card: { ...card, timestamp: new Date(card.timestamp) } };
       });
-    return { matchCards, boutCards };
+    return { matchCards, boutCards, passivityCards };
   }
 
   // ── Format arène Sabre Laser : saisie temps réel (tablette arbitre) ─────────

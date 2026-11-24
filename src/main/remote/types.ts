@@ -96,6 +96,8 @@ export interface TeamArenaState {
   elapsedAccumulatedSec: number; // temps déjà écoulé (assaut en pause)
   timerStartedAt: number | null; // epoch ms, null = chrono à l'arrêt
   cards: TeamArenaCard[];
+  /** Cartons P de la rencontre (aux deux équipes, t.124), copie de la table (docs/adr/0028 C4) */
+  passivityCards?: Array<{ id: string; type: 'yellow' | 'red' | 'black' }>;
   /** Équipes de la rencontre retirées ou exclues (TeamWithdrawn du journal, docs/adr/0028) */
   withdrawnTeams?: Array<{ teamId: string; reason: 'exclusion' | 'abandon' }>;
   /**

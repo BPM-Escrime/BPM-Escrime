@@ -452,5 +452,30 @@ d(
       ]);
       expect(fx.divergences()).toEqual([]);
     });
+
+    it('noir P de l’appareil (p_card 4) avec la fin du relais : ACK, rencontre décidée (C4)', async () => {
+      // Relais 2 : cumul 6-2 après le relais 1 ; l'équipe A mène
+      await device.send('state', { state: 'F' });
+      // Cartons P (message uw2f, champ p_card des deux côtés) : rouge P, puis noir P
+      const pCard = (n: number) =>
+        device.send('uw2f', { right: { p_card: n }, left: { p_card: n } });
+      await device.score(8, 3);
+      await pCard(2);
+      await until(() => team().liveScoreA === 2 && (team().passivityCards?.length ?? 0) === 2);
+      await pCard(4);
+      expect(await end()).toBe('ACK');
+      await until(() => team().currentBoutIndex === -1);
+      const given = journal('PassivityCardGiven');
+      expect(given.map(e => (e.payload as { type: string }).type)).toEqual([
+        'yellow',
+        'red',
+        'black',
+      ]);
+      expect(given.every(e => e.source === 'opp2')).toBe(true);
+      expect(bout(2)).toMatchObject({ status: 'finished', scoreA: 2, scoreB: 1 });
+      const m = fx.db.teams.getTeamMatch(fx.matchId)!;
+      expect(m).toMatchObject({ status: 'finished', winnerId: m.teamAId });
+      expect(fx.divergences()).toEqual([]);
+    });
   }
 );

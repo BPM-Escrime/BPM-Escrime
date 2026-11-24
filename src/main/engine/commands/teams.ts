@@ -28,6 +28,7 @@ import {
   type TeamWithdrawal,
 } from '../../../shared/domain/teams/teamWithdrawal';
 import type { Card } from '../../../shared/types';
+import { PASSIVITY_TYPE_PREFIX } from '../../../shared/domain/teams/passivityCardTypes';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { EVENT, recordEvents } from './eventLog';
@@ -302,6 +303,9 @@ function matchDTO(m: TeamMatchRow & { position?: number | null }, pool: boolean,
         type: c.type as 'white' | 'yellow' | 'red' | 'black',
         at: c.createdAt,
       })),
+    passivityCards: cards.passivityCards
+      .filter(c => c.matchId === m.id)
+      .map(c => ({ id: c.id, type: c.type, at: c.createdAt })),
   };
 }
 
@@ -392,6 +396,8 @@ export function teamStateView(ctx: CommandContext, comp: Competition): TeamState
       })),
       cards: [
         ...m.teamCards.map(c => ({ id: c.id, type: c.type, teamId: c.teamId })),
+        // Carton P : ni équipe ni tireur, type tel que rangé en table (journal : même forme)
+        ...m.passivityCards.map(c => ({ id: c.id, type: `${PASSIVITY_TYPE_PREFIX}${c.type}` })),
         ...m.bouts.flatMap(b =>
           b.cards.map(c => ({ id: c.id, type: c.type, relayId: b.id, fencerId: c.fencerId }))
         ),
