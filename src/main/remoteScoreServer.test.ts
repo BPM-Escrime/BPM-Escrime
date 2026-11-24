@@ -66,6 +66,7 @@ vi.mock('./remote/scoreCommand', async orig => {
 
 import { createServer } from 'http';
 import { RemoteScoreServer } from './remoteScoreServer';
+import type { Fencer } from '../shared/types';
 import { setUiLanguage } from './menuLabels';
 import { mockDb, makeReq, makeRes } from './__tests__/remoteServerTestkit';
 
@@ -571,7 +572,7 @@ describe('RemoteScoreServer', () => {
   });
 
   describe('piste assignée aux poules (pool.strip)', () => {
-    const f = (id: string) => ({ id, firstName: id, lastName: id });
+    const f = (id: string) => ({ id, firstName: id, lastName: id }) as Fencer;
     const poolMatches = (poolId: string) => [
       {
         id: `${poolId}-m1`,
@@ -630,7 +631,7 @@ describe('RemoteScoreServer', () => {
   });
 
   describe('plusieurs poules sur la même piste (#1826)', () => {
-    const f = (id: string) => ({ id, firstName: id, lastName: id });
+    const f = (id: string) => ({ id, firstName: id, lastName: id }) as Fencer;
     const pm = (poolId: string, n: number) => ({
       id: `${poolId}-m${n}`,
       poolId,
@@ -697,7 +698,7 @@ describe('RemoteScoreServer', () => {
   });
 
   describe('réassignation manuelle de piste (#1037)', () => {
-    const f = (id: string) => ({ id, firstName: id, lastName: id });
+    const f = (id: string) => ({ id, firstName: id, lastName: id }) as Fencer;
     const pm = (poolId: string, n: number) => ({
       id: `${poolId}-m${n}`,
       poolId,
@@ -842,8 +843,8 @@ describe('RemoteScoreServer', () => {
   });
 
   describe("arbitre des matchs de tableau assigné depuis l'appli (#977)", () => {
-    const fA = { id: 'a', lastName: 'Dupont', firstName: 'Jean' };
-    const fB = { id: 'b', lastName: 'Martin', firstName: 'Paul' };
+    const fA = { id: 'a', lastName: 'Dupont', firstName: 'Jean' } as Fencer;
+    const fB = { id: 'b', lastName: 'Martin', firstName: 'Paul' } as Fencer;
     const de = (id: string, arena: number, referee?: any) => ({
       id,
       round: 8,

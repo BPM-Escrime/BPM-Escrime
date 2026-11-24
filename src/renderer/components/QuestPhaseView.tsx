@@ -14,6 +14,7 @@ import {
   MatchStatus,
   Score,
   PoolRanking,
+  Weapon,
 } from '../../shared/types';
 import {
   calculateFightsPerFencer,
@@ -41,7 +42,7 @@ import { Icon } from './common/Icon';
 interface QuestPhaseViewProps {
   fencers: Fencer[];
   questConfig: QuestPhaseConfig;
-  competitionWeapon: string;
+  competitionWeapon: Weapon;
   maxScore: number;
   onQuestComplete: (ranking: PoolRanking[]) => void;
   onConfigUpdate?: (updates: Partial<QuestPhaseConfig>) => void;
@@ -231,7 +232,7 @@ const QuestPhaseView: React.FC<QuestPhaseViewProps> = ({
           <PoolView
             key={pool.id}
             pool={pool}
-            weapon={competitionWeapon as any}
+            weapon={competitionWeapon}
             competitionName="Tour Quest"
             maxScore={maxScore}
             onScoreUpdate={(matchIndex, scoreA, scoreB, winner, specialStatus) =>

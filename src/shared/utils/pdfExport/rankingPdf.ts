@@ -152,7 +152,7 @@ function buildRankingHTML(
 ): string {
   if (ranking.length === 0)
     throw new Error(pdfT('ranking_empty', 'Aucun tireur dans le classement'));
-  const isLaserSabre = weapon === 'L' || weapon === ('LASER' as any);
+  const isLaserSabre = weapon === Weapon.LASER;
   const cols = visibleColumns ?? [
     'rank',
     'lastName',
