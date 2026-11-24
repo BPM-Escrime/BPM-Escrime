@@ -105,8 +105,8 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 21 | 271 |
-| `src/main/` | 150 | 1284 |
+| `src/database/` | 22 | 275 |
+| `src/main/` | 151 | 1295 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
 | `src/renderer/components/` | 132 | 711 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 39 | 476 |
+| `src/shared/domain/` | 40 | 482 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **603** | **4689** |
+| **Total** | **606** | **4710** |
 
-Unitaires : 585 fichiers, 4639 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 588 fichiers, 4660 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2359,6 +2359,17 @@ Unitaires : 585 fichiers, 4639 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/database/migrations/teamMatchCardsNullable.test.ts</code> — 4 tests</summary>
+
+- **migration 49 : team\_match\_cards.team\_id nullable**
+  - avant : team\_id NOT NULL refuse le carton P
+  - cartons E déjà en base recopiés dans leur ordre ; carton P à team\_id NULL accepté
+  - clés étrangères conservées : équipe inconnue refusée, cascade sur la rencontre
+  - base vierge : toutes les migrations s’appliquent, table vide et nullable
+
+</details>
+
+<details>
 <summary><code>src/database/repos/clubBackupRepo.test.ts</code> — 3 tests</summary>
 
 - **ClubBackupRepo (sauvegarde / chargement d’un club)**
@@ -3354,6 +3365,19 @@ Unitaires : 585 fichiers, 4639 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/passivityCards.test.ts</code> — 7 tests</summary>
+
+- jaune P, rouge P (sans touche), noir P : rencontre décidée au score, même commandId, rejeu
+- noir P à égalité de score : meilleur classement (rang du tableau), rencontre suivante formée
+- rencontre tirée jusqu’au bout : noir P accepté sans changer le résultat, ou qui décide l’égalité de poule
+- Sabre Laser (relais ou arène) : unsupported\_format, rien d’écrit
+- annulation : Directoire technique seulement, jaune ou rouge P ; noir P refusé ; rejeu
+- dépôt : cartons E et cartons P de la même table lus séparément (même milliseconde)
+- outil MCP give\_passivity\_card (écriture sportive)
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/privacy.test.ts</code> — 8 tests</summary>
 
 - **applyRetention**
@@ -3991,7 +4015,7 @@ Unitaires : 585 fichiers, 4639 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/opp2/e2eTeam.test.ts</code> — 9 tests</summary>
+<summary><code>src/main/opp2/e2eTeam.test.ts</code> — 10 tests</summary>
 
 - relais 1 à 3 : END → ACK, relais enregistré par le moteur (source opp2), relais suivant affiché
 - PREV avant le début du relais 4 : relais 3 rouvert par reopenRelay, puis réenregistré
@@ -4002,6 +4026,7 @@ Unitaires : 585 fichiers, 4639 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - END au palier + 1 sans rouge : NAK, rien d’enregistré
 - rouge de l’appareil → giveRelayCard (opp2), END au palier + 1 → ACK (t.41.1)
 - cartons en base après redémarrage (#2182) : arène rouverte, rejeu sans écart
+- noir P de l’appareil (p\_card 4) avec la fin du relais : ACK, rencontre décidée (C4)
 
 </details>
 
@@ -4130,7 +4155,7 @@ Unitaires : 585 fichiers, 4639 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/piste/teamRelayPiste.test.ts</code> — 35 tests</summary>
+<summary><code>src/main/piste/teamRelayPiste.test.ts</code> — 38 tests</summary>
 
 - rencontre assignée : DISP Type=T du relais 1, tireurs du relais, nation = équipe
 - rencontre de tableau : phase du tableau, A\<tour\>, position + 1
@@ -4152,6 +4177,10 @@ Unitaires : 585 fichiers, 4639 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - END au palier + 1 sans rouge : NAK ; rouge montré → enregistré avant le contrôle, ACK (t.41.1)
   - rouge de l’autre côté : pas de dépassement pour l’équipe sanctionnée (NAK)
   - carton refusé par le moteur : tracé une fois, fin du relais décidée normalement (ACK)
+- **cartons P de l’appareil par givePassivityCard (docs/adr/0028, lot C4)**
+  - jaune P puis rouge P à l’état reçu ; noir P avec la fin du relais : ACK, rencontre décidée au score
+  - rouge P montré d’emblée : jaune P puis rouge P dans l’escalade de la rencontre
+  - noir P au dernier relais à égalité (poule) : ACK au lieu de NAK, rencontre décidée au classement
 - **remplaçant (R11 / L11 = R)**
   - accepté : le remplaçant prend la place du tireur dans ses relais suivants
   - annulé pendant le relais : aucun remplacement
@@ -9557,6 +9586,20 @@ Unitaires : 585 fichiers, 4639 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - chaque équipe rencontre toutes les autres de sa poule exactement une fois
 - **resolveLaserArenaSchedule — 8 équipes**
   - génère exactement 6 rencontres par poule pour 2 poules de 4
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/teams/passivityCards.test.ts</code> — 6 tests</summary>
+
+- **passivityCardFor**
+  - escalade jaune P, rouge P, noir P ; heure et identifiant injectés
+  - noir P à égalité : meilleur classement ; classement inconnu ou égal : draw\_needs\_winner
+  - rencontre terminée : noir P conforme au résultat, ou décide l’égalité ; sinon refus
+  - Sabre Laser et arme à la carte : pas de carton P
+- **cartons P de l’appareil**
+  - niveau Cyrano → rang dans l’escalade, rattrapage borné
+  - type rangé en table
 
 </details>
 
