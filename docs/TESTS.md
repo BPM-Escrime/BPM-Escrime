@@ -106,11 +106,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 23 | 278 |
-| `src/main/` | 155 | 1350 |
+| `src/main/` | 156 | 1355 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 135 | 748 |
-| E2E Playwright (`e2e/`) | 18 | 50 |
+| E2E Playwright (`e2e/`) | 18 | 51 |
 | `src/remote/` | 60 | 427 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 44 | 534 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **620** | **4879** |
+| **Total** | **621** | **4885** |
 
-Unitaires : 602 fichiers, 4829 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 603 fichiers, 4834 tests. E2E : 18 fichiers, 51 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -4840,6 +4840,17 @@ Unitaires : 602 fichiers, 4829 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/remote/teamArenaSync.test.ts</code> — 5 tests</summary>
+
+- carton de relais donné à l’écran : arène relue et diffusée
+- relais enregistré à l’écran : relais suivant, score en direct remis à zéro
+- carton P donné à l’écran, noir P compris : rencontre décidée sur l’arène
+- carton E donné à l’écran (Sabre Laser) ; rencontre non affichée : rien de diffusé
+- commande venue de la tablette : une seule diffusion, pas de doublon après le signal
+
+</details>
+
+<details>
 <summary><code>src/main/remote/trainingLobby.test.ts</code> — 17 tests</summary>
 
 - **TrainingLobby (#1500)**
@@ -7811,10 +7822,11 @@ Unitaires : 602 fichiers, 4829 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>e2e/electron/teams.spec.ts</code> — 2 tests</summary>
+<summary><code>e2e/electron/teams.spec.ts</code> — 3 tests</summary>
 
 - équipes : poule et tableau joués à l’écran par le moteur, retrouvés au rechargement
 - équipes : relais FIE joués sur la tablette /equipe1/arbitre par le moteur (lot E4)
+- équipes : carton donné à l’écran, vu sur la tablette sans renvoi de la rencontre (#2267)
 
 </details>
 
