@@ -37,6 +37,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0025](0025-plan-de-salle-epreuve.md)              | Le plan de salle du planificateur est enregistré sur l'épreuve (`competitions.arena_plan`, migration 48)                                     | Acceptée            |
 | [0026](0026-recherche-de-lieu.md)                  | La recherche de lieu passe par le poste (`listPlaceSuggestions`), sur Photon puis la Géoplateforme IGN, gratuits sans clé                    | Acceptée            |
 | [0028](0028-cartons-equipe-moteur.md)              | Les cartons des épreuves par équipes (carton E, cartons des relais) passent par le moteur : `giveTeamCard`, `giveRelayCard`, journalisés     | Acceptée            |
+| [0029](0029-multi-poste-roles-bail.md)             | Multi-poste : comptes par fonction, droits `checkin:write` et `structure:write`, bail par épreuve en mémoire du moteur                       | Proposée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.
