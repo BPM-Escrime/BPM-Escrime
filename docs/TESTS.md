@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 21 | 271 |
-| `src/main/` | 149 | 1262 |
+| `src/main/` | 150 | 1284 |
 | `src/renderer/services/` | 13 | 62 |
 | `src/renderer/hooks/` | 40 | 208 |
-| `src/renderer/components/` | 132 | 707 |
+| `src/renderer/components/` | 132 | 711 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 417 |
 | `src/renderer/api/` | 10 | 45 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 38 | 470 |
+| `src/shared/domain/` | 39 | 476 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **601** | **4657** |
+| **Total** | **603** | **4689** |
 
-Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 585 fichiers, 4639 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2936,7 +2936,7 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/cyrano/e2eTeam.test.ts</code> — 8 tests</summary>
+<summary><code>src/main/cyrano/e2eTeam.test.ts</code> — 11 tests</summary>
 
 - DISP Type=T reçu par UDP : relais 1 (ordre FIE), tireurs du relais, nation = équipe
 - relais 1 : touches de l’appareil → score du relais sur l’arène équipe, rien en base
@@ -2946,6 +2946,9 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - relais 2 réenregistré puis relais 3 à 9 : rencontre terminée, journal rejoué sans écart
 - relais 9 terminé à 45-45 sans priorité : NAK, rien d’enregistré
 - priorité à gauche puis VALIDATE : ACK, rencontre décidée pour l’équipe B, rejeu sans écart
+- END au palier + 1 sans rouge : NAK, rien d’enregistré, appareil ramené au palier
+- rouge de l’appareil → giveRelayCard (cyrano), END au palier + 1 → ACK (t.41.1)
+- cartons en base après redémarrage (#2182) : arène rouverte, rejeu sans écart
 
 </details>
 
@@ -3599,6 +3602,23 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/teamCards.test.ts</code> — 11 tests</summary>
+
+- jaune puis rouge (t.165), palier + 1 seulement avec le rouge (t.41.1), état, rejeu
+- entrée : exactement un de reason/type ; motif hors arme, relais inconnu, type d’appareil
+- carton après le END du dernier relais : accepté tant que la rencontre suivante n’a pas commencé
+- armes olympiques : tireur exclu, rencontre perdue, équipe exclue sous le même commandId
+- Sabre Laser : noir individuel, tireur retiré seulement (Livret 2 VIII.7, XII « A venir »)
+- withdrawTeam (o.99.7.a) : rencontre perdue, équipe retirée ; tableau : rencontre suivante créée
+- escalade E, noir accepté, équipe hors rencontre, annulation, rejeu
+- carton E hors arène refusé ; withdrawTeam en arène refusé
+- annulation d’un rouge : escalade recalculée, palier de nouveau strict
+- épreuve antérieure : cartons en table sans événement, pas de faux écart
+- give\_team\_card, give\_relay\_card, cancel\_\*, withdraw\_team (écriture sportive)
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/teamRelays.test.ts</code> — 10 tests</summary>
 
 - 9 relais : score de chaque relais, cumul calculé, vainqueur, journal, rejeu sans écart
@@ -3971,7 +3991,7 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/opp2/e2eTeam.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/opp2/e2eTeam.test.ts</code> — 9 tests</summary>
 
 - relais 1 à 3 : END → ACK, relais enregistré par le moteur (source opp2), relais suivant affiché
 - PREV avant le début du relais 4 : relais 3 rouvert par reopenRelay, puis réenregistré
@@ -3979,6 +3999,9 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - relais 4 à 9 : rencontre terminée par le moteur, journal rejoué sans écart
 - relais 9 terminé à 45-45 sans priorité : NAK, rien d’enregistré
 - priorité à droite : ACK, rencontre décidée pour l’équipe A (source opp2), rejeu sans écart
+- END au palier + 1 sans rouge : NAK, rien d’enregistré
+- rouge de l’appareil → giveRelayCard (opp2), END au palier + 1 → ACK (t.41.1)
+- cartons en base après redémarrage (#2182) : arène rouverte, rejeu sans écart
 
 </details>
 
@@ -4107,7 +4130,7 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/piste/teamRelayPiste.test.ts</code> — 32 tests</summary>
+<summary><code>src/main/piste/teamRelayPiste.test.ts</code> — 35 tests</summary>
 
 - rencontre assignée : DISP Type=T du relais 1, tireurs du relais, nation = équipe
 - rencontre de tableau : phase du tableau, A\<tour\>, position + 1
@@ -4125,6 +4148,10 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - arme laser : affichage seul (END → NAK) ; format arène laser : non raccordé
 - rencontre terminée encore assignée : l’arène individuelle N reçoit les entrées
 - rencontre retirée de l’arène : affichage vide
+- **cartons de l’appareil par giveRelayCard (docs/adr/0028, lot C3)**
+  - END au palier + 1 sans rouge : NAK ; rouge montré → enregistré avant le contrôle, ACK (t.41.1)
+  - rouge de l’autre côté : pas de dépassement pour l’équipe sanctionnée (NAK)
+  - carton refusé par le moteur : tracé une fois, fin du relais décidée normalement (ACK)
 - **remplaçant (R11 / L11 = R)**
   - accepté : le remplaçant prend la place du tireur dans ses relais suivants
   - annulé pendant le relais : aucun remplacement
@@ -4710,12 +4737,15 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/teamArena.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/remote/teamArena.test.ts</code> — 7 tests</summary>
 
 - relais FIE complet : 9 relais par la tablette, rencontre terminée, rejeu sans écart
 - relais au-delà du palier : refusé par le moteur, motif rendu à la tablette, rien d’écrit
 - égalité au tableau à la fin du dernier relais : draw\_needs\_winner, rencontre non décidée
 - égalité au tableau au dernier relais : priorité choisie à la tablette (t.41.5), rencontre décidée
+- carton de relais : escalade par giveRelayCard, palier dépassé d’un rouge, rejeu sans écart
+- carton noir de relais (escrime olympique) : tireur retiré, équipe exclue, rencontre décidée
+- carton E (arène Sabre Laser) : giveTeamCard, équipe étrangère refusée (#2183), noir accepté (#2186)
 
 </details>
 
@@ -4768,7 +4798,7 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remoteScoreServer.security.test.ts</code> — 42 tests</summary>
+<summary><code>src/main/remoteScoreServer.security.test.ts</code> — 41 tests</summary>
 
 - **RemoteScoreServer**
   - **route /api/auth/login/:arenaId**
@@ -4793,7 +4823,6 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
       - team\_touch accepté avec cookie, points invalides ignorés
       - **relais FIE (#1086)**
         - touche simple uniquement (pas de zones hors mode points)
-        - carton individuel : escalade, persistance, motif inconnu refusé
         - état public : cumul, palier du relais, cible, motifs de carton
   - **P1 : anti force brute**
     - hash scrypt salé : deux hash du même mot de passe diffèrent et se vérifient
@@ -6002,13 +6031,17 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/CompetitionViewTeams.test.tsx</code> — 5 tests</summary>
+<summary><code>src/renderer/components/CompetitionViewTeams.test.tsx</code> — 9 tests</summary>
 
 - épreuve neuve : état et bloc « teams » dès la création, sans écriture de l’écran
 - épreuve d’avant E1 (rencontres de l’écran) : reprise telle quelle, rien réécrit ni tiré
 - composition et poules depuis l’écran : inscription, affectation, tirage par le contrat
 - relais à l’écran : touches comptées localement, fin, réouverture, remplacement, refus traduit
 - tableau : rien à l’ouverture, tiré par le bouton ; égalité au dernier relais tranchée
+- carton de relais : donné et annulé par le moteur, affiché après sa réponse, refus traduit
+- noir individuel en FIE : tireur et équipe exclus (o.99.7.b), « Exclue », rencontres refusées
+- abandon sans remplaçant : withdrawTeam (o.99.7.a), « N’a pas terminé »
+- carton E (arène Sabre Laser) : escalade du moteur, annulation
 
 </details>
 
@@ -9596,7 +9629,7 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/teams/teamCards.test.ts</code> — 25 tests</summary>
+<summary><code>src/shared/domain/teams/teamCards.test.ts</code> — 27 tests</summary>
 
 - **determineTeamCardEscalation**
   - attribue un carton blanc à la première désignation tardive de la rencontre
@@ -9620,12 +9653,14 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - pas de blanc en escrime olympique ; type inconnu refusé
 - **relayCardFor : refus**
   - relais inconnu
-  - rencontre terminée ou décidée
+  - rencontre terminée : dernier relais tant que la rencontre suivante n’a pas commencé (#2213)
+  - rencontre décidée avant son dernier relais (exclusion, abandon)
   - relais hors ordre (§ 5)
 - **relayAcceptsCard (§ 5)**
   - relais en cours
   - dernier relais terminé tant que le suivant n’a pas commencé
   - relais futur, inconnu, rencontre terminée
+  - rencontre terminée : dernier relais accepté jusqu’au début de la rencontre suivante
 - **newDeviceCards**
   - compteurs de l’appareil sans rien d’enregistré : tout est nouveau, dans l’ordre
   - pas de doublon : seul l’excédent de l’appareil est nouveau
@@ -9660,6 +9695,19 @@ Unitaires : 583 fichiers, 4607 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - Sabre Laser en points : dernière touche jusqu’à 5 points au-delà du palier − 1 (#2188)
   - vainqueur : meneur au cumul en relais FIE, score de l’assaut en arène
   - issue : égalité tranchée par le vainqueur donné
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/teams/teamWithdrawal.test.ts</code> — 4 tests</summary>
+
+- **withoutWithdrawnTeams (o.99.8)**
+  - retire l’équipe et toutes ses rencontres, y compris celles gagnées par ses adversaires
+- **nextTeamMatchStarted**
+  - rencontre suivante de l’équipe pas commencée, puis commencée (relais en cours)
+  - rencontre d’une autre équipe ou antérieure : sans effet ; rencontre inconnue : false
+- **relayPenaltyTouches (t.162.2)**
+  - un rouge donne une touche à l’équipe adverse ; jaunes et noirs sans touche
 
 </details>
 
