@@ -129,12 +129,11 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
 
   /**
    * État de l'épreuve tenu par le moteur (getCompetitionState, docs/adr/0017) avec sa révision
-   * de journal ; hors moteur (navigateur, tests sans pont), lecture directe du bloc.
+   * de journal ; null hors moteur (contrat indisponible).
    */
   const fetchState = useCallback(async (): Promise<FetchedState | null> => {
     try {
       const r = await client.query('getCompetitionState', { competitionId: props.competitionId });
-      // Pont sans moteur (bouchon de test) : réponse vide, lecture directe ci-dessous
       if (r && typeof r === 'object' && typeof r.revision === 'number') {
         return { state: r.state, sessionRevision: r.sessionRevision, revision: r.revision };
       }
@@ -142,15 +141,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
       const code = (e as { code?: string }).code;
       if (code !== 'unavailable' && code !== 'unknown_operation') throw e;
     }
-    if (!window.electronAPI?.db?.getSessionState) return null;
-    const raw = (await window.electronAPI.db.getSessionState(props.competitionId)) as
-      (SessionState & { uiState?: { currentPoolRound?: number } }) | null;
-    if (!raw) return { state: null, sessionRevision: 0, revision: 0 };
-    return {
-      state: { ...raw, currentPoolRound: raw.uiState?.currentPoolRound || 1 },
-      sessionRevision: typeof raw.revision === 'number' ? raw.revision : 0,
-      revision: 0,
-    };
+    return null;
   }, [client, props.competitionId]);
 
   // Restaurer l'état
@@ -239,7 +230,6 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
 
   // Signaux de l'épreuve par le contrat : journal:appended (révision du journal) et
   // session:changed (écritures du moteur pas encore journalisées, jusqu'à l'étape 4b).
-  // Hors moteur : signal session:changed de l'ancien canal.
   useEffect(() => {
     const competitionId = props.competitionId;
     try {
@@ -249,13 +239,8 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
         else if (event.type === 'session:changed') requestReload();
       });
     } catch {
-      const subscribe = window.electronAPI?.onCompetitionEvent;
-      if (!subscribe) return;
-      return subscribe(event => {
-        if (event.type !== 'session:changed') return;
-        if (event.competitionId !== competitionId) return;
-        requestReload();
-      });
+      // Contrat indisponible (hors moteur) : pas de relecture sur signal
+      return undefined;
     }
   }, [client, props.competitionId, requestReload]);
 

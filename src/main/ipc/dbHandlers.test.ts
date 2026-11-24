@@ -12,6 +12,7 @@ vi.mock('electron', () => ({
 }));
 
 import { registerDbHandlers, emitCompetitionEvent } from './dbHandlers';
+import { onCompetitionEvent } from '../engine/api/events';
 
 describe('bus d’événements db (#1298)', () => {
   const db = {
@@ -31,12 +32,13 @@ describe('bus d’événements db (#1298)', () => {
     });
   });
 
-  it('emitCompetitionEvent diffuse aux fenêtres', () => {
+  it('emitCompetitionEvent publie sur le bus du contrat, plus sur un canal IPC (ADR-0010)', () => {
+    const seen: unknown[] = [];
+    const off = onCompetitionEvent(e => seen.push(e));
     emitCompetitionEvent('matches:changed', 'c1');
-    expect(send).toHaveBeenCalledWith('competition:event', {
-      type: 'matches:changed',
-      competitionId: 'c1',
-    });
+    off();
+    expect(seen).toEqual([{ type: 'matches:changed', competitionId: 'c1' }]);
+    expect(send).not.toHaveBeenCalled();
   });
 
   it('lot N (docs/adr/0024) : plus aucun canal d’écriture de l’épreuve par le préload', () => {
@@ -60,6 +62,7 @@ describe('bus d’événements db (#1298)', () => {
     ]) {
       expect(handlers.has(ch), ch).toBe(false);
     }
-    expect(handlers.has('db:getSessionState')).toBe(true);
+    // État de l'épreuve : getCompetitionState du contrat seulement (docs/adr/0017)
+    expect(handlers.has('db:getSessionState')).toBe(false);
   });
 });

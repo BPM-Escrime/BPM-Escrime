@@ -87,7 +87,7 @@ il n'est pas limité aux dossiers de l'agent.
 
 Proposés seulement si **« Autoriser l'écriture »** est coché (désactivé par défaut) ; sinon refusés.
 Chaque outil accepte `dryRun: true` (rapport sans écriture). Toute écriture prévient l'écran
-(`competition:event` : `competitions:changed`, `fencers:changed`), qui se recharge.
+(`onCompetitionEvents` : `competitions:changed`, `fencers:changed`), qui se recharge.
 
 | Outil | Arguments | Effet |
 |---|---|---|
@@ -104,7 +104,7 @@ Chaque outil accepte `dryRun: true` (rapport sans écriture). Toute écriture pr
 
 Mêmes fonctions que l'écran (`src/shared/utils/poolOrchestration.ts`, calcul du tableau), exécutées
 dans le main (`src/main/engine/commands/sport.ts`). Chaque écriture met à jour les tables **et** l'état de
-session, puis prévient l'écran (`competition:event` : `session:changed`), qui le relit. L'état de
+session, puis prévient l'écran (`onCompetitionEvents` : `session:changed`), qui le relit. L'état de
 session porte une révision : une sauvegarde de l'écran faite sur un état périmé est refusée, puis relue.
 
 | Outil | Arguments | Effet |
