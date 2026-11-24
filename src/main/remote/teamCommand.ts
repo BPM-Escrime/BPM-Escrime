@@ -2,7 +2,8 @@
  * BPM - Escrime - Relais d'équipes distants par les commandes du contrat (docs/adr/0024, lot E4)
  * Tablette `/equipe{N}/arbitre` et appareils de piste (Cyrano, OPP2) : fin de relais
  * (recordRelayScore), rappel du relais précédent (reopenRelay), remplaçant
- * (substituteTeamFencer). Mêmes contrôles que l'écran et le MCP, tables et journal dans une
+ * (substituteTeamFencer), cartons E et de relais (giveTeamCard, giveRelayCard, docs/adr/0028
+ * lot C3). Mêmes contrôles que l'écran et le MCP, tables et journal dans une
  * transaction. Refus : rien d'écrit, code du catalogue rendu (jamais de repli par la base).
  * Licensed under GPL-3.0
  */
@@ -16,7 +17,8 @@ import { logger, LogCategory } from '../../shared/services/logger';
 
 export type TeamSource = Extract<EventSource, 'tablet' | 'cyrano' | 'opp2'>;
 
-type TeamCommand = 'recordRelayScore' | 'reopenRelay' | 'substituteTeamFencer';
+type TeamCommand =
+  'recordRelayScore' | 'reopenRelay' | 'substituteTeamFencer' | 'giveTeamCard' | 'giveRelayCard';
 
 export type TeamCommandOutcome<N extends TeamCommand> =
   { ok: true; out: Output<N> } | { ok: false; code: string; message: string };
@@ -59,6 +61,13 @@ export function runTeamCommand<N extends TeamCommand>(
 /** Refus rendu à la tablette : même forme que le score refusé d'un match individuel */
 export const teamRefusal = (outcome: { code: string; message: string }) => ({
   error: 'score_refused',
+  code: outcome.code,
+  detail: outcome.message,
+});
+
+/** Carton refusé, rendu à la tablette : même forme, motif propre (docs/adr/0028, lot C3) */
+export const cardRefusal = (outcome: { code: string; message: string }) => ({
+  error: 'card_refused',
   code: outcome.code,
   detail: outcome.message,
 });
