@@ -23,6 +23,7 @@ Guide fonctionnel : [ARBITRAGE.md](ARBITRAGE.md), [REMOTE_SCORE_GUIDE.md](../REM
 | `team_advance_bout` | ✓ | `teamReferee.html` |
 | `team_card` | ✓ | `teamReferee.html` |
 | `team_fencer_card` | ✓ | `teamReferee.html` |
+| `team_passivity_card` | ✓ | `teamReferee.html` |
 | `team_reset_bout` | ✓ | `teamReferee.html` |
 | `team_timer_pause` | ✓ | `teamReferee.html` |
 | `team_timer_start` | ✓ | `teamReferee.html` |
@@ -64,6 +65,7 @@ Champ `action` de l'événement `arena_control` (`handleArenaControl`) :
 | `strips:plan` | ✓ | — |
 | `team_arena_error` | ✓ | `teamReferee.html` |
 | `team_arena_state` | ✓ | `teamArena.html`, `teamReferee.html` |
+| `team_passivity_black` | ✓ | `teamReferee.html` |
 | `tts:update` | ✓ | `referee.html` |
 | `wallpaper:update` | ✓ | `arena.html` |
 
