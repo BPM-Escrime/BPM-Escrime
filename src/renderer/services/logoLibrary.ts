@@ -4,8 +4,9 @@
  * PDF, kiosque et écrans distants n'ont pas à connaître la bibliothèque.
  * Licensed under GPL-3.0
  */
+import { PREFS } from './preferences';
 
-export const LOGO_STORAGE_KEY = 'bellepoule-logo';
+export const LOGO_STORAGE_KEY = PREFS.logo.key;
 export const LOGO_LIBRARY_KEY = 'bellepoule-logos';
 export const LOGO_LIBRARY_MAX = 20;
 

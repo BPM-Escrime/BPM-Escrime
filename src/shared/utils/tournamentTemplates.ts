@@ -14,6 +14,7 @@ import {
   PoolPhaseConfig,
 } from '../types';
 import { logger, LogCategory, toError } from '../services/logger';
+import { keyValueStore } from '../services/keyValueStore';
 
 export interface TournamentTemplate {
   id: string;
@@ -227,11 +228,11 @@ export function getOfficialTemplates(): TournamentTemplate[] {
 }
 
 /**
- * Get custom templates from localStorage
+ * Get custom templates from the key/value store (#2203)
  */
 export function getCustomTemplates(): TournamentTemplate[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = keyValueStore().getItem(STORAGE_KEY);
     if (stored) {
       return JSON.parse(stored);
     }
@@ -260,7 +261,7 @@ export function saveCustomTemplate(template: TournamentTemplate): boolean {
       });
     }
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
+    keyValueStore().setItem(STORAGE_KEY, JSON.stringify(templates));
     return true;
   } catch (error) {
     logger.error(LogCategory.BUSINESS, 'Failed to save custom template:', toError(error));
@@ -275,7 +276,7 @@ export function deleteCustomTemplate(templateId: string): boolean {
   try {
     const templates = getCustomTemplates();
     const filtered = templates.filter(t => t.id !== templateId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    keyValueStore().setItem(STORAGE_KEY, JSON.stringify(filtered));
     return true;
   } catch (error) {
     logger.error(LogCategory.BUSINESS, 'Failed to delete custom template:', toError(error));
@@ -320,8 +321,7 @@ export function importTemplates(jsonContent: string): TournamentTemplate[] {
     // Filter out official templates
     const customTemplates = templates.filter(t => t.category === 'custom');
 
-    // Save to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(customTemplates));
+    keyValueStore().setItem(STORAGE_KEY, JSON.stringify(customTemplates));
 
     return customTemplates;
   } catch (error) {
@@ -416,7 +416,7 @@ export function createDefaultCustomFormula(): CustomFormulaConfig {
 
 export function getCustomFormulaTemplates(): FormulaTemplateEntry[] {
   try {
-    const stored = localStorage.getItem(FORMULA_STORAGE_KEY);
+    const stored = keyValueStore().getItem(FORMULA_STORAGE_KEY);
     if (stored) return JSON.parse(stored);
   } catch {
     // ignore
@@ -431,7 +431,7 @@ export function saveCustomFormulaTemplate(name: string, formula: CustomFormulaCo
     const entry: FormulaTemplateEntry = { name, formula, savedAt: new Date().toISOString() };
     if (existing >= 0) templates[existing] = entry;
     else templates.push(entry);
-    localStorage.setItem(FORMULA_STORAGE_KEY, JSON.stringify(templates));
+    keyValueStore().setItem(FORMULA_STORAGE_KEY, JSON.stringify(templates));
     return true;
   } catch {
     return false;
@@ -441,7 +441,7 @@ export function saveCustomFormulaTemplate(name: string, formula: CustomFormulaCo
 export function deleteCustomFormulaTemplate(name: string): boolean {
   try {
     const templates = getCustomFormulaTemplates().filter(t => t.name !== name);
-    localStorage.setItem(FORMULA_STORAGE_KEY, JSON.stringify(templates));
+    keyValueStore().setItem(FORMULA_STORAGE_KEY, JSON.stringify(templates));
     return true;
   } catch {
     return false;

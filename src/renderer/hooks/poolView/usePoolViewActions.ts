@@ -18,6 +18,7 @@ import { usePoolViewInput } from './usePoolViewInput';
 import { usePoolViewState } from './usePoolViewState';
 import { withMatchCards } from '../../services/poolCards';
 import { useBpmClient } from '../../api/BpmClientContext';
+import { getPref } from '../../services/preferences';
 
 type Ctx = PoolViewProps &
   ReturnType<typeof usePoolViewState> &
@@ -266,7 +267,7 @@ export function usePoolViewActions(ctx: Ctx) {
 
   // Options communes à l'export PDF et à l'impression de la feuille de poule
   const buildPoolPrintOptions = async () => {
-    const logo = localStorage.getItem('bellepoule-logo') ?? undefined;
+    const logo = getPref('logo') ?? undefined;
     const sigsArray = await client.query('getPoolSignatures', { poolId: pool.id });
     const signatures = Object.fromEntries(sigsArray.map(s => [s.fencerId, s.signatureData]));
     return {

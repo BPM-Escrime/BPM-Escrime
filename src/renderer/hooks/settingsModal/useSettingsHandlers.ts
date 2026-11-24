@@ -5,14 +5,13 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import type { Language } from '../../contexts/TranslationContext';
-import { CONFETTI_DISABLED_KEY, isConfettiDisabled } from '../../components/Confetti';
+import { isConfettiDisabled } from '../../components/Confetti';
 import { logger, LogCategory } from '@shared/services/logger';
 import { isWebhookUrlSafe } from '@shared/services/notificationService';
 import { loadUiScale, saveUiScale, type UiScale } from '../../services/uiScale';
 import { loadUiDensity, saveUiDensity, type UiDensity } from '../../services/uiDensity';
 import { reloadTimeFormat } from '../../services/timeFormat';
 import {
-  LOGO_STORAGE_KEY,
   LOGO_LIBRARY_MAX,
   type LogoEntry,
   loadLogoLibrary,
@@ -34,16 +33,12 @@ import { usePdfTemplateStore } from '../../../features/pdfTemplates/hooks/usePdf
 import {
   loadTtsConfig,
   resizeLogo,
-  WEBHOOK_STORAGE_KEY,
-  AUDIT_LOG_KEY,
-  QUICK_MOUSE_KEY,
-  SIMPLIFIED_INPUT_KEY,
-  CHAINED_INPUT_KEY,
   readInputModes,
   type SettingsModalProps,
 } from '../../components/settingsModal.helpers';
 import { useSettingsPreferences } from './useSettingsPreferences';
 import { useRemoteApi } from '../../api/remoteApi';
+import { getPref, setPref, safeStorage } from '../../services/preferences';
 
 type Ctx = SettingsModalProps & ReturnType<typeof useSettingsPreferences>;
 
@@ -85,12 +80,11 @@ export function useSettingsHandlers(ctx: Ctx) {
     onClose,
   } = ctx;
 
-  // Logo actif : localStorage (PDF/kiosque) + logo.dat + serveurs distants
+  // Logo actif : préférence du poste (PDF/kiosque) + logo.dat + serveurs distants
   const setActiveLogo = useCallback(
     (data: string | null) => {
       setLogo(data);
-      if (data) localStorage.setItem(LOGO_STORAGE_KEY, data);
-      else localStorage.removeItem(LOGO_STORAGE_KEY);
+      setPref('logo', data);
       void remote.updateLogo(data).then(res => {
         if (!res.success) {
           logger.warn(LogCategory.NETWORK, `Échec mise à jour logo remote : ${res.error ?? ''}`);
@@ -165,7 +159,7 @@ export function useSettingsHandlers(ctx: Ctx) {
   const handleWebhookUrlChange = (url: string) => {
     setWebhookUrl(url);
     setWebhookTestStatus('idle');
-    localStorage.setItem(WEBHOOK_STORAGE_KEY, url);
+    setPref('webhookUrl', url);
     // Synchronise l'URL vers tous les serveurs distants actifs
     void remote.setWebhookUrl(url || null);
   };
@@ -195,17 +189,17 @@ export function useSettingsHandlers(ctx: Ctx) {
 
   const handleAuditLogChange = (enabled: boolean) => {
     setAuditLogEnabled(enabled);
-    localStorage.setItem(AUDIT_LOG_KEY, String(enabled));
+    setPref('auditLog', enabled);
   };
 
   const handleQuickMouseScoringChange = (enabled: boolean) => {
     setQuickMouseScoring(enabled);
-    localStorage.setItem(QUICK_MOUSE_KEY, String(enabled));
+    setPref('quickMouseScoring', enabled);
   };
 
   const handleConfettiDisabledChange = (disabled: boolean) => {
     setConfettiDisabled(disabled);
-    localStorage.setItem(CONFETTI_DISABLED_KEY, String(disabled));
+    setPref('confettiDisabled', disabled);
   };
 
   const handleSplashEnabledChange = (enabled: boolean) => {
@@ -270,15 +264,15 @@ export function useSettingsHandlers(ctx: Ctx) {
   const handleSimplifiedInputModeChange = (enabled: boolean) => {
     setSimplifiedInputMode(enabled);
     setChainedInputMode(!enabled);
-    localStorage.setItem(SIMPLIFIED_INPUT_KEY, String(enabled));
-    localStorage.setItem(CHAINED_INPUT_KEY, String(!enabled));
+    setPref('simplifiedInput', enabled);
+    setPref('chainedInput', !enabled);
   };
 
   const handleChainedInputModeChange = (enabled: boolean) => {
     setChainedInputMode(enabled);
     setSimplifiedInputMode(!enabled);
-    localStorage.setItem(CHAINED_INPUT_KEY, String(enabled));
-    localStorage.setItem(SIMPLIFIED_INPUT_KEY, String(!enabled));
+    setPref('chainedInput', enabled);
+    setPref('simplifiedInput', !enabled);
   };
 
   // Export / import JSON des paramètres (logos inclus)
@@ -287,7 +281,7 @@ export function useSettingsHandlers(ctx: Ctx) {
 
   const handleExportSettings = () => {
     const now = new Date();
-    const blob = new Blob([JSON.stringify(buildSettingsExport(localStorage, now), null, 2)], {
+    const blob = new Blob([JSON.stringify(buildSettingsExport(safeStorage, now), null, 2)], {
       type: 'application/json',
     });
     const url = URL.createObjectURL(blob);
@@ -308,17 +302,15 @@ export function useSettingsHandlers(ctx: Ctx) {
       applySettingsValues(values);
       // Rafraîchit l'état local + propage (main, serveurs distants)
       if (values['bellepoule-logos'] !== undefined) {
-        persistLogos(
-          ensureActiveInLibrary(loadLogoLibrary(), localStorage.getItem(LOGO_STORAGE_KEY))
-        );
+        persistLogos(ensureActiveInLibrary(loadLogoLibrary(), getPref('logo')));
       }
       if (values['bellepoule-logo'] !== undefined) setActiveLogo(values['bellepoule-logo']);
       if (values['bellepoule-tts-config'] !== undefined) persistTtsConfig(loadTtsConfig());
       if (values['bellepoule-webhook-url'] !== undefined)
         handleWebhookUrlChange(values['bellepoule-webhook-url']);
-      setAuditLogEnabled(localStorage.getItem(AUDIT_LOG_KEY) !== 'false');
-      setQuickMouseScoring(localStorage.getItem(QUICK_MOUSE_KEY) === 'true');
-      const inputModes = readInputModes(localStorage);
+      setAuditLogEnabled(getPref('auditLog'));
+      setQuickMouseScoring(getPref('quickMouseScoring'));
+      const inputModes = readInputModes(safeStorage);
       setSimplifiedInputMode(inputModes.simplified);
       setChainedInputMode(inputModes.chained);
       setConfettiDisabled(isConfettiDisabled());

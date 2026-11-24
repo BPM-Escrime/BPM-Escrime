@@ -18,6 +18,7 @@ import { useTranslation } from '../useTranslation';
 import { readInputModes } from '../../components/settingsModal.helpers';
 import { useBpmClient } from '../../api/BpmClientContext';
 import { useRemoteApi } from '../../api/remoteApi';
+import { getPref, setPref, safeStorage } from '../../services/preferences';
 
 type Ctx = PoolViewProps;
 
@@ -114,18 +115,18 @@ export function usePoolViewState(ctx: Ctx) {
   // Options d'export PDF / impression de la feuille de poule (persistées localement)
   const { pdfHideStatColumns, setPdfHideStatColumns, pdfLandscape, setPdfLandscape } =
     useStateGroup({
-      pdfHideStatColumns: localStorage.getItem('bellepoule-pool-pdf-hide-stats') === 'true',
-      pdfLandscape: localStorage.getItem('bellepoule-pool-pdf-landscape') === 'true',
+      pdfHideStatColumns: getPref('poolPdfHideStats'),
+      pdfLandscape: getPref('poolPdfLandscape'),
     });
   const togglePdfHideStatColumns = () => {
     const next = !pdfHideStatColumns;
     setPdfHideStatColumns(next);
-    localStorage.setItem('bellepoule-pool-pdf-hide-stats', String(next));
+    setPref('poolPdfHideStats', next);
   };
   const togglePdfLandscape = () => {
     const next = !pdfLandscape;
     setPdfLandscape(next);
-    localStorage.setItem('bellepoule-pool-pdf-landscape', String(next));
+    setPref('poolPdfLandscape', next);
   };
 
   const [signedFencerIds, setSignedFencerIds] = useState<string[]>([]);
@@ -152,9 +153,9 @@ export function usePoolViewState(ctx: Ctx) {
   const isMultiReferee = maxRefereesPerPool > 1;
   const assignedReferee = assignedReferees[0] ?? null;
   const [hoveredFencerIds, setHoveredFencerIds] = useState<Set<string>>(new Set());
-  const quickMouseScoring = localStorage.getItem('bellepoule-quick-mouse-scoring') === 'true';
+  const quickMouseScoring = getPref('quickMouseScoring');
   const { simplified: simplifiedInputMode, chained: chainedInputMode } =
-    readInputModes(localStorage);
+    readInputModes(safeStorage);
 
   const defaultArena = (pool.strip != null && pool.strip > 0 ? pool.strip : pool.number) ?? 1;
 

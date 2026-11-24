@@ -5,17 +5,12 @@
  */
 
 import React, { useEffect, useRef, useCallback } from 'react';
+import { getPref, PREFS } from '../services/preferences';
 
 // Préférence utilisateur : désactiver les animations de feux d'artifice (Paramètres)
-export const CONFETTI_DISABLED_KEY = 'bellepoule-confetti-disabled';
+export const CONFETTI_DISABLED_KEY = PREFS.confettiDisabled.key;
 
-export const isConfettiDisabled = (): boolean => {
-  try {
-    return localStorage.getItem(CONFETTI_DISABLED_KEY) === 'true';
-  } catch {
-    return false;
-  }
-};
+export const isConfettiDisabled = (): boolean => getPref('confettiDisabled');
 
 // Préférence système : réduire les animations (prefers-reduced-motion)
 export const prefersReducedMotion = (): boolean => {
