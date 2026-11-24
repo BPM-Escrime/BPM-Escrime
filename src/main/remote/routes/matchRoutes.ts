@@ -577,13 +577,6 @@ export function registerMatchRoutes(ctx: MatchRouteContext): void {
             // Notifier le renderer pour mettre à jour le statut dans son store
             const mainWin = getSharedMainWindow();
             if (mainWin) {
-              notifyScreen({
-                kind: 'fencer_excluded',
-                competitionId: ctx.session?.competitionId ?? null,
-                fencerId: culpritId,
-                matchId,
-                reason: 'black_card',
-              });
               // Carton noir → appel DT automatique (rapport fédéral)
               const culprit = blackCarded === 'A' ? matchObj?.fencerA : matchObj?.fencerB;
               const arena = Array.from(ctx.arenas.values()).find(

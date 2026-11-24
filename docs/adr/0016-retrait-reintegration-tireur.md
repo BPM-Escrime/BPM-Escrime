@@ -114,8 +114,8 @@ Les événements ne portent que des identifiants (RGPD).
   s'appuie sur `dryRun`.
 - **Serveur distant et appareils de piste** : le carton noir de la tablette, l'exclusion de
   l'appareil et l'abandon confirmé par le DT appellent `withdrawFencer` par
-  `invokeCommandSync`, avec la source `tablet` ou `cyrano`. `remote:fencer_excluded` ne sert plus
-  qu'à prévenir l'écran ; il n'écrit plus rien.
+  `invokeCommandSync`, avec la source `tablet` ou `cyrano`. L'avis `remote:fencer_excluded` a été
+  retiré (#2232) : l'écran relit sur `journal:appended`.
 - **Annulation du carton noir** : `reinstateFencer` rend le statut et les matchs. Rouvrir le match
   interrompu au score atteint reste l'affaire du serveur distant : c'est un état d'arène, pas un
   fait de l'épreuve.
