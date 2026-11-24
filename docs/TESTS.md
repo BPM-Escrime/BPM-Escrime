@@ -106,24 +106,24 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 23 | 278 |
-| `src/main/` | 154 | 1328 |
+| `src/main/` | 155 | 1329 |
 | `src/renderer/services/` | 14 | 70 |
-| `src/renderer/hooks/` | 39 | 201 |
-| `src/renderer/components/` | 133 | 727 |
+| `src/renderer/hooks/` | 40 | 210 |
+| `src/renderer/components/` | 133 | 728 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 423 |
 | `src/renderer/api/` | 10 | 46 |
-| `src/renderer/contexts/` | 1 | 7 |
+| `src/renderer/contexts/` | 1 | 9 |
 | `src/renderer/dt/` | 2 | 7 |
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 44 | 534 |
-| `src/shared/platform/` | 3 | 22 |
-| **Total** | **617** | **4826** |
+| `src/shared/platform/` | 3 | 29 |
+| **Total** | **619** | **4846** |
 
-Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -4267,6 +4267,14 @@ Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/preloadApi/dbReady.test.ts</code> — 1 test</summary>
+
+- **whenDbReady (préload)**
+  - attend db:ready, puis se résout tout de suite pour un appel tardif
+
+</details>
+
+<details>
 <summary><code>src/main/preloadApi/subscribe.test.ts</code> — 3 tests</summary>
 
 - **subscribe (préload)**
@@ -5447,6 +5455,22 @@ Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/hooks/desktopHooks.test.tsx</code> — 7 tests</summary>
+
+- **useAppGlobalEffects : chargement après whenReady**
+  - bureau : attend la base, puis charge une fois
+  - bureau, base déjà ouverte : charge sans délai de secours
+  - sans bureau : charge tout de suite
+- **usePoolsWindowSize**
+  - bureau : ajuste la fenêtre en vue « poule unique »
+  - sans bureau : rien, aucune erreur
+- **useMenuEvents**
+  - bureau : import (nom + contenu), export et propriétés relayés ; désabonnement
+  - sans bureau : aucun abonnement, aucune erreur
+
+</details>
+
+<details>
 <summary><code>src/renderer/hooks/posteUiState.test.ts</code> — 5 tests</summary>
 
 - **posteUiState**
@@ -5474,13 +5498,15 @@ Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useAppMenuHandlers.test.tsx</code> — 4 tests</summary>
+<summary><code>src/renderer/hooks/useAppMenuHandlers.test.tsx</code> — 6 tests</summary>
 
 - **useAppMenuHandlers**
   - relaie les événements vers les derniers handlers, sans réabonnement
   - .bpm ouvert : recharge, toast, ouvre la compétition unique
   - archive chiffrée choisie par le menu : nom et contenu relayés à l’invite
-  - démontage : tous les désabonnements appelés
+  - sauvegarde automatique : avis seulement en cas d’échec
+  - démontage : tous les écouteurs retirés
+  - sans bureau : aucun abonnement, aucune erreur
 
 </details>
 
@@ -7251,7 +7277,7 @@ Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/print/PrintDialog.test.tsx</code> — 16 tests</summary>
+<summary><code>src/renderer/components/print/PrintDialog.test.tsx</code> — 17 tests</summary>
 
 - **PrintDialog (#1214)**
   - présélectionne l’imprimante par défaut et génère l’aperçu avec les réglages
@@ -7269,6 +7295,7 @@ Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **PrintDialogHost (#1214)**
   - enregistre le gestionnaire, ouvre la boîte à la demande et renvoie le résultat
   - désenregistre le gestionnaire au démontage
+  - sans bureau (navigateur, vue DT) : ne rend rien, aucun gestionnaire
 - **plages de pages côté renderer (#1214)**
   - isValidPageRanges(%j) = %s _(each)_
   - pageRangesBeyond
@@ -8828,7 +8855,7 @@ Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage stat
 ### `src/renderer/contexts/`
 
 <details>
-<summary><code>src/renderer/contexts/__tests__/TranslationContext.test.tsx</code> — 7 tests</summary>
+<summary><code>src/renderer/contexts/__tests__/TranslationContext.test.tsx</code> — 9 tests</summary>
 
 - **TranslationContext : langue active (#1160)**
   - attribut lang du document et formats Intl suivent la langue
@@ -8839,6 +8866,9 @@ Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - applique la langue et le thème de la base sur onStationSettingsChanged
   - ignore les valeurs identiques et inconnues
   - se désabonne au démontage
+- **TranslationContext : langue du bureau (ADR-0030)**
+  - langue initiale du bureau, menu natif prévenu au changement
+  - sans bureau (navigateur, vue DT) : langue du localStorage, aucune erreur
 
 </details>
 
@@ -9946,7 +9976,7 @@ Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/platform/desktop.test.ts</code> — 10 tests</summary>
+<summary><code>src/shared/platform/desktop.test.ts</code> — 17 tests</summary>
 
 - **ElectronDesktop**
   - chaque méthode appelle la bonne fonction du préload
@@ -9961,6 +9991,15 @@ Unitaires : 599 fichiers, 4776 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - sans desktop : navigateur
   - avec desktop : appels enregistrés, événements émis aux abonnés encore inscrits
   - fakeDesktop : une méthode se remplace, le reste garde sa valeur par défaut
+- **ElectronDesktop : menu, fichiers, fenêtre, langue (lot 3b)**
+  - onMenu : chaque action reçoit sa charge utile typée
+  - désabonnement : retire son écouteur seulement
+  - fichiers ouverts : épreuves fusionnées, archive chiffrée (nom + contenu)
+  - onAutosave : réussite et échec, un seul désabonnement pour les deux
+  - whenReady : attend db:ready, puis se résout tout de suite
+  - fenêtre, épreuve courante, langue, impression : relais vers le préload
+- **fakeDesktop (lot 3b)**
+  - émet menu, fichiers et sauvegarde aux abonnés encore inscrits
 
 </details>
 
