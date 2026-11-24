@@ -106,12 +106,12 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 281 |
-| `src/main/` | 156 | 1356 |
+| `src/main/` | 157 | 1361 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 135 | 749 |
 | E2E Playwright (`e2e/`) | 18 | 51 |
-| `src/remote/` | 60 | 427 |
+| `src/remote/` | 60 | 430 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 44 | 534 |
+| `src/shared/domain/` | 44 | 539 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **622** | **4891** |
+| **Total** | **623** | **4904** |
 
-Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2908,7 +2908,7 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - parseCyranoStopwatch : m:ss et m:ss.cc
 - **cartons P EFP1.1 (#1829)**
   - champ 12 → compteurs jaune / rouge / noir P
-  - compteurs → champ 12 du DISP (0, 2 ou 4, noir prime)
+  - compteurs → champ 12 du DISP (0, 1, 2 ou 4, niveau le plus haut, #2214)
 
 </details>
 
@@ -2920,7 +2920,7 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - états, statuts et cartons P (0 à 5)
   - INFO minimal : champs absents omis (pas de priorité inventée)
 - **Conversion affichage → DISP**
-  - individuel : chrono m:ss, cartons, carton P (rouge = 2, noir = 4)
+  - individuel : chrono m:ss, cartons, carton P (jaune = 1, rouge = 2, noir = 4)
   - équipes : Type=T, Round = n° du relais, phase / poule / match omis
   - chrono : m:ss, centièmes sous 10 s, arrondi
 - **CyranoPisteDriver**
@@ -3375,9 +3375,10 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/passivityCards.test.ts</code> — 7 tests</summary>
+<summary><code>src/main/engine/commands/passivityCards.test.ts</code> — 8 tests</summary>
 
 - jaune P, rouge P (sans touche), noir P : rencontre décidée au score, même commandId, rejeu
+- pas de carton P à 44:44 (t.124.3) : score affiché (liveScore) ou relais enregistrés
 - noir P à égalité de score : meilleur classement (rang du tableau), rencontre suivante formée
 - rencontre tirée jusqu’au bout : noir P accepté sans changer le résultat, ou qui décide l’égalité de poule
 - Sabre Laser (relais ou arène) : unsupported\_format, rien d’écrit
@@ -3995,7 +3996,7 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - doublon QoS 1 écarté ; redémarrage (seq plus petit, ts plus récent) accepté
   - END + état E : une seule fin proposée ; NEXT / PREV ; piste inconnue relevée
   - affichage : software/fencers, match, score, clock ; Id attendus dans l’état ; ACK / NAK
-  - cartons P repris : software/uw2f (ordinal 0 à 5), absent sans carton P
+  - cartons P repris : software/uw2f (ordinal 0 à 5, jaune P = 1), absent sans carton P
   - créneau : software/record retenu, épreuve du dernier affichage ; wantsRecord
   - inversion gaucher par l’arbitre : apparatus/fencers échange les Id
   - reprise après coupure : états retenus relus au démarrage
@@ -4142,13 +4143,14 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/piste/pisteState.test.ts</code> — 5 tests</summary>
+<summary><code>src/main/piste/pisteState.test.ts</code> — 6 tests</summary>
 
 - **pisteState**
   - resolveSide : Id tronqué (pilote) ou complet ; inconnu ou ambigu → null
   - mapPisteSides : droite/gauche → A/B, inversion comprise
-  - sideCards : jaune, rouges, puis rouges et noirs P (jaune P non repris)
+  - sideCards : jaune, rouges, puis cartons P au niveau montré (jaune P → rouge P → noir P, #2214)
   - cardCounts : cartons d’arène → compteurs à afficher
+  - cartons P : aller-retour arène → appareil → arène stable (#2214)
   - isActiveState : assaut, halte, pause
 
 </details>
@@ -4412,6 +4414,16 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
 - **pause sabre à 8 touches (#2001)**
   - émet sabre\_break une fois en franchissant 8 au sabre en tableau à 15
   - pas de pause hors sabre, hors tableau, ou limite différente de 15
+
+</details>
+
+<details>
+<summary><code>src/main/remote/arenaRules.test.ts</code> — 3 tests</summary>
+
+- **arenaMatchRules**
+  - sans match : rien
+  - score limite : tableau 15, poule 5, sans limite = 0 (JSON)
+  - noir P : rangs du tirage du tableau en cours dès M15, au tableau seulement
 
 </details>
 
@@ -8332,7 +8344,7 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeApp.test.ts</code> — 19 tests</summary>
+<summary><code>src/remote/js/refereeApp.test.ts</code> — 21 tests</summary>
 
 - **refereeApp.js dans referee.html**
   - referee.html ne contient plus de script inline
@@ -8353,6 +8365,8 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - maître en ligne : ajout de carton bloqué (classique, P, noir), rien n’est envoyé
   - maître en ligne : retrait d’un carton permis pour corriger
   - non-combativité : jaune P, rouge P (+1 chacun), puis noir P (t.124, #2214)
+  - pas de carton P à 14:14 : score limite reçu du serveur (t.124.3, #2214)
+  - noir P à égalité : rang du tableau en cours reçu du serveur (FFE dès M15, #2214)
   - carton noir refusé par le serveur (409, appareil maître devenu en ligne) : le combat continue
   - appareil hors ligne : ajout de carton de nouveau permis
 - **Sabre Laser : cartons chrono en marche et mort subite au carton (#2254)**
@@ -8363,7 +8377,7 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeCards.test.ts</code> — 13 tests</summary>
+<summary><code>src/remote/js/refereeCards.test.ts</code> — 14 tests</summary>
 
 - **refereeCards.js cartons**
   - modernYellowOrRed : rouge si déjà jaune ou rouge
@@ -8376,6 +8390,7 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - nextPassivityCard : même suite que les relais par équipes du domaine
   - passivityWinner : score, puis classement initial, puis tirage
   - passivityWinner : parité avec le module partagé (matchEndValidation.ts, #1829)
+  - passivityCardAllowed : pas de carton P à 14:14, parité avec le domaine (#2214)
   - cardFromGroup olympique : parité avec determineCardType (domain/penalties/cards.ts, #2207)
   - Sabre Laser : points des cartons, parité tablette / domaine (provisoire, #2208)
   - motifs olympiques de la tablette = motifs FIE du domaine, mêmes groupes (t.163, #2207)
@@ -9298,7 +9313,7 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/match/matchEndValidation.test.ts</code> — 9 tests</summary>
+<summary><code>src/shared/domain/match/matchEndValidation.test.ts</code> — 13 tests</summary>
 
 - **validateMatchEnd (spécification Cyrano §4)**
   - %s _(each)_
@@ -9315,6 +9330,12 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - %s _(each)_
 - **passivityWinner (P-noir)**
   - score, puis classement initial, puis tirage
+  - FFE dès M15 : rang du tableau en cours, pas le classement initial de l’épreuve (#2214)
+- **passivityUsesTableauSeed (FFE, règlement de l’arbitrage 4.3.2)**
+  - tableau dès M15 seulement
+- **passivityCardAllowed (t.124.3)**
+  - aucun carton P à limite − 1 des deux côtés (14:14, 44:44)
+  - limite inconnue, nulle ou infinie : permis
 
 </details>
 
@@ -9863,12 +9884,13 @@ Unitaires : 604 fichiers, 4840 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/teams/passivityCards.test.ts</code> — 6 tests</summary>
+<summary><code>src/shared/domain/teams/passivityCards.test.ts</code> — 7 tests</summary>
 
 - **passivityCardFor**
   - escalade jaune P, rouge P, noir P ; heure et identifiant injectés
   - noir P à égalité : meilleur classement ; classement inconnu ou égal : draw\_needs\_winner
   - rencontre terminée : noir P conforme au résultat, ou décide l’égalité ; sinon refus
+  - aucun carton P à cible finale − 1 des deux côtés, 44:44 (t.124.3, #2214)
   - Sabre Laser et arme à la carte : pas de carton P
 - **cartons P de l’appareil**
   - niveau Cyrano → rang dans l’escalade, rattrapage borné
