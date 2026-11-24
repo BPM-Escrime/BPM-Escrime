@@ -2,6 +2,7 @@
  * Tablette équipe (/equipe{N}/arbitre) : verrou appareil de piste maître et en ligne (#1829).
  * Ajout de touche, cartons, relais suivant et remise à zéro bloqués avec notification ;
  * retrait d'une touche toujours permis. Page chargée dans jsdom avec un socket factice.
+ * Cartons P (#2227) : bouton en relais FIE seulement, noir P confirmé, cartons affichés.
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
@@ -125,5 +126,77 @@ describe('tablette équipe — verrou appareil maître', () => {
     expect(emitted.map(([e]) => e)).toEqual(
       expect.arrayContaining(['team_touch', 'team_advance_bout'])
     );
+  });
+});
+
+describe('tablette équipe — cartons P (relais FIE, #2227)', () => {
+  const fie = (over: Record<string, unknown> = {}) => ({
+    ...state(null),
+    passivityEnabled: true,
+    passivityCards: [],
+    ...over,
+  });
+  const section = (doc: Document) => doc.getElementById('passivity-section') as HTMLElement;
+  const button = (doc: Document) => doc.getElementById('passivity-btn') as HTMLButtonElement;
+
+  it('relais FIE : bouton qui envoie la commande, cartons P affichés', async () => {
+    const { dom, handlers, emitted } = await loadTeamReferee();
+    const doc = dom.window.document;
+    handlers.team_arena_state(fie({ passivityCards: [{ id: 'p1', type: 'yellow' }] }));
+    expect(section(doc).hidden).toBe(false);
+    expect(doc.querySelectorAll('#passivity-log .p-card')).toHaveLength(1);
+    expect(doc.querySelector('#passivity-log .bp-card-yellow')).not.toBeNull();
+    button(doc).click();
+    expect(emitted).toContainEqual(['team_passivity_card', { arenaId: '1' }]);
+    // Noir P déjà donné : rencontre décidée, plus de bouton actif
+    handlers.team_arena_state(
+      fie({
+        passivityCards: [
+          { id: 'p1', type: 'yellow' },
+          { id: 'p2', type: 'red' },
+          { id: 'p3', type: 'black' },
+        ],
+      })
+    );
+    expect(button(doc).disabled).toBe(true);
+  });
+
+  it('Sabre Laser (passivityEnabled faux) : pas de bouton carton P', async () => {
+    const { dom, handlers } = await loadTeamReferee();
+    const doc = dom.window.document;
+    handlers.team_arena_state({ ...state(null), format: 'laser-arena', passivityEnabled: false });
+    expect(section(doc).hidden).toBe(true);
+    handlers.team_arena_state(fie({ passivityEnabled: false }));
+    expect(section(doc).hidden).toBe(true);
+  });
+
+  it('noir P : confirmation explicite avant envoi, annulable', async () => {
+    const { dom, handlers, emitted } = await loadTeamReferee();
+    const doc = dom.window.document;
+    handlers.team_arena_state(fie());
+    handlers.team_passivity_black({ winnerTeamId: 'tA' });
+    const box = doc.getElementById('passivity-confirm') as HTMLElement;
+    expect(box.hidden).toBe(false);
+    expect(doc.getElementById('passivity-confirm-text')?.textContent).toContain(
+      'team.passivity_black_confirm'
+    );
+    (doc.getElementById('passivity-confirm-cancel') as HTMLButtonElement).click();
+    expect(box.hidden).toBe(true);
+    expect(emitted.filter(([e]) => e === 'team_passivity_card')).toEqual([]);
+    handlers.team_passivity_black({ winnerTeamId: 'tA' });
+    (doc.getElementById('passivity-confirm-ok') as HTMLButtonElement).click();
+    expect(emitted).toContainEqual(['team_passivity_card', { arenaId: '1', confirmBlack: true }]);
+    expect(box.hidden).toBe(true);
+  });
+
+  it('appareil maître et en ligne : carton P bloqué avec notification', async () => {
+    const { dom, handlers, emitted } = await loadTeamReferee();
+    const doc = dom.window.document;
+    handlers.team_arena_state(fie({ cyrano: { piste: '1', mode: 'master', online: true } }));
+    button(doc).click();
+    expect((doc.getElementById('team-toast') as HTMLElement).textContent).toBe(
+      'referee.cyrano_master_card_lock'
+    );
+    expect(emitted.filter(([e]) => e === 'team_passivity_card')).toEqual([]);
   });
 });

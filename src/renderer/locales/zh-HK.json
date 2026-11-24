@@ -780,7 +780,18 @@
     "statusAbandoned": "未完成",
     "matchCancelled": "該場已取消：隊伍已退出",
     "matchRefused": "該場不進行：隊伍已退出",
-    "withdrawnTitle": "已退出或被逐出的隊伍"
+    "withdrawnTitle": "已退出或被逐出的隊伍",
+    "passivityTitle": "P 牌（消極比賽，t.124）",
+    "givePassivityCard": "P 牌",
+    "givePassivityCardTooltip": "P 牌同時給予兩隊：黃 P，然後紅 P，然後黑 P（決定本場勝負）",
+    "passivityNone": "沒有 P 牌",
+    "passivityYellow": "黃 P",
+    "passivityRed": "紅 P",
+    "passivityBlack": "黑 P",
+    "confirmPassivityBlack": "黑 P 判 {{team}} 勝出本場（已完成接力的總分，其次為排名）。請先記錄進行中的接力。確認？",
+    "passivityBlackConfirm": "給予黑 P",
+    "passivityCardGiven": "已給予 P 牌",
+    "passivityMatchDecided": "黑 P：{{team}} 勝出本場"
   },
   "kiosk": {
     "tbd": "待定",

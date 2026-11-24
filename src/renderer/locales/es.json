@@ -780,7 +780,18 @@
     "statusAbandoned": "No terminó",
     "matchCancelled": "Encuentro anulado: equipo retirado",
     "matchRefused": "Encuentro no disputado: equipo retirado",
-    "withdrawnTitle": "Equipos retirados o excluidos"
+    "withdrawnTitle": "Equipos retirados o excluidos",
+    "passivityTitle": "Tarjetas P (no combatividad, t.124)",
+    "givePassivityCard": "Tarjeta P",
+    "givePassivityCardTooltip": "Tarjeta P a ambos equipos: amarilla P, luego roja P, luego negra P (decide el encuentro)",
+    "passivityNone": "Ninguna tarjeta P",
+    "passivityYellow": "Amarilla P",
+    "passivityRed": "Roja P",
+    "passivityBlack": "Negra P",
+    "confirmPassivityBlack": "La negra P decide el encuentro a favor de {{team}} (total de los relevos terminados, luego clasificación). Registre primero el relevo en curso. ¿Confirmar?",
+    "passivityBlackConfirm": "Dar la negra P",
+    "passivityCardGiven": "Tarjeta P dada",
+    "passivityMatchDecided": "Negra P: {{team}} gana el encuentro"
   },
   "kiosk": {
     "tbd": "Por determinar",

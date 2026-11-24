@@ -780,7 +780,18 @@
     "statusAbandoned": "N'eo ket echu",
     "matchCancelled": "Emgav nullet : skipailh aet kuit",
     "matchRefused": "Emgav n’eo ket bet c’hoariet : skipailh aet kuit",
-    "withdrawnTitle": "Skipailhoù aet kuit pe lamet"
+    "withdrawnTitle": "Skipailhoù aet kuit pe lamet",
+    "passivityTitle": "Kartennoù P (diemgann, t.124)",
+    "givePassivityCard": "Karten P",
+    "givePassivityCardTooltip": "Karten P d’an div skipailh : melen P, ruz P, ha du P (a zivizo an emgav)",
+    "passivityNone": "Karten P ebet",
+    "passivityYellow": "Melen P",
+    "passivityRed": "Ruz P",
+    "passivityBlack": "Du P",
+    "confirmPassivityBlack": "Du P a zivizo an emgav evit {{team}} (skor an erlec’hiadennoù echu, ha goude ar renkadur). Enrollit da gentañ an erlec’hiadenn o ren. Kadarnaat ?",
+    "passivityBlackConfirm": "Reiñ an du P",
+    "passivityCardGiven": "Karten P roet",
+    "passivityMatchDecided": "Du P : {{team}} a c’hounez an emgav"
   },
   "kiosk": {
     "tbd": "Da benn-diviz",

@@ -431,6 +431,15 @@
   'team.fencer_card': 'Karte',
   'team.team_excluded': '{{team}} ausgeschlossen (schwarze Karte): Begegnung verloren',
   'team.team_abandoned': '{{team}} zurückgezogen (Aufgabe): Begegnung verloren',
+  'team.passivity_card': 'P-Karte',
+  'team.passivity_title':
+    'P-Karte (Nicht-Kampfbereitschaft, t.124) an beide Mannschaften: Gelb P, Rot P, dann Schwarz P',
+  'team.passivity_cards_label': 'P-Karten der Begegnung (beide Mannschaften)',
+  'team.passivity_cancel': 'Abbrechen',
+  'team.passivity_black_confirm':
+    'Schwarz P entscheidet die Begegnung. Zuerst die laufende Staffel speichern: es zählt die Summe der beendeten Staffeln.',
+  'team.passivity_black_confirm_btn': 'Schwarz P bestätigen',
+  'team.passivity_black_winner': 'Sieger: {{team}}.',
   'team.fencer_cards_label': 'Karten — {{fencer}}',
   'team.reason.early_start': 'Frühstart',
   'team.reason.late_stop': 'Weitermachen nach „Halt!“',

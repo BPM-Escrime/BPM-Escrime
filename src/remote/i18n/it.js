@@ -423,6 +423,15 @@
   'team.fencer_card': 'Cartellino',
   'team.team_excluded': '{{team}} esclusa (cartellino nero): incontro perso',
   'team.team_abandoned': '{{team}} ritirata (abbandono): incontro perso',
+  'team.passivity_card': 'Cartellino P',
+  'team.passivity_title':
+    'Cartellino P (non combattività, t.124) a entrambe le squadre: giallo P, rosso P, poi nero P',
+  'team.passivity_cards_label': 'Cartellini P dell’incontro (entrambe le squadre)',
+  'team.passivity_cancel': 'Annulla',
+  'team.passivity_black_confirm':
+    'Il nero P decide l’incontro. Registrare prima la frazione in corso: il punteggio considerato è il totale delle frazioni concluse.',
+  'team.passivity_black_confirm_btn': 'Conferma il nero P',
+  'team.passivity_black_winner': 'Vincitore: {{team}}.',
   'team.fencer_cards_label': 'Cartellini — {{fencer}}',
   'team.reason.early_start': 'Partenza anticipata',
   'team.reason.late_stop': 'Continua dopo « Alt! »',

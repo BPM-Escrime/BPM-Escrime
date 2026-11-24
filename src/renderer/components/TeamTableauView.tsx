@@ -21,7 +21,12 @@ import {
 } from '../../shared/domain/teams/teamCalculations';
 import { LaserArenaBoutCap } from '../../shared/domain/teams/laserArenaCalculations';
 import TeamPoolView, { CardHandlers, CardTarget, RelayHandlers } from './TeamPoolView';
-import type { RelayCardDTO, TeamCardDTO, TeamWithdrawalDTO } from '../hooks/useTeamCompetition';
+import type {
+  PassivityCardDTO,
+  RelayCardDTO,
+  TeamCardDTO,
+  TeamWithdrawalDTO,
+} from '../hooks/useTeamCompetition';
 import { useTranslation } from '../contexts/TranslationContext';
 
 interface Props {
@@ -47,6 +52,7 @@ interface Props {
   isLaserArena?: boolean;
   boutCap?: LaserArenaBoutCap;
   matchCards?: Record<string, TeamCardDTO[]>;
+  passivityCards?: Record<string, PassivityCardDTO[]>;
   cards?: CardHandlers;
   withdrawn?: Record<string, TeamWithdrawalDTO>;
   onAssignArena?: (matchId: string, arenaId: string) => void;
@@ -84,6 +90,7 @@ const TeamTableauView: React.FC<Props> = ({
   isLaserArena,
   boutCap,
   matchCards,
+  passivityCards,
   cards,
   withdrawn,
   onAssignArena,
@@ -190,6 +197,7 @@ const TeamTableauView: React.FC<Props> = ({
                   isLaserArena={isLaserArena}
                   boutCap={boutCap}
                   matchCards={matchCards}
+                  passivityCards={passivityCards}
                   cards={cards}
                   withdrawn={withdrawn}
                   onAssignArena={onAssignArena}

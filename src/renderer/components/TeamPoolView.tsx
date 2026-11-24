@@ -19,13 +19,19 @@ import { TeamTargetRule, getRelayCap } from '../../shared/domain/teams/teamCalcu
 import { LaserArenaBoutCap } from '../../shared/domain/teams/laserArenaCalculations';
 import { CARD_REASON_LABELS } from '../../shared/utils/cardSystem';
 import { getAvailableReasons } from '../../shared/domain/penalties/cards';
-import type { RelayCardDTO, TeamCardDTO, TeamWithdrawalDTO } from '../hooks/useTeamCompetition';
+import type {
+  PassivityCardDTO,
+  RelayCardDTO,
+  TeamCardDTO,
+  TeamWithdrawalDTO,
+} from '../hooks/useTeamCompetition';
 import { useConfirm } from './ConfirmDialog';
 import { useTranslation } from '../contexts/TranslationContext';
 import { Check, DoorOpen, Flag, Radio, Swords, Undo2, UserRoundCog, X } from 'lucide-react';
 import { Icon } from './common/Icon';
 import EmptyState from './common/EmptyState';
 import { CardIcon } from './common/CardIcon';
+import TeamPassivityCards from './TeamPassivityCards';
 
 const TEAM_CARD_TYPES: Array<'white' | 'yellow' | 'red' | 'black'> = [
   'white',
@@ -60,6 +66,8 @@ export interface CardHandlers {
   onAddTeamCard?: (matchId: string, teamId: string, type?: TeamCardDTO['type']) => void;
   /** Annulation par le Directoire technique (cancelTeamCard / cancelRelayCard) */
   onCancelCard?: (matchId: string, cardId: string, kind: 'team' | 'relay') => void;
+  /** Carton P aux deux équipes (givePassivityCard) ; relais FIE des armes olympiques seulement */
+  onGivePassivityCard?: (matchId: string) => void;
 }
 
 interface Props {
@@ -87,6 +95,8 @@ interface Props {
   isLaserArena?: boolean;
   boutCap?: LaserArenaBoutCap;
   matchCards?: Record<string, TeamCardDTO[]>;
+  /** Cartons P par rencontre (relais FIE, t.124) */
+  passivityCards?: Record<string, PassivityCardDTO[]>;
   cards?: CardHandlers;
   /** Équipes retirées ou exclues, par équipe */
   withdrawn?: Record<string, TeamWithdrawalDTO>;
@@ -115,6 +125,7 @@ const TeamPoolView: React.FC<Props> = ({
   isLaserArena = false,
   boutCap,
   matchCards = {},
+  passivityCards = {},
   cards = {},
   withdrawn = {},
   onAssignArena,
@@ -122,7 +133,7 @@ const TeamPoolView: React.FC<Props> = ({
   const { prompt } = useConfirm();
   const { t } = useTranslation();
   const teamById = new Map(teams.map(team => [team.id, team]));
-  const { onAddTeamCard, onCancelCard } = cards;
+  const { onAddTeamCard, onCancelCard, onGivePassivityCard } = cards;
   const withdrawnLabel = (teamId: string) => {
     const w = withdrawn[teamId];
     if (!w) return null;
@@ -521,6 +532,14 @@ const TeamPoolView: React.FC<Props> = ({
                       </div>
                     ))}
                   </div>
+                )}
+                {!isLaserArena && onGivePassivityCard && (
+                  <TeamPassivityCards
+                    matchId={m.id}
+                    cards={passivityCards[m.id] ?? []}
+                    onGive={onGivePassivityCard}
+                    onCancel={onCancelCard}
+                  />
                 )}
                 {isLaserArena && onAddTeamCard && (
                   <div className="mt-2 pt-2 border-t border-gray-200 grid grid-cols-2 gap-3 text-xs">

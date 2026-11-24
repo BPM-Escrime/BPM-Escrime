@@ -780,7 +780,18 @@
     "statusAbandoned": "Nicht beendet",
     "matchCancelled": "Begegnung annulliert: Mannschaft zurückgezogen",
     "matchRefused": "Begegnung nicht ausgetragen: Mannschaft zurückgezogen",
-    "withdrawnTitle": "Zurückgezogene oder ausgeschlossene Mannschaften"
+    "withdrawnTitle": "Zurückgezogene oder ausgeschlossene Mannschaften",
+    "passivityTitle": "P-Karten (Nicht-Kampfbereitschaft, t.124)",
+    "givePassivityCard": "P-Karte",
+    "givePassivityCardTooltip": "P-Karte an beide Mannschaften: Gelb P, dann Rot P, dann Schwarz P (entscheidet die Begegnung)",
+    "passivityNone": "Keine P-Karte",
+    "passivityYellow": "Gelb P",
+    "passivityRed": "Rot P",
+    "passivityBlack": "Schwarz P",
+    "confirmPassivityBlack": "Schwarz P entscheidet die Begegnung zugunsten von {{team}} (Summe der beendeten Staffeln, dann Rangliste). Zuerst die laufende Staffel speichern. Bestätigen?",
+    "passivityBlackConfirm": "Schwarz P geben",
+    "passivityCardGiven": "P-Karte gegeben",
+    "passivityMatchDecided": "Schwarz P: {{team}} gewinnt die Begegnung"
   },
   "kiosk": {
     "ranking": "Rangliste",

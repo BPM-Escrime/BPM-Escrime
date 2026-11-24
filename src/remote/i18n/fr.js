@@ -429,6 +429,15 @@
   'team.fencer_card': 'Carton',
   'team.team_excluded': '{{team}} exclue (carton noir) : rencontre perdue',
   'team.team_abandoned': '{{team}} retirée (abandon) : rencontre perdue',
+  'team.passivity_card': 'Carton P',
+  'team.passivity_title':
+    'Carton P (non-combativité, t.124) aux deux équipes : jaune P, rouge P, puis noir P',
+  'team.passivity_cards_label': 'Cartons P de la rencontre (aux deux équipes)',
+  'team.passivity_cancel': 'Annuler',
+  'team.passivity_black_confirm':
+    "Noir P : il décide la rencontre. Enregistrez d'abord le relais en cours : le score retenu est le cumul des relais terminés.",
+  'team.passivity_black_confirm_btn': 'Confirmer le noir P',
+  'team.passivity_black_winner': 'Vainqueur : {{team}}.',
   'team.fencer_cards_label': 'Cartons — {{fencer}}',
   'team.reason.early_start': 'Départ anticipé',
   'team.reason.late_stop': 'Continue après « Cessez ! »',

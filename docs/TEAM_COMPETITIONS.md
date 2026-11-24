@@ -215,7 +215,15 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   s'annule pas ainsi. Appareil (Cyrano P-card, OPP2 `p_card`) : jaune P et rouge P enregistrés à
   l'état reçu (un rouge P montré d'emblée vaut jaune P puis rouge P) ; le noir P attend la fin
   du relais : ACK, relais enregistré, puis noir P qui décide la rencontre (au lieu d'un NAK).
-  Ni la tablette équipe ni l'écran `TeamManagerView` n'ont encore de bouton carton P.
+  Boutons (#2227), relais FIE des armes olympiques seulement, jamais en Sabre Laser : tablette
+  `/equipe{N}/arbitre`, bouton « Carton P » (`team_passivity_card` → `givePassivityCard`,
+  source `tablet`) et cartons P de la rencontre (`passivityEnabled`, `passivityCards` de
+  `team_arena_state`) ; verrou de l'appareil maître en ligne comme pour les autres cartons.
+  Écran `TeamManagerView` (panneau « Saisir » de la rencontre) : même bouton, cartons P listés,
+  annulation du jaune ou du rouge P (`cancelTeamCard`). Noir P : le moteur annonce le carton
+  suivant par un essai à blanc (`dryRun`) ; au noir P, confirmation explicite (tablette :
+  encadré « Confirmer le noir P », `team_passivity_black` puis `confirmBlack` ; écran : fenêtre
+  de confirmation) avec le rappel d'enregistrer d'abord le relais en cours.
 - Carton noir individuel : le tireur est exclu (`withdrawFencer`, carton noir) dans la même
   commande. Armes olympiques (o.99.7.b) : la rencontre est perdue et l'équipe exclue, sans
   classement ; abandon (`withdrawTeam`) : rencontre perdue, l'équipe garde sa place (« N'a pas

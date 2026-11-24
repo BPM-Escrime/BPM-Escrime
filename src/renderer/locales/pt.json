@@ -780,7 +780,18 @@
     "statusAbandoned": "Não terminou",
     "matchCancelled": "Encontro anulado: equipa retirada",
     "matchRefused": "Encontro não disputado: equipa retirada",
-    "withdrawnTitle": "Equipas retiradas ou excluídas"
+    "withdrawnTitle": "Equipas retiradas ou excluídas",
+    "passivityTitle": "Cartões P (não combatividade, t.124)",
+    "givePassivityCard": "Cartão P",
+    "givePassivityCardTooltip": "Cartão P às duas equipas: amarelo P, depois vermelho P, depois preto P (decide o encontro)",
+    "passivityNone": "Nenhum cartão P",
+    "passivityYellow": "Amarelo P",
+    "passivityRed": "Vermelho P",
+    "passivityBlack": "Preto P",
+    "confirmPassivityBlack": "O preto P decide o encontro a favor de {{team}} (total dos revezamentos terminados, depois classificação). Registe primeiro o revezamento em curso. Confirmar?",
+    "passivityBlackConfirm": "Dar o preto P",
+    "passivityCardGiven": "Cartão P dado",
+    "passivityMatchDecided": "Preto P: {{team}} ganha o encontro"
   },
   "kiosk": {
     "ranking": "Classificação",
