@@ -86,7 +86,7 @@ export function useCompetitionMenu({
     },
     onExportRanking: format => exportRanking(overallRanking, format, isLaserSabre),
     onExportResults: format => exportResults(finalResults, format),
-    onImport: async (format, filepath, content) => {
+    onImport: async (format, name, content) => {
       if (format === 'fencers-bpf') {
         // Le menu ne lit plus l'archive : l'écran la choisit et l'importe par le contrat
         try {
@@ -104,7 +104,7 @@ export function useCompetitionMenu({
         }
         return;
       }
-      setImportData({ format, filepath, content });
+      setImportData({ format, filepath: name, content });
     },
     onNextPhase: () => {},
     loadFencers,

@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Modal from '../common/Modal';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { PrintDialogSettings } from '../../../shared/types/preload';
+import type { DesktopPrintDialog } from '../../../shared/platform/DesktopServices';
 import { loadPdfJs, type PdfDocument, type PdfLoadingTask } from './pdfjsLoader';
 import {
   expandPageRanges,
@@ -33,6 +34,8 @@ export interface PrintDialogResult {
 
 interface PrintDialogProps {
   html: string;
+  /** Impression native du bureau (`usePlatform().desktop.printDialog`, ADR-0030) */
+  printDialog: DesktopPrintDialog;
   onDone: (result: PrintDialogResult) => void;
 }
 
@@ -54,9 +57,12 @@ const destroyTask = (task: PdfLoadingTask | null) => {
   }
 };
 
-const PrintDialog: React.FC<PrintDialogProps> = ({ html: sourceHtml, onDone }) => {
+const PrintDialog: React.FC<PrintDialogProps> = ({
+  html: sourceHtml,
+  printDialog: api,
+  onDone,
+}) => {
   const { t } = useTranslation();
-  const api = window.electronAPI.printDialog;
   const [settings, setSettings] = useState<PrintDialogSettings>(loadSettings);
   const [printers, setPrinters] = useState<Printer[]>([]);
   const [pageCount, setPageCount] = useState(0);

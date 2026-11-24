@@ -13,6 +13,7 @@ import type { OpenCompetition } from './useAppState';
 import { defaultBpmClient } from '../api/IpcClient';
 import { loadCompetition } from '../api/competitionMapping';
 import { stationApi, stationAvailable } from '../api/stationApi';
+import { usePlatform } from '../platform/PlatformContext';
 
 interface AppGlobalEffectsParams {
   loadCompetitions: () => unknown;
@@ -55,28 +56,26 @@ export function useAppGlobalEffects(params: AppGlobalEffectsParams): void {
     }
   }, []);
 
-  // Load competitions on mount — attendre db:ready si la fenêtre s'ouvre avant la DB
+  // Chargement des compétitions au montage : sur le bureau, une fois la base ouverte
+  // (whenReady, résolue tout de suite si c'est déjà fait, ADR-0030)
+  const desktop = usePlatform().desktop;
   useEffect(() => {
-    if (window.electronAPI?.onDbReady) {
-      // Si la DB n'est pas encore prête, attendre l'event puis charger
-      let loaded = false;
-      const tryLoad = () => {
-        if (!loaded) {
-          loaded = true;
-          ref.current.loadCompetitions();
-          // Réglages du poste repris en base (#1880) : lisibles en --headless et par le MCP
-          installAppSettingsMirror();
-          syncLogoFromStation();
-        }
-      };
-      window.electronAPI.onDbReady(tryLoad);
-      // Charger quand même après 1s au cas où db:ready est déjà passé
-      const fallback = setTimeout(tryLoad, 1000);
-      return () => clearTimeout(fallback);
-    } else {
+    if (!desktop) {
       ref.current.loadCompetitions();
+      return undefined;
     }
-  }, []);
+    let alive = true;
+    void desktop.whenReady().then(() => {
+      if (!alive) return;
+      ref.current.loadCompetitions();
+      // Réglages du poste repris en base (#1880) : lisibles en --headless et par le MCP
+      installAppSettingsMirror();
+      syncLogoFromStation();
+    });
+    return () => {
+      alive = false;
+    };
+  }, [desktop]);
 
   // Ctrl+K → command palette
   useEffect(() => {

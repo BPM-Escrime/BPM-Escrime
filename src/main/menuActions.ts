@@ -60,9 +60,10 @@ export function createMenuActions({
       const filepath = result.filePaths[0];
       try {
         if (/\.(cotcot|cocot)$/i.test(filepath)) {
-          // Fichier BPM - Escrime classique : import XML dans la compétition ouverte
+          // Fichier BPM - Escrime classique : import XML dans la compétition ouverte.
+          // Nom et contenu, jamais le chemin (ADR-0030)
           const content = await readImportText(filepath);
-          getMainWindow()?.webContents.send('menu:import', 'xml', filepath, content);
+          getMainWindow()?.webContents.send('menu:import', 'xml', path.basename(filepath), content);
           return;
         }
         if (onEncryptedBpm && (await isEncryptedBpm(filepath))) {
@@ -71,7 +72,8 @@ export function createMenuActions({
         }
         // Fusion dans la base active, état d'avancement compris (#1117)
         const ids = await db.mergeFromFile(filepath);
-        getMainWindow()?.webContents.send('file:opened', filepath, ids);
+        // Épreuves fusionnées seulement, sans le chemin (ADR-0030)
+        getMainWindow()?.webContents.send('file:opened', ids);
       } catch (error) {
         dialog.showErrorBox(L.errTitle, `${L.openErr} ${error}`);
       }
@@ -113,7 +115,6 @@ export function createMenuActions({
     if (result.canceled || !result.filePath) return { success: false, canceled: true };
     try {
       await db.exportCompetitionToFile(competitionId, result.filePath);
-      getMainWindow()?.webContents.send('file:saved', result.filePath);
       return { success: true, path: result.filePath };
     } catch (error) {
       dialog.showErrorBox(L.errTitle, `${L.saveErr} ${error}`);
@@ -129,7 +130,6 @@ export function createMenuActions({
     if (sessionBackupPath && fs.existsSync(path.dirname(sessionBackupPath))) {
       try {
         await db.exportToFile(sessionBackupPath);
-        getMainWindow()?.webContents.send('file:saved', sessionBackupPath);
         return;
       } catch {
         // Écriture impossible : repli sur « Enregistrer sous » ci-dessous
@@ -149,7 +149,6 @@ export function createMenuActions({
     try {
       await db.exportToFile(result.filePath);
       sessionBackupPath = result.filePath;
-      getMainWindow()?.webContents.send('file:saved', result.filePath);
     } catch (error) {
       dialog.showErrorBox(L.errTitle, `${L.saveErr} ${error}`);
     }
@@ -204,7 +203,7 @@ export function createMenuActions({
       const filepath = result.filePaths[0];
       try {
         const content = await readImportText(filepath);
-        getMainWindow()?.webContents.send('menu:import', format, filepath, content);
+        getMainWindow()?.webContents.send('menu:import', format, path.basename(filepath), content);
       } catch (error) {
         dialog.showErrorBox(L.importErrTitle, `${L.importReadErr} ${error}`);
       }

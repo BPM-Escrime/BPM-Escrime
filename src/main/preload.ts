@@ -4,7 +4,7 @@
  * Licensed under GPL-3.0
  */
 
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 
 import type { ElectronAPI, UpdateInfo, UpdateProgressEvent } from '../shared/types/preload';
 
@@ -14,6 +14,7 @@ import { fileApi } from './preloadApi/fileApi';
 import { dialogApi } from './preloadApi/dialogApi';
 import { subscribe } from './preloadApi/subscribe';
 import { apiBridge } from './preloadApi/apiBridge';
+import { createDbReady } from './preloadApi/dbReady';
 
 // Expose protected methods that allow the renderer process
 // to use the ipcRenderer without exposing the entire object
@@ -40,19 +41,22 @@ const electronApi = {
   onMenuAddReferee: (callback: () => void) => subscribe('menu:add-referee', callback),
   onMenuNextPhase: (callback: () => void) => subscribe('menu:next-phase', callback),
   onMenuExport: (callback: (format: string) => void) => subscribe('menu:export', callback),
-  onMenuImport: (callback: (format: string, filepath: string, content: string) => void) =>
+  onMenuImport: (callback: (format: string, name: string, content: string) => void) =>
     subscribe('menu:import', callback),
   onMenuOpenSettings: (callback: () => void) => subscribe('menu:open-settings', callback),
   onMenuReportIssue: (callback: () => void) => subscribe('menu:report-issue', callback),
   onShowAbout: (callback: () => void) => subscribe('menu:show-about', callback),
-  onFileOpened: (callback: (filepath: string, competitionIds?: string[]) => void) =>
+  onFileOpened: (callback: (competitionIds: string[]) => void) =>
     subscribe('file:opened', callback),
+  // Fichier → Ouvrir a choisi une archive chiffrée (RGPD #1882) : l'écran demande le mot de passe
+  // et l'ouvre par le contrat (openCompetitionFile, ADR-0021)
+  onEncryptedFileOpened: (callback: (fileName: string, content: string) => void) =>
+    subscribe('privacy:encrypted-bpm', callback),
   setCurrentCompetition: (competitionId: string | null) =>
     ipcRenderer.send('app:current-competition', competitionId),
-  onFileSaved: (callback: (filepath: string) => void) => subscribe('file:saved', callback),
   onAutosaveCompleted: (callback: () => void) => subscribe('autosave:completed', callback),
   onAutosaveFailed: (callback: () => void) => subscribe('autosave:failed', callback),
-  onDbReady: (callback: () => void) => ipcRenderer.once('db:ready', callback),
+  whenDbReady: createDbReady(),
 
   // Boîte d'impression intégrée (#1214)
   printDialog: {
@@ -118,17 +122,6 @@ const electronApi = {
         throw new Error('Invalid channel');
       }
       return ipcRenderer.invoke('updater:setChannel', channel);
-    },
-  },
-
-  // RGPD (#1882) : Fichier → Ouvrir a choisi une archive chiffrée ; l'écran demande le mot de
-  // passe et l'ouvre par le contrat (openCompetitionFile, ADR-0021). Le reste : contrat d'API.
-  privacy: {
-    onEncryptedBpmRequest: (callback: (fileName: string, content: string) => void) => {
-      const handler = (_: IpcRendererEvent, fileName: string, content: string) =>
-        callback(fileName, content);
-      ipcRenderer.on('privacy:encrypted-bpm', handler);
-      return () => ipcRenderer.removeListener('privacy:encrypted-bpm', handler);
     },
   },
 

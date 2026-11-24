@@ -6,7 +6,13 @@
  * Licensed under GPL-3.0
  */
 import type { ElectronAPI, UpdateInfo, UpdateProgressEvent, VersionInfo } from '../types/preload';
-import type { DesktopServices, DesktopUpdater, Unsubscribe } from './DesktopServices';
+import type {
+  DesktopPrintDialog,
+  DesktopServices,
+  DesktopUpdater,
+  MenuEvents,
+  Unsubscribe,
+} from './DesktopServices';
 import type {
   ExportPdfRequest,
   OpenedBinaryFile,
@@ -62,7 +68,83 @@ export class ElectronDesktop implements DesktopServices {
   onUpdateProgress(callback: (progress: UpdateProgressEvent) => void): Unsubscribe {
     return this.api().onUpdateProgress(callback);
   }
+
+  whenReady(): Promise<void> {
+    return this.api().whenDbReady();
+  }
+
+  onMenu<K extends keyof MenuEvents>(
+    kind: K,
+    callback: (payload: MenuEvents[K]) => void
+  ): Unsubscribe {
+    const api = this.api();
+    const emit = callback as (payload: unknown) => void;
+    if (kind === 'export') return api.onMenuExport(format => emit({ format }));
+    if (kind === 'import') {
+      return api.onMenuImport((format, name, content) => emit({ format, name, content }));
+    }
+    return MENU_SUBSCRIBERS[kind as SimpleMenuKind](api)(() => emit(undefined));
+  }
+
+  onCompetitionFileOpened(callback: (opened: { competitionIds: string[] }) => void): Unsubscribe {
+    return this.api().onFileOpened(competitionIds =>
+      callback({ competitionIds: competitionIds ?? [] })
+    );
+  }
+
+  onEncryptedFileOpened(callback: (file: { name: string; content: string }) => void): Unsubscribe {
+    return this.api().onEncryptedFileOpened((name, content) => callback({ name, content }));
+  }
+
+  onAutosave(callback: (result: { ok: boolean }) => void): Unsubscribe {
+    const api = this.api();
+    const offOk = api.onAutosaveCompleted(() => callback({ ok: true }));
+    const offFailed = api.onAutosaveFailed(() => callback({ ok: false }));
+    return () => {
+      offOk();
+      offFailed();
+    };
+  }
+
+  setCurrentCompetition(competitionId: string | null): void {
+    this.api().setCurrentCompetition(competitionId);
+  }
+
+  setWindowSize(width: number, height: number, options?: { force?: boolean }): Promise<void> {
+    return this.api().setWindowSize(width, height, options);
+  }
+
+  get initialLanguage(): string | null {
+    return this.api().initialLanguage ?? null;
+  }
+
+  notifyLanguageChanged(lang: string): void {
+    this.api().notifyLanguageChanged(lang);
+  }
+
+  /** Groupe printDialog.* du préload, lu à chaque accès */
+  get printDialog(): DesktopPrintDialog {
+    return this.api().printDialog;
+  }
 }
+
+type SimpleMenuKind = Exclude<keyof MenuEvents, 'export' | 'import'>;
+
+/** Action du menu sans charge utile → abonnement du préload */
+const MENU_SUBSCRIBERS: Record<
+  SimpleMenuKind,
+  (api: ElectronAPI) => (callback: () => void) => Unsubscribe
+> = {
+  newCompetition: api => api.onMenuNewCompetition,
+  save: api => api.onMenuSave,
+  competitionProperties: api => api.onMenuCompetitionProperties,
+  addFencer: api => api.onMenuAddFencer,
+  addReferee: api => api.onMenuAddReferee,
+  nextPhase: api => api.onMenuNextPhase,
+  openSettings: api => api.onMenuOpenSettings,
+  reportIssue: api => api.onMenuReportIssue,
+  about: api => api.onShowAbout,
+};
 
 export class ElectronPlatform implements PlatformServices {
   readonly capabilities = { nativeDialogs: true, printToPdf: true, updater: true };

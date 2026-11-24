@@ -1,6 +1,6 @@
 /**
  * BPM - Escrime - Menu Events Hook
- * Gestion des événements IPC du menu
+ * Événements du menu natif pour l'épreuve affichée, par `usePlatform().desktop` (ADR-0030)
  * Licensed under GPL-3.0
  */
 
@@ -9,6 +9,7 @@ import { PoolRanking } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
 import { FinalResult } from '../../shared/domain/tableau/tableauTypes';
 import type { Phase } from './useCompetitionSession';
+import { usePlatform } from '../platform/PlatformContext';
 
 interface UseMenuEventsProps {
   currentPhase: Phase;
@@ -19,7 +20,8 @@ interface UseMenuEventsProps {
   onExportPhotos: () => void;
   onExportRanking: (format: 'csv' | 'json') => void;
   onExportResults: (format: 'csv' | 'json') => void;
-  onImport: (format: string, filepath: string, content: string) => void;
+  /** Nom du fichier choisi par le menu (jamais son chemin) et son contenu */
+  onImport: (format: string, name: string, content: string) => void;
   onNextPhase: () => void;
   loadFencers: () => void;
   hasPools: boolean;
@@ -104,24 +106,33 @@ export const useMenuEvents = ({
     ]
   );
 
+  const desktop = usePlatform().desktop;
+
   useEffect(() => {
-    const api = window.electronAPI;
-    if (!api) return;
+    if (!desktop) return;
 
     // Chaque on* retourne son désabonnement (#1894) : removeAllListeners retirait aussi
     // les écouteurs des autres composants (cf. file:opened d'App, #1117)
-    const unsubscribers: Array<(() => void) | void> = [
-      api.onMenuCompetitionProperties?.(onShowProperties),
-      api.onMenuImport?.(onImport),
-      api.onMenuExport?.(handleExport),
-      api.onMenuAddFencer?.(onShowAddFencer),
-      api.onMenuNextPhase?.(onNextPhase),
+    const unsubscribers = [
+      desktop.onMenu('competitionProperties', onShowProperties),
+      desktop.onMenu('import', ({ format, name, content }) => onImport(format, name, content)),
+      desktop.onMenu('export', ({ format }) => handleExport(format)),
+      desktop.onMenu('addFencer', onShowAddFencer),
+      desktop.onMenu('nextPhase', onNextPhase),
     ];
 
     return () => {
-      for (const off of unsubscribers) if (typeof off === 'function') off();
+      for (const off of unsubscribers) off();
     };
-  }, [onShowProperties, onImport, handleExport, loadFencers, onShowAddFencer, onNextPhase]);
+  }, [
+    desktop,
+    onShowProperties,
+    onImport,
+    handleExport,
+    loadFencers,
+    onShowAddFencer,
+    onNextPhase,
+  ]);
 
   return {
     handleExport,

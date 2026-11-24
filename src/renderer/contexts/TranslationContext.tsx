@@ -22,6 +22,7 @@ import {
 import { getActiveLanguage, pluralKeys, setActiveLanguage } from '@shared/utils/localeFormat';
 import { setPdfTranslator } from '@shared/utils/pdfExport/core';
 import { stationAvailable, useStationApi } from '../api/stationApi';
+import { usePlatform } from '../platform/PlatformContext';
 import frTranslations from '../locales/fr.json';
 
 export type Language = 'fr' | 'en' | 'br' | 'ca' | 'de' | 'es' | 'pt' | 'it' | 'ru' | 'zh-HK';
@@ -209,15 +210,21 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
   const [translations, setTranslations] = useState<Translations>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  const changeLanguage = useCallback(async (newLanguage: Language) => {
-    setIsLoading(true);
-    const nextTranslations = await loadTranslations(newLanguage);
-    setLanguage(newLanguage);
-    setTranslations(nextTranslations);
-    localStorage.setItem('bellepoule-language', newLanguage);
-    window.electronAPI?.notifyLanguageChanged?.(newLanguage);
-    setIsLoading(false);
-  }, []);
+  const desktop = usePlatform().desktop;
+
+  const changeLanguage = useCallback(
+    async (newLanguage: Language) => {
+      setIsLoading(true);
+      const nextTranslations = await loadTranslations(newLanguage);
+      setLanguage(newLanguage);
+      setTranslations(nextTranslations);
+      localStorage.setItem('bellepoule-language', newLanguage);
+      // Menu natif reconstruit dans la langue choisie (bureau seulement, ADR-0030)
+      desktop?.notifyLanguageChanged(newLanguage);
+      setIsLoading(false);
+    },
+    [desktop]
+  );
 
   const changeTheme = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
@@ -250,7 +257,8 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
 
   useEffect(() => {
     const initialize = async () => {
-      const injectedLang = window.electronAPI?.initialLanguage as Language | null;
+      // Langue choisie sur l'écran de démarrage ; sans bureau : localStorage puis navigateur
+      const injectedLang = (desktop?.initialLanguage ?? null) as Language | null;
       const savedLanguage =
         injectedLang || (localStorage.getItem('bellepoule-language') as Language) || 'fr';
       if (injectedLang) localStorage.setItem('bellepoule-language', injectedLang);
@@ -268,7 +276,8 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
     };
 
     initialize();
-  }, []);
+    // desktop : identité stable (detectPlatform), lu une fois au démarrage
+  }, [desktop]);
 
   // Langue active des formats Intl (dates, nombres) : fixée pendant le rendu, avant celui
   // des enfants, sinon ils formatent avec la langue précédente (#1213)

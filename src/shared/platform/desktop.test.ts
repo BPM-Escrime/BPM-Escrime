@@ -129,3 +129,150 @@ describe('fakePlatform', () => {
     await expect(d.updater.getAutoCheck()).resolves.toEqual({ enabled: true });
   });
 });
+
+/** Préload simulé du lot 3b : écouteurs par canal, désabonnement ciblé comme subscribe (#1894) */
+function eventPreload() {
+  const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
+  const sub =
+    (channel: string) =>
+    (cb: (...args: unknown[]) => void): (() => void) => {
+      if (!listeners.has(channel)) listeners.set(channel, new Set());
+      const wrapper = (...args: unknown[]) => cb(...args);
+      listeners.get(channel)!.add(wrapper);
+      return () => void listeners.get(channel)?.delete(wrapper);
+    };
+  const emit = (channel: string, ...args: unknown[]) =>
+    [...(listeners.get(channel) ?? [])].forEach(fn => fn(...args));
+  const count = (channel: string) => listeners.get(channel)?.size ?? 0;
+  let ready = false;
+  const waiting: Array<() => void> = [];
+  const api = {
+    onMenuNewCompetition: sub('menu:new-competition'),
+    onMenuSave: sub('menu:save'),
+    onMenuCompetitionProperties: sub('menu:competition-properties'),
+    onMenuAddFencer: sub('menu:add-fencer'),
+    onMenuAddReferee: sub('menu:add-referee'),
+    onMenuNextPhase: sub('menu:next-phase'),
+    onMenuExport: sub('menu:export'),
+    onMenuImport: sub('menu:import'),
+    onMenuOpenSettings: sub('menu:open-settings'),
+    onMenuReportIssue: sub('menu:report-issue'),
+    onShowAbout: sub('menu:show-about'),
+    onFileOpened: sub('file:opened'),
+    onEncryptedFileOpened: sub('privacy:encrypted-bpm'),
+    onAutosaveCompleted: sub('autosave:completed'),
+    onAutosaveFailed: sub('autosave:failed'),
+    whenDbReady: () =>
+      ready ? Promise.resolve() : new Promise<void>(resolve => waiting.push(resolve)),
+    setCurrentCompetition: vi.fn(),
+    setWindowSize: vi.fn(async () => undefined),
+    notifyLanguageChanged: vi.fn(),
+    initialLanguage: 'de' as string | null,
+    printDialog: { setHandler: vi.fn(), savePdf: vi.fn() },
+  };
+  const dbReady = () => {
+    ready = true;
+    waiting.splice(0).forEach(r => r());
+  };
+  return { api, emit, count, dbReady };
+}
+
+describe('ElectronDesktop : menu, fichiers, fenêtre, langue (lot 3b)', () => {
+  it('onMenu : chaque action reçoit sa charge utile typée', () => {
+    const { api, emit } = eventPreload();
+    const d = new ElectronDesktop(() => api as never);
+    const save = vi.fn();
+    const exp = vi.fn();
+    const imp = vi.fn();
+    const about = vi.fn();
+    d.onMenu('save', save);
+    d.onMenu('export', exp);
+    d.onMenu('import', imp);
+    d.onMenu('about', about);
+    emit('menu:save');
+    emit('menu:export', 'csv');
+    emit('menu:import', 'fff', 'liste.fff', 'contenu');
+    emit('menu:show-about');
+    expect(save).toHaveBeenCalledOnce();
+    expect(exp).toHaveBeenCalledWith({ format: 'csv' });
+    expect(imp).toHaveBeenCalledWith({ format: 'fff', name: 'liste.fff', content: 'contenu' });
+    expect(about).toHaveBeenCalledOnce();
+  });
+
+  it('désabonnement : retire son écouteur seulement', () => {
+    const { api, emit, count } = eventPreload();
+    const d = new ElectronDesktop(() => api as never);
+    const a = vi.fn();
+    const b = vi.fn();
+    const offA = d.onMenu('addReferee', a);
+    d.onMenu('addReferee', b);
+    offA();
+    emit('menu:add-referee');
+    expect(a).not.toHaveBeenCalled();
+    expect(b).toHaveBeenCalledOnce();
+    expect(count('menu:add-referee')).toBe(1);
+  });
+
+  it('fichiers ouverts : épreuves fusionnées, archive chiffrée (nom + contenu)', () => {
+    const { api, emit } = eventPreload();
+    const d = new ElectronDesktop(() => api as never);
+    const opened = vi.fn();
+    const encrypted = vi.fn();
+    d.onCompetitionFileOpened(opened);
+    d.onEncryptedFileOpened(encrypted);
+    emit('file:opened', ['c1', 'c2']);
+    emit('privacy:encrypted-bpm', 'secret.bpm', 'QlBN');
+    expect(opened).toHaveBeenCalledWith({ competitionIds: ['c1', 'c2'] });
+    expect(encrypted).toHaveBeenCalledWith({ name: 'secret.bpm', content: 'QlBN' });
+  });
+
+  it('onAutosave : réussite et échec, un seul désabonnement pour les deux', () => {
+    const { api, emit, count } = eventPreload();
+    const d = new ElectronDesktop(() => api as never);
+    const cb = vi.fn();
+    const off = d.onAutosave(cb);
+    emit('autosave:completed');
+    emit('autosave:failed');
+    expect(cb.mock.calls).toEqual([[{ ok: true }], [{ ok: false }]]);
+    off();
+    expect(count('autosave:completed') + count('autosave:failed')).toBe(0);
+  });
+
+  it('whenReady : attend db:ready, puis se résout tout de suite', async () => {
+    const { api, dbReady } = eventPreload();
+    const d = new ElectronDesktop(() => api as never);
+    let done = false;
+    const pending = d.whenReady().then(() => (done = true));
+    await Promise.resolve();
+    expect(done).toBe(false);
+    dbReady();
+    await pending;
+    expect(done).toBe(true);
+    await expect(d.whenReady()).resolves.toBeUndefined();
+  });
+
+  it('fenêtre, épreuve courante, langue, impression : relais vers le préload', async () => {
+    const { api } = eventPreload();
+    const d = new ElectronDesktop(() => api as never);
+    d.setCurrentCompetition('c1');
+    await d.setWindowSize(800, 600, { force: true });
+    d.notifyLanguageChanged('en');
+    expect(api.setCurrentCompetition).toHaveBeenCalledWith('c1');
+    expect(api.setWindowSize).toHaveBeenCalledWith(800, 600, { force: true });
+    expect(api.notifyLanguageChanged).toHaveBeenCalledWith('en');
+    expect(d.initialLanguage).toBe('de');
+    expect(d.printDialog).toBe(api.printDialog);
+  });
+});
+
+describe('fakeDesktop (lot 3b)', () => {
+  it('émet menu, fichiers et sauvegarde aux abonnés encore inscrits', () => {
+    const d = fakeDesktop();
+    const imp = vi.fn();
+    const off = d.onMenu('import', imp);
+    d.emitMenu('import', { format: 'xml', name: 'a.cotcot', content: '<x/>' });
+    expect(imp).toHaveBeenCalledWith({ format: 'xml', name: 'a.cotcot', content: '<x/>' });
+    off();
+    expect(d.listenerCount()).toBe(0);
+  });
+});

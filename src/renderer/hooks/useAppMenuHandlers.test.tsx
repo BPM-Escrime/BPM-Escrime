@@ -1,31 +1,14 @@
 // @vitest-environment jsdom
 /**
- * useAppMenuHandlers (#1897) : abonnement unique, handlers à jour, désabonnement ciblé.
+ * useAppMenuHandlers (#1897, ADR-0030) : abonnement unique, handlers à jour, désabonnement
+ * ciblé ; sans bureau (navigateur, vue DT) : aucun abonnement, aucune erreur.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAppMenuHandlers, type AppMenuHandlers } from './useAppMenuHandlers';
-
-type Cb = (...args: unknown[]) => unknown;
-const listeners = new Map<string, Cb>();
-const offs: string[] = [];
-const on = (name: string) =>
-  vi.fn((cb: Cb) => {
-    listeners.set(name, cb);
-    return () => offs.push(name);
-  });
-
-const NAMES = [
-  'onMenuNewCompetition',
-  'onMenuReportIssue',
-  'onShowAbout',
-  'onFileOpened',
-  'onFileSaved',
-  'onMenuSave',
-  'onMenuOpenSettings',
-  'onAutosaveCompleted',
-  'onAutosaveFailed',
-];
+import { PlatformProvider } from '../platform/PlatformContext';
+import { fakeDesktop, fakePlatform, type FakeDesktop } from '../../shared/platform/testing';
 
 const handlers = (over: Partial<AppMenuHandlers> = {}): AppMenuHandlers => ({
   onNewCompetition: vi.fn(),
@@ -38,37 +21,41 @@ const handlers = (over: Partial<AppMenuHandlers> = {}): AppMenuHandlers => ({
   ...over,
 });
 
-describe('useAppMenuHandlers', () => {
-  beforeEach(() => {
-    listeners.clear();
-    offs.length = 0;
-    (window as unknown as { electronAPI: unknown }).electronAPI = {
-      ...Object.fromEntries(NAMES.map(n => [n, on(n)])),
-      privacy: { onEncryptedBpmRequest: on('onEncryptedBpmRequest') },
-    };
-  });
+const wrapper = (desktop?: FakeDesktop) => {
+  const platform = fakePlatform({ desktop });
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return <PlatformProvider platform={platform}>{children}</PlatformProvider>;
+  };
+};
 
+describe('useAppMenuHandlers', () => {
   it('relaie les événements vers les derniers handlers, sans réabonnement', () => {
+    const desktop = fakeDesktop();
     const first = handlers();
-    const { rerender } = renderHook(h => useAppMenuHandlers(h), { initialProps: first });
+    const { rerender } = renderHook(h => useAppMenuHandlers(h), {
+      initialProps: first,
+      wrapper: wrapper(desktop),
+    });
     const second = handlers();
     rerender(second);
-    listeners.get('onMenuNewCompetition')!();
-    listeners.get('onMenuOpenSettings')!();
-    listeners.get('onMenuSave')!();
+    desktop.emitMenu('newCompetition');
+    desktop.emitMenu('openSettings');
+    desktop.emitMenu('save');
+    desktop.emitMenu('about');
     expect(first.onNewCompetition).not.toHaveBeenCalled();
     expect(second.onNewCompetition).toHaveBeenCalledOnce();
     expect(second.onOpenSettings).toHaveBeenCalledOnce();
+    expect(second.onAbout).toHaveBeenCalledOnce();
     expect(second.showToast).toHaveBeenCalledWith('Sauvegarde effectuée', 'success');
-    const api = window.electronAPI as unknown as Record<string, ReturnType<typeof vi.fn>>;
-    expect(api.onMenuNewCompetition).toHaveBeenCalledOnce();
+    expect(desktop.onMenu.mock.calls.filter(([k]) => k === 'newCompetition')).toHaveLength(1);
   });
 
   it('.bpm ouvert : recharge, toast, ouvre la compétition unique', async () => {
+    const desktop = fakeDesktop();
     const h = handlers();
-    renderHook(() => useAppMenuHandlers(h));
+    renderHook(() => useAppMenuHandlers(h), { wrapper: wrapper(desktop) });
     await act(async () => {
-      await listeners.get('onFileOpened')!('/x.bpm', ['c1']);
+      desktop.emitCompetitionFileOpened(['c1']);
     });
     expect(h.reloadCompetitions).toHaveBeenCalled();
     expect(h.showToast).toHaveBeenCalledWith('Compétition importée', 'success');
@@ -76,15 +63,37 @@ describe('useAppMenuHandlers', () => {
   });
 
   it('archive chiffrée choisie par le menu : nom et contenu relayés à l’invite', () => {
+    const desktop = fakeDesktop();
     const onEncryptedFile = vi.fn();
-    renderHook(() => useAppMenuHandlers(handlers({ onEncryptedFile })));
-    listeners.get('onEncryptedBpmRequest')!('secret.bpm', 'QlBN');
+    renderHook(() => useAppMenuHandlers(handlers({ onEncryptedFile })), {
+      wrapper: wrapper(desktop),
+    });
+    desktop.emitEncryptedFileOpened({ name: 'secret.bpm', content: 'QlBN' });
     expect(onEncryptedFile).toHaveBeenCalledWith('secret.bpm', 'QlBN');
   });
 
-  it('démontage : tous les désabonnements appelés', () => {
-    const { unmount } = renderHook(() => useAppMenuHandlers(handlers()));
+  it('sauvegarde automatique : avis seulement en cas d’échec', () => {
+    const desktop = fakeDesktop();
+    const h = handlers();
+    renderHook(() => useAppMenuHandlers(h), { wrapper: wrapper(desktop) });
+    desktop.emitAutosave({ ok: true });
+    expect(h.showToast).not.toHaveBeenCalled();
+    desktop.emitAutosave({ ok: false });
+    expect(h.showToast).toHaveBeenCalledWith('Échec de la sauvegarde automatique', 'error');
+  });
+
+  it('démontage : tous les écouteurs retirés', () => {
+    const desktop = fakeDesktop();
+    const { unmount } = renderHook(() => useAppMenuHandlers(handlers()), {
+      wrapper: wrapper(desktop),
+    });
+    expect(desktop.listenerCount()).toBe(8);
     unmount();
-    expect(offs.sort()).toEqual([...NAMES, 'onEncryptedBpmRequest'].sort());
+    expect(desktop.listenerCount()).toBe(0);
+  });
+
+  it('sans bureau : aucun abonnement, aucune erreur', () => {
+    const { unmount } = renderHook(() => useAppMenuHandlers(handlers()), { wrapper: wrapper() });
+    unmount();
   });
 });

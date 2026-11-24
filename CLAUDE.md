@@ -276,8 +276,7 @@ Database (src/database/)
    - Mode Club : plus de groupe `club.*`, opérations du contrat (`contractClub.ts`, ADR-0022) ; photos ZIP et sauvegardes `.bpclub` par les fichiers de données
    - fichiers de données (.bpm en clair ou chiffré, .bpf, photos ZIP, .bpclub) : opérations du contrat `fileOperations` (`contractFiles.ts`, contenu base64, jamais de chemin), écran `useFilesApi` / `saveDataFile` / `openDataFile` (`src/renderer/api/filesApi.ts`) et `usePlatform()` (ADR-0021)
    - `settings.addAgentFolder` – Dossier de l'agent choisi par dialogue natif (#1880) ; réglages du poste, salles, thèmes, journée multi-épreuves et agent MCP : contrat d'API (`contractStation.ts`, ADR-0022)
-   - `privacy.onEncryptedBpmRequest` – seul reste du RGPD : archive chiffrée choisie par Fichier → Ouvrir (nom + contenu), ouverte par le contrat ; export JSON d'une personne (`getPersonData`), archives chiffrées et droits des personnes par le contrat (#1882, docs/RGPD.md)
-   - `notifyLanguageChanged(lang)` – Rebuild native menu when UI language changes
+   - menu natif, fichiers ouverts par Fichier → Ouvrir (épreuves fusionnées ; archive chiffrée : nom + contenu, ouverte par le contrat, #1882), sauvegarde automatique, base prête, épreuve affichée, taille de fenêtre, langue (`notifyLanguageChanged`, `initialLanguage`), boîte d'impression : plus d'appel direct de l'écran, `usePlatform().desktop` (`onMenu`, `onCompetitionFileOpened`, `onEncryptedFileOpened`, `onAutosave`, `whenReady`, `setCurrentCompetition`, `setWindowSize`, `printDialog`, ADR-0030) ; export JSON d'une personne (`getPersonData`), archives chiffrées et droits des personnes par le contrat (docs/RGPD.md)
 
 ## TypeScript Configuration
 

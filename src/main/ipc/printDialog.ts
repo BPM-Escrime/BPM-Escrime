@@ -94,13 +94,14 @@ export function pdfFileName(title: unknown): string {
   return `${base}.pdf`;
 }
 
-/** Rend le PDF avec les réglages choisis puis l'enregistre là où l'utilisateur le décide */
+/** Rend le PDF avec les réglages choisis puis l'enregistre là où l'utilisateur le décide ;
+ * le chemin choisi reste dans le main (ADR-0030) */
 export async function savePdf(
   deps: PrintDialogDeps,
   html: unknown,
   settings?: Partial<PrintSettings>,
   title?: unknown
-): Promise<PrintResult & { canceled?: boolean; path?: string }> {
+): Promise<PrintResult & { canceled?: boolean }> {
   if (!checkHtml(html)) return { success: false, error: 'html_required' };
   try {
     const target = await deps.chooseSavePath(pdfFileName(title));
@@ -108,7 +109,7 @@ export async function savePdf(
     const s = normalizePrintSettings(settings);
     const pdf = await deps.renderPdf(applyPageOverride(html, s), buildPdfOptions(s));
     await deps.writeFile(target, pdf);
-    return { success: true, path: target };
+    return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : String(e) };
   }

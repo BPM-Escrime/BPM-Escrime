@@ -111,6 +111,7 @@ function mockElectronAPI() {
         'onMenuExport',
         'onFileOpened',
         'onMenuAddFencer',
+        'onMenuNextPhase',
       ].map(k => [k, () => () => {}])
     ),
   };

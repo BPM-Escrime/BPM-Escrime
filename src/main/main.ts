@@ -85,6 +85,8 @@ let autoUpdater: AutoUpdater | null = null;
 
 // Main window reference
 let mainWindow: BrowserWindow | null = null;
+// Base ouverte : db:ready renvoyé à chaque chargement de page (préload whenDbReady, ADR-0030)
+let dbReady = false;
 
 // ============================================================================
 // IPC Handlers - Database Operations
@@ -95,6 +97,11 @@ const createWindow = (initialLang?: string): void =>
     initialLang,
     setMainWindow: win => {
       mainWindow = win;
+      // Page (re)chargée après l'ouverture de la base (rechargement, fenêtre rouverte sous macOS)
+      const contents = win?.webContents;
+      contents?.on('did-finish-load', () => {
+        if (dbReady) contents.send('db:ready');
+      });
     },
     buildMenu: lang => buildMenu(lang),
   });
@@ -523,7 +530,8 @@ app.whenReady().then(async () => {
 
   await openDatabase();
 
-  // Signaler au renderer que la DB est prête
+  // Signaler au renderer que la DB est prête (page pas encore chargée : renvoyé au chargement)
+  dbReady = true;
   mainWindow?.webContents.send('db:ready');
 
   // Initialize auto updater — dialog différé après affichage de la fenêtre
