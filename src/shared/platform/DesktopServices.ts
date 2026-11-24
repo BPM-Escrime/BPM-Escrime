@@ -83,4 +83,11 @@ export interface DesktopServices {
 
   // Impression native (boîte de dialogue de l'application)
   printDialog: DesktopPrintDialog;
+
+  /**
+   * Choix d'un dossier du poste : chemin absolu, ou null si annulé. Seule méthode qui rend un
+   * chemin ; n'écrit rien : l'écran l'envoie ensuite à une commande du contrat (setBackupDir,
+   * setCompetitionBackupDir, addAgentFolder).
+   */
+  pickDirectory(request?: { title?: string }): Promise<string | null>;
 }

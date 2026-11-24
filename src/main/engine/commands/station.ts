@@ -17,6 +17,8 @@ import { eventDayHandlers } from './eventDay';
 import { privacyHandlers } from './privacy';
 import { matchDurationHandlers } from './matchDurations';
 import { normalizePlaceQuery } from '../../../shared/domain/places/placeSearch';
+import { assertDirectory } from './files';
+import { getCompetitionOrThrow } from './competitions';
 
 /** Valeurs localStorage (clé historique → texte) converties en paramètres typés */
 export function legacyValuesToSettings(
@@ -51,9 +53,14 @@ type SettingsOps =
   | 'getResolvedSetting'
   | 'importLegacySettings'
   | 'listAgentFolders'
+  | 'addAgentFolder'
   | 'removeAgentFolder'
   | 'getBackupDir'
+  | 'setBackupDir'
   | 'resetBackupDir'
+  | 'getCompetitionBackupDir'
+  | 'setCompetitionBackupDir'
+  | 'resetCompetitionBackupDir'
   | 'getLogoLibrary'
   | 'updateLogoLibrary'
   | 'getProxySettings'
@@ -98,8 +105,41 @@ const settingsHandlers: { [N in SettingsOps]: StationHandler<N> } = {
       return ctx.db.settings.importLegacySettings(settings);
     }),
   listAgentFolders: ctx => refuse(() => agentFolders(ctx)),
+  // ── Dossiers choisis par desktop.pickDirectory (docs/adr/0030) : vérifiés ici ──
+  addAgentFolder: (ctx, { path }) => {
+    const folder = assertDirectory(path);
+    return refuse(() => {
+      const current = ctx.db.settings.getSetting('agentFolders');
+      if (!current.includes(folder)) {
+        ctx.db.settings.updateSettings({ agentFolders: [...current, folder] });
+      }
+      return agentFolders(ctx);
+    });
+  },
   getBackupDir: ctx => refuse(() => portOf(ctx).backup.info()),
+  setBackupDir: (ctx, { path }) => {
+    const backup = portOf(ctx).backup;
+    const dir = assertDirectory(path, { writable: true });
+    return refuse(() => backup.set(dir));
+  },
   resetBackupDir: ctx => refuse(() => portOf(ctx).backup.reset()),
+  getCompetitionBackupDir: (ctx, { competitionId }) => {
+    const backup = portOf(ctx).backup;
+    getCompetitionOrThrow(ctx, competitionId);
+    return { dir: backup.competitionDir(competitionId) };
+  },
+  setCompetitionBackupDir: (ctx, { competitionId, path }) => {
+    const backup = portOf(ctx).backup;
+    getCompetitionOrThrow(ctx, competitionId);
+    const dir = assertDirectory(path, { writable: true });
+    refuse(() => backup.setCompetitionDir(competitionId, dir));
+    return { dir };
+  },
+  // Épreuve effacée : entrée retirée quand même (rien à vérifier pour revenir au défaut)
+  resetCompetitionBackupDir: (ctx, { competitionId }) => {
+    refuse(() => portOf(ctx).backup.setCompetitionDir(competitionId, null));
+    return { dir: null };
+  },
   removeAgentFolder: (ctx, { folder }) =>
     refuse(() => {
       const current = ctx.db.settings.getSetting('agentFolders');

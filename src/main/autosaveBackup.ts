@@ -3,7 +3,8 @@
  * Licensed under GPL-3.0
  *
  * - Base complète → dossier global (`resolveBackupDir`), fichier fixe.
- * - Compétition avec `settings.backupDir` → copie de cette seule compétition dans son dossier dédié.
+ * - Épreuve avec un dossier propre sur ce poste (backup-settings.json, docs/adr/0030) → copie de
+ *   cette seule épreuve dans ce dossier.
  * Chaque fichier est écrit en `.tmp` puis renommé : pas de fichier à moitié écrit.
  */
 import fs from 'fs';
@@ -11,15 +12,15 @@ import path from 'path';
 import {
   AUTOSAVE_FILE_NAME,
   competitionAutosaveName,
+  readBackupSettings,
   resolveBackupDir,
-  sanitizeBackupDir,
 } from './backupSettings';
 
 /** Sous-ensemble de DatabaseManager utilisé par les sauvegardes */
 export interface AutosaveSource {
   exportToFile(filepath: string): Promise<void>;
   exportCompetitionToFile(competitionId: string, filepath: string): Promise<void>;
-  getAllCompetitions(): { id: string; title?: string; settings?: { backupDir?: string } }[];
+  getAllCompetitions(): { id: string; title?: string }[];
 }
 
 async function writeAtomic(target: string, write: (tmp: string) => Promise<void>): Promise<void> {
@@ -40,8 +41,9 @@ export async function runBackupAutosave(
 
   // Une compétition en échec (dossier supprimé, disque plein) n'empêche pas les autres
   const failures: string[] = [];
+  const dirs = readBackupSettings(userDataPath).competitions ?? {};
   for (const comp of db.getAllCompetitions()) {
-    const compDir = sanitizeBackupDir(comp.settings?.backupDir);
+    const compDir = dirs[comp.id];
     if (!compDir) continue;
     const target = path.join(compDir, competitionAutosaveName(comp.title, comp.id));
     try {

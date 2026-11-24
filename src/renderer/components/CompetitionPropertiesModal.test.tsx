@@ -7,10 +7,13 @@
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 vi.mock('../hooks/useTranslation', () => import('../testUtils/i18nMock'));
 import CompetitionPropertiesModal from './CompetitionPropertiesModal';
 import { Weapon, Gender, Category, type Competition } from '../../shared/types';
+import { stationElectron } from '../testUtils/stationBridge';
+import { PlatformProvider } from '../platform/PlatformContext';
+import { fakeDesktop, fakePlatform } from '../../shared/platform/testing';
 
 const competition = {
   id: 'c1',
@@ -153,5 +156,66 @@ describe('CompetitionPropertiesModal', () => {
     save();
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(onSave.mock.calls[0][0].settings.defaultPoolMaxScore).toBe(15);
+  });
+
+  describe('dossier propre de l’épreuve sur ce poste (docs/adr/0030)', () => {
+    const backup = {
+      getCompetitionDir: vi.fn(async () => ({ dir: '/srv/ancien' as string | null })),
+      setCompetitionDir: vi.fn(async (_id: string, dir: string) => ({ dir })),
+      resetCompetitionDir: vi.fn(async () => ({ dir: null })),
+    };
+    const renderWith = (desktop: ReturnType<typeof fakeDesktop> | false, onSave = vi.fn()) => {
+      (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({ backup });
+      return render(
+        <PlatformProvider platform={fakePlatform({ desktop })}>
+          <CompetitionPropertiesModal competition={competition} onSave={onSave} onClose={vi.fn()} />
+        </PlatformProvider>
+      );
+    };
+
+    it('lu sur le poste, choisi puis enregistré par la commande, retiré ; pas dans l’épreuve', async () => {
+      const desktop = fakeDesktop({ pickDirectory: vi.fn(async () => '/media/usb/Open') });
+      const onSave = vi.fn();
+      renderWith(desktop, onSave);
+      const shown = await screen.findByTestId('competition-backup-dir');
+      await waitFor(() => expect(shown).toHaveTextContent('/srv/ancien'));
+      expect(backup.getCompetitionDir).toHaveBeenCalledWith('c1');
+      fireEvent.click(screen.getByText('Choisir le dossier…'));
+      await waitFor(() => expect(shown).toHaveTextContent('/media/usb/Open'));
+      expect(backup.setCompetitionDir).toHaveBeenCalledWith('c1', '/media/usb/Open');
+      fireEvent.click(screen.getByText('Retirer le dossier dédié'));
+      await waitFor(() => expect(backup.resetCompetitionDir).toHaveBeenCalledWith('c1'));
+      await waitFor(() => expect(shown).not.toHaveTextContent('/media/usb/Open'));
+      save();
+      expect(onSave.mock.calls[0][0].settings).not.toHaveProperty('backupDir');
+      delete (window as { electronAPI?: unknown }).electronAPI;
+    });
+
+    it('à la création (épreuve sans identifiant) : section absente, rien n’est lu', () => {
+      (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({ backup });
+      backup.getCompetitionDir.mockClear();
+      render(
+        <PlatformProvider platform={fakePlatform({ desktop: true })}>
+          <CompetitionPropertiesModal
+            competition={{ ...competition, id: '' }}
+            onSave={vi.fn()}
+            onClose={vi.fn()}
+          />
+        </PlatformProvider>
+      );
+      expect(screen.queryByTestId('competition-backup-dir')).not.toBeInTheDocument();
+      expect(backup.getCompetitionDir).not.toHaveBeenCalled();
+      delete (window as { electronAPI?: unknown }).electronAPI;
+    });
+
+    it('sans bureau : section absente, enregistrement possible', () => {
+      const onSave = vi.fn();
+      renderWith(false, onSave);
+      expect(screen.queryByTestId('competition-backup-dir')).not.toBeInTheDocument();
+      expect(screen.queryByText('Choisir le dossier…')).not.toBeInTheDocument();
+      save();
+      expect(onSave).toHaveBeenCalledTimes(1);
+      delete (window as { electronAPI?: unknown }).electronAPI;
+    });
   });
 });

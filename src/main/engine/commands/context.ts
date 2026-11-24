@@ -292,8 +292,14 @@ export interface StationPort {
   /** Dossier de sauvegarde du poste (<userData>/backup-settings.json) */
   backup: {
     info(): BackupDirDTO;
-    /** Revient au dossier par défaut */
+    /** Dossier du poste (chemin déjà vérifié par la commande) */
+    set(dir: string): BackupDirDTO;
+    /** Revient au dossier par défaut ; dossiers propres des épreuves gardés */
     reset(): BackupDirDTO;
+    /** Dossier propre d'une épreuve sur ce poste ; null : dossier du poste (docs/adr/0030) */
+    competitionDir(competitionId: string): string | null;
+    /** Fixe (chemin vérifié) ou retire (null) le dossier propre d'une épreuve */
+    setCompetitionDir(competitionId: string, dir: string | null): void;
   };
   /**
    * Recherche de lieu sur Internet (Photon, Géoplateforme ; docs/adr/0026). Absent : tests,

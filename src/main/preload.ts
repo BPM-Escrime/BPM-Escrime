@@ -125,11 +125,6 @@ const electronApi = {
     },
   },
 
-  // Dossier de sauvegarde : sélecteur natif (Paramètres → Sauvegarde)
-  backup: {
-    chooseDir: () => ipcRenderer.invoke('backup:chooseDir'),
-    pickCompetitionDir: () => ipcRenderer.invoke('backup:pickCompetitionDir'),
-  },
   // Publication des résultats sur GREG (escrime-info.com), envoi fait par le main (#1328)
   greg: {
     publish: (request: unknown) => ipcRenderer.invoke('greg:publish', request),
@@ -155,11 +150,6 @@ const electronApi = {
 
   // Remote score server functions
 
-  // Dossier de l'agent choisi par dialogue natif (#1880) ; les autres réglages du poste, salles,
-  // journée et agent passent par le contrat d'API (docs/adr/0022)
-  settings: {
-    addAgentFolder: () => ipcRenderer.invoke('settings:addAgentFolder'),
-  },
   // Remote event listeners (for real-time updates)
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) =>
     subscribe('update:available', callback),

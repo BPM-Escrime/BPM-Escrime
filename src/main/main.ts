@@ -40,8 +40,11 @@ import { importLegacyLogoFile } from './logoLibraryStore';
 import { getVersionInfo } from './versionInfo';
 import { readUpdaterSettings, resolveChannel } from './updaterSettings';
 import { applyStoredProxySettings, createProxyService } from './proxySession';
-import { registerBackupHandlers } from './ipc/backupHandlers';
-import { resolveBackupDir } from './backupSettings';
+import {
+  competitionBackupDir,
+  importLegacyCompetitionBackupDirs,
+  resolveBackupDir,
+} from './backupSettings';
 import { runBackupAutosave } from './autosaveBackup';
 import './ipc/connectors'; // canaux de publication GREG et FTP (#1328, #1331)
 import { remoteServers, stopRemoteServer } from './remoteRegistry';
@@ -63,7 +66,6 @@ import { registerApiHandlers } from './engine/api/ipcAdapter';
 import { emitChangeVia } from './mcp/mcpDomain';
 import { createMcpController } from './mcp/mcpController';
 import { parseCliArgs } from './cliArgs';
-import { registerSettingsHandlers } from './ipc/settingsHandlers';
 import { runBatchImport } from './batchImport';
 import type { McpWriteDeps } from './mcp/mcpWriteTools';
 import { setInkSavingProvider } from './printInk';
@@ -114,6 +116,8 @@ const menuActions = createMenuActions({
   onEncryptedBpm: privacyHandlers.requestEncryptedOpen,
   // Dossier de sauvegarde par défaut (Paramètres → Sauvegarde)
   getBackupDir: () => resolveBackupDir(app.getPath('userData'), app.getPath('documents')).dir,
+  // Dossier propre de l'épreuve sur ce poste (docs/adr/0030)
+  getCompetitionBackupDir: id => competitionBackupDir(app.getPath('userData'), id),
 });
 const { setCurrentCompetitionId } = menuActions;
 const buildMenu = (language?: string): void =>
@@ -351,11 +355,9 @@ const mcp = createMcpController({
 });
 /** Démarrage du MCP à l'ouverture de la base (un seul démarrage, attendu en --headless) */
 let mcpReady: ReturnType<typeof mcp.apply> | null = null;
-registerSettingsHandlers({ db, defaultAgentFolders, getMainWindow: () => mainWindow });
 
 registerCryptoHandlers();
 registerUpdaterHandlers({ getAutoUpdater: () => autoUpdater });
-registerBackupHandlers();
 
 // App info handlers
 ipcMain.handle('app:getVersionInfo', async () => {
@@ -443,6 +445,29 @@ async function openDatabase(): Promise<void> {
   applyStoredPrivacySettings(db, userDataPath);
   // Logo actif : ancien fichier logo.dat repris en base, seule source (docs/adr/0022)
   importLegacyLogoFile(db, userDataPath);
+  importLegacyBackupDirs(userDataPath);
+}
+
+/**
+ * Dossiers propres des épreuves : anciens `settings.backupDir` repris une fois dans le réglage
+ * du poste (docs/adr/0030) ; dossier absent ignoré et tracé. La clé reste dans l'épreuve, ignorée.
+ */
+function importLegacyBackupDirs(userDataPath: string): void {
+  try {
+    const report = importLegacyCompetitionBackupDirs(userDataPath, db.getAllCompetitions());
+    if (!report) return;
+    if (report.imported.length) {
+      logger.info(LogCategory.SYSTEM, `Dossiers de sauvegarde repris : ${report.imported.length}`);
+    }
+    for (const { competitionId, dir } of report.ignored) {
+      logger.warn(
+        LogCategory.SYSTEM,
+        `Dossier de sauvegarde de l'épreuve ${competitionId} ignoré (introuvable) : ${dir}`
+      );
+    }
+  } catch (e) {
+    logger.error(LogCategory.SYSTEM, 'Reprise des dossiers de sauvegarde impossible:', toError(e));
+  }
 }
 
 // Autosave every 2 minutes

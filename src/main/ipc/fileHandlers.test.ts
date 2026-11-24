@@ -24,6 +24,7 @@ describe('registerFileHandlers (#1341)', () => {
   it('enregistre les canaux file:* et dialog:*', () => {
     expect([...handlers.keys()].sort()).toEqual([
       'dialog:openFile',
+      'dialog:pickDirectory',
       'dialog:saveFile',
       'file:export',
       'file:import',
@@ -67,5 +68,27 @@ describe('registerFileHandlers (#1341)', () => {
       filters: [{ name: 'BPF', extensions: ['bpf'] }],
     });
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('dialog:pickDirectory (docs/adr/0030) : chemin rendu, null si annulé, rien d’autre', async () => {
+    vi.mocked(dialog.showOpenDialog).mockReset();
+    vi.mocked(dialog.showOpenDialog).mockResolvedValueOnce({
+      canceled: false,
+      filePaths: ['/home/dt/Sauvegardes'],
+    });
+    await expect(handlers.get('dialog:pickDirectory')!({}, { title: 'Dossier' })).resolves.toBe(
+      '/home/dt/Sauvegardes'
+    );
+    expect(vi.mocked(dialog.showOpenDialog).mock.calls[0]).toEqual([
+      { properties: ['openDirectory', 'createDirectory'], title: 'Dossier' },
+    ]);
+    vi.mocked(dialog.showOpenDialog).mockResolvedValueOnce({ canceled: true, filePaths: [] });
+    await expect(handlers.get('dialog:pickDirectory')!({}, undefined)).resolves.toBeNull();
+    // Options du renderer filtrées : seul le titre passe
+    vi.mocked(dialog.showOpenDialog).mockResolvedValueOnce({ canceled: true, filePaths: [] });
+    await handlers.get('dialog:pickDirectory')!({}, { title: 3, properties: ['openFile'] });
+    expect(vi.mocked(dialog.showOpenDialog).mock.calls[2]).toEqual([
+      { properties: ['openDirectory', 'createDirectory'] },
+    ]);
   });
 });

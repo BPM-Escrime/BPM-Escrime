@@ -5,9 +5,9 @@
  * window.electronAPI) en
  * opérations du contrat (entrées nommées, shared/api/contractStation.ts). Hors Electron, le
  * client lève ApiError('unavailable') : `stationAvailable()` dit s'il y a un poste à piloter.
- * Restent en IPC le dialogue natif d'ajout d'un dossier de l'agent (settings.addAgentFolder)
- * et ce qui porte un chemin de fichier : export JSON d'une personne et archives .bpm chiffrées
- * (window.electronAPI.privacy, ADR-0021).
+ * Les dossiers (sauvegarde, agent) sont choisis par `usePlatform().desktop.pickDirectory`, puis
+ * enregistrés ici (docs/adr/0030). Reste en IPC ce qui porte un chemin de fichier : archives .bpm
+ * chiffrées (window.electronAPI.privacy, ADR-0021).
  * Licensed under GPL-3.0
  */
 import { useMemo } from 'react';
@@ -53,6 +53,8 @@ export function createStationApi(client: BpmClient) {
       searchPlaces: (query: string, language: string) =>
         q('listPlaceSuggestions', { query, language }),
       getAgentFolders: () => q('listAgentFolders', {}),
+      /** Dossier choisi par desktop.pickDirectory (docs/adr/0030) */
+      addAgentFolder: (path: string) => c('addAgentFolder', { path }),
       removeAgentFolder: (folder: string) => c('removeAgentFolder', { folder }),
       /** Langue ou thème changés hors de l'écran (agent) : à relire. Renvoie la désinscription. */
       onChanged: (callback: () => void) =>
@@ -102,10 +104,17 @@ export function createStationApi(client: BpmClient) {
         c('setDayStripRule', { dayId, strip, rule }),
       setAutoAssign: (dayId: string, on: boolean) => c('setDayAutoAssign', { dayId, on }),
     },
-    /** Dossier de sauvegarde (#2134) ; le choix passe par le sélecteur natif (backup:chooseDir) */
+    /** Dossiers de sauvegarde (#2134) ; chemin choisi par desktop.pickDirectory (docs/adr/0030) */
     backup: {
       getDir: () => q('getBackupDir', {}),
+      setDir: (path: string) => c('setBackupDir', { path }),
       resetDir: () => c('resetBackupDir', {}),
+      /** Dossier propre d'une épreuve sur ce poste ({ dir } ; null : dossier du poste) */
+      getCompetitionDir: (competitionId: string) => q('getCompetitionBackupDir', { competitionId }),
+      setCompetitionDir: (competitionId: string, path: string) =>
+        c('setCompetitionBackupDir', { competitionId, path }),
+      resetCompetitionDir: (competitionId: string) =>
+        c('resetCompetitionBackupDir', { competitionId }),
     },
     /** Durées de match de référence (#1965) */
     durations: {

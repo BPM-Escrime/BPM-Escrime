@@ -20,7 +20,12 @@ import {
 import { setNameMasking } from './remote/publicDto';
 import { createDayStripService, type DayStripServiceContext } from './remote/dayStripService';
 import type { createMcpController } from './mcp/mcpController';
-import { resolveBackupDir, writeBackupSettings } from './backupSettings';
+import {
+  competitionBackupDir,
+  resolveBackupDir,
+  setCompetitionBackupDir,
+  updateBackupSettings,
+} from './backupSettings';
 import { createPlaceSearch } from './placeSearch';
 import { createLogoLibraryStore } from './logoLibraryStore';
 
@@ -70,10 +75,17 @@ export function createStationPort(opts: StationPortOptions): StationServices {
     },
     backup: {
       info: () => resolveBackupDir(opts.userDataDir(), opts.documentsDir()),
-      reset: () => {
-        writeBackupSettings(opts.userDataDir(), {});
+      set: dir => {
+        updateBackupSettings(opts.userDataDir(), current => ({ ...current, dir }));
         return resolveBackupDir(opts.userDataDir(), opts.documentsDir());
       },
+      reset: () => {
+        // Dossiers propres des épreuves gardés
+        updateBackupSettings(opts.userDataDir(), ({ dir: _dir, ...rest }) => rest);
+        return resolveBackupDir(opts.userDataDir(), opts.documentsDir());
+      },
+      competitionDir: id => competitionBackupDir(opts.userDataDir(), id),
+      setCompetitionDir: (id, dir) => setCompetitionBackupDir(opts.userDataDir(), id, dir),
     },
     places: { search: createPlaceSearch() },
     logos: createLogoLibraryStore(opts.userDataDir),

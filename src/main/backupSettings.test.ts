@@ -4,10 +4,13 @@ import os from 'os';
 import path from 'path';
 import {
   AUTOSAVE_FILE_NAME,
+  competitionBackupDir,
   defaultBackupDir,
+  importLegacyCompetitionBackupDirs,
   readBackupSettings,
   resolveBackupDir,
   sanitizeBackupDir,
+  setCompetitionBackupDir,
   writeBackupSettings,
 } from './backupSettings';
 
@@ -78,5 +81,79 @@ describe('réglage utilisateur', () => {
 
   it('le nom de la sauvegarde automatique est fixe', () => {
     expect(AUTOSAVE_FILE_NAME).toMatch(/\.bpm$/);
+  });
+});
+
+describe('dossier propre d’une épreuve (docs/adr/0030)', () => {
+  it('table épreuve → dossier : fixée, relue, retirée ; dossier du poste gardé', () => {
+    const userData = makeTmp();
+    const global = makeTmp();
+    const own = makeTmp();
+    writeBackupSettings(userData, { dir: global });
+    setCompetitionBackupDir(userData, 'c1', own);
+    expect(competitionBackupDir(userData, 'c1')).toBe(own);
+    expect(competitionBackupDir(userData, 'c2')).toBeNull();
+    expect(readBackupSettings(userData).dir).toBe(global);
+    setCompetitionBackupDir(userData, 'c1', null);
+    expect(readBackupSettings(userData)).toEqual({ dir: global });
+  });
+
+  it('entrée invalide du fichier (relative) ignorée à la lecture', () => {
+    const userData = makeTmp();
+    fs.writeFileSync(
+      path.join(userData, 'backup-settings.json'),
+      JSON.stringify({ competitions: { c1: 'relatif', c2: '/abs' } })
+    );
+    expect(readBackupSettings(userData).competitions).toEqual({ c2: path.normalize('/abs') });
+  });
+});
+
+describe('reprise de settings.backupDir (docs/adr/0030)', () => {
+  it('dossier existant repris, absent ignoré, puis plus jamais refaite', () => {
+    const userData = makeTmp();
+    const existing = makeTmp();
+    const missing = path.join(makeTmp(), 'disparu');
+    const comps = [
+      { id: 'c1', settings: { backupDir: existing } },
+      { id: 'c2', settings: { backupDir: missing } },
+      { id: 'c3', settings: { backupDir: 'relatif' } },
+      { id: 'c4', settings: {} },
+      { id: 'c5' },
+    ];
+    const report = importLegacyCompetitionBackupDirs(userData, comps);
+    expect(report).toEqual({
+      imported: ['c1'],
+      ignored: [
+        { competitionId: 'c2', dir: missing },
+        { competitionId: 'c3', dir: 'relatif' },
+      ],
+    });
+    expect(readBackupSettings(userData)).toEqual({
+      competitions: { c1: existing },
+      legacyImported: true,
+    });
+    // Idempotente : une archive importée ensuite (autre poste) n'est jamais reprise
+    const later = makeTmp();
+    expect(
+      importLegacyCompetitionBackupDirs(userData, [
+        ...comps,
+        { id: 'c6', settings: { backupDir: later } },
+      ])
+    ).toBeNull();
+    expect(competitionBackupDir(userData, 'c6')).toBeNull();
+    expect(competitionBackupDir(userData, 'c1')).toBe(existing);
+  });
+
+  it('un dossier déjà réglé sur le poste n’est pas remplacé ; dossier du poste gardé', () => {
+    const userData = makeTmp();
+    const global = makeTmp();
+    const chosen = makeTmp();
+    writeBackupSettings(userData, { dir: global, competitions: { c1: chosen } });
+    importLegacyCompetitionBackupDirs(userData, [{ id: 'c1', settings: { backupDir: makeTmp() } }]);
+    expect(readBackupSettings(userData)).toEqual({
+      dir: global,
+      competitions: { c1: chosen },
+      legacyImported: true,
+    });
   });
 });

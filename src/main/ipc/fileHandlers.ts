@@ -79,6 +79,21 @@ export function registerFileHandlers({ db, getMainWindow }: FileHandlersContext)
     return null;
   });
 
+  // Choix d'un dossier du poste (docs/adr/0030) : chemin rendu, rien n'est écrit ici ; l'écran
+  // l'envoie à une commande du contrat (setBackupDir, setCompetitionBackupDir, addAgentFolder)
+  ipcMain.handle('dialog:pickDirectory', async (_, raw) => {
+    const title = (raw as { title?: unknown } | undefined)?.title;
+    const options: Electron.OpenDialogOptions = {
+      properties: ['openDirectory', 'createDirectory'],
+      ...(typeof title === 'string' && title ? { title: title.slice(0, 200) } : {}),
+    };
+    const win = getMainWindow();
+    const result = win
+      ? await dialog.showOpenDialog(win, options)
+      : await dialog.showOpenDialog(options);
+    return result.canceled ? null : (result.filePaths[0] ?? null);
+  });
+
   ipcMain.handle('dialog:saveFile', async (_, options) => {
     const result = await dialog.showSaveDialog(getMainWindow()!, options);
     if (!result.canceled && result.filePath) authorizePath(result.filePath, 'write');

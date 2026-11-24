@@ -95,6 +95,38 @@ export function resolveOutputPath(
 }
 
 /**
+ * Dossier du poste choisi à l'écran (docs/adr/0030) : chemin absolu d'un dossier existant, sinon
+ * `dir_not_found` ; `writable` : on doit pouvoir y écrire (essai réel, fiable aussi sous
+ * Windows), sinon `station_refused`. Rend le chemin normalisé.
+ */
+export function assertDirectory(input: string, options: { writable?: boolean } = {}): string {
+  const dir = input.trim();
+  let isDir = false;
+  if (dir && !dir.includes('\0') && path.isAbsolute(dir)) {
+    try {
+      isDir = fs.statSync(dir).isDirectory();
+    } catch {
+      isDir = false;
+    }
+  }
+  if (!isDir) throw new CommandError('dir_not_found', 'Dossier introuvable sur ce poste');
+  const normalized = path.normalize(dir);
+  if (options.writable) {
+    const probe = path.join(normalized, `.bpm-write-test-${process.pid}-${Date.now()}`);
+    try {
+      fs.writeFileSync(probe, '', { flag: 'wx' });
+      fs.rmSync(probe, { force: true });
+    } catch {
+      throw new CommandError(
+        'station_refused',
+        'Dossier en lecture seule : choisissez-en un autre'
+      );
+    }
+  }
+  return normalized;
+}
+
+/**
  * Écriture sans suivre de lien : création exclusive (wx) ; remplacement via un fichier
  * temporaire du même dossier puis renommage (atomique, un lien posé entre-temps est remplacé).
  */

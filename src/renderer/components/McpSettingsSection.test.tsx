@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Paramètres → Système → Agent IA (MCP) (#1880) : jeton illisible, dossiers accessibles
- * à l'agent (défauts, ajout par le main, retrait).
+ * à l'agent (défauts, choix par desktop.pickDirectory puis addAgentFolder, retrait ; ADR-0030).
  */
 import '@testing-library/jest-dom';
 import React from 'react';
@@ -11,6 +11,8 @@ vi.mock('../hooks/useTranslation', () => import('../testUtils/i18nMock'));
 import McpSettingsSection, { mcpClientConfig } from './McpSettingsSection';
 import type { McpStatus } from '../../shared/types/mcp';
 import { stationElectron } from '../testUtils/stationBridge';
+import { PlatformProvider } from '../platform/PlatformContext';
+import { fakeDesktop, fakePlatform, type FakeDesktop } from '../../shared/platform/testing';
 
 const status: McpStatus = {
   enabled: true,
@@ -24,7 +26,7 @@ const defaults = ['/home/dt/Documents'];
 
 let mcp: Record<string, ReturnType<typeof vi.fn>>;
 let settings: Record<string, ReturnType<typeof vi.fn>>;
-let addAgentFolder: ReturnType<typeof vi.fn>;
+let desktop: FakeDesktop;
 
 beforeEach(() => {
   mcp = {
@@ -35,16 +37,21 @@ beforeEach(() => {
   };
   settings = {
     getAgentFolders: vi.fn(async () => ({ folders: [], defaults })),
+    addAgentFolder: vi.fn(async () => ({ folders: ['/media/usb'], defaults })),
     removeAgentFolder: vi.fn(async () => ({ folders: [], defaults })),
   };
-  // Le dialogue natif d'ajout d'un dossier reste en IPC (window.electronAPI.settings)
-  addAgentFolder = vi.fn(async () => ({ folders: ['/media/usb'], defaults }));
-  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron(
-    { mcp, settings },
-    { settings: { addAgentFolder } }
-  );
+  (window as unknown as { electronAPI: unknown }).electronAPI = stationElectron({ mcp, settings });
+  desktop = fakeDesktop({ pickDirectory: vi.fn(async () => '/media/usb') });
 });
 afterEach(cleanup);
+
+/** Rendu dans l'application de bureau (défaut) ou dans un navigateur (`bureau` faux) */
+const renderSection = (bureau = true) =>
+  render(
+    <PlatformProvider platform={fakePlatform({ desktop: bureau ? desktop : false })}>
+      <McpSettingsSection />
+    </PlatformProvider>
+  );
 
 describe('McpSettingsSection', () => {
   it('configuration du client : URL locale et jeton porteur', () => {
@@ -89,15 +96,32 @@ describe('McpSettingsSection', () => {
     expect(await screen.findByText('Aucun appel pour le moment.')).toBeInTheDocument();
   });
 
-  it('dossiers de l’agent : défauts, ajout par le main, retrait', async () => {
-    render(<McpSettingsSection />);
+  it('dossiers de l’agent : défauts, choix du dossier puis commande addAgentFolder, retrait', async () => {
+    renderSection();
     expect(await screen.findByText('/home/dt/Documents')).toBeInTheDocument();
     expect(screen.getByText('par défaut')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Ajouter un dossier'));
     expect(await screen.findByText('/media/usb')).toBeInTheDocument();
+    expect(desktop.pickDirectory).toHaveBeenCalledTimes(1);
+    expect(settings.addAgentFolder).toHaveBeenCalledWith('/media/usb');
     expect(screen.queryByText('/home/dt/Documents')).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('Retirer /media/usb'));
     await waitFor(() => expect(settings.removeAgentFolder).toHaveBeenCalledWith('/media/usb'));
     expect(await screen.findByText('/home/dt/Documents')).toBeInTheDocument();
+  });
+
+  it('choix annulé : rien n’est ajouté', async () => {
+    desktop.pickDirectory.mockResolvedValueOnce(null);
+    renderSection();
+    fireEvent.click(await screen.findByText('Ajouter un dossier'));
+    await waitFor(() => expect(desktop.pickDirectory).toHaveBeenCalled());
+    expect(settings.addAgentFolder).not.toHaveBeenCalled();
+    expect(screen.getByText('/home/dt/Documents')).toBeInTheDocument();
+  });
+
+  it('sans bureau (navigateur, vue DT) : bouton d’ajout absent, liste affichée', async () => {
+    renderSection(false);
+    expect(await screen.findByText('/home/dt/Documents')).toBeInTheDocument();
+    expect(screen.queryByText('Ajouter un dossier')).not.toBeInTheDocument();
   });
 });

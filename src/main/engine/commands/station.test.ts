@@ -23,7 +23,14 @@ import {
   sanitizePrivacySettings,
   writePrivacySettings,
 } from '../../privacySettings';
-import { resolveBackupDir, writeBackupSettings } from '../../backupSettings';
+import {
+  competitionBackupDir,
+  readBackupSettings,
+  resolveBackupDir,
+  setCompetitionBackupDir,
+  updateBackupSettings,
+  writeBackupSettings,
+} from '../../backupSettings';
 import { createLogoLibraryStore, importLegacyLogoFile } from '../../logoLibraryStore';
 import { readProxySettings, sanitizeProxySettings, writeProxySettings } from '../../proxySettings';
 import type { CommandContext, StationPort } from './context';
@@ -52,12 +59,19 @@ const mcpStatus: McpStatus = {
 function stationPort(): StationPort {
   return {
     defaultAgentFolders: () => ['/home/dt/Documents'],
+    // Même branchement que stationPort.ts, fichier réel du profil de test
     backup: {
       info: () => resolveBackupDir(dir, path.join(dir, 'Documents')),
-      reset: () => {
-        writeBackupSettings(dir, {});
+      set: backupDir => {
+        updateBackupSettings(dir, current => ({ ...current, dir: backupDir }));
         return resolveBackupDir(dir, path.join(dir, 'Documents'));
       },
+      reset: () => {
+        updateBackupSettings(dir, ({ dir: _dir, ...rest }) => rest);
+        return resolveBackupDir(dir, path.join(dir, 'Documents'));
+      },
+      competitionDir: id => competitionBackupDir(dir, id),
+      setCompetitionDir: (id, compDir) => setCompetitionBackupDir(dir, id, compDir),
     },
     themes: createThemesStore(() => dir),
     privacy: {
@@ -236,6 +250,82 @@ d('Poste : réglages', () => {
     expect(await op('getBackupDir')).toEqual(reset);
     // Sans port du poste : refus explicite, pas de chemin inventé
     await expect(op('getBackupDir', {}, { db })).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it('setBackupDir (docs/adr/0030) : dossier existant enregistré ; absent ou relatif refusé', async () => {
+    const chosen = fs.mkdirSync(path.join(dir, 'Choisi'), { recursive: true })!;
+    expect(await op('setBackupDir', { path: chosen })).toEqual({ dir: chosen, isDefault: false });
+    expect(readBackupSettings(dir).dir).toBe(chosen);
+    for (const bad of [path.join(dir, 'absent'), 'relatif/dossier', path.join(dir, 'f.txt')]) {
+      if (bad.endsWith('.txt')) fs.writeFileSync(bad, 'x');
+      expect((await refusal(op('setBackupDir', { path: bad }))).code).toBe('dir_not_found');
+    }
+    expect(readBackupSettings(dir).dir).toBe(chosen);
+    expect((await refusal(op('setBackupDir', { path: chosen }, { db }))).code).toBe('unavailable');
+  });
+
+  it('setBackupDir : dossier en lecture seule refusé', async () => {
+    if (process.platform === 'win32' || process.getuid?.() === 0) return;
+    const ro = fs.mkdirSync(path.join(dir, 'LectureSeule'), { recursive: true })!;
+    fs.chmodSync(ro, 0o555);
+    try {
+      expect((await refusal(op('setBackupDir', { path: ro }))).code).toBe('station_refused');
+    } finally {
+      fs.chmodSync(ro, 0o755);
+    }
+  });
+
+  it('dossier propre d’une épreuve : réglage du poste, lu, fixé, retiré (docs/adr/0030)', async () => {
+    const c = competition('Open');
+    const own = fs.mkdirSync(path.join(dir, 'Open'), { recursive: true })!;
+    expect(await op('getCompetitionBackupDir', { competitionId: c.id })).toEqual({ dir: null });
+    expect(await op('setCompetitionBackupDir', { competitionId: c.id, path: own })).toEqual({
+      dir: own,
+    });
+    expect(await op('getCompetitionBackupDir', { competitionId: c.id })).toEqual({ dir: own });
+    expect(readBackupSettings(dir).competitions).toEqual({ [c.id]: own });
+    // Le dossier du poste et son retour au défaut ne touchent pas celui de l'épreuve
+    await op('resetBackupDir');
+    expect(competitionBackupDir(dir, c.id)).toBe(own);
+    // Rien n'est écrit dans l'épreuve
+    expect(JSON.stringify(db.getCompetition(c.id)?.settings)).not.toContain(own);
+    expect(await op('resetCompetitionBackupDir', { competitionId: c.id })).toEqual({ dir: null });
+    expect(await op('getCompetitionBackupDir', { competitionId: c.id })).toEqual({ dir: null });
+  });
+
+  it('dossier propre d’une épreuve : refus dir_not_found, competition_not_found', async () => {
+    const c = competition('Open');
+    expect(
+      (await refusal(op('setCompetitionBackupDir', { competitionId: c.id, path: '/nulle/part' })))
+        .code
+    ).toBe('dir_not_found');
+    expect(
+      (await refusal(op('setCompetitionBackupDir', { competitionId: 'inconnue', path: dir }))).code
+    ).toBe('competition_not_found');
+    expect((await refusal(op('getCompetitionBackupDir', { competitionId: 'inconnue' }))).code).toBe(
+      'competition_not_found'
+    );
+    expect(competitionBackupDir(dir, c.id)).toBeNull();
+  });
+
+  it('le champ settings.backupDir sort de updateCompetitionSettings (schéma)', async () => {
+    const c = competition('Open');
+    const e = await refusal(
+      op('updateCompetitionSettings', { competitionId: c.id, settings: { backupDir: dir } })
+    );
+    expect(e.code).toBe('invalid_input');
+  });
+
+  it('addAgentFolder (docs/adr/0030) : dossier existant ajouté une fois ; absent refusé', async () => {
+    const usb = fs.mkdirSync(path.join(dir, 'usb'), { recursive: true })!;
+    const expected = { folders: [usb], defaults: ['/home/dt/Documents'] };
+    expect(await op('addAgentFolder', { path: usb })).toEqual(expected);
+    expect(await op('addAgentFolder', { path: usb })).toEqual(expected);
+    expect((await refusal(op('addAgentFolder', { path: path.join(dir, 'absent') }))).code).toBe(
+      'dir_not_found'
+    );
+    expect((await refusal(op('addAgentFolder', { path: 'relatif' }))).code).toBe('dir_not_found');
+    expect(db.settings.getSetting('agentFolders')).toEqual([usb]);
   });
 
   it('onStationSettingsChanged : relaie les changements de paramètres, pas les autres', () => {
@@ -579,8 +669,8 @@ describe('contrat du poste', () => {
     n => contract[n].permission === 'station:admin' && !(n in fileOperations)
   );
 
-  it('55 opérations, chacune avec son gestionnaire', () => {
-    expect(ops).toHaveLength(55);
+  it('60 opérations, chacune avec son gestionnaire', () => {
+    expect(ops).toHaveLength(60);
     for (const name of ops) expect(typeof handlers[name], name).toBe('function');
   });
 });

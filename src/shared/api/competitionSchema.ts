@@ -102,7 +102,6 @@ export const CompetitionSettingsSchema = z.strictObject({
   refereeFeatureEnabled: z.boolean().optional(),
   blackCardEnabled: z.boolean().optional(),
   trainerCommentsEnabled: z.boolean().optional(),
-  backupDir: Text.optional(),
   customFormula: CustomFormulaSchema.optional(),
   specialMode: z.enum(['rapieres']).optional(),
   playAllPositions: z.boolean().optional(),

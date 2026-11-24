@@ -3,18 +3,21 @@
  * Licensed under GPL-3.0
  *
  * Dossier des sauvegardes automatiques et de « Enregistrer » (défaut : Documents/BPM - Escrime).
+ * Choix : `usePlatform().desktop.pickDirectory`, puis commande setBackupDir (docs/adr/0030).
  */
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import type { BackupDirDTO } from '../../shared/types/preload';
 import { useStationApi } from '../api/stationApi';
+import { usePlatform } from '../platform/PlatformContext';
 import { HINT, BOLD, SMALL_BTN } from './settingsModal.styles';
 import { Button } from './common/Button';
 
 const BackupDirSettingsSection: React.FC = () => {
   const { t } = useTranslation();
   const station = useStationApi();
+  const { desktop } = usePlatform();
   const [info, setInfo] = useState<BackupDirDTO | null>(null);
 
   useEffect(() => {
@@ -27,10 +30,10 @@ const BackupDirSettingsSection: React.FC = () => {
 
   if (!info) return null;
 
-  // Sélecteur natif de dossier : reste un canal du préload (chemin du poste, comme
-  // settings.addAgentFolder)
-  const choose = () => {
-    void window.electronAPI.backup.chooseDir().then(setInfo);
+  // Le choix n'écrit rien : le chemin passe ensuite par la commande du contrat
+  const choose = async () => {
+    const dir = await desktop?.pickDirectory({ title: t('settings.backup_dir_choose') });
+    if (dir) setInfo(await station.backup.setDir(dir));
   };
   const reset = () => {
     void station.backup.resetDir().then(setInfo);
@@ -45,9 +48,11 @@ const BackupDirSettingsSection: React.FC = () => {
         {info.isDefault && ` (${t('settings.backup_dir_default')})`}
       </p>
       <div className="u-row">
-        <Button style={SMALL_BTN} onClick={choose}>
-          {t('settings.backup_dir_choose')}
-        </Button>
+        {desktop && (
+          <Button style={SMALL_BTN} onClick={() => void choose().catch(() => undefined)}>
+            {t('settings.backup_dir_choose')}
+          </Button>
+        )}
         {!info.isDefault && (
           <Button style={SMALL_BTN} onClick={reset}>
             {t('settings.backup_dir_reset')}
