@@ -3150,7 +3150,9 @@
     "resolve": "DT war an hent — Diskoulmet",
     "abandon": "Dilezel",
     "abandon_note": "(da gadarnaat gant an DT)",
-    "confirm_abandon": "Enrollañ an dilezel"
+    "confirm_abandon": "Enrollañ an dilezel",
+    "black_card_report": "Danevell kartenn zu (PDF)",
+    "black_card_report_title": "Danevell skarzhañ leuniet en a-raok, da gas d'ar FFE a-benn 48 e (stagadenn 14)"
   },
   "qrShare": {
     "generating": "O c'henel ar c'hod QR…",

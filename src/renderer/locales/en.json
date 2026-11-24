@@ -3150,7 +3150,9 @@
     "resolve": "DT on the way — Resolved",
     "abandon": "Withdrawal",
     "abandon_note": "(to be confirmed by the DT)",
-    "confirm_abandon": "Record the withdrawal"
+    "confirm_abandon": "Record the withdrawal",
+    "black_card_report": "Black card report (PDF)",
+    "black_card_report_title": "Pre-filled exclusion report to send to the FFE within 48 h (annex 14)"
   },
   "qrShare": {
     "generating": "Generating QR code…",

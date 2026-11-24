@@ -3150,7 +3150,9 @@
     "resolve": "DT en camino — Resuelto",
     "abandon": "Abandono",
     "abandon_note": "(por confirmar por el DT)",
-    "confirm_abandon": "Registrar el abandono"
+    "confirm_abandon": "Registrar el abandono",
+    "black_card_report": "Informe de tarjeta negra (PDF)",
+    "black_card_report_title": "Informe de exclusión prerrellenado para enviar a la FFE en 48 h (anexo 14)"
   },
   "qrShare": {
     "generating": "Generando el código QR…",
