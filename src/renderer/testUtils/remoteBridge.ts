@@ -46,7 +46,6 @@ const MAPPING: Record<string, [method: string, args: (i: Input) => unknown[], ou
   setRemoteStripCount: ['updateStripCount', i => [i.competitionId, i.count], 'session'],
   setRemoteShowPhotos: ['updateShowPhotos', i => [i.competitionId, i.value]],
   setRemoteCardAnnounce: ['updateCardAnnounce', i => [i.competitionId, i.value]],
-  setStripPlan: ['setStripPlan', i => [i.competitionId, i.plan]],
   setActiveWave: ['setActiveWave', i => [i.competitionId, i.matchIds, i.poolsClosed]],
   moveMatchToArena: [
     'updateMatchArena',

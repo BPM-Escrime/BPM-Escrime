@@ -34,6 +34,7 @@ import { splitOffGroup } from '../commands/splitOff';
 import { teamHandlers, teamsState } from '../commands/teams';
 import { teamRelayHandlers } from '../commands/teamRelays';
 import { teamCardHandlers } from '../commands/teamCards';
+import { stripHandlers } from '../commands/strips';
 import { rebuildCompetitionState } from '../commands/rebuild';
 import {
   fencerDTO,
@@ -300,6 +301,8 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
   ...teamRelayHandlers,
   // Cartons des épreuves par équipes (docs/adr/0028)
   ...teamCardHandlers,
+  // Plan des pistes de l'épreuve (docs/adr/0015)
+  ...stripHandlers,
   onStripControlChanged,
 };
 

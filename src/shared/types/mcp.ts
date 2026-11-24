@@ -8,7 +8,8 @@
  * liste ou réglages des épreuves modifiés, état de session réécrit (poules, scores, tableau),
  * paramètres du poste modifiés (langue, thème : l'écran les applique).
  */
-export type McpScreenEvent = 'competitions:changed' | 'session:changed' | 'settings:changed';
+export type McpScreenEvent =
+  'competitions:changed' | 'session:changed' | 'settings:changed' | 'strips:changed';
 
 export interface McpStatus {
   /** Activé dans les Paramètres (désactivé par défaut) */

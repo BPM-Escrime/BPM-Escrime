@@ -1,18 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { normalizeStripPlan, nextFreeStrip, visibleArenas, DEFAULT_STRIP_PLAN } from './stripPlan';
-
-describe('normalizeStripPlan', () => {
-  it('valeurs par défaut pour une entrée invalide', () => {
-    expect(normalizeStripPlan(null)).toEqual(DEFAULT_STRIP_PLAN);
-    expect(normalizeStripPlan({ start: 0, unavailable: 'x' })).toEqual(DEFAULT_STRIP_PLAN);
-  });
-  it('trie, déduplique et filtre les pistes indisponibles', () => {
-    expect(normalizeStripPlan({ start: 5, unavailable: [7, 6, 7, -1, 1.5, 'a'] })).toEqual({
-      start: 5,
-      unavailable: [6, 7],
-    });
-  });
-});
+import { describe, it, expect, vi } from 'vitest';
+import { DEFAULT_STRIP_PLAN, pushStripPlan, visibleArenas, watchStripPlans } from './stripPlan';
+import { publishCompetitionEvent } from '../engine/api/events';
 
 describe('visibleArenas', () => {
   const arenas = [1, 2, 3, 4, 5, 6].map(number => ({ number }));
@@ -24,14 +12,35 @@ describe('visibleArenas', () => {
   });
 });
 
-describe('nextFreeStrip (#1878)', () => {
-  it('première piste libre dans l’intervalle, hors pistes prises ou indisponibles', () => {
-    expect(nextFreeStrip(DEFAULT_STRIP_PLAN, new Set([1]), 4)).toBe(2);
-    expect(nextFreeStrip({ start: 3, unavailable: [] }, new Set(), 4)).toBe(3);
-    expect(nextFreeStrip({ start: 3, unavailable: [3] }, new Set(), 4)).toBe(4);
+describe('envoi du plan au serveur distant (docs/adr/0015)', () => {
+  const db = {
+    stripPlans: {
+      getStripPlan: (id: string) => ({
+        start: id === 'c1' ? 3 : 1,
+        unavailable: [4],
+        updatedAt: 'x',
+      }),
+    },
+  } as unknown as Parameters<typeof pushStripPlan>[0];
+
+  it('pushStripPlan : plan relu en base, sans date', () => {
+    const setStripPlan = vi.fn();
+    pushStripPlan(db, 'c1', { setStripPlan });
+    expect(setStripPlan).toHaveBeenCalledWith({ start: 3, unavailable: [4] });
   });
-  it('aucune piste libre dans l’intervalle : null (la poule attend)', () => {
-    expect(nextFreeStrip({ start: 3, unavailable: [] }, new Set([3, 4]), 4)).toBeNull();
-    expect(nextFreeStrip({ start: 5, unavailable: [] }, new Set(), 4)).toBeNull();
+
+  it('watchStripPlans : strips:changed → serveur de l’épreuve ; autres signaux ignorés', async () => {
+    const setStripPlan = vi.fn();
+    const off = watchStripPlans(db, id => (id === 'c1' ? { setStripPlan } : undefined));
+    publishCompetitionEvent({ type: 'session:changed', competitionId: 'c1' });
+    publishCompetitionEvent({ type: 'strips:changed', competitionId: 'c2' });
+    publishCompetitionEvent({ type: 'strips:changed', competitionId: 'c1' });
+    await Promise.resolve();
+    expect(setStripPlan).toHaveBeenCalledTimes(1);
+    expect(setStripPlan).toHaveBeenCalledWith({ start: 3, unavailable: [4] });
+    off();
+    publishCompetitionEvent({ type: 'strips:changed', competitionId: 'c1' });
+    await Promise.resolve();
+    expect(setStripPlan).toHaveBeenCalledTimes(1);
   });
 });

@@ -28,8 +28,8 @@ beforeEach(() => localStorage.clear());
 describe('posteUiState', () => {
   it('écrit et relit par épreuve, fusionne les champs', () => {
     writePosteUiState('c1', { tab: 'pools' });
-    writePosteUiState('c1', { remoteStripStart: 3 });
-    expect(readPosteUiState('c1')).toEqual({ tab: 'pools', remoteStripStart: 3 });
+    writePosteUiState('c1', { remoteArenaCount: 3 });
+    expect(readPosteUiState('c1')).toEqual({ tab: 'pools', remoteArenaCount: 3 });
     expect(readPosteUiState('c2')).toEqual({});
   });
 

@@ -187,11 +187,11 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (66)
+## Référence des outils (69)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
-### En lecture (17)
+### En lecture (18)
 
 ### `list_competitions` — Lister les épreuves
 
@@ -326,7 +326,15 @@ Aucun argument.
 | `since` | integer |  | Dernière révision connue (0 : tout) |
 | `limit` | integer |  | Nombre maximum (1000) |
 
-### En écriture, sur autorisation (49)
+### `get_strip_plan` — Plan des pistes
+
+*lecture.* Plan des pistes de l’épreuve : première piste et pistes indisponibles (plan par défaut : piste 1, aucune indisponible ; updatedAt null).
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+
+### En écriture, sur autorisation (51)
 
 ### `create_competition` — Créer une épreuve
 
@@ -800,6 +808,30 @@ Aucun argument.
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve d’origine : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `set_strip_start` — Piste de départ de l’épreuve
+
+*écriture, idempotent.* Plan des pistes : première piste de l’épreuve (les pistes inférieures, d’autres épreuves de la journée, sont masquées aux écrans ; une poule sans piste attend dans l’intervalle). Journal : StripStartChanged.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `start` | integer | oui | Première piste, de 1 à 999 |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal (revision_conflict sinon) |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `set_strip_availability` — Piste disponible ou non
+
+*écriture, idempotent.* Plan des pistes : marque une piste indisponible (panne) ou la remet en service. Exactement un de « competitionId » (une épreuve) ou « eventDayId » (toutes les épreuves de la journée, une transaction : panne de la salle). La répartition des poules et du tableau, les tablettes et l’affectation des pistes de la journée l’évitent. Refus : competition_not_found, event_day_not_found, invalid_input. Journal : StripAvailabilityChanged (une épreuve déjà dans l’état demandé n’en reçoit pas).
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string |  | Identifiant de la compétition (list_competitions) |
+| `eventDayId` | string |  | Identifiant de la journée (listEventDays) |
+| `strip` | integer | oui | Numéro de piste, de 1 à 999 |
+| `available` | boolean | oui | false : piste indisponible ; true : remise en service |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 
 ### `generate_team_pools` — Tirer les poules d’équipes
 

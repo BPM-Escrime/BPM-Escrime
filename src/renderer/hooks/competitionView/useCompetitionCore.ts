@@ -20,6 +20,7 @@ import { Phase } from '../useCompetitionSession';
 import { useFencerManagement } from '../useFencerManagement';
 import { usePoolManagement } from '../usePoolManagement';
 import { useExport } from '../useExport';
+import { useStripPlan } from '../useStripAvailability';
 import { useCompetitionImport } from '../useCompetitionImport';
 import { usePoolsWindowSize } from '../usePoolsWindowSize';
 import { seedFencersFromRanking } from '../../../shared/utils/poolRounds';
@@ -98,9 +99,9 @@ export function useCompetitionCore(ctx: Ctx) {
     setRemoteServerUrl,
     remoteArenaCount,
     setRemoteArenaCount,
-    remoteStripStart,
-    setRemoteStripStart,
   } = useStateGroup(CV_REMOTE_INIT);
+  // Plan des pistes : donnée du moteur (docs/adr/0015), relue par le contrat
+  const { start: remoteStripStart, setStart: setRemoteStripStart } = useStripPlan(competition.id);
   useEffect(() => {
     onRemoteServerChange?.(remoteServerUrl, remoteArenaCount);
   }, [remoteServerUrl, remoteArenaCount]);

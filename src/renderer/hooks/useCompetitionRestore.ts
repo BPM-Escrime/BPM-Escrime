@@ -45,8 +45,8 @@ interface UseCompetitionRestoreParams {
   setRankingValidated: Setter<boolean>;
   remoteArenaCount: number;
   setRemoteArenaCount: Setter<number>;
+  /** Piste de départ du plan des pistes, lue par le contrat (docs/adr/0015) */
   remoteStripStart: number;
-  setRemoteStripStart: Setter<number>;
   setRapieresState: ReturnType<typeof useRapieresSessionState>['setRapieresState'];
   minFencersPerPool: number;
   maxFencersPerPool: number;
@@ -75,7 +75,6 @@ export function useCompetitionRestore({
   remoteArenaCount,
   setRemoteArenaCount,
   remoteStripStart,
-  setRemoteStripStart,
   setRapieresState,
   minFencersPerPool,
   maxFencersPerPool,
@@ -149,7 +148,6 @@ export function useCompetitionRestore({
       if (!restoredState.reloaded) {
         const arenas = poste.remoteArenaCount ?? restoredState.remoteArenaCount;
         if (arenas != null) setRemoteArenaCount(arenas);
-        setRemoteStripStart(poste.remoteStripStart ?? restoredState.remoteStripStart ?? 1);
       }
       if (restoredState.rapieres) setRapieresState(restoredState.rapieres);
     }
@@ -163,7 +161,6 @@ export function useCompetitionRestore({
       minFencersPerPool,
       maxFencersPerPool,
       remoteArenaCount,
-      remoteStripStart,
     });
   }, [
     isLoaded,
@@ -172,7 +169,6 @@ export function useCompetitionRestore({
     minFencersPerPool,
     maxFencersPerPool,
     remoteArenaCount,
-    remoteStripStart,
   ]);
 
   // Préparation non lancée : tirage du poste (posteUiState), sinon celui qu'une version

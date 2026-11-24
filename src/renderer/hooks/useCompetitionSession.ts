@@ -82,7 +82,6 @@ export interface SessionState {
   /** Poules lancées au moins une fois (#1499) ; absent des anciennes sessions */
   poolsLaunched?: boolean;
   remoteArenaCount?: number;
-  remoteStripStart?: number;
   /** Tournoi des rapières : composition des équipes et vagues (#1118) */
   rapieres?: RapieresSession | RapieresLegacyState;
   poolPrepParams: {
@@ -183,7 +182,6 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
             skipPoolPhase: state.skipPoolPhase ?? false,
             poolsLaunched: state.poolsLaunched,
             remoteArenaCount: state.remoteArenaCount,
-            remoteStripStart: state.remoteStripStart,
             rapieres: state.rapieres,
             ...(state.groupTableaux ? { groupTableaux: state.groupTableaux } : {}),
             poolPrepParams: state.poolPrepParams || {

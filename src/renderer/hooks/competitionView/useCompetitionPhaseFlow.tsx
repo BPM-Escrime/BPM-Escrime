@@ -263,12 +263,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
       />
     ) : null;
 
-  const handlePoolStripChange = usePoolStripChange(
-    competition.id,
-    pools,
-    setPools,
-    ctx.assignMatches
-  );
+  const handlePoolStripChange = usePoolStripChange(pools, setPools, ctx.assignMatches);
 
   const stripQrs = buildStripQrs(pools, poolsRemoteInfo);
   // Tournoi des rapières : colonne « Cat. » des poules (#1864)

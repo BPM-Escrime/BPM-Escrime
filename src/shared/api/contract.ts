@@ -32,6 +32,7 @@ import { fileOperations } from './contractFiles';
 import { simulationOperations } from './contractSimulation';
 import { splitOperations } from './contractSplit';
 import { teamOperations, TeamsStateSchema } from './contractTeams';
+import { stripOperations } from './contractStrips';
 import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { ArenaPlanSchema } from './arenaPlanSchema';
@@ -207,7 +208,6 @@ const CompetitionStateSchema = z.object({
   skipPoolPhase: z.boolean(),
   poolsLaunched: z.boolean().optional(),
   remoteArenaCount: z.number().int().optional(),
-  remoteStripStart: z.number().int().optional(),
   rapieres: z.custom<RapieresSession | RapieresLegacyState>().optional(),
   /** Tableaux séparés après les poules : un tableau par groupe (docs/adr/0024) */
   groupTableaux: z.record(z.string(), z.custom<GroupTableau>()).optional(),
@@ -1478,8 +1478,8 @@ export const contract = {
   ...fileOperations,
   // Événements simulés du remplissage automatique : données d'essai, sans journal
   ...simulationOperations,
-  // Tableaux séparés : extraction d'un groupe en épreuve séparée (docs/adr/0024)
-  ...splitOperations,
+  ...splitOperations, // Tableaux séparés : groupe extrait en épreuve séparée (docs/adr/0024)
+  ...stripOperations, // Plan des pistes : départ, pistes indisponibles (docs/adr/0015)
   ...teamOperations, // Épreuves par équipes : inscription, poules, relais, tableau (docs/adr/0024)
 } satisfies ApiContract;
 

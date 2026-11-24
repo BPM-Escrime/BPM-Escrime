@@ -15,7 +15,6 @@ import { ipcErrorText } from '../../services/ipcError';
 import { useRemoteCommand } from '../useRemoteCommand';
 import { RSM_STYLES } from '../../components/remote/rsmStyles';
 import { StripRangeControls } from '../../components/remote/StripRangeControls';
-import { useStripPlanSync } from '../useStripAvailability';
 import { MAX_STRIP, stripNumbers } from '../../../shared/utils/stripRange';
 import { Button } from '../../components/common/Button';
 import { RemoteScoreManagerProps } from '../../components/remote/remoteScoreManagerShared';
@@ -68,7 +67,6 @@ export function useRemoteServerActions(ctx: Ctx) {
     effectiveCommitted,
     setGlobalThemeId,
     serverUrl,
-    unavailableStrips,
     isLoading,
     setPendingStart,
     setPendingCount,
@@ -79,8 +77,8 @@ export function useRemoteServerActions(ctx: Ctx) {
 
   const commitStart = (start: number) => {
     setCommittedStart(start);
+    // Plan des pistes : écrit par le moteur (setStripStart, docs/adr/0015)
     onStripStartChange?.(start);
-    localStorage.setItem(`bellepoule-remote-strip-start-${competition.id}`, String(start));
   };
 
   const handleSaveStripCount = async () => {
@@ -399,7 +397,6 @@ export function useRemoteServerActions(ctx: Ctx) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arenaCount]);
   const stripStart = effectiveCommittedStart;
-  useStripPlanSync(competition.id, !!session, stripStart, unavailableStrips);
   const arenaUrls = stripNumbers(stripStart, arenaCount).map(n => ({
     number: n,
     refereeUrl: `${serverUrl}/arene${n}/arbitre`,

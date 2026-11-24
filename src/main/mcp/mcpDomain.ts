@@ -25,9 +25,11 @@ export function emitChangeVia(notify: McpWriteDeps['notify']): CommandContext['e
         ? 'settings:changed'
         : scope === 'session'
           ? 'session:changed'
-          : scope === 'fencers'
-            ? 'fencers:changed'
-            : 'competitions:changed';
+          : scope === 'strips'
+            ? 'strips:changed'
+            : scope === 'fencers'
+              ? 'fencers:changed'
+              : 'competitions:changed';
     if (competitionIds.length === 0) notify(type);
     for (const id of competitionIds) notify(type, id);
   };

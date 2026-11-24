@@ -37,7 +37,8 @@ export type DivergenceKind =
   | 'team_match_unexpected'
   | 'team_relay'
   | 'team_match_result'
-  | 'team_cards';
+  | 'team_cards'
+  | 'strip_plan';
 
 export interface Divergence {
   kind: DivergenceKind;
@@ -109,6 +110,8 @@ export interface CompetitionStateView {
   splitOffCompetitionIds?: Partial<Record<string, string>>;
   /** Épreuve par équipes : tables des rencontres ; undefined : non comparées */
   teams?: TeamStateView;
+  /** Plan des pistes en base (docs/adr/0015) ; undefined : non comparé */
+  strips?: { start: number; unavailable: number[] };
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -284,6 +287,7 @@ export function compareWithState(
   }
 
   if (state.teams) compareTeams(facts.teams, state.teams, facts.complete, out);
+  if (state.strips && facts.strips) compareStrips(facts.strips, state.strips, out);
 
   if (facts.rapieres) {
     const actual = {
@@ -485,4 +489,24 @@ export function stateView(
     groupTableaux: sessionGroupTableaux(session),
     rapieres: session.rapieres as CompetitionStateView['rapieres'],
   };
+}
+
+/**
+ * Plan des pistes (docs/adr/0015) : piste de départ et pistes nommées par le journal ; une
+ * piste jamais journalisée (reprise de la migration 50) n'est pas comparée
+ */
+function compareStrips(
+  fact: NonNullable<CompetitionFacts['strips']>,
+  state: { start: number; unavailable: number[] },
+  out: Divergence[]
+): void {
+  if (fact.start !== null && fact.start !== state.start) {
+    out.push({ kind: 'strip_plan', id: 'start', expected: fact.start, actual: state.start });
+  }
+  for (const [strip, available] of Object.entries(fact.available)) {
+    const actual = !state.unavailable.includes(Number(strip));
+    if (actual !== available) {
+      out.push({ kind: 'strip_plan', id: strip, expected: available, actual });
+    }
+  }
 }

@@ -158,6 +158,11 @@ export interface CompetitionFacts {
   teams: TeamsFact | null;
   /** Tournoi des rapières : vague lancée, vagues arrêtées (undefined : jamais lancées) */
   rapieres?: { wave: number; ended: boolean };
+  /**
+   * Plan des pistes (docs/adr/0015) : dernière piste de départ et état de chaque piste nommés
+   * par le journal ; null : aucun événement de plan (plan repris par la migration 50)
+   */
+  strips: { start: number | null; available: Record<number, boolean> } | null;
   /** Révision du dernier événement rejoué */
   revision: number;
 }
@@ -172,9 +177,12 @@ const FACT_EVENTS: ReadonlySet<string> = new Set([
   JOURNAL_EVENT.teamPoolsGenerated,
   JOURNAL_EVENT.teamTableauGenerated,
 ]);
-const CHECK_IN_EVENTS: ReadonlySet<string> = new Set([
+/** Événements qui précèdent le premier fait sans rendre le journal incomplet : appel, pistes */
+const PRELUDE_EVENTS: ReadonlySet<string> = new Set([
   JOURNAL_EVENT.fencerCheckedIn,
   JOURNAL_EVENT.fencerCheckedOut,
+  JOURNAL_EVENT.stripStartChanged,
+  JOURNAL_EVENT.stripAvailabilityChanged,
 ]);
 
 /** Rejoue les événements dans l'ordre du journal */
@@ -190,9 +198,10 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
     splitOffGroups: {},
     importedRanking: null,
     teams: null,
+    strips: null,
     revision: 0,
   };
-  const firstFact = events.find(e => !CHECK_IN_EVENTS.has(e.type));
+  const firstFact = events.find(e => !PRELUDE_EVENTS.has(e.type));
   facts.complete = !!firstFact && FACT_EVENTS.has(firstFact.type);
 
   // Résultat d'avant un retrait, par tireur : rendu à la réintégration
@@ -428,6 +437,16 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
       case JOURNAL_EVENT.rapieresWavesEnded:
         facts.rapieres = { wave: 0, ...facts.rapieres, ended: event.payload.ended };
         break;
+      // Plan des pistes (docs/adr/0015)
+      case JOURNAL_EVENT.stripStartChanged:
+        facts.strips = { available: {}, ...facts.strips, start: event.payload.start };
+        break;
+      case JOURNAL_EVENT.stripAvailabilityChanged: {
+        const strips = facts.strips ?? { start: null, available: {} };
+        strips.available[event.payload.strip] = event.payload.available;
+        facts.strips = strips;
+        break;
+      }
       // Signaux et dérivés : ignorés au rejeu (docs/adr/0017)
       case JOURNAL_EVENT.poolCompleted:
       case JOURNAL_EVENT.tableauCompleted:

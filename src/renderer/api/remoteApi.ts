@@ -187,8 +187,6 @@ export function createRemoteApi(client: BpmClient) {
       settle(() => c('setRemoteShowPhotos', { competitionId, value })),
     updateCardAnnounce: (competitionId: string, value: boolean) =>
       settle(() => c('setRemoteCardAnnounce', { competitionId, value })),
-    setStripPlan: (competitionId: string, plan: { start: number; unavailable: number[] }) =>
-      settle(() => c('setStripPlan', { competitionId, plan })),
     /**
      * Tournoi des rapières : matchs de la vague active proposés aux tablettes (`null` : tous) ;
      * `poolsClosed` : vagues terminées, plus aucun match de poule proposé (#1118)

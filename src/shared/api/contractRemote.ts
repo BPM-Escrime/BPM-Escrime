@@ -88,11 +88,6 @@ const SignatureRequestSchema = z.object({
   scoreB: z.number(),
 });
 
-const StripPlanSchema = z.strictObject({
-  start: z.number().int().min(1).max(999),
-  unavailable: z.array(z.number().int().min(1).max(999)).max(999),
-});
-
 /** Commande envoyée à un écran (rafraîchir, naviguer, message, identification, kiosque) */
 const ClientCommandSchema = z.strictObject({
   type: z.enum(['refresh', 'navigate', 'message', 'ping', 'identify', 'kiosk:config']),
@@ -250,13 +245,6 @@ export const remoteOperations = {
   setRemoteCardAnnounce: command({
     description: 'Active ou coupe l’annonce des cartons avec leur motif sur les écrans.',
     input: z.object({ competitionId: CompetitionId, value: z.boolean() }),
-    output: Nothing,
-    permission: 'remote:admin',
-  }),
-  setStripPlan: command({
-    description:
-      'Plan des pistes de l’épreuve : première piste et pistes masquées (réservées à d’autres épreuves). Une poule sans piste attend dans cet intervalle.',
-    input: z.object({ competitionId: CompetitionId, plan: StripPlanSchema }),
     output: Nothing,
     permission: 'remote:admin',
   }),

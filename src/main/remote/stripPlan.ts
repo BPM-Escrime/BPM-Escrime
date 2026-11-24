@@ -1,49 +1,56 @@
 /**
- * BPM - Escrime - Plan des pistes partagé avec le serveur distant (#1501)
- * Intervalle de pistes (piste de départ) et pistes indisponibles, transmis par le renderer.
- * Les arènes hors intervalle sont masquées des écrans (kiosque, tableau de bord).
+ * BPM - Escrime - Plan des pistes vu par le serveur distant (#1501, docs/adr/0015)
+ * Le plan est une donnée du moteur (competition_strip_plans) : envoyé au serveur de l'épreuve à
+ * son démarrage et à chaque signal `strips:changed` (setStripStart, setStripAvailability), d'où
+ * qu'il vienne (écran, MCP). Les arènes hors intervalle sont masquées des écrans (kiosque,
+ * tableau de bord). Règles : shared/domain/planning.
  * Licensed under GPL-3.0
  */
 import type { Arena } from '../../shared/types/remote';
+import type { DatabaseManager } from '../../database';
+import { onCompetitionEvent } from '../engine/api/events';
+import type { StripPlan } from '../../shared/domain/planning/stripPlan';
 
-export interface StripPlan {
-  /** Première piste exposée (les arènes inférieures sont masquées). */
-  start: number;
-  /** Pistes marquées indisponibles (plan des pistes). */
-  unavailable: number[];
-}
-
-export const DEFAULT_STRIP_PLAN: StripPlan = { start: 1, unavailable: [] };
-
-/** Valide une entrée IPC : entiers positifs, sans doublon, triés. */
-export function normalizeStripPlan(input: unknown): StripPlan {
-  const raw = (input ?? {}) as Partial<StripPlan>;
-  const start =
-    Number.isInteger(raw.start) && (raw.start as number) > 0 ? (raw.start as number) : 1;
-  const list = Array.isArray(raw.unavailable) ? raw.unavailable : [];
-  const unavailable = [...new Set(list.filter(n => Number.isInteger(n) && n > 0))].sort(
-    (a, b) => a - b
-  );
-  return { start, unavailable };
-}
-
-/**
- * Première piste libre de l'épreuve pour une poule sans piste : dans son intervalle (≥ piste de
- * départ, ≤ `max`), hors pistes indisponibles et déjà prises. null : la poule attend une piste
- * (jamais placée sur une piste masquée, qui peut être celle d'une autre épreuve de la journée).
- */
-export function nextFreeStrip(
-  plan: StripPlan,
-  used: ReadonlySet<number>,
-  max: number
-): number | null {
-  for (let n = plan.start; n <= max; n++) {
-    if (!used.has(n) && !plan.unavailable.includes(n)) return n;
-  }
-  return null;
-}
+export {
+  DEFAULT_STRIP_PLAN,
+  normalizeStripPlan,
+  type StripPlan,
+} from '../../shared/domain/planning/stripPlan';
 
 /** Arènes visibles : celles dont le numéro est dans l'intervalle (≥ piste de départ). */
 export function visibleArenas<T extends Pick<Arena, 'number'>>(arenas: T[], plan: StripPlan): T[] {
   return arenas.filter(a => a.number >= plan.start);
+}
+
+/** Ce que l'envoi du plan appelle sur un serveur distant */
+export interface StripPlanTarget {
+  setStripPlan(plan: StripPlan): void;
+}
+
+/** Plan de l'épreuve relu en base, envoyé à son serveur distant */
+export function pushStripPlan(
+  db: Pick<DatabaseManager, 'stripPlans'>,
+  competitionId: string,
+  server: StripPlanTarget
+): void {
+  const { start, unavailable } = db.stripPlans.getStripPlan(competitionId);
+  server.setStripPlan({ start, unavailable });
+}
+
+/**
+ * Suit les signaux `strips:changed` du bus : le plan relu en base part au serveur de l'épreuve
+ * s'il tourne. Relu après la transaction de la commande (microtâche). Rend le désabonnement.
+ */
+export function watchStripPlans(
+  db: Pick<DatabaseManager, 'stripPlans'>,
+  serverOf: (competitionId: string) => StripPlanTarget | undefined
+): () => void {
+  return onCompetitionEvent(event => {
+    if (event.type !== 'strips:changed' || !event.competitionId) return;
+    const competitionId = event.competitionId;
+    queueMicrotask(() => {
+      const server = serverOf(competitionId);
+      if (server) pushStripPlan(db, competitionId, server);
+    });
+  });
 }

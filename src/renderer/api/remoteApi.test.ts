@@ -77,7 +77,6 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
   ['updateStripCount', () => api.updateStripCount('c1', 6)],
   ['updateShowPhotos', () => api.updateShowPhotos('c1', true)],
   ['updateCardAnnounce', () => api.updateCardAnnounce('c1', false)],
-  ['setStripPlan', () => api.setStripPlan('c1', { start: 2, unavailable: [5] })],
   ['setActiveWave', () => api.setActiveWave('c1', ['m1', 'm2'], true)],
   ['setActiveWave (toutes)', () => api.setActiveWave('c1', null)],
   ['updateMatchArena', () => api.updateMatchArena('c1', 'm1', null, 3, fencer, null)],
