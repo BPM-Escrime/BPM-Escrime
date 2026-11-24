@@ -187,7 +187,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (65)
+## Référence des outils (66)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -326,7 +326,7 @@ Aucun argument.
 | `since` | integer |  | Dernière révision connue (0 : tout) |
 | `limit` | integer |  | Nombre maximum (1000) |
 
-### En écriture, sur autorisation (48)
+### En écriture, sur autorisation (49)
 
 ### `create_competition` — Créer une épreuve
 
@@ -897,9 +897,9 @@ Aucun argument.
 | `reason` | `early_start`, `late_stop`, `body_contact`, `counter_attack`, `target_substitution`, `voluntary_drop`, `time_wasting`, `non_compliant_gear`, `estoc`, `unarmed_hand`, `voluntary_exit`, `heavy_hit`, `brutality`, `dangerous`, `refusal`, `unsportsmanlike`, `cheating`, `fie_leaving_piste`, `fie_body_contact`, `fie_turning_back`, `fie_covering_target`, `fie_touching_equipment`, `fie_lateral_exit`, `fie_unjustified_stop`, `fie_non_compliant_equipment`, `fie_straightening_blade`, `fie_point_on_piste`, `fie_sabre_forward_cross`, `fie_disobedience`, `fie_non_compliant_hair`, `fie_jostling`, `fie_abnormal_movement`, `fie_unjustified_appeal`, `fie_unarmed_arm`, `fie_medical_pretext`, `fie_missing_control_mark`, `fie_dropping_weapon`, `fie_hit_off_target`, `fie_violent_act`, `fie_disorder`, `fie_unfair_fight`, `fie_advertising`, `fie_unsporting`, `fie_electronic_device`, `fie_fraud`, `fie_tampered_equipment`, `fie_refusal_to_fence`, `fie_sporting_spirit`, `fie_refusal_to_salute`, `fie_collusion`, `fie_violence` |  | Motif (écran, tablette, MCP) |
 | `type` | `WHITE`, `YELLOW`, `RED`, `BLACK` |  | Type imposé (appareil de piste) |
 
-### `cancel_team_card` — Annuler un carton E
+### `give_passivity_card` — Donner un carton P (non-combativité)
 
-*⚠️ écriture, destructif.* Directoire technique (écran, MCP) : annule un carton E. Refus : permission_denied (tablette, appareil), match_not_found, card_not_found. Journal : TeamCardCancelled.
+*écriture.* Relais FIE (épée, fleuret, sabre) : carton P (non-combativité, t.124) donné aux deux équipes, escalade sur la rencontre : jaune P, rouge P, noir P. Le rouge P n’écrit pas de touche (elle est dans le score du relais). Noir P : la rencontre est décidée pour l’équipe au score supérieur des relais terminés (enregistrer d’abord le relais en cours), à égalité au meilleur classement (tableau : rang du tableau ; poule : classement de poule) — TeamMatchDecided. Refus : unsupported_format (Sabre Laser, arme à la carte, épreuve individuelle), match_not_found, team_withdrawn, match_finished (noir P déjà donné, rencontre décidée ou suivante commencée, noir P contraire au résultat), draw_needs_winner. Journal : PassivityCardGiven.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -908,7 +908,19 @@ Aucun argument.
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal (revision_conflict sinon) |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
-| `cardId` | string | oui | Carton E (teamCards[].id) |
+
+### `cancel_team_card` — Annuler un carton E
+
+*⚠️ écriture, destructif.* Directoire technique (écran, MCP) : annule un carton E, ou un carton P jaune ou rouge (le noir P a décidé la rencontre). Refus : permission_denied (tablette, appareil), match_not_found, card_not_found, match_finished (noir P). Journal : TeamCardCancelled.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal (revision_conflict sinon) |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+| `cardId` | string | oui | Carton E ou carton P (teamCards[].id, passivityCards[].id) |
 
 ### `cancel_relay_card` — Annuler un carton de relais
 

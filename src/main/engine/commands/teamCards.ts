@@ -1,10 +1,12 @@
 /**
  * BPM - Escrime - Cartons des épreuves par équipes par le moteur (docs/adr/0028, lot C1)
  * giveTeamCard (carton E, arène Sabre Laser), giveRelayCard (carton individuel d'un relais),
- * cancelTeamCard / cancelRelayCard (Directoire technique : écran, MCP), withdrawTeam (o.99.7.a).
+ * givePassivityCard (carton P, relais FIE, lot C4), cancelTeamCard / cancelRelayCard (Directoire
+ * technique : écran, MCP), withdrawTeam (o.99.7.a).
  * Écritures de team_match_cards et team_bout_cards dans la transaction de la commande
  * (runCommand), identifiant et heure fournis ; journal TeamCardGiven, RelayCardGiven,
- * TeamCardCancelled, RelayCardCancelled, TeamWithdrawn. Aucun effet sur le score (§ 3).
+ * PassivityCardGiven, TeamCardCancelled, RelayCardCancelled, TeamWithdrawn. Aucun effet sur le
+ * score (§ 3) ; le noir P décide la rencontre (TeamMatchDecided, t.124).
  * Noir individuel : tireur retiré (ADR-0016) ; armes olympiques, rencontre perdue et équipe
  * exclue (o.99.7.b) dans la même transaction. Règles : shared/domain/teams/teamCards.
  * Licensed under GPL-3.0
@@ -13,10 +15,19 @@ import type { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import type { Card, CardReason, Competition } from '../../../shared/types';
 import type { teamCardOperations } from '../../../shared/api/contractTeamCards';
-import type { TeamMatchCardRow, TeamMatchRow } from '../../../shared/domain/teams/team.types';
+import type {
+  TeamMatchCardRow,
+  TeamMatchRow,
+  TeamRow,
+} from '../../../shared/domain/teams/team.types';
 import { teamFormatOf } from '../../../shared/domain/teams/relay';
+import { hasPassivityCards, passivityCardFor } from '../../../shared/domain/teams/passivityCards';
+import { rankTeamsForTableau } from '../../../shared/domain/teams/teamTableau';
 import { relayCardFor, teamCardFor } from '../../../shared/domain/teams/teamCards';
-import { nextTeamMatchStarted } from '../../../shared/domain/teams/teamWithdrawal';
+import {
+  nextTeamMatchStarted,
+  withoutWithdrawnTeams,
+} from '../../../shared/domain/teams/teamWithdrawal';
 import { getWeaponCardConfig } from '../../../shared/domain/penalties/cards';
 import { CardType } from '../../../shared/domain/penalties/penalty.types';
 import { planWithdrawal } from '../../../shared/domain/fencers/withdrawal';
@@ -282,6 +293,104 @@ export function giveRelayCard(
   return { dryRun: false, ...out };
 }
 
+// ─── Carton P (non-combativité, t.124) ──────────────────────────────────────
+
+/**
+ * Classement des deux équipes pour le noir P à égalité de score (t.124.2.c) : celui qui place
+ * les équipes au tableau, calculé sur les poules (équipes retirées exclues, o.99.8). Au
+ * tableau, c'est le rang du tableau en cours (FFE dès M15) ; en poule, le logiciel n'a pas de
+ * classement initial d'équipe (inscription par nom) : classement de poule du moment.
+ */
+function passivityRanks(ctx: CommandContext, comp: Competition, m: MatchRow) {
+  const pools = ctx.db.teams.getTeamMatchesByCompetition(comp.id) as TeamMatchRow[];
+  const { teams, matches } = withoutWithdrawnTeams(
+    ctx.db.teams.getTeamsByCompetition(comp.id) as TeamRow[],
+    pools,
+    new Set(withdrawnTeams(ctx, comp.id).keys())
+  );
+  const ranked = rankTeamsForTableau(teams, matches, teamFormatOf(comp.settings));
+  const rank = (id: string) => {
+    const i = ranked.findIndex(t => t.id === id);
+    return i < 0 ? null : i + 1;
+  };
+  return { rankA: rank(m.teamAId), rankB: rank(m.teamBId) };
+}
+
+const PASSIVITY_REFUSAL = {
+  unsupported_format: 'Carton P : relais FIE des armes olympiques seulement',
+  match_finished:
+    'Rencontre terminée (noir P déjà donné, rencontre décidée ou suivante commencée, ou noir P contraire au résultat) : carton P refusé',
+  draw_needs_winner: 'Noir P à égalité de score et de classement : à trancher par le DT',
+} as const;
+
+export function givePassivityCard(
+  ctx: CommandContext,
+  input: { competitionId: string; matchId: string; dryRun?: boolean },
+  { now = new Date(), newId = uuidv4 }: Given = {}
+) {
+  const comp = teamCompetitionOrThrow(ctx, input.competitionId);
+  // Sabre Laser (relais ou arène) et arme à la carte : pas de carton P (ADR-0028, 2 règlements)
+  if (teamFormatOf(comp.settings) !== 'fie-relay' || !hasPassivityCards(comp.weapon)) {
+    refuseP('unsupported_format');
+  }
+  const m = matchOrThrow(ctx, comp.id, input.matchId);
+  assertTeamActive(ctx, comp, m.teamAId);
+  assertTeamActive(ctx, comp, m.teamBId);
+  const ordered = orderedMatches(ctx, comp);
+  const r = passivityCardFor({
+    id: newId(),
+    at: now,
+    meeting: {
+      matchId: m.id,
+      relays: m.bouts.map(b => ({
+        order: b.boutOrder,
+        scoreA: b.scoreA,
+        scoreB: b.scoreB,
+        finished: b.status === 'finished',
+      })),
+      finished: m.status === 'finished',
+      winner: m.winnerId === m.teamAId ? 'A' : m.winnerId === m.teamBId ? 'B' : null,
+      nextMatchStarted:
+        nextTeamMatchStarted(ordered, m.id, m.teamAId) ||
+        nextTeamMatchStarted(ordered, m.id, m.teamBId),
+      ...passivityRanks(ctx, comp, m),
+    },
+    prior: ctx.db.teams.getPassivityCards(m.id),
+    weapon: comp.weapon,
+  });
+  if (!r.ok) refuseP(r.code);
+  const { card } = r;
+  const winnerTeamId = r.winner ? (r.winner.side === 'A' ? m.teamAId : m.teamBId) : null;
+  const decide = !!r.winner?.decide && winnerTeamId !== null;
+  const preview = decide
+    ? decideTeamMatch(ctx, comp, m, winnerTeamId, now, true)
+    : { scheduledMatchIds: [] as string[] };
+  const out = {
+    matchId: m.id,
+    card: { id: card.id, type: card.type, at: card.createdAt },
+    winnerTeamId,
+    scheduledMatchIds: preview.scheduledMatchIds,
+  };
+  if (input.dryRun) return { dryRun: true, ...out };
+
+  ctx.db.teams.createPassivityCard(m.id, card.type, { id: card.id, at: card.createdAt });
+  // Noir P : rencontre décidée (t.124), même commande donc même commandId
+  const decided = decide ? decideTeamMatch(ctx, comp, m, winnerTeamId, now) : null;
+  recordEvents(ctx, comp.id, [
+    {
+      type: EVENT.passivityCardGiven,
+      payload: { matchId: m.id, cardId: card.id, type: card.type },
+    },
+    ...(decided?.events ?? []),
+  ]);
+  changed(ctx, comp.id);
+  return { dryRun: false, ...out };
+}
+
+function refuseP(code: keyof typeof PASSIVITY_REFUSAL): never {
+  throw new CommandError(code, PASSIVITY_REFUSAL[code]);
+}
+
 // ─── Annulation (Directoire technique) ──────────────────────────────────────
 
 export function cancelTeamCard(
@@ -291,10 +400,18 @@ export function cancelTeamCard(
   assertDirectorate(ctx);
   const comp = teamCompetitionOrThrow(ctx, input.competitionId);
   const m = matchOrThrow(ctx, comp.id, input.matchId);
-  if (!ctx.db.teams.getTeamMatchCards(m.id).some(c => c.id === input.cardId)) {
+  const passivity = ctx.db.teams.getPassivityCards(m.id).find(c => c.id === input.cardId);
+  if (!passivity && !ctx.db.teams.getTeamMatchCards(m.id).some(c => c.id === input.cardId)) {
     throw new CommandError(
       'card_not_found',
-      `Carton E inconnu dans la rencontre : ${input.cardId}`
+      `Carton E ou P inconnu dans la rencontre : ${input.cardId}`
+    );
+  }
+  // Le noir P a décidé la rencontre : il ne s'annule pas seul
+  if (passivity?.type === 'black') {
+    throw new CommandError(
+      'match_finished',
+      'Noir P : la rencontre est décidée ; le résultat se corrige d’abord (Directoire technique)'
     );
   }
   const out = { matchId: m.id, cardId: input.cardId };
@@ -384,6 +501,8 @@ export const teamCardHandlers: { [N in keyof Ops]: Handler<N> } = {
     giveTeamCard(ctx, input),
   giveRelayCard: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     giveRelayCard(ctx, input),
+  givePassivityCard: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    givePassivityCard(ctx, input),
   cancelTeamCard: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     cancelTeamCard(ctx, input),
   cancelRelayCard: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>

@@ -3,7 +3,7 @@
  * Tablette `/equipe{N}/arbitre` et appareils de piste (Cyrano, OPP2) : fin de relais
  * (recordRelayScore), rappel du relais précédent (reopenRelay), remplaçant
  * (substituteTeamFencer), cartons E et de relais (giveTeamCard, giveRelayCard, docs/adr/0028
- * lot C3). Mêmes contrôles que l'écran et le MCP, tables et journal dans une
+ * lot C3), cartons P des appareils (givePassivityCard, lot C4). Mêmes contrôles que l'écran et le MCP, tables et journal dans une
  * transaction. Refus : rien d'écrit, code du catalogue rendu (jamais de repli par la base).
  * Licensed under GPL-3.0
  */
@@ -18,7 +18,12 @@ import { logger, LogCategory } from '../../shared/services/logger';
 export type TeamSource = Extract<EventSource, 'tablet' | 'cyrano' | 'opp2'>;
 
 type TeamCommand =
-  'recordRelayScore' | 'reopenRelay' | 'substituteTeamFencer' | 'giveTeamCard' | 'giveRelayCard';
+  | 'recordRelayScore'
+  | 'reopenRelay'
+  | 'substituteTeamFencer'
+  | 'giveTeamCard'
+  | 'giveRelayCard'
+  | 'givePassivityCard';
 
 export type TeamCommandOutcome<N extends TeamCommand> =
   { ok: true; out: Output<N> } | { ok: false; code: string; message: string };

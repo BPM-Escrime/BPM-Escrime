@@ -50,6 +50,7 @@ export const JOURNAL_EVENT = {
   teamFencerSubstituted: 'TeamFencerSubstituted',
   teamCardGiven: 'TeamCardGiven',
   relayCardGiven: 'RelayCardGiven',
+  passivityCardGiven: 'PassivityCardGiven',
   teamCardCancelled: 'TeamCardCancelled',
   relayCardCancelled: 'RelayCardCancelled',
   teamWithdrawn: 'TeamWithdrawn',
@@ -276,6 +277,11 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
       /** Code CardReason ; null : carton imposé par l'appareil de piste, sans motif */
       reason: z.string().nullable(),
     })
+  ),
+  // Carton P (t.124), donné aux deux équipes : team_match_cards, team_id NULL, type `p_…`
+  member(
+    JOURNAL_EVENT.passivityCardGiven,
+    z.object({ matchId: Id, cardId: Id, type: z.enum(['yellow', 'red', 'black']) })
   ),
   member(JOURNAL_EVENT.teamCardCancelled, z.object({ matchId: Id, cardId: Id })),
   member(JOURNAL_EVENT.relayCardCancelled, z.object({ matchId: Id, relayId: Id, cardId: Id })),

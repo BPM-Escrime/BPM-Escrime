@@ -4,7 +4,8 @@
  * PisteHub. L'appareil donne le score cumulé de l'équipe ; l'arène tient le score du relais
  * en cours (`liveScoreA/B`) : relais = cumul reçu − relais précédents terminés. Fin de relais,
  * rappel et remplaçant passent par les commandes du moteur (docs/adr/0024, lot E4) ; les
- * cartons montrés par l'appareil (jaune, rouge) aussi, par giveRelayCard (docs/adr/0028, C3).
+ * cartons montrés par l'appareil (jaune, rouge) aussi, par giveRelayCard (docs/adr/0028, C3),
+ * et les cartons P par givePassivityCard (C4 : noir P réservé à la fin du relais).
  * Licensed under GPL-3.0
  */
 
@@ -20,8 +21,10 @@ import {
   relayPenaltyTouches,
 } from '../../shared/domain/teams/teamCards';
 import { logger, LogCategory } from '../../shared/services/logger';
+import { newDevicePassivityCards } from '../../shared/domain/teams/passivityCards';
 import {
   advanceTeamBout,
+  giveTeamArenaPassivityCard,
   giveTeamArenaRelayCard,
   broadcastTeamArena,
   checkTeamBout,
@@ -66,7 +69,7 @@ export function teamRelayView(ctx: TeamArenaContext, arenaId: string): TeamRelay
   };
 }
 
-const CARD_ORDER = ['yellow', 'red', 'p-red', 'p-black'] as const;
+const CARD_ORDER = ['yellow', 'red', 'p-yellow', 'p-red', 'p-black'] as const;
 
 /**
  * Cartons d'un tireur sur toute la rencontre (#1829) : ils se cumulent d'un relais à l'autre.
@@ -87,9 +90,11 @@ export function fencerMeetingCards(
   const device = relays.length ? state.deviceCards![relays[0].id] : null;
   const fromDevice = (side === 'A' ? device?.cardsA : device?.cardsB) ?? [];
   // Cartons enregistrés (CardType en capitales) au format des arènes
-  const fromTablet = state.fencerCards
-    .filter(c => c.fencerId === fencerId)
-    .map(c => c.type.toLowerCase());
+  // Cartons P enregistrés : donnés aux deux équipes, donc à chaque tireur (t.124)
+  const fromTablet = [
+    ...state.fencerCards.filter(c => c.fencerId === fencerId).map(c => c.type.toLowerCase()),
+    ...(state.passivityCards ?? []).map(c => `p-${c.type}`),
+  ];
   const count = (list: readonly string[], type: string) => list.filter(c => c === type).length;
   return CARD_ORDER.flatMap(type =>
     Array<string>(Math.max(count(fromDevice, type), count(fromTablet, type))).fill(type)
@@ -103,6 +108,8 @@ export interface RelayDeviceUpdate {
   /** Cartons montrés par l'appareil (relais en cours) */
   cardsA?: string[];
   cardsB?: string[];
+  /** Cartons P montrés (rang dans l'escalade, 0 à 3 : `devicePassivityStep`), les deux côtés */
+  passivity?: number;
   /** Source du journal des cartons enregistrés (protocole de l'appareil) */
   source?: TeamSource;
   /** Chrono de l'appareil (secondes restantes) et état */
@@ -115,7 +122,7 @@ const refusedDeviceCards = new WeakMap<TeamArenaState, Set<string>>();
 
 /**
  * Cartons montrés par l'appareil et pas encore enregistrés (`newDeviceCards`, compteurs jaune
- * et rouge du tireur sur la rencontre ; cartons P : lot C4) → giveRelayCard avec le type,
+ * et rouge du tireur sur la rencontre ; cartons P : `recordDevicePassivity`) → giveRelayCard avec le type,
  * source de l'appareil (ADR-0028 question 6 : à chaque état reçu). Un refus est tracé, sans
  * bloquer le score ni la fin du relais. true : au moins un carton enregistré.
  */
@@ -165,6 +172,45 @@ function recordDeviceCards(
 }
 
 /**
+ * Cartons P montrés par l'appareil et pas encore enregistrés → givePassivityCard, source de
+ * l'appareil, jusqu'au rang `upTo` : 2 pendant le relais (jaune P, rouge P), 3 à la fin du
+ * relais (noir P, qui décide la rencontre : docs/adr/0028 § 5 bis). Refus tracé une fois.
+ * true : au moins un carton enregistré.
+ */
+export function recordDevicePassivity(
+  ctx: TeamArenaContext,
+  arenaId: string,
+  step: number,
+  source: TeamSource,
+  upTo: number
+): boolean {
+  const state = ctx.teamArenaState.get(arenaId);
+  if (!state) return false;
+  let given = false;
+  let missing = newDevicePassivityCards(state.passivityCards?.length ?? 0, step, upTo);
+  for (; missing > 0; missing--) {
+    const outcome = giveTeamArenaPassivityCard(ctx, arenaId, source, { broadcast: false });
+    if (outcome.ok) {
+      given = true;
+      continue;
+    }
+    const seen = refusedDeviceCards.get(state) ?? new Set<string>();
+    refusedDeviceCards.set(state, seen);
+    const key = `${state.matchId}:P:${state.passivityCards?.length ?? 0}:${outcome.code}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      logger.warn(
+        LogCategory.NETWORK,
+        `Équipes ${arenaId} : carton P de l'appareil refusé par le moteur (${outcome.code}) : ` +
+          `à saisir par le DT`
+      );
+    }
+    break;
+  }
+  return given;
+}
+
+/**
  * État de l'appareil → relais en cours : cartons (enregistrés d'abord, pour que le palier tienne
  * compte des rouges, t.41.1), score du relais, chrono. Refus (tracé) si le cumul reçu est
  * inférieur à celui des relais déjà terminés, ou au-delà du palier et des rouges adverses.
@@ -180,6 +226,11 @@ export function applyRelayDeviceState(
   // Rencontre relue après chaque carton : relais en cours inchangé (un carton ne termine pas
   // le relais, sauf noir qui décide la rencontre : plus de score à reporter)
   let changed = recordDeviceCards(ctx, arenaId, state, bout, update);
+  // Jaune P et rouge P tout de suite ; le noir P attend la fin du relais (score enregistré)
+  if (update.passivity)
+    changed =
+      recordDevicePassivity(ctx, arenaId, update.passivity, update.source ?? 'cyrano', 2) ||
+      changed;
   if (changed && state.bouts[state.currentBoutIndex]?.id !== bout.id) {
     broadcastTeamArena(ctx, arenaId);
     return { accepted: false, changed };

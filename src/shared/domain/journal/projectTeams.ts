@@ -1,13 +1,14 @@
 /**
  * BPM - Escrime - Rejeu des faits d'une épreuve par équipes (docs/adr/0024, lots E1 et E2)
  * Poules d'équipes, tableau, rencontres et leurs relais, score de chaque relais, rencontres
- * terminées, remplaçants, cartons et équipes retirées (docs/adr/0028). Les dérivés (cumul, classement de poule, avancement du tableau) se
+ * terminées, remplaçants, cartons (E, relais, P) et équipes retirées (docs/adr/0028). Les dérivés (cumul, classement de poule, avancement du tableau) se
  * recalculent ; seul le retrait de la rencontre suivante à la réouverture d'un relais suit la
  * règle du moteur (reopenRelay : rencontre suivante pas encore commencée, donc retirée).
  * Licensed under GPL-3.0
  */
 import { JOURNAL_EVENT, type JournalEventBody } from '../../api/events';
 import type { TeamsFact } from './projectCompetition';
+import { PASSIVITY_TYPE_PREFIX } from '../teams/passivityCardTypes';
 
 type TeamEvent = Extract<
   JournalEventBody,
@@ -22,6 +23,7 @@ type TeamEvent = Extract<
       | typeof JOURNAL_EVENT.teamFencerSubstituted
       | typeof JOURNAL_EVENT.teamCardGiven
       | typeof JOURNAL_EVENT.relayCardGiven
+      | typeof JOURNAL_EVENT.passivityCardGiven
       | typeof JOURNAL_EVENT.teamCardCancelled
       | typeof JOURNAL_EVENT.relayCardCancelled
       | typeof JOURNAL_EVENT.teamWithdrawn;
@@ -126,6 +128,13 @@ export function projectTeamEvent(current: TeamsFact | null, event: TeamEvent): T
       const { matchId, relayId, fencerId, cardId, type } = event.payload;
       markCardMatch(teams, matchId);
       teams.cards.push({ cardId, matchId, relayId, fencerId, type });
+      break;
+    }
+    case JOURNAL_EVENT.passivityCardGiven: {
+      // Carton P : aux deux équipes, sans équipe ni tireur ; type rangé en table (`p_…`)
+      const { matchId, cardId, type } = event.payload;
+      markCardMatch(teams, matchId);
+      teams.cards.push({ cardId, matchId, type: `${PASSIVITY_TYPE_PREFIX}${type}` });
       break;
     }
     case JOURNAL_EVENT.teamCardCancelled:

@@ -9,6 +9,7 @@
 import { z } from 'zod';
 import { command, CommandId, CompetitionId, DryRun, Id } from './contractDef';
 import {
+  PassivityCardSchema,
   RelayCardSchema,
   teamCardOperations,
   TeamCardSchema,
@@ -71,6 +72,8 @@ const TeamMatchSchema = z.object({
   bouts: z.array(TeamRelaySchema),
   /** Cartons E de la rencontre (arène Sabre Laser, docs/adr/0028) */
   teamCards: z.array(TeamCardSchema),
+  /** Cartons P de la rencontre, donnés aux deux équipes (relais FIE, t.124, docs/adr/0028) */
+  passivityCards: z.array(PassivityCardSchema),
 });
 
 export const TeamsStateSchema = z.object({
