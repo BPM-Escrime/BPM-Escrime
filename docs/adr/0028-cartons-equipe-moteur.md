@@ -1,6 +1,6 @@
 # ADR-0028 — Les cartons des épreuves par équipes passent par le moteur
 
-- **Statut** : Acceptée (2026-11-23), questions tranchées par les règlements (§ « Questions tranchées »)
+- **Statut** : Acceptée (2026-11-23), questions tranchées par les règlements (§ « Questions tranchées ») ; amendée le 2026-11-24 (migration 49, cartons P)
 - **Date** : 2026-11-23
 - **Tickets** : #2100 (suite), #1980, #1981 (épique #1978)
 
@@ -252,8 +252,11 @@ vainqueur imposé par un noir P.
 - Au noir P, le domaine désigne le vainqueur (score, puis classement initial) et la commande
   décide la rencontre (`TeamMatchDecided`). L'appareil qui envoie un noir P avec la fin de relais
   est accepté (ACK) au lieu d'un NAK.
-- Événement `PassivityCardGiven { matchId, cardId, type }`. Stockage : `team_match_cards` avec
-  `team_id` nul et `type` préfixé `p_` ; si le lot montre qu'une colonne manque, nouvelle ADR.
+- Événement `PassivityCardGiven { matchId, cardId, type }`. Stockage : `team_match_cards`, une
+  ligne par carton P, `team_id` **NULL** (carton donné aux deux équipes) et `type` préfixé `p_`
+  (`p_yellow`, `p_red`, `p_black`), motif `passivity`. La migration 49 rend `team_id` nullable
+  (§ 9, amendement du 2026-11-24). Un carton E a toujours une équipe ; un lecteur des cartons E
+  écarte les lignes à `team_id` nul ou à `type` en `p_`.
 
 ### 6. Journal
 
@@ -306,12 +309,19 @@ reprendra cette forme (`MatchCardGiven`).
 Après chaque commande, l'arène relit la rencontre et diffuse `team_arena_state`, comme pour
 `recordRelayScore`. Pas de changement de protocole des pages `/equipe{N}` ni de `teamRelayPiste`.
 
-### 9. Schéma : pas de migration
+### 9. Schéma : une migration, `team_id` nullable
 
-Les deux tables suffisent ([ADR-0011](0011-migrations-schema-3-0.md)). Le moteur écrit
+Les deux tables suffisent en colonnes ([ADR-0011](0011-migrations-schema-3-0.md)). Le moteur écrit
 `team_bout_cards.card_json` au format `Card` actuel ; `id` et `created_at` viennent de
-l'identifiant et de l'heure injectés de la commande. La source est au journal, pas en table. Si
-un lot découvre un besoin de colonne, il passe par une nouvelle ADR.
+l'identifiant et de l'heure injectés de la commande. La source est au journal, pas en table.
+
+Amendement du 2026-11-24 (lot C4) : `team_match_cards.team_id` est `NOT NULL` depuis la
+migration 15, avec une clé étrangère vers `teams` (`foreign_keys = ON`) ; le carton P sans équipe
+ne s'y range pas. **Migration 49** : la table est reconstruite à l'identique, `team_id` nullable,
+clé étrangère vers `teams(id)` conservée (vérifiée quand la valeur n'est pas nulle), cascade sur
+`team_matches` conservée, lignes recopiées, index `idx_team_match_cards_match` recréé. Options
+écartées : une ligne par équipe (deux identifiants pour un seul `cardId` de l'événement) et une
+table `team_passivity_cards` (une troisième table de cartons pour un seul type).
 
 ### 10. Cartons déjà en base
 
@@ -348,7 +358,7 @@ un fait journalisé partout ou nulle part ([ADR-0005](0005-journal-un-fait-un-ch
 | C1  | `giveTeamCard`, `giveRelayCard`, `cancel…Card`, `withdrawTeam` (moteur, MCP), noir individuel → retrait du tireur et exclusion de l'équipe dans la transaction, palier + rouges dans `recordRelayScore`, événements, `projectTeams`, bloc `teams`, codes | Rencontre avec cartons E, jaune, rouge et noir par les commandes, rejeu sans écart |
 | C2  | Écran : `TeamManagerView` lit les cartons dans le bloc `teams` et écrit par `useBpmClient`                                                                                                                                                               | `grep electronAPI src/renderer/components/TeamManagerView.tsx` vide                |
 | C3  | Tablette (`team_card`, `team_fencer_card`) et appareils (`newDeviceCards`) par `invokeCommandSync`                                                                                                                                                       | Relais FIE depuis le simulateur Cyrano et OPP2 : cartons en base après redémarrage |
-| C4  | `givePassivityCard`, noir P qui décide la rencontre, appareil : P-card → commande, ACK au noir P                                                                                                                                                         | Noir P depuis le simulateur Cyrano : rencontre décidée, ACK, rejeu sans écart      |
+| C4  | Migration 49 (`team_id` nullable), `givePassivityCard`, noir P qui décide la rencontre, appareil : P-card → commande, ACK au noir P                                                                                                                      | Noir P depuis le simulateur Cyrano : rencontre décidée, ACK, rejeu sans écart      |
 | N   | Retrait de `createTeamMatchCard`, `createTeamBoutCard`, `getTeamMatchCards`, `getTeamBoutCards` du préload, des canaux `db:*` et de `DatabaseManager` (le moteur lit le dépôt). Cliquets abaissés                                                        | Critères ci-dessous                                                                |
 
 **Critères d'acceptation** :
@@ -391,6 +401,9 @@ un fait journalisé partout ou nulle part ([ADR-0005](0005-journal-un-fait-un-ch
    Laser, points de ses adversaires conservés (Livret 2 VIII.7).
 8. **Épreuves en cours** : aucune règle sportive ne s'applique ; la comparaison partielle du § 10
    suffit.
+9. **Stockage des cartons P** (décision du mainteneur, 2026-11-24) : `team_match_cards` avec
+   `team_id` NULL et `type` `p_…`, après la migration 49 qui rend la colonne nullable (§ 5 bis,
+   § 9). L'événement `PassivityCardGiven { matchId, cardId, type }` est inchangé.
 
 ## Conséquences
 
