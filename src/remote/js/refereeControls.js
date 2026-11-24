@@ -100,9 +100,13 @@
     return matchStatus === 'not_started' || matchStatus === 'finished';
   }
 
-  /** Cartons : actifs avant le départ du chrono ; verrouillés après la fin du match et pendant que le chrono tourne (#1826, #1936) */
-  function cardButtonsLocked(matchStatus, timerRunning) {
-    return matchStatus === 'finished' || !!timerRunning;
+  /**
+   * Cartons : actifs avant le départ du chrono ; verrouillés après la fin du match et, en
+   * escrime olympique, pendant que le chrono tourne (#1826, #1936). Sabre Laser : le combat ne
+   * s'arrête pas, cartons chrono en marche (#2254)
+   */
+  function cardButtonsLocked(matchStatus, timerRunning, isModernFencing) {
+    return matchStatus === 'finished' || (!!timerRunning && !!isModernFencing);
   }
 
   /** Le repos (escrime moderne) n'est possible qu'à 0 s, chrono arrêté, match en cours */

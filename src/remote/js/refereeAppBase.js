@@ -136,6 +136,8 @@ class RefereeAppBase {
           // Formule personnalisée : règles choisies dans la formule (#1125)
           this.isModernFencing = ['E', 'F', 'S'].includes(s.weapon) || s.modernRules === true;
           this.rulesLoaded = true;
+          // Verrou des cartons chrono en marche : dépend des règles (#2254)
+          if (typeof this.updateCardButtons === 'function') this.updateCardButtons();
           if (s.trainingCustomRules) this.trainingCustomRules = s.trainingCustomRules;
           this.blackCardEnabled = s.blackCardEnabled === true;
           this.applyBlackCardSetting();
@@ -897,8 +899,8 @@ class RefereeAppBase {
       return;
     }
     if (this.matchStatus === 'finished') return;
-    // Pas de carton chrono en marche (#1826)
-    if (this.timerRunning) return;
+    // Olympique : pas de carton chrono en marche (#1826) ; Sabre Laser : le combat continue (#2254)
+    if (this.timerRunning && this.isModernFencing) return;
 
     this.pushHistory('card');
     if (navigator.vibrate) navigator.vibrate(BPRefereeCards.cardVibration(cardType));
@@ -920,6 +922,8 @@ class RefereeAppBase {
     }
 
     this.updateScores();
+    // Points de carton (Sabre Laser) : les deux tireurs à 10 → mort subite challenger (#2254)
+    if (BPRefereeScoring.shouldTriggerChallenger(this)) this.triggerSuddenDeathChallenger();
     this.updateCardsDisplay();
     this.broadcastUpdate();
     this.saveScore();
