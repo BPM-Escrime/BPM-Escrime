@@ -24,7 +24,9 @@ import {
   buildMatchBody,
   buildPanelFencersBody,
   buildPanelMatchBody,
+  buildRecordBody,
   buildScoreBody,
+  buildUw2fBody,
   isValidOpp2Piste,
   OPP2_STATES,
   OPP2_STATUSES,
@@ -100,6 +102,8 @@ interface PisteRuntime {
   seen: Map<string, { seq: number; ts?: number }>;
   /** Intervention médicale en cours, par côté (compte les débuts) */
   medicalActive: { left: boolean; right: boolean };
+  /** Champ épreuve du dernier affichage, repris par `software/record` */
+  competition?: string;
 }
 
 const clean = <T extends object>(o: T): T => {
@@ -197,6 +201,11 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
     return this.getStatuses().filter(s => s.arena === arena);
   }
 
+  /** Créneau publié (`software/record`) pour toute piste OPP2 déclarée, pilote démarré. */
+  wantsRecord(piste: string): boolean {
+    return this.running && this.pistes.has(piste);
+  }
+
   /** OPP2 transporte l'identifiant complet (aucune troncature). */
   fencerId(id: string): string {
     return id;
@@ -216,6 +225,9 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
         this.publish(piste, 'match', buildMatchBody(d, command.competition));
         this.publish(piste, 'score', buildScoreBody(d));
         if (d.stopwatch !== undefined) this.publish(piste, 'clock', buildClockBody(d.stopwatch));
+        const uw2f = buildUw2fBody(d);
+        if (uw2f) this.publish(piste, 'uw2f', uw2f);
+        rt.competition = command.competition;
         // Identités attendues de l'appareil : `apparatus/score` ne les porte pas
         for (const side of SIDES) {
           const s = d[side];
@@ -244,6 +256,10 @@ export class Opp2PisteDriver extends EventEmitter<PisteDriverEvents> implements 
           delete s.name;
           delete s.nat;
         }
+        return true;
+      case 'record':
+        // Retenu : un écran ou une feuille de match qui se connecte le reçoit aussitôt
+        this.publish(piste, 'record', buildRecordBody(command.record, rt.competition));
         return true;
       case 'ack':
       case 'nak':

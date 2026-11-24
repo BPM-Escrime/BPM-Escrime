@@ -631,6 +631,9 @@ Livré ensuite (#1829) : cartons de la feuille de poule et de la feuille de matc
 imprimées, **cartons P à part** (t.124.3.e, § 2 sexies) ; reprise du chrono au redémarrage
 (§ 2 quater) ; **rapport d'exclusion pré-rempli**
 pour la FFE (carton noir, annexe 14 : Résultats → Export → « Rapport FFE (carton noir) »).
+Depuis #2190 : aussi proposé sur l'appel DT d'un carton noir (« Rapport carton noir (PDF) ») ;
+heure, match et source (écran, tablette, appareil, agent) lus au journal (`FencerWithdrawn`) ;
+motifs du 4e groupe de l'arme à cocher, plus « Cumul de cartons » et « Autre ».
 
 Questions encore ouvertes : rattachement des sous-arènes (`arena3s2`) à un appareil ;
 second poste BPM - Escrime en secours (maître / esclave, cf. Fencing Fox).

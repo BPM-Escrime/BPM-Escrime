@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { MqttBroker } from './mqttBroker';
+import { opp2ClientMayPublish } from './codec';
 import { MqttClient } from './mqttClient';
 
 async function until(cond: () => boolean, ms = 5000): Promise<void> {
@@ -86,6 +87,30 @@ describe('broker MQTT intégré (#1960)', () => {
     await dev.publish('openpiste/3/apparatus/state', '{"state":"F"}', { qos: 1, retain: true });
     expect(errors).toEqual(['publication refusée sur openpiste/3/software/control']);
     expect(broker.getRetained('openpiste/3/apparatus/state')?.toString()).toBe('{"state":"F"}');
+  });
+
+  it('règle par défaut (main.ts) : software/* réservé au logiciel, will compris', async () => {
+    expect(opp2ClientMayPublish('openpiste/3/software/control')).toBe(false);
+    expect(opp2ClientMayPublish('openpiste/3/apparatus/score')).toBe(true);
+    expect(opp2ClientMayPublish('openpiste/3/scoresheet/event')).toBe(true);
+    expect(opp2ClientMayPublish('autre/3/software/x')).toBe(true);
+    broker = new MqttBroker({
+      host: '127.0.0.1',
+      authorizePublish: (_, topic) => opp2ClientMayPublish(topic),
+    });
+    const port = await broker.start(0);
+    const topic = 'openpiste/3/software/connection';
+    const fake = await client(port, {
+      clientId: 'faux',
+      will: { topic, payload: '{"online":false}', qos: 1, retain: true },
+    });
+    await fake.publish(topic, '{"online":true}', { qos: 1, retain: true });
+    fake.destroy();
+    await until(() => broker.getClients().length === 0);
+    expect(broker.getRetained(topic)).toBeUndefined();
+    // BPM - Escrime publie par le bus interne, sans contrôle
+    broker.publish(topic, '{"online":true}', { qos: 1, retain: true });
+    expect(broker.getRetained(topic)?.toString()).toBe('{"online":true}');
   });
 
   it('paquet invalide : connexion coupée', async () => {

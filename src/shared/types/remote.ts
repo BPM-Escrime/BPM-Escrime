@@ -162,7 +162,7 @@ export interface ArenaMatch {
   deviceEnd?: { winner?: 'A' | 'B'; reason?: 'priority' | 'abandon' | 'exclusion' };
   /**
    * Carton noir donné par la tablette à la fin du match : score et retrait écrits ensemble par
-   * recordScore (specialStatus exclusion, blackCard) ; l'avis fencer_excluded suit.
+   * recordScore (specialStatus exclusion, blackCard) ; l'écran relit sur journal:appended.
    */
   blackCardFencer?: 'A' | 'B';
   /**
@@ -281,7 +281,7 @@ export type RemoteMatchPayload = Record<string, unknown>;
 
 /** Avis du serveur distant à l'écran (abonnement onRemoteActivity, docs/adr/0010 et 0022) */
 interface RemoteActivityBase {
-  /** Épreuve du serveur émetteur ; null : avis du poste (logo) ou serveur d'entraînement */
+  /** Épreuve du serveur émetteur ; null : serveur d'entraînement */
   competitionId: string | null;
 }
 
@@ -298,20 +298,6 @@ export type RemoteActivity = RemoteActivityBase &
         isTableau?: boolean;
         /** Motif de fin signalé par l'appareil de piste : le perdant porte l'abandon / l'exclusion */
         deviceReason?: 'priority' | 'abandon' | 'exclusion';
-      }
-    | {
-        kind: 'fencer_excluded';
-        fencerId: string;
-        matchId: string;
-        reason?: 'black_card';
-      }
-    | {
-        kind: 'fencer_reinstated';
-        fencerId: string;
-        matchId: string;
-        status: string;
-        scoreA: number;
-        scoreB: number;
       }
     | { kind: 'checkin_updated'; person: 'fencer' | 'referee'; id: string; present: boolean }
     | { kind: 'referee_changed'; matchId: string; refereeId: string }
@@ -337,7 +323,6 @@ export type RemoteActivity = RemoteActivityBase &
     | ({ kind: 'dt_call' } & DTCallEvent)
     | { kind: 'dt_call_cancelled'; arenaId: string }
     | { kind: 'org_note_changed'; note: OrgNote | null }
-    | { kind: 'logo_loaded'; logo: string | null }
   );
 
 /** Clients (écrans, tablettes) connectés au serveur distant d'une épreuve */

@@ -5,6 +5,12 @@
  * Licensed under GPL-3.0
  */
 
+import {
+  DEFAULT_DURATION_CONFIG,
+  validateDurationConfig,
+  type MatchDurationConfig,
+} from '../domain/durations/matchDurations';
+
 /** Paramètres du poste, clé → type de la valeur */
 export interface AppSettings {
   /** Langue de l'interface (fr, en, de, zh-HK…) */
@@ -24,6 +30,8 @@ export interface AppSettings {
   agentFolders: string[];
   /** Économie d'encre à l'impression : fonds retirés, texte et traits en noir (PDF compris) */
   inkSaving: boolean;
+  /** Durées de match : réglages du DT, historique du poste, changement de piste (#1965) */
+  matchDurations: MatchDurationConfig;
 }
 
 export type AppSettingKey = keyof AppSettings;
@@ -37,12 +45,26 @@ export const APP_SETTINGS_DEFAULTS: Readonly<AppSettings> = Object.freeze({
   remoteInterface: '0.0.0.0',
   agentFolders: [],
   inkSaving: false,
+  matchDurations: DEFAULT_DURATION_CONFIG,
 });
 
 export const APP_SETTING_KEYS = Object.keys(APP_SETTINGS_DEFAULTS) as AppSettingKey[];
 
 /** Taille max du logo (data URL), alignée sur l'import de logo des Paramètres */
 export const MAX_LOGO_CHARS = 4 * 1024 * 1024;
+
+/** Logos de la bibliothèque du poste (<userData>/logos.json), le logo actif compris */
+export const MAX_LOGO_LIBRARY = 20;
+/** Nom d'un logo de la bibliothèque (caractères) */
+export const MAX_LOGO_NAME = 80;
+
+/** Logo de la bibliothèque du poste : le logo actif est `AppSettings.logo` (docs/adr/0022) */
+export interface LogoLibraryEntry {
+  id: string;
+  name: string;
+  /** data URL `data:image/…` */
+  data: string;
+}
 
 const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
 
@@ -83,6 +105,8 @@ export function validateAppSetting<K extends AppSettingKey>(
     case 'inkSaving':
       if (typeof value !== 'boolean') fail('booléen');
       return value as AppSettings[K];
+    case 'matchDurations':
+      return validateDurationConfig(value) as AppSettings[K];
     case 'agentFolders':
       if (
         !Array.isArray(value) ||

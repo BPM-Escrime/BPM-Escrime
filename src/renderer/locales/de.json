@@ -590,7 +590,30 @@
     "backup_imported": "{{count}} Einstellung(en) importiert.",
     "backup_invalid": "Ungültige Datei: BPM-Escrime-Einstellungsexport erwartet.",
     "webhook_test": "Testen",
-    "webhook_testing": "Teste…"
+    "webhook_testing": "Teste…",
+    "durations_title": "Gefechtsdauern",
+    "durations_hint": "Referenz nach Waffe, Phase und Trefferzahl: Einstellung der Turnierleitung, sonst Verlauf dieses Rechners (mindestens 30 Gefechte), sonst Standardwert. Für Phasenende, Formelsimulation und Kennzahlen. Leere Einstellung: keine.",
+    "durations_weapon": "Waffe",
+    "durations_phase": "Phase",
+    "durations_score": "Treffer",
+    "durations_scope": "Geschlecht · Kategorie",
+    "durations_reference": "Referenz",
+    "durations_measured": "Gemessen (Rechner)",
+    "durations_setting": "Einstellung TL",
+    "durations_phase_pool": "Pool",
+    "durations_phase_tableau": "Tableau",
+    "durations_phase_team_relay": "Staffel",
+    "durations_all": "alle",
+    "durations_basis_default": "Standard",
+    "durations_basis_history": "Verlauf",
+    "durations_basis_setting": "Einstellung TL",
+    "durations_basis_live": "live",
+    "durations_matches": "{{count}} G.",
+    "durations_changeover": "Bahnwechsel",
+    "durations_competitions": "Verlauf: {{count}} Turnier(e)",
+    "durations_reset": "Verlauf zurücksetzen",
+    "durations_reset_confirm": "Verlauf der Gefechtsdauern dieses Rechners löschen? Die Einstellungen der Turnierleitung bleiben erhalten.",
+    "durations_error": "Dauer abgelehnt: Format m:ss, mindestens 30 s"
   },
   "shortcuts": {
     "category_actions": "Aktionen",
@@ -3150,7 +3173,9 @@
     "resolve": "DT unterwegs — Erledigt",
     "abandon": "Aufgabe",
     "abandon_note": "(vom DT zu bestätigen)",
-    "confirm_abandon": "Aufgabe erfassen"
+    "confirm_abandon": "Aufgabe erfassen",
+    "black_card_report": "Bericht Schwarze Karte (PDF)",
+    "black_card_report_title": "Vorausgefüllter Ausschlussbericht, innerhalb von 48 h an die FFE zu senden (Anhang 14)"
   },
   "qrShare": {
     "generating": "QR-Code wird erstellt…",

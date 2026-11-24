@@ -4,6 +4,9 @@ import { useTranslation } from '../hooks/useTranslation';
 import type { VersionInfo } from '../../shared/types/preload';
 import { getActiveLocale } from '../../shared/utils/localeFormat';
 import HyperspaceCrawl from './HyperspaceCrawl';
+import { saveDataFile, useFilesApi } from '../api/filesApi';
+import { stationAvailable } from '../api/stationApi';
+import { usePlatform } from '../platform/PlatformContext';
 
 interface Props {
   onClose: () => void;
@@ -104,6 +107,8 @@ const AboutModal: React.FC<Props> = ({ onClose }) => {
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
   const [easterActive, setEasterActive] = useState(false);
   const [diagStatus, setDiagStatus] = useState<'idle' | 'busy' | 'saved' | 'failed'>('idle');
+  const files = useFilesApi();
+  const platform = usePlatform();
 
   useEffect(() => {
     window.electronAPI
@@ -114,12 +119,15 @@ const AboutModal: React.FC<Props> = ({ onClose }) => {
 
   const triggerEasterEgg = () => setEasterActive(true);
 
+  // Rapport rendu en contenu par le poste (getDiagnosticReport), enregistré par la plateforme
   const exportDiagnostic = async () => {
     setDiagStatus('busy');
     try {
-      const result = await window.electronAPI.diagnostic.exportReport();
-      if (result.cancelled) setDiagStatus('idle');
-      else setDiagStatus(result.success ? 'saved' : 'failed');
+      const file = await files.diagnosticReport();
+      const saved = await saveDataFile(platform, file, {
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+      });
+      setDiagStatus(saved ? 'saved' : 'idle');
     } catch {
       setDiagStatus('failed');
     }
@@ -181,7 +189,7 @@ const AboutModal: React.FC<Props> = ({ onClose }) => {
 
         <div style={styles.licence}>{t('about.licence')}</div>
 
-        {window.electronAPI?.diagnostic && (
+        {stationAvailable() && (
           <>
             <button
               style={styles.diagBtn}

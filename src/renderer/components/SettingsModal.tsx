@@ -14,6 +14,7 @@ import VenuesSettingsSection from './VenuesSettingsSection';
 import { Bell, Hourglass } from 'lucide-react';
 // Chargé à la demande : embarque jsPDF, lourd pour le bundle initial
 import { InkSavingSettingsSection } from './InkSavingSettingsSection';
+import { MatchDurationsSettingsSection } from './MatchDurationsSettingsSection';
 const PdfTemplateModal = React.lazy(() => import('./PdfTemplateModal'));
 import { restartGuidedTour } from './guidedTourFlags';
 import { UI_SCALES, normalizeUiScale } from '../services/uiScale';
@@ -520,6 +521,8 @@ const SettingsModal: React.FC<SettingsModalProps> = (props: SettingsModalProps) 
         return <PrivacySettingsSection item={id} />;
       case 'venues':
         return <VenuesSettingsSection />;
+      case 'match_durations':
+        return <MatchDurationsSettingsSection />;
       case 'backup_dir':
         return <BackupDirSettingsSection />;
       case 'backup':

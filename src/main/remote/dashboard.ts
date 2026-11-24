@@ -4,7 +4,14 @@
  * Licensed under GPL-3.0
  */
 import type { SessionMatch } from './types';
-import { referenceDuration, weaponCode } from '../../shared/utils/matchDurations';
+import {
+  competitionDurationKey,
+  durationSources,
+  referenceDuration,
+  weaponCode,
+  type DurationKey,
+  type DurationSources,
+} from '../../shared/domain/durations/matchDurations';
 import { estimatePhaseEta } from '../../shared/utils/phaseEta';
 import type { PhaseEtaSummary } from './routes/context';
 import { visibleArenas } from './stripPlan';
@@ -174,13 +181,7 @@ export function computePhaseEta(ctx: DashboardContext): PhaseEtaSummary {
     activeArenas: ctx.session?.strips?.length || ctx.arenas.size,
     now: Date.now(),
     // Même référence que la simulation et les indicateurs (#1965), si l'arme est connue
-    reference: ctx.session?.weapon
-      ? referenceDuration({
-          weapon: weaponCode(ctx.session.weapon),
-          phase: phase === 'pools' ? 'pool' : 'tableau',
-          maxScore: phase === 'pools' ? 5 : 15,
-        })
-      : undefined,
+    reference: durationReference(ctx, phase === 'pools' ? 'pool' : 'tableau'),
   });
   return {
     finishAt: new Date(estimate.finishAt).toISOString(),
@@ -190,6 +191,28 @@ export function computePhaseEta(ctx: DashboardContext): PhaseEtaSummary {
     phase,
     round,
   };
+}
+
+/**
+ * Référence de la phase (#1965) : clé de l'épreuve (arme, sexe, catégorie, score), réglages du
+ * DT et historique du poste. Sans épreuve en base : arme de la session, valeurs par défaut.
+ */
+function durationReference(ctx: DashboardContext, phase: 'pool' | 'tableau') {
+  let sources: DurationSources = {};
+  let key: DurationKey | null = null;
+  try {
+    sources = durationSources(ctx.db.settings.getSetting('matchDurations'));
+    const comp = ctx.session?.competitionId
+      ? ctx.db.getCompetition(ctx.session.competitionId)
+      : null;
+    if (comp) key = competitionDurationKey(comp, phase);
+  } catch {
+    /* base fermée : valeurs par défaut */
+  }
+  if (!key && ctx.session?.weapon) {
+    key = { weapon: weaponCode(ctx.session.weapon), phase, maxScore: phase === 'pool' ? 5 : 15 };
+  }
+  return key ? referenceDuration(key, sources) : undefined;
 }
 
 /** Champs et méthodes du serveur exposés à ce contexte via liveContext (#1896) */

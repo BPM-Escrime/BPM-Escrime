@@ -6,10 +6,8 @@
 import { MatchStatus, FencerStatus, Score } from '../../shared/types';
 import type { BlackCardRecord } from './types';
 import type { RemoteScoreServer } from '../remoteScoreServer';
-import { getSharedMainWindow } from '../mainWindowRef';
 import { logger, LogCategory } from '../../shared/services/logger';
 import { reinstateByCommand } from './scoreCommand';
-import { notifyScreen } from './remoteActivity';
 
 type S = RemoteScoreServer;
 
@@ -162,18 +160,6 @@ export function cancelBlackCard(
     `[RemoteScoreServer] Carton noir annulé : combattant ${fencerId} réintégré, match ${matchId} rouvert`
   );
 
-  const mainWin = getSharedMainWindow();
-  if (mainWin) {
-    notifyScreen({
-      kind: 'fencer_reinstated',
-      competitionId: ctx.session?.competitionId ?? null,
-      fencerId,
-      matchId,
-      status,
-      scoreA,
-      scoreB,
-    });
-  }
   return { success: true, matchId };
 }
 

@@ -83,7 +83,6 @@ async function poolsPlayed(): Promise<Competition> {
 function mockElectronAPI() {
   const reads: Record<string, (...args: any[]) => unknown> = {
     getFencersByCompetition: (id: string) => db.getFencersByCompetition(id),
-    getSessionState: (id: string) => db.getSessionState(id),
     getPhasesByCompetition: () => [],
   };
   const group = (): any =>

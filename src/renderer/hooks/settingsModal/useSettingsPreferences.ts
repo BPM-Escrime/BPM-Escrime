@@ -24,6 +24,7 @@ import {
   type SettingsModalProps,
 } from '../../components/settingsModal.helpers';
 import { useRemoteApi } from '../../api/remoteApi';
+import { stationAvailable, useStationApi } from '../../api/stationApi';
 import { getPref, setPref, safeStorage } from '../../services/preferences';
 
 type Ctx = SettingsModalProps;
@@ -31,6 +32,7 @@ type Ctx = SettingsModalProps;
 /** Préférences de l'application : affichage, voix, mises à jour, webhook (état et effets) (extrait de SettingsModal, #1599) */
 export function useSettingsPreferences(ctx: Ctx) {
   const remote = useRemoteApi();
+  const station = useStationApi();
   const { onClose, onSave } = ctx;
 
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
@@ -116,22 +118,26 @@ export function useSettingsPreferences(ctx: Ctx) {
     setSettings(prev => ({ ...prev, language, theme }));
   }, [language, theme]);
 
-  // Logo enregistré par le main si le poste n'en a pas
+  // Logo actif du poste (paramètre `logo`, en base) si l'écran n'en a pas, et bibliothèque
+  // du poste fusionnée avec la copie locale (getLogoLibrary, docs/adr/0022)
   useEffect(() => {
+    if (!stationAvailable()) return;
     if (!logo) {
-      const api = window.electronAPI;
-      api?.getLogo?.().then((persisted: string | null) => {
-        if (persisted) {
-          setLogo(persisted);
-          setPref('logo', persisted);
-        }
-      });
+      station.settings
+        .get()
+        .then(({ logo: persisted }) => {
+          if (persisted) {
+            setLogo(persisted);
+            setPref('logo', persisted);
+          }
+        })
+        .catch(() => {
+          /* logo optionnel */
+        });
     }
-    const api = window.electronAPI;
-    // Bibliothèque persistée (logos.json) : fusion avec la copie locale
-    api
-      ?.getLogos?.()
-      .then((raw: unknown) => {
+    station.logos
+      .list()
+      .then(raw => {
         const disk = sanitizeLogoLibrary(raw);
         if (disk.length === 0) return;
         setLogos(prev => {
@@ -145,14 +151,7 @@ export function useSettingsPreferences(ctx: Ctx) {
       .catch(() => {
         /* bibliothèque optionnelle */
       });
-    const unsub = remote.onActivity('logo_loaded', undefined, ({ logo: persisted }) => {
-      if (persisted && !getPref('logo')) {
-        setLogo(persisted);
-        setPref('logo', persisted);
-      }
-    });
-    return () => unsub();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- chargement de la bibliothèque de logos et abonnement au montage seulement
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chargement du logo et de la bibliothèque au montage seulement
   }, []);
 
   // Liste des voix disponibles (peut arriver de façon asynchrone)

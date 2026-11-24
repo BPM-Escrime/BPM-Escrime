@@ -1,7 +1,8 @@
 /**
  * BPM - Escrime - Poste : appels de l'écran au contrat d'API (#1981 lot 2, docs/adr/0022)
  * Un seul endroit traduit les appels de l'écran (arguments positionnels, mêmes noms que les
- * anciens groupes settings, themes, eventDay, privacy et mcp de window.electronAPI) en
+ * anciens groupes settings, themes, eventDay, privacy, mcp et proxy, et des logos de
+ * window.electronAPI) en
  * opérations du contrat (entrées nommées, shared/api/contractStation.ts). Hors Electron, le
  * client lève ApiError('unavailable') : `stationAvailable()` dit s'il y a un poste à piloter.
  * Restent en IPC le dialogue natif d'ajout d'un dossier de l'agent (settings.addAgentFolder)
@@ -11,10 +12,12 @@
  */
 import { useMemo } from 'react';
 import type { BpmClient } from '../../shared/api/client';
-import type { AppSettings, VenueInput } from '../../shared/types/appSettings';
+import type { AppSettings, LogoLibraryEntry, VenueInput } from '../../shared/types/appSettings';
+import type { ProxySettingsDTO } from '../../shared/types/systemSettings';
 import type { CustomTheme } from '../../shared/types/remote';
 import type { DayRefereeInput, StripRule } from '../../shared/types/eventDay';
 import type { PrivacyPersonRef, PrivacySettings } from '../../shared/types/privacy';
+import { weaponCode, type DurationKey } from '../../shared/domain/durations/matchDurations';
 import { useBpmClient } from './BpmClientContext';
 import { defaultBpmClient } from './IpcClient';
 
@@ -23,7 +26,9 @@ export const stationAvailable = (): boolean =>
   typeof window !== 'undefined' && !!window.electronAPI?.api;
 
 /** Paramètres du poste modifiables par l'écran (les dossiers de l'agent ont leurs opérations) */
-export type StationSettingsPatch = Partial<Omit<AppSettings, 'agentFolders'>>;
+export type StationSettingsPatch = Partial<Omit<AppSettings, 'agentFolders' | 'matchDurations'>>;
+
+type WeaponCode = 'E' | 'F' | 'S' | 'L' | 'C';
 
 export function createStationApi(client: BpmClient) {
   const q = client.query.bind(client);
@@ -37,7 +42,7 @@ export function createStationApi(client: BpmClient) {
       importLegacy: (values: Record<string, string | null>, mode: 'missing' | 'write') =>
         c('importLegacySettings', { values, mode }),
       resolve: (
-        key: keyof AppSettings | 'stripCount',
+        key: Exclude<keyof AppSettings, 'matchDurations'> | 'stripCount',
         scope?: { competitionId?: string; eventDayId?: string }
       ) => q('getResolvedSetting', { key, ...scope }),
       listVenues: () => q('listVenues', {}),
@@ -52,6 +57,17 @@ export function createStationApi(client: BpmClient) {
       /** Langue ou thème changés hors de l'écran (agent) : à relire. Renvoie la désinscription. */
       onChanged: (callback: () => void) =>
         client.subscribe('onStationSettingsChanged', {}, () => callback()),
+    },
+    /** Bibliothèque de logos du poste ; le logo actif est `settings.get().logo` */
+    logos: {
+      list: () => q('getLogoLibrary', {}),
+      save: (logos: LogoLibraryEntry[]) => c('updateLogoLibrary', { logos }),
+    },
+    /** Proxy réseau du poste (session Electron) ; adresse refusée : ApiError station_refused */
+    proxy: {
+      get: () => q('getProxySettings', {}),
+      update: (settings: ProxySettingsDTO) => c('updateProxySettings', settings),
+      test: () => c('testProxy', {}),
     },
     /** Bibliothèque de thèmes d'écrans */
     themes: {
@@ -90,6 +106,18 @@ export function createStationApi(client: BpmClient) {
     backup: {
       getDir: () => q('getBackupDir', {}),
       resetDir: () => c('resetBackupDir', {}),
+    },
+    /** Durées de match de référence (#1965) */
+    durations: {
+      get: () => q('getMatchDurations', {}),
+      setChangeover: (changeoverMs: number) => c('updateMatchDurationSettings', { changeoverMs }),
+      setOverride: (key: DurationKey, medianMs: number | null) =>
+        c('updateMatchDurationSettings', {
+          override: { key: { ...key, weapon: weaponCode(key.weapon) as WeaponCode }, medianMs },
+        }),
+      resetHistory: () => c('resetMatchDurationHistory', {}),
+      /** Durées d'une épreuve versées à l'historique (fait aussi à la fin du tableau) */
+      recordHistory: (competitionId: string) => c('recordMatchDurationHistory', { competitionId }),
     },
     /** RGPD (#1882) : droits des personnes, conservation, noms sur le réseau */
     privacy: {

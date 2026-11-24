@@ -10,11 +10,12 @@ import type { AppSettingKey } from '../../../shared/types/appSettings';
 import { LEGACY_LOCAL_STORAGE_KEYS, fromLegacyStorage } from '../../../shared/types/appSettings';
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
 import { onCompetitionEvent } from '../api/events';
-import type { CommandContext } from './context';
+import { CommandError, type CommandContext } from './context';
 import { portOf, refuse, type StationHandler } from './stationSupport';
 import { resolveSetting, type ResolvableKey } from './settings';
 import { eventDayHandlers } from './eventDay';
 import { privacyHandlers } from './privacy';
+import { matchDurationHandlers } from './matchDurations';
 import { normalizePlaceQuery } from '../../../shared/domain/places/placeSearch';
 
 /** Valeurs localStorage (clé historique → texte) converties en paramètres typés */
@@ -53,6 +54,11 @@ type SettingsOps =
   | 'removeAgentFolder'
   | 'getBackupDir'
   | 'resetBackupDir'
+  | 'getLogoLibrary'
+  | 'updateLogoLibrary'
+  | 'getProxySettings'
+  | 'updateProxySettings'
+  | 'testProxy'
   | 'listVenues'
   | 'saveVenue'
   | 'deleteVenue'
@@ -100,6 +106,22 @@ const settingsHandlers: { [N in SettingsOps]: StationHandler<N> } = {
       ctx.db.settings.updateSettings({ agentFolders: current.filter(f => f !== folder) });
       return agentFolders(ctx);
     }),
+  // ── Bibliothèque de logos (<userData>/logos.json) ; logo actif : paramètre `logo` ──
+  getLogoLibrary: ctx => portOf(ctx).logos.list(),
+  updateLogoLibrary: (ctx, { logos }) => portOf(ctx).logos.save(logos),
+  // ── Proxy réseau du poste (session Electron) ──
+  getProxySettings: ctx => portOf(ctx).proxy.settings(),
+  updateProxySettings: async (ctx, input) => {
+    const applied = await portOf(ctx).proxy.update(input);
+    if (!applied) {
+      throw new CommandError(
+        'station_refused',
+        'Adresse de proxy invalide : hôte:port, schéma http, https, socks4 ou socks5, sans identifiants'
+      );
+    }
+    return applied;
+  },
+  testProxy: ctx => portOf(ctx).proxy.test(),
   // ── Salles ──
   listVenues: ctx => refuse(() => ctx.db.settings.listVenues()),
   // Appareils de piste déclarés sur la salle (docs/adr/0023) : pilotes rechargés
@@ -143,4 +165,5 @@ export const stationHandlers = {
   ...settingsHandlers,
   ...eventDayHandlers,
   ...privacyHandlers,
+  ...matchDurationHandlers,
 };

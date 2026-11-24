@@ -4,6 +4,7 @@
  * Licensed under GPL-3.0
  */
 
+import { useDurationSources } from '../hooks/useDurationSources';
 import React, { useState, useEffect, useMemo, useCallback, memo, Suspense } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useTranslation } from '../hooks/useTranslation';
@@ -416,6 +417,7 @@ const AnalyticsDashboard_: React.FC<AnalyticsDashboardProps> = ({
 
   // Mode « toutes les places » et durées de référence (#1965)
   const kpiOpts = useMemo(() => kpiCompetitionOptions(competition), [competition]);
+  const durationSources = useDurationSources();
   const orgKpis = useMemo(
     () =>
       organisationKpis({
@@ -423,12 +425,23 @@ const AnalyticsDashboard_: React.FC<AnalyticsDashboardProps> = ({
         tableauMatches,
         consolationMatches: consolationBrackets.map(b => b.matches),
         ...kpiOpts,
+        durationSources,
         timings,
         events: remoteEvents,
         arenas: liveArenas,
         now,
       }),
-    [pools, tableauMatches, consolationBrackets, kpiOpts, timings, remoteEvents, liveArenas, now]
+    [
+      pools,
+      tableauMatches,
+      consolationBrackets,
+      kpiOpts,
+      durationSources,
+      timings,
+      remoteEvents,
+      liveArenas,
+      now,
+    ]
   );
   const poolRanks = useMemo(
     () => new Map(overallRanking.map(r => [r.fencer.id, r.rank])),

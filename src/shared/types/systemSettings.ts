@@ -1,5 +1,6 @@
 /**
- * BPM - Escrime - Types IPC « réglages système » : proxy réseau, dossiers de sauvegarde
+ * BPM - Escrime - Types « réglages système » : proxy réseau (contrat : getProxySettings,
+ * updateProxySettings), dossiers de sauvegarde
  * Licensed under GPL-3.0
  * Extraits de preload.ts (plafond de longueur, cf. scripts/check-quality-ratchet.js).
  */
@@ -23,13 +24,4 @@ export interface BackupAPI {
   chooseDir: () => Promise<BackupDirDTO>;
   /** Dossier dédié à une compétition (sélecteur natif, sans enregistrer) ; null si annulé */
   pickCompetitionDir: () => Promise<string | null>;
-}
-
-export interface ProxyAPI {
-  get: () => Promise<ProxySettingsDTO>;
-  set: (
-    settings: ProxySettingsDTO
-  ) => Promise<{ success: boolean; settings?: ProxySettingsDTO; error?: string }>;
-  /** Proxy résolu pour GitHub (« DIRECT », « PROXY hôte:port »…) + requête réelle */
-  test: () => Promise<{ ok: boolean; resolved: string }>;
 }

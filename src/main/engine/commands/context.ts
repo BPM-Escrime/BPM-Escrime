@@ -15,7 +15,9 @@ import type {
 } from '../../../shared/types/club';
 import type { DayStripBoard } from '../../../shared/types/eventDay';
 import type { McpLogEntry, McpStatus } from '../../../shared/types/mcp';
-import type { BackupDirDTO } from '../../../shared/types/systemSettings';
+import type { BackupDirDTO, ProxySettingsDTO } from '../../../shared/types/systemSettings';
+import type { LogoLibraryEntry } from '../../../shared/types/appSettings';
+import type { DiagnosticInput } from '../../diagnosticReport';
 import type { PlaceSuggestion } from '../../../shared/domain/places/placeSearch';
 import type { PrivacySettings } from '../../../shared/types/privacy';
 import type { CustomTheme, FirewallDiagnosis } from '../../../shared/types/remote';
@@ -178,7 +180,7 @@ export interface RemoteAdminPort {
   server(competitionId: string): RemoteServerHandle | undefined;
   /** Tous les serveurs actifs (épreuves et entraînement) */
   servers(): RemoteSharedHandle[];
-  /** Logo des écrans : fichier du poste puis serveurs actifs */
+  /** Logo des écrans poussé aux serveurs actifs (enregistré en base par setRemoteLogo) */
   setLogo(logo: string | null): Promise<void>;
   /** Synthèse vocale : fichier du poste puis serveurs actifs */
   setTtsConfig(config: TtsConfig): Promise<void>;
@@ -303,6 +305,22 @@ export interface StationPort {
       language: string
     ): Promise<{ suggestions: PlaceSuggestion[]; unavailable: boolean }>;
   };
+  /** Bibliothèque de logos (<userData>/logos.json) ; le logo actif est le paramètre `logo` */
+  logos: {
+    list(): Promise<LogoLibraryEntry[]>;
+    /** Remplace la bibliothèque (écriture atomique) ; renvoie ce qui est enregistré */
+    save(logos: LogoLibraryEntry[]): Promise<LogoLibraryEntry[]>;
+  };
+  /** Proxy réseau (<userData>/proxy-settings.json), appliqué à la session Electron */
+  proxy: {
+    settings(): ProxySettingsDTO;
+    /** Normalise, applique puis enregistre ; null : réglage invalide, rien n'est changé */
+    update(input: ProxySettingsDTO): Promise<ProxySettingsDTO | null>;
+    /** Route résolue pour GitHub et requête réelle */
+    test(): Promise<{ ok: boolean; resolved: string }>;
+  };
+  /** Données techniques du rapport de diagnostic (versions, système, mémoire) */
+  diagnostics(): DiagnosticInput;
   /** Pistes de la journée en temps réel (serveurs distants des épreuves) */
   dayStrips: {
     board(dayId: string): DayStripBoard | null;

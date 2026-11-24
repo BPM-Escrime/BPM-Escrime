@@ -64,3 +64,12 @@ export function diagnosticFileName(generatedAt: string): string {
   const stamp = generatedAt.replace(/\.\d{3}Z$/, '').replace(/[-:]/g, '');
   return `bpm-escrime-diagnostic-${stamp}.json`;
 }
+
+/** Fichier du rapport : nom proposé et JSON indenté (rendu en contenu par getDiagnosticReport) */
+export function diagnosticReportFile(input: DiagnosticInput): { fileName: string; text: string } {
+  const report = buildDiagnosticReport(input);
+  return {
+    fileName: diagnosticFileName(report.generatedAt),
+    text: `${JSON.stringify(report, null, 2)}\n`,
+  };
+}

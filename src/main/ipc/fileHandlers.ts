@@ -1,7 +1,8 @@
 /**
- * BPM - Escrime - Handlers IPC `file:*` (écriture au chemin choisi, impression, tableur,
- * fichiers fédéraux) et `dialog:*` (boîtes de dialogue natives) — extraits de main.ts, #1341.
- * Les fichiers de données (.bpm, .bpf, photos) passent par le contrat en contenu (ADR-0021).
+ * BPM - Escrime - Handlers IPC `file:*` (écriture au chemin choisi, impression, fichiers
+ * fédéraux) et `dialog:*` (boîtes de dialogue natives) — extraits de main.ts, #1341.
+ * Les fichiers de données (.bpm, .bpf, photos, tableur .xlsx) passent par le contrat en contenu
+ * (ADR-0021).
  * Licensed under GPL-3.0
  */
 import { app, dialog, ipcMain, type BrowserWindow } from 'electron';
@@ -10,7 +11,7 @@ import * as path from 'path';
 import type { DatabaseManager } from '../../database';
 import { assertAuthorizedPath, authorizePath, readBoundedFile } from '../pathAuthorization';
 import { MAX_DATA_FILE_BYTES } from '../../shared/api/contractFiles';
-import { readImportText, rowsToXlsx } from '../xlsxToCsv';
+import { readImportText } from '../xlsxToCsv';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
 
 /** Fichiers lus d'un seul choix multiple du dialogue (binaire) */
@@ -43,33 +44,6 @@ export function registerFileHandlers({ db, getMainWindow }: FileHandlersContext)
     else if (typeof content === 'string') await fs.promises.writeFile(resolved, content, 'utf-8');
     else throw new Error('Contenu invalide');
   });
-
-  // Tableur Excel (.xlsx) écrit depuis une grille de valeurs (Mode Club : inventaire)
-  ipcMain.handle(
-    'file:writeSpreadsheet',
-    async (_, filepath: string, rows: unknown, sheetName?: unknown) => {
-      const resolved = assertAuthorizedPath(filepath, 'write');
-      const appDir = path.resolve(app.getAppPath());
-      if (resolved.startsWith(appDir)) {
-        throw new Error('Writing inside app directory is not allowed');
-      }
-      if (!Array.isArray(rows) || rows.length > 20000) {
-        throw new Error('Tableau invalide (20 000 lignes max)');
-      }
-      const grid = rows.map(
-        r =>
-          (Array.isArray(r) ? r : [])
-            .slice(0, 200)
-            .map(v => (typeof v === 'number' || typeof v === 'string' ? v : '')) as (
-            string | number
-          )[]
-      );
-      await fs.promises.writeFile(
-        resolved,
-        await rowsToXlsx(grid, typeof sheetName === 'string' ? sheetName : undefined)
-      );
-    }
-  );
 
   // Dialog handlers
   ipcMain.handle('dialog:openFile', async (_, raw) => {

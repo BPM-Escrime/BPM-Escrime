@@ -141,6 +141,18 @@ Rafraîchissement automatique toutes les 10 s.
 
 API : `GET /api/journee-status` → `{ day, strips, competitions }`.
 
+## Planning prévisionnel (#1958)
+
+Moteur pur `planDay` (`src/shared/domain/planning/dayPlanner.ts`), lot 1 : pas encore branché à l'écran.
+
+- Découpe chaque épreuve en blocs : une poule (une piste), un tour de tableau (1 à N pistes, exempts non comptés).
+- Durée d'un bloc : matchs × (durée de référence ajustée + changement de piste), `matchDurations.ts` (#1965).
+- Ordonnancement par liste : pas avant le scratch, repos entre deux tours (10 min par défaut), réservations des pistes (#1878), arbitres libres de l'arme.
+- Alertes : `referees_short` (pistes réduites ou décalées faute d'arbitres), `no_strip` (aucune piste autorisée).
+- Recalage : blocs commencés passés en `fixed`, durées réelles en `measuredMs`, rien de nouveau avant `now`.
+
 ## Pas encore fait
+
+- Onglet Planning (tableau des épreuves, alertes, Gantt), heures prévues sur le kiosque, les tablettes et le MCP (#1958, lots 2 et 3).
 
 - Pilotage de chaque épreuve depuis un poste différent (multi-poste réseau).

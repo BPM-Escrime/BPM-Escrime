@@ -12,7 +12,7 @@ import { installAppSettingsMirror } from '../services/appSettingsMirror';
 import type { OpenCompetition } from './useAppState';
 import { defaultBpmClient } from '../api/IpcClient';
 import { loadCompetition } from '../api/competitionMapping';
-import { remoteApi } from '../api/remoteApi';
+import { stationApi, stationAvailable } from '../api/stationApi';
 
 interface AppGlobalEffectsParams {
   loadCompetitions: () => unknown;
@@ -31,23 +31,28 @@ export function useAppGlobalEffects(params: AppGlobalEffectsParams): void {
   // les réglages ont changé reprend la version en base (sinon l'écran régénérerait par
   // exemple le tableau avec l'ancien choix de petite finale)
   useEffect(() => {
-    const subscribe = window.electronAPI?.onCompetitionEvent;
-    if (!subscribe) return;
-    return subscribe(event => {
-      if (event.type !== 'competitions:changed') return;
-      void ref.current.loadCompetitions();
-      const id = event.competitionId;
-      if (!id) return;
-      void loadCompetition(defaultBpmClient, id).then(fresh => {
-        if (!fresh) return;
-        const merge = (c: Competition): Competition =>
-          c.id === id ? { ...c, ...fresh, fencers: c.fencers, referees: c.referees } : c;
-        ref.current.setCurrentCompetition?.(prev => (prev ? merge(prev) : prev));
-        ref.current.setOpenCompetitions?.(prev =>
-          prev.map(o => (o.competition.id === id ? { ...o, competition: merge(o.competition) } : o))
-        );
+    try {
+      return defaultBpmClient.subscribe('onCompetitionEvents', {}, event => {
+        if (event.type !== 'competitions:changed') return;
+        void ref.current.loadCompetitions();
+        const id = event.competitionId;
+        if (!id) return;
+        void loadCompetition(defaultBpmClient, id).then(fresh => {
+          if (!fresh) return;
+          const merge = (c: Competition): Competition =>
+            c.id === id ? { ...c, ...fresh, fencers: c.fencers, referees: c.referees } : c;
+          ref.current.setCurrentCompetition?.(prev => (prev ? merge(prev) : prev));
+          ref.current.setOpenCompetitions?.(prev =>
+            prev.map(o =>
+              o.competition.id === id ? { ...o, competition: merge(o.competition) } : o
+            )
+          );
+        });
       });
-    });
+    } catch {
+      // Contrat indisponible (navigateur sans poste, tests sans pont)
+      return undefined;
+    }
   }, []);
 
   // Load competitions on mount — attendre db:ready si la fenêtre s'ouvre avant la DB
@@ -61,6 +66,7 @@ export function useAppGlobalEffects(params: AppGlobalEffectsParams): void {
           ref.current.loadCompetitions();
           // Réglages du poste repris en base (#1880) : lisibles en --headless et par le MCP
           installAppSettingsMirror();
+          syncLogoFromStation();
         }
       };
       window.electronAPI.onDbReady(tryLoad);
@@ -101,26 +107,33 @@ export function useAppGlobalEffects(params: AppGlobalEffectsParams): void {
     return () => document.removeEventListener('wheel', handler, { capture: true });
   }, []);
 
-  // Sync logo from disk to localStorage so PDF exports always find it
+  // Logo du poste (paramètre `logo` en base, seule source) recopié dans localStorage pour les
+  // exports PDF : lu après db:ready (syncLogoFromStation), relu quand l'agent change les
+  // réglages du poste
   useEffect(() => {
-    if (!window.electronAPI) return;
-    window.electronAPI
-      .getLogo?.()
-      .then((logo: string | null) => {
-        if (logo) localStorage.setItem('bellepoule-logo', logo);
-        else localStorage.removeItem('bellepoule-logo');
-      })
-      .catch((err: unknown) => {
-        logger.warn(
-          LogCategory.UI,
-          'Impossible de charger le logo',
-          err instanceof Error ? err : undefined
-        );
-      });
-    const unsub = remoteApi.onActivity('logo_loaded', undefined, ({ logo }) => {
+    if (!stationAvailable()) return undefined;
+    try {
+      return stationApi.settings.onChanged(syncLogoFromStation);
+    } catch {
+      return undefined;
+    }
+  }, []);
+}
+
+/** Logo actif du poste (getStationSettings, docs/adr/0022) → localStorage des exports PDF */
+function syncLogoFromStation(): void {
+  if (!stationAvailable()) return;
+  stationApi.settings
+    .get()
+    .then(({ logo }) => {
       if (logo) localStorage.setItem('bellepoule-logo', logo);
       else localStorage.removeItem('bellepoule-logo');
+    })
+    .catch((err: unknown) => {
+      logger.warn(
+        LogCategory.UI,
+        'Impossible de charger le logo',
+        err instanceof Error ? err : undefined
+      );
     });
-    return () => unsub();
-  }, []);
 }

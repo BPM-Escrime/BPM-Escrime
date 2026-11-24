@@ -5,16 +5,7 @@
  */
 
 import type { SettingsAPI } from './settingsApi';
-import {
-  Competition,
-  Match,
-  Pool,
-  PoolSnapshot,
-  Score,
-  Phase,
-  FencerCompetitionStats,
-} from '../types';
-import type { MatchSignatureRequest, ArenaUpdate } from './remote';
+import { Competition, Pool, Score, Phase, FencerCompetitionStats } from '../types';
 import type { PrivacyAPI } from './privacy';
 import type { McpScreenEvent } from './mcp';
 export type { ClubMemberReport } from './club';
@@ -283,8 +274,8 @@ export interface UpdateProgressEvent {
   currentBuild?: number;
 }
 
-export type { ProxySettingsDTO, ProxyAPI, BackupDirDTO, BackupAPI } from './systemSettings';
-import type { ProxyAPI, BackupAPI } from './systemSettings';
+export type { ProxySettingsDTO, BackupDirDTO, BackupAPI } from './systemSettings';
+import type { BackupAPI } from './systemSettings';
 
 export interface UpdaterAPI {
   check: () => Promise<UpdateInfo | null>;
@@ -374,9 +365,6 @@ export interface DatabaseAPI {
   // Poules d'une préparation écrite par une version précédente (lecture seule)
   getPoolsByPhase: (phaseId: string) => Promise<Pool[]>;
   getPhasesByCompetition: (competitionId: string) => Promise<Phase[]>;
-
-  // État de l'épreuve hors moteur (lecture seule ; écrit par le moteur seul, docs/adr/0024)
-  getSessionState: (competitionId: string) => Promise<SessionState | null>;
 }
 
 export interface FileAPI {
@@ -384,12 +372,6 @@ export interface FileAPI {
   import: (filepath: string) => Promise<FileOpenResult>;
   /** Écrit un texte (UTF-8) ou des octets au chemin choisi par le dialogue natif */
   writeContent: (filepath: string, content: string | Uint8Array) => Promise<void>;
-  /** Classeur .xlsx écrit par le main (une feuille) */
-  writeSpreadsheet: (
-    filepath: string,
-    rows: (string | number)[][],
-    sheetName?: string
-  ) => Promise<void>;
   printHtml: (html: string) => Promise<{ success: boolean; error?: string }>;
   printHtmlToPDF: (
     html: string,
@@ -557,11 +539,6 @@ export interface PrintDialogSettings {
   scale: number;
 }
 
-/** Rapport de diagnostic exporté en JSON (#1326) */
-export interface DiagnosticAPI {
-  exportReport: () => Promise<{ success: boolean; cancelled?: boolean; error?: string }>;
-}
-
 /** Publication GREG (escrime-info.com) : fichier XML + champs du formulaire (#1328) */
 export interface GregAPI {
   publish: (request: {
@@ -616,21 +593,14 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   file: FileAPI;
   dialog: DialogAPI;
   updater: UpdaterAPI;
-  proxy: ProxyAPI;
   backup: BackupAPI;
   privacy: PrivacyAPI;
-  /** Serveur MCP intégré, agent IA en lecture (#1880) */
-  diagnostic: DiagnosticAPI;
   greg: GregAPI;
   ftp: FtpAPI;
   crypto: CryptoAPI;
   settings: SettingsAPI;
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void;
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) => () => void;
-  /** Bus d'événements de données main → renderer (#1298) */
-  onCompetitionEvent: (
-    callback: (event: { type: CompetitionEventType; competitionId?: string }) => void
-  ) => () => void;
   notifyLanguageChanged: (lang: string) => void;
   /** Écran de démarrage affiché ou non (préférence persistée côté main) */
   splash?: {
@@ -638,10 +608,4 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
     setEnabled: (enabled: boolean) => Promise<{ success: boolean; enabled?: boolean }>;
   };
   initialLanguage: string | null;
-  getLogo: () => Promise<string | null>;
-  getLogos: () => Promise<{ id: string; name: string; data: string }[]>;
-  saveLogos: (
-    logos: { id: string; name: string; data: string }[]
-  ) => Promise<{ success: boolean; error?: string }>;
-  getTtsConfig: () => Promise<TtsConfig | null>;
 }

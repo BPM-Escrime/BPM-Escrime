@@ -86,9 +86,9 @@ const TEAM_WRITES = [
 /** Lectures des cartons par le préload : plus aucune depuis l'écran (docs/adr/0028, lot C2) */
 const CARD_READS = ['getTeamBoutCards', 'getTeamMatchCards'];
 
-/** Préload : contrat sur le moteur réel ; bloc de session sur la base */
+/** Préload : contrat sur le moteur réel (état de l'épreuve : getCompetitionState) */
 function mockElectronAPI() {
-  const direct = ['getFencersByCompetition', 'getSessionState', ...CARD_READS, ...TEAM_WRITES];
+  const direct = ['getFencersByCompetition', ...CARD_READS, ...TEAM_WRITES];
   const group = (): any =>
     new Proxy(
       {},

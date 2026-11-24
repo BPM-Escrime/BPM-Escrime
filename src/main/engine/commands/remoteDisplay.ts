@@ -121,6 +121,12 @@ export const remoteDisplayHandlers: { [N in DisplayOps]: RemoteHandler<N> } = {
     }
     throw new CommandError('remote_refused', result.error ?? 'Échec du webhook');
   },
-  setRemoteLogo: (ctx, { logo }) => refuseAsync(() => adminOf(ctx).setLogo(logo)),
+  // Logo actif : paramètre du poste en base (seule source, docs/adr/0022), puis serveurs actifs
+  setRemoteLogo: (ctx, { logo }) =>
+    refuseAsync(async () => {
+      const admin = adminOf(ctx);
+      ctx.db.settings.updateSettings({ logo });
+      await admin.setLogo(logo);
+    }),
   setTtsConfig: (ctx, { config }) => refuseAsync(() => adminOf(ctx).setTtsConfig(config)),
 };

@@ -455,7 +455,30 @@
     "backup_imported": "{{count}} paramètre(s) importé(s).",
     "backup_invalid": "Fichier invalide : export de paramètres BPM - Escrime attendu.",
     "webhook_test": "Tester",
-    "webhook_testing": "Test…"
+    "webhook_testing": "Test…",
+    "durations_title": "Durées de match",
+    "durations_hint": "Référence par arme, phase et score : réglage du DT, sinon historique du poste (30 matchs au moins), sinon valeur par défaut. Sert à l'heure de fin de phase, à la simulation de formule et aux indicateurs. Réglage vide : aucun.",
+    "durations_weapon": "Arme",
+    "durations_phase": "Phase",
+    "durations_score": "Score",
+    "durations_scope": "Sexe · catégorie",
+    "durations_reference": "Référence",
+    "durations_measured": "Mesuré (poste)",
+    "durations_setting": "Réglage DT",
+    "durations_phase_pool": "Poule",
+    "durations_phase_tableau": "Tableau",
+    "durations_phase_team_relay": "Relais",
+    "durations_all": "tous",
+    "durations_basis_default": "défaut",
+    "durations_basis_history": "historique",
+    "durations_basis_setting": "réglage DT",
+    "durations_basis_live": "en direct",
+    "durations_matches": "{{count}} m.",
+    "durations_changeover": "Changement de piste",
+    "durations_competitions": "Historique : {{count}} épreuve(s)",
+    "durations_reset": "Réinitialiser l'historique",
+    "durations_reset_confirm": "Effacer l'historique des durées de match du poste ? Les réglages du DT sont gardés.",
+    "durations_error": "Durée refusée : format m:ss, 30 s au moins"
   },
   "actions": {
     "undo": "Annuler",
@@ -3150,7 +3173,9 @@
     "resolve": "DT en route — Résolu",
     "abandon": "Abandon",
     "abandon_note": "(à confirmer par le DT)",
-    "confirm_abandon": "Enregistrer l'abandon"
+    "confirm_abandon": "Enregistrer l'abandon",
+    "black_card_report": "Rapport carton noir (PDF)",
+    "black_card_report_title": "Rapport d'exclusion pré-rempli à adresser à la FFE sous 48 h (annexe 14)"
   },
   "qrShare": {
     "generating": "Génération du QR code…",

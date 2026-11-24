@@ -77,6 +77,10 @@ export class MultiPisteDriver extends EventEmitter<PisteDriverEvents> implements
     return this.ownerOf(piste)?.send(piste, command) ?? false;
   }
 
+  wantsRecord(piste: string): boolean {
+    return this.ownerOf(piste)?.wantsRecord?.(piste) ?? false;
+  }
+
   fencerId(id: string, piste?: string): string {
     const d = piste !== undefined ? this.ownerOf(piste) : this.drivers[0];
     return (d ?? this.drivers[0])?.fencerId(id, piste) ?? id;

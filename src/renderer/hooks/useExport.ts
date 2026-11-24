@@ -11,6 +11,7 @@ import { FinalResult } from '../../shared/domain/tableau/tableauTypes';
 import { exportFencersToTXT, exportFencersToFFF } from '../../shared/utils/fencerExport';
 import { usePdfTemplateStore } from '../../features/pdfTemplates/hooks/usePdfTemplateStore';
 import { useToast } from '../components/Toast';
+import { usePlatform } from '../platform/PlatformContext';
 import { formatQuestPerMatch } from '../../shared/utils/poolCalculations';
 import {
   exportResultsHTML,
@@ -94,6 +95,7 @@ export const useExport = ({
   referees,
 }: UseExportProps) => {
   const poolTemplate = usePdfTemplateStore(s => s.templates.pool);
+  const platform = usePlatform();
 
   // Helper pour télécharger un fichier
   const downloadFile = useCallback((content: string, filename: string, mimeType: string) => {
@@ -116,28 +118,25 @@ export const useExport = ({
         const extension = isFFF ? 'fff' : 'txt';
         const filterName = isFFF ? 'Fichier FFE' : 'Fichier texte';
 
-        const result = await window.electronAPI?.dialog?.saveFile({
+        const content = isFFF
+          ? exportFencersToFFF(competition, fencers)
+          : exportFencersToTXT(fencers, competition.title);
+        const saved = await platform.saveFile({
           title: `Exporter les tireurs (.${extension})`,
-          defaultPath: `tireurs_${competition.title.replace(/[^a-z0-9]/gi, '_')}.${extension}`,
+          suggestedName: `tireurs_${competition.title.replace(/[^a-z0-9]/gi, '_')}.${extension}`,
           filters: [
             { name: filterName, extensions: [extension] },
             { name: 'Tous les fichiers', extensions: ['*'] },
           ],
+          content,
         });
-
-        if (result && !result.canceled && result.filePath) {
-          const content = isFFF
-            ? exportFencersToFFF(competition, fencers)
-            : exportFencersToTXT(fencers, competition.title);
-          await window.electronAPI?.file?.writeContent(result.filePath, content);
-          showToast(`Export ${extension.toUpperCase()} des tireurs réussi`, 'success');
-        }
+        if (saved) showToast(`Export ${extension.toUpperCase()} des tireurs réussi`, 'success');
       } catch (error) {
         logger.error(LogCategory.UI, 'Export fencers failed', error as Error);
         showToast('Export des tireurs échoué', 'error');
       }
     },
-    [competition.title, showToast]
+    [competition, platform, showToast]
   );
 
   // Export classement (CSV ou JSON)

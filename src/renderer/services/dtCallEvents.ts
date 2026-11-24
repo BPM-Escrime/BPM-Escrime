@@ -22,3 +22,25 @@ export function requestConfirmAbandon(fencerId: string, competitionId: string | 
   );
   return detail.handled;
 }
+
+/** Rapport de carton noir (annexe 14) demandé depuis l'appel DT de la tablette (#2190) */
+export const DT_BLACK_CARD_REPORT_EVENT = 'bp:dt-black-card-report';
+
+export interface DtBlackCardReportDetail {
+  fencerId: string | null;
+  competitionId: string | null;
+  /** Posé à true par l'écouteur de l'épreuve affichée */
+  handled: boolean;
+}
+
+/** Demande le rapport pré-rempli ; retourne true si l'épreuve affichée l'a pris en charge. */
+export function requestBlackCardReport(
+  fencerId: string | null,
+  competitionId: string | null
+): boolean {
+  const detail: DtBlackCardReportDetail = { fencerId, competitionId, handled: false };
+  window.dispatchEvent(
+    new CustomEvent<DtBlackCardReportDetail>(DT_BLACK_CARD_REPORT_EVENT, { detail })
+  );
+  return detail.handled;
+}

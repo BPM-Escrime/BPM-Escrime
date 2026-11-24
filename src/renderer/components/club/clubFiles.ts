@@ -4,6 +4,7 @@
  */
 
 import { defaultPlatform } from '../../platform/PlatformContext';
+import { filesApi, saveDataFile } from '../../api/filesApi';
 
 /** Enregistre un texte (« Enregistrer sous », ou téléchargement hors Electron) ; false si annulé */
 export async function saveTextFile(
@@ -89,20 +90,19 @@ export async function openInventoryFile(
   });
 }
 
-/** Enregistre une grille en classeur Excel ; false si annulé */
+/**
+ * Enregistre une grille en classeur Excel ; false si annulé. Classeur construit par le poste
+ * (getSpreadsheetFile, contenu base64), enregistré par la plateforme (ADR-0021)
+ */
 export async function saveSpreadsheetFile(
   defaultPath: string,
   rows: (string | number)[][],
   title: string
 ): Promise<boolean> {
-  const api = window.electronAPI;
-  if (!api?.dialog?.saveFile || !api.file?.writeSpreadsheet) return false;
-  const r = await api.dialog.saveFile({
-    title,
-    defaultPath,
-    filters: [{ name: 'Excel', extensions: ['xlsx'] }],
-  });
-  if (!r || r.canceled || !r.filePath) return false;
-  await api.file.writeSpreadsheet(r.filePath, rows);
-  return true;
+  const { content } = await filesApi.spreadsheet(rows);
+  return saveDataFile(
+    defaultPlatform,
+    { fileName: defaultPath, content },
+    { title, filters: [{ name: 'Excel', extensions: ['xlsx'] }] }
+  );
 }

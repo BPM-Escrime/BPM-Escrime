@@ -8,16 +8,22 @@
  * Sorties typées par les interfaces de shared/types (z.custom, sans contrôle à l'exécution).
  * Hors contrat, car ils ouvrent un dialogue natif ou portent un chemin de fichier (ADR-0021) :
  * settings.addAgentFolder, privacy.exportPerson, exportEncryptedBpm, openEncryptedBpm,
- * cancelEncryptedBpm.
+ * cancelEncryptedBpm. Proxy réseau : pas d'identifiants dans l'adresse (refusés par le poste).
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';
 import { command, CompetitionId, Id, query, subscription } from './contractDef';
 import { StripDeviceSchema } from './contractDevices';
 import { Weapon } from '../types';
-import { MAX_LOGO_CHARS, MAX_VENUE_STRIPS } from '../types/appSettings';
-import type { AppSettings, Venue } from '../types/appSettings';
+import {
+  MAX_LOGO_CHARS,
+  MAX_LOGO_LIBRARY,
+  MAX_LOGO_NAME,
+  MAX_VENUE_STRIPS,
+} from '../types/appSettings';
+import type { AppSettings, LogoLibraryEntry, Venue } from '../types/appSettings';
 import type { AgentFolders } from '../types/settingsApi';
+import type { DurationRow } from '../domain/durations/matchDurations';
 import type { CustomTheme } from '../types/remote';
 import type {
   DayReferee,
@@ -36,7 +42,7 @@ import type {
   RetentionPurgeResult,
 } from '../types/privacy';
 import type { McpLogEntry, McpStatus } from '../types/mcp';
-import type { BackupDirDTO } from '../types/systemSettings';
+import type { BackupDirDTO, ProxySettingsDTO } from '../types/systemSettings';
 import {
   PLACE_QUERY_MAX,
   PLACE_QUERY_MIN,
@@ -96,8 +102,42 @@ const VenueInputSchema = z.object({
   isDefault: z.boolean().optional(),
 });
 
+/** Logo de la bibliothèque du poste ; le logo actif reste le paramètre `logo` */
+const LogoEntrySchema = z.strictObject({
+  id: z.string().min(1).max(200),
+  name: z.string().max(MAX_LOGO_NAME),
+  data: z
+    .string()
+    .max(MAX_LOGO_CHARS)
+    .refine(v => v.startsWith('data:image/'), 'data URL d’image attendue'),
+});
+
+/** Proxy réseau du poste : serveur et exclusions normalisés par le poste (sans identifiants) */
+const ProxySettingsSchema = z.strictObject({
+  mode: z.enum(['system', 'direct', 'manual']),
+  server: z.string().max(300).optional(),
+  bypass: z.string().max(2000).optional(),
+});
+
 /** Valeurs de localStorage (clé historique → texte, null : effacée) */
 const LegacyValuesSchema = z.record(z.string().max(100), z.string().max(MAX_LOGO_CHARS).nullable());
+
+// ─── Durées de match (#1965) ─────────────────────────────────────────────────
+
+const DurationKeySchema = z.strictObject({
+  weapon: z.enum(['E', 'F', 'S', 'L', 'C']),
+  gender: z.string().max(32).optional(),
+  category: z.string().max(32).optional(),
+  phase: z.enum(['pool', 'tableau', 'team_relay']),
+  maxScore: z.number().int().min(1).max(100),
+});
+
+const MatchDurationsView = z.object({
+  changeoverMs: z.number(),
+  /** Épreuves comptées dans l'historique du poste */
+  competitions: z.number().int(),
+  rows: z.custom<DurationRow[]>(),
+});
 
 // ─── Thèmes d'écrans ─────────────────────────────────────────────────────────
 
@@ -234,6 +274,42 @@ export const stationOperations = {
     output: z.custom<AgentFolders>(),
     permission: 'station:admin',
   }),
+  // ── Bibliothèque de logos (<userData>/logos.json) ; logo actif : paramètre `logo` ──
+  getLogoLibrary: query({
+    description:
+      'Logos enregistrés sur le poste (nom et data URL) ; le logo actif est le paramètre logo de getStationSettings.',
+    input: z.object({}),
+    output: z.custom<LogoLibraryEntry[]>(),
+    permission: 'station:admin',
+  }),
+  updateLogoLibrary: command({
+    description: `Remplace la bibliothèque de logos du poste (${MAX_LOGO_LIBRARY} au plus, doublons d’id ignorés) ; renvoie la bibliothèque enregistrée.`,
+    input: z.object({ logos: z.array(LogoEntrySchema).max(MAX_LOGO_LIBRARY) }),
+    output: z.custom<LogoLibraryEntry[]>(),
+    permission: 'station:admin',
+  }),
+  // ── Proxy réseau du poste : session Electron (mises à jour, webhooks, recherche de lieu) ──
+  getProxySettings: query({
+    description:
+      'Proxy réseau du poste : system (celui du système), direct (aucun) ou manual (serveur et exclusions).',
+    input: z.object({}),
+    output: z.custom<ProxySettingsDTO>(),
+    permission: 'station:admin',
+  }),
+  updateProxySettings: command({
+    description:
+      'Applique et enregistre le proxy réseau du poste (connexions ouvertes coupées) ; renvoie le réglage normalisé. Serveur invalide (hôte:port, schéma http, https, socks4 ou socks5, sans identifiants) : station_refused.',
+    input: ProxySettingsSchema,
+    output: z.custom<ProxySettingsDTO>(),
+    permission: 'station:admin',
+  }),
+  testProxy: command({
+    description:
+      'Essaie le proxy réseau du poste sur GitHub : route résolue (« DIRECT », « PROXY hôte:port »…) et réussite de la requête.',
+    input: z.object({}),
+    output: z.object({ ok: z.boolean(), resolved: z.string() }),
+    permission: 'station:admin',
+  }),
   onStationSettingsChanged: subscription({
     description:
       'Paramètres du poste modifiés hors de l’écran (agent) : langue et thème sont à relire (getStationSettings).',
@@ -266,6 +342,44 @@ export const stationOperations = {
     description: 'Désigne la salle par défaut.',
     input: z.object({ venueId: VenueId }),
     output: Nothing,
+    permission: 'station:admin',
+  }),
+
+  // ── Durées de match (#1965) : référence réglage du DT > historique (≥ 30 matchs) > défaut ──
+  getMatchDurations: query({
+    description:
+      'Durées de match de référence du poste par arme, phase, score, sexe et catégorie : référence effective, historique mesuré, réglage du DT, changement de piste.',
+    input: z.object({}),
+    output: MatchDurationsView,
+    permission: 'station:admin',
+  }),
+  updateMatchDurationSettings: command({
+    description:
+      'Règle le changement de piste et/ou la durée de référence d’une clé (medianMs null : réglage retiré, retour à l’historique ou au défaut).',
+    input: z.object({
+      changeoverMs: z.number().int().min(0).max(3_600_000).optional(),
+      override: z
+        .object({
+          key: DurationKeySchema,
+          medianMs: z.number().int().min(30_000).max(14_400_000).nullable(),
+        })
+        .optional(),
+    }),
+    output: MatchDurationsView,
+    permission: 'station:admin',
+  }),
+  recordMatchDurationHistory: command({
+    description:
+      'Ajoute à l’historique du poste les durées mesurées d’une épreuve (médiane, 80ᵉ centile, nombre de matchs par clé, sans donnée personnelle) ; remplace son apport précédent. Fait aussi à la fin du tableau.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.object({ samples: z.number().int(), keys: z.number().int() }),
+    permission: 'station:admin',
+  }),
+  resetMatchDurationHistory: command({
+    description:
+      'Efface l’historique des durées de match du poste ; les réglages du DT sont gardés.',
+    input: z.object({}),
+    output: MatchDurationsView,
     permission: 'station:admin',
   }),
 

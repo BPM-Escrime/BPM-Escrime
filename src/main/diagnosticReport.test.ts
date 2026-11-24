@@ -1,13 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
-
-vi.mock('electron', () => ({ ipcMain: { handle: vi.fn() } }));
-
+import { describe, it, expect } from 'vitest';
 import {
   buildDiagnosticReport,
   diagnosticFileName,
+  diagnosticReportFile,
   type DiagnosticInput,
 } from './diagnosticReport';
-import { exportDiagnosticReport } from './ipc/diagnosticHandlers';
 
 const input: DiagnosticInput = {
   appVersion: '5.9.0',
@@ -70,41 +67,11 @@ describe('diagnosticFileName (#1326)', () => {
   });
 });
 
-describe('exportDiagnosticReport (#1326)', () => {
-  it('écrit le JSON au chemin choisi avec le nom proposé', async () => {
-    const writeFile = vi.fn(async () => {});
-    const chooseSavePath = vi.fn(async () => '/tmp/rapport.json');
-    const result = await exportDiagnosticReport({
-      collect: () => input,
-      chooseSavePath,
-      writeFile,
-    });
-    expect(result).toEqual({ success: true });
-    expect(chooseSavePath).toHaveBeenCalledWith('bpm-escrime-diagnostic-20261030T192800.json');
-    const [path, content] = writeFile.mock.calls[0] as unknown as [string, string];
-    expect(path).toBe('/tmp/rapport.json');
-    expect(JSON.parse(content).app.build).toBe(1521);
-  });
-
-  it('signale une annulation sans rien écrire', async () => {
-    const writeFile = vi.fn(async () => {});
-    const result = await exportDiagnosticReport({
-      collect: () => input,
-      chooseSavePath: async () => undefined,
-      writeFile,
-    });
-    expect(result).toEqual({ success: false, cancelled: true });
-    expect(writeFile).not.toHaveBeenCalled();
-  });
-
-  it("renvoie une erreur lisible si l'écriture échoue", async () => {
-    const result = await exportDiagnosticReport({
-      collect: () => input,
-      chooseSavePath: async () => '/tmp/x.json',
-      writeFile: async () => {
-        throw new Error('disque plein');
-      },
-    });
-    expect(result).toEqual({ success: false, error: 'disque plein' });
+describe('diagnosticReportFile (#1326)', () => {
+  it('nom proposé horodaté et JSON indenté terminé par un saut de ligne', () => {
+    const file = diagnosticReportFile(input);
+    expect(file.fileName).toBe('bpm-escrime-diagnostic-20261030T192800.json');
+    expect(file.text.endsWith('}\n')).toBe(true);
+    expect(JSON.parse(file.text).app.build).toBe(1521);
   });
 });

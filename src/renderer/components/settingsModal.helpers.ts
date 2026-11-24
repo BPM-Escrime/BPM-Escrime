@@ -52,7 +52,8 @@ export type SettingsItemId =
   | 'privacy_retention'
   | 'privacy_person'
   | 'privacy_bpm'
-  | 'venues';
+  | 'venues'
+  | 'match_durations';
 
 export interface SettingsSectionDef {
   id: SettingsSectionId;
@@ -139,7 +140,13 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
     id: 'venues',
     icon: MapPin,
     labelKey: 'settings.section_venues',
-    items: [{ id: 'venues', keys: ['venues.title', 'venues.hint'] }],
+    items: [
+      { id: 'venues', keys: ['venues.title', 'venues.hint'] },
+      {
+        id: 'match_durations',
+        keys: ['settings.durations_title', 'settings.durations_hint'],
+      },
+    ],
   },
   {
     id: 'system',

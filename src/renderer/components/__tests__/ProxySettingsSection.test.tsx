@@ -4,18 +4,27 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import ProxySettingsSection from '../ProxySettingsSection';
+import { fakeApiBridge } from '../../testUtils/apiBridge';
 
 vi.mock('../../hooks/useTranslation', () => import('../../testUtils/i18nMock'));
 
 describe('ProxySettingsSection', () => {
-  let set: ReturnType<typeof vi.fn>;
-  let test: ReturnType<typeof vi.fn>;
+  type Handler = (input: Record<string, unknown>) => Promise<unknown>;
+  let set: ReturnType<typeof vi.fn<Handler>>;
+  let test: ReturnType<typeof vi.fn<Handler>>;
 
   beforeEach(() => {
-    set = vi.fn().mockResolvedValue({ success: true });
-    test = vi.fn().mockResolvedValue({ ok: true, resolved: 'PROXY proxy:3128' });
+    set = vi.fn<Handler>(async i => i);
+    test = vi.fn<Handler>(async () => ({ ok: true, resolved: 'PROXY proxy:3128' }));
+    // Opérations du poste getProxySettings, updateProxySettings, testProxy (docs/adr/0022)
     Object.assign(window, {
-      electronAPI: { proxy: { get: vi.fn().mockResolvedValue({ mode: 'system' }), set, test } },
+      electronAPI: {
+        api: fakeApiBridge({
+          getProxySettings: async () => ({ mode: 'system' }),
+          updateProxySettings: set,
+          testProxy: test,
+        }),
+      },
     });
   });
 
@@ -46,8 +55,14 @@ describe('ProxySettingsSection', () => {
     expect(set).toHaveBeenCalledWith({ mode: 'manual', server: 'proxy:3128', bypass: '*.club' });
   });
 
-  it('refus du main → message d’adresse invalide', async () => {
-    set.mockResolvedValue({ success: false, error: 'invalid_proxy' });
+  it('sans poste : section masquée', async () => {
+    Object.assign(window, { electronAPI: undefined });
+    await renderReady();
+    expect(screen.queryByRole('radiogroup')).toBeNull();
+  });
+
+  it('refus du poste → message d’adresse invalide', async () => {
+    set.mockRejectedValue(new Error('Adresse de proxy invalide'));
     await renderReady();
     fireEvent.click(screen.getByLabelText(/Proxy manuel/));
     fireEvent.change(screen.getByLabelText('Serveur proxy'), { target: { value: 'nope' } });

@@ -126,7 +126,7 @@ export function recallPrevMatchResult(
 
 /**
  * Exclusion signalée par l'appareil (statut E, #1829), déjà écrite par recordScore avec le score
- * (docs/adr/0016) : notification au renderer et appel DT, comme le carton noir de la tablette
+ * (docs/adr/0016) : appel DT, comme le carton noir de la tablette
  * (remote/routes/matchRoutes.ts). Annulable depuis la tablette (motif `black_card`).
  */
 function applyDeviceExclusion(
@@ -137,16 +137,6 @@ function applyDeviceExclusion(
 ): void {
   const culprit = side === 'A' ? match.fencerA : match.fencerB;
   if (!culprit?.id) return;
-  const mainWin = getSharedMainWindow();
-  if (mainWin) {
-    notifyScreen({
-      kind: 'fencer_excluded',
-      competitionId: ctx.session?.competitionId ?? null,
-      fencerId: culprit.id,
-      matchId: match.id,
-      reason: 'black_card',
-    });
-  }
   recordRemoteEvent(ctx, {
     type: 'dt_call',
     arenaId,
@@ -162,6 +152,8 @@ function applyDeviceExclusion(
     competitionId: ctx.session?.competitionId ?? null,
     timestamp: Date.now(),
     reason: 'black_card',
+    // Rapport fédéral proposé depuis l'appel (#2190)
+    fencerId: culprit.id,
     fencerName: `${culprit.lastName ?? ''} ${culprit.firstName ?? ''}`.trim() || null,
   });
 }

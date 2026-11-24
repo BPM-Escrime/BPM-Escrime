@@ -14,7 +14,7 @@ import {
   Pool,
   RemoteEvent,
 } from '../../types';
-import { referenceDuration, weaponCode } from '../../utils/matchDurations';
+import { referenceDuration, weaponCode, type DurationSources } from '../durations/matchDurations';
 import { estimatePhaseEta, median as medianOf } from '../../utils/phaseEta';
 import {
   allPlacesCompetitionBouts,
@@ -392,6 +392,8 @@ export function organisationKpis(input: {
   arenas?: LiveArena[];
   /** Clé des durées de référence (#1965) : absente → anciennes valeurs par défaut */
   durationKey?: KpiDurationKey;
+  /** Réglages du DT et historique du poste (#1965) ; absent : valeurs par défaut */
+  durationSources?: DurationSources;
   now: number;
 }): OrganisationKpis {
   const {
@@ -403,19 +405,23 @@ export function organisationKpis(input: {
     events = [],
     arenas = [],
     durationKey,
+    durationSources,
     now,
   } = input;
   const reference = (phase: 'pool' | 'tableau') =>
     durationKey
-      ? referenceDuration({
-          weapon: weaponCode(durationKey.weapon),
-          gender: durationKey.gender,
-          category: durationKey.category,
-          phase,
-          maxScore:
-            (phase === 'pool' ? durationKey.poolMaxScore : durationKey.tableauMaxScore) ||
-            (phase === 'pool' ? 5 : 15),
-        })
+      ? referenceDuration(
+          {
+            weapon: weaponCode(durationKey.weapon),
+            gender: durationKey.gender,
+            category: durationKey.category,
+            phase,
+            maxScore:
+              (phase === 'pool' ? durationKey.poolMaxScore : durationKey.tableauMaxScore) ||
+              (phase === 'pool' ? 5 : 15),
+          },
+          durationSources
+        )
       : undefined;
   const live = arenas.filter(a => a.status === 'in_progress' && a.matchId);
   const liveIds = new Set(live.map(a => a.matchId as string));

@@ -66,7 +66,6 @@ const competition = (settings: Record<string, unknown> = {}): Competition =>
 function mockElectronAPI(fencers: Fencer[], session: unknown = null) {
   const overrides: Record<string, (...args: any[]) => unknown> = {
     getFencersByCompetition: () => fencers,
-    getSessionState: () => session,
     getPhasesByCompetition: () => [],
     createPhase: () => ({ id: 'ph1', type: 'pool' }),
     updateFencer: () => undefined,
@@ -119,7 +118,10 @@ function mockElectronAPI(fencers: Fencer[], session: unknown = null) {
               ? { dryRun: false, status: 'x', matched: 1, updated: 1, skipped: 0, unknown: [] }
               : name === 'listFencers'
                 ? fencers
-                : null,
+                : // État de l'épreuve par le contrat (docs/adr/0017) : bloc du bouchon
+                  name === 'getCompetitionState'
+                  ? { state: session, sessionRevision: 0, revision: 0 }
+                  : null,
         });
       },
       subscribe: () => Promise.resolve({ ok: true, data: null }),

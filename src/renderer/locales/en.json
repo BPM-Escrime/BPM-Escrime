@@ -455,7 +455,30 @@
     "backup_imported": "{{count}} setting(s) imported.",
     "backup_invalid": "Invalid file: BPM - Escrime settings export expected.",
     "webhook_test": "Test",
-    "webhook_testing": "Testing…"
+    "webhook_testing": "Testing…",
+    "durations_title": "Match durations",
+    "durations_hint": "Reference by weapon, phase and score: DT setting, otherwise this station's history (at least 30 bouts), otherwise default value. Used for phase end time, formula simulation and indicators. Empty setting: none.",
+    "durations_weapon": "Weapon",
+    "durations_phase": "Phase",
+    "durations_score": "Score",
+    "durations_scope": "Gender · category",
+    "durations_reference": "Reference",
+    "durations_measured": "Measured (station)",
+    "durations_setting": "DT setting",
+    "durations_phase_pool": "Pool",
+    "durations_phase_tableau": "Tableau",
+    "durations_phase_team_relay": "Relay",
+    "durations_all": "all",
+    "durations_basis_default": "default",
+    "durations_basis_history": "history",
+    "durations_basis_setting": "DT setting",
+    "durations_basis_live": "live",
+    "durations_matches": "{{count}} b.",
+    "durations_changeover": "Strip changeover",
+    "durations_competitions": "History: {{count}} competition(s)",
+    "durations_reset": "Reset history",
+    "durations_reset_confirm": "Clear this station's match duration history? DT settings are kept.",
+    "durations_error": "Duration rejected: m:ss format, at least 30 s"
   },
   "actions": {
     "undo": "Undo",
@@ -3150,7 +3173,9 @@
     "resolve": "DT on the way — Resolved",
     "abandon": "Withdrawal",
     "abandon_note": "(to be confirmed by the DT)",
-    "confirm_abandon": "Record the withdrawal"
+    "confirm_abandon": "Record the withdrawal",
+    "black_card_report": "Black card report (PDF)",
+    "black_card_report_title": "Pre-filled exclusion report to send to the FFE within 48 h (annex 14)"
   },
   "qrShare": {
     "generating": "Generating QR code…",

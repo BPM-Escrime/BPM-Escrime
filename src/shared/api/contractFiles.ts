@@ -1,7 +1,7 @@
 /**
  * BPM - Escrime - Fichiers de données du poste (#1981, docs/adr/0021 et 0022) : sauvegarde
  * .bpm d'une épreuve (en clair ou chiffrée), archive de tireurs .bpf, photos en ZIP, sauvegarde
- * d'un club .bpclub. Le contrat rend ou reçoit un **contenu** (base64), jamais un chemin :
+ * d'un club .bpclub, rapport de diagnostic, tableur .xlsx. Le contrat rend ou reçoit un **contenu** (base64), jamais un chemin :
  * l'écran l'enregistre ou le choisit par PlatformServices (usePlatform).
  * Fonctions du poste : jamais servies sur le réseau (STATION_PERMISSIONS), pas d'outil MCP.
  * Une écriture dans une épreuve passe par runCommand (docs/adr/0006). Mot de passe d'une archive
@@ -21,6 +21,11 @@ const FileContent = z
   .max(Math.ceil(MAX_DATA_FILE_BYTES / 3) * 4)
   .regex(/^[A-Za-z0-9+/]*={0,2}$/, 'base64 attendu')
   .describe('Contenu du fichier en base64');
+
+/** Tableur : lignes et colonnes au plus (Mode Club : inventaire) */
+export const MAX_SPREADSHEET_ROWS = 20_000;
+export const MAX_SPREADSHEET_COLUMNS = 200;
+const SpreadsheetCell = z.union([z.string().max(32_767), z.number()]);
 
 const ClubId = Id.describe('Identifiant du club (listClubs)');
 const Password = z.string().min(1).max(1000);
@@ -98,6 +103,27 @@ export const fileOperations = {
     }),
     output: z.custom<Array<{ name: string; content: string }>>(),
     permission: 'station:admin',
+  }),
+
+  // ── Poste ──
+  getDiagnosticReport: query({
+    description:
+      'Rapport de diagnostic du poste (JSON : versions, système, mémoire, serveurs distants actifs ; aucun nom, mot de passe, jeton ni chemin) : nom proposé et contenu base64.',
+    input: z.strictObject({}),
+    output: z.custom<DataFile>(),
+    permission: 'station:admin',
+  }),
+  getSpreadsheetFile: query({
+    description: `Tableur Excel (.xlsx) d’une feuille construit depuis une grille de valeurs (${MAX_SPREADSHEET_ROWS} lignes et ${MAX_SPREADSHEET_COLUMNS} colonnes au plus) : contenu base64.`,
+    input: z.strictObject({
+      rows: z
+        .array(z.array(SpreadsheetCell).max(MAX_SPREADSHEET_COLUMNS))
+        .max(MAX_SPREADSHEET_ROWS),
+      sheetName: z.string().max(100).optional(),
+    }),
+    output: z.object({ content: z.string() }),
+    // Mise en forme de lignes : compte du Mode Club sans administration du poste
+    permission: 'club:read',
   }),
 
   // ── Mode Club ──

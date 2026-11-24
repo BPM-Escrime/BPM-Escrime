@@ -60,49 +60,47 @@ export function useCompetitionTabs({
   const handleCreateCompetition = useCallback(
     async (data: Partial<Competition>, imported?: FederalCreationPayload) => {
       try {
-        if (window.electronAPI) {
-          const created = await client.call('createCompetition', {
-            title: data.title || 'Nouvelle compétition',
-            date: new Date(data.date ?? Date.now()).toISOString(),
-            weapon: data.weapon ?? Weapon.FOIL,
-            gender: data.gender ?? Gender.MALE,
-            category: data.category ?? Category.SENIOR,
-            ...(data.location ? { location: data.location } : {}),
-            ...(data.color ? { color: data.color } : {}),
-            ...(data.isTeamEvent ? { isTeamEvent: true } : {}),
-            ...(data.settings
-              ? { settings: data.settings as unknown as Record<string, unknown> }
-              : {}),
-          });
-          const newComp = await loadCompetition(client, created.competitionId!);
-          if (!newComp) throw new Error('Épreuve créée introuvable');
-          // L'avis competitions:changed recharge déjà la liste : pas de doublon
-          setCompetitions(prev =>
-            prev.some(c => c.id === newComp.id)
-              ? prev.map(c => (c.id === newComp.id ? newComp : c))
-              : [newComp, ...prev]
+        const created = await client.call('createCompetition', {
+          title: data.title || 'Nouvelle compétition',
+          date: new Date(data.date ?? Date.now()).toISOString(),
+          weapon: data.weapon ?? Weapon.FOIL,
+          gender: data.gender ?? Gender.MALE,
+          category: data.category ?? Category.SENIOR,
+          ...(data.location ? { location: data.location } : {}),
+          ...(data.color ? { color: data.color } : {}),
+          ...(data.isTeamEvent ? { isTeamEvent: true } : {}),
+          ...(data.settings
+            ? { settings: data.settings as unknown as Record<string, unknown> }
+            : {}),
+        });
+        const newComp = await loadCompetition(client, created.competitionId!);
+        if (!newComp) throw new Error('Épreuve créée introuvable');
+        // L'avis competitions:changed recharge déjà la liste : pas de doublon
+        setCompetitions(prev =>
+          prev.some(c => c.id === newComp.id)
+            ? prev.map(c => (c.id === newComp.id ? newComp : c))
+            : [newComp, ...prev]
+        );
+
+        // Tireurs, équipes et arbitres des fichiers de l'extranet (#1938)
+        if (imported) {
+          const counts = await applyFederalImport(
+            client,
+            newComp.id,
+            imported,
+            newComp.settings?.minTeamSize ?? 3
           );
-
-          // Tireurs, équipes et arbitres des fichiers de l'extranet (#1938)
-          if (imported) {
-            const counts = await applyFederalImport(
-              client,
-              newComp.id,
-              imported,
-              newComp.settings?.minTeamSize ?? 3
-            );
-            showToast(translateStatic('federalImport.imported', { ...counts }), 'success');
-          }
-
-          // Ouvrir la compétition dans un nouvel onglet (tireurs importés compris)
-          const withFencers = await loadCompetition(client, newComp.id, { withFencers: true });
-          newComp.fencers = withFencers?.fencers ?? [];
-
-          setOpenCompetitions(prev => [...prev, { competition: newComp, isDirty: false }]);
-          setActiveTabId(newComp.id);
-          setCurrentCompetition(newComp);
-          setView('competition');
+          showToast(translateStatic('federalImport.imported', { ...counts }), 'success');
         }
+
+        // Ouvrir la compétition dans un nouvel onglet (tireurs importés compris)
+        const withFencers = await loadCompetition(client, newComp.id, { withFencers: true });
+        newComp.fencers = withFencers?.fencers ?? [];
+
+        setOpenCompetitions(prev => [...prev, { competition: newComp, isDirty: false }]);
+        setActiveTabId(newComp.id);
+        setCurrentCompetition(newComp);
+        setView('competition');
       } catch (error) {
         logger.error(LogCategory.UI, 'Failed to create competition', error as Error);
       }
@@ -128,29 +126,27 @@ export function useCompetitionTabs({
       });
 
       try {
-        if (window.electronAPI) {
-          const existingOpenComp = openCompetitions.find(
-            open => open.competition.id === competition.id
-          );
+        const existingOpenComp = openCompetitions.find(
+          open => open.competition.id === competition.id
+        );
 
-          if (existingOpenComp) {
-            setActiveTabId(competition.id);
-            setCurrentCompetition(existingOpenComp.competition);
+        if (existingOpenComp) {
+          setActiveTabId(competition.id);
+          setCurrentCompetition(existingOpenComp.competition);
+          setView('competition');
+        } else {
+          const comp = await loadCompetition(client, competition.id, { withFencers: true });
+
+          if (comp) {
+            setOpenCompetitions(prev => [...prev, { competition: comp, isDirty: false }]);
+            setActiveTabId(comp.id);
+            setCurrentCompetition(comp);
             setView('competition');
           } else {
-            const comp = await loadCompetition(client, competition.id, { withFencers: true });
-
-            if (comp) {
-              setOpenCompetitions(prev => [...prev, { competition: comp, isDirty: false }]);
-              setActiveTabId(comp.id);
-              setCurrentCompetition(comp);
-              setView('competition');
-            } else {
-              logger.error(LogCategory.UI, 'Compétition non trouvée dans la DB', undefined, {
-                id: competition.id,
-              });
-              showToast('Erreur: Compétition non trouvée', 'error');
-            }
+            logger.error(LogCategory.UI, 'Compétition non trouvée dans la DB', undefined, {
+              id: competition.id,
+            });
+            showToast('Erreur: Compétition non trouvée', 'error');
           }
         }
       } catch (error) {
@@ -274,33 +270,31 @@ export function useCompetitionTabs({
   const handleDeleteCompetition = useCallback(
     async (id: string) => {
       try {
-        if (window.electronAPI) {
-          await client.call('deleteCompetition', { competitionId: id });
-          localStorage.removeItem(`bellepoule-remote-launched-${id}`);
-          localStorage.removeItem(`bellepoule-remote-port-${id}`);
-          setCompetitions(prev => prev.filter(c => c.id !== id));
+        await client.call('deleteCompetition', { competitionId: id });
+        localStorage.removeItem(`bellepoule-remote-launched-${id}`);
+        localStorage.removeItem(`bellepoule-remote-port-${id}`);
+        setCompetitions(prev => prev.filter(c => c.id !== id));
 
-          // Supprimer l'onglet ouvert pour cette compétition (évite le tab fantôme)
-          setOpenCompetitions(prev => {
-            const next = prev.filter(open => open.competition.id !== id);
-            if (activeTabId === id) {
-              if (next.length > 0) {
-                const lastComp = next[next.length - 1].competition;
-                setActiveTabId(lastComp.id);
-                setCurrentCompetition(lastComp);
-                setView('competition');
-              } else {
-                setActiveTabId(null);
-                setCurrentCompetition(null);
-                setView('home');
-              }
-            } else if (currentCompetition?.id === id) {
+        // Supprimer l'onglet ouvert pour cette compétition (évite le tab fantôme)
+        setOpenCompetitions(prev => {
+          const next = prev.filter(open => open.competition.id !== id);
+          if (activeTabId === id) {
+            if (next.length > 0) {
+              const lastComp = next[next.length - 1].competition;
+              setActiveTabId(lastComp.id);
+              setCurrentCompetition(lastComp);
+              setView('competition');
+            } else {
+              setActiveTabId(null);
               setCurrentCompetition(null);
               setView('home');
             }
-            return next;
-          });
-        }
+          } else if (currentCompetition?.id === id) {
+            setCurrentCompetition(null);
+            setView('home');
+          }
+          return next;
+        });
       } catch (error) {
         logger.error(LogCategory.UI, 'Failed to delete competition', error as Error);
       }

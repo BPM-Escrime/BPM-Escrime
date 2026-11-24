@@ -127,7 +127,7 @@ const FencerStatsTableComponent: React.FC<FencerStatsTableProps> = ({ competitio
   }, [t]);
 
   const exportCompetitionPdf = async () => {
-    if (!window.electronAPI?.file) return;
+    if (!platform.capabilities.printToPdf) return;
     setExportingComp(true);
     try {
       const entries = await Promise.all(
@@ -155,7 +155,7 @@ const FencerStatsTableComponent: React.FC<FencerStatsTableProps> = ({ competitio
   };
 
   const exportPdf = async () => {
-    if (!window.electronAPI?.file) return;
+    if (!platform.capabilities.printToPdf) return;
     const rows = sorted
       .map(
         s => `
