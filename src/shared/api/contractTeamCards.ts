@@ -117,8 +117,17 @@ export const teamCardOperations = {
     description:
       'Relais FIE (épée, fleuret, sabre) : carton P (non-combativité, t.124) donné aux deux équipes, escalade sur la rencontre : jaune P, rouge P, noir P. Le rouge P n’écrit pas de touche (elle est dans le score du relais). ' +
       'Noir P : la rencontre est décidée pour l’équipe au score supérieur des relais terminés (enregistrer d’abord le relais en cours), à égalité au meilleur classement (tableau : rang du tableau ; poule : classement de poule) — TeamMatchDecided. ' +
-      'Refus : unsupported_format (Sabre Laser, arme à la carte, épreuve individuelle), match_not_found, team_withdrawn, match_finished (noir P déjà donné, rencontre décidée ou suivante commencée, noir P contraire au résultat), draw_needs_winner. Journal : PassivityCardGiven.',
-    input: z.object(Base),
+      'Aucun carton P à une touche de la cible finale des deux côtés (44:44, t.124.3) : score cumulé des relais enregistrés, ou liveScore (relais en cours compris). ' +
+      'Refus : unsupported_format (Sabre Laser, arme à la carte, épreuve individuelle), match_not_found, team_withdrawn, match_finished (noir P déjà donné, rencontre décidée ou suivante commencée, noir P contraire au résultat), passivity_at_last_touch, draw_needs_winner. Journal : PassivityCardGiven.',
+    input: z.object({
+      ...Base,
+      liveScore: z
+        .object({ scoreA: z.number().int().min(0), scoreB: z.number().int().min(0) })
+        .optional()
+        .describe(
+          'Score cumulé affiché (relais en cours compris), lu par la tablette ou l’appareil ; sans lui, cumul des relais enregistrés'
+        ),
+    }),
     output: z.object({
       dryRun: z.boolean(),
       matchId: z.string(),

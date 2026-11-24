@@ -20,7 +20,7 @@ import type {
   TeamMatchRow,
   TeamRow,
 } from '../../../shared/domain/teams/team.types';
-import { teamFormatOf } from '../../../shared/domain/teams/relay';
+import { relayRuleOf, teamFormatOf } from '../../../shared/domain/teams/relay';
 import { hasPassivityCards, passivityCardFor } from '../../../shared/domain/teams/passivityCards';
 import { rankTeamsForTableau } from '../../../shared/domain/teams/teamTableau';
 import { relayCardFor, teamCardFor } from '../../../shared/domain/teams/teamCards';
@@ -320,12 +320,19 @@ const PASSIVITY_REFUSAL = {
   unsupported_format: 'Carton P : relais FIE des armes olympiques seulement',
   match_finished:
     'Rencontre terminée (noir P déjà donné, rencontre décidée ou suivante commencée, ou noir P contraire au résultat) : carton P refusé',
+  passivity_at_last_touch:
+    'Carton P refusé : une touche de la cible finale des deux côtés (44:44, t.124.3)',
   draw_needs_winner: 'Noir P à égalité de score et de classement : à trancher par le DT',
 } as const;
 
 export function givePassivityCard(
   ctx: CommandContext,
-  input: { competitionId: string; matchId: string; dryRun?: boolean },
+  input: {
+    competitionId: string;
+    matchId: string;
+    dryRun?: boolean;
+    liveScore?: { scoreA: number; scoreB: number };
+  },
   { now = new Date(), newId = uuidv4 }: Given = {}
 ) {
   const comp = teamCompetitionOrThrow(ctx, input.competitionId);
@@ -354,6 +361,8 @@ export function givePassivityCard(
         nextTeamMatchStarted(ordered, m.id, m.teamAId) ||
         nextTeamMatchStarted(ordered, m.id, m.teamBId),
       ...passivityRanks(ctx, comp, m),
+      target: relayRuleOf(comp.weapon, comp.settings).target,
+      liveScore: input.liveScore ?? null,
     },
     prior: ctx.db.teams.getPassivityCards(m.id),
     weapon: comp.weapon,

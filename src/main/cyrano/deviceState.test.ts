@@ -49,9 +49,10 @@ describe('cartons P EFP1.1 (#1829)', () => {
     ]);
   });
 
-  it('compteurs → champ 12 du DISP (0, 2 ou 4, noir prime)', () => {
+  it('compteurs → champ 12 du DISP (0, 1, 2 ou 4, niveau le plus haut, #2214)', () => {
     expect(cyranoPCardField({})).toBe(0);
-    expect(cyranoPCardField({ pYellow: 1 })).toBe(0);
+    expect(cyranoPCardField({ pYellow: 1 })).toBe(1);
+    expect(cyranoPCardField({ pYellow: 1, pRed: 1 })).toBe(2);
     expect(cyranoPCardField({ pRed: 2 })).toBe(2);
     expect(cyranoPCardField({ pRed: 1, pBlack: 1 })).toBe(4);
   });

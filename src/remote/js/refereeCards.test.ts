@@ -5,7 +5,10 @@ import { describe, it, expect } from 'vitest';
 import { createRequire } from 'module';
 import fs from 'fs';
 import path from 'path';
-import { passivityWinner as sharedPassivityWinner } from '../../shared/domain/match/matchEndValidation';
+import {
+  passivityCardAllowed as sharedPassivityCardAllowed,
+  passivityWinner as sharedPassivityWinner,
+} from '../../shared/domain/match/matchEndValidation';
 import { CARD_REASON_LABELS } from '../../shared/utils/cardSystem';
 import { PASSIVITY_STEPS } from '../../shared/domain/teams/passivityCardTypes';
 import {
@@ -134,6 +137,10 @@ describe('refereeCards.js passivité', () => {
       { ranking: 0 },
       { ranking: -2 },
       { ranking: 'abc' },
+      { initialRanking: 1, tableauSeed: 8 },
+      { tableauSeed: 3 },
+      { tableauSeed: 0, ranking: 2 },
+      { tableauSeed: null, initialRanking: 6 },
     ];
     const scores = [
       [0, 0],
@@ -151,6 +158,18 @@ describe('refereeCards.js passivité', () => {
           count++;
         }
     expect(count).toBe(scores.length * fencers.length * fencers.length);
+  });
+
+  it('passivityCardAllowed : pas de carton P à 14:14, parité avec le domaine (#2214)', () => {
+    expect(C.passivityCardAllowed({ scoreA: 14, scoreB: 14, scoreLimit: 15 })).toBe(false);
+    expect(C.passivityCardAllowed({ scoreA: 14, scoreB: 13, scoreLimit: 15 })).toBe(true);
+    expect(C.passivityCardAllowed({ scoreA: 14, scoreB: 14, scoreLimit: 0 })).toBe(true);
+    for (const scoreLimit of [undefined, null, 0, 1, 5, 10, 15, 45, Infinity])
+      for (const scoreA of [0, 4, 9, 13, 14, 44])
+        for (const scoreB of [0, 4, 9, 13, 14, 44]) {
+          const s = { scoreA, scoreB, scoreLimit };
+          expect(C.passivityCardAllowed(s)).toBe(sharedPassivityCardAllowed(s));
+        }
   });
 
   it('cardFromGroup olympique : parité avec determineCardType (domain/penalties/cards.ts, #2207)', () => {

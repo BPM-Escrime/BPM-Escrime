@@ -33,7 +33,7 @@ Pas de dépendance npm ajoutée.
 | `display` : score et cartons repris                                           | → appareil | `software/score`                                                                         |
 | `display` : chrono d'un match rappelé                                         | → appareil | `software/clock` (toujours `running: false`)                                             |
 | `clear`                                                                       | → appareil | `software/fencers` vide                                                                  |
-| `display` : cartons P déjà donnés                                             | → appareil | `software/uw2f` (ordinal 0 à 5 ; seulement s'il y en a, minuteur à 0)                    |
+| `display` : cartons P déjà donnés                                             | → appareil | `software/uw2f` (ordinal 0 à 5, 1 = jaune P ; seulement s'il y en a, minuteur à 0)       |
 | `record` : créneau de la piste                                                | → tous     | `software/record` (retenu) — voir ci-dessous                                             |
 | `ack` / `nak`                                                                 | → appareil | `software/control` `ACK` / `NAK`                                                         |
 | Présence de BPM - Escrime                                                     | → tous     | `software/connection` (retenu) au démarrage, `online: false` à l'arrêt                   |

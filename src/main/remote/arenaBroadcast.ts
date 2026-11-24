@@ -8,11 +8,12 @@ import type { RemoteScoreServer } from '../remoteScoreServer';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
 import { needsLeftHandedSwap } from '../../shared/utils/handedness';
 import { notifyScreen } from './remoteActivity';
+import { arenaMatchRules, type ArenaRulesContext } from './arenaRules';
 
 type S = RemoteScoreServer;
 
 /** État et services du serveur utilisés par ce module. */
-export interface ArenaBroadcastContext {
+export interface ArenaBroadcastContext extends ArenaRulesContext {
   readonly arenaEventBuffer: S['arenaEventBuffer'];
   readonly arenaMatchQueue: S['arenaMatchQueue'];
   readonly arenaPhotoSentForMatch: S['arenaPhotoSentForMatch'];
@@ -99,6 +100,8 @@ export function broadcastArenaUpdate(
     restSeconds: ctx.sessionRestSeconds,
     modernRules: ctx.sessionModernRules,
     refereeSelected: ctx.arenaRefereeSelected.get(arenaId) ?? false,
+    // Score limite et rangs du tableau : cartons P de la tablette (#2214)
+    ...arenaMatchRules(ctx, update.match ?? arena?.currentMatch),
   };
 
   // Photos envoyées une seule fois par match : les updates suivants partent sans
@@ -182,6 +185,11 @@ export const ARENA_BROADCAST_CONTEXT_KEYS = {
     'sessionTheme',
     'sessionWeapon',
     'cyranoHook',
+    // Règles du match (arenaRules.ts, #2214)
+    'sessionMatches',
+    'sessionPoolMaxScore',
+    'sessionTableMaxScore',
+    'sessionCategory',
   ],
   methods: ['getArena', 'getSessionReferees', 'notifyKioskData'],
 } as const;

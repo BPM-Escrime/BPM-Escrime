@@ -209,6 +209,10 @@ export interface ArenaUpdate {
   timerDuration?: number; // durée du chrono en secondes pour ce match
   restSeconds?: number; // durée du repos entre périodes (escrime olympique, 0 = désactivé)
   modernRules?: boolean; // règles armes modernes (E/F/S, formule ou rapières) (#1118)
+  /** Score limite du match en cours (0 = sans limite) : pas de carton P à limite − 1 partout (#2214) */
+  scoreLimit?: number;
+  /** Noir P à égalité : rangs du tableau en cours (FFE dès M15) ; null : classement initial (#2214) */
+  passivityRanks?: { A: number | null; B: number | null } | null;
   poolComplete?: boolean; // vrai quand tous les matchs de la poule sont terminés
   completedPoolId?: string; // id de la poule terminée
   refereeSelected?: boolean; // vrai quand l'arbitre a explicitement sélectionné le match

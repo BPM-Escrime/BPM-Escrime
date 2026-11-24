@@ -19,11 +19,12 @@ import {
   teamArenaElapsedSec,
 } from './teamArena';
 import { cardRefusal, teamRefusal } from './teamCommand';
+import { arenaMatchRules, type ArenaRulesContext } from './arenaRules';
 
 type S = RemoteScoreServer;
 
 /** État et services du serveur utilisés par ce module (accesseurs : valeurs toujours à jour). */
-export interface SocketHandlersContext {
+export interface SocketHandlersContext extends ArenaRulesContext {
   readonly MAX_SOCKETS_PER_IP: S['MAX_SOCKETS_PER_IP'];
   readonly SOCKET_EVENTS_PER_SEC: S['SOCKET_EVENTS_PER_SEC'];
   readonly SOCKET_EVENT_BURST: S['SOCKET_EVENT_BURST'];
@@ -191,6 +192,8 @@ export function setupSocketHandlers(ctx: SocketHandlersContext): void {
           refereeSelected: ctx.arenaRefereeSelected.get(data.arenaId) ?? false,
           timerDuration: isPoolMatch ? ctx.sessionPoolTimerSeconds : ctx.sessionTableTimerSeconds,
           restSeconds: ctx.sessionRestSeconds,
+          // Score limite et rangs du tableau : cartons P de la tablette (#2214)
+          ...arenaMatchRules(ctx, arena.currentMatch),
           ...(ctx.isTrainingMode && ctx.trainingCustomRules
             ? { trainingCustomRules: ctx.trainingCustomRules }
             : {}),
@@ -495,6 +498,12 @@ export const SOCKET_HANDLERS_CONTEXT_KEYS = {
     'socketsPerIp',
     'teamArenaState',
     'trainingCustomRules',
+    // Règles du match (arenaRules.ts, #2214)
+    'sessionMatches',
+    'sessionWeapon',
+    'sessionPoolMaxScore',
+    'sessionTableMaxScore',
+    'sessionCategory',
   ],
   methods: [
     'broadcastClientList',

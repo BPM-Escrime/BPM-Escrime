@@ -56,9 +56,14 @@ export function cyranoPCardCounts(value: number | undefined): PCardCounts {
   }
 }
 
-/** Champ 12 du DISP : règle 2026-2027, 0, 2 ou 4 ; le noir P prime sur le rouge P. */
+/**
+ * Champ 12 du DISP (Cyrano 1.1, § 3) : niveau le plus haut des cartons P donnés, suite t.124
+ * jaune P → rouge P → noir P : 1 jaune P, 2 rouge P, 4 noir P (3 et 5, deux rouges ou deux
+ * noirs P, ne sont pas écrits : la suite ne donne qu'un carton de chaque, #2214).
+ */
 export function cyranoPCardField(counts: PCardCounts): number {
   if ((counts.pBlack ?? 0) > 0) return 4;
   if ((counts.pRed ?? 0) > 0) return 2;
+  if ((counts.pYellow ?? 0) > 0) return 1;
   return 0;
 }

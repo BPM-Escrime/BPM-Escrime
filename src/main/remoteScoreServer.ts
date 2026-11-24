@@ -272,9 +272,9 @@ export class RemoteScoreServer {
   private sessionTableMaxScore: number | null = null;
   private sessionRestSeconds: number = 0; // Repos entre périodes (escrime olympique, 0 = désactivé)
   private sessionModernRules = false; // Règles armes modernes (E/F/S ou formule personnalisée, #1125)
+  private sessionCategory: string | null = null; // Catégorie d'âge (noir P : FFE dès M15, #2214)
   private sessionMatches: SessionMatch[] = []; // Matches passés depuis le renderer
-  /** Tournoi des rapières : seuls les matchs de la vague active sont proposés aux tablettes (#1118). `null` = pas de filtre. */
-  private activeWaveMatchIds: Set<string> | null = null;
+  private activeWaveMatchIds: Set<string> | null = null; // Rapières : matchs de la vague active (#1118), null = pas de filtre
   /** Rapières : vagues terminées, plus aucun match de poule proposé aux tablettes (#1118) */
   private poolsClosed = false;
   private arenaSlots = new slots.ArenaSlotRegistry();

@@ -86,6 +86,8 @@ export interface PisteDisplaySide {
   /** Cartons déjà donnés (match repris, appareil redémarré) */
   yellowCards?: number;
   redCards?: number;
+  /** Cartons P déjà donnés : jaune P (0-1), rouges P, noirs P */
+  pYellow?: number;
   pRed?: number;
   pBlack?: number;
   /** Statut repris d'un match rappelé qui s'était terminé par un abandon ou une exclusion */

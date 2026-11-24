@@ -186,6 +186,7 @@
   'referee.opp_plus5': '+5 Punkte für den Gegner',
   'referee.passivity_yellow': 'Passivität: P-Gelb, Verwarnung für beide Fechter',
   'referee.passivity_red': 'Passivität: P-Rot, +1 Punkt für jeden Fechter',
+  'referee.passivity_last_touch': 'Keine P-Karte, wenn beide Fechter einen Treffer vor dem Ende stehen (14:14)',
   'referee.no_card_to_remove': 'Keine Karte zum Entfernen',
   'referee.passivity_undone': 'Letzte Passivitätskarte zurückgenommen',
   'referee.undo_white': 'Letzte weiße Karte zurückgenommen',

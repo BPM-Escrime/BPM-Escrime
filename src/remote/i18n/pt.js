@@ -185,6 +185,7 @@
   'referee.opp_plus5': '+5 pontos para o adversário',
   'referee.passivity_yellow': 'Passividade: P amarelo, advertência aos dois esgrimistas',
   'referee.passivity_red': 'Passividade: P vermelho, +1 ponto para cada esgrimista',
+  'referee.passivity_last_touch': 'Sem cartão P quando ambos os esgrimistas estão a um toque do fim (14:14)',
   'referee.no_card_to_remove': 'Nenhum cartão a remover',
   'referee.passivity_undone': 'Último cartão de passividade anulado',
   'referee.undo_white': 'Último cartão branco anulado',

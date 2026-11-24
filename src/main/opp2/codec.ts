@@ -205,13 +205,16 @@ export function buildScoreBody(d: PisteDisplay): Record<string, unknown> {
   return { right: scoreSide(d.right), left: scoreSide(d.left), priority: 'N' };
 }
 
-/** Cartons P déjà donnés → ordinal OPP2 (0 à 5, même lecture que Cyrano, spéc. § 19) */
-export function opp2PCardOrdinal(s: Pick<PisteDisplaySide, 'pRed' | 'pBlack'>): number {
+/**
+ * Cartons P déjà donnés → ordinal OPP2 (0 à 5, même lecture que Cyrano, spéc. § 19) : 1 jaune
+ * P, 2 / 3 un / deux rouges P, 4 / 5 un / deux noirs P (#2214).
+ */
+export function opp2PCardOrdinal(s: Pick<PisteDisplaySide, 'pYellow' | 'pRed' | 'pBlack'>): number {
   const black = s.pBlack ?? 0;
   const red = s.pRed ?? 0;
   if (black > 0) return black >= 2 ? 5 : 4;
   if (red > 0) return red >= 2 ? 3 : 2;
-  return 0;
+  return (s.pYellow ?? 0) > 0 ? 1 : 0;
 }
 
 /**

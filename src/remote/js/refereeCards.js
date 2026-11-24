@@ -74,10 +74,22 @@
   }
 
   /**
-   * P-noir : vainqueur = score le plus haut ; à égalité, le mieux classé au départ ;
+   * Carton P permis au score (t.124.3) : aucun à une touche du score limite des deux côtés
+   * (14:14 à 15 touches). Limite inconnue, nulle ou infinie : permis.
+   * Copie de `passivityCardAllowed` (src/shared/domain/match/matchEndValidation.ts, #2214).
+   */
+  function passivityCardAllowed(s) {
+    const limit = s.scoreLimit;
+    if (typeof limit !== 'number' || !Number.isFinite(limit) || limit <= 1) return true;
+    return !(s.scoreA === limit - 1 && s.scoreB === limit - 1);
+  }
+
+  /**
+   * P-noir : vainqueur = score le plus haut ; à égalité, le mieux classé au départ (rang du
+   * tableau en cours `tableauSeed` s'il est fourni, FFE dès M15, sinon classement initial) ;
    * sans classement, tirage au sort.
    * Copie servie telle quelle aux tablettes de `passivityWinner`
-   * (src/shared/utils/matchEndValidation.ts, #1829) : parité vérifiée par refereeCards.test.ts.
+   * (src/shared/domain/match/matchEndValidation.ts, #1829) : parité vérifiée par refereeCards.test.ts.
    * @returns {{action: 'finish', winner: 'A'|'B', reasonKey: string}|{action: 'tiebreak'}}
    */
   function passivityWinner(s) {
@@ -88,10 +100,12 @@
         reasonKey: 'referee.reason_passivity',
       };
     }
-    const rankOf = f => {
-      const r = Number(f?.initialRanking ?? f?.ranking);
+    const valid = v => {
+      const r = Number(v);
       return Number.isFinite(r) && r > 0 ? r : null;
     };
+    const bySeed = valid(s.fencerA?.tableauSeed) !== null || valid(s.fencerB?.tableauSeed) !== null;
+    const rankOf = f => valid(bySeed ? f?.tableauSeed : (f?.initialRanking ?? f?.ranking));
     const rA = rankOf(s.fencerA);
     const rB = rankOf(s.fencerB);
     if (rA !== null || rB !== null) {
@@ -108,6 +122,7 @@
     cardEffect,
     cardVibration,
     nextPassivityCard,
+    passivityCardAllowed,
     passivityWinner,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

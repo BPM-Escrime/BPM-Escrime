@@ -140,6 +140,27 @@ d('givePassivityCard : relais FIE (docs/adr/0028, lot C4)', () => {
     expect(divergences(comp.id)).toEqual([]);
   });
 
+  it('pas de carton P à 44:44 (t.124.3) : score affiché (liveScore) ou relais enregistrés', async () => {
+    const comp = competition(Weapon.EPEE);
+    await teamsRegistered(comp.id, ['A', 'B']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    const id = `${comp.id}-p1-1`;
+    await relayScore(comp.id, id, 1, 5, 4);
+    const at4444 = { liveScore: { scoreA: 44, scoreB: 44 } };
+    await reject('givePassivityCard', {
+      competitionId: comp.id,
+      matchId: id,
+      ...at4444,
+    }).toMatchObject({ code: 'passivity_at_last_touch' });
+    expect(db.teams.getPassivityCards(id)).toEqual([]);
+    // 44:43 ou 43:44 : permis
+    const ok = await giveP(comp.id, id, { liveScore: { scoreA: 44, scoreB: 43 } });
+    expect(ok.card.type).toBe('yellow');
+    // Sans liveScore : cumul des relais enregistrés (5:4)
+    expect((await giveP(comp.id, id)).card.type).toBe('red');
+    expect(divergences(comp.id)).toEqual([]);
+  });
+
   it('noir P à égalité de score : meilleur classement (rang du tableau), rencontre suivante formée', async () => {
     const comp = competition(Weapon.FOIL, { minTeamSize: 2 });
     await teamsRegistered(comp.id, ['A', 'B', 'C', 'D'], 2);
