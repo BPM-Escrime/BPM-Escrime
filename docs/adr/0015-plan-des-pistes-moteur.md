@@ -116,6 +116,15 @@ passé, PascalCase, numéros seulement, `schemaVersion` 1.
 - Rien ne change (piste déjà dans l'état demandé, même piste de départ) : aucun événement.
 - Avec `eventDayId`, chaque épreuve de la journée reçoit son événement, sous le même
   `commandId`. Une épreuve déjà dans l'état demandé n'en reçoit pas.
+- Journée et transaction (revue de la PR #2234) : la commande ne contourne pas `runCommand`.
+  Le moteur (`runCommandAcross`) ouvre **une** transaction englobante et y lance une
+  `runCommand` par épreuve : l'échec d'une épreuve annule toutes les autres, rien n'est écrit.
+  `journal:appended` part ensuite pour chaque journal qui avance, comme pour toute commande.
+- `commandId` accepté en entrée, tiré s'il manque, commun à toutes les épreuves. Rejouer un
+  `commandId` déjà présent au journal d'une des épreuves : `command_already_applied`, rien
+  n'est réécrit.
+- `expectedRevision` est une révision par épreuve : avec `eventDayId`, refusé par le contrat
+  (`invalid_input`). `dryRun` n'ouvre aucune transaction et n'écrit rien.
 - Rejeu : `projectCompetition` range la dernière piste de départ et l'état de chaque piste
   nommée par le journal (`facts.strips`). Ces événements ne sont pas des faits de structure :
   ils ne rendent pas un journal « incomplet » quand ils précèdent le tirage (comme l'appel).

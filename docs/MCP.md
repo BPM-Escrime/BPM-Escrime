@@ -823,7 +823,7 @@ Aucun argument.
 
 ### `set_strip_availability` — Piste disponible ou non
 
-*écriture, idempotent.* Plan des pistes : marque une piste indisponible (panne) ou la remet en service. Exactement un de « competitionId » (une épreuve) ou « eventDayId » (toutes les épreuves de la journée, une transaction : panne de la salle). La répartition des poules et du tableau, les tablettes et l’affectation des pistes de la journée l’évitent. Refus : competition_not_found, event_day_not_found, invalid_input. Journal : StripAvailabilityChanged (une épreuve déjà dans l’état demandé n’en reçoit pas).
+*écriture, idempotent.* Plan des pistes : marque une piste indisponible (panne) ou la remet en service. Exactement un de « competitionId » (une épreuve) ou « eventDayId » (toutes les épreuves de la journée, tout ou rien : panne de la salle ; « commandId » commun, « expectedRevision » refusé). La répartition des poules et du tableau, les tablettes et l’affectation des pistes de la journée l’évitent. Refus : competition_not_found, event_day_not_found, invalid_input, revision_conflict, command_already_applied. Journal : StripAvailabilityChanged (une épreuve déjà dans l’état demandé n’en reçoit pas).
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -832,6 +832,8 @@ Aucun argument.
 | `strip` | integer | oui | Numéro de piste, de 1 à 999 |
 | `available` | boolean | oui | false : piste indisponible ; true : remise en service |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve (revision_conflict sinon) ; refusée avec « eventDayId » (une révision par épreuve) |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
 
 ### `generate_team_pools` — Tirer les poules d’équipes
 

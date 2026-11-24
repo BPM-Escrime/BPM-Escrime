@@ -48,8 +48,8 @@ export const stripOperations = {
   }),
   setStripAvailability: command({
     description:
-      'Plan des pistes : marque une piste indisponible (panne) ou la remet en service. Exactement un de « competitionId » (une épreuve) ou « eventDayId » (toutes les épreuves de la journée, une transaction : panne de la salle). ' +
-      'La répartition des poules et du tableau, les tablettes et l’affectation des pistes de la journée l’évitent. Refus : competition_not_found, event_day_not_found, invalid_input. Journal : StripAvailabilityChanged (une épreuve déjà dans l’état demandé n’en reçoit pas).',
+      'Plan des pistes : marque une piste indisponible (panne) ou la remet en service. Exactement un de « competitionId » (une épreuve) ou « eventDayId » (toutes les épreuves de la journée, tout ou rien : panne de la salle ; « commandId » commun, « expectedRevision » refusé). ' +
+      'La répartition des poules et du tableau, les tablettes et l’affectation des pistes de la journée l’évitent. Refus : competition_not_found, event_day_not_found, invalid_input, revision_conflict, command_already_applied. Journal : StripAvailabilityChanged (une épreuve déjà dans l’état demandé n’en reçoit pas).',
     input: z
       .object({
         competitionId: CompetitionId.optional(),
@@ -57,9 +57,16 @@ export const stripOperations = {
         strip: Strip.describe('Numéro de piste, de 1 à 999'),
         available: z.boolean().describe('false : piste indisponible ; true : remise en service'),
         dryRun: DryRun,
+        expectedRevision: ExpectedRevision.describe(
+          'Révision attendue du journal de l’épreuve (revision_conflict sinon) ; refusée avec « eventDayId » (une révision par épreuve)'
+        ),
+        commandId: CommandId,
       })
       .refine(i => (i.competitionId === undefined) !== (i.eventDayId === undefined), {
         message: 'Exactement un de « competitionId » ou « eventDayId »',
+      })
+      .refine(i => i.eventDayId === undefined || i.expectedRevision === undefined, {
+        message: '« expectedRevision » : une révision par épreuve, sans objet avec « eventDayId »',
       }),
     output: z.object({
       dryRun: z.boolean(),

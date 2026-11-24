@@ -1,17 +1,15 @@
 /**
  * BPM - Escrime - Plan des pistes d'une épreuve, donnée du moteur (docs/adr/0015, #2033) :
- * setStripStart, setStripAvailability (une épreuve, ou toutes les épreuves d'une journée dans
- * une transaction), getStripPlan. Écriture de competition_strip_plans et journal
- * StripStartChanged / StripAvailabilityChanged dans la même transaction ; signal `strips`
- * (l'écran relit, le serveur distant de l'épreuve reçoit le plan : main/remote/stripPlan).
- * Règles : shared/domain/planning.
+ * setStripStart, setStripAvailability (une épreuve, ou toutes les épreuves d'une journée : une
+ * runCommand par épreuve dans une transaction englobante), getStripPlan. Écriture de
+ * competition_strip_plans et journal StripStartChanged / StripAvailabilityChanged dans la même
+ * transaction ; signal `strips` (l'écran relit, le serveur distant de l'épreuve reçoit le
+ * plan : main/remote/stripPlan). Règles : shared/domain/planning.
  * Licensed under GPL-3.0
  */
 import type { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
 import type { stripOperations } from '../../../shared/api/contractStrips';
 import { withStripAvailability } from '../../../shared/domain/planning/stripPlan';
-import { publishCompetitionEvent } from '../api/events';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { EVENT, recordEvents } from './eventLog';
@@ -55,74 +53,83 @@ export function setStripStart(
   return { dryRun: false, changed: true, plan: planOf(ctx, id) };
 }
 
-/** Épreuves visées : l'épreuve, ou toutes celles de la journée */
-function targetsOf(ctx: CommandContext, input: In<'setStripAvailability'>): string[] {
-  if (input.competitionId) return [getCompetitionOrThrow(ctx, input.competitionId).id];
-  const day = input.eventDayId ? ctx.db.eventDays.getDay(input.eventDayId) : null;
+/** Épreuves de la journée (celles qui existent encore) */
+function dayCompetitions(ctx: CommandContext, eventDayId: string | undefined): string[] {
+  const day = eventDayId ? ctx.db.eventDays.getDay(eventDayId) : null;
   if (!day) {
-    throw new CommandError('event_day_not_found', `Journée introuvable : ${input.eventDayId}`);
+    throw new CommandError('event_day_not_found', `Journée introuvable : ${eventDayId}`);
   }
   return day.competitionIds.filter(id => !!ctx.db.getCompetition(id));
 }
 
+type StripPlanOut = Out<'setStripAvailability'>['plans'][number];
+type Applied = { changed: boolean; plan: StripPlanOut };
+
+/** Une épreuve : plan changé (ou qui changerait, dryRun) et son événement au journal */
+function applyAvailability(
+  ctx: CommandContext,
+  id: string,
+  input: In<'setStripAvailability'>,
+  at: string
+): Applied {
+  const current = planOf(ctx, id);
+  const next = withStripAvailability(current, input.strip, input.available);
+  if (!next) return { changed: false, plan: current };
+  if (input.dryRun) return { changed: true, plan: { ...current, ...next } };
+  ctx.db.stripPlans.saveStripPlan(id, next, at);
+  recordEvents(ctx, id, [
+    {
+      type: EVENT.stripAvailabilityChanged,
+      payload: { strip: input.strip, available: input.available },
+    },
+  ]);
+  return { changed: true, plan: planOf(ctx, id) };
+}
+
+/** Moteur : une runCommand par épreuve dans une transaction englobante (api/engine) */
+export type RunAcross = <T>(
+  ctx: CommandContext,
+  competitionIds: readonly string[],
+  options: { commandId?: string },
+  fn: (commandCtx: CommandContext, competitionId: string) => T
+) => { commandId: string; results: Array<{ competitionId: string; result: T }> };
+
+/**
+ * Une épreuve : appelée dans la runCommand de l'épreuve (invoke). Journée (`eventDayId`) : une
+ * runCommand par épreuve sous un commandId commun, tout ou rien (`across`) ; dryRun : rien
+ * d'écrit, aucune transaction. `expectedRevision` refusé par le contrat avec `eventDayId`.
+ */
 export function setStripAvailability(
   ctx: CommandContext,
   input: In<'setStripAvailability'>,
-  { now = new Date() }: Given = {}
+  { now = new Date(), across }: Given & { across?: RunAcross } = {}
 ): Out<'setStripAvailability'> {
-  const targets = targetsOf(ctx, input);
   const at = now.toISOString();
-  const touched: string[] = [];
-  const plans: Out<'setStripAvailability'>['plans'] = [];
-  // Journée : hors runCommand (pas de competitionId), d'où la transaction et le commandId ici
-  const c: CommandContext = { ...ctx, commandId: ctx.commandId ?? uuidv4() };
-  const write = () => {
-    for (const id of targets) {
-      const current = planOf(c, id);
-      const next = withStripAvailability(current, input.strip, input.available);
-      if (!next) {
-        plans.push(current);
-        continue;
-      }
-      touched.push(id);
-      if (input.dryRun) {
-        plans.push({ ...current, ...next });
-        continue;
-      }
-      c.db.stripPlans.saveStripPlan(id, next, at);
-      recordEvents(c, id, [
-        {
-          type: EVENT.stripAvailabilityChanged,
-          payload: { strip: input.strip, available: input.available },
-        },
-      ]);
-      plans.push(planOf(c, id));
-    }
-  };
-  const dayWide = !input.competitionId;
-  if (dayWide && !input.dryRun && typeof ctx.db.transaction === 'function') {
-    ctx.db.transaction(write);
+  let results: Array<{ competitionId: string; result: Applied }>;
+  if (input.competitionId) {
+    const id = getCompetitionOrThrow(ctx, input.competitionId).id;
+    results = [{ competitionId: id, result: applyAvailability(ctx, id, input, at) }];
   } else {
-    write();
+    const ids = dayCompetitions(ctx, input.eventDayId);
+    const apply = (c: CommandContext, id: string) => applyAvailability(c, id, input, at);
+    if (input.dryRun) {
+      results = ids.map(id => ({ competitionId: id, result: apply(ctx, id) }));
+    } else {
+      if (!across) throw new CommandError('internal', 'Journée : moteur indisponible');
+      results = across(ctx, ids, { commandId: input.commandId }, apply).results;
+    }
   }
+  const touched = results.filter(r => r.result.changed).map(r => r.competitionId);
+  const plans = results.map(r => r.result.plan);
   if (input.dryRun) return { dryRun: true, changedCompetitionIds: touched, plans };
   changed(ctx, touched);
-  // Une épreuve : runCommand diffuse la révision ; journée : chaque journal touché
-  if (dayWide && ctx.db.eventLog) {
-    for (const id of touched) {
-      publishCompetitionEvent({
-        type: 'journal:appended',
-        competitionId: id,
-        revision: ctx.db.eventLog.getRevision(id),
-      });
-    }
-  }
   return { dryRun: false, changedCompetitionIds: touched, plans };
 }
 
-export const stripHandlers = {
+/** Opérations du plan des pistes ; `across` : runCommand par épreuve du moteur (journée) */
+export const stripHandlers = (across: RunAcross) => ({
   getStripPlan,
   setStripStart: (ctx: CommandContext, input: In<'setStripStart'>) => setStripStart(ctx, input),
   setStripAvailability: (ctx: CommandContext, input: In<'setStripAvailability'>) =>
-    setStripAvailability(ctx, input),
-};
+    setStripAvailability(ctx, input, { across }),
+});

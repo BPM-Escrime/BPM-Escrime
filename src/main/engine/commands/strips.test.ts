@@ -14,7 +14,7 @@ import { compareWithState, stateView } from '../../../shared/domain/journal/comp
 import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import { invoke } from '../api/engine';
 import { emitChangeVia } from '../../mcp/mcpDomain';
-import { publishCompetitionEvent } from '../api/events';
+import { onCompetitionEvent, publishCompetitionEvent } from '../api/events';
 import { watchStripPlans } from '../../remote/stripPlan';
 import type { CommandContext, DomainChange } from './context';
 
@@ -175,6 +175,83 @@ d('plan des pistes par le moteur (ADR-0015)', () => {
     expect(last(c1).commandId).toBe(last(c2).commandId);
     expect(last(c1).payload).toEqual({ strip: 5, available: true });
     for (const id of [c1, c2]) expect(divergences(id)).toEqual([]);
+  });
+
+  /** Journée de trois épreuves */
+  function day3() {
+    const ids = ['Épée H', 'Épée D', 'Fleuret'].map(competition);
+    const day = db.eventDays.createDay({ name: 'Dimanche', date: '2026-12-07', stripCount: 8 });
+    for (const id of ids) db.eventDays.setCompetitionDay(id, day.id);
+    return { ids, dayId: day.id };
+  }
+
+  it('journée : une runCommand par épreuve, journal:appended pour chacune, commandId repris', async () => {
+    const { ids, dayId } = day3();
+    const seen: Array<{ competitionId?: string; revision?: number }> = [];
+    const off = onCompetitionEvent(e => {
+      if (e.type === 'journal:appended')
+        seen.push({ competitionId: e.competitionId, revision: e.revision });
+    });
+    try {
+      await call('setStripAvailability', {
+        eventDayId: dayId,
+        strip: 3,
+        available: false,
+        commandId: 'cmd-day-1',
+      });
+    } finally {
+      off();
+    }
+    expect(seen.map(s => s.competitionId).sort()).toEqual([...ids].sort());
+    expect(seen.every(s => s.revision === 1)).toBe(true);
+    for (const id of ids) {
+      expect(events(id).map(e => [e.type, e.commandId])).toEqual([
+        ['StripAvailabilityChanged', 'cmd-day-1'],
+      ]);
+    }
+  });
+
+  it('journée : rejouer le même commandId ne réécrit rien (command_already_applied)', async () => {
+    const { ids, dayId } = day3();
+    const input = { eventDayId: dayId, strip: 3, available: false, commandId: 'cmd-day-2' };
+    await call('setStripAvailability', input);
+    // Entre-temps, une épreuve remet la piste en service : le rejeu ne la remarque pas
+    await call('setStripAvailability', { competitionId: ids[1], strip: 3, available: true });
+    await expect(call('setStripAvailability', input)).rejects.toMatchObject({
+      code: 'command_already_applied',
+    });
+    expect(db.stripPlans.getStripPlan(ids[1]).unavailable).toEqual([]);
+    expect(events(ids[0])).toHaveLength(1);
+    expect(events(ids[1])).toHaveLength(2);
+  });
+
+  it('journée : une épreuve en échec au milieu → aucune écriture, aucun événement', async () => {
+    const { ids, dayId } = day3();
+    const save = db.stripPlans.saveStripPlan.bind(db.stripPlans);
+    const spy = vi.spyOn(db.stripPlans, 'saveStripPlan').mockImplementation((id, plan, at) => {
+      if (id === ids[1]) throw new Error('disque plein');
+      save(id, plan, at);
+    });
+    await expect(
+      call('setStripAvailability', { eventDayId: dayId, strip: 4, available: false })
+    ).rejects.toMatchObject({ code: 'internal' });
+    spy.mockRestore();
+    for (const id of ids) {
+      expect(db.stripPlans.getStripPlan(id)).toMatchObject({ unavailable: [], updatedAt: null });
+      expect(events(id)).toEqual([]);
+    }
+  });
+
+  it('journée : expectedRevision refusé (une révision par épreuve)', async () => {
+    const { dayId } = day3();
+    await expect(
+      call('setStripAvailability', {
+        eventDayId: dayId,
+        strip: 2,
+        available: false,
+        expectedRevision: 0,
+      })
+    ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 
   it('refus : journée inconnue, ni ou les deux identifiants, piste hors bornes', async () => {
