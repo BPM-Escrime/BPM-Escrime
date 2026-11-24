@@ -130,6 +130,13 @@ export class ElectronDesktop implements DesktopServices {
   async pickDirectory(request?: { title?: string }): Promise<string | null> {
     return (await this.api().dialog.pickDirectory(request)) ?? null;
   }
+
+  async countHtmlPages(html: string): Promise<number | null> {
+    const count = this.api().file?.countHtmlPages;
+    if (!count) return null;
+    const res = await count(html);
+    return res?.success && res.pages ? res.pages : null;
+  }
 }
 
 type SimpleMenuKind = Exclude<keyof MenuEvents, 'export' | 'import'>;

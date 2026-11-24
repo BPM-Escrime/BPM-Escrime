@@ -2901,17 +2901,6 @@
     "add_error": "新增時出錯：{{msg}}",
     "unknown_error": "未知錯誤"
   },
-  "conflicts": {
-    "title": "同步衝突（{{n}}）",
-    "type_competition": "比賽",
-    "type_fencer": "劍手",
-    "type_match": "比賽場次",
-    "local": "本地",
-    "remote": "遠端",
-    "keep_local": "保留本地",
-    "keep_remote": "保留遠端",
-    "none": "沒有需要解決的衝突。"
-  },
   "updateNotif": {
     "title": "有可用更新！",
     "version": "版本",

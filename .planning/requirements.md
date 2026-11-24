@@ -37,7 +37,6 @@
 - [x] poolCalculations (classement + Quest)
 - [x] tableCalculations (seeding + ranking)
 - [x] scoreValidation
-- [x] conflictResolution
 - [x] import/export
 
 ## V2 - Mode Hors-Ligne (EN COURS 🔜)

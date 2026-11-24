@@ -2901,17 +2901,6 @@
     "add_error": "Error al añadir: {{msg}}",
     "unknown_error": "Error desconocido"
   },
-  "conflicts": {
-    "title": "Conflictos de sincronización ({{n}})",
-    "type_competition": "Competición",
-    "type_fencer": "Tirador",
-    "type_match": "Combate",
-    "local": "Local",
-    "remote": "Remoto",
-    "keep_local": "Mantener local",
-    "keep_remote": "Mantener remoto",
-    "none": "Ningún conflicto por resolver."
-  },
   "updateNotif": {
     "title": "¡Actualización disponible!",
     "version": "Versión",

@@ -45,8 +45,11 @@
  *   - featuresImports : fichiers de src/main, src/shared ou src/database qui importent
  *                  src/features, couche d'interface (#1979, docs/adr/0004)
  *   - electronApiCalls : fichiers de l'interface (src/renderer hors src/renderer/api,
- *                  src/features) qui appellent `window.electronAPI` directement → client
- *                  d'API du contrat (#1981, docs/adr/0008)
+ *                  src/features) et de src/shared (hors src/shared/platform et src/shared/types)
+ *                  qui appellent `window.electronAPI` directement, y compris par un cast
+ *                  `(window as …).electronAPI` ou `globalThis.electronAPI` → client d'API du
+ *                  contrat (#1981, docs/adr/0008) ou services de la plateforme (docs/adr/0021,
+ *                  0030 ; #2252)
  *   - electronApiUses : chaque occurrence de `window.electronAPI` et chaque appel de
  *                  `useElectronDB()` dans l'interface (mêmes fichiers) : un nouvel appel dans un
  *                  fichier déjà compté fait monter ce compteur → commande du contrat
@@ -248,12 +251,23 @@ function viaDb(expr) {
   return false;
 }
 
-/** `window.electronAPI` (ou `window?.electronAPI`) */
-const isWindowElectronApi = node =>
-  ts.isPropertyAccessExpression(node) &&
-  node.name.text === 'electronAPI' &&
-  ts.isIdentifier(node.expression) &&
-  node.expression.text === 'window';
+/**
+ * `window.electronAPI` (ou `window?.electronAPI`), aussi derrière un cast ou des parenthèses :
+ * `(window as unknown as {…}).electronAPI`, `globalThis.electronAPI` (#2252)
+ */
+const isWindowElectronApi = node => {
+  if (!ts.isPropertyAccessExpression(node) || node.name.text !== 'electronAPI') return false;
+  let e = node.expression;
+  while (
+    ts.isParenthesizedExpression(e) ||
+    ts.isAsExpression(e) ||
+    ts.isNonNullExpression(e) ||
+    ts.isTypeAssertionExpression(e)
+  ) {
+    e = e.expression;
+  }
+  return ts.isIdentifier(e) && (e.text === 'window' || e.text === 'globalThis');
+};
 
 function analyze(file) {
   const text = fs.readFileSync(file, 'utf8');
@@ -267,7 +281,10 @@ function analyze(file) {
   const commandOnly = inDir(file, 'main', 'remote') || inDir(file, 'main', 'mcp');
   // Couches (#1979) : un fichier compte une fois par compteur
   const lowerLayer = inDir(file, 'main') || inDir(file, 'shared') || inDir(file, 'database');
-  const interfaceLayer = renderer && !inDir(file, 'renderer', 'api');
+  // Plateforme (ElectronDesktop lit le préload) et types du préload : seuls à y toucher (#2252)
+  const sharedUi =
+    inDir(file, 'shared') && !inDir(file, 'shared', 'platform') && !inDir(file, 'shared', 'types');
+  const interfaceLayer = (renderer && !inDir(file, 'renderer', 'api')) || sharedUi;
   const once = (key, line) => {
     if (hits[key].length === 0) hits[key].push(line);
   };

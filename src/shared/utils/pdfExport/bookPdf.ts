@@ -4,6 +4,7 @@
  * Licensed under GPL-3.0
  */
 
+import { defaultPlatform } from '../../platform/platforms';
 import { savePDF, pdfLang, pdfT } from './core';
 import { buildBookFrontHTML, escHtml, orderBookSections, type BookSectionKind } from './bookToc';
 
@@ -36,6 +37,26 @@ export interface BookInput {
   logo?: string;
 }
 
+/**
+ * Pages de chaque section, comptées par le bureau (ADR-0030) ; undefined sans bureau ou au
+ * premier échec : le sommaire est alors sans numéros de page.
+ */
+export async function countSectionPages(sections: string[]): Promise<number[] | undefined> {
+  try {
+    const desktop = defaultPlatform.desktop;
+    if (!desktop?.countHtmlPages) return undefined;
+    const counts: number[] = [];
+    for (const html of sections) {
+      const pages = await desktop.countHtmlPages(html);
+      if (!pages) return undefined;
+      counts.push(pages);
+    }
+    return counts;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function exportBookPDF(input: BookInput): Promise<void> {
   const { sectionOrder, competitionTitle, bookTitle, filename, logo } = input;
   const chosen = orderBookSections(input.items, sectionOrder);
@@ -45,21 +66,7 @@ export async function exportBookPDF(input: BookInput): Promise<void> {
 
   // Sommaire avec numéros de page réels (#1325) : pages de chaque section comptées par un rendu,
   // puis page de garde (1) + sommaire (1) en tête ; repli sur un sommaire sans numéros.
-  const api = (window as unknown as { electronAPI?: Window['electronAPI'] }).electronAPI;
-  const countPages = api?.file?.countHtmlPages;
-  let pageCounts: number[] | undefined;
-  if (countPages) {
-    try {
-      pageCounts = [];
-      for (const html of sections) {
-        const r = await countPages(html);
-        if (!r?.success || !r.pages) throw new Error('count');
-        pageCounts.push(r.pages);
-      }
-    } catch {
-      pageCounts = undefined;
-    }
-  }
+  const pageCounts = await countSectionPages(sections);
   const front = buildBookFrontHTML({
     competitionTitle,
     toc: titles.map(title => ({ title })),

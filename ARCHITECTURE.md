@@ -90,7 +90,7 @@ bpm-escrime/
 │   │
 │   ├── shared/                   # Code commun main/renderer
 │   │   ├── types/                # index.ts (domaine), remote.ts, preload.ts, pdfTemplate.types.ts
-│   │   ├── services/             # cloudSync, errorService, ffeConnect, logger,
+│   │   ├── services/             # errorService, ffeConnect, logger,
 │   │   │                         # notification, performance, refereeManager, tournamentFlow
 │   │   └── utils/
 │   │       ├── fileParser/       # detect, ffeParser, xmlParser, engardeParser, txtParser,
@@ -101,7 +101,7 @@ bpm-escrime/
 │   │       ├── cardSystem, touchSystem, customTouchSystem, customRankingCalculator
 │   │       ├── questScheduler, splitCompetition, tournamentTemplates
 │   │       ├── fencerStatsCalculator, refereeStats, postTournamentReport
-│   │       └── bulkImport, fencerExport, multiFormatExport, conflictResolution, ...
+│   │       └── bulkImport, fencerExport, multiFormatExport, ...
 │   │
 │   ├── database/
 │   │   ├── index.ts              # DatabaseManager
@@ -154,7 +154,6 @@ bpm-escrime/
 | `remote.*` | `startServer`, `stopServer`, `changePort`, `getServerInfo`, `getArenas`, `getConnectedClients`, `broadcastCommand`, `identifyClient`, `updateTheme`, `updateLogo`, `updateCardAnnounce`, `updateStripCount`, `setCheckinPassword`, `setTrainerPassword`, `setTtsConfig`, `setWebhookUrl`, `acknowledgeDTCall`, `resetPoolMatch`, `refreshDeMatches`, ... |
 | `training.*` | Serveur d'entraînement |
 | `updater.*` | `check`, `installPendingUpdate`, `setSilentMode`, ... |
-| `crypto.*` | `protect` / `unprotect` (safeStorage) |
 | `themes.*` | `list`, `save`, `delete` |
 | Événements | `onAutosaveCompleted`, menus `onMenu*`, ... |
 | Divers | `notifyLanguageChanged`, `getVersionInfo`, `openExternal`, `print`, `setWindowSize`, `getLogo`, `getTtsConfig` |
@@ -330,7 +329,7 @@ planning, #1959 arbitres, #1964 ordre des matchs, #1966 tableau préparé). Chem
 À supprimer dans une PR dédiée (hors refactor, aucun changement visible) :
 `components/TouchOptimizedReferee.tsx`, `components/LiveDashboard.tsx`,
 `hooks/usePoolOptimizations.ts`, `hooks/useElectronDB.ts`, `hooks/useEventManager.ts`,
-`hooks/useKeyboardShortcuts.ts`, `hooks/useTheme.ts`, `services/offlineSync.ts`, et sept composants :
-`CardModal`, `ChangePoolModal`, `ConflictResolutionModal`,
+`hooks/useKeyboardShortcuts.ts`, `hooks/useTheme.ts`, `services/offlineSync.ts`, et six composants :
+`CardModal`, `ChangePoolModal`,
 `MultiStripManager`, `OptimizedPoolGrid`, `VoiceScoreController`, `VirtualList`.
 `features/bracket/services/bracketService.ts` n'est appelé nulle part hors de son module.

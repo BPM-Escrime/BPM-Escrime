@@ -2901,17 +2901,6 @@
     "add_error": "Error en afegir: {{msg}}",
     "unknown_error": "Error desconegut"
   },
-  "conflicts": {
-    "title": "Conflictes de sincronització ({{n}})",
-    "type_competition": "Competició",
-    "type_fencer": "Tirador",
-    "type_match": "Combat",
-    "local": "Local",
-    "remote": "Remot",
-    "keep_local": "Conserva el local",
-    "keep_remote": "Conserva el remot",
-    "none": "Cap conflicte per resoldre."
-  },
   "updateNotif": {
     "title": "Actualització disponible!",
     "version": "Versió",

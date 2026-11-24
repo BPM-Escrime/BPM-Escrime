@@ -503,13 +503,6 @@ export interface ArenaStateData {
   extraData?: Record<string, unknown>;
 }
 
-/** Chiffrement OS (safeStorage) pour secrets locaux. Renvoie null si indisponible. */
-export interface CryptoAPI {
-  isAvailable: () => Promise<boolean>;
-  protect: (plaintext: string) => Promise<string | null>;
-  unprotect: (ciphertext: string) => Promise<string | null>;
-}
-
 /** Boîte d'impression intégrée (#1214) */
 export interface PrintDialogSettings {
   printer: string;
@@ -558,7 +551,6 @@ export interface ElectronAPI extends MenuAPI, UtilityAPI {
   file: FileAPI;
   dialog: DialogAPI;
   updater: UpdaterAPI;
-  crypto: CryptoAPI;
   onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void;
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) => () => void;
   notifyLanguageChanged: (lang: string) => void;
