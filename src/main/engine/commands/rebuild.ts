@@ -81,9 +81,11 @@ function diagnose(ctx: CommandContext, competitionId: string) {
   const settings = comp?.settings ?? {};
   // Épreuve par équipes : rencontres et relais lus dans leurs tables (docs/adr/0024)
   const teams = comp?.isTeamEvent ? { teams: teamStateView(ctx, comp) } : {};
+  // Plan des pistes en base (docs/adr/0015)
+  const strips = ctx.db.stripPlans.getStripPlan(competitionId);
   const divergences = compareWithState(
     facts,
-    { ...stateView(session, settings), ...teams },
+    { ...stateView(session, settings), ...teams, strips },
     statusesOf(ctx, competitionId)
   );
   return { facts, session, divergences };

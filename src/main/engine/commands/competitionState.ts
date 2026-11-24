@@ -67,9 +67,6 @@ export function competitionState(
     ...(typeof session.remoteArenaCount === 'number'
       ? { remoteArenaCount: session.remoteArenaCount }
       : {}),
-    ...(typeof session.remoteStripStart === 'number'
-      ? { remoteStripStart: session.remoteStripStart }
-      : {}),
     ...(session.rapieres ? { rapieres: session.rapieres as CompetitionStateDTO['rapieres'] } : {}),
     ...(prep ? { poolPrepParams: prep } : {}),
     // Tableaux séparés après les poules (docs/adr/0024) : onglets de l'écran (lot A2)

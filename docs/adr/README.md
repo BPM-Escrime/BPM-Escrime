@@ -24,7 +24,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0012](0012-formule-domaine.md)                     | Formule : modèle dans `shared/domain/formula`, validée par le moteur à chaque écriture                                                       | Acceptée            |
 | [0013](0013-troisieme-place-epreuves-2-0.md)        | 3ᵉ place des épreuves 2.0 migrées : nouveau comportement accepté                                                                             | Acceptée            |
 | [0014](0014-affectation-arbitres-moteur-unique.md)  | Un seul moteur d'affectation des arbitres, appelé par une commande                                                                           | Acceptée (principe) |
-| [0015](0015-plan-des-pistes-moteur.md)              | Le plan des pistes est une donnée du moteur (migration 47)                                                                                   | Acceptée (principe) |
+| [0015](0015-plan-des-pistes-moteur.md)              | Le plan des pistes est une donnée du moteur (migration 50, journalisé)                                                                       | Acceptée            |
 | [0016](0016-retrait-reintegration-tireur.md)        | Retrait et réintégration d'un tireur : `withdrawFencer`, `reinstateFencer`                                                                   | Acceptée            |
 | [0017](0017-projections-etat-epreuve.md)            | L'état de l'épreuve devient une projection du moteur (`session_state` en cache, `getCompetitionState`, journal source de vérité par paliers) | Acceptée            |
 | [0019](0019-plan-arene-salle.md)                    | Disposition d'arène rattachée à la salle, salle liée à la compétition                                                                        | Remplacée par 0025  |
@@ -36,7 +36,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0024](0024-tableaux-separes-equipes-moteur.md)     | Tableaux séparés (un tableau par groupe) et épreuves par équipes (relais) passent par le moteur ; fin de `persistLocally`                    | Acceptée            |
 | [0025](0025-plan-de-salle-epreuve.md)               | Le plan de salle du planificateur est enregistré sur l'épreuve (`competitions.arena_plan`, migration 48)                                     | Acceptée            |
 | [0026](0026-recherche-de-lieu.md)                   | La recherche de lieu passe par le poste (`listPlaceSuggestions`), sur Photon puis la Géoplateforme IGN, gratuits sans clé                    | Acceptée            |
-| [0027](0027-choregraphies-document-bibliotheque.md) | Une chorégraphie est un document versionné de la bibliothèque du poste (table `choreographies`, migration 49), compatible `.chore`           | Proposée            |
+| [0027](0027-choregraphies-document-bibliotheque.md) | Une chorégraphie est un document versionné de la bibliothèque du poste (table `choreographies`, migration 51), compatible `.chore`           | Proposée            |
 | [0028](0028-cartons-equipe-moteur.md)               | Les cartons des épreuves par équipes (carton E, cartons des relais) passent par le moteur : `giveTeamCard`, `giveRelayCard`, journalisés     | Acceptée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).

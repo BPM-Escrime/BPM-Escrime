@@ -176,12 +176,19 @@ export function forcedPoolArena(ctx: ArenaQueueContext, poolId: string): string 
   return matches.every(m => ctx.poolMatchArenaOverrides.get(m.id) === first) ? first : null;
 }
 
-/** Serveur distant d'une épreuve, vu par les pistes de la journée (#1878) */
-export function dayStripServer(server: RemoteScoreServer): DayStripServer {
+/**
+ * Serveur distant d'une épreuve, vu par les pistes de la journée (#1878). `unavailable` : pistes
+ * indisponibles du plan de l'épreuve en base (docs/adr/0015), exclues même si le serveur ne les
+ * a pas encore reçues.
+ */
+export function dayStripServer(
+  server: RemoteScoreServer,
+  unavailable: () => readonly number[] = () => []
+): DayStripServer {
   return {
     hasSession: () => server.hasSession(),
     hasArenaAssignment: arenaId => server.hasArenaAssignment(arenaId),
-    canHostStrip: n => canHostStrip(server.arenaSetupCtx, n),
+    canHostStrip: n => canHostStrip(server.arenaSetupCtx, n) && !unavailable().includes(n),
     getWaitingWork: () => listWaitingWork(server.arenaQueueCtx),
     moveWorkToArena: (work, n) =>
       moveWorkToStrip(server.arenaSetupCtx, server.arenaQueueCtx, work, n),

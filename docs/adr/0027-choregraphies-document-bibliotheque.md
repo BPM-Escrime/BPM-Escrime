@@ -40,7 +40,7 @@ besoin de chercher une action précise dans la base.
    (`ChoreographySchema`, `schemaVersion: 1`). Ajouter un champ optionnel ne change pas de
    version ; une version ancienne se lit telle quelle ([ADR-0025](0025-plan-de-salle-epreuve.md),
    même principe).
-3. **Stockage** : table `choreographies` (migration 49) — `id`, `club_id` (nullable, lien
+3. **Stockage** : table `choreographies` (migration 51) — `id`, `club_id` (nullable, lien
    Mode Club), `title`, `discipline`, `document` (JSON texte), `revision`, `created_at`,
    `updated_at`. Une ligne par chorégraphie ; pas de tables par phrase, action ou mouvement.
 4. **Opérations du contrat** ([ADR-0008](0008-nommage-contrat.md)), droits `club:read` /
@@ -66,7 +66,7 @@ besoin de chercher une action précise dans la base.
 
 ## Conséquences
 
-- Une migration (49). L'archive `.bpclub` (sauvegarde du club) doit inclure ses chorégraphies.
+- Une migration (51). L'archive `.bpclub` (sauvegarde du club) doit inclure ses chorégraphies.
 - Une chorégraphie n'est **pas** une donnée d'épreuve : pas de journal, pas de serveur distant,
   pas d'outil MCP d'écriture tant que les droits du poste ne sont pas servis.
 - **Hors périmètre, ADR à venir** : l'épreuve « performance » (engagement d'une chorégraphie,

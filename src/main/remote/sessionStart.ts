@@ -9,7 +9,7 @@ import { remoteCustomScoring } from '../../shared/utils/customFormulaSettings';
 import type { RendererMatch, SessionMatch } from './types';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { logger, LogCategory } from '../../shared/services/logger';
-import { nextFreeStrip } from './stripPlan';
+import { nextFreeStrip } from '../../shared/domain/planning/stripPlan';
 
 type S = RemoteScoreServer;
 

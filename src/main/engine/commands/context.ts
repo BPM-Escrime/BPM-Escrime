@@ -38,8 +38,11 @@ import type { StripControlTarget } from '../../piste/stripControl';
 
 /** Écriture faite hors de l'écran : l'écran ouvert recharge les données concernées */
 export interface DomainChange {
-  /** Nature : épreuves (liste, réglages), tireurs, arbitres, réglages du poste, état de session */
-  scope: 'competitions' | 'fencers' | 'referees' | 'settings' | 'session';
+  /**
+   * Nature : épreuves (liste, réglages), tireurs, arbitres, réglages du poste, état de session,
+   * plan des pistes (docs/adr/0015)
+   */
+  scope: 'competitions' | 'fencers' | 'referees' | 'settings' | 'session' | 'strips';
   /** Épreuves touchées (vide = liste entière) */
   competitionIds: string[];
 }
@@ -113,7 +116,6 @@ export type RemoteServerHandle = Pick<
   | 'clearArenaThemeOverride'
   | 'updateKioskViews'
   | 'updateKioskTheme'
-  | 'setStripPlan'
   | 'updateArenaScreenTheme'
   | 'setArenaPassword'
   | 'setOrgNote'

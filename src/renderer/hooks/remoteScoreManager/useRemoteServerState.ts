@@ -188,17 +188,13 @@ export function useRemoteServerState(ctx: Ctx) {
   }, [activeQR]);
 
   // Initialisation : priorité localStorage → initialStripCount (parent) → pistes de la salle
-  // (#1880) → nombre de poules
+  // (#1880) → nombre de poules. Piste de départ : plan des pistes du moteur (docs/adr/0015)
   useEffect(() => {
     if (pendingCount !== null) return;
     let cancelled = false;
     const lsKey = `bellepoule-remote-strips-${competition.id}`;
     const lsSaved = localStorage.getItem(lsKey);
-    const startSaved = parseInt(
-      localStorage.getItem(`bellepoule-remote-strip-start-${competition.id}`) ?? '',
-      10
-    );
-    const initStart = Number.isFinite(startSaved) ? startSaved : (initialStripStart ?? 1);
+    const initStart = initialStripStart ?? 1;
     const apply = (initial: number, keepUserChoice = false) => {
       const range = normalizeStripRange(initStart, Math.max(initial, initStart));
       // Réponse asynchrone : un choix fait entre-temps par l'opérateur n'est pas écrasé
@@ -222,6 +218,19 @@ export function useRemoteServerState(ctx: Ctx) {
       cancelled = true;
     };
   }, [initialStripCount, pools.length, competition.id]);
+
+  // Piste de départ changée par le moteur (autre poste, MCP, relecture) : suivie si l'opérateur
+  // n'a pas de modification en attente
+  const engineStartRef = useRef(initialStripStart);
+  useEffect(() => {
+    if (initialStripStart == null || initialStripStart === engineStartRef.current) return;
+    engineStartRef.current = initialStripStart;
+    if (committedStart === null || pendingStart !== committedStart) return;
+    setCommittedStart(initialStripStart);
+    setPendingStart(initialStripStart);
+    setPendingCount(c => (c !== null && c < initialStripStart ? initialStripStart : c));
+    setCommittedCount(c => (c !== null && c < initialStripStart ? initialStripStart : c));
+  }, [initialStripStart]);
 
   const effectivePending = pendingCount ?? pools.length ?? 1;
   const effectiveCommitted = committedCount ?? pools.length ?? 1;
@@ -406,12 +415,8 @@ export function useRemoteServerState(ctx: Ctx) {
         pool: poolMatches.length,
         de: deMatches.length,
       });
-      // Plan des pistes connu du serveur avant la répartition : une poule sans piste attend
-      // dans l'intervalle de l'épreuve, jamais sur une piste masquée (#1878)
-      await remote.setStripPlan(competition.id, {
-        start: effectiveCommittedStart,
-        unavailable: [...unavailableStrips],
-      });
+      // Plan des pistes : déjà connu du serveur, envoyé par le moteur (docs/adr/0015) ; une
+      // poule sans piste attend dans l'intervalle de l'épreuve, jamais sur une piste masquée
       const result = await remote.startSession(
         competition.id,
         count,

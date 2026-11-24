@@ -45,8 +45,8 @@ interface UseCompetitionRestoreParams {
   setRankingValidated: Setter<boolean>;
   remoteArenaCount: number;
   setRemoteArenaCount: Setter<number>;
+  /** Piste de départ du plan des pistes, lue par le contrat (docs/adr/0015) */
   remoteStripStart: number;
-  setRemoteStripStart: Setter<number>;
   setRapieresState: ReturnType<typeof useRapieresSessionState>['setRapieresState'];
   minFencersPerPool: number;
   maxFencersPerPool: number;
@@ -75,7 +75,6 @@ export function useCompetitionRestore({
   remoteArenaCount,
   setRemoteArenaCount,
   remoteStripStart,
-  setRemoteStripStart,
   setRapieresState,
   minFencersPerPool,
   maxFencersPerPool,
@@ -104,14 +103,19 @@ export function useCompetitionRestore({
     }
   }, [isLoaded, pools.length, remoteStripStart]);
 
-  // Restaurer l'état au chargement
+  // Réglages du poste (onglet, préparation, pistes) appliqués une fois par montage : un second
+  // chargement complet (effets rejoués, chargements concurrents) relirait l'état du poste déjà
+  // réécrit avec les valeurs d'avant la restauration et ramènerait l'écran à l'appel
+  const posteAppliedRef = useRef(false);
   useEffect(() => {
     if (restoredState && isLoaded) {
       const restoredPhase = phaseFromNumber(restoredState.currentPhase);
+      const firstLoad = !restoredState.reloaded && !posteAppliedRef.current;
+      if (firstLoad) posteAppliedRef.current = true;
       // Onglet : seulement au chargement, celui du poste s'il ne devance pas la phase de
       // l'épreuve ; une relecture après une commande garde l'onglet affiché (docs/adr/0017)
       const poste = readPosteUiState(competitionId);
-      if (!restoredState.reloaded) {
+      if (firstLoad) {
         const tab = tabToRestore(poste.tab, restoredPhase, phaseNumber);
         if (tab) setCurrentPhase(tab);
       }
@@ -135,7 +139,7 @@ export function useCompetitionRestore({
           setConsolationBrackets(restoredState.consolationBrackets);
       }
       // Préparation des poules et pistes : réglages du poste d'abord (docs/adr/0017)
-      if (!restoredState.reloaded) {
+      if (firstLoad) {
         const min = poste.minFencersPerPool ?? restoredState.poolPrepParams?.minFencersPerPool;
         const max = poste.maxFencersPerPool ?? restoredState.poolPrepParams?.maxFencersPerPool;
         if (min !== undefined) setMinFencersPerPool(min);
@@ -146,10 +150,9 @@ export function useCompetitionRestore({
         restoredState.poolsLaunched ??
           inferPoolsLaunched(restoredPhase, restoredState.pools, restoredState.poolHistory)
       );
-      if (!restoredState.reloaded) {
+      if (firstLoad) {
         const arenas = poste.remoteArenaCount ?? restoredState.remoteArenaCount;
         if (arenas != null) setRemoteArenaCount(arenas);
-        setRemoteStripStart(poste.remoteStripStart ?? restoredState.remoteStripStart ?? 1);
       }
       if (restoredState.rapieres) setRapieresState(restoredState.rapieres);
     }
@@ -163,7 +166,6 @@ export function useCompetitionRestore({
       minFencersPerPool,
       maxFencersPerPool,
       remoteArenaCount,
-      remoteStripStart,
     });
   }, [
     isLoaded,
@@ -172,7 +174,6 @@ export function useCompetitionRestore({
     minFencersPerPool,
     maxFencersPerPool,
     remoteArenaCount,
-    remoteStripStart,
   ]);
 
   // Préparation non lancée : tirage du poste (posteUiState), sinon celui qu'une version

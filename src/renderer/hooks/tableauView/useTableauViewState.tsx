@@ -30,7 +30,7 @@ import {
   calculateMatchVerticalPosition,
 } from '../../components/tableau/tableauLayout';
 import { useTranslation } from '../useTranslation';
-import { stripAtIndex } from '../../../shared/utils/stripRange';
+import { distributeArenasRoundRobin as distributeArenas } from '../../../shared/domain/planning/stripPlan';
 import { useStripAvailability } from '../useStripAvailability';
 import { useBpmClient } from '../../api/BpmClientContext';
 import { TableauViewProps } from '../../components/tableau/tableauViewShared';
@@ -307,19 +307,15 @@ export function useTableauViewState(ctx: Ctx) {
   });
 
   const unavailableStrips = useStripAvailability(s => s.unavailable);
+  // Répartition des pistes du tableau : règle du domaine (docs/adr/0015)
   const distributeArenasRoundRobin = useCallback(
-    (matchList: TableauMatch[], only?: (m: TableauMatch) => boolean): TableauMatch[] => {
-      if (arenaCount <= 0) return matchList;
-      let arenaIdx = 0;
-      return matchList.map(m => {
-        if (m.fencerA && m.fencerB && !m.isBye && !m.winner && (!only || only(m))) {
-          const arena = stripAtIndex(stripStart, arenaCount, arenaIdx, unavailableStrips);
-          arenaIdx++;
-          return { ...m, arena };
-        }
-        return m;
-      });
-    },
+    (matchList: TableauMatch[], only?: (m: TableauMatch) => boolean): TableauMatch[] =>
+      distributeArenas(
+        matchList,
+        { start: stripStart, unavailable: unavailableStrips },
+        arenaCount,
+        only
+      ),
     [arenaCount, stripStart, unavailableStrips]
   );
 

@@ -91,11 +91,17 @@ Sans saisie distante ouverte : occupation prévue en base (poules en cours), san
 **Poule sans piste.** Quand une épreuve a plus de poules que de pistes dans sa plage (piste de
 départ à piste de fin, hors pistes indisponibles), les poules en trop attendent une piste : le
 serveur ne les place plus sur une piste masquée (sous la piste de départ), qui peut être celle
-d'une autre épreuve de la journée. La saisie distante envoie le plan des pistes au serveur
-avant de démarrer la séance. Ces poules sont proposées aux pistes libres de la journée.
+d'une autre épreuve de la journée. Le plan des pistes est une donnée du moteur, enregistrée sur
+l'épreuve (`getStripPlan`, `setStripStart`, `setStripAvailability`,
+[ADR-0015](adr/0015-plan-des-pistes-moteur.md)) : le serveur le reçoit à son démarrage et à
+chaque changement. Ces poules sont proposées aux pistes libres de la journée.
+
+**Piste en panne pour la salle.** `setStripAvailability` avec `eventDayId` marque la piste
+indisponible (ou la remet en service) dans toutes les épreuves de la journée, en une
+transaction (écran, agent MCP `set_strip_availability`).
 
 **Piste hors de la plage de l'épreuve.** Une épreuve peut recevoir n'importe quelle piste de la
-salle, sauf celles marquées indisponibles dans son plan des pistes (`canHostStrip`). À
+salle, sauf celles marquées indisponibles dans son plan des pistes, lu en base (`canHostStrip`). À
 l'affectation (`hostStrip`, `src/main/remote/arenaSetup.ts`) :
 
 - piste au-delà de sa dernière arène : les arènes manquantes sont créées sans toucher aux

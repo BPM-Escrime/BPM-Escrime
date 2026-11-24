@@ -48,6 +48,7 @@ export const ERRORS = {
   withdrawal_not_found: e('not_found', 'Aucun retrait à annuler pour ce tireur'),
   dir_not_found: e('not_found', 'Dossier introuvable'),
   venue_not_found: e('not_found', 'Salle introuvable'),
+  event_day_not_found: e('not_found', 'Journée multi-épreuves introuvable'),
 
   // ── conflict ──
   revision_conflict: e('conflict', 'Révision attendue périmée : relire le journal puis renvoyer'),

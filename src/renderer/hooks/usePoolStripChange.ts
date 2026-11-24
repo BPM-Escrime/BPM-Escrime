@@ -6,19 +6,14 @@
  */
 import type { Dispatch, SetStateAction } from 'react';
 import type { Pool } from '../../shared/types';
-import { useEffect } from 'react';
-import { useStripAvailability } from './useStripAvailability';
 import type { AssignmentsInput } from './usePoolsLaunch';
 
 export function usePoolStripChange<P extends Pool>(
-  competitionId: string,
   pools: P[],
   setPools: Dispatch<SetStateAction<P[]>>,
   /** Piste écrite par le moteur (assignMatches, docs/adr/0017) ; absent : écran seul */
   assign?: (input: AssignmentsInput) => Promise<'recorded' | 'local' | 'refused'>
 ) {
-  // Pistes indisponibles de la compétition (plan des pistes, #1501)
-  useEffect(() => useStripAvailability.getState().load(competitionId), [competitionId]);
   return async (poolId: string, strip: number | undefined) => {
     const target = pools.find(p => p.id === poolId);
     if (!target) return;

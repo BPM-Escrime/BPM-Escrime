@@ -12,7 +12,6 @@ export interface PosteUiState {
   minFencersPerPool?: number;
   maxFencersPerPool?: number;
   remoteArenaCount?: number;
-  remoteStripStart?: number;
   /** Tableaux séparés après les poules : groupe affiché (docs/adr/0024) */
   splitGroup?: string;
 }
