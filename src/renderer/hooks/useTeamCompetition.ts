@@ -23,6 +23,8 @@ export type TeamPoolRankingDTO = TeamsStateDTO['poolRanking'][number];
 export type RelayCardDTO = MatchDTO['bouts'][number]['cards'][number];
 /** Carton E d'une rencontre (arène Sabre Laser) */
 export type TeamCardDTO = MatchDTO['teamCards'][number];
+/** Carton P d'une rencontre (relais FIE, aux deux équipes, t.124) */
+export type PassivityCardDTO = MatchDTO['passivityCards'][number];
 export type TeamWithdrawalDTO = TeamsStateDTO['withdrawn'][number];
 
 /** Rencontre du moteur au format des vues (TeamPoolView, exports PDF) */
@@ -42,6 +44,8 @@ export interface TeamCompetitionData {
   relayCards: Record<string, RelayCardDTO[]>;
   /** Cartons E par rencontre */
   teamCards: Record<string, TeamCardDTO[]>;
+  /** Cartons P par rencontre (jaune P, rouge P, noir P) */
+  passivityCards: Record<string, PassivityCardDTO[]>;
   /** Équipes retirées (abandon) ou exclues (noir individuel), par équipe */
   withdrawn: Record<string, TeamWithdrawalDTO>;
 }
@@ -53,6 +57,7 @@ const EMPTY: TeamCompetitionData = {
   poolRanking: [],
   relayCards: {},
   teamCards: {},
+  passivityCards: {},
   withdrawn: {},
 };
 
@@ -66,6 +71,7 @@ function fromBlock(block: TeamsStateDTO): TeamCompetitionData {
     poolRanking: block.poolRanking,
     relayCards: Object.fromEntries(all.flatMap(m => m.bouts.map(b => [b.id, b.cards]))),
     teamCards: Object.fromEntries(all.map(m => [m.id, m.teamCards])),
+    passivityCards: Object.fromEntries(all.map(m => [m.id, m.passivityCards])),
     withdrawn: Object.fromEntries(block.withdrawn.map(w => [w.teamId, w])),
   };
 }

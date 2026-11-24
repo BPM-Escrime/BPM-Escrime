@@ -5,6 +5,7 @@
  * refus du moteur rendu à la tablette (`team_arena_error`, code du catalogue) sans rien
  * écrire, égalité au tableau refusée, journal rejoué sans écart. Cartons (docs/adr/0028, lot
  * C3) : `team_card` → giveTeamCard, `team_fencer_card` → giveRelayCard, source tablet.
+ * Cartons P (#2227) : `team_passivity_card` → givePassivityCard, noir P confirmé d'abord.
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
@@ -327,5 +328,63 @@ d('Arène équipe des tablettes par les commandes (docs/adr/0024, lot E4)', () =
     ]);
     expect(fx.db.teams.getTeamMatchCards(fx.matchId)).toHaveLength(2);
     expect(fx.divergences()).toEqual([]);
+  });
+
+  it('carton P (relais FIE) : jaune P, rouge P, noir P confirmé puis rencontre décidée (#2227)', async () => {
+    const { handlers, socket, relay, errors } = await setup();
+    relay(5, 3);
+    const pub = () =>
+      getPublicTeamArenaState(remote.teamArenaCtx, '1') as {
+        passivityEnabled: boolean;
+        passivityCards: Array<{ type: string }>;
+      };
+    expect(pub().passivityEnabled).toBe(true);
+    handlers.team_passivity_card({ arenaId: '1' });
+    handlers.team_passivity_card({ arenaId: '1' });
+    expect(errors()).toEqual([]);
+    expect(pub().passivityCards.map(c => c.type)).toEqual(['yellow', 'red']);
+    // Noir P : essai à blanc, la tablette doit confirmer ; rien d'écrit
+    handlers.team_passivity_card({ arenaId: '1' });
+    expect(socket.emit).toHaveBeenCalledWith('team_passivity_black', {
+      winnerTeamId: fx.teamAId,
+    });
+    expect(journal('PassivityCardGiven')).toHaveLength(2);
+    handlers.team_passivity_card({ arenaId: '1', confirmBlack: true });
+    expect(errors()).toEqual([]);
+    const given = journal('PassivityCardGiven');
+    expect(given.map(e => [e.source, (e.payload as { type: string }).type])).toEqual([
+      ['tablet', 'yellow'],
+      ['tablet', 'red'],
+      ['tablet', 'black'],
+    ]);
+    expect(fx.db.teams.getTeamMatch(fx.matchId)).toMatchObject({
+      status: 'finished',
+      winnerId: fx.teamAId,
+    });
+    expect(pub().passivityCards.map(c => c.type)).toEqual(['yellow', 'red', 'black']);
+    expect(fx.divergences()).toEqual([]);
+  });
+
+  it('carton P : refusé quand l’appareil maître fait foi, absent en Sabre Laser (#2227)', async () => {
+    const { handlers, errors } = await setup();
+    team().cyrano = { piste: '1', mode: 'master', online: true } as never;
+    handlers.team_passivity_card({ arenaId: '1' });
+    expect(journal('PassivityCardGiven')).toEqual([]);
+    fx.db.close();
+
+    const laser = await setup(undefined, { weapon: 'L' as never });
+    const pub = getPublicTeamArenaState(remote.teamArenaCtx, '1') as {
+      passivityEnabled: boolean;
+    };
+    expect(pub.passivityEnabled).toBe(false);
+    laser.handlers.team_passivity_card({ arenaId: '1' });
+    expect(laser.errors()).toEqual([
+      [
+        'team_arena_error',
+        expect.objectContaining({ error: 'card_refused', code: 'unsupported_format' }),
+      ],
+    ]);
+    expect(journal('PassivityCardGiven')).toEqual([]);
+    expect(errors()).toEqual([]);
   });
 });

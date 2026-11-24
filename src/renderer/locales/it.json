@@ -780,7 +780,18 @@
     "statusAbandoned": "Non ha terminato",
     "matchCancelled": "Incontro annullato: squadra ritirata",
     "matchRefused": "Incontro non disputato: squadra ritirata",
-    "withdrawnTitle": "Squadre ritirate o escluse"
+    "withdrawnTitle": "Squadre ritirate o escluse",
+    "passivityTitle": "Cartellini P (non combattività, t.124)",
+    "givePassivityCard": "Cartellino P",
+    "givePassivityCardTooltip": "Cartellino P a entrambe le squadre: giallo P, poi rosso P, poi nero P (decide l’incontro)",
+    "passivityNone": "Nessun cartellino P",
+    "passivityYellow": "Giallo P",
+    "passivityRed": "Rosso P",
+    "passivityBlack": "Nero P",
+    "confirmPassivityBlack": "Il nero P decide l’incontro a favore di {{team}} (totale delle frazioni concluse, poi classifica). Registrare prima la frazione in corso. Confermare?",
+    "passivityBlackConfirm": "Dare il nero P",
+    "passivityCardGiven": "Cartellino P dato",
+    "passivityMatchDecided": "Nero P: {{team}} vince l’incontro"
   },
   "kiosk": {
     "tbd": "Da definire",

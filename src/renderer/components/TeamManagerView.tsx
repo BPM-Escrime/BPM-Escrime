@@ -7,7 +7,8 @@
  * est un état de l'écran, envoyé à la fin du relais (recordRelayScore). Cartons et retrait
  * d'une équipe par le moteur (docs/adr/0028, lot C2) : lus dans le bloc « teams », écrits par
  * giveTeamCard, giveRelayCard, cancelTeamCard, cancelRelayCard, withdrawTeam ; succès affiché
- * après la réponse du moteur (docs/adr/0005).
+ * après la réponse du moteur (docs/adr/0005). Cartons P (relais FIE, t.124, #2227) par
+ * givePassivityCard : essai à blanc, confirmation du noir P (il décide la rencontre), envoi.
  * Licensed under GPL-3.0
  */
 
@@ -27,6 +28,7 @@ import {
   teamFormatOf,
 } from '../../shared/domain/teams/relay';
 import { rankTeamsForTableau } from '../../shared/domain/teams/teamTableau';
+import { hasPassivityCards } from '../../shared/domain/teams/passivityCards';
 import TeamPoolView, { CardHandlers, CardTarget, RelayHandlers } from './TeamPoolView';
 import TeamTableauView from './TeamTableauView';
 import BookSectionsModal from './BookSectionsModal';
@@ -99,6 +101,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     poolRanking,
     relayCards,
     teamCards,
+    passivityCards,
     withdrawn,
     loading,
     run,
@@ -320,6 +323,33 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
             : await run('cancelRelayCard', { competitionId, matchId, cardId });
         if (out) showToast(t('teams.cardCancelled'), 'success');
       })(),
+    // Carton P : relais FIE des armes olympiques seulement, jamais en Sabre Laser (t.124)
+    ...(format === 'fie-relay' && hasPassivityCards(competition.weapon)
+      ? { onGivePassivityCard: (matchId: string) => void handleGivePassivityCard(matchId) }
+      : {}),
+  };
+
+  // ── Carton P aux deux équipes : le moteur dit lequel (essai à blanc) ; le noir P décide la
+  // rencontre (score cumulé des relais terminés, puis classement) : confirmation d'abord ──
+  const handleGivePassivityCard = async (matchId: string) => {
+    const input = { competitionId, matchId };
+    const preview = await run('givePassivityCard', { ...input, dryRun: true });
+    if (!preview) return;
+    if (preview.card.type === 'black') {
+      const winner = preview.winnerTeamId ? teamName(preview.winnerTeamId) : '—';
+      const ok = await confirm({
+        message: t('teams.confirmPassivityBlack', { team: winner }),
+        confirmLabel: t('teams.passivityBlackConfirm'),
+      });
+      if (!ok) return;
+    }
+    const out = await run('givePassivityCard', input);
+    if (!out) return;
+    if (out.card.type === 'black' && out.winnerTeamId) {
+      showToast(t('teams.passivityMatchDecided', { team: teamName(out.winnerTeamId) }), 'warning');
+    } else {
+      showToast(t('teams.passivityCardGiven'), 'success');
+    }
   };
 
   // ── Envoyer une rencontre sur une arène pour saisie tablette temps réel ──────
@@ -731,6 +761,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           isLaserArena={isLaserArena}
           boutCap={boutCap}
           matchCards={teamCards}
+          passivityCards={passivityCards}
           cards={cardHandlers}
           withdrawn={withdrawn}
           onAssignArena={handleAssignArena}
@@ -762,6 +793,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           isLaserArena={isLaserArena}
           boutCap={boutCap}
           matchCards={teamCards}
+          passivityCards={passivityCards}
           cards={cardHandlers}
           withdrawn={withdrawn}
           onAssignArena={handleAssignArena}

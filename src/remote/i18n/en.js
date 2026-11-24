@@ -427,6 +427,15 @@
   'team.fencer_card': 'Card',
   'team.team_excluded': '{{team}} excluded (black card): match lost',
   'team.team_abandoned': '{{team}} withdrawn (abandonment): match lost',
+  'team.passivity_card': 'P card',
+  'team.passivity_title':
+    'P card (non-combativity, t.124) to both teams: yellow P, red P, then black P',
+  'team.passivity_cards_label': 'P cards of the match (both teams)',
+  'team.passivity_cancel': 'Cancel',
+  'team.passivity_black_confirm':
+    'Black P decides the match. Record the current relay first: the score used is the total of the finished relays.',
+  'team.passivity_black_confirm_btn': 'Confirm black P',
+  'team.passivity_black_winner': 'Winner: {{team}}.',
   'team.fencer_cards_label': 'Cards — {{fencer}}',
   'team.reason.early_start': 'Early start',
   'team.reason.late_stop': 'Continue after "Halt!"',

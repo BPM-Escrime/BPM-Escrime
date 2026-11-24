@@ -780,7 +780,18 @@
     "statusAbandoned": "N'a pas terminé",
     "matchCancelled": "Rencontre annulée : équipe retirée",
     "matchRefused": "Rencontre non disputée : équipe retirée",
-    "withdrawnTitle": "Équipes retirées ou exclues"
+    "withdrawnTitle": "Équipes retirées ou exclues",
+    "passivityTitle": "Cartons P (non-combativité, t.124)",
+    "givePassivityCard": "Carton P",
+    "givePassivityCardTooltip": "Carton P aux deux équipes : jaune P, puis rouge P, puis noir P (il décide la rencontre)",
+    "passivityNone": "Aucun carton P",
+    "passivityYellow": "Jaune P",
+    "passivityRed": "Rouge P",
+    "passivityBlack": "Noir P",
+    "confirmPassivityBlack": "Noir P : il décide la rencontre en faveur de {{team}} (score cumulé des relais terminés, puis classement). Enregistrez d'abord le relais en cours. Confirmer ?",
+    "passivityBlackConfirm": "Donner le noir P",
+    "passivityCardGiven": "Carton P donné",
+    "passivityMatchDecided": "Noir P : {{team}} gagne la rencontre"
   },
   "kiosk": {
     "tbd": "À déterminer",

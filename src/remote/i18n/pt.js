@@ -430,6 +430,15 @@
   'team.fencer_card': 'Cartão',
   'team.team_excluded': '{{team}} excluída (cartão preto): encontro perdido',
   'team.team_abandoned': '{{team}} retirada (abandono): encontro perdido',
+  'team.passivity_card': 'Cartão P',
+  'team.passivity_title':
+    'Cartão P (não combatividade, t.124) às duas equipas: amarelo P, vermelho P e depois preto P',
+  'team.passivity_cards_label': 'Cartões P do encontro (às duas equipas)',
+  'team.passivity_cancel': 'Cancelar',
+  'team.passivity_black_confirm':
+    'O preto P decide o encontro. Registe primeiro o revezamento em curso: o resultado considerado é o total dos revezamentos terminados.',
+  'team.passivity_black_confirm_btn': 'Confirmar o preto P',
+  'team.passivity_black_winner': 'Vencedor: {{team}}.',
   'team.fencer_cards_label': 'Cartões — {{fencer}}',
   'team.reason.early_start': 'Início antecipado',
   'team.reason.late_stop': 'Continuar depois de «Alto!»',

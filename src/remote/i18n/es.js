@@ -429,6 +429,15 @@
   'team.fencer_card': 'Tarjeta',
   'team.team_excluded': '{{team}} excluido (tarjeta negra): encuentro perdido',
   'team.team_abandoned': '{{team}} retirado (abandono): encuentro perdido',
+  'team.passivity_card': 'Tarjeta P',
+  'team.passivity_title':
+    'Tarjeta P (no combatividad, t.124) a ambos equipos: amarilla P, roja P y luego negra P',
+  'team.passivity_cards_label': 'Tarjetas P del encuentro (ambos equipos)',
+  'team.passivity_cancel': 'Cancelar',
+  'team.passivity_black_confirm':
+    'La negra P decide el encuentro. Registre primero el relevo en curso: el marcador retenido es el total de los relevos terminados.',
+  'team.passivity_black_confirm_btn': 'Confirmar la negra P',
+  'team.passivity_black_winner': 'Ganador: {{team}}.',
   'team.fencer_cards_label': 'Tarjetas — {{fencer}}',
   'team.reason.early_start': 'Salida anticipada',
   'team.reason.late_stop': 'Continúa tras «¡Alto!»',

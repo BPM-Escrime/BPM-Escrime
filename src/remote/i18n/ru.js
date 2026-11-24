@@ -428,6 +428,15 @@
   'team.fencer_card': 'Карточка',
   'team.team_excluded': '{{team}} исключена (чёрная карточка): встреча проиграна',
   'team.team_abandoned': '{{team}} снята (отказ): встреча проиграна',
+  'team.passivity_card': 'Карточка P',
+  'team.passivity_title':
+    'Карточка P (пассивность, t.124) обеим командам: жёлтая P, красная P, затем чёрная P',
+  'team.passivity_cards_label': 'Карточки P встречи (обеим командам)',
+  'team.passivity_cancel': 'Отмена',
+  'team.passivity_black_confirm':
+    'Чёрная P решает исход встречи. Сначала сохраните текущую эстафету: учитывается сумма завершённых эстафет.',
+  'team.passivity_black_confirm_btn': 'Подтвердить чёрную P',
+  'team.passivity_black_winner': 'Победитель: {{team}}.',
   'team.fencer_cards_label': 'Карточки — {{fencer}}',
   'team.reason.early_start': 'Ранний старт',
   'team.reason.late_stop': 'Продолжение после «Стой!»',

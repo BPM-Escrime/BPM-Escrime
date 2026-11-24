@@ -15,6 +15,7 @@ import {
   broadcastTeamArena,
   giveTeamArenaCard,
   giveTeamArenaRelayCard,
+  giveTeamArenaPassivityCard,
   teamArenaElapsedSec,
 } from './teamArena';
 import { cardRefusal, teamRefusal } from './teamCommand';
@@ -408,6 +409,26 @@ export function setupSocketHandlers(ctx: SocketHandlersContext): void {
         if (!outcome.ok) socket.emit('team_arena_error', cardRefusal(outcome));
       }
     );
+
+    // Carton P (non-combativité, t.124) aux deux équipes par givePassivityCard (#2227) : relais
+    // FIE seulement (le moteur refuse le Sabre Laser). Noir P : il décide la rencontre, la
+    // tablette le fait confirmer (essai à blanc du moteur, puis `confirmBlack`).
+    socket.on('team_passivity_card', (data: { arenaId: string; confirmBlack?: boolean }) => {
+      if (!ctx.checkSocketArenaAuth(socket, data?.arenaId)) return;
+      if (!ctx.teamArenaState.get(data.arenaId)) return;
+      if (teamDeviceLocked(data.arenaId, 'team_passivity_card')) return;
+      if (data.confirmBlack !== true) {
+        const preview = giveTeamArenaPassivityCard(ctx, data.arenaId, 'tablet', { dryRun: true });
+        if (!preview.ok) return void socket.emit('team_arena_error', cardRefusal(preview));
+        if (preview.out.card.type === 'black') {
+          return void socket.emit('team_passivity_black', {
+            winnerTeamId: preview.out.winnerTeamId,
+          });
+        }
+      }
+      const outcome = giveTeamArenaPassivityCard(ctx, data.arenaId, 'tablet');
+      if (!outcome.ok) socket.emit('team_arena_error', cardRefusal(outcome));
+    });
 
     // Niveau de batterie remonté par les tablettes arbitre
     socket.on('client:battery', (data: { level: number; charging: boolean }) => {

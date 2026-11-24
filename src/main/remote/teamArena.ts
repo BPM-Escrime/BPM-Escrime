@@ -16,6 +16,7 @@ import {
   relayCumul,
 } from '../../shared/domain/teams/teamRelayLive';
 import { getAvailableReasons } from '../../shared/domain/penalties/cards';
+import { hasPassivityCards } from '../../shared/domain/teams/passivityCards';
 import { JOURNAL_EVENT } from '../../shared/api/events';
 import type { CardReason } from '../../shared/types';
 import type { TeamArenaCard, TeamArenaFencerCard, TeamArenaState } from './types';
@@ -251,14 +252,16 @@ export function giveTeamArenaRelayCard(
 
 /**
  * Carton P (non-combativité, t.124) aux deux équipes par givePassivityCard (appareil de piste,
- * docs/adr/0028 lot C4) : escalade sur la rencontre ; le noir P la décide. Succès : rencontre
- * relue. Refus : rien d'écrit, code rendu. `broadcast: false` : l'appelant diffuse.
+ * tablette, docs/adr/0028 lot C4, #2227) : escalade sur la rencontre ; le noir P la décide.
+ * Succès : rencontre relue. Refus : rien d'écrit, code rendu. `broadcast: false` : l'appelant
+ * diffuse. `dryRun` : carton suivant rendu par le moteur sans rien écrire (la tablette fait
+ * confirmer le noir P).
  */
 export function giveTeamArenaPassivityCard(
   ctx: TeamArenaContext,
   arenaId: string,
   source: TeamSource,
-  { broadcast = true }: { broadcast?: boolean } = {}
+  { broadcast = true, dryRun = false }: { broadcast?: boolean; dryRun?: boolean } = {}
 ): TeamCommandOutcome<'givePassivityCard'> {
   const state = ctx.teamArenaState.get(arenaId);
   if (!state) return NO_ARENA;
@@ -266,9 +269,10 @@ export function giveTeamArenaPassivityCard(
     ctx.db,
     'givePassivityCard',
     { competitionId: state.competitionId, matchId: state.matchId },
-    source
+    source,
+    dryRun
   );
-  if (!outcome.ok) return outcome;
+  if (!outcome.ok || dryRun) return outcome;
   reloadTeamArenaMatch(ctx, state);
   if (broadcast) broadcastTeamArena(ctx, arenaId);
   return outcome;
@@ -393,6 +397,9 @@ export function getPublicTeamArenaState(ctx: TeamArenaContext, arenaId: string):
     boutComplete,
     matchComplete: !currentBout,
     cards: state.cards,
+    // Cartons P : relais FIE des armes olympiques seulement, jamais en Sabre Laser (t.124)
+    passivityEnabled: relay && hasPassivityCards(state.weapon),
+    passivityCards: relay ? (state.passivityCards ?? []) : [],
     withdrawnTeams: state.withdrawnTeams ?? [],
     deviceCards: state.deviceCards ?? {},
     cyrano: state.cyrano ?? null,

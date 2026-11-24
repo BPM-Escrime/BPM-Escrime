@@ -427,6 +427,15 @@
   'team.fencer_card': 'Targeta',
   'team.team_excluded': '{{team}} exclòs (targeta negra): encontre perdut',
   'team.team_abandoned': '{{team}} retirat (abandonament): encontre perdut',
+  'team.passivity_card': 'Targeta P',
+  'team.passivity_title':
+    'Targeta P (no combativitat, t.124) als dos equips: groga P, vermella P i després negra P',
+  'team.passivity_cards_label': 'Targetes P de l’encontre (als dos equips)',
+  'team.passivity_cancel': 'Cancel·lar',
+  'team.passivity_black_confirm':
+    'La negra P decideix l’encontre. Enregistreu primer el relleu en curs: el resultat retingut és el total dels relleus acabats.',
+  'team.passivity_black_confirm_btn': 'Confirmar la negra P',
+  'team.passivity_black_winner': 'Guanyador: {{team}}.',
   'team.fencer_cards_label': 'Targetes — {{fencer}}',
   'team.reason.early_start': 'Sortida anticipada',
   'team.reason.late_stop': 'Continua després de «Alto!»',

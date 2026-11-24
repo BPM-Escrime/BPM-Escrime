@@ -780,7 +780,18 @@
     "statusAbandoned": "No ha acabat",
     "matchCancelled": "Encontre anul·lat: equip retirat",
     "matchRefused": "Encontre no disputat: equip retirat",
-    "withdrawnTitle": "Equips retirats o exclosos"
+    "withdrawnTitle": "Equips retirats o exclosos",
+    "passivityTitle": "Targetes P (no combativitat, t.124)",
+    "givePassivityCard": "Targeta P",
+    "givePassivityCardTooltip": "Targeta P als dos equips: groga P, després vermella P, després negra P (decideix l’encontre)",
+    "passivityNone": "Cap targeta P",
+    "passivityYellow": "Groga P",
+    "passivityRed": "Vermella P",
+    "passivityBlack": "Negra P",
+    "confirmPassivityBlack": "La negra P decideix l’encontre a favor de {{team}} (total dels relleus acabats, després classificació). Enregistreu primer el relleu en curs. Confirmar?",
+    "passivityBlackConfirm": "Donar la negra P",
+    "passivityCardGiven": "Targeta P donada",
+    "passivityMatchDecided": "Negra P: {{team}} guanya l’encontre"
   },
   "kiosk": {
     "tbd": "Per determinar",

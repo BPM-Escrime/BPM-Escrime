@@ -780,7 +780,18 @@
     "statusAbandoned": "Не завершила",
     "matchCancelled": "Встреча аннулирована: команда снята",
     "matchRefused": "Встреча не проводится: команда снята",
-    "withdrawnTitle": "Снятые или исключённые команды"
+    "withdrawnTitle": "Снятые или исключённые команды",
+    "passivityTitle": "Карточки P (пассивность, t.124)",
+    "givePassivityCard": "Карточка P",
+    "givePassivityCardTooltip": "Карточка P обеим командам: жёлтая P, затем красная P, затем чёрная P (решает исход встречи)",
+    "passivityNone": "Нет карточек P",
+    "passivityYellow": "Жёлтая P",
+    "passivityRed": "Красная P",
+    "passivityBlack": "Чёрная P",
+    "confirmPassivityBlack": "Чёрная P решает встречу в пользу {{team}} (сумма завершённых эстафет, затем рейтинг). Сначала сохраните текущую эстафету. Подтвердить?",
+    "passivityBlackConfirm": "Дать чёрную P",
+    "passivityCardGiven": "Карточка P выдана",
+    "passivityMatchDecided": "Чёрная P: {{team}} выигрывает встречу"
   },
   "kiosk": {
     "ranking": "Рейтинг",

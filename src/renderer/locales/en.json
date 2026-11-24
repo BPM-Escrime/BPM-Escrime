@@ -780,7 +780,18 @@
     "statusAbandoned": "Did not finish",
     "matchCancelled": "Match cancelled: team withdrawn",
     "matchRefused": "Match not fenced: team withdrawn",
-    "withdrawnTitle": "Withdrawn or excluded teams"
+    "withdrawnTitle": "Withdrawn or excluded teams",
+    "passivityTitle": "P cards (non-combativity, t.124)",
+    "givePassivityCard": "P card",
+    "givePassivityCardTooltip": "P card to both teams: yellow P, then red P, then black P (decides the match)",
+    "passivityNone": "No P card",
+    "passivityYellow": "Yellow P",
+    "passivityRed": "Red P",
+    "passivityBlack": "Black P",
+    "confirmPassivityBlack": "Black P decides the match for {{team}} (total of the finished relays, then ranking). Record the current relay first. Confirm?",
+    "passivityBlackConfirm": "Give black P",
+    "passivityCardGiven": "P card given",
+    "passivityMatchDecided": "Black P: {{team}} wins the match"
   },
   "kiosk": {
     "ranking": "Ranking",

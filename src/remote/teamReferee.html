@@ -136,6 +136,14 @@
       .tie-priority-buttons { display: flex; gap: 0.4rem; justify-content: center; }
       .tie-priority-buttons button { flex: 1; }
       .tie-priority-buttons button.chosen { background: var(--tw-amber-400); color: var(--slate-900); font-weight: 700; }
+      /* Cartons P (non-combativité, t.124) : relais FIE seulement, aux deux équipes (#2227) */
+      .passivity-section { border-top: 1px solid var(--slate-700); padding-top: 0.6rem; text-align: center; }
+      .passivity-row { display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap; }
+      .p-card { display: inline-flex; align-items: center; gap: 0.1rem; font-weight: 700; }
+      .passivity-confirm { margin-top: 0.5rem; border: 1px solid var(--tw-red-400); border-radius: 0.6rem; padding: 0.5rem; font-size: 0.85rem; }
+      .passivity-confirm-buttons { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.4rem; }
+      .passivity-confirm-buttons button { flex: 1; }
+      .passivity-black { background: var(--tw-red-900); font-weight: 700; }
       .relay-live { text-align: center; font-size: 0.85rem; color: var(--tw-slate-300); }
       .team-out { text-align: center; font-weight: 700; color: var(--tw-red-400); }
       .match-complete {
@@ -207,6 +215,21 @@
           <div class="cards-label" id="cards-label-b">Cartons équipe « E » — B</div>
           <div class="card-buttons" id="card-buttons-b"></div>
           <div class="cards-log" id="cards-log-b"></div>
+        </div>
+      </div>
+
+      <div class="passivity-section" id="passivity-section" hidden>
+        <div class="cards-label" data-i18n="team.passivity_cards_label">Cartons P de la rencontre (aux deux équipes)</div>
+        <div class="passivity-row">
+          <button class="card-btn" id="passivity-btn" data-i18n-title="team.passivity_title" title="Carton P (non-combativité) aux deux équipes"><span data-i18n="team.passivity_card">Carton P</span></button>
+          <div class="cards-log" id="passivity-log"></div>
+        </div>
+        <div class="passivity-confirm" id="passivity-confirm" role="alertdialog" aria-labelledby="passivity-confirm-text" hidden>
+          <div id="passivity-confirm-text"></div>
+          <div class="passivity-confirm-buttons">
+            <button id="passivity-confirm-cancel" data-i18n="team.passivity_cancel">Annuler</button>
+            <button class="passivity-black" id="passivity-confirm-ok" data-i18n="team.passivity_black_confirm_btn">Confirmer le noir P</button>
+          </div>
         </div>
       </div>
 
@@ -430,6 +453,7 @@
           }
 
           renderTiePriority();
+          renderPassivity();
 
           // Équipe exclue (noir individuel, o.99.7.b) ou retirée : issue décidée par le moteur
           const teamOut = document.getElementById('team-out');
@@ -464,6 +488,57 @@
             .map(c => bpCard(c.type))
             .join(' ');
         }
+
+        // Cartons P (t.124, #2227) : relais FIE des armes olympiques seulement (passivityEnabled
+        // du serveur) ; escalade et vainqueur du noir P décidés par le moteur
+        let passivityAsk = null;
+        let passivityMatch = null;
+        function renderPassivity() {
+          const section = document.getElementById('passivity-section');
+          if (passivityMatch !== lastState.matchId) {
+            passivityMatch = lastState.matchId;
+            passivityAsk = null;
+          }
+          section.hidden = !lastState.passivityEnabled;
+          if (section.hidden) passivityAsk = null;
+          const given = lastState.passivityCards || [];
+          document.getElementById('passivity-log').innerHTML = given
+            .map(c => `<span class="p-card">${bpCard(c.type)}P</span>`)
+            .join(' ');
+          document.getElementById('passivity-btn').disabled = given.some(c => c.type === 'black');
+          const box = document.getElementById('passivity-confirm');
+          box.hidden = !passivityAsk;
+          if (!passivityAsk) return;
+          const winner = passivityAsk.winnerTeamId === lastState.teamAId
+            ? lastState.teamAName
+            : passivityAsk.winnerTeamId === lastState.teamBId
+              ? lastState.teamBName
+              : null;
+          document.getElementById('passivity-confirm-text').textContent = [
+            tk('team.passivity_black_confirm'),
+            winner ? tk('team.passivity_black_winner', { team: winner }) : '',
+          ].filter(Boolean).join(' ');
+        }
+        document.getElementById('passivity-btn').onclick = () => {
+          if (locked('referee.cyrano_master_card_lock')) return;
+          passivityAsk = null;
+          socket.emit('team_passivity_card', { arenaId });
+        };
+        document.getElementById('passivity-confirm-cancel').onclick = () => {
+          passivityAsk = null;
+          render();
+        };
+        document.getElementById('passivity-confirm-ok').onclick = () => {
+          if (locked('referee.cyrano_master_card_lock')) return;
+          passivityAsk = null;
+          socket.emit('team_passivity_card', { arenaId, confirmBlack: true });
+          render();
+        };
+        // Le moteur annonce un noir P : confirmation explicite avant envoi
+        socket.on('team_passivity_black', body => {
+          passivityAsk = { winnerTeamId: body ? body.winnerTeamId : null };
+          render();
+        });
 
         // Égalité au dernier relais d'une rencontre de tableau : l'arbitre désigne la priorité
         function renderTiePriority() {
