@@ -109,11 +109,32 @@ describe('ClubStatsPanel', () => {
     expect(screen.getByRole('heading', { name: 'Face-à-face' })).toBeInTheDocument();
     expect(await screen.findByText('Bonne parade')).toBeInTheDocument();
     expect(screen.getByText('BRAVO X')).toBeInTheDocument();
+    // Pas de zones connues : pas de mannequins
+    expect(screen.queryByRole('heading', { name: 'Répartition des touches' })).toBeNull();
     fireEvent.change(screen.getByLabelText('Regrouper par'), { target: { value: 'quarter' } });
     await waitFor(() =>
       expect(api.getMemberReport).toHaveBeenLastCalledWith('a', expect.any(Object), 'quarter')
     );
     fireEvent.click(screen.getByRole('button', { name: 'Retour au classement' }));
     expect(await screen.findByRole('heading', { name: 'Classement du club' })).toBeInTheDocument();
+  });
+
+  it('fiche membre Sabre Laser : mannequins des touches portées et reçues (docs/adr/0031)', async () => {
+    api.getMemberReport.mockResolvedValue({
+      stats: {
+        ...stats('a', 3, 1),
+        zonesScored: { A: 4, B: 2, C: 1 },
+        zonesReceived: { A: 1, B: 0, C: 2 },
+      },
+      headToHead: [],
+      progression: [],
+    });
+    render(<ClubStatsPanel clubId="c1" />);
+    fireEvent.click(await screen.findByText('ALPHA'));
+    expect(
+      await screen.findByRole('heading', { name: 'Répartition des touches' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Touches données — A=4 B=2 C=1/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Touches reçues — A=1 B=0 C=2/ })).toBeInTheDocument();
   });
 });

@@ -28,6 +28,28 @@ describe('clubPort (#1872, docs/adr/0022)', () => {
     });
   });
 
+  it('zones de la tablette gardées en Sabre Laser seulement (docs/adr/0031)', () => {
+    const bouts: Record<string, { id: string; status: string; weapon?: string }> = {
+      laser: { id: 'laser', status: 'in_progress', weapon: 'L' },
+      epee: { id: 'epee', status: 'in_progress', weapon: 'E' },
+    };
+    const club = { getBout: vi.fn((id: string) => bouts[id] ?? null), finishBout: vi.fn() };
+    const db = { club } as unknown as DatabaseManager;
+    const rec = { arenaId: 'arena1', arenaNumber: 1, weapon: '', finishedAt: '', durationSec: 60 };
+    const touches = { touches: { touchesA: ['A', 'C'], touchesB: ['B'] } };
+    onClubRemoteFinish(db, { ...rec, ...touches, id: 'club:laser', scoreA: 6, scoreB: 3 });
+    onClubRemoteFinish(db, { ...rec, ...touches, id: 'club:epee', scoreA: 2, scoreB: 1 });
+    expect(club.finishBout).toHaveBeenNthCalledWith(1, 'laser', {
+      scoreA: 6,
+      scoreB: 3,
+      entryMode: 'referee',
+      duration: 60,
+      zonesA: ['A', 'C'],
+      zonesB: ['B'],
+    });
+    expect(club.finishBout.mock.calls[1][1]).not.toHaveProperty('zonesA');
+  });
+
   it('combat annulé : score ignoré', () => {
     const club = {
       getBout: vi.fn(() => ({ id: 'b2', status: 'cancelled' })),

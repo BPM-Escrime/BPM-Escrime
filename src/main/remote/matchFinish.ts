@@ -57,6 +57,15 @@ export interface MatchFinishContext {
 
 /** Fin d'un match d'entraînement : écouteurs du process principal (Mode Club #1872) */
 export type TrainingFinishRecord = S['trainingHistory'][number];
+
+/** Zones de touche de la tablette (copie), seulement si au moins une touche a une zone */
+function trainingZones(touches: { touchesA: string[]; touchesB: string[] } | undefined): {
+  touchesA?: string[];
+  touchesB?: string[];
+} {
+  if (!touches || touches.touchesA.length + touches.touchesB.length === 0) return {};
+  return { touchesA: [...touches.touchesA], touchesB: [...touches.touchesB] };
+}
 export const trainingFinishListeners = new Set<(record: TrainingFinishRecord) => void>();
 
 /**
@@ -384,6 +393,7 @@ export function finishArenaMatch(ctx: MatchFinishContext, arenaId: string): Fini
       scoreB: finishedMatch.scoreB,
       durationSec: finishedMatch.duration ?? 0,
       finishedAt: new Date().toISOString(),
+      ...trainingZones(ctx.arenaTouches.get(arenaId)),
     });
     const record = ctx.trainingHistory[ctx.trainingHistory.length - 1];
     for (const listener of trainingFinishListeners) {

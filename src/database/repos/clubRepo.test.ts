@@ -556,6 +556,25 @@ describe.skipIf(!DatabaseSync)('ClubRepo (#1872)', () => {
       expect(repo.updateBoutScore(bt.id, 0, 0)).toMatchObject({ scoreA: 5 });
     });
 
+    it('zones de touche (docs/adr/0031) : lettres A/B/C gardées, conservées sans nouvelles zones', () => {
+      const bt = repo.createBout({ sessionId: sid, memberAId: a, memberBId: b });
+      expect(repo.finishBout(bt.id, { scoreA: 4, scoreB: 0 })!.zonesA).toBeUndefined();
+      const done = repo.finishBout(bt.id, {
+        scoreA: 9,
+        scoreB: 3,
+        zonesA: ['A', 'C', 'x', 'B'],
+        zonesB: ['B'],
+      })!;
+      expect(done).toMatchObject({ zonesA: 'ACB', zonesB: 'B' });
+      expect(repo.finishBout(bt.id, { scoreA: 9, scoreB: 2 })).toMatchObject({
+        zonesA: 'ACB',
+        zonesB: 'B',
+      });
+      expect(
+        repo.finishBout(bt.id, { scoreA: 0, scoreB: 0, zonesA: [], zonesB: [] })
+      ).toMatchObject({ zonesA: '', zonesB: '' });
+    });
+
     it('correction après coup + vainqueur explicite', () => {
       const bt = repo.createBout({ sessionId: sid, memberAId: a, memberBId: b });
       repo.finishBout(bt.id, { scoreA: 5, scoreB: 2 });

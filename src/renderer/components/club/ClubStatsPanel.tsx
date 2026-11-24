@@ -27,6 +27,7 @@ import { AgeRangeSelect, ageRangeText } from './ClubAgeRange';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useClubApi } from '../../api/clubApi';
 import { Button } from '../common/Button';
+import { TouchZoneHeatmap } from '../analytics/TouchZoneHeatmap';
 import { EmptyState } from '../common/EmptyState';
 
 type Scope = 'season' | 'quarter' | 'month' | 'session' | 'all';
@@ -34,6 +35,9 @@ type Scope = 'season' | 'quarter' | 'month' | 'session' | 'all';
 const today = () => new Date().toISOString().slice(0, 10);
 const pct = (r: number) => `${Math.round(r * 100)} %`;
 const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
+/** Comptes par zone ; absents (ancien poste) → zéro */
+const NO_ZONES = { A: 0, B: 0, C: 0 };
+const zoneTotal = (z: { A: number; B: number; C: number } = NO_ZONES) => z.A + z.B + z.C;
 
 /** Filtre des combats pour la portée choisie */
 export function scopeFilter(scope: Scope, sessionId: string, date = today()): ClubBoutFilter {
@@ -221,6 +225,31 @@ export const ClubStatsPanel: React.FC<{ clubId: string }> = ({ clubId }) => {
             </dl>
           )}
         </section>
+
+        {/* Sabre Laser : mannequins des touches portées / reçues (zones de la tablette, ADR-0031) */}
+        {report &&
+          zoneTotal(report.stats.zonesScored) + zoneTotal(report.stats.zonesReceived) > 0 && (
+            <section className="club-card" aria-labelledby="club-zones-title">
+              <h2 id="club-zones-title" className="club-card-title">
+                {t('fencerDetail.touch_split')}
+              </h2>
+              <div className="flex justify-center gap-8">
+                <TouchZoneHeatmap
+                  label={t('fencerDetail.touches_given')}
+                  zoneA={report.stats.zonesScored?.A ?? 0}
+                  zoneB={report.stats.zonesScored?.B ?? 0}
+                  zoneC={report.stats.zonesScored?.C ?? 0}
+                />
+                <TouchZoneHeatmap
+                  label={t('fencerDetail.touches_received')}
+                  variant="received"
+                  zoneA={report.stats.zonesReceived?.A ?? 0}
+                  zoneB={report.stats.zonesReceived?.B ?? 0}
+                  zoneC={report.stats.zonesReceived?.C ?? 0}
+                />
+              </div>
+            </section>
+          )}
 
         <section className="club-card" aria-labelledby="club-progress-title">
           <div className="club-row club-row--between">
