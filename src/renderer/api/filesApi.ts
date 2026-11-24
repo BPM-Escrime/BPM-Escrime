@@ -4,8 +4,8 @@
  * sauvegarde d'un club .bpclub. Le contrat rend ou reçoit le contenu en base64 ; l'écran
  * l'enregistre ou le choisit par PlatformServices (`saveDataFile`, `openDataFile`). Remplace
  * file.exportCompetition, exportFencersArchive, importFencersArchive, exportPhotos,
- * importPhotos, privacy.exportEncryptedBpm, openEncryptedBpm et le groupe club de
- * window.electronAPI. Un refus du contrat lève ApiError (code traduisible par `errors.<code>`).
+ * importPhotos, privacy.exportEncryptedBpm, openEncryptedBpm, diagnostic.exportReport,
+ * file.writeSpreadsheet et le groupe club de window.electronAPI. Un refus du contrat lève ApiError (code traduisible par `errors.<code>`).
  * Licensed under GPL-3.0
  */
 import { useMemo } from 'react';
@@ -35,6 +35,11 @@ export function createFilesApi(client: BpmClient) {
     /** Fichiers de l'extranet fédéral (contenus base64) décodés en texte (#1938, #2134) */
     federalFiles: (files: Array<{ name: string; content: string }>) =>
       q('listFederalFiles', { files }),
+    /** Rapport de diagnostic du poste (JSON), à enregistrer par saveDataFile */
+    diagnosticReport: () => q('getDiagnosticReport', {}),
+    /** Classeur .xlsx d'une feuille (contenu base64) */
+    spreadsheet: (rows: (string | number)[][], sheetName?: string) =>
+      q('getSpreadsheetFile', sheetName ? { rows, sheetName } : { rows }),
     club: {
       importPhotos: (clubId: string, content: string) => c('importClubPhotos', { clubId, content }),
       backupFile: (clubId: string) => q('getClubBackupFile', { clubId }),

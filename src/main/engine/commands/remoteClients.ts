@@ -38,7 +38,7 @@ export const remoteClientsHandlers: { [N in ClientOps]: RemoteHandler<N> } = {
 };
 
 /**
- * Avis d'une épreuve : un avis sans épreuve (logo du poste) ou venu d'un serveur sans épreuve
+ * Avis d'une épreuve : un avis sans épreuve (serveur d'entraînement) ou venu d'un serveur sans épreuve
  * connue est livré à tous les abonnés ; sinon, seulement à ceux de son épreuve.
  */
 const concerns = (wanted: string | undefined, event: string | null): boolean =>

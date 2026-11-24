@@ -42,6 +42,16 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
   ['photosArchive', () => api.photosArchive('c1')],
   ['importPhotos', () => api.importPhotos('c1', B64)],
   ['federalFiles', () => api.federalFiles([{ name: 'epreuve.zip', content: B64 }])],
+  ['diagnosticReport', () => api.diagnosticReport()],
+  [
+    'spreadsheet',
+    () =>
+      api.spreadsheet([
+        ['Nom', 'Prix'],
+        ['Masque', 120],
+      ]),
+  ],
+  ['spreadsheet (feuille)', () => api.spreadsheet([['a']], 'Inventaire')],
   ['club.importPhotos', () => api.club.importPhotos('k1', B64)],
   ['club.backupFile', () => api.club.backupFile('k1')],
   ['club.importBackup', () => api.club.importBackup(B64)],

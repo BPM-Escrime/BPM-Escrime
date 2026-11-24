@@ -2,7 +2,7 @@
  * BPM - Escrime - Port du serveur distant (#1981 lot 2, docs/adr/0022)
  * Branche sur le CommandContext ce que les opérations du serveur distant ne peuvent pas faire
  * seules : registre des serveurs et ports (remoteRegistry), certificat TLS, pare-feu, logo et
- * synthèse vocale du poste (<userData>/logo.dat, tts-config.json), webhook. Remplace les canaux
+ * synthèse vocale du poste (logo poussé aux serveurs, tts-config.json), webhook. Remplace les canaux
  * `remote:*` migrés (ipc/remoteServerHandlers, remoteSettingsHandlers, remoteClientsHandlers,
  * webhookHandlers…).
  * Licensed under GPL-3.0
@@ -71,17 +71,8 @@ export function createRemoteAdminPort(opts: RemotePortOptions): RemoteAdminPort 
     firewallCheck: async port => runFirewallCheck(port),
     server: competitionId => remoteServers.get(competitionId)?.server,
     servers,
+    // Logo enregistré en base par setRemoteLogo (paramètre du poste `logo`, seule source)
     setLogo: async logo => {
-      const logoPath = path.join(opts.userDataDir(), 'logo.dat');
-      if (logo) {
-        await fs.promises.writeFile(logoPath, logo, 'utf-8');
-      } else {
-        try {
-          fs.unlinkSync(logoPath);
-        } catch {
-          /* déjà absent */
-        }
-      }
       for (const server of servers()) server.setLogo(logo);
     },
     setTtsConfig: async config => {

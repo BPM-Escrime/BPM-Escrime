@@ -6,12 +6,7 @@
 
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
-import type {
-  ElectronAPI,
-  UpdateInfo,
-  UpdateProgressEvent,
-  ProxySettingsDTO,
-} from '../shared/types/preload';
+import type { ElectronAPI, UpdateInfo, UpdateProgressEvent } from '../shared/types/preload';
 
 import { setPrintRequestHandler, type PrintRequestHandler } from './preloadApi/printHandler';
 import { dbApi } from './preloadApi/dbApi';
@@ -137,22 +132,11 @@ const electronApi = {
     },
   },
 
-  // Proxy réseau (Paramètres → Réseau)
+  // Dossier de sauvegarde : sélecteur natif (Paramètres → Sauvegarde)
   backup: {
     chooseDir: () => ipcRenderer.invoke('backup:chooseDir'),
     pickCompetitionDir: () => ipcRenderer.invoke('backup:pickCompetitionDir'),
   },
-  proxy: {
-    get: () => ipcRenderer.invoke('proxy:get'),
-    set: (settings: ProxySettingsDTO) => ipcRenderer.invoke('proxy:set', settings),
-    test: () => ipcRenderer.invoke('proxy:test'),
-  },
-
-  // Rapport de diagnostic (fichier JSON, sans port réseau) (#1326)
-  diagnostic: {
-    exportReport: () => ipcRenderer.invoke('diagnostic:exportReport'),
-  },
-
   // Publication des résultats sur GREG (escrime-info.com), envoi fait par le main (#1328)
   greg: {
     publish: (request: unknown) => ipcRenderer.invoke('greg:publish', request),
@@ -188,11 +172,6 @@ const electronApi = {
     subscribe('update:available', callback),
   onUpdateProgress: (callback: (data: UpdateProgressEvent) => void) =>
     subscribe('update:progress', callback),
-  getLogo: () => ipcRenderer.invoke('app:getLogo'),
-  getLogos: () => ipcRenderer.invoke('app:getLogos'),
-  saveLogos: (logos: { id: string; name: string; data: string }[]) =>
-    ipcRenderer.invoke('app:saveLogos', logos),
-  getTtsConfig: () => ipcRenderer.invoke('app:getTtsConfig'),
 
   // Remove listeners
   removeAllListeners: (channel: string) => ipcRenderer.removeAllListeners(channel),

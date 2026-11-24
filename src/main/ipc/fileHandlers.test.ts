@@ -28,7 +28,6 @@ describe('registerFileHandlers (#1341)', () => {
       'file:export',
       'file:import',
       'file:writeContent',
-      'file:writeSpreadsheet',
     ]);
   });
 

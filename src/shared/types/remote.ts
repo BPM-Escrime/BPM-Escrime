@@ -281,7 +281,7 @@ export type RemoteMatchPayload = Record<string, unknown>;
 
 /** Avis du serveur distant à l'écran (abonnement onRemoteActivity, docs/adr/0010 et 0022) */
 interface RemoteActivityBase {
-  /** Épreuve du serveur émetteur ; null : avis du poste (logo) ou serveur d'entraînement */
+  /** Épreuve du serveur émetteur ; null : serveur d'entraînement */
   competitionId: string | null;
 }
 
@@ -323,7 +323,6 @@ export type RemoteActivity = RemoteActivityBase &
     | ({ kind: 'dt_call' } & DTCallEvent)
     | { kind: 'dt_call_cancelled'; arenaId: string }
     | { kind: 'org_note_changed'; note: OrgNote | null }
-    | { kind: 'logo_loaded'; logo: string | null }
   );
 
 /** Clients (écrans, tablettes) connectés au serveur distant d'une épreuve */

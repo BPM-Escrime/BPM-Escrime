@@ -12,7 +12,6 @@ import { installAppSettingsMirror } from '../services/appSettingsMirror';
 import type { OpenCompetition } from './useAppState';
 import { defaultBpmClient } from '../api/IpcClient';
 import { loadCompetition } from '../api/competitionMapping';
-import { remoteApi } from '../api/remoteApi';
 import { stationApi, stationAvailable } from '../api/stationApi';
 
 interface AppGlobalEffectsParams {
@@ -108,26 +107,16 @@ export function useAppGlobalEffects(params: AppGlobalEffectsParams): void {
     return () => document.removeEventListener('wheel', handler, { capture: true });
   }, []);
 
-  // Logo du poste recopié dans localStorage pour les exports PDF : lu après db:ready
-  // (syncLogoFromStation), relu quand l'agent change les réglages du poste, et à chaque
-  // logo chargé par le serveur distant
+  // Logo du poste (paramètre `logo` en base, seule source) recopié dans localStorage pour les
+  // exports PDF : lu après db:ready (syncLogoFromStation), relu quand l'agent change les
+  // réglages du poste
   useEffect(() => {
-    let unsubSettings: (() => void) | undefined;
-    if (stationAvailable()) {
-      try {
-        unsubSettings = stationApi.settings.onChanged(syncLogoFromStation);
-      } catch {
-        unsubSettings = undefined;
-      }
+    if (!stationAvailable()) return undefined;
+    try {
+      return stationApi.settings.onChanged(syncLogoFromStation);
+    } catch {
+      return undefined;
     }
-    const unsub = remoteApi.onActivity('logo_loaded', undefined, ({ logo }) => {
-      if (logo) localStorage.setItem('bellepoule-logo', logo);
-      else localStorage.removeItem('bellepoule-logo');
-    });
-    return () => {
-      unsub();
-      unsubSettings?.();
-    };
   }, []);
 }
 

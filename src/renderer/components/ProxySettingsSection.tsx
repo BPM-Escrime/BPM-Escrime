@@ -2,13 +2,15 @@
  * BPM - Escrime - Paramètres → Système → Proxy réseau
  * Licensed under GPL-3.0
  *
- * Appliqué par le process principal à toute l'app (mises à jour, webhooks…).
+ * Appliqué par le poste à toute l'app (mises à jour, webhooks…), par les opérations
+ * getProxySettings, updateProxySettings et testProxy (docs/adr/0022).
  * La machine locale (serveur d'arbitrage) reste toujours en direct.
  */
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
-import type { ProxySettingsDTO } from '../../shared/types/preload';
+import type { ProxySettingsDTO } from '../../shared/types/systemSettings';
+import { stationAvailable, useStationApi } from '../api/stationApi';
 import { HINT, BOLD, SMALL_BTN, TOGGLE_LABEL } from './settingsModal.styles';
 import { Button } from './common/Button';
 
@@ -24,6 +26,7 @@ const MODES: Mode[] = ['system', 'direct', 'manual'];
 
 const ProxySettingsSection: React.FC = () => {
   const { t } = useTranslation();
+  const station = useStationApi();
   const [mode, setMode] = useState<Mode>('system');
   const [server, setServer] = useState('');
   const [bypass, setBypass] = useState('');
@@ -31,8 +34,9 @@ const ProxySettingsSection: React.FC = () => {
   const [available, setAvailable] = useState(false);
 
   useEffect(() => {
-    window.electronAPI?.proxy
-      ?.get?.()
+    if (!stationAvailable()) return; // hors poste (navigateur, tests sans pont)
+    station.proxy
+      .get()
       .then(s => {
         setMode(s.mode);
         setServer(s.server ?? '');
@@ -40,15 +44,15 @@ const ProxySettingsSection: React.FC = () => {
         setAvailable(true);
       })
       .catch(() => {
-        // hors Electron (tests, navigateur)
+        // poste indisponible : section masquée
       });
-  }, []);
+  }, [station]);
 
   const save = async (next: ProxySettingsDTO) => {
     setStatus({ kind: 'busy' });
     try {
-      const res = await window.electronAPI.proxy.set(next);
-      setStatus(res.success ? { kind: 'saved' } : { kind: 'invalid' });
+      await station.proxy.update(next);
+      setStatus({ kind: 'saved' });
     } catch {
       setStatus({ kind: 'invalid' });
     }
@@ -64,7 +68,7 @@ const ProxySettingsSection: React.FC = () => {
   const handleTest = async () => {
     setStatus({ kind: 'busy' });
     try {
-      const r = await window.electronAPI.proxy.test();
+      const r = await station.proxy.test();
       setStatus({ kind: 'test', ok: r.ok, resolved: r.resolved });
     } catch {
       setStatus({ kind: 'test', ok: false, resolved: '' });

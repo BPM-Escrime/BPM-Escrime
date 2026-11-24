@@ -2,7 +2,8 @@
  * BPM - Escrime - Fichiers de données du poste par le contrat (#1981, docs/adr/0021 et 0022)
  * Reprise des anciens canaux IPC file:exportCompetition, file:exportFencersArchive,
  * file:importFencersArchive, file:exportPhotos, file:importPhotos, privacy:exportEncryptedBpm,
- * privacy:openEncryptedBpm, club:importPhotos, club:exportBackup, club:importBackup : contenu
+ * privacy:openEncryptedBpm, club:importPhotos, club:exportBackup, club:importBackup,
+ * diagnostic:exportReport, file:writeSpreadsheet : contenu
  * base64 en entrée et en sortie, jamais de chemin. Les copies en clair d'une base passent par
  * un fichier temporaire du dossier de la base (userData), supprimé aussitôt.
  * Les imports dans une épreuve décodent l'archive (asynchrone) puis écrivent par runCommand
@@ -23,6 +24,8 @@ import {
 } from '../../bpmCrypto';
 import { decodeClubBackup, encodeClubBackup } from '../../clubBackupFile';
 import { unpackFederalFiles } from '../../federalFiles';
+import { diagnosticReportFile } from '../../diagnosticReport';
+import { rowsToXlsx } from '../../xlsxToCsv';
 import { CLUB_EXISTS_ERROR } from '../../../database/repos/clubBackupRepo';
 import {
   fencersFromArchive,
@@ -34,6 +37,7 @@ import {
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { refusing } from './refusal';
+import { portOf } from './stationSupport';
 
 type Ops = typeof fileOperations;
 type FileHandler<N extends keyof Ops> = (
@@ -285,6 +289,18 @@ async function listFederalFiles(
   }
 }
 
+/** Rapport de diagnostic du poste (#1326) : JSON, liste blanche de champs techniques */
+const getDiagnosticReport: FileHandler<'getDiagnosticReport'> = ctx => {
+  const { fileName, text } = diagnosticReportFile(portOf(ctx).diagnostics());
+  return { fileName, content: Buffer.from(text, 'utf-8').toString('base64') };
+};
+
+/** Tableur .xlsx d'une feuille (Mode Club : inventaire, membres) */
+const getSpreadsheetFile: FileHandler<'getSpreadsheetFile'> = async (_ctx, { rows, sheetName }) => {
+  const content = await rowsToXlsx(rows, sheetName);
+  return { content: content.toString('base64') };
+};
+
 /** Opérations sans écriture dans une épreuve ; les deux imports d'épreuve sont dans engine.ts */
 export const dataFileHandlers = {
   listFederalFiles,
@@ -296,4 +312,6 @@ export const dataFileHandlers = {
   importClubPhotos,
   getClubBackupFile,
   importClubBackup,
+  getDiagnosticReport,
+  getSpreadsheetFile,
 };
