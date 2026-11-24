@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 23 | 278 |
-| `src/main/` | 155 | 1329 |
+| `src/main/` | 155 | 1340 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 210 |
-| `src/renderer/components/` | 133 | 728 |
+| `src/renderer/components/` | 134 | 736 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 423 |
 | `src/renderer/api/` | 10 | 46 |
@@ -120,10 +120,10 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 44 | 534 |
-| `src/shared/platform/` | 3 | 29 |
-| **Total** | **619** | **4846** |
+| `src/shared/platform/` | 3 | 31 |
+| **Total** | **620** | **4867** |
 
-Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 602 fichiers, 4817 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2739,8 +2739,8 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - **runBackupAutosave**
   - écrit la base complète dans le dossier global
   - utilise le dossier global réglé par l’utilisateur
-  - une compétition avec dossier dédié est copiée seule dans ce dossier
-  - un dossier dédié invalide (relatif) est ignoré
+  - une épreuve avec un dossier propre sur le poste est copiée seule dans ce dossier (ADR-0030)
+  - l’ancien settings.backupDir de l’épreuve n’est plus lu
   - un échec sur une compétition n’empêche pas les autres
 - **competitionAutosaveName**
   - assainit le titre et ajoute un suffixe d’id
@@ -2749,7 +2749,7 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/backupSettings.test.ts</code> — 8 tests</summary>
+<summary><code>src/main/backupSettings.test.ts</code> — 12 tests</summary>
 
 - **sanitizeBackupDir**
   - accepte un chemin absolu et le normalise
@@ -2762,6 +2762,12 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - écrit puis relit le dossier choisi
   - réinitialiser (réglage vide) rétablit le défaut
   - le nom de la sauvegarde automatique est fixe
+- **dossier propre d’une épreuve (docs/adr/0030)**
+  - table épreuve → dossier : fixée, relue, retirée ; dossier du poste gardé
+  - entrée invalide du fichier (relative) ignorée à la lecture
+- **reprise de settings.backupDir (docs/adr/0030)**
+  - dossier existant repris, absent ignoré, puis plus jamais refaite
+  - un dossier déjà réglé sur le poste n’est pas remplacé ; dossier du poste gardé
 
 </details>
 
@@ -3614,7 +3620,7 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/station.test.ts</code> — 32 tests</summary>
+<summary><code>src/main/engine/commands/station.test.ts</code> — 38 tests</summary>
 
 - lit les valeurs par défaut, modifie puis relit
 - refuse une clé inconnue ou les dossiers de l’agent (schéma), une valeur invalide (dépôt)
@@ -3622,6 +3628,12 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - reprise des réglages localStorage : « missing » ne remplace pas, « write » écrit
 - dossiers de l’agent : défauts du poste, retrait
 - dossier de sauvegarde : lu, puis remis au défaut (#2134)
+- setBackupDir (docs/adr/0030) : dossier existant enregistré ; absent ou relatif refusé
+- setBackupDir : dossier en lecture seule refusé
+- dossier propre d’une épreuve : réglage du poste, lu, fixé, retiré (docs/adr/0030)
+- dossier propre d’une épreuve : refus dir\_not\_found, competition\_not\_found
+- le champ settings.backupDir sort de updateCompetitionSettings (schéma)
+- addAgentFolder (docs/adr/0030) : dossier existant ajouté une fois ; absent refusé
 - onStationSettingsChanged : relaie les changements de paramètres, pas les autres
 - crée, renomme, désigne par défaut et supprime
 - refus du dépôt rendus en station\_refused, message gardé
@@ -3646,7 +3658,7 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 - adresse invalide ou avec identifiants : station\_refused, réglage inchangé
 - contenu JSON en base64, nom horodaté, liste blanche de champs
 - **contrat du poste**
-  - 55 opérations, chacune avec son gestionnaire
+  - 60 opérations, chacune avec son gestionnaire
 - **listPlaceSuggestions (docs/adr/0026)**
   - texte nettoyé transmis au port, langue par défaut fr
   - texte trop court : refus du contrat ; poste sans service : indisponible
@@ -3802,13 +3814,14 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/ipc/fileHandlers.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/ipc/fileHandlers.test.ts</code> — 5 tests</summary>
 
 - **registerFileHandlers (#1341)**
   - enregistre les canaux file:\* et dialog:\*
   - refuse d’écrire un chemin non autorisé par une boîte de dialogue (#1146)
   - écrit des octets (fichier de données rendu par le contrat, ADR-0021) ou du texte
   - dialog:openFile binaire : octets bruts, option retirée du dialogue natif
+  - dialog:pickDirectory (docs/adr/0030) : chemin rendu, null si annulé, rien d’autre
 
 </details>
 
@@ -6038,6 +6051,16 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/BackupDirSettingsSection.test.tsx</code> — 3 tests</summary>
+
+- **BackupDirSettingsSection**
+  - choix du dossier puis setBackupDir : chemin affiché, retour au défaut
+  - choix annulé : rien n’est enregistré
+  - sans bureau : dossier affiché, bouton de choix absent
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/BookSectionsModal.test.tsx</code> — 2 tests</summary>
 
 - **moveItem**
@@ -6102,7 +6125,7 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/CompetitionPropertiesModal.test.tsx</code> — 10 tests</summary>
+<summary><code>src/renderer/components/CompetitionPropertiesModal.test.tsx</code> — 13 tests</summary>
 
 - **CompetitionPropertiesModal**
   - affiche 3 onglets verticaux, sans « Configuration » (#2013)
@@ -6115,6 +6138,10 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - « Garder » conserve les touches et masque l’alerte
   - signature des matchs de tableau dans Arbitrage
   - enregistre les valeurs saisies dans les autres onglets
+  - **dossier propre de l’épreuve sur ce poste (docs/adr/0030)**
+    - lu sur le poste, choisi puis enregistré par la commande, retiré ; pas dans l’épreuve
+    - à la création (épreuve sans identifiant) : section absente, rien n’est lu
+    - sans bureau : section absente, enregistrement possible
 
 </details>
 
@@ -6329,14 +6356,16 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/McpSettingsSection.test.tsx</code> — 5 tests</summary>
+<summary><code>src/renderer/components/McpSettingsSection.test.tsx</code> — 7 tests</summary>
 
 - **McpSettingsSection**
   - configuration du client : URL locale et jeton porteur
   - jeton illisible : message dédié plutôt que l’erreur brute
   - journal des appels : plus récent d’abord, erreurs signalées
   - journal vide : message
-  - dossiers de l’agent : défauts, ajout par le main, retrait
+  - dossiers de l’agent : défauts, choix du dossier puis commande addAgentFolder, retrait
+  - choix annulé : rien n’est ajouté
+  - sans bureau (navigateur, vue DT) : bouton d’ajout absent, liste affichée
 
 </details>
 
@@ -9976,7 +10005,7 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/platform/desktop.test.ts</code> — 17 tests</summary>
+<summary><code>src/shared/platform/desktop.test.ts</code> — 19 tests</summary>
 
 - **ElectronDesktop**
   - chaque méthode appelle la bonne fonction du préload
@@ -10000,6 +10029,9 @@ Unitaires : 601 fichiers, 4796 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - fenêtre, épreuve courante, langue, impression : relais vers le préload
 - **fakeDesktop (lot 3b)**
   - émet menu, fichiers et sauvegarde aux abonnés encore inscrits
+- **pickDirectory (lot 3c, docs/adr/0030)**
+  - ElectronDesktop : relais vers dialog.pickDirectory du préload, null si annulé
+  - fakeDesktop : annulé par défaut, remplaçable
 
 </details>
 
