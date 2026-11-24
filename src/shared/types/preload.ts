@@ -7,14 +7,11 @@
 import type { SettingsAPI } from './settingsApi';
 import {
   Competition,
-  Match,
   Pool,
-  PoolSnapshot,
   Score,
   Phase,
   FencerCompetitionStats,
 } from '../types';
-import type { MatchSignatureRequest, ArenaUpdate } from './remote';
 import type { PrivacyAPI } from './privacy';
 import type { McpScreenEvent } from './mcp';
 export type { ClubMemberReport } from './club';
