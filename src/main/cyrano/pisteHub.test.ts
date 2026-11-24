@@ -1,4 +1,3 @@
-import { FencerStatus } from '../../shared/types';
 /**
  * PisteHub (#1720) — intégration appareil Cyrano ↔ RemoteScoreServer réel, mode appareil maître.
  * Identifiants de tireurs au format UUID (36 caractères) : l'appareil n'en reçoit que 8.
@@ -36,6 +35,16 @@ vi.mock('socket.io', () => ({
 vi.mock('../ipc/dbHandlers', async importOriginal => ({
   ...(await importOriginal<typeof import('../ipc/dbHandlers')>()),
   emitCompetitionEvent: vi.fn(),
+}));
+// Score par le moteur (recordScore, #2151) : simulé ici (base factice sans session ni
+// journal), couvert sur base réelle par remote/finishByEngine.test.ts
+const engine = vi.hoisted(() => ({
+  record: vi.fn((_score: Record<string, unknown>) => ({ kind: 'accepted' as const })),
+}));
+vi.mock('../remote/scoreCommand', async orig => ({
+  ...(await orig<typeof import('../remote/scoreCommand')>()),
+  checkFinishedScore: () => ({ kind: 'accepted' }),
+  recordFinishedScore: (_db: unknown, score: Record<string, unknown>) => engine.record(score),
 }));
 vi.mock('http', () => ({
   createServer: vi
@@ -286,11 +295,13 @@ describe('PisteHub — mode appareil maître (#1720)', () => {
     device(info('E', { id: short(ID.ef), score: 2, y: 1 }, { id: short(ID.ab), score: 1 }));
     expect(acks).toBe(1);
     expect(arena().status).toBe('finished');
-    expect(mockDb.updateMatch).toHaveBeenCalledWith(
-      pm(1, ID.ef, ID.ab).id,
+    expect(engine.record).toHaveBeenCalledWith(
       expect.objectContaining({
-        scoreA: expect.objectContaining({ value: 2, isVictory: true }),
-        scoreB: expect.objectContaining({ value: 1, isVictory: false }),
+        matchId: pm(1, ID.ef, ID.ab).id,
+        scoreA: 2,
+        scoreB: 1,
+        winner: 'A',
+        source: 'cyrano',
       })
     );
     expect(mockDb.saveCard).toHaveBeenCalledWith(
@@ -298,20 +309,21 @@ describe('PisteHub — mode appareil maître (#1720)', () => {
     );
     expect(disps).toHaveLength(0);
     // END répété (ACK perdu) : nouvel ACK, rien de réenregistré
-    mockDb.updateMatch.mockClear();
+    engine.record.mockClear();
     device(info('E', { id: short(ID.ef), score: 2 }, { id: short(ID.ab), score: 1 }));
     expect(acks).toBe(2);
-    expect(mockDb.updateMatch).not.toHaveBeenCalled();
+    expect(engine.record).not.toHaveBeenCalled();
   });
 
   it('END envoyé directement (score dans la même trame, sans INFO préalable) : score final retenu', () => {
     device(info('E', { id: short(ID.ab), score: 5 }, { id: short(ID.ef), score: 3 }));
     expect(acks).toBe(1);
-    expect(mockDb.updateMatch).toHaveBeenCalledWith(
-      pm(1, ID.ef, ID.ab).id,
+    expect(engine.record).toHaveBeenCalledWith(
       expect.objectContaining({
-        scoreA: expect.objectContaining({ value: 3 }),
-        scoreB: expect.objectContaining({ value: 5, isVictory: true }),
+        matchId: pm(1, ID.ef, ID.ab).id,
+        scoreA: 3,
+        scoreB: 5,
+        winner: 'B',
       })
     );
   });
@@ -413,13 +425,12 @@ describe('PisteHub — mode appareil maître (#1720)', () => {
       expect(lastDisp()?.stopwatch).toBe('1:20');
       expect(updates[updates.length - 1]).toMatchObject({ time: 80, timerStatus: 'paused' });
       // Correction sur l'appareil puis nouvelle validation
-      mockDb.updateMatch.mockClear();
+      engine.record.mockClear();
       device(info('H', { id: short(ID.ef), score: 5, y: 1 }, { id: short(ID.ab), score: 3, r: 2 }));
       device(info('E', { id: short(ID.ef), score: 5, y: 1 }, { id: short(ID.ab), score: 3, r: 2 }));
       expect(acks).toBe(2);
-      expect(mockDb.updateMatch).toHaveBeenCalledWith(
-        pm(1, ID.ef, ID.ab).id,
-        expect.objectContaining({ scoreB: expect.objectContaining({ value: 3 }) })
+      expect(engine.record).toHaveBeenCalledWith(
+        expect.objectContaining({ matchId: pm(1, ID.ef, ID.ab).id, scoreB: 3 })
       );
     });
 
@@ -485,7 +496,7 @@ describe('PisteHub — mode appareil maître (#1720)', () => {
     device(info('W', null, null));
     expect(lastDisp().weapon).toBeUndefined();
   });
-  const finishedWith = () => lastCall(mockDb.updateMatch)?.[1];
+  const finishedWith = () => lastCall(engine.record)?.[0];
 
   it('END à égalité avec priorité : vainqueur = tireur prioritaire, inversion comprise', () => {
     // A (EF) à droite, priorité à droite → A
@@ -493,38 +504,29 @@ describe('PisteHub — mode appareil maître (#1720)', () => {
       info('E', { id: short(ID.ef), score: 4 }, { id: short(ID.ab), score: 4 }, { priority: 'R' })
     );
     expect(acks).toBe(1);
-    expect(finishedWith()).toMatchObject({
-      scoreA: { value: 4, isVictory: true },
-      scoreB: { value: 4, isVictory: false },
-    });
+    expect(finishedWith()).toMatchObject({ scoreA: 4, scoreB: 4, winner: 'A' });
   });
 
   it('END à égalité, A à gauche après inversion, priorité à droite → B', () => {
     device(
       info('E', { id: short(ID.ab), score: 2 }, { id: short(ID.ef), score: 2 }, { priority: 'R' })
     );
-    expect(finishedWith()).toMatchObject({
-      scoreA: { value: 2, isVictory: false },
-      scoreB: { value: 2, isVictory: true },
-    });
+    expect(finishedWith()).toMatchObject({ scoreA: 2, scoreB: 2, winner: 'B' });
   });
 
-  it('END sur abandon : l’adversaire gagne même mené au score, abandon marqué', () => {
+  it('END sur abandon : l’adversaire gagne même mené au score, le DT décide du retrait', () => {
     device(info('E', { id: short(ID.ef), score: 3, status: 'A' }, { id: short(ID.ab), score: 1 }));
     expect(acks).toBe(1);
-    expect(finishedWith()).toMatchObject({
-      scoreA: { value: 3, isVictory: false, isAbstention: true },
-      scoreB: { value: 1, isVictory: true, isAbstention: false },
-    });
+    expect(finishedWith()).toMatchObject({ scoreA: 3, scoreB: 1, winner: 'B' });
+    // Abandon : score seul, jamais de retrait automatique (t.45.1)
+    expect(finishedWith()?.specialStatus).toBeUndefined();
   });
 
-  it('END sur exclusion (statut E) : tireur exclu comme pour un carton noir, annulable (#1829)', () => {
+  it('END sur exclusion (statut E) : exclusion par le moteur avec le score, rien d’écrit en direct (#2151)', () => {
     device(info('E', { id: short(ID.ef), score: 2 }, { id: short(ID.ab), score: 4, status: 'E' }));
-    expect(mockDb.updateFencer).toHaveBeenCalledWith(ID.ab, {
-      status: FencerStatus.EXCLUDED,
-      exclusionReason: 'black_card',
-    });
-    expect(mockDb.updateFencer).not.toHaveBeenCalledWith(ID.ef, expect.anything());
+    expect(finishedWith()).toMatchObject({ specialStatus: 'exclusion', blackCard: true });
+    expect(mockDb.updateFencer).not.toHaveBeenCalled();
+    expect(mockDb.updateMatch).not.toHaveBeenCalled();
   });
 
   it('END sur abandon : aucune exclusion automatique, le DT est sollicité', () => {
@@ -534,10 +536,7 @@ describe('PisteHub — mode appareil maître (#1720)', () => {
 
   it('END sur exclusion : exclusion marquée sur le tireur exclu', () => {
     device(info('E', { id: short(ID.ef), score: 2 }, { id: short(ID.ab), score: 4, status: 'E' }));
-    expect(finishedWith()).toMatchObject({
-      scoreA: { value: 2, isVictory: true },
-      scoreB: { value: 4, isVictory: false, isExclusion: true },
-    });
+    expect(finishedWith()).toMatchObject({ scoreA: 2, scoreB: 4, winner: 'A' });
   });
 
   it('journal des scores : auteur « device » pour l’appareil, « referee » pour la tablette', () => {
@@ -548,11 +547,9 @@ describe('PisteHub — mode appareil maître (#1720)', () => {
       { arenaId: 'arena1', action: 'update_score', scoreA: 2, scoreB: 0, cardsA: [], cardsB: [] }
     );
     expect(lastCall(mockDb.logScoreChange)?.[0]).toMatchObject({ changedBy: 'referee' });
+    // Fin : journal des scores tenu par le moteur (recordScore, audit « device »)
     device(info('E', { id: short(ID.ef), score: 2 }, { id: short(ID.ab), score: 0 }));
-    expect(lastCall(mockDb.logScoreChange)?.[0]).toMatchObject({
-      changedBy: 'device',
-      reason: 'arena_finish',
-    });
+    expect(finishedWith()).toMatchObject({ source: 'cyrano', scoreA: 2, scoreB: 0 });
   });
 
   it('BAD MATCH : alerte exposée pour le panneau, levée quand l’appareil affiche le bon match', () => {

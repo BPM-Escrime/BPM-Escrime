@@ -46,21 +46,21 @@ vi.mock('http', () => ({
 // Réintégration par la commande reinstateFencer (docs/adr/0016) : simulée ici, la base de
 // test n'a pas de journal (#2134 : plus d'écriture directe en repli)
 const reinstateByCommand = vi.hoisted(() => vi.fn(() => true));
-// Contrôle du score par le moteur (#2151) : remplaçable par test, réel sinon
+// Score par le moteur (#2151) : la base de test n'a ni session ni journal, la commande est
+// simulée (acceptée, ou refusée par test) ; le moteur est couvert sur base réelle
+// (remote/finishByEngine.test.ts, remote/scoreCommand.test.ts)
 const scoreCheck = vi.hoisted(() => ({ refuse: null as null | { code: string; message: string } }));
 vi.mock('./remote/scoreCommand', async orig => {
   const real = await orig<typeof import('./remote/scoreCommand')>();
+  const outcome = () =>
+    scoreCheck.refuse
+      ? { kind: 'refused' as const, ...scoreCheck.refuse }
+      : { kind: 'accepted' as const };
   return {
     ...real,
     reinstateByCommand,
-    checkFinishedScore: (...args: Parameters<typeof real.checkFinishedScore>) =>
-      scoreCheck.refuse
-        ? { kind: 'refused' as const, ...scoreCheck.refuse }
-        : real.checkFinishedScore(...args),
-    recordFinishedScore: (...args: Parameters<typeof real.recordFinishedScore>) =>
-      scoreCheck.refuse
-        ? { kind: 'refused' as const, ...scoreCheck.refuse }
-        : real.recordFinishedScore(...args),
+    checkFinishedScore: outcome,
+    recordFinishedScore: outcome,
   };
 });
 

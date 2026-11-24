@@ -2,10 +2,9 @@
  * BPM - Escrime - Fin de match distante par la commande recordScore (#1980, ADR-0005)
  * Tablettes et appareils de piste (Cyrano, OPP2) écrivent le score par le moteur : mêmes
  * contrôles que l'écran et le MCP, état de session, base et journal dans une transaction.
- * L'écran ouvert relit la session (session:changed). Score refusé par une règle : rien
- * d'écrit, la tablette ou l'appareil reçoit le refus (#2151). Repli provisoire sur le chemin
- * historique seulement pour un match absent de la session (tableaux séparés, ADR-0024 : #2100)
- * ou une épreuve sans journal.
+ * L'écran ouvert relit la session (session:changed). Commande refusée (règle du score, match
+ * absent de la session, épreuve introuvable) : rien d'écrit, la tablette reçoit le refus,
+ * l'appareil NAK ; le DT corrige au poste. Plus de chemin historique (#2151, étape 3).
  * Licensed under GPL-3.0
  */
 import type { DatabaseManager } from '../../database';
@@ -40,21 +39,15 @@ export function sessionMatchId(competitionId: string, matchId: string): string {
   return matchId.startsWith(prefix) ? matchId.slice(prefix.length) : matchId;
 }
 
-/**
- * Refus qui renvoient encore au chemin historique (#2151, étape 2) : match absent de la
- * session (seul le groupe affiché d'un tableau séparé y est enregistré, ADR-0024). À retirer
- * avec #2100. Tout autre refus (règle du score, tableau tiré, tour suivant joué…) est rendu.
- */
-const FALLBACK_CODES = new Set(['match_not_found', 'competition_not_found']);
-
 export type FinishOutcome =
-  | { kind: 'accepted' }
-  | { kind: 'fallback'; code: string }
-  | { kind: 'refused'; code: string; message: string };
+  { kind: 'accepted' } | { kind: 'refused'; code: string; message: string };
 
 function runFinished(db: DatabaseManager, score: FinishedScore, dryRun: boolean): FinishOutcome {
   const { competitionId } = score;
-  if (!competitionId || !db.eventLog) return { kind: 'fallback', code: 'no_competition' };
+  // Session sans épreuve (hors entraînement, qui n'appelle pas ce module) : refus explicite
+  if (!competitionId) {
+    return { kind: 'refused', code: 'competition_not_found', message: 'Aucune épreuve en cours' };
+  }
   try {
     invokeCommandSync(
       {
@@ -77,26 +70,21 @@ function runFinished(db: DatabaseManager, score: FinishedScore, dryRun: boolean)
     );
     return { kind: 'accepted' };
   } catch (e) {
-    const code = (e as { code?: string }).code ?? 'internal';
-    const message = (e as Error).message;
-    return FALLBACK_CODES.has(code)
-      ? { kind: 'fallback', code }
-      : { kind: 'refused', code, message };
+    return {
+      kind: 'refused',
+      code: (e as { code?: string }).code ?? 'internal',
+      message: (e as Error).message,
+    };
   }
 }
 
 /**
- * Enregistre le score par recordScore : accepted (le moteur l'a écrit), refused (rien
- * d'écrit, refus à rendre à la tablette) ou fallback (chemin historique provisoire).
+ * Enregistre le score par recordScore : accepted (le moteur l'a écrit) ou refused (rien
+ * d'écrit, refus à rendre à la tablette ou à l'appareil).
  */
 export function recordFinishedScore(db: DatabaseManager, score: FinishedScore): FinishOutcome {
   const outcome = runFinished(db, score, false);
-  if (outcome.kind === 'fallback') {
-    logger.warn(
-      LogCategory.NETWORK,
-      `[recordFinishedScore] ${score.matchId} : chemin historique (${outcome.code})`
-    );
-  } else if (outcome.kind === 'refused') {
+  if (outcome.kind === 'refused') {
     logger.info(
       LogCategory.NETWORK,
       `[recordFinishedScore] ${score.matchId} : score refusé (${outcome.code})`
