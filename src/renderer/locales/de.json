@@ -3173,7 +3173,9 @@
     "resolve": "DT unterwegs — Erledigt",
     "abandon": "Aufgabe",
     "abandon_note": "(vom DT zu bestätigen)",
-    "confirm_abandon": "Aufgabe erfassen"
+    "confirm_abandon": "Aufgabe erfassen",
+    "black_card_report": "Bericht Schwarze Karte (PDF)",
+    "black_card_report_title": "Vorausgefüllter Ausschlussbericht, innerhalb von 48 h an die FFE zu senden (Anhang 14)"
   },
   "qrShare": {
     "generating": "QR-Code wird erstellt…",

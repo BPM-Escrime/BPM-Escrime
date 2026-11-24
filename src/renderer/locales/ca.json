@@ -3173,7 +3173,9 @@
     "resolve": "DT en camí — Resolt",
     "abandon": "Abandonament",
     "abandon_note": "(a confirmar pel DT)",
-    "confirm_abandon": "Registrar l'abandonament"
+    "confirm_abandon": "Registrar l'abandonament",
+    "black_card_report": "Informe de targeta negra (PDF)",
+    "black_card_report_title": "Informe d'exclusió preomplert per enviar a la FFE en 48 h (annex 14)"
   },
   "qrShare": {
     "generating": "Generant el codi QR…",

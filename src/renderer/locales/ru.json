@@ -3173,7 +3173,9 @@
     "resolve": "DT уже идёт — Решено",
     "abandon": "Снятие с боя",
     "abandon_note": "(подтверждает DT)",
-    "confirm_abandon": "Записать снятие"
+    "confirm_abandon": "Записать снятие",
+    "black_card_report": "Отчёт о чёрной карточке (PDF)",
+    "black_card_report_title": "Предзаполненный отчёт об исключении для FFE в течение 48 ч (приложение 14)"
   },
   "qrShare": {
     "generating": "Создание QR-кода…",

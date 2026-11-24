@@ -3173,7 +3173,9 @@
     "resolve": "DT 已出發 — 已解決",
     "abandon": "棄權",
     "abandon_note": "（須由 DT 確認）",
-    "confirm_abandon": "記錄棄權"
+    "confirm_abandon": "記錄棄權",
+    "black_card_report": "黑牌報告 (PDF)",
+    "black_card_report_title": "預先填寫的取消資格報告，須於 48 小時內寄交 FFE（附件 14）"
   },
   "qrShare": {
     "generating": "正在產生二維碼…",

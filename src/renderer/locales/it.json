@@ -3173,7 +3173,9 @@
     "resolve": "DT in arrivo — Risolto",
     "abandon": "Abbandono",
     "abandon_note": "(da confermare dal DT)",
-    "confirm_abandon": "Registra l'abbandono"
+    "confirm_abandon": "Registra l'abbandono",
+    "black_card_report": "Rapporto cartellino nero (PDF)",
+    "black_card_report_title": "Rapporto di esclusione precompilato da inviare alla FFE entro 48 h (allegato 14)"
   },
   "qrShare": {
     "generating": "Generazione del QR code…",

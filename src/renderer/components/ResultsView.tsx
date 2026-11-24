@@ -8,7 +8,7 @@ import React from 'react';
 import { Fencer, PoolRanking, Competition, FencerStatus } from '../../shared/types';
 import type { Pool } from '../../shared/types';
 import { useToast } from './Toast';
-import { buildBlackCardEntries, isBlackCardExclusion } from '../services/blackCardReport';
+import { exportBlackCardReport, isBlackCardExclusion } from '../services/blackCardReport';
 import { useTranslation } from '../hooks/useTranslation';
 import { applyBlackCardRanking } from '../../shared/utils/blackCardRanking';
 import { exportResultsXMLFFE } from '../../shared/utils/multiFormatExport';
@@ -407,23 +407,9 @@ const ResultsView: React.FC<ResultsViewProps> = ({
 
   // Rapport d'exclusion pré-rempli pour la FFE (carton noir, annexe 14, #1829)
   const hasBlackCard = (fencers ?? []).some(isBlackCardExclusion);
-  const exportBlackCardReport = async () => {
+  const exportBlackCardReportPdf = async () => {
     try {
-      const entries = await buildBlackCardEntries(fencers ?? [], pools, tableauMatches);
-      const { exportBlackCardReportToPDF } =
-        await import('../../shared/utils/pdfExport/blackCardReportPdf');
-      await exportBlackCardReportToPDF(
-        {
-          title: competition.title,
-          date: competition.date ? new Date(competition.date) : undefined,
-          location: competition.location,
-          organizer: competition.organizer,
-          weapon: competition.weapon,
-          category: competition.category,
-          gender: competition.gender,
-        },
-        entries
-      );
+      await exportBlackCardReport(competition, fencers ?? [], pools ?? [], tableauMatches ?? []);
     } catch (e) {
       showToast((e as Error).message, 'error');
     }
@@ -821,7 +807,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
                   title={t('results.export_black_card_report_title')}
                   onClick={() => {
                     setIsExportMenuOpen(false);
-                    void exportBlackCardReport();
+                    void exportBlackCardReportPdf();
                   }}
                 >
                   {t('results.export_black_card_report')}

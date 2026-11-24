@@ -3173,7 +3173,9 @@
     "resolve": "DT en route — Résolu",
     "abandon": "Abandon",
     "abandon_note": "(à confirmer par le DT)",
-    "confirm_abandon": "Enregistrer l'abandon"
+    "confirm_abandon": "Enregistrer l'abandon",
+    "black_card_report": "Rapport carton noir (PDF)",
+    "black_card_report_title": "Rapport d'exclusion pré-rempli à adresser à la FFE sous 48 h (annexe 14)"
   },
   "qrShare": {
     "generating": "Génération du QR code…",
