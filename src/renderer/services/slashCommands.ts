@@ -8,6 +8,7 @@ import type { Competition } from '../../shared/types';
 import type { Language, Theme } from '../contexts/TranslationContext';
 import { SHOW_UPDATE_EVENT } from '../components/UpdateMenuButton';
 import { remoteApi, remoteAvailable } from '../api/remoteApi';
+import { defaultPlatform } from '../platform/PlatformContext';
 
 /** Événement fenêtre écouté par RemoteScoreManager (detail : RemoteCommandAction). */
 export const REMOTE_COMMAND_EVENT = 'bp:remote-command';
@@ -181,7 +182,7 @@ const onOff = (arg: string | undefined): boolean | null =>
 
 async function runUpdate(args: string[], ctx: SlashCommandContext): Promise<SlashCommandResult> {
   const { t } = ctx;
-  const updater = window.electronAPI?.updater;
+  const updater = defaultPlatform.desktop?.updater;
   if (!updater) return { ok: false, message: t('slashCommands.unavailable') };
   const [sub, value] = args.map(a => a.toLowerCase());
   if (!sub) {

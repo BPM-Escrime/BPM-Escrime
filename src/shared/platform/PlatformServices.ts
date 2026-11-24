@@ -6,6 +6,8 @@
  * Licensed under GPL-3.0
  */
 
+import type { DesktopServices } from './DesktopServices';
+
 export interface FileFilter {
   name: string;
   extensions: string[];
@@ -51,11 +53,17 @@ export interface PlatformCapabilities {
   /** Dialogues natifs : l'utilisateur choisit le dossier et peut annuler */
   nativeDialogs: boolean;
   printToPdf: boolean;
+  /** Vaut `desktop !== undefined` (ADR-0030) */
   updater: boolean;
 }
 
 export interface PlatformServices {
   readonly capabilities: PlatformCapabilities;
+  /**
+   * Fonctions de l'application de bureau (version, écran de démarrage, mise à jour). Absent dans le
+   * navigateur et la vue DT : l'écran masque alors son bouton (ADR-0030).
+   */
+  readonly desktop?: DesktopServices;
   /** Propose d'enregistrer le fichier ; false si l'utilisateur annule */
   saveFile(request: SaveFileRequest): Promise<boolean>;
   /** Choix d'un fichier texte ; null si annulé */

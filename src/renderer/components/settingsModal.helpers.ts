@@ -169,6 +169,12 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
   },
 ];
 
+/** Paramètres de l'application de bureau : absents du navigateur et de la vue DT (ADR-0030) */
+const DESKTOP_ONLY_ITEMS: SettingsItemId[] = ['updates'];
+
+export const isSettingsItemAvailable = (id: SettingsItemId, hasDesktop: boolean): boolean =>
+  hasDesktop || !DESKTOP_ONLY_ITEMS.includes(id);
+
 export const SECTION_STORAGE_KEY = 'bellepoule-settings-section';
 
 export function loadActiveSection(): SettingsSectionId {

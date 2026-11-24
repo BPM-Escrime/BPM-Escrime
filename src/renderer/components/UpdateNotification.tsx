@@ -12,6 +12,7 @@ import { SHOW_UPDATE_EVENT } from './UpdateMenuButton';
 import { Button } from './common/Button';
 import { Rocket, X } from 'lucide-react';
 import { Icon } from './common/Icon';
+import { usePlatform } from '../platform/PlatformContext';
 
 const MB = 1024 * 1024;
 
@@ -31,6 +32,7 @@ interface UpdateInfo {
 const UpdateNotification: React.FC<UpdateNotificationProps> = ({ visible: propVisible }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
+  const desktop = usePlatform().desktop;
   const [visible, setVisible] = useState(propVisible || false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [dismissed, setDismissed] = useState(false);
@@ -39,14 +41,13 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({ visible: propVi
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    const api = window.electronAPI;
     // Écouter les événements de mise à jour depuis le processus principal
-    const offAvailable = api?.onUpdateAvailable?.(info => {
+    const offAvailable = desktop?.onUpdateAvailable(info => {
       setUpdateInfo(info);
       if (!dismissed) setVisible(true);
     });
     // Téléchargement lancé (bannière, menu Aide ou fond) : bannière affichée avec le %
-    const offProgress = api?.onUpdateProgress?.(data => {
+    const offProgress = desktop?.onUpdateProgress(data => {
       setProgress(data.progress);
       if (data.total) setBytes({ done: data.downloaded ?? 0, total: data.total });
       if (data.latestVersion && data.latestBuild !== undefined) {
@@ -80,7 +81,7 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({ visible: propVi
       offProgress?.();
       window.removeEventListener(SHOW_UPDATE_EVENT, onShow);
     };
-  }, [dismissed]);
+  }, [dismissed, desktop]);
 
   // Téléchargement + vérification + installation dans l'app (sans navigateur)
   const handleDownload = async () => {
@@ -90,7 +91,7 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({ visible: propVi
     setProgress(p => p ?? 0);
     showToast(t('updateNotif.redirect'), 'info');
     try {
-      const res = await window.electronAPI?.updater?.downloadAndInstall?.();
+      const res = await desktop?.updater.downloadAndInstall();
       if (!res) {
         showToast(t('updateNotif.failed'), 'error');
       } else if (!res.success) {

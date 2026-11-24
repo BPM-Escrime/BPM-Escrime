@@ -110,12 +110,13 @@ const AboutModal: React.FC<Props> = ({ onClose }) => {
   const files = useFilesApi();
   const platform = usePlatform();
 
+  const desktop = platform.desktop;
   useEffect(() => {
-    window.electronAPI
+    desktop
       ?.getVersionInfo()
       .then(setVersionInfo)
       .catch(() => {});
-  }, []);
+  }, [desktop]);
 
   const triggerEasterEgg = () => setEasterActive(true);
 

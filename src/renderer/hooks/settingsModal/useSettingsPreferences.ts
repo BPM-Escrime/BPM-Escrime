@@ -26,6 +26,7 @@ import {
 import { useRemoteApi } from '../../api/remoteApi';
 import { stationAvailable, useStationApi } from '../../api/stationApi';
 import { getPref, setPref, safeStorage } from '../../services/preferences';
+import { usePlatform } from '../../platform/PlatformContext';
 
 type Ctx = SettingsModalProps;
 
@@ -33,6 +34,7 @@ type Ctx = SettingsModalProps;
 export function useSettingsPreferences(ctx: Ctx) {
   const remote = useRemoteApi();
   const station = useStationApi();
+  const desktop = usePlatform().desktop;
   const { onClose, onSave } = ctx;
 
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
@@ -76,34 +78,34 @@ export function useSettingsPreferences(ctx: Ctx) {
   // Écran de démarrage : préférence stockée côté main (lue avant la création des fenêtres)
   const [splashEnabled, setSplashEnabledState] = useState<boolean>(true);
   useEffect(() => {
-    window.electronAPI?.splash
-      ?.getEnabled?.()
-      .then(r => setSplashEnabledState(r.enabled))
+    desktop
+      ?.getSplashEnabled()
+      .then(setSplashEnabledState)
       .catch(() => {
         // indisponible (dev / tests)
       });
-  }, []);
+  }, [desktop]);
   useEffect(() => {
-    const updater = window.electronAPI?.updater;
+    const updater = desktop?.updater;
     updater
-      ?.getDownloadDir?.()
+      ?.getDownloadDir()
       .then(r => setUpdateDir({ dir: r.dir, isDefault: r.isDefault }))
       .catch(() => {
         // updater indisponible (dev / tests)
       });
     updater
-      ?.getAutoCheck?.()
+      ?.getAutoCheck()
       .then(r => setUpdateAutoCheck(r.enabled))
       .catch(() => {
         // updater indisponible (dev / tests)
       });
     updater
-      ?.getChannel?.()
+      ?.getChannel()
       .then(r => setUpdateChannel(r.channel))
       .catch(() => {
         // updater indisponible (dev / tests)
       });
-  }, []);
+  }, [desktop]);
   const [webhookUrl, setWebhookUrl] = useState<string>(() => getPref('webhookUrl'));
   const [webhookTestStatus, setWebhookTestStatus] = useState<
     'idle' | 'testing' | 'success' | 'error'

@@ -4,10 +4,12 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import fs from 'fs';
 import path from 'path';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render as renderRaw, screen } from '@testing-library/react';
 import UpdateNotification from '../UpdateNotification';
 import { frT } from '../../testUtils/i18nMock';
 import type { UpdateProgressEvent } from '../../../shared/types/preload';
+import { PlatformProvider } from '../../platform/PlatformContext';
+import { fakeDesktop, fakePlatform } from '../../../shared/platform/testing';
 
 const showToast = vi.hoisted(() => vi.fn());
 vi.mock('../Toast', () => ({ useToast: () => ({ showToast }) }));
@@ -27,22 +29,38 @@ describe('UpdateNotification — mise à jour intégrée', () => {
   let emitProgress: (d: UpdateProgressEvent) => void;
   let downloadAndInstall: ReturnType<typeof vi.fn>;
   let openSpy: ReturnType<typeof vi.spyOn>;
+  let desktop: ReturnType<typeof fakeDesktop>;
+  const render = (ui: React.ReactElement) =>
+    renderRaw(<PlatformProvider platform={fakePlatform({ desktop })}>{ui}</PlatformProvider>);
 
   beforeEach(() => {
     showToast.mockReset();
     downloadAndInstall = vi.fn().mockResolvedValue({ success: true });
     openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    (window as any).electronAPI = {
-      onUpdateAvailable: (cb: typeof emitAvailable) => {
-        emitAvailable = cb;
-        return () => {};
-      },
-      onUpdateProgress: (cb: typeof emitProgress) => {
-        emitProgress = cb;
-        return () => {};
-      },
-      updater: { downloadAndInstall },
-    };
+    desktop = fakeDesktop({ updater: { downloadAndInstall } as never });
+    emitAvailable = info => desktop.emitUpdateAvailable(info);
+    emitProgress = p => desktop.emitUpdateProgress(p);
+  });
+
+  it('sans bureau : aucun abonnement, rien ne s’affiche', () => {
+    renderRaw(
+      <PlatformProvider platform={fakePlatform()}>
+        <UpdateNotification />
+      </PlatformProvider>
+    );
+    expect(screen.queryByText(/1\.3\.0/)).not.toBeInTheDocument();
+  });
+
+  it('se désabonne au démontage (ses écouteurs seulement)', () => {
+    const offAvailable = vi.fn();
+    const offProgress = vi.fn();
+    desktop.onUpdateAvailable.mockReturnValue(offAvailable);
+    desktop.onUpdateProgress.mockReturnValue(offProgress);
+    const { unmount } = render(<UpdateNotification />);
+    expect(offAvailable).not.toHaveBeenCalled();
+    unmount();
+    expect(offAvailable).toHaveBeenCalledTimes(1);
+    expect(offProgress).toHaveBeenCalledTimes(1);
   });
 
   it('s’affiche sur update:available et installe sans ouvrir le navigateur', async () => {

@@ -5,7 +5,8 @@
  * window.print, window.open ; pas de PDF.
  * Licensed under GPL-3.0
  */
-import type { ElectronAPI } from '../types/preload';
+import type { ElectronAPI, UpdateInfo, UpdateProgressEvent, VersionInfo } from '../types/preload';
+import type { DesktopServices, DesktopUpdater, Unsubscribe } from './DesktopServices';
 import type {
   ExportPdfRequest,
   OpenedBinaryFile,
@@ -29,10 +30,47 @@ export class PlatformError extends Error {
 
 const baseName = (path: string) => path.split(/[/\\]/).pop() || path;
 
+/** Fonctions de bureau par le préload existant (ADR-0030) : aucun nouveau canal IPC */
+export class ElectronDesktop implements DesktopServices {
+  constructor(private readonly api: () => ElectronAPI) {}
+
+  /** Groupe updater.* du préload, lu à chaque accès : rien n'est lu au chargement du module */
+  get updater(): DesktopUpdater {
+    return this.api().updater;
+  }
+
+  getVersionInfo(): Promise<VersionInfo> {
+    return this.api().getVersionInfo();
+  }
+
+  async getSplashEnabled(): Promise<boolean> {
+    const res = await this.api().splash?.getEnabled();
+    // Préload sans le groupe (ancien build) : écran de démarrage actif par défaut
+    return res?.enabled ?? true;
+  }
+
+  async setSplashEnabled(enabled: boolean): Promise<boolean> {
+    const res = await this.api().splash?.setEnabled(enabled);
+    if (!res?.success) throw new PlatformError("Échec de l'enregistrement de l'écran de démarrage");
+    return res.enabled ?? enabled;
+  }
+
+  onUpdateAvailable(callback: (info: UpdateInfo) => void): Unsubscribe {
+    return this.api().onUpdateAvailable(callback);
+  }
+
+  onUpdateProgress(callback: (progress: UpdateProgressEvent) => void): Unsubscribe {
+    return this.api().onUpdateProgress(callback);
+  }
+}
+
 export class ElectronPlatform implements PlatformServices {
   readonly capabilities = { nativeDialogs: true, printToPdf: true, updater: true };
+  readonly desktop: DesktopServices;
 
-  constructor(private readonly api: () => ElectronAPI) {}
+  constructor(private readonly api: () => ElectronAPI) {
+    this.desktop = new ElectronDesktop(api);
+  }
 
   async saveFile(request: SaveFileRequest): Promise<boolean> {
     const api = this.api();
@@ -115,6 +153,8 @@ export class ElectronPlatform implements PlatformServices {
 
 export class BrowserPlatform implements PlatformServices {
   readonly capabilities = { nativeDialogs: false, printToPdf: false, updater: false };
+  /** Pas de fonctions de bureau dans le navigateur ni dans la vue DT (ADR-0030) */
+  readonly desktop = undefined;
 
   constructor(private readonly doc: Document = document) {}
 
@@ -219,10 +259,19 @@ export class BrowserPlatform implements PlatformServices {
   }
 }
 
+/** Plateforme Electron du dernier préload vu : `desktop` garde la même identité (effets React) */
+let electronCache: { api: ElectronAPI; platform: ElectronPlatform } | null = null;
+
 /** Electron si le préload est là, navigateur sinon (vue DT, page sans préload) */
 export function detectPlatform(): PlatformServices {
   if (typeof window !== 'undefined' && (window.electronAPI?.file || window.electronAPI?.dialog)) {
-    return new ElectronPlatform(() => window.electronAPI);
+    if (electronCache?.api !== window.electronAPI) {
+      electronCache = {
+        api: window.electronAPI,
+        platform: new ElectronPlatform(() => window.electronAPI),
+      };
+    }
+    return electronCache.platform;
   }
   return new BrowserPlatform();
 }
@@ -246,4 +295,7 @@ export const defaultPlatform: PlatformServices = {
     return p.exportPdf(html, request);
   },
   openExternal: url => detectPlatform().openExternal(url),
+  get desktop() {
+    return detectPlatform().desktop;
+  },
 };

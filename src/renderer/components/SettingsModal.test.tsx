@@ -11,8 +11,16 @@ import { render, screen, fireEvent } from '@testing-library/react';
 vi.mock('../hooks/useTranslation', () => import('../testUtils/i18nMock'));
 vi.mock('./LanguageSelector', () => ({ default: () => <label>Langue</label> }));
 import SettingsModal from './SettingsModal';
+import { PlatformProvider } from '../platform/PlatformContext';
+import { fakePlatform } from '../../shared/platform/testing';
 
-const renderModal = () => render(<SettingsModal onClose={vi.fn()} onSave={vi.fn()} />);
+// Application de bureau par défaut ; `{ desktop: false }` : navigateur ou vue DT (ADR-0030)
+const renderModal = ({ desktop = true } = {}) =>
+  render(
+    <PlatformProvider platform={fakePlatform({ desktop })}>
+      <SettingsModal onClose={vi.fn()} onSave={vi.fn()} />
+    </PlatformProvider>
+  );
 
 beforeEach(() => {
   localStorage.clear();
@@ -49,6 +57,22 @@ describe('SettingsModal', () => {
     expect(screen.getByText('Vérifier automatiquement les mises à jour')).toBeInTheDocument();
     expect(screen.queryByText('Taille du texte')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Saisie des scores/ })).toBeDisabled();
+  });
+
+  it('écran de démarrage : réglage présent avec le bureau', () => {
+    localStorage.setItem('bellepoule-settings-section', 'display');
+    renderModal();
+    expect(screen.getByText('Écran de démarrage')).toBeInTheDocument();
+  });
+
+  it('sans bureau : ni réglage de mise à jour ni écran de démarrage', () => {
+    localStorage.setItem('bellepoule-settings-section', 'display');
+    renderModal({ desktop: false });
+    expect(screen.queryByText('Écran de démarrage')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText('Rechercher un paramètre…'), {
+      target: { value: 'mises a jour' },
+    });
+    expect(screen.queryByText('Vérifier automatiquement les mises à jour')).not.toBeInTheDocument();
   });
 
   it('affiche un message si aucun résultat', () => {
