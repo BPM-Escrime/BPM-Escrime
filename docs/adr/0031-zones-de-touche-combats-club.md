@@ -1,6 +1,6 @@
 # ADR-0031 — Les zones de touche des combats du Mode Club sont enregistrées sur le combat
 
-- **Statut** : Proposée
+- **Statut** : Acceptée (2026-11-25)
 - **Date** : 2026-11-24
 - **Tickets** : Mode Club #1872 (statistiques Sabre Laser) ; complète [ADR-0022](0022-fonctions-du-poste-contrat.md), soumise à [ADR-0011](0011-migrations-schema-3-0.md)
 
