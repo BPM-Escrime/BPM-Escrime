@@ -108,7 +108,7 @@ npm run e2e:debug                                 # mode debug
 | `src/database/` | 22 | 275 |
 | `src/main/` | 152 | 1301 |
 | `src/renderer/services/` | 13 | 62 |
-| `src/renderer/hooks/` | 40 | 208 |
+| `src/renderer/hooks/` | 40 | 203 |
 | `src/renderer/components/` | 132 | 711 |
 | E2E Playwright (`e2e/`) | 18 | 50 |
 | `src/remote/` | 60 | 419 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 40 | 482 |
 | `src/shared/platform/` | 2 | 12 |
-| **Total** | **607** | **4718** |
+| **Total** | **607** | **4713** |
 
-Unitaires : 589 fichiers, 4668 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 589 fichiers, 4663 tests. E2E : 18 fichiers, 50 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5712,7 +5712,7 @@ Unitaires : 589 fichiers, 4668 tests. E2E : 18 fichiers, 50 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/usePoolManagement.test.tsx</code> — 11 tests</summary>
+<summary><code>src/renderer/hooks/usePoolManagement.test.tsx</code> — 6 tests</summary>
 
 - **generatePools**
   - refuse moins de 4 tireurs
@@ -5724,13 +5724,6 @@ Unitaires : 589 fichiers, 4668 tests. E2E : 18 fichiers, 50 tests (comptage stat
   - vrai si tous les matchs sont terminés
 - **computePoolRanking**
   - retourne un classement (tableau)
-- **handleBlackCardCancelled**
-  - réintègre le combattant, rouvre le match du carton et rend ses résultats aux adversaires
-- **updateMatchFromRemote**
-  - vainqueur transmis par le serveur prioritaire, même si le perdant mène (abandon, #1720)
-  - abandon signalé par l’appareil : marque du perdant conservée (#1829)
-  - exclusion signalée par l’appareil : marque du perdant, pas celle du vainqueur (#1829)
-  - sans vainqueur transmis : vainqueur au score
 
 </details>
 
