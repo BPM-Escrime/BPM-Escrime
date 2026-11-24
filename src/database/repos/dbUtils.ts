@@ -18,7 +18,7 @@ export const FENCER_TEXT_FIELDS = new Set([
 
 // JSON.parse tolérant : une colonne corrompue ne doit pas rendre illisible
 // toute une poule ou tout un tableau (#1007).
-export function safeJsonParse<T = any>(raw: unknown, fallback: T, context = ''): T {
+export function safeJsonParse<T = unknown>(raw: unknown, fallback: T, context = ''): T {
   if (raw === null || raw === undefined || raw === '') return fallback;
   if (typeof raw !== 'string') return raw as T;
   try {

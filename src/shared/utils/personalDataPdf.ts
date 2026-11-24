@@ -5,7 +5,7 @@
  * Licensed under GPL-3.0
  */
 import type { PersonalDataExport } from '../types/privacy';
-import { escHtml } from './pdfExport/bookToc';
+import { escapeHtml as escHtml } from './escapeHtml';
 
 export interface PersonalDataLabels {
   heading: string;

@@ -544,18 +544,15 @@ const XiaomiRemotePanelComponent: React.FC<XiaomiRemotePanelProps> = ({
               {t('xiaomi.swap_label')}{' '}
               {swapCandidates
                 .map(c => <strong key={c.socketId}>{clientLabel(c, t)}</strong>)
-                .reduce(
-                  (a, b) =>
-                    (
-                      <>
-                        {a}{' '}
-                        <span className="is-4cd15e">
-                          <Icon icon={ArrowLeftRight} />
-                        </span>{' '}
-                        {b}
-                      </>
-                    ) as any
-                )}
+                .reduce((a, b) => (
+                  <>
+                    {a}{' '}
+                    <span className="is-4cd15e">
+                      <Icon icon={ArrowLeftRight} />
+                    </span>{' '}
+                    {b}
+                  </>
+                ))}
               {swapSet.size === 1 && <span className="is-4cd15e"> {t('xiaomi.select_2nd')}</span>}
             </span>
             {canSwap && (

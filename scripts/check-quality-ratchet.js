@@ -58,6 +58,9 @@
  *                  dans src/main/remote et src/main/mcp : le serveur distant et les outils MCP
  *                  écrivent par une commande du contrat (`invokeCommandSync`, `runContractCommand`),
  *                  pas par le dépôt (docs/adr/0005, 0006 ; #2134, #2151)
+ *   - depsUnjustified : `eslint-disable(-next)-line react-hooks/exhaustive-deps` sans raison
+ *                  écrite après « -- » : corriger la dépendance, ou dire pourquoi elle est
+ *                  omise (closure périmée, #2201)
  *
  * Plafond de longueur (#1155) : aucun fichier source de src/ (hors tests) ne dépasse
  * MAX_LINES lignes. Les fichiers déjà au-dessus sont listés dans `lineExceptions`
@@ -78,7 +81,7 @@ const BASELINE = path.join(__dirname, 'quality-baseline.json');
 const SOURCE_RE = /\.tsx?$/;
 const MAX_LINES = 1500;
 const LINE_RE = /\.(tsx?|html|js|css)$/;
-const EXCLUDE_RE = /(\.test\.tsx?$|\.spec\.tsx?$|\.d\.ts$|[\\/]__tests__[\\/]|[\\/]examples[\\/])/;
+const EXCLUDE_RE = /(\.test\.tsx?$|\.spec\.tsx?$|\.d\.ts$|[\\/]__tests__[\\/])/;
 const COUNTERS = [
   'jsxText',
   'jsxAttr',
@@ -97,7 +100,11 @@ const COUNTERS = [
   'electronApiUses',
   'ipcChannels',
   'directDbWrites',
+  'depsUnjustified',
 ];
+/** Désactivation de react-hooks/exhaustive-deps sans raison écrite après « -- » (#2201) */
+const DEPS_DISABLE_RE =
+  /eslint-disable(?:-next)?-line\s+react-hooks\/exhaustive-deps(?!\s+--\s*\S)/;
 /**
  * Un bouton a un nom accessible s'il a du texte visible (directement ou dans un élément
  * enfant), une expression {…} (libellé calculé), ou un aria-label / aria-labelledby / title.
@@ -266,6 +273,9 @@ function analyze(file) {
   };
   const isFrLiteral = n => n && ts.isStringLiteralLike(n) && /^fr\b/i.test(n.text);
   const at = node => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+  text.split('\n').forEach((l, i) => {
+    if (DEPS_DISABLE_RE.test(l)) hits.depsUnjustified.push(i + 1);
+  });
 
   function visit(node) {
     if (lowerLayer) {

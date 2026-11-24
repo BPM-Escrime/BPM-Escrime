@@ -70,7 +70,7 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
 
   // Ajouter un tireur
   const addFencer = useCallback(
-    async (fencerData: Omit<Fencer, 'id' | 'createdAt' | 'updatedAt'>) => {
+    async (fencerData: Partial<Fencer>) => {
       logger.debug(LogCategory.UI, 'addFencer called', { fencerData });
 
       try {
@@ -323,7 +323,7 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
 
   // Importer plusieurs tireurs en une seule opération (évite N re-renders)
   const bulkAddFencers = useCallback(
-    async (fencersData: Omit<Fencer, 'id' | 'createdAt' | 'updatedAt'>[]) => {
+    async (fencersData: Partial<Fencer>[]) => {
       const added: Fencer[] = [];
       for (let i = 0; i < fencersData.length; i += 2000) {
         const r = await client.call('registerFencers', {

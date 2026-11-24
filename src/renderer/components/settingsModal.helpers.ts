@@ -290,5 +290,5 @@ export const TTS_THRESHOLDS: { key: string; label: string }[] = [
 
 export interface SettingsModalProps {
   onClose: () => void;
-  onSave: (settings: any) => void;
+  onSave: (settings: unknown) => void;
 }

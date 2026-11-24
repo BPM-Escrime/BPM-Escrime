@@ -52,7 +52,7 @@ export const LiveInterPoolRanking: React.FC<LiveInterPoolRankingProps> = ({
     }));
   }, [pools, isLaserSabre]);
   // Horodatage = dernier changement réel des données (#1288)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- horodatage voulu au changement de ranking (#1288)
   const lastUpdate = useMemo(() => new Date(), [ranking]);
 
   const totalMatches = pools.reduce((s, p) => s + p.matches.length, 0);

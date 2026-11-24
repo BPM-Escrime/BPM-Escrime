@@ -31,7 +31,7 @@ export function useColumnMeasures(active: boolean, deps: DependencyList) {
       }
       return prev;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- dépendances fournies par l'appelant (deps)
   }, [active, ...deps]);
 
   return { colRefs, bracketWrapRef, colMeasures };

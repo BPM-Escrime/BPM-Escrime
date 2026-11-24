@@ -3,11 +3,10 @@
  * Frontend for remote score entry
  */
 
-// Échappement HTML des données issues des tireurs (noms)
+// Échappement HTML des données issues des tireurs (noms) : escHtml de /common.js,
+// à charger avant ce fichier (#2204, une seule implémentation)
 function escapeHtml(v) {
-    return String(v == null ? '' : v).replace(/[&<>"']/g, c => (
-        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-    ));
+    return window.escHtml(v);
 }
 
 class RemoteRefereeApp {

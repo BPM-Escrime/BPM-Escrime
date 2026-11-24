@@ -39,7 +39,7 @@ const PrivacyPrompts: React.FC = () => {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- rappel de conservation une fois au démarrage
   }, []);
 
   return null;

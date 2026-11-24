@@ -176,7 +176,7 @@ const PrintDialog: React.FC<PrintDialogProps> = ({ html: sourceHtml, onDone }) =
       clearTimeout(timer);
     };
     // Le rendu ne dépend que des réglages de mise en page (pas de l'imprimante, des copies…)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- aperçu relancé sur la mise en page seulement (renderKey)
   }, [html, renderKey, api, renderPages, t]);
 
   // Zoom : redessine le PDF déjà chargé

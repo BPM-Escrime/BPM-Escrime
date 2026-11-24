@@ -408,8 +408,8 @@
 | Fonctionnalité | Priorité | Statut | Fichier(s) |
 |----------------|----------|--------|------------|
 | Cibles 1/3/5 pts | ⭐ Haute | ✅ Fait | `touchSystem.ts`, `referee.html` |
-| Points Quest automatiques | ⭐ Haute | ✅ Fait | `poolCalculations.ts` |
-| Classement Quest complet | ⭐ Haute | ✅ Fait | `poolCalculations.ts` |
+| Points Quest automatiques | ⭐ Haute | ✅ Fait | `domain/pools/questPoints.ts` |
+| Classement Quest complet | ⭐ Haute | ✅ Fait | `domain/pools/poolRanking.ts` |
 | Cartons (Jaune/Rouge/Noir) | ⭐ Haute | ✅ Fait | `cardSystem.ts`, `penalty.types.ts` |
 | Escalade cartons FFE | ⭐ Haute | ✅ Fait | `cardSystem.ts` |
 | Sortie d'arène (+3 pts) | ⭐ Haute | ✅ Fait | `referee.html` (modal exit) |

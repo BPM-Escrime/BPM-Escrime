@@ -64,8 +64,8 @@ export const usePoolManagement = ({
   // Classement global courant mémoïsé — recalculé seulement quand pools ou poolHistory change
   const currentOverallRanking = useMemo(
     () => computeOverallRankingAllRounds(pools),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pools, poolHistory, isLaserSabre]
+    // computeOverallRankingAllRounds suit poolHistory et isLaserSabre
+    [pools, computeOverallRankingAllRounds]
   );
 
   // Générer les poules
