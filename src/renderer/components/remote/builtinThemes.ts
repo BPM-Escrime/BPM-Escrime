@@ -12,7 +12,7 @@ import {
   POOL_DEFAULTS,
   PUBLIC_DEFAULTS,
   REFEREE_DEFAULTS,
-} from '../ThemeEditor';
+} from '../themeEditor/themeEditorDefaults';
 import {
   MUSKETEERS_THEME,
   REFEREE_DARK_MATCH_VARS,
