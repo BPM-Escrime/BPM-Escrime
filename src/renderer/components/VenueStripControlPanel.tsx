@@ -298,8 +298,9 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
             </table>
           </div>
 
-          <div className="strip-control-form">
-            <label className="cyrano-option">
+          <div className="strip-control-form strip-control-send">
+            {/* Arme seule sur sa ligne, puis gauche et droite côte à côte */}
+            <label className="cyrano-option strip-control-weapon">
               {t('stripControl.weapon')}
               <select
                 className="form-select"
@@ -316,32 +317,34 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
                 ))}
               </select>
             </label>
-            {(['left', 'right'] as const).map(side => (
-              <fieldset key={side} className="strip-control-side">
-                <legend>{t(`stripControl.${side}`)}</legend>
-                <input
-                  type="text"
-                  className="form-input"
-                  maxLength={40}
-                  value={form[`${side}Name`]}
-                  placeholder={t('stripControl.name')}
-                  aria-label={t(`stripControl.${side}_name`)}
-                  onChange={e => setForm({ ...form, [`${side}Name`]: e.target.value })}
-                />
-                <input
-                  type="text"
-                  className="form-input strip-control-nat"
-                  maxLength={20}
-                  value={form[`${side}Nat`]}
-                  placeholder={t('stripControl.nat')}
-                  aria-label={t(`stripControl.${side}_nat`)}
-                  onChange={e => setForm({ ...form, [`${side}Nat`]: e.target.value })}
-                />
-              </fieldset>
-            ))}
+            <div className="strip-control-sides">
+              {(['left', 'right'] as const).map(side => (
+                <fieldset key={side} className="strip-control-side">
+                  <legend>{t(`stripControl.${side}`)}</legend>
+                  <input
+                    type="text"
+                    className="form-input"
+                    maxLength={40}
+                    value={form[`${side}Name`]}
+                    placeholder={t('stripControl.name')}
+                    aria-label={t(`stripControl.${side}_name`)}
+                    onChange={e => setForm({ ...form, [`${side}Name`]: e.target.value })}
+                  />
+                  <input
+                    type="text"
+                    className="form-input strip-control-nat"
+                    maxLength={20}
+                    value={form[`${side}Nat`]}
+                    placeholder={t('stripControl.nat')}
+                    aria-label={t(`stripControl.${side}_nat`)}
+                    onChange={e => setForm({ ...form, [`${side}Nat`]: e.target.value })}
+                  />
+                </fieldset>
+              ))}
+            </div>
           </div>
           <p className="cyrano-muted cyrano-small">{t('stripControl.fields_hint')}</p>
-          <div className="u-row">
+          <div className="u-row strip-control-actions">
             <Button
               variant="primary"
               size="sm"
