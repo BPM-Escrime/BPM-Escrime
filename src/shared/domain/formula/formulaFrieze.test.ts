@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Category, CustomDEConfig, CustomPoolRoundConfig, Weapon } from '../../types';
 import { createDefaultCustomFormula } from '../../utils/tournamentTemplates';
 import { deriveSettingsFromFormula } from '../../utils/customFormulaSettings';
+import { simulateFormula } from '../../utils/customRankingCalculator';
 import { draftFromSettings } from './formulaDraft';
 import {
   customCanRemove,
@@ -15,6 +16,7 @@ import {
   draftInsert,
   draftInsertOptions,
   draftRemove,
+  draftToSimulationFormula,
   normalizeCustomFormula,
   summarizeCustomFormula,
   summarizeDraft,
@@ -161,6 +163,24 @@ describe('frise : arme « Autre »', () => {
     expect(summarizeCustomFormula(base())).toEqual([
       { kind: 'pools', rounds: 1, maxScore: 5 },
       { kind: 'tableau', maxScore: 15, thirdPlace: true },
+    ]);
+  });
+});
+
+describe('simulation de la formule de l’épée… Sabre Laser', () => {
+  it('2 tours (24 qualifiés) puis tableau : effectifs simulés', () => {
+    const d = { ...epee(), poolRounds: 2, poolRoundQualifiers: [24] };
+    const sim = simulateFormula(40, draftToSimulationFormula(d, Weapon.EPEE), 'E');
+    expect(sim.phases.map(p => p.type)).toEqual(['pool_round', 'pool_round', 'direct_elimination']);
+    expect(sim.phases[0].inputFencers).toBe(40);
+    expect(sim.phases[1].inputFencers).toBe(24);
+    expect(sim.phases[2]).toMatchObject({ inputFencers: 24, bracketSize: 32 });
+  });
+
+  it('poules seules : pas de tableau', () => {
+    const d = { ...epee(), hasDirectElimination: false };
+    expect(draftToSimulationFormula(d, Weapon.EPEE).phases.map(p => p.type)).toEqual([
+      'pool_round',
     ]);
   });
 });

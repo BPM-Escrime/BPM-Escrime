@@ -33,12 +33,16 @@ import {
   draftInsert,
   draftInsertOptions,
   draftRemove,
+  draftToSimulationFormula,
   normalizeCustomFormula,
 } from '../../../shared/domain/formula/formulaFrieze';
 import { createDefaultCustomFormula } from '../../../shared/utils/tournamentTemplates';
 import { useTranslation } from '../../hooks/useTranslation';
 import { PropertiesFormulaTab } from './PropertiesFormulaTab';
 import { FormulaPhaseCard } from './FormulaPhaseCard';
+import { FormulaSimulationPreview } from './FormulaSimulationPreview';
+import { simulateFormula } from '../../../shared/utils/customRankingCalculator';
+import { useDurationSources } from '../../hooks/useDurationSources';
 
 export interface FormulaEditorProps {
   weapon: Weapon;
@@ -54,6 +58,8 @@ export interface FormulaEditorProps {
   onSpecialModeChange?: (mode: CompetitionSpecialMode | undefined) => void;
   /** Épreuve des rapières existante : qualification sans effet, grisée */
   rapieres?: boolean;
+  /** Effectif de départ de la simulation (modifiable dans le panneau) */
+  fencerCount?: number;
 }
 
 const SPECIAL_MODES: CompetitionSpecialMode[] = ['rapieres'];
@@ -81,8 +87,12 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   specialMode,
   onSpecialModeChange,
   rapieres,
+  fencerCount = 32,
 }) => {
   const { t } = useTranslation();
+  // Simulation (effectifs, poules, matchs, durée), comme le constructeur « À la carte »
+  const [simCount, setSimCount] = useState(fencerCount);
+  const durationSources = useDurationSources();
   const isOther = weapon === Weapon.CUSTOM;
   const custom = normalizeCustomFormula(customFormula);
   const phases = isOther ? customFrieze(custom) : draftFrieze(draft, weapon);
@@ -314,23 +324,53 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
         {frieze}
       </nav>
 
-      {isOther && specialMode && (
-        <div className="card formula-builder-3">
-          <strong>{t(`rapieres.mode_${specialMode}`)}</strong>
-          <p className="formula-builder-4">{t('rapieres.mode_description')}</p>
+      <div className="formula-builder-content">
+        <div className="formula-editor__settings">
+          {isOther && specialMode && (
+            <div className="card formula-builder-3">
+              <strong>{t(`rapieres.mode_${specialMode}`)}</strong>
+              <p className="formula-builder-4">{t('rapieres.mode_description')}</p>
+            </div>
+          )}
+          {isOther && !specialMode && renderOtherPhase()}
+          {!isOther && (
+            <PropertiesFormulaTab
+              draft={draft}
+              onChange={onDraftChange}
+              weapon={weapon}
+              category={category}
+              controlledPhase={toPhaseId(current)}
+            />
+          )}
+          {isOther && renderOtherGeneral()}
         </div>
-      )}
-      {isOther && !specialMode && renderOtherPhase()}
-      {!isOther && (
-        <PropertiesFormulaTab
-          draft={draft}
-          onChange={onDraftChange}
-          weapon={weapon}
-          category={category}
-          controlledPhase={toPhaseId(current)}
-        />
-      )}
-      {isOther && renderOtherGeneral()}
+        {!specialMode && (
+          <aside className="formula-simulation-panel" data-testid="formula-simulation">
+            <label className="form-label formula-editor__sim-count">
+              {t('formulaEditor.sim_fencers')}
+              <input
+                type="number"
+                className="form-input"
+                min={2}
+                max={512}
+                value={simCount}
+                onChange={e =>
+                  setSimCount(Math.min(512, Math.max(2, parseInt(e.target.value, 10) || 2)))
+                }
+              />
+            </label>
+            <FormulaSimulationPreview
+              simulation={simulateFormula(
+                simCount,
+                isOther ? custom : draftToSimulationFormula(draft, weapon),
+                weapon,
+                durationSources
+              )}
+              fencerCount={simCount}
+            />
+          </aside>
+        )}
+      </div>
     </div>
   );
 };

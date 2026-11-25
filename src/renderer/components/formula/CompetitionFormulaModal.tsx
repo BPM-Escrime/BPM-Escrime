@@ -190,6 +190,7 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onApplie
         customFormula={customFormula}
         onCustomChange={setCustomFormula}
         rapieres={rapieres}
+        fencerCount={competition.fencerCount || 32}
       />
     </Modal>
   );

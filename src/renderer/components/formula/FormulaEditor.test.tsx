@@ -51,6 +51,16 @@ describe('FormulaEditor', () => {
     expect(screen.queryByTestId('formula-plus-2')).toBeNull();
   });
 
+  it('simulation : effectif modifiable, recalculée avec la formule', () => {
+    render(<Harness weapon={Weapon.EPEE} />);
+    const panel = screen.getByTestId('formula-simulation');
+    expect(panel).toHaveTextContent('formulaSim.title');
+    fireEvent.change(screen.getByLabelText('formulaEditor.sim_fencers'), {
+      target: { value: '48' },
+    });
+    expect(screen.getByLabelText('formulaEditor.sim_fencers')).toHaveValue(48);
+  });
+
   it('« ＋ » propose les briques autorisées et insère un tour', () => {
     render(<Harness weapon={Weapon.EPEE} />);
     fireEvent.click(screen.getByTestId('formula-plus-1'));

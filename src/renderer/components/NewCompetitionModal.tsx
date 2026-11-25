@@ -50,7 +50,9 @@ interface NewCompetitionModalProps {
 }
 
 const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCreate }) => {
-  const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
+  // Fermeture par la croix (ou « Annuler ») seulement : ni clic à côté, ni Échap, qui
+  // perdraient une saisie en cours
+  const modalRef = useFocusTrap<HTMLDivElement>(true);
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -316,11 +318,11 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
 
   return (
     <>
-      <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-overlay">
         <div
           ref={modalRef}
           className="modal"
-          style={isCustom && !formulaPreview ? { maxWidth: '92vw', width: '1100px' } : undefined}
+          style={isCustom || formulaPreview ? { maxWidth: '94vw', width: '1200px' } : undefined}
           onClick={e => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
