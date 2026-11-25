@@ -141,7 +141,8 @@
     "state_current": "進行中",
     "state_todo": "待辦",
     "state_blocked": "已鎖定",
-    "unavailable": "此部分暫不可用"
+    "unavailable": "此部分暫不可用",
+    "tableau_closed": "淘汰賽表（已結束）"
   },
   "pools": {
     "generate": "生成分組",
@@ -4758,7 +4759,11 @@
     "seeding": "本輪分組方式",
     "seeding_previous": "上一輪排名",
     "seeding_cumulative": "所有已賽輪次累計",
-    "seeding_hint": "晉級劍手按此排名分配到本輪各分組。"
+    "seeding_hint": "晉級劍手按此排名分配到本輪各分組。",
+    "stop_at": "停止淘汰賽表",
+    "stop_at_none": "直至決賽",
+    "stop_at_n": "剩下 {{n}} 名劍手時",
+    "stop_at_hint": "餘下劍手在淘汰賽表後進入一輪小組賽。"
   },
   "formulaTemplates": {
     "template": "賽制範本",
@@ -4807,5 +4812,14 @@
     "copied": "已複製",
     "copy_failed": "無法複製到剪貼簿",
     "open_count": "{{n}} 項待處理"
+  },
+  "tableauStage": {
+    "title": "淘汰賽表在 {{n}} 名劍手時停止",
+    "hint": "進行比賽直至剩下 {{n}} 名劍手：之後的輪次不進行。",
+    "close": "進入下一階段",
+    "confirm": "{{qualified}} 名劍手進入下一階段，{{eliminated}} 名被淘汰。繼續？",
+    "closed": "淘汰賽表已結束：為下一階段點名 {{n}} 名餘下劍手。",
+    "closed_title": "淘汰賽表在 {{n}} 名劍手時停止：已結束",
+    "closed_hint": "只供查看。餘下劍手已繼續比賽；最終名次見「結果」。"
   }
 }

@@ -12,6 +12,7 @@ import type {
   FinalResult,
   TableauMatch,
 } from '../../shared/domain/tableau/tableauTypes';
+import type { TableauStageRecord } from '../../shared/domain/tableau/tableauStage';
 import { inferPoolsLaunched } from '../components/poolLaunchState';
 import type { useRapieresSessionState } from '../../features/rapieres/useRapieresSessionState';
 import { useCompetitionSession, phaseFromNumber, phaseNumber } from './useCompetitionSession';
@@ -52,6 +53,8 @@ interface UseCompetitionRestoreParams {
   setMinFencersPerPool: Setter<number>;
   setMaxFencersPerPool: Setter<number>;
   setPoolsLaunched: Setter<boolean>;
+  /** Étapes closes (tableau arrêté, docs/adr/0037) */
+  setStageHistory?: Setter<TableauStageRecord[]>;
 }
 
 /** Relit l'état de l'épreuve (phase, poules, tableau…) et l'applique à l'écran. */
@@ -80,6 +83,7 @@ export function useCompetitionRestore({
   setMinFencersPerPool,
   setMaxFencersPerPool,
   setPoolsLaunched,
+  setStageHistory,
 }: UseCompetitionRestoreParams) {
   // État de l'épreuve relu (getCompetitionState), écrit par le moteur seul
   const { isLoaded, restoredState, preparedPools } = useCompetitionSession({ competitionId });
@@ -154,6 +158,7 @@ export function useCompetitionRestore({
         if (arenas != null) setRemoteArenaCount(arenas);
       }
       if (restoredState.rapieres) setRapieresState(restoredState.rapieres);
+      setStageHistory?.(restoredState.stageHistory ?? []);
     }
   }, [restoredState, isLoaded]);
 

@@ -141,7 +141,8 @@
     "state_current": "en curso",
     "state_todo": "pendiente",
     "state_blocked": "bloqueado",
-    "unavailable": "Sección no disponible"
+    "unavailable": "Sección no disponible",
+    "tableau_closed": "Cuadro (cerrado)"
   },
   "pools": {
     "generate": "Generar Poules",
@@ -4758,7 +4759,11 @@
     "seeding": "Reparto de esta ronda",
     "seeding_previous": "Clasificación de la ronda anterior",
     "seeding_cumulative": "Acumulado de las rondas disputadas",
-    "seeding_hint": "Los tiradores clasificados se reparten en las poules de esta ronda según esta clasificación."
+    "seeding_hint": "Los tiradores clasificados se reparten en las poules de esta ronda según esta clasificación.",
+    "stop_at": "Detener el cuadro",
+    "stop_at_none": "Hasta la final",
+    "stop_at_n": "Cuando queden {{n}} tiradores",
+    "stop_at_hint": "Los tiradores restantes pasan a una vuelta de poules después del cuadro."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",
@@ -4807,5 +4812,14 @@
     "copied": "Copiado",
     "copy_failed": "No se pudo copiar al portapapeles",
     "open_count": "{{n}} punto(s) pendiente(s)"
+  },
+  "tableauStage": {
+    "title": "Cuadro detenido en {{n}} tiradores",
+    "hint": "Dispute los asaltos hasta que queden {{n}} tiradores: las rondas siguientes no se disputan.",
+    "close": "Pasar a la fase siguiente",
+    "confirm": "{{qualified}} tiradores pasan a la fase siguiente, {{eliminated}} quedan eliminados. ¿Continuar?",
+    "closed": "Cuadro cerrado: pase lista a los {{n}} tiradores restantes para la fase siguiente.",
+    "closed_title": "Cuadro detenido en {{n}} tiradores: cerrado",
+    "closed_hint": "Solo consulta. Los tiradores restantes siguieron en la competición; su puesto final está en Resultados."
   }
 }

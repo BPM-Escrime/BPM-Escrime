@@ -1,7 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import type { Fencer } from '../../types';
+import { Category, CompetitionSettings, Weapon } from '../../types';
+import type { Fencer, PoolRanking } from '../../types';
+import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
+import { applyOperationsV2 } from '../formula/formulaV2Operations';
 import type { TableauMatch } from './tableauTypes';
-import { closeStage, isStageDone, stageMatches } from './tableauStage';
+import {
+  closeStage,
+  isStageDone,
+  rankAfterStages,
+  rankingAfterStage,
+  resultsTableauMatches,
+  seedRankingForNextRound,
+  stageMatches,
+  type TableauStageRecord,
+} from './tableauStage';
 
 const f = (id: string) => ({ id, lastName: id, firstName: id }) as Fencer;
 let n = 0;
@@ -60,5 +72,134 @@ describe('tableau arrêté à N (ADR-0037)', () => {
 
   it('étape non terminée : pas de clôture', () => {
     expect(closeStage([...quarters, { ...semis[0], winner: null }, semis[1]], 2)).toBeNull();
+  });
+});
+
+describe('classement final après un tableau arrêté (Q5)', () => {
+  const out = closeStage([...quarters, ...semis, final], 2)!;
+  const stage: TableauStageRecord = {
+    kind: 'tableau',
+    stopAt: 2,
+    matches: [...quarters, ...semis, final],
+    eliminated: out.eliminated.map(e => ({ fencerId: e.fencer.id, round: e.round, seed: e.seed })),
+  };
+  const row = (id: string, rank: number) => ({ fencer: f(id), rank }) as PoolRanking;
+  // Classement des tours : poule finale (E 1, B 2), puis tour d'avant le tableau (I, J éliminés)
+  const merged = ['E', 'B', 'A', 'C', 'D', 'F', 'G', 'H', 'I', 'J'].map((id, i) => row(id, i + 1));
+
+  it('restants, puis éliminés du tableau (tour, rang d’entrée), puis éliminés des poules', () => {
+    const r = rankAfterStages(merged, [stage]);
+    expect(r.ranking.map(x => [x.fencer.id, x.rank])).toEqual([
+      ['E', 1],
+      ['B', 2],
+      ['A', 3],
+      ['F', 4],
+      ['C', 5],
+      ['D', 6],
+      ['G', 7],
+      ['H', 8],
+      ['I', 9],
+      ['J', 10],
+    ]);
+    expect(r.eliminatedAt.get('F')).toBe('Tableau de 4');
+    expect(r.eliminatedAt.get('H')).toBe('Tableau de 8');
+    expect(r.eliminatedAt.has('I')).toBe(false);
+  });
+
+  it('même tour et même rang d’entrée : ex aequo', () => {
+    const tied = { ...stage, eliminated: stage.eliminated.map(e => ({ ...e, seed: 1 })) };
+    const r = rankAfterStages(merged, [tied]);
+    expect(r.ranking.slice(2, 8).map(x => [x.fencer.id, x.rank])).toEqual([
+      ['A', 3],
+      ['F', 3],
+      ['C', 5],
+      ['D', 5],
+      ['G', 5],
+      ['H', 5],
+    ]);
+  });
+
+  it('sans étape close : classement inchangé', () => {
+    expect(rankAfterStages(merged, []).ranking).toBe(merged);
+  });
+});
+
+describe('répartition du tour après un tableau arrêté (Q5)', () => {
+  it('restants seuls, dans l’ordre de leur rang d’entrée', () => {
+    const out = closeStage([...quarters, ...semis, final], 2)!;
+    const stage: TableauStageRecord = {
+      kind: 'tableau',
+      stopAt: 2,
+      matches: [...quarters, ...semis, final],
+      eliminated: out.eliminated.map(e => ({
+        fencerId: e.fencer.id,
+        round: e.round,
+        seed: e.seed,
+      })),
+    };
+    // Classement du tour d'avant : E devant B ; au tableau, B est entré 2ᵉ, E 5ᵉ
+    const before = ['E', 'B', 'A', 'C'].map(
+      (id, i) => ({ fencer: f(id), rank: i + 1 }) as PoolRanking
+    );
+    expect(rankingAfterStage(before, stage).map(r => [r.fencer.id, r.rank])).toEqual([
+      ['B', 2],
+      ['E', 5],
+    ]);
+  });
+});
+
+describe('tableau des résultats et des exports (ADR-0037)', () => {
+  it('tableau clos repris quand aucun tableau n’est en cours', () => {
+    const closed: TableauStageRecord = {
+      kind: 'tableau',
+      stopAt: 2,
+      matches: quarters,
+      eliminated: [],
+    };
+    expect(resultsTableauMatches([], closed)).toBe(quarters);
+    expect(resultsTableauMatches(semis, closed)).toBe(semis);
+    expect(resultsTableauMatches([], undefined)).toEqual([]);
+  });
+});
+
+describe('répartition du tour à tirer, écran (Q5, ADR-0037)', () => {
+  const settings = buildDefaultCompetitionSettings({
+    weapon: Weapon.EPEE,
+    category: Category.SENIOR,
+  }) as CompetitionSettings;
+  const formula = applyOperationsV2(
+    { weapon: Weapon.EPEE, category: Category.SENIOR, settings },
+    [
+      { op: 'setPhase', phase: 'tableau', settings: { stopAt: 2 } },
+      { op: 'insertPhase', brick: 'pool', at: 2 },
+    ],
+    () => 'x'
+  );
+  const out = closeStage([...quarters, ...semis, final], 2)!;
+  const stage: TableauStageRecord = {
+    kind: 'tableau',
+    stopAt: 2,
+    matches: [...quarters, ...semis, final],
+    eliminated: out.eliminated.map(e => ({ fencerId: e.fencer.id, round: e.round, seed: e.seed })),
+  };
+  const last = ['E', 'B', 'A', 'C'].map((id, i) => ({ fencer: f(id), rank: i + 1 }) as PoolRanking);
+
+  it('premier tour après le tableau clos : restants par rang d’entrée', () => {
+    const r = seedRankingForNextRound({
+      formula,
+      playedRounds: 1,
+      stages: [stage],
+      lastRoundRanking: last,
+    });
+    expect(r.map(x => x.fencer.id)).toEqual(['B', 'E']);
+  });
+
+  it('autres tours, ou sans étape close : classement du dernier tour', () => {
+    expect(
+      seedRankingForNextRound({ formula, playedRounds: 2, stages: [stage], lastRoundRanking: last })
+    ).toBe(last);
+    expect(
+      seedRankingForNextRound({ formula, playedRounds: 1, stages: [], lastRoundRanking: last })
+    ).toBe(last);
   });
 });

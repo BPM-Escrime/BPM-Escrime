@@ -154,6 +154,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     // Formule enregistrée sans tour de poules : le tableau suit l'appel (ADR-0037)
     tableauFirst:
       !!competition.settings?.formula && startsWithTableau(competition.settings.formula),
+    closedTableau: !hasDirectElimination && ctx.stageHistory.length > 0,
   });
   useRemoteCheckinSync({
     competitionId: competition.id,
@@ -206,9 +207,11 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
 
   // Qualification vers le tableau de la formule v2, toutes armes (#2013 R1)
   const storedFormula = competition.settings?.formula;
+  // Après un tableau arrêté (pas de tableau à venir) : plus de qualification (ADR-0037)
   const tableauQualification = useMemo(
-    () => (storedFormula ? tableauQualificationOf(storedFormula) : undefined),
-    [storedFormula]
+    () =>
+      storedFormula && hasDirectElimination ? tableauQualificationOf(storedFormula) : undefined,
+    [storedFormula, hasDirectElimination]
   );
 
   // Classement effectif pour le tableau (filtré par vainqueurs de poule et/ou groupe actif)
@@ -217,8 +220,9 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
       computeEffectiveTableauRanking(overallRanking, pools, {
         isRapieres,
         rapieresTableauMode: rapieres.tableauMode,
-        poolWinnersOnly,
-        customFormula,
+        // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
+        poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
+        customFormula: hasDirectElimination ? customFormula : undefined,
         tableauQualification,
         postPoolSplitCriteria,
         activeSplitGroup,
@@ -230,6 +234,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
       isRapieres,
       rapieres.tableauMode,
       poolWinnersOnly,
+      hasDirectElimination,
       customFormula,
       tableauQualification,
       postPoolSplitCriteria,

@@ -6,7 +6,7 @@
  * Licensed under GPL-3.0
  */
 
-import type { FormulaV2 } from './formulaV2';
+import type { FormulaV2, TableauPhase } from './formulaV2';
 
 export type FormulaStep =
   | { kind: 'checkin' }
@@ -36,3 +36,37 @@ export function formulaSteps(f: FormulaV2): FormulaStep[] {
 export const startsWithTableau = (f: FormulaV2): boolean =>
   !f.phases.some(p => p.kind === 'pool' || p.kind === 'quest') &&
   f.phases.some(p => p.kind === 'tableau');
+
+/**
+ * Tableau arrêté à N tireurs et suivi d'au moins un tour de poules (ADR-0037, D2) ; sinon null.
+ * Un `stopAt` sans phase après le tableau est sans effet : le tableau va jusqu'à la finale.
+ */
+export function stoppedTableauOf(f: FormulaV2): TableauPhase | null {
+  const at = f.phases.findIndex(p => p.kind === 'tableau');
+  const tableau = f.phases[at] as TableauPhase | undefined;
+  if (!tableau?.stopAt) return null;
+  return f.phases.slice(at + 1).some(p => p.kind === 'pool') ? tableau : null;
+}
+
+/**
+ * Partie de la formule en cours quand un tableau est arrêté (ADR-0037, D2) : avant sa clôture,
+ * les tours de poules qui le précèdent puis le tableau ; après, tous les tours et pas de
+ * tableau (les restants finissent par les tours qui suivent). null : formule sans tableau
+ * arrêté, réglages habituels.
+ */
+export function formulaSegment(
+  f: FormulaV2,
+  closedTableauStages: number
+): { poolRounds: number; hasDirectElimination: boolean; stopAt?: number } | null {
+  const tableau = stoppedTableauOf(f);
+  if (!tableau) return null;
+  const at = f.phases.indexOf(tableau);
+  const pools = (list: FormulaV2['phases']) => list.filter(p => p.kind === 'pool').length;
+  return closedTableauStages > 0
+    ? { poolRounds: pools(f.phases), hasDirectElimination: false }
+    : {
+        poolRounds: pools(f.phases.slice(0, at)),
+        hasDirectElimination: true,
+        stopAt: tableau.stopAt,
+      };
+}

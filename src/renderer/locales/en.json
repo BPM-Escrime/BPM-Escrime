@@ -141,7 +141,8 @@
     "state_current": "in progress",
     "state_todo": "to do",
     "state_blocked": "blocked",
-    "unavailable": "Section unavailable"
+    "unavailable": "Section unavailable",
+    "tableau_closed": "Bracket (closed)"
   },
   "pools": {
     "generate": "Generate Pools",
@@ -4758,7 +4759,11 @@
     "seeding": "Seeding of this round",
     "seeding_previous": "Ranking of the previous round",
     "seeding_cumulative": "Cumulative ranking of all rounds",
-    "seeding_hint": "Qualified fencers are seeded into this round's pools from this ranking."
+    "seeding_hint": "Qualified fencers are seeded into this round's pools from this ranking.",
+    "stop_at": "Stop the bracket",
+    "stop_at_none": "Up to the final",
+    "stop_at_n": "When {{n}} fencers remain",
+    "stop_at_hint": "The remaining fencers go on to a pool round after the bracket."
   },
   "formulaTemplates": {
     "template": "Formula template",
@@ -4807,5 +4812,14 @@
     "copied": "Copied",
     "copy_failed": "Could not copy to the clipboard",
     "open_count": "{{n}} item(s) to handle"
+  },
+  "tableauStage": {
+    "title": "Bracket stopped at {{n}} fencers",
+    "hint": "Fence the bouts until {{n}} fencers remain: later rounds are not fenced.",
+    "close": "Go to the next phase",
+    "confirm": "{{qualified}} fencers go on to the next phase, {{eliminated}} are eliminated. Continue?",
+    "closed": "Bracket closed: check in the {{n}} remaining fencers for the next phase.",
+    "closed_title": "Bracket stopped at {{n}} fencers: closed",
+    "closed_hint": "Read only. The remaining fencers went on in the competition; their final place is in Results."
   }
 }

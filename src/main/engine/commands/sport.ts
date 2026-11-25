@@ -83,6 +83,7 @@ import { resolveSetting } from './settings';
 import { bracketMatchView, fencerRef, readSession, summarizePool } from './sessionView';
 import { areAllPoolsComplete, isPoolComplete } from '../../../shared/domain/pools/poolCompletion';
 import { phaseSettings, tableauQualificationOf } from '../../../shared/domain/formula/formulaV2';
+import { stoppedTableauOf } from '../../../shared/domain/formula/formulaSteps';
 import type { PoolSeparation } from '../../../shared/domain/pools/poolDraw';
 import {
   composePools,
@@ -536,7 +537,18 @@ export function recordScore(ctx: CommandContext, competitionId: string, input: R
   if (poolIndex >= 0) return recordPoolScore(ctx, comp, session, pools, poolIndex, input);
   // Le match désigne son tableau : unique, ou celui de son groupe (docs/adr/0024)
   const slot = slotOfMatch(comp, session, input.matchId);
-  if (slot) return recordBracketScore(ctx, comp, session, slot, input);
+  if (slot) {
+    // Tableau arrêté à N (ADR-0037) : seuls les tours où il reste plus de N tireurs se jouent
+    const stopped = comp.settings?.formula ? stoppedTableauOf(comp.settings.formula) : null;
+    const round = slot.matches.find(m => m.id === input.matchId)?.round;
+    if (stopped?.stopAt && round !== undefined && round <= stopped.stopAt) {
+      throw new CommandError(
+        'tableau_round_after_stop',
+        `Tableau arrêté à ${stopped.stopAt} tireurs : ce tour ne se tire pas`
+      );
+    }
+    return recordBracketScore(ctx, comp, session, slot, input);
+  }
   if (
     sessionPoolHistory(session).some(r => r.some(p => p.matches?.some(m => m.id === input.matchId)))
   ) {

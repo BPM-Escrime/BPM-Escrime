@@ -7,8 +7,8 @@
  * Licensed under GPL-3.0
  */
 import { FencerStatus } from '../../../shared/types';
-import { closeStage } from '../../../shared/domain/tableau/tableauStage';
-import type { TableauPhase } from '../../../shared/domain/formula/formulaV2';
+import { closeStage, type TableauStageRecord } from '../../../shared/domain/tableau/tableauStage';
+import { stoppedTableauOf } from '../../../shared/domain/formula/formulaSteps';
 import { isTableauEligible } from '../../../shared/domain/fencers/fencerStatus';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
@@ -23,19 +23,13 @@ import {
   writeSession,
 } from './sport';
 
-/** Tableau arrêté de la formule enregistrée, suivi d'une autre phase ; sinon refus */
-function stoppedTableau(phases: Array<{ kind: string }>): TableauPhase | null {
-  const index = phases.findIndex(p => p.kind === 'tableau');
-  const tableau = phases[index] as TableauPhase | undefined;
-  return tableau?.stopAt && index < phases.length - 1 ? tableau : null;
-}
-
 export function closeTableauStage(
   ctx: CommandContext,
   input: { competitionId: string; dryRun?: boolean }
 ) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
-  const tableau = stoppedTableau(comp.settings?.formula?.phases ?? []);
+  const formula = comp.settings?.formula;
+  const tableau = formula ? stoppedTableauOf(formula) : null;
   if (!tableau?.stopAt) {
     throw new CommandError(
       'invalid_settings',
@@ -72,7 +66,7 @@ export function closeTableauStage(
   const poolHistory =
     pools.length > 0 ? [...sessionPoolHistory(session), pools] : sessionPoolHistory(session);
   const stageHistory = Array.isArray(session.stageHistory) ? [...session.stageHistory] : [];
-  stageHistory.push({
+  const record: TableauStageRecord = {
     kind: 'tableau',
     stopAt,
     matches,
@@ -81,7 +75,8 @@ export function closeTableauStage(
       round: e.round,
       seed: e.seed,
     })),
-  });
+  };
+  stageHistory.push(record);
   ctx.db.transaction(() => {
     for (const e of toEliminate)
       ctx.db.updateFencer(e.fencer.id, { status: FencerStatus.ELIMINATED });
@@ -112,6 +107,8 @@ export function closeTableauStage(
       },
     ]);
   });
+  // Tireurs éliminés et classés : l'écran relit la liste (statuts, rangs)
+  ctx.emitChange?.({ scope: 'fencers', competitionIds: [comp.id] });
   emitSession(ctx, comp.id);
   return report;
 }

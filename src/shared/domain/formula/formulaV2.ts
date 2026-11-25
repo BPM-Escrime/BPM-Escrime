@@ -349,6 +349,12 @@ export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<Competitio
   const first = list[0];
   const last = list[list.length - 1];
   const tableau = tableauOf(f);
+  const beforeTableau = tableau
+    ? f.phases
+        .slice(0, f.phases.indexOf(tableau))
+        .filter((p): p is PoolRoundPhase => p.kind === 'pool')
+        .pop()
+    : undefined;
   const quest = questOf(f);
   const out: Partial<CompetitionSettings> = {
     poolRounds: list.length > 0 ? list.length : quest ? 0 : 1,
@@ -356,7 +362,8 @@ export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<Competitio
       .slice(0, -1)
       .map(p => (p.qualification.mode === 'fixed_count' ? (p.qualification.count ?? 0) : 0)),
     hasDirectElimination: !!tableau,
-    poolWinnersOnly: last?.qualification.mode === 'pool_winner',
+    // Vainqueurs de poule : tour qui précède le tableau (tableau arrêté suivi de tours, ADR-0037)
+    poolWinnersOnly: (beforeTableau ?? last)?.qualification.mode === 'pool_winner',
     restTimeSeconds: f.general.restTimeSeconds ?? 60,
     postPoolSplitCriteria: f.general.postPoolSplitCriteria,
   };

@@ -141,7 +141,8 @@
     "state_current": "en curs",
     "state_todo": "per fer",
     "state_blocked": "bloquejat",
-    "unavailable": "Secció no disponible"
+    "unavailable": "Secció no disponible",
+    "tableau_closed": "Quadre (tancat)"
   },
   "pools": {
     "generate": "Generar Poules",
@@ -4758,7 +4759,11 @@
     "seeding": "Distribució d'aquesta ronda",
     "seeding_previous": "Classificació de la ronda anterior",
     "seeding_cumulative": "Acumulat de les rondes jugades",
-    "seeding_hint": "Els tiradors classificats es reparteixen a les poules d'aquesta ronda segons aquesta classificació."
+    "seeding_hint": "Els tiradors classificats es reparteixen a les poules d'aquesta ronda segons aquesta classificació.",
+    "stop_at": "Aturar el quadre",
+    "stop_at_none": "Fins a la final",
+    "stop_at_n": "Quan quedin {{n}} tiradors",
+    "stop_at_hint": "Els tiradors restants passen a una volta de poules després del quadre."
   },
   "formulaTemplates": {
     "template": "Model de fórmula",
@@ -4807,5 +4812,14 @@
     "copied": "Copiat",
     "copy_failed": "No s'ha pogut copiar al porta-retalls",
     "open_count": "{{n}} punt(s) pendent(s)"
+  },
+  "tableauStage": {
+    "title": "Quadre aturat a {{n}} tiradors",
+    "hint": "Disputeu els assalts fins que quedin {{n}} tiradors: les rondes següents no es disputen.",
+    "close": "Passar a la fase següent",
+    "confirm": "{{qualified}} tiradors passen a la fase següent, {{eliminated}} queden eliminats. Continuar?",
+    "closed": "Quadre tancat: passeu llista als {{n}} tiradors restants per a la fase següent.",
+    "closed_title": "Quadre aturat a {{n}} tiradors: tancat",
+    "closed_hint": "Només consulta. Els tiradors restants han continuat la competició; la seva posició final és als Resultats."
   }
 }

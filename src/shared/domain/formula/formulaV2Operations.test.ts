@@ -2,13 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { Category, CompetitionSettings, Weapon } from '../../types';
 import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
 import { createDefaultCustomFormula } from '../../utils/tournamentTemplates';
-import { flatSettingsOf, phaseSettings } from './formulaV2';
+import { flatSettingsOf, formulaOf, phaseSettings } from './formulaV2';
 import {
   applyOperationsV2,
+  canRemoveV2,
   formulaV2Issues,
   formulaViewV2,
   friezeOfV2,
   insertOptionsV2,
+  operationsBetweenV2,
+  removeV2,
 } from './formulaV2Operations';
 
 let n = 0;
@@ -160,5 +163,114 @@ describe('frise sur la formule v2 (ADR-0036)', () => {
       enabled: true,
       hasPreliminaryPools: true,
     });
+  });
+});
+
+describe('tableau arrêté à N (ADR-0037, D2)', () => {
+  const stopped = () =>
+    applyOperationsV2(
+      epee(),
+      [
+        { op: 'setPhase', phase: 'tableau', settings: { stopAt: 8 } },
+        { op: 'insertPhase', brick: 'pool', at: 2 },
+      ],
+      id
+    );
+
+  it('« ＋ » après le tableau seulement s’il est arrêté', () => {
+    expect(insertOptionsV2(formulaOf(epee()), Weapon.EPEE, 2)).toEqual([]);
+    const f = applyOperationsV2(
+      epee(),
+      [{ op: 'setPhase', phase: 'tableau', settings: { stopAt: 8 } }],
+      id
+    );
+    expect(insertOptionsV2(f, Weapon.EPEE, 2)).toEqual(['pool']);
+    expect(formulaV2Issues(f, { weapon: Weapon.EPEE })).toEqual([
+      'tableau arrêté à 8 : ajouter un tour de poules après le tableau',
+    ]);
+  });
+
+  it('tours d’après : formule valide, tours numérotés à la suite', () => {
+    const f = stopped();
+    expect(friezeOfV2(f).map(p => p.key)).toEqual(['pool-0', 'tableau', 'pool-1']);
+    expect(formulaV2Issues(f, { weapon: Weapon.EPEE })).toEqual([]);
+  });
+
+  it('arrêt refusé hors puissances de 2 ; 0 : jusqu’à la finale', () => {
+    expect(() =>
+      applyOperationsV2(epee(), [{ op: 'setPhase', phase: 'tableau', settings: { stopAt: 6 } }], id)
+    ).toThrow(/stopAt/);
+    const f = applyOperationsV2(
+      epee(),
+      [{ op: 'setPhase', phase: 'tableau', settings: { stopAt: 0 } }],
+      id
+    );
+    expect(f.phases.find(p => p.kind === 'tableau')).not.toHaveProperty('stopAt');
+  });
+
+  it('bornes de l’arrêt : 2 et 128 acceptés', () => {
+    for (const stopAt of [2, 128]) {
+      const f = applyOperationsV2(
+        epee(),
+        [{ op: 'setPhase', phase: 'tableau', settings: { stopAt } }],
+        id
+      );
+      expect(f.phases.find(p => p.kind === 'tableau')).toMatchObject({ stopAt });
+    }
+  });
+
+  it('pas de Tour Quest avec un tableau arrêté', () => {
+    const laser = { weapon: Weapon.LASER, category: Category.SENIOR };
+    const withQuest = applyOperationsV2(laser, [{ op: 'insertPhase', brick: 'quest', at: 1 }], id);
+    const at = withQuest.phases.findIndex(p => p.kind === 'tableau');
+    const stoppedQuest = {
+      ...withQuest,
+      phases: withQuest.phases.map((p, i) => (i === at ? { ...p, stopAt: 4 } : p)),
+    } as typeof withQuest;
+    expect(insertOptionsV2(stoppedQuest, Weapon.LASER, at + 1)).not.toContain('pool');
+    expect(formulaV2Issues(stoppedQuest, { weapon: Weapon.LASER })).toContain(
+      'tableau arrêté : sans Tour Quest'
+    );
+    // Arrêt posé : le « ＋ » ne propose plus le Tour Quest
+    const stopped = applyOperationsV2(
+      epee(),
+      [{ op: 'setPhase', phase: 'tableau', settings: { stopAt: 8 } }],
+      id
+    );
+    expect(insertOptionsV2(stopped, Weapon.LASER, 1)).not.toContain('quest');
+  });
+
+  it('dernier tour d’après retiré : le tableau va de nouveau jusqu’à la finale', () => {
+    const f = removeV2(stopped(), { kind: 'pool', round: 1, key: 'pool-1' });
+    expect(f.phases.find(p => p.kind === 'tableau')).not.toHaveProperty('stopAt');
+    expect(canRemoveV2(stopped(), { kind: 'pool', round: 0, key: 'pool-0' })).toBe(false);
+  });
+
+  it('opérations entre deux formules : aller et retour', () => {
+    const base = formulaOf(epee());
+    const f = stopped();
+    const there = operationsBetweenV2(base, f);
+    expect(there).toEqual([
+      { op: 'setPhase', phase: 'tableau', settings: { stopAt: 8 } },
+      { op: 'insertPhase', brick: 'pool', at: 2 },
+    ]);
+    const settings = { ...epee().settings, formula: f };
+    const back = operationsBetweenV2(f, base);
+    const again = applyOperationsV2({ ...epee(), settings }, back, id);
+    expect(again.phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
+    expect(again.phases[1]).not.toHaveProperty('stopAt');
+  });
+
+  it('réglages plats : vainqueurs de poule lus au tour qui précède le tableau', () => {
+    const f = applyOperationsV2(
+      epee(),
+      [
+        { op: 'setPhase', phase: 'tableau', settings: { stopAt: 8 } },
+        { op: 'insertPhase', brick: 'pool', at: 2 },
+        { op: 'setPhase', phase: 'pool-0', settings: { poolWinnersOnly: true } },
+      ],
+      id
+    );
+    expect(flatSettingsOf(f, Weapon.EPEE).poolWinnersOnly).toBe(true);
   });
 });

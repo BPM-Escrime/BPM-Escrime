@@ -3,7 +3,7 @@ import { Category, CompetitionSettings, Weapon } from '../../types';
 import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
 import { formulaOf } from './formulaV2';
 import { applyOperationsV2 } from './formulaV2Operations';
-import { formulaSteps, startsWithTableau } from './formulaSteps';
+import { formulaSegment, formulaSteps, startsWithTableau, stoppedTableauOf } from './formulaSteps';
 
 const settings = buildDefaultCompetitionSettings({
   weapon: Weapon.EPEE,
@@ -35,5 +35,37 @@ describe('déroulé dérivé de la formule (ADR-0037)', () => {
     const f = applyOperationsV2(ctx, [{ op: 'removePhase', phase: 'pool-0' }], () => 'x');
     expect(formulaSteps(f).map(s => s.kind)).toEqual(['checkin', 'tableau', 'results']);
     expect(startsWithTableau(f)).toBe(true);
+  });
+});
+
+describe('tableau arrêté à N, tours après le tableau (ADR-0037, D2)', () => {
+  const stopped = applyOperationsV2(
+    ctx,
+    [
+      { op: 'setPhase', phase: 'tableau', settings: { stopAt: 8 } },
+      { op: 'insertPhase', brick: 'pool', at: 2 },
+    ],
+    () => 'x'
+  );
+
+  it('déroulé : poules, tableau arrêté, poules des restants', () => {
+    expect(formulaSteps(stopped)).toEqual([
+      { kind: 'checkin' },
+      { kind: 'pools', rounds: 1 },
+      { kind: 'tableau', stopAt: 8 },
+      { kind: 'pools', rounds: 1 },
+      { kind: 'results' },
+    ]);
+    expect(stoppedTableauOf(stopped)?.stopAt).toBe(8);
+  });
+
+  it('partie en cours : avant la clôture, tours d’avant et tableau ; après, plus de tableau', () => {
+    expect(formulaSegment(stopped, 0)).toEqual({
+      poolRounds: 1,
+      hasDirectElimination: true,
+      stopAt: 8,
+    });
+    expect(formulaSegment(stopped, 1)).toEqual({ poolRounds: 2, hasDirectElimination: false });
+    expect(formulaSegment(formulaOf(ctx), 0)).toBeNull();
   });
 });

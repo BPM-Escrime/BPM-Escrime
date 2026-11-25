@@ -12,6 +12,11 @@ import {
 } from '../../components/competition/competitionViewState';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { phaseSettings } from '../../../shared/domain/formula/formulaV2';
+import { formulaSegment } from '../../../shared/domain/formula/formulaSteps';
+import {
+  seedRankingForNextRound,
+  type TableauStageRecord,
+} from '../../../shared/domain/tableau/tableauStage';
 import { getDefaultMaxScores } from '../../../shared/utils/defaultMaxScores';
 import { Fencer, FencerStatus, Weapon } from '../../../shared/types';
 import { useToast } from '../../components/Toast';
@@ -51,9 +56,16 @@ export function useCompetitionCore(ctx: Ctx) {
   // Settings avec valeurs par défaut (formule personnalisée prioritaire, #1125)
   const customFormula = getActiveFormula(competition.weapon, competition.settings);
   const effectiveSettings = resolveCompetitionSettings(competition.weapon, competition.settings);
-  const poolRounds = effectiveSettings?.poolRounds ?? 1;
+  // Tableau arrêté à N tireurs (ADR-0037, D2) : tours et tableau de la partie en cours
+  const [stageHistory, setStageHistory] = useState<TableauStageRecord[]>([]);
+  const segment = competition.settings?.formula
+    ? formulaSegment(competition.settings.formula, stageHistory.length)
+    : null;
+  const poolRounds = segment?.poolRounds ?? effectiveSettings?.poolRounds ?? 1;
   const poolRoundQualifiers = competition.settings?.poolRoundQualifiers;
-  const hasDirectElimination = effectiveSettings?.hasDirectElimination ?? true;
+  const hasDirectElimination =
+    segment?.hasDirectElimination ?? effectiveSettings?.hasDirectElimination ?? true;
+  const tableauStopAt = segment?.stopAt;
   const thirdPlaceMatch = effectiveSettings?.thirdPlaceMatch ?? false;
   const playAllPositions = competition.settings?.playAllPositions ?? false;
   const defaultScores = getDefaultMaxScores(competition.weapon, competition.category);
@@ -256,13 +268,18 @@ export function useCompetitionCore(ctx: Ctx) {
   } = usePoolsViewSettings(pools.length);
 
   // Tours de poules (#1051) : seed du tirage = classement du tour précédent
-  const previousRoundRanking = useMemo(
-    () =>
-      currentPoolRound > 1 && poolHistory.length > 0
-        ? computeOverallRanking(poolHistory[poolHistory.length - 1])
-        : null,
-    [currentPoolRound, poolHistory, computeOverallRanking]
-  );
+  // Premier tour après un tableau arrêté clos : restants par rang d'entrée au tableau (Q5,
+  // ADR-0037), comme le moteur (closeTableauStage)
+  const storedFormulaForSeed = competition.settings?.formula;
+  const previousRoundRanking = useMemo(() => {
+    if (currentPoolRound <= 1 || poolHistory.length === 0) return null;
+    return seedRankingForNextRound({
+      formula: storedFormulaForSeed,
+      playedRounds: poolHistory.length,
+      stages: stageHistory,
+      lastRoundRanking: computeOverallRanking(poolHistory[poolHistory.length - 1]),
+    });
+  }, [currentPoolRound, poolHistory, computeOverallRanking, storedFormulaForSeed, stageHistory]);
   const getSeededCheckedInFencers = useCallback(() => {
     const checkedIn = getCheckedInFencers();
     return previousRoundRanking
@@ -325,6 +342,9 @@ export function useCompetitionCore(ctx: Ctx) {
     poolRounds,
     poolRoundQualifiers,
     hasDirectElimination,
+    stageHistory,
+    setStageHistory,
+    tableauStopAt,
     thirdPlaceMatch,
     playAllPositions,
     poolMaxScore,

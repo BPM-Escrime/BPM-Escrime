@@ -95,6 +95,7 @@ export const ERRORS = {
   fencer_already_in_pool: e('rule', 'Tireur déjà dans une poule'),
   tableau_complete: e('rule', 'Tableau terminé'),
   tableau_stage_not_complete: e('rule', 'Tableau : matchs avant l’arrêt à N tireurs non terminés'),
+  tableau_round_after_stop: e('rule', 'Tableau arrêté à N tireurs : ce tour ne se tire pas'),
   invalid_composition: e('rule', 'Composition invalide'),
   team_incomplete: e('rule', 'Équipe sans tous ses titulaires au tirage'),
   relay_out_of_order: e('rule', 'Relais hors ordre : précédents non terminés ou déjà terminé'),

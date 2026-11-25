@@ -141,7 +141,8 @@
     "state_current": "em curso",
     "state_todo": "por fazer",
     "state_blocked": "bloqueado",
-    "unavailable": "Secção indisponível"
+    "unavailable": "Secção indisponível",
+    "tableau_closed": "Quadro (fechado)"
   },
   "pools": {
     "generate": "Gerar poules",
@@ -4758,7 +4759,11 @@
     "seeding": "Distribuição desta volta",
     "seeding_previous": "Classificação da volta anterior",
     "seeding_cumulative": "Acumulado das voltas disputadas",
-    "seeding_hint": "Os atiradores qualificados são distribuídos pelas poules desta volta segundo esta classificação."
+    "seeding_hint": "Os atiradores qualificados são distribuídos pelas poules desta volta segundo esta classificação.",
+    "stop_at": "Parar o quadro",
+    "stop_at_none": "Até à final",
+    "stop_at_n": "Quando restarem {{n}} atiradores",
+    "stop_at_hint": "Os atiradores restantes passam a uma volta de poules depois do quadro."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",
@@ -4807,5 +4812,14 @@
     "copied": "Copiado",
     "copy_failed": "Não foi possível copiar para a área de transferência",
     "open_count": "{{n}} ponto(s) a tratar"
+  },
+  "tableauStage": {
+    "title": "Quadro parado em {{n}} atiradores",
+    "hint": "Disputem os assaltos até restarem {{n}} atiradores: as voltas seguintes não se disputam.",
+    "close": "Passar à fase seguinte",
+    "confirm": "{{qualified}} atiradores passam à fase seguinte, {{eliminated}} são eliminados. Continuar?",
+    "closed": "Quadro fechado: faça a chamada dos {{n}} atiradores restantes para a fase seguinte.",
+    "closed_title": "Quadro parado em {{n}} atiradores: fechado",
+    "closed_hint": "Só consulta. Os atiradores restantes seguiram na prova; o seu lugar final está nos Resultados."
   }
 }

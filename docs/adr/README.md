@@ -1,8 +1,10 @@
 # Décisions d'architecture (ADR)
 
 Une ADR consigne **une** décision d'architecture : son contexte, ce qui est décidé, ce que cela coûte.
-Elle est courte, datée, numérotée, et ne se réécrit pas : une décision qui change fait l'objet
-d'une nouvelle ADR, qui **remplace** l'ancienne (statut « Remplacée par ADR-00xx »).
+Elle est courte, datée, numérotée. Une phrase précisée, restreinte ou corrigée s'amende **sur
+place**, après accord du mainteneur : statut daté avec l'objet, phrase réécrite avec la mention
+« remplace « … » » ([ADR-0001](0001-processus-adr.md)). Une décision principale renversée fait
+l'objet d'une nouvelle ADR, qui **remplace** l'ancienne (statut « Remplacée par ADR-00xx »).
 
 Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-processus-adr.md).
 
@@ -10,7 +12,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 
 | N°                                                  | Décision                                                                                                                                                                                  | Statut              |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| [0001](0001-processus-adr.md)                       | Processus : ADR, revue du mainteneur, pas d'auto-merge pour l'architecture                                                                                                                | Acceptée            |
+| [0001](0001-processus-adr.md)                       | Processus : ADR, revue du mainteneur, pas d'auto-merge pour l'architecture, amendement sur place                                                                                          | Acceptée (amendée)  |
 | [0002](0002-couches-et-dependances.md)              | Couches, sens des dépendances, domaine pur dans `src/shared/domain`                                                                                                                       | Acceptée            |
 | [0003](0003-main-domain-couche-application.md)      | `src/main/domain` devient la couche d'application (`src/main/engine/commands`)                                                                                                            | Acceptée            |
 | [0004](0004-features-couche-interface.md)           | `src/features` est une couche d'interface                                                                                                                                                 | Acceptée            |
@@ -46,7 +48,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0034](0034-surnom-membres-club.md)                 | Les membres du Mode Club ont un surnom (`club_members.nickname`, migration 52)                                                                                                            | Acceptée            |
 | [0035](0035-durees-de-match-mcp.md)                 | Durées de match de référence lisibles par l'agent MCP (`get_match_durations`) ; fin estimée de la phase dans `server_status`                                                              | Proposée            |
 | [0036](0036-formule-v2-arbre-par-phase.md)          | Formule v2 : arbre de phases pour toutes les armes (`settings.formula`), lu par phase par le moteur, sans migration de schéma                                                             | Acceptée            |
-| [0037](0037-deroule-genere-par-la-formule.md)       | Déroulé généré par la formule v2 : navigation, 0 tour, tableau arrêté à N (`closeTableauStage`, `TableauStageClosed`), phase après un tableau                                             | Acceptée            |
+| [0037](0037-deroule-genere-par-la-formule.md)       | Déroulé généré par la formule v2 : navigation, 0 tour, tableau arrêté à N (`closeTableauStage`, `TableauStageClosed`), phase après un tableau                                             | Acceptée (amendée)  |
 | [0038](0038-cyrano-sans-hello-saint-george.md)      | Appareil Cyrano sans `HELLO` (`hello: false`, profil Saint-George) ; envoi des HELLO choisi au démarrage du pilote (`device`, `always`, `never`)                                          | Acceptée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
@@ -57,7 +59,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 ```markdown
 # ADR-00xx — Titre à l'indicatif (« X devient Y », « On fait Z »)
 
-- **Statut** : Proposée | Acceptée | Remplacée par ADR-00yy
+- **Statut** : Proposée | Acceptée | Acceptée ; amendée le AAAA-MM-JJ (objet, validé par le mainteneur) | Remplacée par ADR-00yy
 - **Date** : AAAA-MM-JJ
 - **Tickets** : #…
 

@@ -6,6 +6,7 @@
  * Licensed under GPL-3.0
  */
 
+import type { TableauStageRecord } from '../../shared/domain/tableau/tableauStage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Fencer, Pool, PoolRanking } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
@@ -94,6 +95,8 @@ export interface SessionState {
     currentPoolRound: number;
     pools: number;
   };
+  /** Étapes closes : tableau arrêté à N tireurs (docs/adr/0037), lu seulement */
+  stageHistory?: TableauStageRecord[];
   /** Tableaux séparés après les poules : un tableau par groupe, lu seulement (docs/adr/0024) */
   groupTableaux?: Record<string, GroupTableau>;
   /** Révision de l'état : incrémentée par la couche domaine (MCP, #1880) */
@@ -184,6 +187,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
             poolsLaunched: state.poolsLaunched,
             remoteArenaCount: state.remoteArenaCount,
             rapieres: state.rapieres,
+            stageHistory: state.stageHistory ?? [],
             ...(state.groupTableaux ? { groupTableaux: state.groupTableaux } : {}),
             poolPrepParams: state.poolPrepParams || {
               poolCount: 0,
