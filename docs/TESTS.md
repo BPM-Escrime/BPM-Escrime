@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 282 |
-| `src/main/` | 158 | 1371 |
+| `src/main/` | 158 | 1377 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 136 | 766 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 46 | 571 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **628** | **4966** |
+| **Total** | **628** | **4972** |
 
-Unitaires : 609 fichiers, 4913 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 609 fichiers, 4919 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -5212,7 +5212,7 @@ Unitaires : 609 fichiers, 4913 tests. E2E : 19 fichiers, 53 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/updateReleases.test.ts</code> — 13 tests</summary>
+<summary><code>src/main/updateReleases.test.ts</code> — 19 tests</summary>
 
 - **parseReleaseBuild**
   - lit le build dans le nom, sinon le tag, sinon le corps
@@ -5232,6 +5232,13 @@ Unitaires : 609 fichiers, 4913 tests. E2E : 19 fichiers, 53 tests (comptage stat
   - un 3.0.0-dev ne se voit pas proposer la 2.0.1
   - un 2.0.0 stable se voit proposer la 2.0.1
   - un testeur 3.0.0-dev.1995 ne redescend pas vers la 3.0.0 (Build #1990)
+- **isChannelDowngrade (passage dev → stable)**
+  - build dev 2086, canal stable, stable 1986 : retour proposé
+  - même version X.Y.Z, build dev plus élevé : retour proposé
+  - build rc de maintenance, canal stable : retour proposé
+  - canal dev conservé : pas de retour
+  - build stable installé : jamais de retour
+  - release dev ou stable plus récente : pas un retour
 
 </details>
 
