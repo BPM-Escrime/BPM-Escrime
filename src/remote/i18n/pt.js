@@ -752,7 +752,6 @@
   'referee.fault_laser_2_02': 'Recusa de obedecer',
   'referee.fault_laser_2_03': 'Pedido de paragem por lesão não confirmada',
   'referee.fault_laser_2_04': 'Toque de estocada',
-  'referee.fault_laser_2_05': 'Toque muito brutal',
   'referee.fault_laser_2_06': 'Toque durante / após uma queda ou movimento descontrolado',
   'referee.fault_laser_2_07': 'Sair deliberadamente da pista para evitar um toque',
   'referee.fault_laser_2_08': 'Utilização do braço ou da mão não armada',

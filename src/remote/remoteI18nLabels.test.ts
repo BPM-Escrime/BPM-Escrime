@@ -32,7 +32,7 @@ describe('referee.html : raisons de carton avancé traduites (#1213)', () => {
   const groupKeys = groups.map(g => g.labelKey);
 
   it('chaque raison a une clé et la valeur enregistrée reste en français', () => {
-    expect(keys.length).toBe(51);
+    expect(keys.length).toBe(50);
     expect(groupKeys.length).toBe(6);
     expect(html).toContain('btn.textContent = window.T(fault.key)');
     expect(html).toContain('this.confirmReasonSelector(fault.fr, group, fencer)');

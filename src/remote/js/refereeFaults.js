@@ -33,7 +33,6 @@ const FAULT_REASONS = [
       { key: 'referee.fault_laser_2_02', fr: "Refus d'obéissance" },
       { key: 'referee.fault_laser_2_03', fr: "Demande d'arrêt pour traumatisme non reconnu" },
       { key: 'referee.fault_laser_2_04', fr: "Touche d'estoc" },
-      { key: 'referee.fault_laser_2_05', fr: 'Touche portée très brutalement' },
       {
         key: 'referee.fault_laser_2_06',
         fr: 'Touche pendant / après une chute ou déplacement non maîtrisé',

@@ -732,7 +732,6 @@
   'referee.fault_laser_2_02': '拒絕服從',
   'referee.fault_laser_2_03': '以未獲確認的受傷要求暫停',
   'referee.fault_laser_2_04': '刺擊',
-  'referee.fault_laser_2_05': '非常粗暴的擊打',
   'referee.fault_laser_2_06': '跌倒或失控移動期間／之後的擊打',
   'referee.fault_laser_2_07': '故意離開比賽區以避免被擊中',
   'referee.fault_laser_2_08': '使用非持劍手臂或手',

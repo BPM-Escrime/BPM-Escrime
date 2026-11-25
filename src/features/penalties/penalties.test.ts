@@ -67,7 +67,7 @@ describe('CardGroup progression – Sabre Laser', () => {
 
     it('deuxième carton GROUP_2 → RED (+1 point)', () => {
       const prev = [card(CardGroup.GROUP_2, CardType.YELLOW)];
-      const result = determineCardType(CardReason.HEAVY_HIT, prev);
+      const result = determineCardType(CardReason.UNARMED_HAND, prev);
       expect(result.type).toBe(CardType.RED);
       expect(result.shouldExclude).toBe(false);
       expect(result.points).toBe(1);
