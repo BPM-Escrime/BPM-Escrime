@@ -106,8 +106,9 @@ const RapieresTeamModal: React.FC<RapieresTeamModalProps> = ({ initial, onSave, 
     } else onClose();
   };
 
+  // Fenêtre de saisie : pas de fermeture par un clic à côté (croix, Annuler ou Échap)
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div
         ref={modalRef}
         className="modal"

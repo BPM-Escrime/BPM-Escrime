@@ -74,6 +74,7 @@ export const ClubMemberEditModal: React.FC<ClubMemberEditModalProps> = ({
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={
         member
           ? `${t('actions.edit')} : ${member.firstName} ${member.lastName}`

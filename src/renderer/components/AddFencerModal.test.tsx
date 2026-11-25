@@ -23,6 +23,12 @@ const setup = () => {
 };
 
 describe('AddFencerModal', () => {
+  it('fenêtre de saisie : un clic à côté ne la ferme pas', () => {
+    const { onClose, container } = setup();
+    fireEvent.click(container.querySelector('.modal-overlay')!);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('ajoute un tireur avec nom en majuscules puis ferme', () => {
     const { onAdd, onClose, container } = setup();
     fireEvent.change(screen.getByPlaceholderText('addFencer.last_name_ph'), {

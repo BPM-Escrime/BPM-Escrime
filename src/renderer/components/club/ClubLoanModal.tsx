@@ -78,6 +78,7 @@ export const ClubLoanModal: React.FC<LoanModalProps> = props => {
 
     return (
       <Modal
+        closeOnOverlay={false}
         title={t('clubInventory.lend_title', { name: item.name })}
         onClose={onClose}
         size="md"
@@ -182,6 +183,7 @@ export const ClubLoanModal: React.FC<LoanModalProps> = props => {
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={t('clubInventory.return_title', { name: loan.itemName })}
       onClose={onClose}
       size="md"

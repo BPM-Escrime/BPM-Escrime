@@ -110,6 +110,7 @@ _Issue créée automatiquement depuis BPM - Escrime_`;
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={t('reportIssue.title')}
       onClose={onClose}
       footer={

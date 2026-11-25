@@ -79,6 +79,7 @@ const FFEConnectModal: React.FC<FFEConnectModalProps> = ({ onImport, onClose }) 
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={t('ffeConnect.title')}
       onClose={onClose}
       size="lg"
