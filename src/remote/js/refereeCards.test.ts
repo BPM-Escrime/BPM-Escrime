@@ -260,3 +260,26 @@ describe('refereeCards.js passivité', () => {
     expect(html).not.toContain('Groupe 3 : rouge direct');
   });
 });
+
+describe('penaltyReachesLimit : points de pénalité au score limite', () => {
+  const base = { prevA: 13, prevB: 9, scoreA: 13, scoreB: 9, scoreLimit: 15, isLaserSabre: true };
+
+  it('carton qui porte un tireur à 15 ou au-delà : vrai', () => {
+    expect(C.penaltyReachesLimit({ ...base, scoreA: 16 })).toBe(true);
+    expect(C.penaltyReachesLimit({ ...base, scoreA: 18 })).toBe(true);
+    expect(C.penaltyReachesLimit({ ...base, prevB: 12, scoreB: 15 })).toBe(true);
+  });
+
+  it('sous la limite ou déjà au-delà : faux', () => {
+    expect(C.penaltyReachesLimit({ ...base, scoreA: 14 })).toBe(false);
+    expect(C.penaltyReachesLimit({ ...base, prevA: 15, scoreA: 18 })).toBe(false);
+  });
+
+  it('limite inconnue : 15 au Sabre Laser, rien ailleurs ; illimitée : faux', () => {
+    expect(C.penaltyReachesLimit({ ...base, scoreLimit: 0, scoreA: 16 })).toBe(true);
+    expect(C.penaltyReachesLimit({ ...base, scoreLimit: 0, isLaserSabre: false, scoreA: 16 })).toBe(
+      false
+    );
+    expect(C.penaltyReachesLimit({ ...base, scoreLimit: Infinity, scoreA: 40 })).toBe(false);
+  });
+});

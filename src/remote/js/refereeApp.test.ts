@@ -507,4 +507,27 @@ describe('Sabre Laser : cartons chrono en marche et mort subite au carton (#2254
     expect(app.overtimeType).toBe('challenger');
     expect(errors).toEqual([]);
   });
+
+  it('Laser : un carton qui porte un tireur au-delà de 15 ouvre la fin de match', async () => {
+    const { app, dom, errors } = await running({ weapon: 'L' });
+    app.scoreA = 13;
+    app.scoreB = 9;
+    // Jaune à B → +3 à A : 16, sans avis du serveur
+    app.addCard('B', 'yellow');
+    expect(app.scoreA).toBe(16);
+    const modal = dom.window.document.getElementById('finish-modal');
+    expect(modal?.classList.contains('active')).toBe(true);
+    expect(app.timerRunning).toBe(false);
+    expect(errors).toEqual([]);
+  });
+
+  it('Laser : un carton sous la limite ne termine pas le match', async () => {
+    const { app, dom } = await running({ weapon: 'L' });
+    app.scoreA = 10;
+    app.scoreB = 2;
+    app.addCard('B', 'yellow');
+    expect(app.scoreA).toBe(13);
+    const modal = dom.window.document.getElementById('finish-modal');
+    expect(modal?.classList.contains('active')).toBe(false);
+  });
 });
