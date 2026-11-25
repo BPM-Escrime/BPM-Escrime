@@ -13,7 +13,10 @@ import {
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { phaseSettings } from '../../../shared/domain/formula/formulaV2';
 import { formulaSegment } from '../../../shared/domain/formula/formulaSteps';
-import type { TableauStageRecord } from '../../../shared/domain/tableau/tableauStage';
+import {
+  rankingAfterStage,
+  type TableauStageRecord,
+} from '../../../shared/domain/tableau/tableauStage';
 import { getDefaultMaxScores } from '../../../shared/utils/defaultMaxScores';
 import { Fencer, FencerStatus, Weapon } from '../../../shared/types';
 import { useToast } from '../../components/Toast';
@@ -265,13 +268,18 @@ export function useCompetitionCore(ctx: Ctx) {
   } = usePoolsViewSettings(pools.length);
 
   // Tours de poules (#1051) : seed du tirage = classement du tour précédent
-  const previousRoundRanking = useMemo(
-    () =>
-      currentPoolRound > 1 && poolHistory.length > 0
-        ? computeOverallRanking(poolHistory[poolHistory.length - 1])
-        : null,
-    [currentPoolRound, poolHistory, computeOverallRanking]
-  );
+  // Premier tour après un tableau arrêté clos : restants par rang d'entrée au tableau (Q5,
+  // ADR-0037), comme le moteur (closeTableauStage)
+  const lastStage = stageHistory[stageHistory.length - 1];
+  const firstRoundAfterStage =
+    !!lastStage &&
+    !!competition.settings?.formula &&
+    formulaSegment(competition.settings.formula, 0)?.poolRounds === poolHistory.length;
+  const previousRoundRanking = useMemo(() => {
+    if (currentPoolRound <= 1 || poolHistory.length === 0) return null;
+    const last = computeOverallRanking(poolHistory[poolHistory.length - 1]);
+    return firstRoundAfterStage && lastStage ? rankingAfterStage(last, lastStage) : last;
+  }, [currentPoolRound, poolHistory, computeOverallRanking, firstRoundAfterStage, lastStage]);
   const getSeededCheckedInFencers = useCallback(() => {
     const checkedIn = getCheckedInFencers();
     return previousRoundRanking

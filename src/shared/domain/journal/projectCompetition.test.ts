@@ -3,6 +3,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import type { JournalEventBody } from '../../api/events';
+import { FencerStatus } from '../../types';
 import { projectCompetition } from './projectCompetition';
 
 const ev = <T extends JournalEventBody['type']>(
@@ -53,6 +54,17 @@ describe('projectCompetition', () => {
     expect(projectCompetition([ev('ScoreRecorded', score('x', 5, 1)), drawn(1)]).complete).toBe(
       false
     );
+  });
+
+  it('tableau arrêté clos (ADR-0037) : éliminés sortis, tableau archivé', () => {
+    const facts = projectCompetition([
+      drawn(1),
+      tableau,
+      ev('TableauStageClosed', { stopAt: 1, qualifiedIds: ['a'], eliminatedIds: ['b'] }),
+    ]);
+    expect(facts.tableau).toBeNull();
+    expect(facts.fencerStatus.b).toBe(FencerStatus.ELIMINATED);
+    expect(facts.fencerStatus.a).toBeUndefined();
   });
 
   it('tirage refait sur le même tour : il remplace le précédent', () => {

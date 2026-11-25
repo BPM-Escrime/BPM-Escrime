@@ -5,6 +5,8 @@ import {
   closeStage,
   isStageDone,
   rankAfterStages,
+  rankingAfterStage,
+  resultsTableauMatches,
   stageMatches,
   type TableauStageRecord,
 } from './tableauStage';
@@ -115,5 +117,43 @@ describe('classement final après un tableau arrêté (Q5)', () => {
 
   it('sans étape close : classement inchangé', () => {
     expect(rankAfterStages(merged, []).ranking).toBe(merged);
+  });
+});
+
+describe('répartition du tour après un tableau arrêté (Q5)', () => {
+  it('restants seuls, dans l’ordre de leur rang d’entrée', () => {
+    const out = closeStage([...quarters, ...semis, final], 2)!;
+    const stage: TableauStageRecord = {
+      kind: 'tableau',
+      stopAt: 2,
+      matches: [...quarters, ...semis, final],
+      eliminated: out.eliminated.map(e => ({
+        fencerId: e.fencer.id,
+        round: e.round,
+        seed: e.seed,
+      })),
+    };
+    // Classement du tour d'avant : E devant B ; au tableau, B est entré 2ᵉ, E 5ᵉ
+    const before = ['E', 'B', 'A', 'C'].map(
+      (id, i) => ({ fencer: f(id), rank: i + 1 }) as PoolRanking
+    );
+    expect(rankingAfterStage(before, stage).map(r => [r.fencer.id, r.rank])).toEqual([
+      ['B', 2],
+      ['E', 5],
+    ]);
+  });
+});
+
+describe('tableau des résultats et des exports (ADR-0037)', () => {
+  it('tableau clos repris quand aucun tableau n’est en cours', () => {
+    const closed: TableauStageRecord = {
+      kind: 'tableau',
+      stopAt: 2,
+      matches: quarters,
+      eliminated: [],
+    };
+    expect(resultsTableauMatches([], closed)).toBe(quarters);
+    expect(resultsTableauMatches(semis, closed)).toBe(semis);
+    expect(resultsTableauMatches([], undefined)).toEqual([]);
   });
 });

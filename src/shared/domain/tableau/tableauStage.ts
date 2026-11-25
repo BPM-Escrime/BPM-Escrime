@@ -136,3 +136,29 @@ export function rankAfterStages(
   });
   return { ranking: result, eliminatedAt };
 }
+
+/**
+ * Classement qui répartit le tour de poules suivant un tableau arrêté (Q5, ADR-0037) : les
+ * restants dans l'ordre de leur rang d'entrée au tableau. `ranking` fournit les lignes (tour
+ * qui précède le tableau) ; seuls les restants sont gardés, rang = rang d'entrée.
+ */
+export function rankingAfterStage(
+  ranking: PoolRanking[],
+  stage: TableauStageRecord
+): PoolRanking[] {
+  const out = new Set(stage.eliminated.map(e => e.fencerId));
+  const seeds = entrySeeds(stage.matches);
+  return ranking
+    .filter(r => seeds.has(r.fencer.id) && !out.has(r.fencer.id))
+    .map(r => ({ ...r, rank: seeds.get(r.fencer.id) as number }))
+    .sort((a, b) => a.rank - b.rank);
+}
+
+/**
+ * Tableau des résultats et de leurs exports (PDF du tableau, livret, XML) : le tableau en cours,
+ * sinon le tableau arrêté clos (ADR-0037 : une étape close reste consultable)
+ */
+export const resultsTableauMatches = (
+  current: TableauMatch[],
+  closed: TableauStageRecord | undefined
+): TableauMatch[] => (current.length === 0 && closed ? closed.matches : current);

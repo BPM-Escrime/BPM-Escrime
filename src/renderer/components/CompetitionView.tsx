@@ -3,7 +3,11 @@
  * Licensed under GPL-3.0
  */
 
-import { entrySeeds, rankAfterStages } from '../../shared/domain/tableau/tableauStage';
+import {
+  entrySeeds,
+  rankAfterStages,
+  resultsTableauMatches,
+} from '../../shared/domain/tableau/tableauStage';
 import { formulaSegment } from '../../shared/domain/formula/formulaSteps';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
@@ -719,9 +723,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             finalResults={finalResults}
             fencers={fencers}
             pools={[...poolHistory.flat(), ...pools]}
-            tableauMatches={
-              closedStage && tableauMatches.length === 0 ? closedStage.matches : tableauMatches
-            }
+            tableauMatches={resultsTableauMatches(tableauMatches, closedStage)}
             consolationBrackets={consolationBrackets}
             isLaserSabre={isLaserSabre}
             appelFencers={appelFencers.length > 0 ? appelFencers : undefined}

@@ -208,6 +208,38 @@ describe('tableau arrêté à N (ADR-0037, D2)', () => {
     expect(f.phases.find(p => p.kind === 'tableau')).not.toHaveProperty('stopAt');
   });
 
+  it('bornes de l’arrêt : 2 et 128 acceptés', () => {
+    for (const stopAt of [2, 128]) {
+      const f = applyOperationsV2(
+        epee(),
+        [{ op: 'setPhase', phase: 'tableau', settings: { stopAt } }],
+        id
+      );
+      expect(f.phases.find(p => p.kind === 'tableau')).toMatchObject({ stopAt });
+    }
+  });
+
+  it('pas de Tour Quest avec un tableau arrêté', () => {
+    const laser = { weapon: Weapon.LASER, category: Category.SENIOR };
+    const withQuest = applyOperationsV2(laser, [{ op: 'insertPhase', brick: 'quest', at: 1 }], id);
+    const at = withQuest.phases.findIndex(p => p.kind === 'tableau');
+    const stoppedQuest = {
+      ...withQuest,
+      phases: withQuest.phases.map((p, i) => (i === at ? { ...p, stopAt: 4 } : p)),
+    } as typeof withQuest;
+    expect(insertOptionsV2(stoppedQuest, Weapon.LASER, at + 1)).not.toContain('pool');
+    expect(formulaV2Issues(stoppedQuest, { weapon: Weapon.LASER })).toContain(
+      'tableau arrêté : sans Tour Quest'
+    );
+    // Arrêt posé : le « ＋ » ne propose plus le Tour Quest
+    const stopped = applyOperationsV2(
+      epee(),
+      [{ op: 'setPhase', phase: 'tableau', settings: { stopAt: 8 } }],
+      id
+    );
+    expect(insertOptionsV2(stopped, Weapon.LASER, 1)).not.toContain('quest');
+  });
+
   it('dernier tour d’après retiré : le tableau va de nouveau jusqu’à la finale', () => {
     const f = removeV2(stopped(), { kind: 'pool', round: 1, key: 'pool-1' });
     expect(f.phases.find(p => p.kind === 'tableau')).not.toHaveProperty('stopAt');

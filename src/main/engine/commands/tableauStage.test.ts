@@ -13,7 +13,11 @@ import {
   Weapon,
 } from '../../../shared/types';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
-import { formulaOf, type FormulaV2 } from '../../../shared/domain/formula/formulaV2';
+import {
+  flatSettingsOf,
+  formulaOf,
+  type FormulaV2,
+} from '../../../shared/domain/formula/formulaV2';
 import type { TableauMatch } from '../../../shared/domain/tableau/tableauTypes';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
@@ -119,5 +123,27 @@ d('closeTableauStage (docs/adr/0037)', () => {
     });
     db.updateCompetition(competitionId, { settings: base as never });
     await expect(op('closeTableauStage', {})).rejects.toMatchObject({ code: 'invalid_settings' });
+  });
+
+  it('tours après l’arrêt : score refusé, écran comme tablettes (ADR-0037)', async () => {
+    const [a, b, c, dd] = fencers;
+    const final = m(2, dd, b, null);
+    db.saveSessionState(competitionId, {
+      currentPhase: 5,
+      tableauMatches: [m(4, a, dd, dd, [1, 4]), m(4, b, c, b, [2, 3]), final],
+    });
+    await expect(
+      op('recordScore', { matchId: final.id, scoreA: 15, scoreB: 3 })
+    ).rejects.toMatchObject({ code: 'tableau_round_after_stop' });
+  });
+
+  it('pilotage hors écran (MCP) toujours refusé : plusieurs tours de poules (ADR-0037)', async () => {
+    // Réglages plats écrits avec la formule (writeFormula) : 2 tours de poules
+    db.updateCompetition(competitionId, {
+      settings: { ...base, ...flatSettingsOf(stopped(), Weapon.EPEE), formula: stopped() } as never,
+    });
+    await expect(op('generateTableau', {})).rejects.toMatchObject({
+      code: 'unsupported_format',
+    });
   });
 });
