@@ -1133,8 +1133,9 @@ export class RemoteScoreServer {
    * Tableau : seul le tour en cours compte (les tours suivants ne sont pas encore
    * connus, sinon l'estimation reculerait à chaque match terminé). Poules : chaque
    * poule s'enchaîne sur une piste ; parallélisme = nombre de pistes de la session.
+   * Public : outil MCP d'état de la salle (server_status, #1965 lot 4).
    */
-  private computePhaseEta(): PhaseEtaSummary {
+  public computePhaseEta(): PhaseEtaSummary {
     return computePhaseEta(this.dashboardCtx);
   }
 
