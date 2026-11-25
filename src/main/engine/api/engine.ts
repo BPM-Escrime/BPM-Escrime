@@ -25,6 +25,7 @@ import { checkInFencers } from '../commands/checkIn';
 import { reinstateFencer, withdrawFencer } from '../commands/withdrawal';
 import { addPoolFencer } from '../commands/poolComposition';
 import { closePoolRound } from '../commands/poolRound';
+import { closeTableauStage } from '../commands/tableauStage';
 import { endRapieresWaves, launchRapieresWave, setRapieresTeams } from '../commands/rapieres';
 import { getArenaPlan, saveArenaPlan } from '../commands/arenaPlan';
 import { clearScore } from '../commands/scoreClear';
@@ -151,6 +152,9 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     applyFormulaTemplate(ctx, input),
   updateCompetitionFormula: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     updateCompetitionFormula(ctx, input),
+  // Tableau arrêté à N tireurs (docs/adr/0035)
+  closeTableauStage: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    closeTableauStage(ctx, input),
   deleteCompetition: (ctx, { commandId: _c, ...input }) => deleteCompetition(ctx, input),
   configureDtView: (ctx, { commandId: _c, ...input }) => configureDtView(ctx, input),
   getDtViewStatus: (ctx, input) => getDtViewStatus(ctx, input),

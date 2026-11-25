@@ -104,6 +104,7 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `not_enough_qualifiers` | rule | Pas assez de qualifiés |
 | `fencer_already_in_pool` | rule | Tireur déjà dans une poule |
 | `tableau_complete` | rule | Tableau terminé |
+| `tableau_stage_not_complete` | rule | Tableau : matchs avant l’arrêt à N tireurs non terminés |
 | `invalid_composition` | rule | Composition invalide |
 | `team_incomplete` | rule | Équipe sans tous ses titulaires au tirage |
 | `relay_out_of_order` | rule | Relais hors ordre : précédents non terminés ou déjà terminé |

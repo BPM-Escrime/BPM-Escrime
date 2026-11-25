@@ -122,4 +122,23 @@ export const formulaOperations = {
     permission: 'competition:write',
     mcp: { name: 'update_competition_formula', title: 'Modifier la formule d’une épreuve' },
   }),
+
+  closeTableauStage: command({
+    description:
+      'Clôt un tableau arrêté à N tireurs (formule enregistrée, docs/adr/0035) : quand tous les matchs avant l’arrêt sont joués, les N restants passent à la phase suivante (classement = rang d’entrée), les éliminés sortent (classés par tour atteint puis rang d’entrée). Refus : invalid_settings (formule sans tableau arrêté suivi d’une phase), tableau_stage_not_complete.',
+    input: z.object({
+      competitionId: CompetitionId,
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      stopAt: z.number().int(),
+      qualified: z.number().int(),
+      eliminated: z.number().int(),
+      revision: Revision,
+    }),
+    permission: 'score:write',
+  }),
 };

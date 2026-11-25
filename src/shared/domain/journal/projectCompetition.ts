@@ -277,6 +277,15 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
         pool.matches.push(...event.payload.matches.map(m => ({ ...m, result: null })));
         break;
       }
+      case JOURNAL_EVENT.tableauStageClosed: {
+        // Étape close : les éliminés sortent, le tableau est archivé (ADR-0035)
+        for (const id of event.payload.eliminatedIds) {
+          facts.fencerStatus[id] = FencerStatus.ELIMINATED;
+        }
+        clearMainResults();
+        facts.tableau = null;
+        break;
+      }
       case JOURNAL_EVENT.poolRoundClosed: {
         const round = facts.rounds.find(r => r.round === event.payload.round);
         if (round) {
