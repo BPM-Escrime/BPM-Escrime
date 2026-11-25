@@ -1,4 +1,4 @@
-# ADR-0032 — Les membres du Mode Club ont un surnom
+# ADR-0034 — Les membres du Mode Club ont un surnom
 
 - **Statut** : Acceptée (2026-11-25)
 - **Date** : 2026-11-25

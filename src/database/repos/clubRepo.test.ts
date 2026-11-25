@@ -91,7 +91,7 @@ describe.skipIf(!DatabaseSync)('ClubRepo (#1872)', () => {
       expect(repo.getMember(a.id)!.birthYear).toBe(2000);
     });
 
-    it('surnom : enregistré, effacé par une chaîne vide (ADR-0032)', () => {
+    it('surnom : enregistré, effacé par une chaîne vide (ADR-0034)', () => {
       const a = member('A', { nickname: '  Zorro ' });
       expect(a.nickname).toBe('Zorro');
       expect(repo.updateMember(a.id, { lastName: 'ABEL' })!.nickname).toBe('Zorro');

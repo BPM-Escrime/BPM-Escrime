@@ -16,6 +16,7 @@ import { resolveSetting, type ResolvableKey } from './settings';
 import { eventDayHandlers } from './eventDay';
 import { privacyHandlers } from './privacy';
 import { matchDurationHandlers } from './matchDurations';
+import { formulaTemplateHandlers } from './formulaTemplates';
 import { publicationHandlers } from './publishResults';
 import { normalizePlaceQuery } from '../../../shared/domain/places/placeSearch';
 import { assertDirectory } from './files';
@@ -207,5 +208,6 @@ export const stationHandlers = {
   ...eventDayHandlers,
   ...privacyHandlers,
   ...matchDurationHandlers,
+  ...formulaTemplateHandlers,
   ...publicationHandlers,
 };

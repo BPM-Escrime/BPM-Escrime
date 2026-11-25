@@ -48,6 +48,7 @@ export type SettingsItemId =
   | 'backup'
   | 'backup_dir'
   | 'tour'
+  | 'formula_preview'
   | 'privacy_network'
   | 'privacy_retention'
   | 'privacy_person'
@@ -165,6 +166,10 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
       },
       { id: 'backup', keys: ['settings.backup_title', 'settings.backup_hint'] },
       { id: 'tour', keys: ['settings.tour_title', 'settings.tour_hint'] },
+      {
+        id: 'formula_preview',
+        keys: ['settings.formula_preview_title', 'settings.formula_preview_hint'],
+      },
     ],
   },
 ];

@@ -613,7 +613,11 @@
     "durations_competitions": "Verlauf: {{count}} Turnier(e)",
     "durations_reset": "Verlauf zurücksetzen",
     "durations_reset_confirm": "Verlauf der Gefechtsdauern dieses Rechners löschen? Die Einstellungen der Turnierleitung bleiben erhalten.",
-    "durations_error": "Dauer abgelehnt: Format m:ss, mindestens 30 s"
+    "durations_error": "Dauer abgelehnt: Format m:ss, mindestens 30 s",
+    "formula_preview_title": "Neue Formel-Oberfläche (Vorschau)",
+    "formula_preview_hint": "Eine einzige Formel-Oberfläche für alle Waffen: Formel beim Erstellen eingeklappt, danach bearbeitbar unter Organisation ▸ Formel. Gilt nur für den Bildschirm dieses Arbeitsplatzes; Wettbewerbe bleiben mit der aktuellen Oberfläche kompatibel.",
+    "formula_preview_enable": "Neue Oberfläche aktivieren",
+    "formula_preview_error": "Einstellung konnte nicht gespeichert werden."
   },
   "shortcuts": {
     "category_actions": "Aktionen",
@@ -705,6 +709,7 @@
   },
   "weapons": {
     "custom": "Eigene Formel",
+    "other": "Andere",
     "epee": "Degen",
     "foil": "Florett",
     "laser": "Laser-Säbel",
@@ -2852,7 +2857,8 @@
     "goto_prep": "Zur Vorbereitung",
     "coach_dismiss": "Nicht mehr anzeigen",
     "all_places": "{{a}}/{{b}} Gefechte (alle Plätze)",
-    "all_places_title": "Gefechte des Turniers: Haupttableau und Ausfechten aller Plätze"
+    "all_places_title": "Gefechte des Turniers: Haupttableau und Ausfechten aller Plätze",
+    "organization_formula_desc": "Wettbewerbsphasen und ihre Einstellungen"
   },
   "offline": {
     "never": "Nie",
@@ -4724,5 +4730,41 @@
     "empty": "Kein Ort gefunden",
     "offline": "Suche nicht verfügbar (keine Verbindung)",
     "credit": "Daten © OpenStreetMap, IGN"
+  },
+  "formulaEditor": {
+    "formula": "Formel",
+    "add_here": "Hier eine Phase hinzufügen",
+    "brick_pool": "Gruppenrunde",
+    "brick_quest": "Quest-Runde",
+    "brick_tableau": "Direktausscheidungen",
+    "remove": "Entfernen: {{phase}}",
+    "summary_pools": "Gruppen {{score}} Treffer",
+    "summary_pools_rounds": "{{rounds}} Gruppenrunden {{score}} Treffer",
+    "summary_tableau": "Direktausscheidungen {{score}} Treffer",
+    "summary_tableau_unlimited": "Direktausscheidungen ohne Trefferlimit",
+    "summary_third_place": "3. Platz ausgelost",
+    "state_standard": "Standard",
+    "personalize": "Formel anpassen",
+    "modal_title": "Formel des Wettbewerbs",
+    "round_settings_hint": "Treffer, Zeit und Wertung: die der Runde 1, für alle Runden.",
+    "save_error": "Die Formel konnte nicht gespeichert werden."
+  },
+  "formulaTemplates": {
+    "template": "Formelvorlage",
+    "search_ph": "Vorlage suchen",
+    "provided": "Von der Anwendung bereitgestellt",
+    "personal": "Meine Vorlagen",
+    "name_standard": "Standard",
+    "name_two_rounds": "2 Poolrunden + Tableau",
+    "name_pools_only": "Nur Pools",
+    "name_rapieres": "Rapier-Turnier",
+    "state_adapted": "Angepasst · {{count}} Abweichung(en)",
+    "state_free": "Frei",
+    "reset": "Zur Vorlage zurück",
+    "save_as": "Als Vorlage speichern",
+    "save_name_ph": "Name der Vorlage",
+    "save": "Speichern",
+    "saved": "Vorlage gespeichert",
+    "save_error": "Vorlage konnte nicht gespeichert werden."
   }
 }

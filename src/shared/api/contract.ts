@@ -13,8 +13,10 @@ import {
   CommandId,
   CompetitionId,
   DryRun,
+  ExpectedRevision,
   Id,
   query,
+  Revision,
   subscription,
   type ApiContract,
   type OperationKind,
@@ -37,6 +39,7 @@ import { JournalEventSchema } from './events';
 import { CompetitionSchema, CompetitionSettingsPatchSchema } from './competitionSchema';
 import { ArenaPlanSchema } from './arenaPlanSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
+import { formulaOperations, TemplateId } from './contractFormula';
 import type { ConsolationBracket, FinalResult, TableauMatch } from '../domain/tableau/tableauTypes';
 import type { RapieresLegacyState, RapieresSession } from '../domain/rapieres/rapieres.types';
 import type { GroupTableau } from '../domain/ranking/splitGroups';
@@ -54,16 +57,6 @@ export { command, query, subscription } from './contractDef';
 
 const Side = z.enum(['A', 'B']);
 const FencerKey = z.union([Id, z.number().int().min(0)]);
-const ExpectedRevision = z
-  .number()
-  .int()
-  .min(0)
-  .optional()
-  .describe(
-    'Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées.'
-  );
-/** Révision du journal après la commande (absente si rien n'a été écrit) */
-const Revision = z.number().int().optional();
 
 const NeutralityCriterion = z.enum(['club', 'nationality', 'region']);
 const Neutrality = z.object({
@@ -743,6 +736,7 @@ export const contract = {
       location: Text.optional(),
       color: z.string().max(20).optional(),
       isTeamEvent: z.boolean().optional(),
+      templateId: TemplateId.optional(),
       settings: SettingsPatch.optional(),
       dryRun: DryRun,
       commandId: CommandId,
@@ -1467,6 +1461,7 @@ export const contract = {
   // Mode Club : données du poste, jamais sur le réseau (docs/adr/0022)
   ...clubOperations,
   // Poste : réglages, salles, thèmes, journée, RGPD, agent ; jamais sur le réseau (docs/adr/0022)
+  ...formulaOperations,
   ...stationOperations,
   // Serveur distant : pilotage et avis, jamais sur le réseau (docs/adr/0022)
   ...remoteOperations,

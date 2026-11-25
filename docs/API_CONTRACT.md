@@ -65,6 +65,7 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `withdrawal_not_found` | not_found | Aucun retrait à annuler pour ce tireur |
 | `dir_not_found` | not_found | Dossier introuvable |
 | `venue_not_found` | not_found | Salle introuvable |
+| `formula_template_not_found` | not_found | Modèle de formule introuvable |
 | `event_day_not_found` | not_found | Journée multi-épreuves introuvable |
 | `revision_conflict` | conflict | Révision attendue périmée : relire le journal puis renvoyer |
 | `command_already_applied` | conflict | Commande déjà appliquée (même commandId) |

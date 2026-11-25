@@ -88,6 +88,16 @@ export const SplitGroup = z
     'Tableaux séparés après les poules : groupe du tableau (« F », « M »), exigé pour ce format'
   );
 export const DryRun = z.boolean().optional().describe('Décrit le résultat sans rien écrire');
+export const ExpectedRevision = z
+  .number()
+  .int()
+  .min(0)
+  .optional()
+  .describe(
+    'Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées.'
+  );
+/** Révision du journal après la commande (absente si rien n'a été écrit) */
+export const Revision = z.number().int().optional();
 export const CommandId = z
   .string()
   .trim()

@@ -7,9 +7,10 @@ import { contract, type OperationName } from '../../shared/api/contract';
 import { fileOperations } from '../../shared/api/contractFiles';
 import { publicationOperations } from '../../shared/api/contractPublication';
 import type { ApiBridge } from '../../shared/api/client';
-import { Weapon } from '../../shared/types';
+import { Category, Weapon } from '../../shared/types';
 import { IpcClient } from './IpcClient';
 import { createStationApi } from './stationApi';
+import { draftFromSettings } from '../../shared/domain/formula/formulaDraft';
 
 const seen: Array<{ name: string; input: unknown }> = [];
 const bridge: ApiBridge = {
@@ -151,6 +152,19 @@ const CALLS: Array<[string, () => Promise<unknown>]> = [
   ],
   ['durations.resetHistory', () => api.durations.resetHistory()],
   ['durations.recordHistory', () => api.durations.recordHistory('c1')],
+  ['formulaTemplates.list', () => api.formulaTemplates.list({ weapon: Weapon.EPEE })],
+  [
+    'formulaTemplates.save',
+    () =>
+      api.formulaTemplates.save({
+        name: 'Club',
+        body: {
+          kind: 'draft',
+          draft: draftFromSettings(Weapon.EPEE, Category.SENIOR, undefined),
+        },
+      }),
+  ],
+  ['formulaTemplates.delete', () => api.formulaTemplates.delete('perso/1')],
   ['mcp.getStatus', () => api.mcp.getStatus()],
   ['mcp.setSettings', () => api.mcp.setSettings({ enabled: true, port: 8067, allowWrite: false })],
   ['mcp.regenerateToken', () => api.mcp.regenerateToken()],

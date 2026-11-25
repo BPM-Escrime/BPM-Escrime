@@ -1373,7 +1373,7 @@ export const ALL_MIGRATIONS: Migration[] = [
   },
   {
     version: 52,
-    description: 'Mode Club : surnom des membres, club_members.nickname (docs/adr/0032)',
+    description: 'Mode Club : surnom des membres, club_members.nickname (docs/adr/0034)',
     up(db) {
       try {
         db.run(`ALTER TABLE club_members ADD COLUMN nickname TEXT`);

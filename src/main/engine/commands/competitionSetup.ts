@@ -19,6 +19,8 @@ import {
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
+import { compatibleTemplate } from './competitionFormula';
+import { templateToSettings } from '../../../shared/domain/formula/formulaTemplate';
 import {
   validateFormulaSettings,
   type FormulaIssue,
@@ -69,6 +71,8 @@ export interface CreateCompetitionInput {
   location?: string;
   color?: string;
   isTeamEvent?: boolean;
+  /** Modèle de formule de départ (docs/adr/0033), appliqué avant `settings` */
+  templateId?: string;
   /** Réglages choisis à la création, fusionnés sur les défauts du moteur */
   settings?: Partial<CompetitionSettings>;
   dryRun?: boolean;
@@ -85,8 +89,20 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
       category: input.category,
       isTeamEvent: !!input.isTeamEvent,
     }) ?? getFallbackCompetitionSettings(input.weapon, input.category);
+  const fromTemplate = input.templateId
+    ? templateToSettings(
+        compatibleTemplate(ctx, input.templateId, {
+          weapon: input.weapon,
+          category: input.category,
+          isTeamEvent: !!input.isTeamEvent,
+        }),
+        input.weapon,
+        defaults
+      )
+    : {};
   const settings = {
     ...defaults,
+    ...fromTemplate,
     ...patch,
   } as CompetitionSettings;
   assertFormula(
