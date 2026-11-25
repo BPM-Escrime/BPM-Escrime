@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 282 |
-| `src/main/` | 160 | 1391 |
+| `src/main/` | 160 | 1393 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
-| `src/renderer/components/` | 136 | 766 |
+| `src/renderer/components/` | 137 | 768 |
 | E2E Playwright (`e2e/`) | 19 | 54 |
 | `src/remote/` | 60 | 439 |
 | `src/renderer/api/` | 10 | 46 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 52 | 604 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **636** | **5029** |
+| **Total** | **637** | **5033** |
 
-Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 618 fichiers, 4979 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3059,7 +3059,7 @@ Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/cyrano/server.test.ts</code> — 15 tests</summary>
+<summary><code>src/main/cyrano/server.test.ts</code> — 16 tests</summary>
 
 - **CyranoServer**
   - interface d’écoute : adresse IP ou vide, refus sinon (#1829)
@@ -3079,6 +3079,8 @@ Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage stat
   - version imposée : jamais d’alternance
 - **appareil sans HELLO (Saint-George, ADR-0038)**
   - ni au démarrage, ni au battement, ni derrière un affichage : seul le DISP part
+- **envoi des HELLO choisi au démarrage (ADR-0038)**
+  - device : selon la déclaration ; always : à tous ; never : à aucun
 - **champ Compe**
   - DISP d’une épreuve : repris par les HELLO, ACK et NAK suivants de la piste
 
@@ -3324,7 +3326,7 @@ Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/devices.test.ts</code> — 9 tests</summary>
+<summary><code>src/main/engine/commands/devices.test.ts</code> — 10 tests</summary>
 
 - setStripDevice : piste créée au besoin, appareil relu, retiré par null ; pilotes rechargés
 - salle inconnue : venue\_not\_found ; Cyrano sans adresse refusé par le schéma
@@ -3332,6 +3334,7 @@ Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage stat
 - salle propre → salle de la journée → salle par défaut
 - manualStrips par updateCompetitionSettings : pistes marquées pour cette épreuve seulement
 - démarrage : port renvoyé, appareils rechargés pour l’épreuve ; déjà démarré : même port
+- envoi des HELLO choisi au démarrage (ADR-0038) ; valeur inconnue refusée
 - refus du pilote : device\_refused (message pour l’opérateur)
 - état, routes, options, secours
 - sans pilote (tests, MCP) : unavailable ; la déclaration reste possible
@@ -6596,6 +6599,16 @@ Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/StripDriversPanel.test.tsx</code> — 3 tests</summary>
+
+- **StripDriversPanel**
+  - démarre Cyrano avec l’envoi des HELLO choisi, puis propose l’arrêt
+  - démarre le broker OPP2 sans épreuve
+  - journal des trames affiché à la demande ; interfaces proposées
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/TableauView.test.tsx</code> — 8 tests</summary>
 
 - **TableauView**
@@ -6663,7 +6676,7 @@ Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage stat
 - **buildRequest**
   - seuls les champs saisis partent
 - **VenueStripControlPanel**
-  - grille : liaison, piste occupée, accusé reçu, pilote OPP2 arrêté
+  - grille : liaison, piste occupée, accusé reçu
   - envoi en masse : arme, noms, nations ; résultat par piste ; toutes ; remise à blanc
   - sans sélection ni champ : rien n’est envoyé
 - **VenueStripBulkTools**
@@ -7462,22 +7475,6 @@ Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/remote/CyranoPanel.test.tsx</code> — 8 tests</summary>
-
-- **CyranoPanel — appareils de la salle (docs/adr/0023)**
-  - affiche les appareils de la salle sans édition d’adresse
-  - case « manuel » : écrit manualStrips de l’épreuve
-  - salle de l’épreuve choisie par setCompetitionVenue
-  - démarre le broker OPP2 pour l’épreuve
-- **CyranoPanel — alerte, secours et journal (#1720, #1829)**
-  - signale la piste dont l’appareil affiche un autre match
-  - actions de secours envoyées pour la piste
-  - journal affiché à la demande ; interfaces proposées
-  - journal : défile jusqu’aux dernières trames, dans son cadre (#2001)
-
-</details>
-
-<details>
 <summary><code>src/renderer/components/remote/DisplayOptionsPanel.test.tsx</code> — 2 tests</summary>
 
 - **DisplayOptionsPanel**
@@ -7514,6 +7511,22 @@ Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage stat
   - tout replier puis tout déplier
   - un volet replié : propose Tout déplier
   - ne touche pas aux volets non listés
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/remote/StripDevicesCard.test.tsx</code> — 7 tests</summary>
+
+- **devicesInRange**
+  - garde les appareils dont l’arène est dans la plage de l’épreuve
+- **StripDevicesCard — appareils des pistes de l’épreuve (docs/adr/0023)**
+  - pilotes arrêtés : rien n’est affiché
+  - seules les pistes de l’épreuve, sans édition d’adresse
+  - case « manuel » : écrit manualStrips de l’épreuve
+  - salle de l’épreuve choisie par setCompetitionVenue
+- **StripDevicesCard — alerte et secours (#1720, #1829)**
+  - signale la piste dont l’appareil affiche un autre match
+  - actions de secours envoyées pour la piste
 
 </details>
 
@@ -7581,7 +7594,7 @@ Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage stat
 
 - **réglages des pilotes (#1829, docs/adr/0023)**
   - démarrage automatique désactivé par défaut
-  - démarrage automatique : port, interface, épreuve et options ; OPP2 si la salle en déclare
+  - démarrage automatique : port, interface, HELLO, épreuve et options ; OPP2 si la salle en déclare
   - démarrage automatique sans appareil dans la salle : rien
   - journal exportable : une trame par ligne
 
