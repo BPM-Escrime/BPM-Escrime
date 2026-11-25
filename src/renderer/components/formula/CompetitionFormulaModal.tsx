@@ -27,10 +27,15 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { FormulaEditor } from './FormulaEditor';
+import { useBpmClient } from '../../api/BpmClientContext';
+import { ApiError } from '../../../shared/api/client';
+import { useToast } from '../Toast';
+import { formulaOperationsBetween } from '../../../shared/domain/formula/formulaOperations';
 import { FormulaTemplatePicker } from './FormulaTemplatePicker';
 import { useFormulaTemplates } from '../../hooks/useFormulaTemplates';
 import {
   formulaDeviations,
+  templateToSettings,
   type FormulaTemplate,
   type FormulaTemplateBody,
 } from '../../../shared/domain/formula/formulaTemplate';
@@ -54,12 +59,15 @@ export function formulaSettingsUpdate(
 
 interface Props {
   competition: Competition;
-  onSave: (updates: Partial<Competition>) => void | Promise<void>;
+  /** Réglages écrits par le moteur : mise à jour de l'écran (aucune écriture ici) */
+  onApplied: (settings: CompetitionSettings) => void;
   onClose: () => void;
 }
 
-export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onSave, onClose }) => {
+export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onApplied, onClose }) => {
   const { t } = useTranslation();
+  const client = useBpmClient();
+  const { showToast } = useToast();
   const [draft, setDraft] = useState<FormulaDraft>(() =>
     draftFromSettings(competition.weapon, competition.category, competition.settings)
   );
@@ -112,11 +120,30 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onSave, 
     setOrigin({ templateId: template.id });
   };
 
+  // Mêmes commandes que l'agent (docs/adr/0033, un fait, un chemin) : modèle choisi par
+  // applyFormulaTemplate, puis modifications par updateCompetitionFormula
   const save = async () => {
     setSaving(true);
+    const competitionId = competition.id;
+    const target = nextSettings();
     try {
-      await onSave({ settings: nextSettings() });
+      let base = (competition.settings ?? {}) as CompetitionSettings;
+      if (origin && origin.templateId !== competition.settings?.formulaOrigin?.templateId) {
+        await client.call('applyFormulaTemplate', { competitionId, templateId: origin.templateId });
+        const tpl = templates.all.find(x => x.id === origin.templateId);
+        if (tpl) base = { ...base, ...templateToSettings(tpl, competition.weapon, base) };
+      }
+      const operations = formulaOperationsBetween(
+        { weapon: competition.weapon, category: competition.category, settings: base },
+        target
+      );
+      if (operations.length > 0) {
+        await client.call('updateCompetitionFormula', { competitionId, operations });
+      }
+      onApplied(target);
       onClose();
+    } catch (e) {
+      showToast(e instanceof ApiError ? e.message : t('formulaEditor.save_error'), 'error');
     } finally {
       setSaving(false);
     }

@@ -4745,7 +4745,8 @@
     "state_standard": "Padrão",
     "personalize": "Personalizar a fórmula",
     "modal_title": "Fórmula da competição",
-    "round_settings_hint": "Toques, cronómetro e pontuação: os da volta 1, aplicados a todas as voltas."
+    "round_settings_hint": "Toques, cronómetro e pontuação: os da volta 1, aplicados a todas as voltas.",
+    "save_error": "Não foi possível guardar a fórmula."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",

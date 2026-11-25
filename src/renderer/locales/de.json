@@ -4745,7 +4745,8 @@
     "state_standard": "Standard",
     "personalize": "Formel anpassen",
     "modal_title": "Formel des Wettbewerbs",
-    "round_settings_hint": "Treffer, Zeit und Wertung: die der Runde 1, für alle Runden."
+    "round_settings_hint": "Treffer, Zeit und Wertung: die der Runde 1, für alle Runden.",
+    "save_error": "Die Formel konnte nicht gespeichert werden."
   },
   "formulaTemplates": {
     "template": "Formelvorlage",

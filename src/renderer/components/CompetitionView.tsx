@@ -313,11 +313,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
       {showFormula && (
         <CompetitionFormulaModal
           competition={competition}
-          onSave={async updates => {
-            onUpdate({ ...competition, ...updates });
-            // Par les commandes du contrat (docs/adr/0018), comme les Propriétés
-            await persistCompetitionUpdate(client, competition, updates);
-          }}
+          // Écrit par applyFormulaTemplate / updateCompetitionFormula (docs/adr/0033)
+          onApplied={settings => onUpdate({ ...competition, settings })}
           onClose={() => setShowFormula(false)}
         />
       )}

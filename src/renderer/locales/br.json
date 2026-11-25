@@ -4745,7 +4745,8 @@
     "state_standard": "Standard",
     "personalize": "Personelaat ar formulenn",
     "modal_title": "Formulenn an dournadeg",
-    "round_settings_hint": "Taolioù, amzer ha barem : re an dro 1, lakaet e pep tro."
+    "round_settings_hint": "Taolioù, amzer ha barem : re an dro 1, lakaet e pep tro.",
+    "save_error": "N'eus ket bet gallet enrollañ ar furmulenn."
   },
   "formulaTemplates": {
     "template": "Patrom furmulenn",

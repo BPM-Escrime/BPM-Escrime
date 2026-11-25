@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { Category, CompetitionSettings, Weapon } from '../../types';
+import {
+  Category,
+  CompetitionSettings,
+  CustomDEConfig,
+  CustomPoolRoundConfig,
+  Weapon,
+} from '../../types';
 import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
 import { createDefaultCustomFormula } from '../../utils/tournamentTemplates';
-import { draftFromSettings } from './formulaDraft';
+import { draftFromSettings, draftToSettings } from './formulaDraft';
+import { normalizeCustomFormula } from './formulaFrieze';
 import {
   filterTemplates,
   formulaDeviations,
@@ -13,7 +20,7 @@ import {
   validatePersonalTemplates,
   type FormulaTemplate,
 } from './formulaTemplate';
-import { applyFormulaOperations, formulaView } from './formulaOperations';
+import { applyFormulaOperations, formulaOperationsBetween, formulaView } from './formulaOperations';
 import { providedTemplates } from './presets/bpmTemplates';
 
 const defaults = (weapon: Weapon, category: Category, isTeamEvent = false) =>
@@ -205,3 +212,121 @@ describe('opérations de formule (updateCompetitionFormula)', () => {
     expect(v.coherence.map(c => c.field).sort()).toEqual(['poolMaxScore', 'tableMaxScore']);
   });
 });
+
+describe('opérations entre deux formules (écran → updateCompetitionFormula)', () => {
+  let n = 0;
+  const id = () => `y${++n}`;
+  const roundTrip = (
+    weapon: Weapon,
+    category: Category,
+    from: Partial<CompetitionSettings>,
+    to: Partial<CompetitionSettings>
+  ) => {
+    const ctx = { weapon, category, settings: from };
+    const ops = formulaOperationsBetween(ctx, to);
+    const out = ops.length ? applyFormulaOperations(ctx, ops, id) : {};
+    return { ops, result: { ...from, ...out } };
+  };
+
+  it('épée : aucune modification, aucune opération', () => {
+    const s = defaults(Weapon.EPEE, Category.SENIOR);
+    expect(
+      formulaOperationsBetween({ weapon: Weapon.EPEE, category: Category.SENIOR, settings: s }, s)
+    ).toEqual([]);
+  });
+
+  it.each([
+    [
+      '2 tours, 24 qualifiés, tableau en 10',
+      { poolRounds: 2, poolRoundQualifiers: [24], defaultTableMaxScore: 10 },
+    ],
+    [
+      'poules seules, poules de 6 à 8',
+      { hasDirectElimination: false, poolSizeMin: 6, poolSizeMax: 8 },
+    ],
+    [
+      '3 tours puis retour à 1 avec repos 30 s',
+      { poolRounds: 3, poolRoundQualifiers: [0, 16], restTimeSeconds: 30 },
+    ],
+  ])('épée : %s', (_label, patch) => {
+    const from = defaults(Weapon.EPEE, Category.SENIOR);
+    const target = draftToSettings(
+      { ...draftFromSettings(Weapon.EPEE, Category.SENIOR, from), ...patchToDraft(patch) },
+      Weapon.EPEE,
+      undefined
+    );
+    const { result } = roundTrip(Weapon.EPEE, Category.SENIOR, from, target);
+    expect(draftFromSettings(Weapon.EPEE, Category.SENIOR, result as CompetitionSettings)).toEqual(
+      draftFromSettings(Weapon.EPEE, Category.SENIOR, { ...from, ...target } as CompetitionSettings)
+    );
+  });
+
+  it('Sabre Laser : Tour Quest ajouté', () => {
+    const from = defaults(Weapon.LASER, Category.SENIOR);
+    const d = draftFromSettings(Weapon.LASER, Category.SENIOR, from);
+    const target = draftToSettings(
+      { ...d, questEnabled: true, questHasPools: true, poolRounds: 1, questQualifiers: 12 },
+      Weapon.LASER,
+      undefined
+    );
+    const { result } = roundTrip(Weapon.LASER, Category.SENIOR, from, target);
+    const r = draftFromSettings(Weapon.LASER, Category.SENIOR, result as CompetitionSettings);
+    expect(r.questEnabled).toBe(true);
+    expect(r.questQualifiers).toBe(12);
+  });
+
+  it('arme « Autre » : tour ajouté, barème et règles', () => {
+    const base = normalizeCustomFormula(createDefaultCustomFormula());
+    const [pool, de] = base.phases;
+    const to = {
+      ...base,
+      ruleSet: 'modern' as const,
+      phases: [
+        pool,
+        {
+          ...pool,
+          id: 'p2',
+          config: {
+            ...(pool.config as CustomPoolRoundConfig),
+            roundIndex: 1,
+            maxScore: 4,
+            advancementRule: { mode: 'fixed_count' as const, count: 8 },
+          },
+        },
+        { ...de, config: { ...(de.config as CustomDEConfig), maxScore: 10 } },
+      ],
+    };
+    const { result } = roundTrip(
+      Weapon.CUSTOM,
+      Category.SENIOR,
+      { customFormula: base },
+      { customFormula: to }
+    );
+    const f = result.customFormula!;
+    expect(f.ruleSet).toBe('modern');
+    expect(f.phases.map(p => p.type)).toEqual(['pool_round', 'pool_round', 'direct_elimination']);
+    expect((f.phases[1].config as CustomPoolRoundConfig).advancementRule).toEqual({
+      mode: 'fixed_count',
+      count: 8,
+    });
+    expect((f.phases[1].config as CustomPoolRoundConfig).maxScore).toBe(4);
+    expect((f.phases[2].config as CustomDEConfig).maxScore).toBe(10);
+  });
+});
+
+/** Réglages plats d'un test → champs du brouillon */
+function patchToDraft(
+  p: Partial<CompetitionSettings>
+): Partial<import('./formulaDraft').FormulaDraft> {
+  return {
+    ...(p.poolRounds !== undefined ? { poolRounds: p.poolRounds } : {}),
+    ...(p.poolRoundQualifiers ? { poolRoundQualifiers: p.poolRoundQualifiers } : {}),
+    ...(p.defaultTableMaxScore !== undefined ? { tableMaxScore: p.defaultTableMaxScore } : {}),
+    ...(p.hasDirectElimination !== undefined
+      ? { hasDirectElimination: p.hasDirectElimination }
+      : {}),
+    ...(p.poolSizeMin !== undefined ? { poolSizeMin: p.poolSizeMin } : {}),
+    ...(p.poolSizeMax !== undefined ? { poolSizeMax: p.poolSizeMax } : {}),
+    ...(p.restTimeSeconds !== undefined ? { restTimeSeconds: p.restTimeSeconds } : {}),
+  };
+}

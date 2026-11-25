@@ -4745,7 +4745,8 @@
     "state_standard": "Standard",
     "personalize": "Customize formula",
     "modal_title": "Competition formula",
-    "round_settings_hint": "Touches, timer and scoring: those of round 1, applied to every round."
+    "round_settings_hint": "Touches, timer and scoring: those of round 1, applied to every round.",
+    "save_error": "Could not save the formula."
   },
   "formulaTemplates": {
     "template": "Formula template",

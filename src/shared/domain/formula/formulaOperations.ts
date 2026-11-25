@@ -67,8 +67,8 @@ const DRAFT_GENERAL_FIELDS: Array<keyof FormulaDraft> = [
   'restTimeSeconds',
   'postPoolSplitCriteria',
 ];
-const CUSTOM_POOL_FIELDS = ['maxScore', 'timerSeconds', 'scoring', 'advancementRule'];
-const CUSTOM_DE_FIELDS = ['maxScore', 'timerSeconds', 'thirdPlaceMatch', 'scoring'];
+const CUSTOM_POOL_FIELDS = ['label', 'maxScore', 'timerSeconds', 'scoring', 'advancementRule'];
+const CUSTOM_DE_FIELDS = ['label', 'maxScore', 'timerSeconds', 'thirdPlaceMatch', 'scoring'];
 const CUSTOM_GENERAL_FIELDS = ['ruleSet', 'restTimeSeconds'];
 
 function checkFields(settings: Record<string, unknown>, allowed: readonly string[], where: string) {
@@ -137,9 +137,11 @@ export function applyFormulaOperations(
         if (!found) throw new FormulaOperationError(`${where} : phase introuvable`);
         checkFields(o.settings, p.kind === 'pool' ? CUSTOM_POOL_FIELDS : CUSTOM_DE_FIELDS, where);
         const phases = [...f.phases];
+        const { label, ...config } = o.settings;
         phases[found.index] = {
           ...found.node,
-          config: { ...found.node.config, ...o.settings } as CustomPoolRoundConfig | CustomDEConfig,
+          ...(typeof label === 'string' ? { label: label.slice(0, 80) } : {}),
+          config: { ...found.node.config, ...config } as CustomPoolRoundConfig | CustomDEConfig,
         };
         f = { ...f, phases };
       } else {
@@ -187,6 +189,138 @@ export function applyFormulaOperations(
     }
   });
   return draftToSettings(d, ctx.weapon, ctx.settings?.questConfig);
+}
+
+// ── Opérations qui mènent d'une formule à une autre (écran, « un fait, un chemin ») ──
+
+const differs = (a: unknown, b: unknown) => JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
+
+function pickChanged<T extends object>(from: T, to: T, keys: readonly string[]) {
+  const out: Record<string, unknown> = {};
+  for (const k of keys) {
+    const a = (from as Record<string, unknown>)[k];
+    const b = (to as Record<string, unknown>)[k];
+    if (differs(a, b)) out[k] = b;
+  }
+  return out;
+}
+
+function draftOperationsBetween(
+  weapon: Weapon,
+  from: FormulaDraft,
+  to: FormulaDraft
+): FormulaOperation[] {
+  const ops: FormulaOperation[] = [];
+  let cur = from;
+  const push = (o: FormulaOperation) => {
+    ops.push(o);
+    if (o.op === 'insertPhase') cur = { ...cur, ...draftInsert(cur, weapon, o.brick, o.at) };
+    else if (o.op === 'removePhase') {
+      const p = draftFrieze(cur, weapon).find(x => x.key === o.phase);
+      if (p) cur = { ...cur, ...draftRemove(cur, weapon, p) };
+    }
+  };
+  if (cur.hasDirectElimination && !to.hasDirectElimination)
+    push({ op: 'removePhase', phase: 'tableau' });
+  if (weapon === Weapon.LASER && cur.questEnabled !== to.questEnabled) {
+    if (to.questEnabled)
+      push({ op: 'insertPhase', brick: 'quest', at: effectivePoolRounds(cur, weapon) });
+    else push({ op: 'removePhase', phase: 'quest' });
+  }
+  for (let guard = 0; guard < 10; guard++) {
+    const have = effectivePoolRounds(cur, weapon);
+    const want = effectivePoolRounds(to, weapon);
+    if (have < want) push({ op: 'insertPhase', brick: 'pool', at: have });
+    else if (have > want && have > 0) push({ op: 'removePhase', phase: `pool-${have - 1}` });
+    else break;
+  }
+  if (!cur.hasDirectElimination && to.hasDirectElimination)
+    push({ op: 'insertPhase', brick: 'tableau', at: draftFrieze(cur, weapon).length });
+
+  const rounds = effectivePoolRounds(to, weapon);
+  const pool = pickChanged(
+    cur,
+    to,
+    DRAFT_PHASE_FIELDS.pool.filter(k => k !== 'qualifiers')
+  );
+  if (rounds > 0 && Object.keys(pool).length)
+    ops.push({ op: 'setPhase', phase: 'pool-0', settings: pool });
+  for (let r = 0; r < rounds - 1; r++) {
+    const a = cur.poolRoundQualifiers[r] ?? 0;
+    const b = to.poolRoundQualifiers[r] ?? 0;
+    if (a !== b) ops.push({ op: 'setPhase', phase: `pool-${r}`, settings: { qualifiers: b } });
+  }
+  const quest = pickChanged(cur, to, DRAFT_PHASE_FIELDS.quest);
+  if (weapon === Weapon.LASER && to.questEnabled && Object.keys(quest).length)
+    ops.push({ op: 'setPhase', phase: 'quest', settings: quest });
+  const tableau = pickChanged(cur, to, DRAFT_PHASE_FIELDS.tableau);
+  if (to.hasDirectElimination && Object.keys(tableau).length)
+    ops.push({ op: 'setPhase', phase: 'tableau', settings: tableau });
+  const general = pickChanged(cur, to, DRAFT_GENERAL_FIELDS);
+  if (Object.keys(general).length) ops.push({ op: 'setGeneral', settings: general });
+  return ops;
+}
+
+function customOperationsBetween(
+  from: CustomFormulaConfig,
+  to: CustomFormulaConfig
+): FormulaOperation[] {
+  const ops: FormulaOperation[] = [];
+  const pools = (f: CustomFormulaConfig) => f.phases.filter(p => p.type === 'pool_round');
+  const tableauOf = (f: CustomFormulaConfig) => f.phases.find(p => p.type === 'direct_elimination');
+  const have = pools(from).length;
+  const want = pools(to).length;
+  if (tableauOf(from) && !tableauOf(to)) ops.push({ op: 'removePhase', phase: 'tableau' });
+  for (let n = have; n < want; n++) ops.push({ op: 'insertPhase', brick: 'pool', at: n });
+  for (let n = have; n > want; n--) ops.push({ op: 'removePhase', phase: `pool-${n - 1}` });
+  if (!tableauOf(from) && tableauOf(to))
+    ops.push({ op: 'insertPhase', brick: 'tableau', at: want });
+
+  const nodeFields = (n: { label?: string; config: object } | undefined) =>
+    n ? { label: n.label, ...(n.config as Record<string, unknown>) } : {};
+  pools(to).forEach((node, r) => {
+    const before = r < have ? nodeFields(pools(from)[r]) : nodeFields(pools(to)[r - 1] ?? node);
+    const changed = pickChanged(before, nodeFields(node), CUSTOM_POOL_FIELDS);
+    // Tour inséré : réglages du voisin, qualification « tous » (customInsert)
+    if (r >= have) changed.advancementRule = (node.config as CustomPoolRoundConfig).advancementRule;
+    if (Object.keys(changed).length)
+      ops.push({ op: 'setPhase', phase: `pool-${r}`, settings: changed });
+  });
+  const tTo = tableauOf(to);
+  if (tTo) {
+    const changed = pickChanged(nodeFields(tableauOf(from)), nodeFields(tTo), CUSTOM_DE_FIELDS);
+    if (!tableauOf(from))
+      Object.assign(changed, pickChanged({}, nodeFields(tTo), CUSTOM_DE_FIELDS));
+    if (Object.keys(changed).length)
+      ops.push({ op: 'setPhase', phase: 'tableau', settings: changed });
+  }
+  const general = pickChanged(from, to, CUSTOM_GENERAL_FIELDS);
+  if (Object.keys(general).length) ops.push({ op: 'setGeneral', settings: general });
+  return ops;
+}
+
+/**
+ * Opérations qui mènent la formule de l'épreuve (`ctx`) à celle de `target` : l'écran envoie
+ * ses modifications par updateCompetitionFormula, comme l'agent (docs/adr/0033). Liste vide :
+ * rien à écrire.
+ */
+export function formulaOperationsBetween(
+  ctx: FormulaContext,
+  target: Partial<CompetitionSettings>
+): FormulaOperation[] {
+  if (ctx.weapon === Weapon.CUSTOM) {
+    const from = normalizeCustomFormula(
+      ctx.settings?.customFormula ?? createDefaultCustomFormula()
+    );
+    const to = normalizeCustomFormula(target.customFormula ?? from);
+    return customOperationsBetween(from, to);
+  }
+  const from = draftFromSettings(ctx.weapon, ctx.category, ctx.settings as CompetitionSettings);
+  const to = draftFromSettings(ctx.weapon, ctx.category, {
+    ...ctx.settings,
+    ...target,
+  } as CompetitionSettings);
+  return draftOperationsBetween(ctx.weapon, from, to);
 }
 
 /** Vue de la formule pour l'agent et l'écran (getCompetitionFormula) */

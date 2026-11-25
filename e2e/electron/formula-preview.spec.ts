@@ -73,5 +73,18 @@ test.describe('Formule : interface actuelle et aperçu (application Electron)', 
     await win.getByRole('button', { name: 'Organisation' }).first().click();
     await win.getByTestId('organization-formula').click();
     await expect(win.getByTestId('formula-step-tableau')).toHaveCount(0);
+
+    // Écrit en base par les commandes de formule (docs/adr/0033) : relu par le contrat
+    const formula = await win.evaluate(async () => {
+      const list = (await window.electronAPI.api.invoke('listCompetitions', {})) as {
+        data: Array<{ id: string; title: string }>;
+      };
+      const comp = list.data.find(c => c.title === 'E2E Formule aperçu')!;
+      return window.electronAPI.api.invoke('getCompetitionFormula', { competitionId: comp.id });
+    });
+    expect(formula).toMatchObject({
+      ok: true,
+      data: { phases: [{ key: 'pool-0' }, { key: 'pool-1' }], state: 'adapted' },
+    });
   });
 });

@@ -4745,7 +4745,8 @@
     "state_standard": "Standard",
     "personalize": "Personnaliser la formule",
     "modal_title": "Formule de l'épreuve",
-    "round_settings_hint": "Touches, chrono et barème : ceux du tour 1, appliqués à tous les tours."
+    "round_settings_hint": "Touches, chrono et barème : ceux du tour 1, appliqués à tous les tours.",
+    "save_error": "Impossible d'enregistrer la formule."
   },
   "formulaTemplates": {
     "template": "Modèle de formule",
