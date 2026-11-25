@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import dgram from 'dgram';
-import { CyranoServer, findIPv4Subnet, inIPv4Subnet } from './server';
+import { CYRANO_LOG_SIZE, CyranoServer, findIPv4Subnet, inIPv4Subnet } from './server';
 import { parseCyrano } from './codec';
 
 /** Appareil simulé : socket UDP local qui collecte les trames reçues. */
@@ -136,6 +136,11 @@ describe('CyranoServer', () => {
     const server = new CyranoServer({ logSize: 3 });
     for (let i = 0; i < 5; i++) server.handle(`|EFP1.1|NEXT|${i}|x|%|`, '10.9.9.9', 1);
     expect(server.getLog()).toHaveLength(3);
+    // Par défaut : assez pour retrouver un envoi après plusieurs minutes sur une salle de 12 pistes
+    const big = new CyranoServer();
+    for (let i = 0; i < 600; i++) big.handle(`|EFP1.1|NEXT|${i}|x|%|`, '10.9.9.9', 1);
+    expect(big.getLog()).toHaveLength(600);
+    expect(CYRANO_LOG_SIZE).toBeGreaterThanOrEqual(10000);
   });
 
   it('version imposée par piste', async () => {

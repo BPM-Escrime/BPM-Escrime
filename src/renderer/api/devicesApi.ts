@@ -49,7 +49,7 @@ export function createDevicesApi(client: BpmClient) {
         c('startCyranoServer', options),
       stop: () => c('stopCyranoServer', {}),
       status: () => q('getCyranoStatus', {}),
-      log: () => q('listCyranoLog', {}),
+      log: (limit?: number) => q('listCyranoLog', limit ? { limit } : {}),
     },
     opp2: {
       start: (options: { port?: number; competitionId?: string }) => c('startOpp2Broker', options),

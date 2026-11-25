@@ -39,7 +39,15 @@ function fakePort() {
         cyrano = false;
       }),
       status: () => ({ running: cyrano, port: 50100, pistes: [] }),
-      log: () => [],
+      log: () =>
+        [1, 2, 3].map(ts => ({
+          ts,
+          dir: 'in' as const,
+          ip: '10.0.0.1',
+          port: 50100,
+          piste: '1',
+          raw: '',
+        })),
     },
     opp2: {
       running: () => false,
@@ -245,7 +253,8 @@ d('pilotes Cyrano et OPP2', () => {
   it('état, routes, options, secours', async () => {
     expect(await op('getCyranoStatus')).toMatchObject({ running: false, pistes: [] });
     expect(await op('getOpp2Status')).toMatchObject({ clients: 0 });
-    expect(await op('listCyranoLog')).toEqual([]);
+    expect(await op('listCyranoLog')).toHaveLength(3);
+    expect(await op('listCyranoLog', { limit: 2 })).toMatchObject([{ ts: 2 }, { ts: 3 }]);
     expect(await op('listStripDeviceRoutes')).toEqual({ '1': 'c1' });
     await op('setStripDeviceOptions', { nameLength: 15, natSource: 'club' });
     expect(port.setOptions).toHaveBeenCalledWith({ nameLength: 15, natSource: 'club' });

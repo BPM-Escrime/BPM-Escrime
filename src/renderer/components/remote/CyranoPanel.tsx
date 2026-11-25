@@ -108,7 +108,7 @@ export const CyranoPanel: React.FC<{ competitionId: string | null }> = ({ compet
       setStatuses(s.pistes);
       setOpp2(await api.opp2.status());
       setRoutes(await api.routes());
-      if (showLogRef.current) setLog(await api.cyrano.log());
+      if (showLogRef.current) setLog(await api.cyrano.log(LOG_LINES));
     } catch {
       // Hors Electron (navigateur, tests sans pont) : pas de pilote
     }
@@ -198,7 +198,7 @@ export const CyranoPanel: React.FC<{ competitionId: string | null }> = ({ compet
   const toggleLog = async () => {
     const next = !showLog;
     setShowLog(next);
-    if (next) setLog(await api.cyrano.log().catch(() => [] as CyranoFrameLog[]));
+    if (next) setLog(await api.cyrano.log(LOG_LINES).catch(() => [] as CyranoFrameLog[]));
   };
 
   const exportLog = async () => {

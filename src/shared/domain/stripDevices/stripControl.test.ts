@@ -11,6 +11,7 @@ import {
   selectStrips,
   STRIP_ACK_TIMEOUT_MS,
   stripAckVerdict,
+  stripEchoDiff,
   stripOccupancy,
   stripSendOutcome,
   type CompetitionStripUse,
@@ -122,13 +123,27 @@ describe('stripAckVerdict', () => {
     expect(stripAckVerdict(expected, { left: 'DUPONT L', right: 'ROSSI G' })).toBe('acked');
   });
 
-  it('appareil en plein combat sans l’affichage : refusé ; au repos : on attend', () => {
+  it('appareil en plein combat sans l’affichage : refusé ; au repos : affichage différent', () => {
     const old = { weapon: 'E', left: 'X', right: 'Y' };
     expect(stripAckVerdict(expected, { ...old, active: true })).toBe('refused');
-    expect(stripAckVerdict(expected, { ...old, active: false })).toBeNull();
-    expect(
-      stripAckVerdict(expected, { weapon: 'E', left: 'DUPONT L', right: 'ROSSI G' })
-    ).toBeNull();
+    expect(stripAckVerdict(expected, { ...old, active: false })).toBe('mismatch');
+    // Noms reçus, arme gardée par l'appareil (pistes restées en épée)
+    expect(stripAckVerdict(expected, { weapon: 'E', left: 'DUPONT L', right: 'ROSSI G' })).toBe(
+      'mismatch'
+    );
+  });
+
+  it('champs en écart : arme, gauche, droite (absents : non comparés)', () => {
+    expect(stripEchoDiff(expected, { weapon: 'E', left: 'DUPONT L', right: 'ROSSI G' })).toEqual([
+      'weapon',
+    ]);
+    expect(stripEchoDiff(expected, { weapon: 's', left: 'MOINE', right: 'JORDAN' })).toEqual([
+      'left',
+      'right',
+    ]);
+    expect(stripEchoDiff(expected, { left: 'DUPONT L' })).toEqual([]);
+    // Sans arme envoyée : l'arme renvoyée n'est pas comparée
+    expect(stripEchoDiff({ ...expected, weapon: undefined }, { weapon: 'E' })).toEqual([]);
   });
 
   it('morceau sans nom ni arme : rien de conclusif ; remise à blanc : noms vides', () => {

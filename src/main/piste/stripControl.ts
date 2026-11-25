@@ -5,7 +5,8 @@
  * - Cyrano n'acquitte pas un DISP : le pilote envoie un HELLO derrière, l'INFO qui répond (ou
  *   le suivant) fait foi ; noms et arme renvoyés = reçu ; appareil en plein combat = refusé ;
  * - OPP2 : l'écho `apparatus/fencers` fait foi (noms) ; `apparatus/state` actif = refusé ;
- * - rien dans le délai : sans réponse.
+ * - au délai : affichage différent si l'appareil a répondu autre chose (trame croisée tolérée
+ *   jusque-là), sans réponse s'il n'a rien renvoyé.
  * Ce ne sont que des ordres d'affichage : aucun fait d'épreuve, aucun journal, et jamais de nom
  * dans les traces (RGPD). État en mémoire, perdu au redémarrage.
  * Licensed under GPL-3.0
@@ -15,12 +16,14 @@ import type {
   StripControlChange,
   StripDeviceProtocol,
   StripEcho,
+  StripEchoField,
   StripLastSend,
   StripPanel,
 } from '../../shared/types/stripDevice';
 import {
   STRIP_ACK_TIMEOUT_MS,
   stripAckVerdict,
+  stripEchoDiff,
   type StripEchoState,
 } from '../../shared/domain/stripDevices/stripControl';
 
@@ -36,6 +39,8 @@ interface Pending extends StripLastSend {
   target: StripControlTarget;
   echo: StripEcho | null;
   timer?: ReturnType<typeof setTimeout>;
+  /** Dernière réponse de l'appareil qui ne reflète pas l'envoi : champs différents */
+  seenDiff?: StripEchoField[];
 }
 
 export interface StripControlOptions {
@@ -73,7 +78,7 @@ export class StripControl {
     if (!p) return null;
     if (match && (p.target.venueId !== match.venueId || p.target.strip !== match.strip))
       return null;
-    const { target: _t, echo: _e, timer: _timer, ...view } = p;
+    const { target: _t, echo: _e, timer: _timer, seenDiff: _d, ...view } = p;
     return view;
   }
 
@@ -103,6 +108,7 @@ export class StripControl {
     entry.timer = undefined;
     entry.ack = ack;
     entry.ackAt = this.now();
+    if (ack === 'mismatch' && entry.seenDiff) entry.diff = entry.seenDiff;
     this.options.onChange?.({
       kind: 'ack',
       piste,
@@ -114,14 +120,16 @@ export class StripControl {
 
   private expire(piste: string, entry: Pending): void {
     if (this.last.get(piste) !== entry || entry.ack !== 'pending') return;
-    this.settle(piste, entry, 'no_response');
+    this.settle(piste, entry, entry.seenDiff ? 'mismatch' : 'no_response');
   }
 
   private onEcho = (piste: string, state: StripEchoState): void => {
     const entry = this.last.get(piste);
     if (!entry || entry.ack !== 'pending' || !entry.echo) return;
     const verdict = stripAckVerdict(entry.echo, state);
-    if (verdict) this.settle(piste, entry, verdict);
+    // Réponse différente : peut-être une trame croisée, on attend la suivante jusqu'au délai
+    if (verdict === 'mismatch') entry.seenDiff = stripEchoDiff(entry.echo, state);
+    else if (verdict) this.settle(piste, entry, verdict);
   };
 
   private onStatus = (link: { piste: string }): void => {

@@ -134,7 +134,10 @@ export const devicesHandlers: { [N in DevicesOps]: DevicesHandler<N> } = {
     await portOf(ctx).cyrano.stop();
   },
   getCyranoStatus: ctx => portOf(ctx).cyrano.status(),
-  listCyranoLog: ctx => portOf(ctx).cyrano.log(),
+  listCyranoLog: (ctx, { limit }) => {
+    const log = portOf(ctx).cyrano.log();
+    return limit ? log.slice(-limit) : log;
+  },
 
   // ── Pilote OPP2 ──
   startOpp2Broker: async (ctx, { port, competitionId }) => {
