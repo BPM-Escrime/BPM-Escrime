@@ -1,6 +1,6 @@
 # ADR-0032 — Formule : interface unique derrière un réglage expérimental du poste, réservé à l'écran
 
-- **Statut** : Proposée
+- **Statut** : Acceptée (arbitrage du 2026-11-25)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape B1, décisions D1 à D13), #1948 ; complète [ADR-0012](0012-formule-domaine.md) et [ADR-0022](0022-fonctions-du-poste-contrat.md)
 
