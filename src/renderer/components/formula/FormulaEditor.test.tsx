@@ -44,6 +44,9 @@ describe('FormulaEditor', () => {
     expect(screen.getByTestId('formula-step-tableau')).toBeInTheDocument();
     expect(screen.getByText('properties.phase_final_ranking')).toBeInTheDocument();
     expect(screen.queryByText('formulaBuilder.cls_btn')).toBeNull();
+    // Les boutons de l'ancienne frise ne sont pas rendus : le « ＋ » les remplace
+    expect(screen.queryByText('properties.add_pool_round')).toBeNull();
+    expect(screen.queryByText('properties.remove_tableau')).toBeNull();
     // Rien après le tableau : pas de « ＋ » en fin de frise
     expect(screen.queryByTestId('formula-plus-2')).toBeNull();
   });
@@ -71,6 +74,24 @@ describe('FormulaEditor', () => {
     expect(screen.getByTestId('formula-step-tableau')).toBeInTheDocument();
     expect(screen.getAllByText('properties.phase_final_ranking')).toHaveLength(1);
     expect(screen.getByLabelText('formula.rule_set')).toBeInTheDocument();
+  });
+
+  it('arme « Autre » : seuls les réglages exécutés sont proposés (P2)', () => {
+    render(<Harness weapon={Weapon.CUSTOM} />);
+    expect(screen.getByText('formulaPhase.max_score')).toBeInTheDocument();
+    expect(screen.getByText('formulaPhase.advancement')).toBeInTheDocument();
+    expect(screen.queryByText('formulaPhase.pool_size')).toBeNull();
+    expect(screen.queryByText('formula.ranking_criteria')).toBeNull();
+    // Tour 2 : touches, chrono et barème du tour 1
+    fireEvent.click(screen.getByTestId('formula-plus-1'));
+    fireEvent.click(screen.getByTestId('formula-add-pool-1'));
+    expect(screen.getByText('formulaEditor.round_settings_hint')).toBeInTheDocument();
+    expect(screen.queryByText('formulaPhase.max_score')).toBeNull();
+    // Tableau : ni taille forcée, ni 5ᵉ place
+    fireEvent.click(screen.getByTestId('formula-step-tableau'));
+    expect(screen.getByText('formulaPhase.third_place')).toBeInTheDocument();
+    expect(screen.queryByText('formulaPhase.bracket_size')).toBeNull();
+    expect(screen.queryByText('formulaPhase.fifth_place')).toBeNull();
   });
 });
 

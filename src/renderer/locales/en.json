@@ -4746,6 +4746,7 @@
     "state_custom": "Custom",
     "reset_standard": "Back to standard",
     "personalize": "Customize formula",
-    "modal_title": "Competition formula"
+    "modal_title": "Competition formula",
+    "round_settings_hint": "Touches, timer and scoring: those of round 1, applied to every round."
   }
 }

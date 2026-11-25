@@ -895,3 +895,7 @@ button.formula-frieze__step {
   cursor: pointer;
   font-weight: 600;
 }
+/* Place pour la croix de retrait au-dessus des phases (corps de modale défilant) */
+.formula-editor > .formula-frieze {
+  padding-top: 0.5rem;
+}

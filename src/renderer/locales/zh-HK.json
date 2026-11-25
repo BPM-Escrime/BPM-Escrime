@@ -4746,6 +4746,7 @@
     "state_custom": "自訂",
     "reset_standard": "恢復標準",
     "personalize": "自訂賽制",
-    "modal_title": "賽事賽制"
+    "modal_title": "賽事賽制",
+    "round_settings_hint": "劍數、計時及計分：沿用第 1 輪，適用於所有輪次。"
   }
 }

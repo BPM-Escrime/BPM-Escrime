@@ -4746,6 +4746,7 @@
     "state_custom": "Personnalisée",
     "reset_standard": "Revenir au standard",
     "personalize": "Personnaliser la formule",
-    "modal_title": "Formule de l'épreuve"
+    "modal_title": "Formule de l'épreuve",
+    "round_settings_hint": "Touches, chrono et barème : ceux du tour 1, appliqués à tous les tours."
   }
 }

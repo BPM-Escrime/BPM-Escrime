@@ -4746,6 +4746,7 @@
     "state_custom": "Personelaet",
     "reset_standard": "Distreiñ d'ar standard",
     "personalize": "Personelaat ar formulenn",
-    "modal_title": "Formulenn an dournadeg"
+    "modal_title": "Formulenn an dournadeg",
+    "round_settings_hint": "Taolioù, amzer ha barem : re an dro 1, lakaet e pep tro."
   }
 }

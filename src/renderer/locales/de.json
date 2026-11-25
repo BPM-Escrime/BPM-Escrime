@@ -4746,6 +4746,7 @@
     "state_custom": "Benutzerdefiniert",
     "reset_standard": "Zurück zum Standard",
     "personalize": "Formel anpassen",
-    "modal_title": "Formel des Wettbewerbs"
+    "modal_title": "Formel des Wettbewerbs",
+    "round_settings_hint": "Treffer, Zeit und Wertung: die der Runde 1, für alle Runden."
   }
 }

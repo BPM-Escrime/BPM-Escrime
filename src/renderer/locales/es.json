@@ -4746,6 +4746,7 @@
     "state_custom": "Personalizada",
     "reset_standard": "Volver al estándar",
     "personalize": "Personalizar la fórmula",
-    "modal_title": "Fórmula de la competición"
+    "modal_title": "Fórmula de la competición",
+    "round_settings_hint": "Tocados, cronómetro y baremo: los de la ronda 1, aplicados a todas las rondas."
   }
 }

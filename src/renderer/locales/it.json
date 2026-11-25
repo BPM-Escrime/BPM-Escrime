@@ -4746,6 +4746,7 @@
     "state_custom": "Personalizzata",
     "reset_standard": "Torna allo standard",
     "personalize": "Personalizza la formula",
-    "modal_title": "Formula della gara"
+    "modal_title": "Formula della gara",
+    "round_settings_hint": "Stoccate, cronometro e punteggio: quelli del turno 1, applicati a tutti i turni."
   }
 }

@@ -4746,6 +4746,7 @@
     "state_custom": "Personalitzada",
     "reset_standard": "Torna a l'estàndard",
     "personalize": "Personalitza la fórmula",
-    "modal_title": "Fórmula de la competició"
+    "modal_title": "Fórmula de la competició",
+    "round_settings_hint": "Tocs, cronòmetre i barem: els de la ronda 1, aplicats a totes les rondes."
   }
 }

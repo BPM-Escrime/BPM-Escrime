@@ -52,6 +52,10 @@ Deux contraintes du code :
   - puis le Tour Quest, au Sabre Laser seulement ;
   - puis au plus un tableau, toujours en dernier ;
   - le classement final est implicite et ne s'ajoute pas.
+- **Réglages de phase de l'arme `'C'` bridés de même** : la nouvelle interface ne montre ni la
+  taille de poule, ni la répartition, ni la séparation, ni les critères de classement, ni la
+  taille de tableau forcée, ni la 5ᵉ place, qui ne sont pas exécutés. Touches, chrono et barème
+  ne se règlent qu'au premier tour, le seul que lit `deriveSettingsFromFormula`.
 - **Normalisation de l'arme `'C'` à l'ouverture dans la nouvelle interface** : les phases
   `classification` sont retirées et seul le premier tableau est gardé, placé en dernier. C'est
   exactement ce que le moteur exécutait déjà (`deriveSettingsFromFormula`). Sans le réglage, la

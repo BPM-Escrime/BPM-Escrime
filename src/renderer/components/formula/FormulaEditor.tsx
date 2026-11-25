@@ -235,6 +235,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
         canMoveUp={false}
         canMoveDown={false}
         advancementDisabled={rapieres || specialMode === 'rapieres'}
+        embedded
       />
     );
   }

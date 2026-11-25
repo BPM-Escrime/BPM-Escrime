@@ -4746,6 +4746,7 @@
     "state_custom": "Personalizada",
     "reset_standard": "Repor o padrão",
     "personalize": "Personalizar a fórmula",
-    "modal_title": "Fórmula da competição"
+    "modal_title": "Fórmula da competição",
+    "round_settings_hint": "Toques, cronómetro e pontuação: os da volta 1, aplicados a todas as voltas."
   }
 }
