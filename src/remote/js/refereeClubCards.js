@@ -2,7 +2,7 @@
  * BPM - Escrime - Arbitre : identification des tireurs par leur carte de club (#1872).
  * Séance du Mode Club reliée au serveur d'entraînement : combat déjà sur la piste (scanné ou
  * lancé depuis le poste) → vue arbitre directe ; sinon la tablette demande la carte du tireur A
- * puis celle du tireur B (caméra ou code en clair), chacune pouvant être passée. Bouton
+ * puis celle du tireur B (caméra, code en clair ou liste des présents de la séance), chacune pouvant être passée. Bouton
  * « Cartes » (en-tête et vue du combat) : nouvelle identification. Deux cartes : combat enregistré dans la séance ; sinon combat libre.
  * Caméra : BarcodeDetector si disponible, sinon jsQR (/js/jsQR.js) ; HTTPS requis.
  * Script classique : window.BPRefereeClubCards. Servi en /js (CSP 'self').
@@ -142,10 +142,44 @@
   // ─── Fenêtre d'identification ───────────────────────────────────────────────
 
   /**
-   * Demande la carte d'un tireur. Résout le code lu, null si passé, ou 'cancel'
-   * (identification abandonnée : la piste garde son combat libre).
+   * Liste déroulante des présents de la séance (sans caméra ou carte oubliée).
+   * `exclude` : tireur déjà choisi pour l'autre côté. null si aucun présent.
    */
-  function askCard(win, side, clubName, errorText) {
+  function memberSelect(doc, members, exclude) {
+    var list = (Array.isArray(members) ? members : []).filter(function (m) {
+      return m && typeof m.id === 'string' && m.id !== exclude;
+    });
+    if (!list.length) return null;
+    var select = el(
+      doc,
+      'select',
+      'width:100%;padding:10px;border-radius:8px;border:1px solid var(--slate-600);' +
+        'background:var(--slate-800);color:var(--color-white);font-size:18px;'
+    );
+    var label = tr('referee.club_card_pick', 'Choisir un tireur pointé présent');
+    select.setAttribute('aria-label', label);
+    select.appendChild(el(doc, 'option', '', label)).value = '';
+    list.forEach(function (m) {
+      var o = el(doc, 'option', '', String(m.name || ''));
+      o.value = m.id;
+      select.appendChild(o);
+    });
+    return select;
+  }
+
+  /** Choix d'un côté → champs envoyés au serveur (code de carte ou tireur de la liste) */
+  function sideFields(choice, side) {
+    var out = {};
+    if (choice && typeof choice === 'object') out['member' + side] = choice.member;
+    else out['code' + side] = choice || null;
+    return out;
+  }
+
+  /**
+   * Demande la carte d'un tireur. Résout le code lu, { member } si choisi dans la liste,
+   * null si passé, ou 'cancel' (identification abandonnée : la piste garde son combat libre).
+   */
+  function askCard(win, side, clubName, errorText, members, exclude) {
     var doc = win.document;
     return new Promise(function (resolve) {
       var overlay = el(
@@ -218,6 +252,8 @@
       row.appendChild(input);
       row.appendChild(ok);
       box.appendChild(row);
+      var select = memberSelect(doc, members, exclude);
+      if (select) box.appendChild(select);
       var actions = el(doc, 'div', 'display:flex;gap:8px;justify-content:center;flex-wrap:wrap;');
       var skip = el(
         doc,
@@ -258,6 +294,11 @@
         e.preventDefault();
         tryText(input.value);
       });
+      if (select) {
+        select.addEventListener('change', function () {
+          if (select.value) finish({ member: select.value });
+        });
+      }
       skip.addEventListener('click', function () {
         finish(null);
       });
@@ -272,11 +313,17 @@
         stopCam = stop;
         if (!stop) {
           video.style.display = 'none';
-          hint.textContent = tr(
-            'referee.club_card_no_camera',
-            'Caméra indisponible : saisissez le code imprimé sous le QR code.'
-          );
-          input.focus();
+          hint.textContent = select
+            ? tr(
+                'referee.club_card_no_camera_list',
+                'Caméra indisponible : choisissez le tireur dans la liste ou saisissez le code de sa carte.'
+              )
+            : tr(
+                'referee.club_card_no_camera',
+                'Caméra indisponible : saisissez le code imprimé sous le QR code.'
+              );
+          if (select) select.focus();
+          else input.focus();
         }
       });
     });
@@ -296,12 +343,12 @@
   }
 
   /** Cartes A puis B ; erreur serveur : on recommence en indiquant le motif */
-  async function identify(win, arena, clubName) {
+  async function identify(win, arena, clubName, members) {
     var message = '';
     for (var attempt = 0; attempt < 5; attempt++) {
-      var a = await askCard(win, 'A', clubName, message);
+      var a = await askCard(win, 'A', clubName, message, members, null);
       if (a === 'cancel') return false;
-      var b = await askCard(win, 'B', clubName, '');
+      var b = await askCard(win, 'B', clubName, '', members, a && a.member);
       if (b === 'cancel') return false;
       if (a === null && b === null) return false; // aucune carte : combat libre inchangé
       var res = null;
@@ -309,7 +356,9 @@
         var r = await win.fetch('/api/club/identify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ arena: arena, codeA: a, codeB: b }),
+          body: JSON.stringify(
+            Object.assign({ arena: arena }, sideFields(a, 'A'), sideFields(b, 'B'))
+          ),
         });
         res = await r.json();
       } catch (_) {
@@ -381,19 +430,32 @@
     if (!info || !info.active) return false;
     var clubName = typeof info.club === 'string' ? info.club : '';
     var running = false;
-    async function run() {
+    /** Présents relus à chaque identification (pointages faits depuis le poste) */
+    async function attendees() {
+      try {
+        var r = await (await win.fetch('/api/club/identify?arena=' + arena)).json();
+        return r && Array.isArray(r.members) ? r.members : [];
+      } catch (_) {
+        return [];
+      }
+    }
+    async function run(initial) {
       var a = app && app();
       if (running || (a && a.timerRunning)) return;
       running = true;
       try {
-        if (await identify(win, arena, clubName)) reloadOnMatch(win);
+        var members = Array.isArray(initial) ? initial : await attendees();
+        if (await identify(win, arena, clubName, members)) reloadOnMatch(win);
       } finally {
         running = false;
       }
     }
-    addButton(win.document, run);
-    addHeaderButton(win.document, run);
-    if (!info.hasMatch) run();
+    function onClick() {
+      run(null);
+    }
+    addButton(win.document, onClick);
+    addHeaderButton(win.document, onClick);
+    if (!info.hasMatch) run(Array.isArray(info.members) ? info.members : []);
     return true;
   }
 
@@ -402,6 +464,8 @@
     arenaFromPath: arenaFromPath,
     cameraUsable: cameraUsable,
     errorMessage: errorMessage,
+    memberSelect: memberSelect,
+    sideFields: sideFields,
     addButton: addButton,
     addHeaderButton: addHeaderButton,
     install: install,

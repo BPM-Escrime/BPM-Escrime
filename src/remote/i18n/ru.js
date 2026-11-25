@@ -54,6 +54,9 @@
   'referee.club_card_a': 'Карта фехтовальщика A',
   'referee.club_card_b': 'Карта фехтовальщика B',
   'referee.club_card_hint': 'Поднесите QR-код клубной карты к камере.',
+  'referee.club_card_pick': 'Выберите присутствующего фехтовальщика',
+  'referee.club_card_no_camera_list':
+    'Камера недоступна: выберите фехтовальщика из списка или введите код карты.',
   'referee.club_card_code': 'Код карты',
   'referee.club_card_ok': 'Подтвердить',
   'referee.club_card_skip': 'Пропустить (не опознан)',
@@ -184,7 +187,8 @@
   'referee.opp_plus5': '+5 очков сопернику',
   'referee.passivity_yellow': 'Пассивность: жёлтая P, предупреждение обоим фехтовальщикам',
   'referee.passivity_red': 'Пассивность: красная P, +1 очко каждому фехтовальщику',
-  'referee.passivity_last_touch': 'Без карточки P, когда обоим фехтовальщикам остаётся один укол (14:14)',
+  'referee.passivity_last_touch':
+    'Без карточки P, когда обоим фехтовальщикам остаётся один укол (14:14)',
   'referee.no_card_to_remove': 'Нет карточки для отмены',
   'referee.passivity_undone': 'Последняя карточка за пассивность отменена',
   'referee.undo_white': 'Последняя белая карточка отменена',

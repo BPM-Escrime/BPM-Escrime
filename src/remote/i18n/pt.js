@@ -55,6 +55,9 @@
   'referee.club_card_a': 'Cartão do atirador A',
   'referee.club_card_b': 'Cartão do atirador B',
   'referee.club_card_hint': 'Mostre o código QR do cartão do clube à câmara.',
+  'referee.club_card_pick': 'Escolher um atirador presente',
+  'referee.club_card_no_camera_list':
+    'Câmara indisponível: escolha o atirador na lista ou escreva o código do cartão.',
   'referee.club_card_code': 'Código do cartão',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Saltar (atirador não identificado)',
@@ -185,7 +188,8 @@
   'referee.opp_plus5': '+5 pontos para o adversário',
   'referee.passivity_yellow': 'Passividade: P amarelo, advertência aos dois esgrimistas',
   'referee.passivity_red': 'Passividade: P vermelho, +1 ponto para cada esgrimista',
-  'referee.passivity_last_touch': 'Sem cartão P quando ambos os esgrimistas estão a um toque do fim (14:14)',
+  'referee.passivity_last_touch':
+    'Sem cartão P quando ambos os esgrimistas estão a um toque do fim (14:14)',
   'referee.no_card_to_remove': 'Nenhum cartão a remover',
   'referee.passivity_undone': 'Último cartão de passividade anulado',
   'referee.undo_white': 'Último cartão branco anulado',

@@ -73,7 +73,9 @@ describe('refereeClubCards (#1872)', () => {
     const header = document.getElementById('btn-club-cards-header');
     expect(header?.getAttribute('aria-label')).toMatch(/carte de club/);
     header?.click();
-    expect(document.getElementById('club-card-overlay')).not.toBeNull();
+    // Présents relus avant d'ouvrir la fenêtre
+    await vi.waitFor(() => expect(document.getElementById('club-card-overlay')).not.toBeNull());
+    expect(win.fetch).toHaveBeenCalledTimes(2);
   });
 
   it('caméra utilisable : contexte sécurisé + getUserMedia', () => {
@@ -102,5 +104,28 @@ describe('refereeClubCards (#1872)', () => {
     };
     expect(await cards.install(win, () => null)).toBe(true);
     expect(document.getElementById('club-card-overlay')).not.toBeNull();
+  });
+
+  it('liste des présents : tireur déjà choisi exclu, aucun présent → pas de liste', () => {
+    const sel = cards.memberSelect(
+      document,
+      [
+        { id: 'a', name: 'MARTIN Anne' },
+        { id: 'p', name: '<b>DURAND</b>' },
+      ],
+      'a'
+    );
+    expect(sel.tagName).toBe('SELECT');
+    expect(sel.options.length).toBe(2);
+    expect(sel.options[1].value).toBe('p');
+    expect(sel.options[1].textContent).toBe('<b>DURAND</b>');
+    expect(cards.memberSelect(document, [], null)).toBeNull();
+    expect(cards.memberSelect(document, undefined, null)).toBeNull();
+  });
+
+  it('champs envoyés : code lu ou tireur de la liste', () => {
+    expect(cards.sideFields('AAAAAAAAAA', 'A')).toEqual({ codeA: 'AAAAAAAAAA' });
+    expect(cards.sideFields({ member: 'p' }, 'B')).toEqual({ memberB: 'p' });
+    expect(cards.sideFields(null, 'B')).toEqual({ codeB: null });
   });
 });

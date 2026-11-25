@@ -54,6 +54,9 @@
   'referee.club_card_a': "Fencer A's card",
   'referee.club_card_b': "Fencer B's card",
   'referee.club_card_hint': 'Show the club card QR code to the camera.',
+  'referee.club_card_pick': 'Choose a checked-in fencer',
+  'referee.club_card_no_camera_list':
+    'Camera unavailable: pick the fencer from the list or type their card code.',
   'referee.club_card_code': 'Card code',
   'referee.club_card_ok': 'Confirm',
   'referee.club_card_skip': 'Skip (unidentified fencer)',

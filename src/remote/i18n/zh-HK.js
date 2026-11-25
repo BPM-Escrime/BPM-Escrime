@@ -54,6 +54,8 @@
   'referee.club_card_a': '劍手 A 的會員卡',
   'referee.club_card_b': '劍手 B 的會員卡',
   'referee.club_card_hint': '請將會員卡的二維碼對準鏡頭。',
+  'referee.club_card_pick': '選擇已報到的劍手',
+  'referee.club_card_no_camera_list': '鏡頭不可用：請從名單選擇劍手，或輸入其卡號。',
   'referee.club_card_code': '卡號',
   'referee.club_card_ok': '確定',
   'referee.club_card_skip': '略過（未識別劍手）',

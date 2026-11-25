@@ -54,6 +54,9 @@
   'referee.club_card_a': "Kartenn ar c'hleziad A",
   'referee.club_card_b': "Kartenn ar c'hleziad B",
   'referee.club_card_hint': "Diskouezit kod QR kartenn ar c'hlub d'ar c'hamera.",
+  'referee.club_card_pick': "Dibab ur c'hlezeier bezant",
+  'referee.club_card_no_camera_list':
+    "Kamera dihegerz : dibabit ar c'hlezeier er roll pe skrivit kod e gartenn.",
   'referee.club_card_code': 'Kod ar gartenn',
   'referee.club_card_ok': 'Kadarnaat',
   'referee.club_card_skip': 'Tremen (kleziad anidentelaet)',
@@ -182,7 +185,8 @@
   'referee.opp_plus5': "+5 poent d'an enebour",
   'referee.passivity_yellow': "Didalvoudegezh: P-melen, kemenn d'an daou emganner",
   'referee.passivity_red': 'Didalvoudegezh: P-ruz, +1 poent da bep emganner',
-  'referee.passivity_last_touch': 'Karten P ebet pa vez an daou emganner un taol diouzh an dibenn (14:14)',
+  'referee.passivity_last_touch':
+    'Karten P ebet pa vez an daou emganner un taol diouzh an dibenn (14:14)',
   'referee.no_card_to_remove': 'Kartenn ebet da lemel',
   'referee.passivity_undone': 'Kartenn didalvoudegezh diwezhañ nullet',
   'referee.undo_white': 'Kartenn wenn diwezhañ nullet',

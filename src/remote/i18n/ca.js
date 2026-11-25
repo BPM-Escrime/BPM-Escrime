@@ -55,6 +55,9 @@
   'referee.club_card_a': 'Carnet del tirador A',
   'referee.club_card_b': 'Carnet del tirador B',
   'referee.club_card_hint': 'Mostreu el codi QR del carnet del club a la càmera.',
+  'referee.club_card_pick': 'Trieu un tirador present',
+  'referee.club_card_no_camera_list':
+    'Càmera no disponible: trieu el tirador a la llista o escriviu el codi del carnet.',
   'referee.club_card_code': 'Codi del carnet',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Ometre (tirador no identificat)',
@@ -184,7 +187,8 @@
   'referee.opp_plus5': "+5 punts per a l'adversari",
   'referee.passivity_yellow': 'Passivitat: P-groga, advertiment a tots dos tiradors',
   'referee.passivity_red': 'Passivitat: P-vermella, +1 punt per a cada tirador',
-  'referee.passivity_last_touch': 'Cap targeta P quan tots dos tiradors són a un tocat del final (14:14)',
+  'referee.passivity_last_touch':
+    'Cap targeta P quan tots dos tiradors són a un tocat del final (14:14)',
   'referee.no_card_to_remove': 'Cap targeta per retirar',
   'referee.passivity_undone': 'Última targeta de passivitat anul·lada',
   'referee.undo_white': 'Última targeta blanca anul·lada',

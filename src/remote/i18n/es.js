@@ -56,6 +56,9 @@
   'referee.club_card_a': 'Tarjeta del tirador A',
   'referee.club_card_b': 'Tarjeta del tirador B',
   'referee.club_card_hint': 'Muestre el código QR de la tarjeta del club a la cámara.',
+  'referee.club_card_pick': 'Elegir un tirador presente',
+  'referee.club_card_no_camera_list':
+    'Cámara no disponible: elija al tirador en la lista o escriba el código de su tarjeta.',
   'referee.club_card_code': 'Código de la tarjeta',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Omitir (tirador no identificado)',
@@ -186,7 +189,8 @@
   'referee.opp_plus5': '+5 puntos para el adversario',
   'referee.passivity_yellow': 'Pasividad: P-amarilla, advertencia a ambos tiradores',
   'referee.passivity_red': 'Pasividad: P-roja, +1 punto para cada tirador',
-  'referee.passivity_last_touch': 'Sin tarjeta P cuando ambos tiradores están a un tocado del final (14:14)',
+  'referee.passivity_last_touch':
+    'Sin tarjeta P cuando ambos tiradores están a un tocado del final (14:14)',
   'referee.no_card_to_remove': 'Ninguna tarjeta que retirar',
   'referee.passivity_undone': 'Última tarjeta de pasividad anulada',
   'referee.undo_white': 'Última tarjeta blanca anulada',
