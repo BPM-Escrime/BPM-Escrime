@@ -2858,7 +2858,8 @@
     "coach_dismiss": "No volver a mostrar",
     "all_places": "{{a}}/{{b}} asaltos (todos los puestos)",
     "all_places_title": "Asaltos de la competición: cuadro principal y clasificación de todos los puestos",
-    "organization_formula_desc": "Fases de la competición y sus ajustes"
+    "organization_formula_desc": "Fases de la competición y sus ajustes",
+    "organization_notes_desc": "Notas, incidencias y comentarios durante toda la competición"
   },
   "offline": {
     "never": "Nunca",
@@ -4766,5 +4767,35 @@
     "save": "Guardar",
     "saved": "Modelo guardado",
     "save_error": "No se pudo guardar el modelo."
+  },
+  "organizerNotes": {
+    "title": "Notas y comentarios",
+    "intro": "Cuaderno de la organización: anote lo que ocurre durante la competición, las incidencias, los comentarios de tiradores, árbitros y voluntarios, y lo que hay que mejorar la próxima vez.",
+    "kind": "Categoría",
+    "kind_note": "Nota",
+    "kind_incident": "Incidencia",
+    "kind_feedback": "Comentario",
+    "kind_improvement": "A mejorar",
+    "placeholder_note": "Ej.: sala abierta a las 8 h, cafetería lista",
+    "placeholder_incident": "Ej.: aparato de la pista 3 averiado, sustituido",
+    "placeholder_feedback": "Ej.: los árbitros elogian la rapidez de las poules",
+    "placeholder_improvement": "Ej.: prever más alargadores eléctricos",
+    "new_note": "Nueva nota",
+    "add": "Añadir",
+    "shortcut_hint": "Ctrl+Intro para añadir",
+    "filter_kind": "Filtrar por categoría",
+    "all_kinds": "Todas las categorías",
+    "search": "Buscar",
+    "open_only": "Solo pendientes",
+    "empty": "Aún no hay notas.",
+    "no_match": "Ninguna nota coincide con el filtro.",
+    "mark_done": "Resuelto",
+    "done": "resuelto",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "copy_report": "Copiar el informe",
+    "copied": "Copiado",
+    "copy_failed": "No se pudo copiar al portapapeles",
+    "open_count": "{{n}} punto(s) pendiente(s)"
   }
 }

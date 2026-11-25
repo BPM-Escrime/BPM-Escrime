@@ -2858,7 +2858,8 @@
     "coach_dismiss": "No ho tornis a mostrar",
     "all_places": "{{a}}/{{b}} assalts (tots els llocs)",
     "all_places_title": "Assalts de la competició: quadre principal i classificació de tots els llocs",
-    "organization_formula_desc": "Fases de la competició i la seva configuració"
+    "organization_formula_desc": "Fases de la competició i la seva configuració",
+    "organization_notes_desc": "Notes, incidències i comentaris al llarg de la competició"
   },
   "offline": {
     "never": "Mai",
@@ -4766,5 +4767,35 @@
     "save": "Desa",
     "saved": "Model desat",
     "save_error": "No s'ha pogut desar el model."
+  },
+  "organizerNotes": {
+    "title": "Notes i comentaris",
+    "intro": "Quadern de l'organització: anoteu durant la competició el que passa, les incidències, els comentaris de tiradors, àrbitres i voluntaris, i el que cal millorar la propera vegada.",
+    "kind": "Categoria",
+    "kind_note": "Nota",
+    "kind_incident": "Incidència",
+    "kind_feedback": "Comentari",
+    "kind_improvement": "A millorar",
+    "placeholder_note": "Ex.: sala oberta a les 8 h, bar a punt",
+    "placeholder_incident": "Ex.: aparell de la pista 3 avariat, substituït",
+    "placeholder_feedback": "Ex.: els àrbitres elogien la rapidesa de les poules",
+    "placeholder_improvement": "Ex.: preveure més allargadors elèctrics",
+    "new_note": "Nova nota",
+    "add": "Afegeix",
+    "shortcut_hint": "Ctrl+Retorn per afegir",
+    "filter_kind": "Filtra per categoria",
+    "all_kinds": "Totes les categories",
+    "search": "Cerca",
+    "open_only": "Només pendents",
+    "empty": "Encara no hi ha notes.",
+    "no_match": "Cap nota coincideix amb el filtre.",
+    "mark_done": "Resolt",
+    "done": "resolt",
+    "edit": "Edita",
+    "delete": "Suprimeix",
+    "copy_report": "Copia l'informe",
+    "copied": "Copiat",
+    "copy_failed": "No s'ha pogut copiar al porta-retalls",
+    "open_count": "{{n}} punt(s) pendent(s)"
   }
 }

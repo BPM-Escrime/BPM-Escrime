@@ -2858,7 +2858,8 @@
     "coach_dismiss": "Nicht mehr anzeigen",
     "all_places": "{{a}}/{{b}} Gefechte (alle Plätze)",
     "all_places_title": "Gefechte des Turniers: Haupttableau und Ausfechten aller Plätze",
-    "organization_formula_desc": "Wettbewerbsphasen und ihre Einstellungen"
+    "organization_formula_desc": "Wettbewerbsphasen und ihre Einstellungen",
+    "organization_notes_desc": "Notizen, Vorfälle und Rückmeldungen während des Turniers"
   },
   "offline": {
     "never": "Nie",
@@ -4766,5 +4767,35 @@
     "save": "Speichern",
     "saved": "Vorlage gespeichert",
     "save_error": "Vorlage konnte nicht gespeichert werden."
+  },
+  "organizerNotes": {
+    "title": "Notizen & Rückmeldungen",
+    "intro": "Logbuch der Organisation: Halten Sie während des Turniers Ereignisse, Vorfälle, Rückmeldungen von Fechtern, Kampfrichtern und Helfern sowie Verbesserungen für das nächste Mal fest.",
+    "kind": "Kategorie",
+    "kind_note": "Notiz",
+    "kind_incident": "Vorfall",
+    "kind_feedback": "Rückmeldung",
+    "kind_improvement": "Zu verbessern",
+    "placeholder_note": "Z. B. Halle um 8 Uhr geöffnet, Bewirtung bereit",
+    "placeholder_incident": "Z. B. Melder auf Bahn 3 defekt, ersetzt",
+    "placeholder_feedback": "Z. B. Kampfrichter loben den zügigen Ablauf der Runden",
+    "placeholder_improvement": "Z. B. mehr Verlängerungskabel mitbringen",
+    "new_note": "Neue Notiz",
+    "add": "Hinzufügen",
+    "shortcut_hint": "Strg+Eingabe zum Hinzufügen",
+    "filter_kind": "Nach Kategorie filtern",
+    "all_kinds": "Alle Kategorien",
+    "search": "Suchen",
+    "open_only": "Nur offene Punkte",
+    "empty": "Noch keine Notizen.",
+    "no_match": "Keine Notiz entspricht dem Filter.",
+    "mark_done": "Erledigt",
+    "done": "erledigt",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "copy_report": "Bericht kopieren",
+    "copied": "Kopiert",
+    "copy_failed": "Kopieren in die Zwischenablage fehlgeschlagen",
+    "open_count": "{{n}} offene(r) Punkt(e)"
   }
 }

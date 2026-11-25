@@ -2858,7 +2858,8 @@
     "coach_dismiss": "不再顯示",
     "all_places": "{{a}}/{{b}} 場（全部名次）",
     "all_places_title": "比賽場次：主淘汰賽及全部名次排位賽",
-    "organization_formula_desc": "賽事階段及其設定"
+    "organization_formula_desc": "賽事階段及其設定",
+    "organization_notes_desc": "整場比賽期間的筆記、事故及意見"
   },
   "offline": {
     "never": "從未",
@@ -4766,5 +4767,35 @@
     "save": "儲存",
     "saved": "範本已儲存",
     "save_error": "無法儲存範本。"
+  },
+  "organizerNotes": {
+    "title": "筆記及意見",
+    "intro": "籌辦日誌：在比賽期間記錄發生的事情、事故、劍手、裁判及義工的意見，以及下次需要改善的地方。",
+    "kind": "類別",
+    "kind_note": "筆記",
+    "kind_incident": "事故",
+    "kind_feedback": "意見",
+    "kind_improvement": "待改善",
+    "placeholder_note": "例如：場館早上 8 時開放，小食部已準備",
+    "placeholder_incident": "例如：3 號劍道計分器故障，已更換",
+    "placeholder_feedback": "例如：裁判稱讚小組賽進行快速",
+    "placeholder_improvement": "例如：多準備拖板",
+    "new_note": "新筆記",
+    "add": "新增",
+    "shortcut_hint": "按 Ctrl+Enter 新增",
+    "filter_kind": "按類別篩選",
+    "all_kinds": "所有類別",
+    "search": "搜尋",
+    "open_only": "只顯示未處理",
+    "empty": "暫時未有筆記。",
+    "no_match": "沒有符合篩選的筆記。",
+    "mark_done": "已處理",
+    "done": "已處理",
+    "edit": "編輯",
+    "delete": "刪除",
+    "copy_report": "複製報告",
+    "copied": "已複製",
+    "copy_failed": "無法複製到剪貼簿",
+    "open_count": "{{n}} 項待處理"
   }
 }

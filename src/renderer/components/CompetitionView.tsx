@@ -41,6 +41,7 @@ import { ScoreAuditLog } from './ScoreAuditLog';
 import CompetitionHeader from './competition/CompetitionHeader';
 import CompetitionNav from './competition/CompetitionNav';
 import OrganizationModal from './competition/OrganizationModal';
+import OrganizerNotesModal from './competition/OrganizerNotesModal';
 import { CompetitionFormulaModal } from './formula/CompetitionFormulaModal';
 import { useFormulaPreview } from '../hooks/useFormulaPreview';
 import CompetitionExportModals from './competition/CompetitionExportModals';
@@ -51,6 +52,7 @@ import type { CompetitionViewProps } from './competition/competitionViewTypes';
 import { useCompetitionPhaseFlow } from '../hooks/competitionView/useCompetitionPhaseFlow';
 import { useCompetitionSessionSync } from '../hooks/competitionView/useCompetitionSessionSync';
 import { useCompetitionCore } from '../hooks/competitionView/useCompetitionCore';
+import { useOrganizerNotes } from '../hooks/competitionView/useOrganizerNotes';
 import { useBlackCardReportRequest } from '../hooks/competitionView/useBlackCardReportRequest';
 import QuestSection from './competition/QuestSection';
 import PoolsPhase from './competition/PoolsPhase';
@@ -78,6 +80,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
   // Organisation ▸ Formule : nouvelle interface de formule (aperçu, docs/adr/0032)
   const formulaPreview = useFormulaPreview();
   const [showFormula, setShowFormula] = useState(false);
+  // Organisation ▸ Notes & retours (settings.organizerNotes, updateCompetitionSettings)
+  const [showNotes, setShowNotes] = useState(false);
   const competitionCore = useCompetitionCore({ ...props });
   const competitionSessionSync = useCompetitionSessionSync({ ...props, ...competitionCore });
   const competitionPhaseFlow = useCompetitionPhaseFlow({
@@ -299,6 +303,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     competition.id
   );
 
+  const organizerNotes = useOrganizerNotes(competition, onUpdate);
+
   return (
     <div style={CV_STYLES.root}>
       {showOrganization && (
@@ -308,6 +314,19 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
           onOpenArenaPlanner={props.onOpenArenaPlanner}
           onOpenRoadmap={props.onOpenRoadmap}
           onOpenFormula={formulaPreview ? () => setShowFormula(true) : undefined}
+          onOpenNotes={() => setShowNotes(true)}
+          openNotesCount={organizerNotes.openCount}
+        />
+      )}
+      {showNotes && (
+        <OrganizerNotesModal
+          t={t}
+          notes={organizerNotes.notes}
+          currentPhase={currentPhase}
+          phases={phases}
+          competitionTitle={competition.title}
+          onSave={organizerNotes.save}
+          onClose={() => setShowNotes(false)}
         />
       )}
       {showFormula && (
@@ -365,11 +384,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         consolationBrackets={consolationBrackets}
         playAllPositions={playAllPositions}
         onOpenPlanningAssistant={() => modals.setShowPlanningAssistant(true)}
-        onOpenOrganization={
-          formulaPreview || props.onOpenArenaPlanner || props.onOpenRoadmap
-            ? () => setShowOrganization(true)
-            : undefined
-        }
+        onOpenOrganization={() => setShowOrganization(true)}
+        organizationBadge={organizerNotes.openCount}
         isTeamEvent={isTeamEvent}
         tourReady={isLoaded}
         remoteActive={isRemoteActive}
