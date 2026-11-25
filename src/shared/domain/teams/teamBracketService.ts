@@ -2,11 +2,11 @@
  * BPM - Escrime - Team Elimination Bracket
  * Génère et fait progresser un tableau à élimination directe entre équipes,
  * en réutilisant le calcul de seeding générique (agnostique du type de
- * compétiteur) de `tableCalculations.ts`.
+ * compétiteur) de `tableSeeding.ts`.
  * Licensed under GPL-3.0
  */
 
-import { calculateTableSize, generateSeedingChart } from '../../utils/tableCalculations';
+import { calculateTableSize, generateSeedingChart } from '../tableau/tableSeeding';
 import { Team } from './team.types';
 
 export interface TeamTableNode {

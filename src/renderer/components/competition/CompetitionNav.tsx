@@ -27,7 +27,7 @@ import { usePhaseShortcuts } from './usePhaseShortcuts';
 import { registerPhases } from './phaseRegistry';
 import { phaseStepStates, nextBlockedReason } from './phaseStepper';
 import { Button } from '../common/Button';
-import { countCompetitionBouts } from '../../../shared/utils/tableauBouts';
+import { countCompetitionBouts } from '../../../shared/domain/tableau/tableauBouts';
 import { FencingMaskIcon } from '../common/FencingMaskIcon';
 
 interface PhaseItem {

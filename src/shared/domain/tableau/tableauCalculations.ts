@@ -5,7 +5,7 @@
  */
 
 import { Fencer, PoolRanking } from '../../types';
-import { generateSeedingChart } from '../../utils/tableCalculations';
+import { generateSeedingChart } from './tableSeeding';
 import {
   TableauMatch,
   FinalResult,

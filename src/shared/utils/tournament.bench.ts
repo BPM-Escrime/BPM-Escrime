@@ -5,11 +5,8 @@
 import { describe, test } from 'vitest';
 import { simulateTournament } from './tournamentSimulator';
 import { calculateOverallRanking, calculatePoolRanking } from '../domain/pools/poolRanking';
-import {
-  calculateTableRanking,
-  createDirectEliminationTable,
-  generateSeedingChart,
-} from './tableCalculations';
+import { generateSeedingChart } from '../domain/tableau/tableSeeding';
+import { calculateTableRanking, createDirectEliminationTable } from './tableCalculations';
 
 const small = simulateTournament({ fencerCount: 7, seed: 1 });
 const large = simulateTournament({ fencerCount: 200, seed: 1 });
