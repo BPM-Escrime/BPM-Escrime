@@ -2858,7 +2858,8 @@
     "coach_dismiss": "Don't show again",
     "all_places": "{{a}}/{{b}} bouts (all places)",
     "all_places_title": "Competition bouts: main table and classification of all places",
-    "organization_formula_desc": "Competition phases and their settings"
+    "organization_formula_desc": "Competition phases and their settings",
+    "goto_entry_ranking": "Entry ranking"
   },
   "offline": {
     "never": "Never",

@@ -2858,7 +2858,8 @@
     "coach_dismiss": "Non mostrare più",
     "all_places": "{{a}}/{{b}} assalti (tutti i posti)",
     "all_places_title": "Assalti della gara: tabellone principale e classificazione di tutti i posti",
-    "organization_formula_desc": "Fasi della gara e relative impostazioni"
+    "organization_formula_desc": "Fasi della gara e relative impostazioni",
+    "goto_entry_ranking": "Classifica di ingresso"
   },
   "offline": {
     "never": "Mai",

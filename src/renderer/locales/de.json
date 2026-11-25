@@ -2858,7 +2858,8 @@
     "coach_dismiss": "Nicht mehr anzeigen",
     "all_places": "{{a}}/{{b}} Gefechte (alle Plätze)",
     "all_places_title": "Gefechte des Turniers: Haupttableau und Ausfechten aller Plätze",
-    "organization_formula_desc": "Wettbewerbsphasen und ihre Einstellungen"
+    "organization_formula_desc": "Wettbewerbsphasen und ihre Einstellungen",
+    "goto_entry_ranking": "Startrangliste"
   },
   "offline": {
     "never": "Nie",

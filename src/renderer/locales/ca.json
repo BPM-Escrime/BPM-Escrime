@@ -2858,7 +2858,8 @@
     "coach_dismiss": "No ho tornis a mostrar",
     "all_places": "{{a}}/{{b}} assalts (tots els llocs)",
     "all_places_title": "Assalts de la competició: quadre principal i classificació de tots els llocs",
-    "organization_formula_desc": "Fases de la competició i la seva configuració"
+    "organization_formula_desc": "Fases de la competició i la seva configuració",
+    "goto_entry_ranking": "Classificació d'entrada"
   },
   "offline": {
     "never": "Mai",

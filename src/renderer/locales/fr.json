@@ -2858,7 +2858,8 @@
     "coach_dismiss": "Ne plus afficher",
     "all_places": "{{a}}/{{b}} matchs (toutes les places)",
     "all_places_title": "Matchs de la compétition : tableau principal et classement de toutes les places",
-    "organization_formula_desc": "Phases de l'épreuve et leurs réglages"
+    "organization_formula_desc": "Phases de l'épreuve et leurs réglages",
+    "goto_entry_ranking": "Classement d'entrée"
   },
   "offline": {
     "never": "Jamais",

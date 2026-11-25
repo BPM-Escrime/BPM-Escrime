@@ -2858,7 +2858,8 @@
     "coach_dismiss": "不再顯示",
     "all_places": "{{a}}/{{b}} 場（全部名次）",
     "all_places_title": "比賽場次：主淘汰賽及全部名次排位賽",
-    "organization_formula_desc": "賽事階段及其設定"
+    "organization_formula_desc": "賽事階段及其設定",
+    "goto_entry_ranking": "入場排名"
   },
   "offline": {
     "never": "從未",

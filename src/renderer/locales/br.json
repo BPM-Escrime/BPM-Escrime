@@ -2858,7 +2858,8 @@
     "coach_dismiss": "Arabat diskouez en-dro",
     "all_places": "{{a}}/{{b}} emgann (an holl lec'hioù)",
     "all_places_title": "Emgannoù ar genstrivadeg : taolenn bennañ ha renkadur an holl lec'hioù",
-    "organization_formula_desc": "Derezhioù an dournadeg hag o arventennoù"
+    "organization_formula_desc": "Derezhioù an dournadeg hag o arventennoù",
+    "goto_entry_ranking": "Renkadur an deroù"
   },
   "offline": {
     "never": "Biken",

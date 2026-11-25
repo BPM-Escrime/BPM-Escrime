@@ -2858,7 +2858,8 @@
     "coach_dismiss": "Больше не показывать",
     "all_places": "{{a}}/{{b}} боёв (все места)",
     "all_places_title": "Бои соревнования: основная таблица и розыгрыш всех мест",
-    "organization_formula_desc": "Этапы соревнования и их настройки"
+    "organization_formula_desc": "Этапы соревнования и их настройки",
+    "goto_entry_ranking": "Стартовый рейтинг"
   },
   "offline": {
     "never": "Никогда",

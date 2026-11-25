@@ -37,6 +37,11 @@ interface UseCompetitionPhasesParams {
   questConfig: QuestPhaseConfig | undefined;
   auditLogEnabled: boolean;
   refereeFeatureEnabled: boolean;
+  /**
+   * Formule sans tour de poules (ADR-0035, 0 tour) : ni préparation ni poules, le tableau part
+   * du classement d'entrée
+   */
+  tableauFirst?: boolean;
 }
 
 /** Ordre des phases, onglets de navigation, accessibilité des étapes (poules, tableau, résultats). */
@@ -63,15 +68,17 @@ export function useCompetitionPhases({
   questConfig,
   auditLogEnabled,
   refereeFeatureEnabled,
+  tableauFirst = false,
 }: UseCompetitionPhasesParams) {
   const { t } = useTranslation();
   const phaseOrder = useMemo<Phase[]>(() => {
     if (isTeamEvent) return ['checkin', 'teams', 'teampool', 'teamtableau', 'teamranking'];
+    if (tableauFirst) return ['checkin', 'ranking', 'tableau', 'results'];
     if (!questEnabled) return ['checkin', 'poolprep', 'pools', 'ranking', 'tableau', 'results'];
     if (questConfig?.hasPreliminaryPools)
       return ['checkin', 'poolprep', 'pools', 'quest', 'ranking', 'tableau', 'results'];
     return ['checkin', 'quest', 'ranking', 'tableau', 'results'];
-  }, [isTeamEvent, questEnabled, questConfig?.hasPreliminaryPools]);
+  }, [isTeamEvent, tableauFirst, questEnabled, questConfig?.hasPreliminaryPools]);
 
   // Réinitialiser currentPhase si elle n'existe plus dans le nouveau phaseOrder
   useEffect(() => {
@@ -82,7 +89,7 @@ export function useCompetitionPhases({
 
   const handleGoBack = () => {
     if (skipPoolPhase && currentPhase === 'ranking') {
-      setCurrentPhase('poolprep');
+      setCurrentPhase(tableauFirst ? 'checkin' : 'poolprep');
       return;
     }
     const currentIndex = phaseOrder.indexOf(currentPhase);
@@ -139,7 +146,7 @@ export function useCompetitionPhases({
     },
     ...(isTeamEvent ? teamPhases : []),
     // Phases de poules : masquées en mode Quest sans poules préliminaires
-    ...(!questEnabled || questConfig?.hasPreliminaryPools
+    ...(!tableauFirst && (!questEnabled || questConfig?.hasPreliminaryPools)
       ? [
           {
             id: 'poolprep',

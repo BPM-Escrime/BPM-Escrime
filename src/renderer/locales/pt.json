@@ -2858,7 +2858,8 @@
     "coach_dismiss": "Não mostrar novamente",
     "all_places": "{{a}}/{{b}} assaltos (todos os lugares)",
     "all_places_title": "Assaltos da competição: quadro principal e classificação de todos os lugares",
-    "organization_formula_desc": "Fases da competição e respetivas definições"
+    "organization_formula_desc": "Fases da competição e respetivas definições",
+    "goto_entry_ranking": "Classificação de entrada"
   },
   "offline": {
     "never": "Nunca",

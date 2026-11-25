@@ -2858,7 +2858,8 @@
     "coach_dismiss": "No volver a mostrar",
     "all_places": "{{a}}/{{b}} asaltos (todos los puestos)",
     "all_places_title": "Asaltos de la competición: cuadro principal y clasificación de todos los puestos",
-    "organization_formula_desc": "Fases de la competición y sus ajustes"
+    "organization_formula_desc": "Fases de la competición y sus ajustes",
+    "goto_entry_ranking": "Clasificación de entrada"
   },
   "offline": {
     "never": "Nunca",
