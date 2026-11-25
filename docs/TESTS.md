@@ -106,11 +106,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 282 |
-| `src/main/` | 160 | 1393 |
+| `src/main/` | 160 | 1395 |
 | `src/renderer/services/` | 14 | 70 |
-| `src/renderer/hooks/` | 40 | 214 |
-| `src/renderer/components/` | 137 | 769 |
-| E2E Playwright (`e2e/`) | 19 | 54 |
+| `src/renderer/hooks/` | 41 | 217 |
+| `src/renderer/components/` | 139 | 775 |
+| E2E Playwright (`e2e/`) | 20 | 55 |
 | `src/remote/` | 60 | 439 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 52 | 609 |
+| `src/shared/domain/` | 52 | 627 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **637** | **5039** |
+| **Total** | **641** | **5069** |
 
-Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 621 fichiers, 5014 tests. E2E : 20 fichiers, 55 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3713,10 +3713,12 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/tableauStage.test.ts</code> — 2 tests</summary>
+<summary><code>src/main/engine/commands/tableauStage.test.ts</code> — 4 tests</summary>
 
 - demies jouées : finalistes au tour suivant par rang d’entrée, demi-finalistes éliminés
 - refus : demie non jouée, ou formule sans tableau arrêté
+- tours après l’arrêt : score refusé, écran comme tablettes (ADR-0037)
+- pilotage hors écran (MCP) toujours refusé : plusieurs tours de poules (ADR-0037)
 
 </details>
 
@@ -5690,6 +5692,16 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/hooks/useCompetitionPhases.test.tsx</code> — 3 tests</summary>
+
+- **navigation dérivée de formulaSteps (ADR-0037)**
+  - formule standard
+  - 0 tour de poules : appel, classement d’entrée, tableau
+  - tableau arrêté : mêmes onglets avant et après la clôture (étape close consultable)
+
+</details>
+
+<details>
 <summary><code>src/renderer/hooks/useCompetitionRestore.phase.test.tsx</code> — 4 tests</summary>
 
 - **onglet restauré (docs/adr/0017)**
@@ -6573,6 +6585,17 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/ResultsView.stage.test.tsx</code> — 4 tests</summary>
+
+- **Résultats après un tableau arrêté (ADR-0037)**
+  - écran : restants, puis éliminés du tableau « Tableau de 4 »
+  - CSV : même classement et même libellé
+  - XML FFE : classement final et tableau clos
+  - PDF du classement et livret : classement final, tableau clos
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/SettingsModal.test.tsx</code> — 10 tests</summary>
 
 - **SettingsModal**
@@ -7265,7 +7288,7 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 15 tests</summary>
+<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 16 tests</summary>
 
 - **FormulaEditor (formule v2)**
   - frise : appel, poules, tableau, classement ; pas de « + Classement »
@@ -7273,6 +7296,7 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
   - « ＋ » insère un tour ; le tour 2 se règle seul (touches, répartition)
   - retirer le tableau rend le « ＋ » de fin de frise
   - dernier tour avant le tableau (épée) : qualification complète (#2013 R1)
+  - tableau arrêté à N : un tour de poules s’ajoute après le tableau (ADR-0037)
   - arme « Autre » : règles, barème, qualification complète
 - **Organisation ▸ Formule : réglages affichés après enregistrement**
   - formule v2 et réglages plats du 1er tour
@@ -7725,6 +7749,14 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/tableau/TableauStageBanner.test.tsx</code> — 1 test</summary>
+
+- **TableauStageBanner**
+  - bouton actif une fois les tours avant l’arrêt joués, puis clôture par le moteur
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/tableau/matchCardNav.test.ts</code> — 5 tests</summary>
 
 - **matchCardNav**
@@ -7947,6 +7979,13 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 <summary><code>e2e/electron/strip-control.spec.ts</code> — 1 test</summary>
 
 - pilotage de la salle : arme et noms envoyés à 2 pistes, accusé visible
+
+</details>
+
+<details>
+<summary><code>e2e/electron/tableau-stage.spec.ts</code> — 1 test</summary>
+
+- tableau arrêté à 4 : poule finale des restants et classement final
 
 </details>
 
@@ -9403,12 +9442,15 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaSteps.test.ts</code> — 3 tests</summary>
+<summary><code>src/shared/domain/formula/formulaSteps.test.ts</code> — 5 tests</summary>
 
 - **déroulé dérivé de la formule (ADR-0037)**
   - standard : appel, poules, tableau, résultats
   - tours consécutifs regroupés ; 5 tours
   - 0 tour de poules : le tableau suit l’appel
+- **tableau arrêté à N, tours après le tableau (ADR-0037, D2)**
+  - déroulé : poules, tableau arrêté, poules des restants
+  - partie en cours : avant la clôture, tours d’avant et tableau ; après, plus de tableau
 
 </details>
 
@@ -9458,7 +9500,7 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaV2Operations.test.ts</code> — 8 tests</summary>
+<summary><code>src/shared/domain/formula/formulaV2Operations.test.ts</code> — 16 tests</summary>
 
 - **frise sur la formule v2 (ADR-0036)**
   - mêmes briques autorisées que la frise de l’écran
@@ -9469,6 +9511,15 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
   - bornes jugées tour par tour
   - arme « Autre » : mêmes opérations, barème du tour 2
   - Sabre Laser : Tour Quest au plus après un tour de poules
+- **tableau arrêté à N (ADR-0037, D2)**
+  - « ＋ » après le tableau seulement s’il est arrêté
+  - tours d’après : formule valide, tours numérotés à la suite
+  - arrêt refusé hors puissances de 2 ; 0 : jusqu’à la finale
+  - bornes de l’arrêt : 2 et 128 acceptés
+  - pas de Tour Quest avec un tableau arrêté
+  - dernier tour d’après retiré : le tableau va de nouveau jusqu’à la finale
+  - opérations entre deux formules : aller et retour
+  - réglages plats : vainqueurs de poule lus au tour qui précède le tableau
 
 </details>
 
@@ -9497,10 +9548,11 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 15 tests</summary>
+<summary><code>src/shared/domain/journal/projectCompetition.test.ts</code> — 16 tests</summary>
 
 - **projectCompetition**
   - journal complet seulement s’il commence (après l’appel) par un tirage
+  - tableau arrêté clos (ADR-0037) : éliminés sortis, tableau archivé
   - tirage refait sur le même tour : il remplace le précédent
   - score, annulation ; statut spécial : perdant seulement
   - correction avec tableau à refaire : tableau retiré
@@ -10049,12 +10101,23 @@ Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/tableau/tableauStage.test.ts</code> — 3 tests</summary>
+<summary><code>src/shared/domain/tableau/tableauStage.test.ts</code> — 10 tests</summary>
 
 - **tableau arrêté à N (ADR-0037)**
   - seuls les tours où il reste plus de N tireurs se jouent
   - restants par rang d’entrée ; éliminés par tour atteint puis rang d’entrée (Q5)
   - étape non terminée : pas de clôture
+- **classement final après un tableau arrêté (Q5)**
+  - restants, puis éliminés du tableau (tour, rang d’entrée), puis éliminés des poules
+  - même tour et même rang d’entrée : ex aequo
+  - sans étape close : classement inchangé
+- **répartition du tour après un tableau arrêté (Q5)**
+  - restants seuls, dans l’ordre de leur rang d’entrée
+- **tableau des résultats et des exports (ADR-0037)**
+  - tableau clos repris quand aucun tableau n’est en cours
+- **répartition du tour à tirer, écran (Q5, ADR-0037)**
+  - premier tour après le tableau clos : restants par rang d’entrée
+  - autres tours, ou sans étape close : classement du dernier tour
 
 </details>
 
