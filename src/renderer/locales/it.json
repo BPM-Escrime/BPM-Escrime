@@ -3566,6 +3566,7 @@
   },
   "club": {
     "new_member": "Nuovo membro",
+    "nickname": "Soprannome",
     "tab_identity": "Identità",
     "tab_members": "Soci",
     "tab_sessions": "Sedute",

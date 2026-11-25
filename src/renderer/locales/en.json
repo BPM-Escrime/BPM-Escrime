@@ -3566,6 +3566,7 @@
   },
   "club": {
     "new_member": "New member",
+    "nickname": "Nickname",
     "tab_identity": "Identity",
     "tab_members": "Members",
     "tab_sessions": "Sessions",

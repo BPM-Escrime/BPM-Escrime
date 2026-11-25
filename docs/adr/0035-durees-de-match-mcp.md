@@ -1,4 +1,4 @@
-# ADR-0034 — Les durées de match de référence sont lisibles par l'agent MCP
+# ADR-0035 — Les durées de match de référence sont lisibles par l'agent MCP
 
 - **Statut** : Proposée
 - **Date** : 2026-11-25

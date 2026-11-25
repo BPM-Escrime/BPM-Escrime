@@ -121,7 +121,7 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
     const list = members.filter(
       m =>
         (!q ||
-          `${m.lastName} ${m.firstName} ${m.license ?? ''} ${m.cardCode}`
+          `${m.lastName} ${m.firstName} ${m.nickname ?? ''} ${m.license ?? ''} ${m.cardCode}`
             .toLowerCase()
             .includes(q)) &&
         (!ageFilter || ageCat.get(m.id) === ageFilter)
@@ -397,6 +397,7 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
                 </th>
                 <th scope="col">{t('fencerList.col_last_name')}</th>
                 <th scope="col">{t('fencerList.col_first_name')}</th>
+                <th scope="col">{t('club.nickname')}</th>
                 <th scope="col">{t('fencerList.col_birth')}</th>
                 <th scope="col">{t('clubAge.category')}</th>
                 <th scope="col">{t('fencerList.col_handedness')}</th>
@@ -434,6 +435,7 @@ export const ClubMembersPanel: React.FC<ClubMembersPanelProps> = ({
                   </td>
                   <td className="font-medium">{m.lastName}</td>
                   <td>{m.firstName}</td>
+                  <td className="text-sm text-muted">{m.nickname || '-'}</td>
                   <td className="text-sm text-muted">
                     <input
                       className="form-input club-date-input"

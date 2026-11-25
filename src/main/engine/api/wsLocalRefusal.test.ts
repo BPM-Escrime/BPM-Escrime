@@ -38,7 +38,7 @@ describe('opérations du poste : pas d’outil MCP', () => {
   it('aucune opération club:*, station:* ou remote:* n’est exposée à l’agent, sauf exception d’ADR', () => {
     // Exceptions décidées par ADR, en lecture seulement :
     // - listFormulaTemplates : modèles de formule, ni secret ni effet externe (docs/adr/0033)
-    // - getMatchDurations : durées de match agrégées, sans donnée personnelle (docs/adr/0034)
+    // - getMatchDurations : durées de match agrégées, sans donnée personnelle (docs/adr/0035)
     const ADR_EXCEPTIONS = ['getMatchDurations', 'listFormulaTemplates'];
     const exposed = localOps.filter(n => (contract[n] as { mcp?: unknown }).mcp);
     expect(exposed).toEqual(ADR_EXCEPTIONS);

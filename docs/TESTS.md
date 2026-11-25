@@ -106,11 +106,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 281 |
-| `src/main/` | 157 | 1361 |
+| `src/main/` | 158 | 1371 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
-| `src/renderer/components/` | 135 | 749 |
-| E2E Playwright (`e2e/`) | 18 | 51 |
+| `src/renderer/components/` | 136 | 765 |
+| E2E Playwright (`e2e/`) | 19 | 53 |
 | `src/remote/` | 60 | 430 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 44 | 539 |
+| `src/shared/domain/` | 46 | 571 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **623** | **4904** |
+| **Total** | **628** | **4964** |
 
-Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 609 fichiers, 4911 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3221,7 +3221,7 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - aucun droit du groupe n’est servi sur le réseau
   - %s est refusé (permission\_denied) _(each)_
 - **opérations du poste : pas d’outil MCP**
-  - aucune opération club:\*, station:\* ou remote:\* n’est exposée à l’agent
+  - aucune opération club:\*, station:\* ou remote:\* n’est exposée à l’agent, sauf exception d’ADR
 - **STATION\_PERMISSIONS (pas de journal, pas de réseau)**
   - couvre exactement les droits club:, station: et remote: du contrat
 
@@ -3264,6 +3264,22 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - aucune opération club:\* n’a d’outil MCP
 - **erreurs du Mode Club**
   - refus du dépôt : club\_refused avec son message ; panne SQLite : erreur interne
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 10 tests</summary>
+
+- liste : fournis puis personnels, standard du contexte
+- enregistrer une copie, la retrouver, la supprimer ; un modèle fourni est refusé
+- formule hors bornes refusée à l’entrée
+- MCP : liste en lecture, aucun outil d’écriture des modèles
+- lecture : frise, briques autorisées, état libre sans origine
+- appliquer le standard : état standard ; modifier : adaptée avec l’écart
+- tout ou rien : une opération refusée n’écrit rien
+- modèle incompatible ou inconnu refusé
+- createCompetition avec un modèle : Tournoi des rapières, arme « Autre »
+- outils MCP de la formule d’une épreuve
 
 </details>
 
@@ -3660,7 +3676,7 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 - adresse invalide ou avec identifiants : station\_refused, réglage inchangé
 - contenu JSON en base64, nom horodaté, liste blanche de champs
 - **contrat du poste**
-  - 61 opérations, chacune avec son gestionnaire
+  - 64 opérations, chacune avec son gestionnaire
 - **listPlaceSuggestions (docs/adr/0026)**
   - texte nettoyé transmis au port, langue par défaut fr
   - texte trop court : refus du contrat ; poste sans service : indisponible
@@ -6406,12 +6422,13 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/NewCompetitionModal.test.tsx</code> — 6 tests</summary>
+<summary><code>src/renderer/components/NewCompetitionModal.test.tsx</code> — 7 tests</summary>
 
 - **NewCompetitionModal**
   - crée une compétition avec le titre saisi
   - génère un titre par défaut si vide
   - propriétés saisies à la création : appliquées à cette compétition seulement
+  - ni un clic à côté ni Échap ne ferment la modale ; la croix la ferme
   - le bouton annuler ferme la modale
   - pré-remplit et verrouille les champs depuis le .zip de l'extranet (#1938)
   - niveau GREG de l'import visible et modifiable dans Propriétés à la création (#1328)
@@ -7196,6 +7213,30 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 15 tests</summary>
+
+- **FormulaEditor**
+  - frise : appel, poules, tableau, classement ; pas de « + Classement »
+  - « ＋ » propose les briques autorisées et insère un tour
+  - retirer le tableau rend le « ＋ » de fin de frise
+  - arme « Autre » : même frise, « Classement final » implicite
+  - arme « Autre » : seuls les réglages exécutés sont proposés (P2)
+- **Organisation ▸ Formule : réglages enregistrés**
+  - épée : réglages plats, comme l’onglet Formule des Propriétés
+  - arme « Autre » : formule normalisée et réglages dérivés
+- **Création : formule repliée (aperçu)**
+  - « À la carte » devient « Autre »
+  - sans personnaliser : mêmes réglages qu’aujourd’hui, plus l’origine standard
+  - changer de catégorie présélectionne le standard de la nouvelle catégorie
+  - choisir un autre modèle fourni : appliqué et enregistré avec son origine
+  - arme « Autre » : le modèle Tournoi des rapières active le mode spécial
+  - personnalisée : le tour ajouté est enregistré
+  - « Revenir au modèle » annule la personnalisation
+  - arme « Autre » : formule enregistrée sans « Classement final »
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/guidedTourFlags.test.ts</code> — 6 tests</summary>
 
 - **guidedTour**
@@ -7805,6 +7846,15 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 
 - archive de tireurs .bpf : export puis réimport dans une autre épreuve
 - sauvegarde .bpm : export depuis l’accueil, suppression, réouverture
+
+</details>
+
+<details>
+<summary><code>e2e/electron/formula-preview.spec.ts</code> — 2 tests</summary>
+
+- **Formule : interface actuelle et aperçu (application Electron)**
+  - sans le réglage : interface actuelle inchangée
+  - avec le réglage : formule repliée, personnalisée, puis Organisation ▸ Formule
 
 </details>
 
@@ -9260,6 +9310,56 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - dernier tour non retirable
   - laser : Tour Quest sans poules → 0 tour, poules ajoutées → 1 tour
   - scission vide : clé retirée
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/formula/formulaFrieze.test.ts</code> — 15 tests</summary>
+
+- **frise : épée, fleuret, sabre, Sabre Laser**
+  - standard : un tour de poules puis le tableau
+  - « ＋ » : poules avant le tableau, rien après le tableau
+  - tableau proposé en fin de frise seulement quand il est absent
+  - insérer un tour en tête décale les qualifiés
+  - brique interdite : aucun changement
+  - retrait : il reste toujours une phase de combat
+  - Sabre Laser : Tour Quest après les poules
+  - résumé sur une ligne
+- **frise : arme « Autre »**
+  - « Classement final » retiré, il est implicite
+  - normalisation : premier tableau seul, en dernier ; réglages exécutés inchangés
+  - insérer un tour reprend les réglages du tour voisin, tous qualifiés
+  - tableau : seulement en fin de frise, et une seule fois
+  - retrait : il reste une phase de combat, le dernier tour ne se retire pas
+  - nœud d’une phase de la frise
+  - résumé sur une ligne
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/formula/formulaTemplate.test.ts</code> — 17 tests</summary>
+
+- **catalogue fourni (docs/adr/0033)**
+  - identifiants uniques, modèles valides, lecture seule
+  - un standard par arme × catégorie × type, égal aux défauts de création
+  - épée M13 : standard 4 / 8 touches
+  - arme « Autre » : standard et Tournoi des rapières, rien d’autre
+  - recherche sans accents ni casse
+- **compatibilité, modèles personnels**
+  - un modèle « draft » ne s’applique pas à l’arme « Autre », ni l’inverse
+  - personnels après les fournis
+  - bibliothèque validée : formule hors bornes refusée
+  - état : libre sans origine, adaptée avec écart
+- **opérations de formule (updateCompetitionFormula)**
+  - insère un tour, règle les qualifiés et le tableau, tout ou rien
+  - refus : brique interdite, phase inconnue, réglage non modifiable ici
+  - arme « Autre » : barème et règles, classement final implicite
+  - vue : briques autorisées à chaque position, relevé de cohérence
+- **opérations entre deux formules (écran → updateCompetitionFormula)**
+  - épée : aucune modification, aucune opération
+  - épée : %s _(each)_
+  - Sabre Laser : Tour Quest ajouté
+  - arme « Autre » : tour ajouté, barème et règles
 
 </details>
 
