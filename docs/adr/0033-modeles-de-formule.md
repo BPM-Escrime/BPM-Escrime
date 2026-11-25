@@ -62,7 +62,7 @@ fonction que celle des épreuves.
 | ----------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `listFormulaTemplates`  | requête  | Fournis puis personnels. Filtres facultatifs : arme, catégorie, type, texte. Le premier modèle compatible est marqué `standard`                 |
 | `saveFormulaTemplate`   | commande | Crée ou remplace un modèle **personnel**. Un `id` de modèle fourni est refusé (`station_refused`) : on enregistre une copie, qui garde `origin` |
-| `deleteFormulaTemplate` | commande | Supprime un modèle personnel. Modèle fourni : `station_refused` ; inconnu : `not_found`                                                         |
+| `deleteFormulaTemplate` | commande | Supprime un modèle personnel. Modèle fourni : `station_refused` ; inconnu : `formula_template_not_found` (code ajouté, catégorie not_found)     |
 
 - **Un seul outil MCP, en lecture** : `list_formula_templates`. Exception limitée à la règle
   « station:admin, pas d'outil MCP » de l'ADR-0022 : un modèle de formule n'est ni un secret ni
@@ -71,7 +71,8 @@ fonction que celle des épreuves.
   restent réservées à l'écran (arbitrage du 2026-11-25).
 - **Pas de journal** : ce n'est pas un fait de l'épreuve (ADR-0005). Appliquer un modèle à une
   épreuve passe par `applyFormulaTemplate` (ci-dessous).
-- Codes d'erreur existants seulement (`station_refused`, `not_found`, ADR-0009).
+- Codes d'erreur (ADR-0009) : `station_refused` existant, et un code ajouté,
+  `formula_template_not_found` (catégorie `not_found`).
 
 **Origine sur l'épreuve et badge**
 
