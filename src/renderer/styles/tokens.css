@@ -266,3 +266,16 @@ html {
   flex: 1;
   overflow: auto;
 }
+
+/* Modale qui défile : titre et croix, boutons du pied, toujours visibles */
+.modal > .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+.modal > .modal-footer,
+.modal > form > .modal-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+}
