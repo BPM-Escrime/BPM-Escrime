@@ -17,7 +17,7 @@ import {
   waveMatchOrder,
   waveSheetMatches,
 } from './rapieresCalculations';
-import { calculateOverallRanking } from '../../utils/poolCalculations';
+import { calculateOverallRanking } from '../pools/poolRanking';
 import { RapieresLevel, RapieresTeamInfo } from './rapieres.types';
 
 /** Date de référence fixe des catégories d'âge (domaine pur : date injectée) */

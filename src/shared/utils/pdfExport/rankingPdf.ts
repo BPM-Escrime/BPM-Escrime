@@ -17,7 +17,8 @@ import {
   pdfT,
   templateFor,
 } from './core';
-import { formatQuestPerMatch, isDnf, isDnsRanking } from '../poolCalculations';
+import { formatQuestPerMatch } from '../poolCalculations';
+import { isDnf, isDnsRanking } from '../../domain/pools/poolForfeit';
 import { getActiveLocale } from '../localeFormat';
 
 // ─── Export Classement Général ───────────────────────────────────────────────

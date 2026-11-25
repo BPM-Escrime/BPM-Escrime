@@ -9,6 +9,8 @@ import {
   getSeedPosition,
   generateSeedingChart,
   placeFencersInTable,
+} from '../domain/tableau/tableSeeding';
+import {
   createDirectEliminationTable,
   getRoundName,
   findNodeById,

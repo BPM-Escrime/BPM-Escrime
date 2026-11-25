@@ -10,7 +10,7 @@ import {
   mainTableauSize,
   planTableau,
 } from './tableauCalculations';
-import { generateSeedingChart } from '../../utils/tableCalculations';
+import { generateSeedingChart } from './tableSeeding';
 import { TableauMatch } from './tableauTypes';
 
 const mkRanking = (n: number): PoolRanking[] =>

@@ -9,7 +9,7 @@
 import type { DatabaseManager } from '../../database';
 import type { RemoteScoreServer } from '../remoteScoreServer';
 import { MatchStatus, type Fencer, type Pool } from '../../shared/types';
-import { calculatePoolRanking } from '../../shared/utils/poolCalculations';
+import { calculatePoolRanking } from '../../shared/domain/pools/poolRanking';
 import { buildOverview } from '../engine/commands/eventDay';
 
 export interface McpDeps {

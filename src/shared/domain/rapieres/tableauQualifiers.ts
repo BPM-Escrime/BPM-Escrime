@@ -4,7 +4,7 @@
  * Licensed under GPL-3.0
  */
 import { Fencer, Pool, PoolRanking } from '../../types';
-import { calculatePoolRanking } from '../../utils/poolCalculations';
+import { calculatePoolRanking } from '../pools/poolRanking';
 
 /**
  * Mode de tableau (#1441) : toutes les équipes qualifiées en « normal » (sans petite finale),

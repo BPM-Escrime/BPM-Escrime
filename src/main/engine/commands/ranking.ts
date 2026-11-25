@@ -7,7 +7,7 @@
  * Licensed under GPL-3.0
  */
 import { FencerStatus, type Pool, type PoolRanking } from '../../../shared/types';
-import { generateInitialRanking } from '../../../shared/utils/poolCalculations';
+import { generateInitialRanking } from '../../../shared/domain/pools/poolRanking';
 import { allTableauMatches } from '../../../shared/domain/ranking/splitGroups';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';

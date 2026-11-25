@@ -5,7 +5,7 @@
  * Licensed under GPL-3.0
  */
 import type { Fencer, Pool, PoolRanking } from '../../../shared/types';
-import { calculatePoolRanking } from '../../../shared/utils/poolCalculations';
+import { calculatePoolRanking } from '../../../shared/domain/pools/poolRanking';
 import type { CommandContext } from './context';
 import { getCompetitionOrThrow, phaseName } from './competitions';
 import { tableauSlots } from './groupTableaux';

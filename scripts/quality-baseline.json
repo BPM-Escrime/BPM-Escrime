@@ -12,6 +12,7 @@
   "unnamedButton": 0,
   "rendererImports": 0,
   "featuresImports": 0,
+  "domainUtilsImports": 10,
   "ipcChannels": 41,
   "directDbWrites": 0,
   "depsUnjustified": 0,

@@ -6,7 +6,7 @@ import {
   seedFencersFromRanking,
   mergeRoundRankings,
 } from './poolRounds';
-import { distributeFencersToPoolsSerpentine } from './poolCalculations';
+import { distributeFencersToPoolsSerpentine } from '../domain/pools/poolDistribution';
 
 const fencer = (id: string, ranking?: number, status = FencerStatus.CHECKED_IN): Fencer =>
   ({ id, lastName: `N${id}`, firstName: `P${id}`, club: `C${id}`, ranking, status }) as Fencer;
@@ -69,11 +69,11 @@ describe('seedFencersFromRanking', () => {
     // Classement initial : f1..f8 ; classement du tour 1 inversé
     const fs = Array.from({ length: 8 }, (_, i) => fencer(`f${i + 1}`, i + 1));
     const round1 = [...fs].reverse().map((f, i) => entry(f, i + 1));
-    const initial = distributeFencersToPoolsSerpentine(fs, 2, []);
+    const initial = distributeFencersToPoolsSerpentine(fs, 2, [], [], Math.random);
     const seeded = seedFencersFromRanking(fs, round1);
     expect(seeded.map(f => f.id)).toEqual(['f8', 'f7', 'f6', 'f5', 'f4', 'f3', 'f2', 'f1']);
     const ids = (pools: Fencer[][]) => pools.map(p => p.map(f => f.id).sort());
-    const next = distributeFencersToPoolsSerpentine(seeded, 2, []);
+    const next = distributeFencersToPoolsSerpentine(seeded, 2, [], [], Math.random);
     // Têtes de série : f1 (tirage initial) vs f8 (tour 2)
     expect(ids(initial)[0]).toContain('f1');
     expect(ids(next)[0]).toContain('f8');

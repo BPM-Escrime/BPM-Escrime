@@ -4,7 +4,7 @@
  * Licensed under GPL-3.0
  */
 import { MatchStatus } from '../../../shared/types';
-import { calculateFencerPoolStats } from '../../../shared/utils/poolCalculations';
+import { calculateFencerPoolStats } from '../../../shared/domain/pools/poolStats';
 import type { CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { fencerDTO } from './fencers';

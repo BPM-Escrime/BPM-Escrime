@@ -9,7 +9,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { Match, Fencer, FencerStatus } from '../../../shared/types';
 import { Arena } from '../../../shared/types/remote';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { isMatchVoidedByForfeit } from '../../../shared/utils/poolCalculations';
+import { isMatchVoidedByForfeit } from '../../../shared/domain/pools/poolForfeit';
 import { stripNumbers } from '../../../shared/utils/stripRange';
 import { Button } from '../common/Button';
 import { ClipboardList, Flag, MapPin, Pause, Swords, Trash2 } from 'lucide-react';

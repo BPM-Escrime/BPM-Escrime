@@ -45,6 +45,16 @@ module.exports = (env = {}) => ({
           chunks: 'all',
           priority: 20,
         },
+        // Règles de poule (#2197) : un seul chunk partagé par les vues (poules, tableau, kiosque,
+        // PDF). Importées fichier par fichier, elles passent sous le seuil de découpage et seraient
+        // recopiées dans chaque vue (CompetitionView au-delà de son budget).
+        domainPools: {
+          test: /[\\/]src[\\/]shared[\\/]domain[\\/]pools[\\/]/,
+          name: 'domain-pools',
+          chunks: 'async',
+          priority: 5,
+          enforce: true,
+        },
       },
     },
   },

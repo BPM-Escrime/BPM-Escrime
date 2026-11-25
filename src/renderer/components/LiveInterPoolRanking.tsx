@@ -11,7 +11,7 @@ import { Pool, PoolRanking, Weapon, MatchStatus } from '../../shared/types';
 import {
   calculateOverallRanking,
   calculateOverallRankingQuest,
-} from '../../shared/utils/poolCalculations';
+} from '../../shared/domain/pools/poolRanking';
 import { formatIndex, formatQuestPerMatch } from '../../shared/utils/poolCalculations';
 import { getActiveLocale } from '../../shared/utils/localeFormat';
 

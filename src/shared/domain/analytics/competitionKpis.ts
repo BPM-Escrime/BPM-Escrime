@@ -20,7 +20,7 @@ import {
   allPlacesCompetitionBouts,
   countCompetitionBouts,
   tableauRemainingWaves,
-} from '../../utils/tableauBouts';
+} from '../tableau/tableauBouts';
 
 /** Durée d'un match supposée tant que moins de 3 matchs sont chronométrés (#1817) */
 const DEFAULT_MATCH_MS = 3 * 60_000;

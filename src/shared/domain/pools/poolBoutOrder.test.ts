@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { Fencer, FencerStatus, Gender } from '../types';
-import { generatePoolMatchOrder, parseBoutTable } from './poolCalculations';
+import { Fencer, FencerStatus, Gender } from '../../types';
+import { generatePoolMatchOrder, parseBoutTable } from './poolMatchOrder';
 import {
   SPECIAL_BOUT_TABLES,
   boutsForTable,

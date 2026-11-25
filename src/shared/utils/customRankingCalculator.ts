@@ -19,7 +19,7 @@ import {
 } from '../types';
 
 import { FencerStatus } from '../types';
-import { calculateFencerPoolStats } from './poolCalculations';
+import { calculateFencerPoolStats } from '../domain/pools/poolStats';
 import { referenceDuration, type DurationSources } from '../domain/durations/matchDurations';
 
 // ============================================================================

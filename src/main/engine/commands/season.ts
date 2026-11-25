@@ -5,7 +5,7 @@
  * recevoir de l'écran. Pas de journal.
  * Licensed under GPL-3.0
  */
-import { calculateOverallRankingQuest } from '../../../shared/utils/poolCalculations';
+import { calculateOverallRankingQuest } from '../../../shared/domain/pools/poolRanking';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { readSession } from './sessionView';
