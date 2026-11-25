@@ -753,7 +753,6 @@
   'referee.fault_laser_2_02': "Refus d'obéissance",
   'referee.fault_laser_2_03': "Demande d'arrêt pour traumatisme non reconnu",
   'referee.fault_laser_2_04': "Touche d'estoc",
-  'referee.fault_laser_2_05': 'Touche portée très brutalement',
   'referee.fault_laser_2_06': 'Touche pendant / après une chute ou déplacement non maîtrisé',
   'referee.fault_laser_2_07': "Sortie volontaire de l'arène pour éviter une touche",
   'referee.fault_laser_2_08': 'Utilisation du bras ou de la main non armée',

@@ -757,7 +757,6 @@
   'referee.fault_laser_2_02': 'Verweigerung des Gehorsams',
   'referee.fault_laser_2_03': 'Unterbrechungsantrag wegen nicht anerkannter Verletzung',
   'referee.fault_laser_2_04': 'Stoßtreffer',
-  'referee.fault_laser_2_05': 'Sehr brutaler Treffer',
   'referee.fault_laser_2_06': 'Treffer während / nach einem Sturz oder unkontrollierter Bewegung',
   'referee.fault_laser_2_07': 'Absichtliches Verlassen der Arena, um einen Treffer zu vermeiden',
   'referee.fault_laser_2_08': 'Einsatz des unbewaffneten Arms oder der unbewaffneten Hand',

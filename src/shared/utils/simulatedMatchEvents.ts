@@ -35,12 +35,12 @@ const MINOR_REASONS: CardReason[] = [
   CardReason.COUNTER_ATTACK,
   CardReason.TARGET_SUBSTITUTION,
   CardReason.TIME_WASTING,
+  CardReason.HEAVY_HIT,
 ];
 const MAJOR_REASONS: CardReason[] = [
   CardReason.ESTOC,
   CardReason.UNARMED_HAND,
   CardReason.VOLUNTARY_EXIT,
-  CardReason.HEAVY_HIT,
 ];
 // Escrime olympique : motifs FIE du 1er groupe (jaune) et du 2e groupe (rouge), t.170 (#2207)
 const FIE_MINOR_REASONS: CardReason[] = [

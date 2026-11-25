@@ -748,7 +748,6 @@
   'referee.fault_laser_2_02': 'Refusal to obey',
   'referee.fault_laser_2_03': 'Stoppage request for an unconfirmed injury',
   'referee.fault_laser_2_04': 'Thrust hit',
-  'referee.fault_laser_2_05': 'Very brutal hit',
   'referee.fault_laser_2_06': 'Hit during / after a fall or uncontrolled movement',
   'referee.fault_laser_2_07': 'Deliberately leaving the arena to avoid a hit',
   'referee.fault_laser_2_08': 'Use of the unarmed arm or hand',
