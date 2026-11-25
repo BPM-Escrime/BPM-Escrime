@@ -10,6 +10,7 @@ import { draftFromSettings } from '../../../shared/domain/formula/formulaDraft';
 import { contract } from '../../../shared/api/contract';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
+import { effectiveSettings } from './sport';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -171,5 +172,71 @@ d('formule d’une épreuve (docs/adr/0033)', () => {
     expect(contract.getCompetitionFormula.mcp?.name).toBe('get_competition_formula');
     expect(contract.applyFormulaTemplate.mcp?.name).toBe('apply_formula_template');
     expect(contract.updateCompetitionFormula.mcp?.name).toBe('update_competition_formula');
+  });
+});
+
+d('formule v2 écrite et lue par phase (docs/adr/0034)', () => {
+  it('updateCompetitionFormula écrit formula et les réglages plats du 1er tour', async () => {
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [
+        { op: 'insertPhase', brick: 'pool', at: 1 },
+        { op: 'setPhase', phase: 'pool-1', settings: { maxScore: 4 } },
+      ],
+    });
+    const comp = db.getCompetition(competitionId)!;
+    expect(comp.settings?.formula?.phases.map(p => p.kind)).toEqual(['pool', 'pool', 'tableau']);
+    expect(comp.settings).toMatchObject({ poolRounds: 2, defaultPoolMaxScore: 5 });
+    expect(effectiveSettings(comp, 1).poolMaxScore).toBe(5);
+    expect(effectiveSettings(comp, 2).poolMaxScore).toBe(4);
+    const f = await op('getCompetitionFormula', { competitionId });
+    expect(f.formula.phases[1].maxScore).toBe(4);
+  });
+
+  it('bornes du tour 2 refusées', async () => {
+    await expect(
+      op('updateCompetitionFormula', {
+        competitionId,
+        operations: [
+          { op: 'insertPhase', brick: 'pool', at: 1 },
+          { op: 'setPhase', phase: 'pool-1', settings: { maxScore: 40 } },
+        ],
+      })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+  });
+
+  it('réglages plats écrits sans formula : formule retirée, reconstruite à la lecture', async () => {
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [{ op: 'insertPhase', brick: 'pool', at: 1 }],
+    });
+    expect(db.getCompetition(competitionId)?.settings?.formula).toBeDefined();
+    await op('updateCompetitionSettings', { competitionId, settings: { defaultPoolMaxScore: 4 } });
+    const comp = db.getCompetition(competitionId)!;
+    expect(comp.settings?.formula).toBeUndefined();
+    expect(effectiveSettings(comp, 2).poolMaxScore).toBe(4);
+    // Réglage sans rapport avec la formule : formule gardée
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [{ op: 'setPhase', phase: 'pool-1', settings: { maxScore: 3 } }],
+    });
+    await op('updateCompetitionSettings', { competitionId, settings: { expertMode: false } });
+    expect(db.getCompetition(competitionId)?.settings?.formula).toBeDefined();
+  });
+
+  it('modèle appliqué ou choisi à la création : formula enregistrée', async () => {
+    await op('applyFormulaTemplate', { competitionId, templateId: 'bpm/E/SEN/ind/two_rounds' });
+    expect(db.getCompetition(competitionId)?.settings?.formula?.phases).toHaveLength(3);
+    const r = await op('createCompetition', {
+      title: 'Avec modèle',
+      date: '2026-12-13',
+      weapon: 'F',
+      gender: 'F',
+      category: 'U13',
+      templateId: 'bpm/F/U13/ind/standard',
+    });
+    const created = db.getCompetition(r.competitionId)!;
+    expect(created.settings?.formula?.phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
+    expect(created.settings?.defaultPoolMaxScore).toBe(4);
   });
 });

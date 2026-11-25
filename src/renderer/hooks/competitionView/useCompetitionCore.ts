@@ -11,6 +11,7 @@ import {
   CV_DATA_INIT,
 } from '../../components/competition/competitionViewState';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { phaseSettings } from '../../../shared/domain/formula/formulaV2';
 import { getDefaultMaxScores } from '../../../shared/utils/defaultMaxScores';
 import { Fencer, FencerStatus, Weapon } from '../../../shared/types';
 import { useToast } from '../../components/Toast';
@@ -56,7 +57,16 @@ export function useCompetitionCore(ctx: Ctx) {
   const thirdPlaceMatch = effectiveSettings?.thirdPlaceMatch ?? false;
   const playAllPositions = competition.settings?.playAllPositions ?? false;
   const defaultScores = getDefaultMaxScores(competition.weapon, competition.category);
-  const poolMaxScore = effectiveSettings?.defaultPoolMaxScore ?? defaultScores.pool;
+  // Score max des poules par tour (ADR-0034) : formule enregistrée, sinon réglage commun
+  const storedFormula = competition.settings?.formula;
+  const flatPoolMaxScore = effectiveSettings?.defaultPoolMaxScore ?? defaultScores.pool;
+  const poolMaxScoreFor = useCallback(
+    (round: number) =>
+      storedFormula?.phases.some(p => p.kind === 'pool')
+        ? phaseSettings(storedFormula, { kind: 'pool', round: round - 1 }).maxScore
+        : flatPoolMaxScore,
+    [storedFormula, flatPoolMaxScore]
+  );
   const tableMaxScore = effectiveSettings?.defaultTableMaxScore ?? defaultScores.table;
   const isLaserSabre = competition.weapon === Weapon.LASER;
   const expertMode = competition.settings?.expertMode ?? true; // actif par défaut (#1501)
@@ -156,17 +166,6 @@ export function useCompetitionCore(ctx: Ctx) {
     minFencersPerPool: competition.settings?.poolSizeMin ?? CV_PLANNING_INIT.minFencersPerPool,
     maxFencersPerPool: competition.settings?.poolSizeMax ?? CV_PLANNING_INIT.maxFencersPerPool,
   });
-  // Formule modifiée dans les propriétés : la nouvelle cible remplace la valeur de préparation
-  const formulaPoolSize = `${competition.settings?.poolSizeMin ?? ''}-${competition.settings?.poolSizeMax ?? ''}`;
-  const formulaPoolSizeRef = useRef(formulaPoolSize);
-  useEffect(() => {
-    if (formulaPoolSizeRef.current === formulaPoolSize) return;
-    formulaPoolSizeRef.current = formulaPoolSize;
-    const { poolSizeMin, poolSizeMax } = competition.settings ?? {};
-    if (poolSizeMin) setMinFencersPerPool(poolSizeMin);
-    if (poolSizeMax) setMaxFencersPerPool(poolSizeMax);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- formulaPoolSize résume competition.settings.poolSize* : suit la formule, pas la préparation
-  }, [formulaPoolSize]);
 
   // Compétition couplée (#1241)
   const {
@@ -226,7 +225,25 @@ export function useCompetitionCore(ctx: Ctx) {
     areAllPoolsComplete,
     handleFencerForfeit,
     syncFencersToPool,
-  } = usePoolManagement({ isLaserSabre, poolMaxScore, showToast });
+  } = usePoolManagement({ isLaserSabre, poolMaxScoreFor, showToast });
+  const poolMaxScore = poolMaxScoreFor(currentPoolRound);
+
+  // Formule modifiée, ou tour suivant : la taille de poule cible du tour remplace la valeur de
+  // préparation (formule enregistrée : taille du tour, ADR-0034 ; sinon réglage commun)
+  const roundPool = storedFormula?.phases.some(p => p.kind === 'pool')
+    ? phaseSettings(storedFormula, { kind: 'pool', round: currentPoolRound - 1 })
+    : undefined;
+  const targetMin = roundPool?.sizeMin ?? competition.settings?.poolSizeMin;
+  const targetMax = roundPool?.sizeMax ?? competition.settings?.poolSizeMax;
+  const formulaPoolSize = `${targetMin ?? ''}-${targetMax ?? ''}`;
+  const formulaPoolSizeRef = useRef(formulaPoolSize);
+  useEffect(() => {
+    if (formulaPoolSizeRef.current === formulaPoolSize) return;
+    formulaPoolSizeRef.current = formulaPoolSize;
+    if (targetMin) setMinFencersPerPool(targetMin);
+    if (targetMax) setMaxFencersPerPool(targetMax);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- formulaPoolSize résume la taille cible du tour : suit la formule et le tour, pas la préparation
+  }, [formulaPoolSize]);
 
   // Affichage des poules : grille (toutes les poules) ou poule unique avec navigation
   const {

@@ -21,6 +21,7 @@ import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
 import { compatibleTemplate } from './competitionFormula';
 import { templateToSettings } from '../../../shared/domain/formula/formulaTemplate';
+import { formulaOf } from '../../../shared/domain/formula/formulaV2';
 import {
   validateFormulaSettings,
   type FormulaIssue,
@@ -34,6 +35,31 @@ function assertFormula(issues: FormulaIssue[]): void {
     `Réglages refusés : ${issues.map(i => `${i.field} (${i.message})`).join(' ; ')}`
   );
 }
+
+/**
+ * Réglages plats de la formule : écrits sans `formula` (anciennes fenêtres, agent par
+ * updateCompetitionSettings), ils rendent la formule v2 enregistrée périmée. Elle est alors
+ * retirée et reconstruite à la lecture depuis ces réglages (ADR-0034).
+ */
+const FORMULA_FLAT_KEYS: ReadonlySet<string> = new Set([
+  'poolRounds',
+  'poolRoundQualifiers',
+  'hasDirectElimination',
+  'defaultPoolMaxScore',
+  'defaultTableMaxScore',
+  'defaultPoolTimerSeconds',
+  'defaultTableTimerSeconds',
+  'restTimeSeconds',
+  'thirdPlaceMatch',
+  'playAllPositions',
+  'poolWinnersOnly',
+  'postPoolSplitCriteria',
+  'poolBoutOrder',
+  'poolSizeMin',
+  'poolSizeMax',
+  'questConfig',
+  'customFormula',
+]);
 
 /** Réglages figés une fois les poules tirées (ou le tableau généré) : ils changent les règles */
 const FROZEN_SETTINGS: ReadonlySet<string> = new Set(['specialMode', 'customFormula']);
@@ -100,11 +126,19 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
         defaults
       )
     : {};
-  const settings = {
+  const merged = {
     ...defaults,
     ...fromTemplate,
     ...patch,
   } as CompetitionSettings;
+  // Modèle choisi : formule v2 enregistrée dès la création (ADR-0034)
+  const settings: CompetitionSettings =
+    input.templateId && !merged.formula
+      ? {
+          ...merged,
+          formula: formulaOf({ weapon: input.weapon, category: input.category, settings: merged }),
+        }
+      : merged;
   assertFormula(
     validateFormulaSettings(settings, undefined, {
       weapon: input.weapon,
@@ -217,6 +251,16 @@ export function updateCompetitionSettings(
   if (input.isTeamEvent !== undefined) update.isTeamEvent = input.isTeamEvent;
   if (Object.keys(patch).length) {
     update.settings = { ...comp.settings, ...patch } as CompetitionSettings;
+  }
+  // Formule v2 périmée : réglages plats écrits sans elle, ou arme changée (autre modèle)
+  const staleFormula =
+    comp.settings?.formula &&
+    !('formula' in patch) &&
+    (Object.keys(patch).some(k => FORMULA_FLAT_KEYS.has(k)) ||
+      (input.weapon !== undefined && input.weapon !== comp.weapon));
+  if (staleFormula) {
+    const { formula: _stale, ...rest } = (update.settings ?? comp.settings) as CompetitionSettings;
+    update.settings = rest as CompetitionSettings;
   }
   const changed = [
     ...Object.keys(update).filter(k => k !== 'settings'),

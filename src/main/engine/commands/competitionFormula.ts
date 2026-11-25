@@ -10,10 +10,19 @@ import { randomUUID } from 'crypto';
 import type { CompetitionSettings, Weapon } from '../../../shared/types';
 import {
   FormulaOperationError,
-  applyFormulaOperations,
   formulaView,
   type FormulaOperation,
 } from '../../../shared/domain/formula/formulaOperations';
+import {
+  applyOperationsV2,
+  formulaV2Issues,
+  formulaViewV2,
+} from '../../../shared/domain/formula/formulaV2Operations';
+import {
+  flatSettingsOf,
+  formulaOf,
+  type FormulaV2,
+} from '../../../shared/domain/formula/formulaV2';
 import {
   formulaDeviations,
   templateMatches,
@@ -56,11 +65,11 @@ export function compatibleTemplate(
 
 export function getCompetitionFormula(ctx: CommandContext, input: { competitionId: string }) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
-  const view = formulaView({
-    weapon: comp.weapon,
-    category: comp.category,
-    settings: comp.settings,
-  });
+  const src = { weapon: comp.weapon, category: comp.category, settings: comp.settings };
+  // Frise et cohérence sur la formule v2 (ADR-0034) ; draft / customFormula gardés pour l'agent
+  const legacy = formulaView(src);
+  const v2 = formulaViewV2(src);
+  const view = { ...legacy, ...v2 };
   const { state, template, deviations } = formulaDeviations(
     { weapon: comp.weapon, category: comp.category, settings: comp.settings },
     allFormulaTemplates(ctx)
@@ -89,10 +98,33 @@ export function applyFormulaTemplate(
     category: comp.category,
     isTeamEvent: !!comp.isTeamEvent,
   });
+  const patch = templateToSettings(template, comp.weapon, comp.settings);
+  const formula = formulaOf({
+    weapon: comp.weapon,
+    category: comp.category,
+    settings: { ...comp.settings, ...patch, formula: undefined },
+  });
+  return writeFormula(ctx, comp, formula, patch, input.dryRun);
+}
+
+/**
+ * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0034), après le contrôle des bornes
+ * de chaque tour ; `extra` : autres réglages écrits avec elle (origine, mode spécial).
+ */
+export function writeFormula(
+  ctx: CommandContext,
+  comp: { id: string; weapon: Weapon; isTeamEvent?: boolean },
+  formula: FormulaV2,
+  extra: Partial<CompetitionSettings>,
+  dryRun?: boolean
+) {
+  const issues = formulaV2Issues(formula, { weapon: comp.weapon, isTeamEvent: !!comp.isTeamEvent });
+  if (issues.length)
+    throw new CommandError('invalid_settings', `Formule refusée : ${issues.join(' ; ')}`);
   return updateCompetitionSettings(ctx, {
     competitionId: comp.id,
-    settings: templateToSettings(template, comp.weapon, comp.settings),
-    dryRun: input.dryRun,
+    settings: { ...extra, ...flatSettingsOf(formula, comp.weapon), formula },
+    dryRun,
   });
 }
 
@@ -101,9 +133,9 @@ export function updateCompetitionFormula(
   input: { competitionId: string; operations: FormulaOperation[]; dryRun?: boolean }
 ) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
-  let settings: Partial<CompetitionSettings>;
+  let formula: FormulaV2;
   try {
-    settings = applyFormulaOperations(
+    formula = applyOperationsV2(
       { weapon: comp.weapon, category: comp.category, settings: comp.settings },
       input.operations,
       newPhaseId
@@ -112,9 +144,5 @@ export function updateCompetitionFormula(
     if (e instanceof FormulaOperationError) throw new CommandError('invalid_settings', e.message);
     throw e;
   }
-  return updateCompetitionSettings(ctx, {
-    competitionId: comp.id,
-    settings,
-    dryRun: input.dryRun,
-  });
+  return writeFormula(ctx, comp, formula, {}, input.dryRun);
 }

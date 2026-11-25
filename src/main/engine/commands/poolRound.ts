@@ -114,6 +114,8 @@ export function closePoolRound(ctx: CommandContext, input: ClosePoolRoundInput) 
       overallRanking: computeOverallRankingAllRoundsFor([], history, isLaser(comp)),
       poolsLaunched: false,
     });
+    // Tablettes : chrono et score max du nouveau tour (formule lue par phase, ADR-0034)
+    if (comp.settings?.formula) ctx.remote?.settingsChanged(comp.id, {});
     recordEvents(ctx, comp.id, [
       {
         type: EVENT.poolRoundClosed,

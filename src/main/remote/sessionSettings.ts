@@ -15,6 +15,7 @@ import {
   usesModernRules,
 } from '../../shared/utils/customFormulaSettings';
 import type { RemoteScoreServer } from '../remoteScoreServer';
+import { phaseSettings } from '../../shared/domain/formula/formulaV2';
 
 type S = RemoteScoreServer;
 
@@ -142,9 +143,19 @@ export function applyCompetitionSettings(
   competition: Competition
 ): void {
   const settings = resolveCompetitionSettings(competition.weapon, competition.settings);
-  ctx.sessionPoolTimerSeconds = settings?.defaultPoolTimerSeconds ?? 180;
+  // Formule enregistrée : chrono et score max du tour de poules en cours (ADR-0034)
+  const formula = competition.settings?.formula;
+  const state = formula ? ctx.db.getSessionState(competition.id) : null;
+  const round = Math.max(
+    1,
+    Number((state as { currentPoolRound?: unknown } | null)?.currentPoolRound ?? 1) || 1
+  );
+  const roundPool = formula?.phases.some(p => p.kind === 'pool')
+    ? phaseSettings(formula, { kind: 'pool', round: round - 1 })
+    : undefined;
+  ctx.sessionPoolTimerSeconds = roundPool?.timerSeconds ?? settings?.defaultPoolTimerSeconds ?? 180;
   ctx.sessionTableTimerSeconds = settings?.defaultTableTimerSeconds ?? 180;
-  ctx.sessionPoolMaxScore = settings?.defaultPoolMaxScore ?? null;
+  ctx.sessionPoolMaxScore = roundPool?.maxScore ?? settings?.defaultPoolMaxScore ?? null;
   ctx.sessionTableMaxScore = settings?.defaultTableMaxScore ?? null;
   ctx.sessionRestSeconds = Math.max(0, settings?.restTimeSeconds ?? 60);
   ctx.sessionModernRules = usesModernRules(competition.weapon, competition.settings);

@@ -16,6 +16,7 @@ import {
 } from './contractDef';
 import { Category, Weapon, type CustomFormulaConfig } from '../types';
 import type { FormulaDraft } from '../domain/formula/formulaDraft';
+import type { FormulaV2 } from '../domain/formula/formulaV2';
 import type { CoherenceIssue } from '../utils/formulaCoherence';
 
 const WeaponEnum = z.enum(Weapon);
@@ -44,6 +45,9 @@ export const formulaOperations = {
         z.object({ kind: z.string(), key: z.string(), round: z.number().optional() })
       ),
       insertOptions: z.array(z.array(z.enum(['pool', 'quest', 'tableau']))),
+      formula: z
+        .custom<FormulaV2>()
+        .describe('Formule v2 (docs/adr/0034) : phases et réglages de chaque tour'),
       draft: z.custom<FormulaDraft>().optional(),
       customFormula: z.custom<CustomFormulaConfig>().optional(),
       coherence: z.array(z.custom<CoherenceIssue>()),
