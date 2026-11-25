@@ -55,6 +55,18 @@
   'referee.club_card_a': 'Carnet del tirador A',
   'referee.club_card_b': 'Carnet del tirador B',
   'referee.club_card_hint': 'Mostreu el codi QR del carnet del club a la càmera.',
+  'referee.club_card_pick': 'Trieu un tirador present',
+  'referee.club_card_no_camera_list':
+    'Càmera no disponible: trieu el tirador a la llista o escriviu el codi del carnet.',
+  'referee.club_camera_insecure':
+    'Càmera bloquejada: la pàgina fa servir HTTP. Activeu HTTPS als paràmetres de la puntuació remota del club.',
+  'referee.club_camera_unsupported':
+    'Aquest navegador no dona accés a la càmera: obriu la pàgina amb Chrome o Safari.',
+  'referee.club_camera_denied':
+    'Accés a la càmera denegat: autoritzeu-lo als paràmetres del navegador.',
+  'referee.club_camera_busy': 'Càmera ocupada per una altra aplicació.',
+  'referee.club_camera_none': "No s'ha trobat cap càmera en aquest dispositiu.",
+  'referee.club_card_scan': 'Escanejar el codi QR',
   'referee.club_card_code': 'Codi del carnet',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Ometre (tirador no identificat)',
@@ -184,7 +196,8 @@
   'referee.opp_plus5': "+5 punts per a l'adversari",
   'referee.passivity_yellow': 'Passivitat: P-groga, advertiment a tots dos tiradors',
   'referee.passivity_red': 'Passivitat: P-vermella, +1 punt per a cada tirador',
-  'referee.passivity_last_touch': 'Cap targeta P quan tots dos tiradors són a un tocat del final (14:14)',
+  'referee.passivity_last_touch':
+    'Cap targeta P quan tots dos tiradors són a un tocat del final (14:14)',
   'referee.no_card_to_remove': 'Cap targeta per retirar',
   'referee.passivity_undone': 'Última targeta de passivitat anul·lada',
   'referee.undo_white': 'Última targeta blanca anul·lada',

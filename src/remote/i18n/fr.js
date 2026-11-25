@@ -54,6 +54,18 @@
   'referee.club_card_a': 'Carte du tireur A',
   'referee.club_card_b': 'Carte du tireur B',
   'referee.club_card_hint': 'Présentez le QR code de la carte de club à la caméra.',
+  'referee.club_card_pick': 'Choisir un tireur pointé présent',
+  'referee.club_card_no_camera_list':
+    'Caméra indisponible : choisissez le tireur dans la liste ou saisissez le code de sa carte.',
+  'referee.club_camera_insecure':
+    'Caméra bloquée : la page est en HTTP. Activez HTTPS dans les réglages de la saisie distante du club.',
+  'referee.club_camera_unsupported':
+    'Ce navigateur ne donne pas accès à la caméra : ouvrez la page dans Chrome ou Safari.',
+  'referee.club_camera_denied':
+    'Accès à la caméra refusé : autorisez-le dans les réglages du navigateur.',
+  'referee.club_camera_busy': 'Caméra occupée par une autre application.',
+  'referee.club_camera_none': 'Aucune caméra trouvée sur cet appareil.',
+  'referee.club_card_scan': 'Scanner le QR code',
   'referee.club_card_code': 'Code de la carte',
   'referee.club_card_ok': 'Valider',
   'referee.club_card_skip': 'Passer (tireur non identifié)',

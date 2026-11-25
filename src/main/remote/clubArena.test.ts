@@ -8,6 +8,8 @@ import {
   releaseClubBout,
   setLinkedClubSession,
   type ClubIdentifyDeps,
+  attendeeCardCode,
+  listSessionAttendees,
 } from './clubArena';
 import type { ClubBout, ClubMember, ClubSession } from '../../shared/types/club';
 import type { RemoteScoreServer } from '../remoteScoreServer';
@@ -172,5 +174,59 @@ describe('cartes scannées sur la tablette arbitre (#1872)', () => {
     expect(arenaHasMatch(arena({ ...free, scoreB: 2 }))).toBe(true);
     expect(arenaHasMatch(arena(free, 'in_progress'))).toBe(true);
     expect(arenaHasMatch(arena({ ...free, poolId: 'p1' }))).toBe(true);
+  });
+});
+
+describe('liste des présents sur la tablette arbitre', () => {
+  const members: Record<string, ClubMember> = {
+    a: { ...anne, clubId: 'c1', active: true, cardCode: 'AAAAAAAAAA' },
+    p: { ...paul, clubId: 'c1', active: true, cardCode: 'BBBBBBBBBB' },
+    x: {
+      id: 'x',
+      firstName: 'Ex',
+      lastName: 'AUTRE',
+      clubId: 'c2',
+      active: true,
+      cardCode: 'CCCCCCCCCC',
+    } as ClubMember,
+    z: {
+      id: 'z',
+      firstName: 'Zoé',
+      lastName: 'ARCHIVE',
+      clubId: 'c1',
+      active: false,
+      cardCode: 'DDDDDDDDDD',
+    } as ClubMember,
+  };
+  const session = {
+    id: 's1',
+    clubId: 'c1',
+    status: 'open',
+    attendeeIds: ['a', 'p', 'x', 'z'],
+  } as ClubSession;
+  const deps = {
+    club: {
+      getSession: (id: string) => (id === 's1' ? session : null),
+      getMember: (id: string) => members[id] ?? null,
+    },
+  } as unknown as Pick<ClubIdentifyDeps, 'club'>;
+
+  it('présents du club, triés, sans code de carte', () => {
+    setLinkedClubSession('s1');
+    expect(listSessionAttendees(deps)).toEqual([
+      { id: 'p', name: 'DURAND Paul' },
+      { id: 'a', name: 'MARTIN Anne' },
+    ]);
+    setLinkedClubSession(null);
+    expect(listSessionAttendees(deps)).toEqual([]);
+  });
+
+  it('tireur choisi : code de sa carte s’il est présent', () => {
+    setLinkedClubSession('s1');
+    expect(attendeeCardCode(deps, 'a')).toBe('AAAAAAAAAA');
+    expect(attendeeCardCode(deps, 'x')).toBeNull();
+    expect(attendeeCardCode(deps, 'z')).toBeNull();
+    expect(attendeeCardCode(deps, 'ghost')).toBeNull();
+    expect(attendeeCardCode(deps, 42)).toBeNull();
   });
 });

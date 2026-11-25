@@ -95,6 +95,7 @@ export interface ClubIdentifyDeps {
   club: Pick<
     DatabaseManager['club'],
     | 'getSession'
+    | 'getMember'
     | 'findMemberByCardCode'
     | 'setAttendance'
     | 'createBout'
@@ -129,6 +130,35 @@ export function linkedOpenSession(deps: Pick<ClubIdentifyDeps, 'club'>) {
   if (!linkedSessionId) return null;
   const s = deps.club.getSession(linkedSessionId);
   return s && s.status === 'open' ? s : null;
+}
+
+/**
+ * Présents de la séance reliée, pour la liste déroulante de la tablette (caméra absente ou
+ * carte oubliée) : identifiant et nom seulement, jamais le code de carte. Tri par nom.
+ */
+export function listSessionAttendees(
+  deps: Pick<ClubIdentifyDeps, 'club'>
+): { id: string; name: string }[] {
+  const session = linkedOpenSession(deps);
+  if (!session) return [];
+  const out: { id: string; name: string }[] = [];
+  for (const id of session.attendeeIds) {
+    const m = deps.club.getMember(id);
+    if (m && m.active && m.clubId === session.clubId) out.push({ id: m.id, name: fullName(m, '') });
+  }
+  return out.sort((x, y) => x.name.localeCompare(y.name, 'fr'));
+}
+
+/** Tireur choisi dans la liste : code de sa carte s'il est pointé présent, sinon null */
+export function attendeeCardCode(
+  deps: Pick<ClubIdentifyDeps, 'club'>,
+  memberId: unknown
+): string | null {
+  if (typeof memberId !== 'string' || !memberId) return null;
+  const session = linkedOpenSession(deps);
+  if (!session || !session.attendeeIds.includes(memberId)) return null;
+  const m = deps.club.getMember(memberId);
+  return m && m.active && m.clubId === session.clubId && m.cardCode ? m.cardCode : null;
 }
 
 /**

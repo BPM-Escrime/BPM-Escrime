@@ -51,6 +51,18 @@
   'referee.club_card_a': 'Tessera dello schermidore A',
   'referee.club_card_b': 'Tessera dello schermidore B',
   'referee.club_card_hint': 'Mostra il codice QR della tessera del club alla fotocamera.',
+  'referee.club_card_pick': 'Scegli uno schermidore presente',
+  'referee.club_card_no_camera_list':
+    "Fotocamera non disponibile: scegli lo schermidore dall'elenco o digita il codice della tessera.",
+  'referee.club_camera_insecure':
+    'Fotocamera bloccata: la pagina usa HTTP. Attiva HTTPS nelle impostazioni del punteggio remoto del club.',
+  'referee.club_camera_unsupported':
+    'Questo browser non dà accesso alla fotocamera: apri la pagina in Chrome o Safari.',
+  'referee.club_camera_denied':
+    'Accesso alla fotocamera negato: consentilo nelle impostazioni del browser.',
+  'referee.club_camera_busy': "Fotocamera usata da un'altra app.",
+  'referee.club_camera_none': 'Nessuna fotocamera trovata su questo dispositivo.',
+  'referee.club_card_scan': 'Scansiona il codice QR',
   'referee.club_card_code': 'Codice della tessera',
   'referee.club_card_ok': 'Conferma',
   'referee.club_card_skip': 'Salta (schermidore non identificato)',
@@ -182,7 +194,8 @@
   'referee.opp_plus5': "+5 punti all'avversario",
   'referee.passivity_yellow': 'Passività: P-giallo, avvertimento a entrambi gli schermidori',
   'referee.passivity_red': 'Passività: P-rosso, +1 punto a ciascuno schermidore',
-  'referee.passivity_last_touch': 'Nessun cartellino P quando entrambi gli schermidori sono a una stoccata dalla fine (14:14)',
+  'referee.passivity_last_touch':
+    'Nessun cartellino P quando entrambi gli schermidori sono a una stoccata dalla fine (14:14)',
   'referee.no_card_to_remove': 'Nessun cartellino da rimuovere',
   'referee.passivity_undone': 'Ultimo cartellino di passività annullato',
   'referee.undo_white': 'Ultimo cartellino bianco annullato',
