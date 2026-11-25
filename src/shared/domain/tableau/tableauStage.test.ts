@@ -100,6 +100,19 @@ describe('classement final après un tableau arrêté (Q5)', () => {
     expect(r.eliminatedAt.has('I')).toBe(false);
   });
 
+  it('même tour et même rang d’entrée : ex aequo', () => {
+    const tied = { ...stage, eliminated: stage.eliminated.map(e => ({ ...e, seed: 1 })) };
+    const r = rankAfterStages(merged, [tied]);
+    expect(r.ranking.slice(2, 8).map(x => [x.fencer.id, x.rank])).toEqual([
+      ['A', 3],
+      ['F', 3],
+      ['C', 5],
+      ['D', 5],
+      ['G', 5],
+      ['H', 5],
+    ]);
+  });
+
   it('sans étape close : classement inchangé', () => {
     expect(rankAfterStages(merged, []).ranking).toBe(merged);
   });

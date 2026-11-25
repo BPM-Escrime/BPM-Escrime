@@ -99,17 +99,18 @@ export function rankAfterStages(
   if (stages.length === 0) return { ranking, eliminatedAt };
   const byId = new Map(ranking.map(r => [r.fencer.id, r]));
   // Étape la plus récente d'abord : ses éliminés sont allés le plus loin
-  const stageOut: PoolRanking[] = [];
+  const stageOut: Array<{ row: PoolRanking; key: string }> = [];
   const out = new Set<string>();
-  for (const stage of [...stages].reverse()) {
+  [...stages].reverse().forEach((stage, s) => {
     for (const e of stage.eliminated) {
       const row = byId.get(e.fencerId);
       if (!row || out.has(e.fencerId)) continue;
       out.add(e.fencerId);
-      stageOut.push(row);
+      // Même étape, même tour, même rang d'entrée : ex aequo
+      stageOut.push({ row, key: `${s}:${e.round}:${e.seed}` });
       eliminatedAt.set(e.fencerId, stageEliminatedAt(e.round));
     }
-  }
+  });
   const last = stages[stages.length - 1];
   const entered = new Set(
     last.matches.flatMap(m => [m.fencerA?.id, m.fencerB?.id]).filter((id): id is string => !!id)
@@ -118,7 +119,11 @@ export function rankAfterStages(
   const frontIds = new Set(front.map(r => r.fencer.id));
   const rest = ranking.filter(r => !frontIds.has(r.fencer.id) && !out.has(r.fencer.id));
   const result: PoolRanking[] = [...front];
-  stageOut.forEach((r, i) => result.push({ ...r, rank: front.length + i + 1 }));
+  let tie = 0;
+  stageOut.forEach(({ row, key }, i) => {
+    if (i === 0 || stageOut[i - 1].key !== key) tie = i;
+    result.push({ ...row, rank: front.length + tie + 1 });
+  });
   // Autres : égalités du classement reçu gardées
   let prev = NaN;
   let tieStart = 0;

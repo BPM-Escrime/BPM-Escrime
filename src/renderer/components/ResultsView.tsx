@@ -356,7 +356,8 @@ const ResultsView: React.FC<ResultsViewProps> = ({
       return poolRanking.map((pr, idx) => {
         const fencer = freshFencer(pr.fencer);
         return {
-          rank: idx + 1,
+          // Tableau arrêté : rangs du classement final, ex aequo compris (Q5, ADR-0037)
+          rank: stageEliminatedAt?.size ? pr.rank : idx + 1,
           fencer,
           eliminatedAt: stageEliminatedAt?.get(fencer.id) ?? poolEliminatedAt(fencer),
         };

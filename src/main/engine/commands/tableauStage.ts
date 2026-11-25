@@ -107,6 +107,8 @@ export function closeTableauStage(
       },
     ]);
   });
+  // Tireurs éliminés et classés : l'écran relit la liste (statuts, rangs)
+  ctx.emitChange?.({ scope: 'fencers', competitionIds: [comp.id] });
   emitSession(ctx, comp.id);
   return report;
 }

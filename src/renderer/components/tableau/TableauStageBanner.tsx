@@ -51,7 +51,7 @@ export const TableauStageBanner: React.FC<TableauStageBannerProps> = ({
   };
 
   return (
-    <div className="alert alert--info tableau-drift" role="status" data-testid="tableau-stage">
+    <div className="tableau-stage tableau-drift" role="status" data-testid="tableau-stage">
       <p>
         <Icon icon={Info} /> <strong>{t('tableauStage.title', { n: stopAt })}</strong>
       </p>
