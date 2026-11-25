@@ -41,7 +41,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0029](0029-multi-poste-roles-bail.md)              | Multi-poste : comptes par fonction, droits `checkin:write` et `structure:write`, bail par épreuve en mémoire du moteur                                                                    | Proposée            |
 | [0030](0030-services-de-bureau.md)                  | Fonctions de l'application de bureau (menu, mise à jour, fenêtre, langue, impression native, choix de dossier) derrière `PlatformServices.desktop`, absent dans le navigateur             | Acceptée            |
 | [0031](0031-zones-de-touche-combats-club.md)        | Les zones de touche des combats du Mode Club sont enregistrées sur le combat (`club_bouts.zones_a` / `zones_b`, migration 51)                                                             | Acceptée            |
-| [0033](0033-modeles-de-formule.md)                  | Modèles de formule (catalogue fourni, modèles du poste) et formule d'une épreuve par le contrat : `getCompetitionFormula`, `applyFormulaTemplate`, `updateCompetitionFormula`, outils MCP | Proposée            |
+| [0033](0033-modeles-de-formule.md)                  | Modèles de formule (catalogue fourni, modèles du poste) et formule d'une épreuve par le contrat : `getCompetitionFormula`, `applyFormulaTemplate`, `updateCompetitionFormula`, outils MCP | Acceptée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.

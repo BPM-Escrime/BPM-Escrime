@@ -1,6 +1,6 @@
 # ADR-0033 — Modèles de formule et formule d'une épreuve par le contrat, MCP compris
 
-- **Statut** : Proposée
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : outils MCP des modèles en lecture seule)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape B2, décisions D6, D7, D8, D12 ; questions Q13, Q14, Q20, Q22), #1948 (lots 5 et 7) ; complète [ADR-0012](0012-formule-domaine.md), [ADR-0022](0022-fonctions-du-poste-contrat.md) et [ADR-0032](0032-formule-interface-unique-apercu.md)
 
@@ -64,13 +64,13 @@ fonction que celle des épreuves.
 | `saveFormulaTemplate`   | commande | Crée ou remplace un modèle **personnel**. Un `id` de modèle fourni est refusé (`station_refused`) : on enregistre une copie, qui garde `origin` |
 | `deleteFormulaTemplate` | commande | Supprime un modèle personnel. Modèle fourni : `station_refused` ; inconnu : `not_found`                                                         |
 
-- **Outils MCP** `list_formula_templates` (lecture), `save_formula_template` et
-  `delete_formula_template` (écriture sur autorisation, comme les autres outils d'écriture).
-  Exception assumée à la règle « station:admin, pas d'outil MCP » de l'ADR-0022 : un modèle de
-  formule n'est ni un secret ni un effet externe, et l'agent doit pouvoir proposer une formule
-  (#1948, lot 7).
+- **Un seul outil MCP, en lecture** : `list_formula_templates`. Exception limitée à la règle
+  « station:admin, pas d'outil MCP » de l'ADR-0022 : un modèle de formule n'est ni un secret ni
+  un effet externe, et l'agent doit pouvoir choisir un modèle (#1948, lot 7). L'agent
+  n'enregistre ni ne supprime de modèle : `saveFormulaTemplate` et `deleteFormulaTemplate`
+  restent réservées à l'écran (arbitrage du 2026-11-25).
 - **Pas de journal** : ce n'est pas un fait de l'épreuve (ADR-0005). Appliquer un modèle à une
-  épreuve passe par la commande qui modifie la formule de l'épreuve, qui journalise.
+  épreuve passe par `applyFormulaTemplate` (ci-dessous).
 - Codes d'erreur existants seulement (`station_refused`, `not_found`, ADR-0009).
 
 **Origine sur l'épreuve et badge**
@@ -95,21 +95,22 @@ fonction que celle des épreuves.
 
 **Formule d'une épreuve par le contrat et le MCP** (amendement du 2026-11-25)
 
-| Opération                       | Nature   | Outil MCP                               | Effet                                                                                                                                                                   |
-| ------------------------------- | -------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getCompetitionFormula`         | requête  | `get_competition_formula` (lecture)     | Phases de la frise, réglages par phase, origine, état Standard / Adaptée / Libre et écarts, relevé de cohérence avec la catégorie, briques autorisées à chaque position |
-| `applyFormulaTemplate`          | commande | `apply_formula_template` (écriture)     | Applique un modèle fourni ou personnel compatible ; enregistre `formulaOrigin`                                                                                          |
-| `updateCompetitionFormula`      | commande | `update_competition_formula` (écriture) | Une opération de frise par appel : `insertPhase` (brique, position), `removePhase` (phase), `setPhase` (phase, réglages), `setGeneral` (réglages généraux)              |
-| `createCompetition` (existante) | commande | `create_competition` (étendu)           | Accepte aussi le Sabre Laser et l'arme « Autre », et un `templateId` facultatif                                                                                         |
+| Opération                       | Nature   | Outil MCP                               | Effet                                                                                                                                                                                       |
+| ------------------------------- | -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getCompetitionFormula`         | requête  | `get_competition_formula` (lecture)     | Phases de la frise, réglages par phase, origine, état Standard / Adaptée / Libre et écarts, relevé de cohérence avec la catégorie, briques autorisées à chaque position                     |
+| `applyFormulaTemplate`          | commande | `apply_formula_template` (écriture)     | Applique un modèle fourni ou personnel compatible ; enregistre `formulaOrigin`                                                                                                              |
+| `updateCompetitionFormula`      | commande | `update_competition_formula` (écriture) | Liste d'opérations de frise appliquées dans l'ordre, tout ou rien : `insertPhase` (brique, position), `removePhase` (phase), `setPhase` (phase, réglages), `setGeneral` (réglages généraux) |
+| `createCompetition` (existante) | commande | `create_competition` (étendu)           | Accepte aussi le Sabre Laser et l'arme « Autre », et un `templateId` facultatif                                                                                                             |
 
 - **Mêmes règles que l'écran, un seul code** : les commandes appellent les opérations de la frise
   du domaine (`formulaFrieze.ts`, ADR-0032) et la validation `validateFormulaSettings`
   (ADR-0012). Une brique interdite à une position, ou une formule incohérente, est refusée par
   `invalid_settings` ; une épreuve déjà tirée, par `draw_done` (codes existants, ADR-0009).
   L'agent ne voit jamais d'option que le moteur n'exécute pas (P2).
-- **Droit `competition:write`**, comme `updateCompetitionSettings` : ce sont des faits de
-  l'épreuve, **journalisés** (ADR-0005), avec `dryRun`, `expectedRevision` et `commandId`
-  (ADR-0006, ADR-0008). Aucune exception à l'ADR-0022 n'est nécessaire pour ces opérations ;
+- **Droit `competition:write`**, comme `updateCompetitionSettings` : même transaction de
+  l'épreuve, avec `dryRun`, `expectedRevision` et `commandId` (ADR-0006, ADR-0008), et comme
+  elle **sans événement du journal** (réglages, ADR-0018). Le journal des modifications en cours
+  d'épreuve (§ 10 de #2013) viendra avec le verrou par phase. Aucune exception à l'ADR-0022 n'est nécessaire pour ces opérations ;
   les outils d'écriture restent soumis à l'autorisation d'écriture du MCP.
 - **Verrou** : formule figée après le tirage (`draw_done`, comme `updateCompetitionSettings`
   aujourd'hui), puis verrou par phase commencée quand l'étape D de #2013 l'apportera (P8).
@@ -152,4 +153,8 @@ fonction que celle des épreuves.
   grammaire de la frise ; l'agent pourrait écrire une suite de phases que l'écran refuse, et
   le contrat changerait de forme à l'étape C.
 - **Une seule commande qui remplace toute la formule** : simple, mais l'agent devrait
-  reconstruire la formule entière et les refus ne désigneraient pas la phase fautive.
+  reconstruire la formule entière et les refus ne désigneraient pas la phase fautive. La liste
+  d'opérations garde les deux usages : l'écran envoie toutes ses modifications en une fois,
+  l'agent peut n'en envoyer qu'une.
+- **Outils MCP d'écriture des modèles** : écartés à l'arbitrage du 2026-11-25 ; l'agent agit
+  sur la formule des épreuves, pas sur la bibliothèque du poste.
