@@ -72,6 +72,25 @@ export function isNewerRelease(release: ReleaseLike, current: VersionPoint): boo
   return compareVersionPoints(latest, current) > 0;
 }
 
+/** Canal du build installé (version.json). Absent : ancien build, traité comme stable. */
+export type InstalledChannel = 'dev' | 'rc' | 'stable' | undefined;
+
+/**
+ * Retour au canal stable : build installé dev/rc, canal stable choisi, release stable
+ * plus ancienne. Sans cela, passer de dev (build 2086) à stable (build 1986) ne
+ * proposait rien : seule une version plus récente l'était.
+ */
+export function isChannelDowngrade(
+  release: ReleaseLike,
+  current: VersionPoint & { channel?: InstalledChannel },
+  includePrerelease: boolean
+): boolean {
+  if (includePrerelease || release.prerelease || release.draft) return false;
+  if (current.channel !== 'dev' && current.channel !== 'rc') return false;
+  const latest = { version: parseReleaseVersion(release), build: parseReleaseBuild(release) };
+  return compareVersionPoints(latest, current) < 0;
+}
+
 /**
  * Release la plus récente du canal (stable : hors pré-releases), au sens de
  * compareVersionPoints. L'ordre de l'API (date de création) ne suffit pas : un

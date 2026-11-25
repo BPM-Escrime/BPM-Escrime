@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   compareVersionPoints,
+  isChannelDowngrade,
   isNewerRelease,
   parseReleaseBuild,
   parseReleaseVersion,
@@ -118,5 +119,77 @@ describe('branche de maintenance', () => {
 
   it('un testeur 3.0.0-dev.1995 ne redescend pas vers la 3.0.0 (Build #1990)', () => {
     expect(isNewerRelease(stable('3.0.0', 1990), { version: '3.0.0', build: 1995 })).toBe(false);
+  });
+});
+
+describe('isChannelDowngrade (passage dev → stable)', () => {
+  it('build dev 2086, canal stable, stable 1986 : retour proposé', () => {
+    expect(
+      isChannelDowngrade(
+        stable('3.0.0', 1986),
+        { version: '3.0.1', build: 2086, channel: 'dev' },
+        false
+      )
+    ).toBe(true);
+  });
+
+  it('même version X.Y.Z, build dev plus élevé : retour proposé', () => {
+    expect(
+      isChannelDowngrade(
+        stable('3.0.0', 1986),
+        { version: '3.0.0', build: 2086, channel: 'dev' },
+        false
+      )
+    ).toBe(true);
+  });
+
+  it('build rc de maintenance, canal stable : retour proposé', () => {
+    expect(
+      isChannelDowngrade(
+        stable('2.0.0', 1964),
+        { version: '2.0.1', build: 1995, channel: 'rc' },
+        false
+      )
+    ).toBe(true);
+  });
+
+  it('canal dev conservé : pas de retour', () => {
+    expect(
+      isChannelDowngrade(
+        stable('3.0.0', 1986),
+        { version: '3.0.1', build: 2086, channel: 'dev' },
+        true
+      )
+    ).toBe(false);
+  });
+
+  it('build stable installé : jamais de retour', () => {
+    expect(
+      isChannelDowngrade(
+        stable('3.0.0', 1986),
+        { version: '3.0.0', build: 1986, channel: 'stable' },
+        false
+      )
+    ).toBe(false);
+    expect(
+      isChannelDowngrade(stable('3.0.0', 1986), { version: '3.0.0', build: 2086 }, false)
+    ).toBe(false);
+  });
+
+  it('release dev ou stable plus récente : pas un retour', () => {
+    expect(
+      isChannelDowngrade(
+        devOf('3.0.1', 2090),
+        { version: '3.0.1', build: 2086, channel: 'dev' },
+        false
+      )
+    ).toBe(false);
+    expect(
+      isChannelDowngrade(
+        stable('3.1.0', 2100),
+        { version: '3.0.1', build: 2086, channel: 'dev' },
+        false
+      )
+    ).toBe(false);
   });
 });

@@ -18,9 +18,11 @@ import {
 } from './pendingUpdate';
 import { parseSha256Digest, isTrustedDownloadUrl, verifyFileSha256 } from './updateIntegrity';
 import {
+  isChannelDowngrade,
   isNewerRelease,
   parseReleaseBuild,
   pickLatestRelease,
+  type InstalledChannel,
   type ReleaseLike,
 } from './updateReleases';
 import { downloadToFile, getJson } from './updateHttp';
@@ -71,6 +73,8 @@ interface GitHubRelease extends ReleaseLike {
 
 interface UpdateInfo {
   hasUpdate: boolean;
+  /** Retour du canal dev vers stable : release plus ancienne que le build installé. */
+  isDowngrade?: boolean;
   currentBuild: number;
   latestBuild: number;
   latestVersion: string;
@@ -236,7 +240,7 @@ export class AutoUpdater {
   /**
    * Canal de mise à jour choisi par l'utilisateur (persisté).
    * stable → releases `main` uniquement ; dev → pré-releases `dev` incluses.
-   * Pas de retour en arrière : seule une version plus récente (X.Y.Z puis build) est proposée.
+   * Passage dev → stable sur un build dev/rc : retour à la dernière stable proposé (isChannelDowngrade).
    */
   setChannel(channel: UpdateChannel): void {
     const userData = app.getPath('userData');
@@ -282,10 +286,13 @@ export class AutoUpdater {
 
       // Version X.Y.Z puis build : un correctif de maintenance 2.0.1 au build plus
       // élevé n'est pas proposé à un 3.0.0-dev (betaChannel ne filtre que les releases)
-      const hasUpdate = isNewerRelease(release, currentInfo);
+      // Canal stable choisi sur un build dev/rc : proposer le retour à la stable
+      const isDowngrade = isChannelDowngrade(release, currentInfo, this.config.betaChannel);
+      const hasUpdate = isDowngrade || isNewerRelease(release, currentInfo);
 
       this.updateInfo = {
         hasUpdate,
+        isDowngrade,
         currentBuild: currentInfo.build,
         latestBuild,
         latestVersion,
@@ -356,9 +363,9 @@ export class AutoUpdater {
 
   // version.json lu une seule fois (versionInfo.ts, mis en cache) : plus de lecture
   // disque synchrone à chaque vérification de mise à jour (#1776).
-  private getCurrentVersion(): { version: string; build: number } {
-    const { version, build } = getVersionInfo();
-    return { version, build };
+  private getCurrentVersion(): { version: string; build: number; channel?: InstalledChannel } {
+    const { version, build, channel } = getVersionInfo();
+    return { version, build, channel };
   }
 
   private showUpdateNotification(updateInfo: UpdateInfo): void {
@@ -820,8 +827,8 @@ export class AutoUpdater {
     const notes = this.updateInfo.releaseNotes;
     const response = dialog.showMessageBoxSync(this.mainWindow!, {
       type: 'info',
-      title: L.updAvailableTitle,
-      message: L.updAvailableMsg,
+      title: this.updateInfo.isDowngrade ? L.updDowngradeTitle : L.updAvailableTitle,
+      message: this.updateInfo.isDowngrade ? L.updDowngradeMsg : L.updAvailableMsg,
       detail:
         fmt(L.updAvailableDetail, {
           current: this.updateInfo.currentBuild,
