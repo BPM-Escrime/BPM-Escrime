@@ -32,6 +32,8 @@ export interface CyranoStripDevice extends StripDeviceBase {
   /** Port UDP de l'appareil (50100 par défaut) */
   port?: number;
   version?: CyranoVersion;
+  /** false : aucun HELLO (Saint-George SG31 / SG32, ADR-0038) ; absent : HELLO toutes les 15 s */
+  hello?: boolean;
 }
 
 /** Appareil OPP2 (JSON sur MQTT, broker intégré) */

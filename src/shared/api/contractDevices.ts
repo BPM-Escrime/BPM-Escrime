@@ -37,6 +37,12 @@ export const StripDeviceSchema = z.discriminatedUnion('protocol', [
     ip: z.string().trim().min(1).max(64),
     port: Port.optional(),
     version: z.enum(['auto', 'EFP1', 'EFP1.1']).optional(),
+    hello: z
+      .boolean()
+      .optional()
+      .describe(
+        'false : aucun HELLO vers l’appareil (Saint-George SG31 / SG32 : un HELLO bloque son chrono, ADR-0038). Absent : HELLO toutes les 15 s'
+      ),
     mode: Mode,
     arena: Arena,
   }),

@@ -47,6 +47,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0035](0035-durees-de-match-mcp.md)                 | Durées de match de référence lisibles par l'agent MCP (`get_match_durations`) ; fin estimée de la phase dans `server_status`                                                              | Proposée            |
 | [0036](0036-formule-v2-arbre-par-phase.md)          | Formule v2 : arbre de phases pour toutes les armes (`settings.formula`), lu par phase par le moteur, sans migration de schéma                                                             | Acceptée            |
 | [0037](0037-deroule-genere-par-la-formule.md)       | Déroulé généré par la formule v2 : navigation, 0 tour, tableau arrêté à N (`closeTableauStage`, `TableauStageClosed`), phase après un tableau                                             | Acceptée            |
+| [0038](0038-cyrano-sans-hello-saint-george.md)      | Appareil Cyrano sans `HELLO` (`hello: false` sur la déclaration) : profil Saint-George SG31 / SG32, dont un `HELLO` bloque le chrono                                                      | Acceptée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.

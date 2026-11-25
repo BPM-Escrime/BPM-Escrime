@@ -83,11 +83,14 @@ export function editToDevice(edit: StripEdit, previous?: StripDevice | null): St
   const ip = edit.ip.trim();
   if (edit.protocol === 'none' || !ip) return null;
   const port = edit.port.trim();
+  // Sans HELLO (profil Saint-George, ADR-0038) : gardé, non édité ici
+  const hello = previous?.protocol === 'cyrano' && previous.hello === false ? { hello: false } : {};
   return {
     protocol: 'cyrano',
     ip,
     ...(port ? { port: Number(port) } : {}),
     version: edit.version,
+    ...hello,
     mode: edit.mode,
     ...arena,
   };
