@@ -43,6 +43,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0031](0031-zones-de-touche-combats-club.md)        | Les zones de touche des combats du Mode Club sont enregistrées sur le combat (`club_bouts.zones_a` / `zones_b`, migration 51)                                                             | Acceptée            |
 | [0032](0032-formule-interface-unique-apercu.md)     | Formule : interface unique derrière un réglage expérimental du poste (`formulaPreview`), lu par l'écran seulement                                                                         | Acceptée            |
 | [0033](0033-modeles-de-formule.md)                  | Modèles de formule (catalogue fourni, modèles du poste) et formule d'une épreuve par le contrat : `getCompetitionFormula`, `applyFormulaTemplate`, `updateCompetitionFormula`, outils MCP | Acceptée            |
+| [0034](0034-formule-v2-arbre-par-phase.md)          | Formule v2 : arbre de phases pour toutes les armes (`settings.formula`), lu par phase par le moteur, sans migration de schéma                                                             | Proposée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.
