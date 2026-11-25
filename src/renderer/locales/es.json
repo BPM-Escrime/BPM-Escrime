@@ -1886,7 +1886,11 @@
     "deleted": "{{name}} eliminado",
     "col_handedness": "Lateralidad",
     "withdraw_failed": "Retirada no guardada: {{message}}",
-    "reinstate_failed": "Reincorporación no guardada: {{message}}"
+    "reinstate_failed": "Reincorporación no guardada: {{message}}",
+    "col_category": "Cat.",
+    "compute_categories": "Calcular las categorías",
+    "compute_categories_title": "Categoría de edad de los tiradores que no la tienen, según la fecha de nacimiento y la temporada de la competición",
+    "compute_categories_done": "{{count}} categorías calculadas; {{missing}} tiradores sin fecha de nacimiento"
   },
   "questPhase": {
     "running_title": "Ronda Quest en curso",
@@ -2273,7 +2277,9 @@
     "region_ph": "Ej.: IDF",
     "license_no": "N.º de licencia",
     "unranked": "Sin clasificar",
-    "save": "Guardar"
+    "save": "Guardar",
+    "category": "Categoría",
+    "category_unknown": "Sin indicar"
   },
   "exportCenter": {
     "title": "Centro de exportación",

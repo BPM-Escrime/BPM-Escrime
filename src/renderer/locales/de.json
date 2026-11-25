@@ -1886,7 +1886,11 @@
     "deleted": "{{name}} gelöscht",
     "col_handedness": "Händigkeit",
     "withdraw_failed": "Rückzug nicht gespeichert: {{message}}",
-    "reinstate_failed": "Wiederaufnahme nicht gespeichert: {{message}}"
+    "reinstate_failed": "Wiederaufnahme nicht gespeichert: {{message}}",
+    "col_category": "Kat.",
+    "compute_categories": "Kategorien berechnen",
+    "compute_categories_title": "Altersklasse der Fechter ohne Kategorie, aus Geburtsdatum und Saison des Turniers",
+    "compute_categories_done": "{{count}} Kategorien berechnet; {{missing}} Fechter ohne Geburtsdatum"
   },
   "questPhase": {
     "running_title": "Quest-Runde läuft",
@@ -2273,7 +2277,9 @@
     "region_ph": "Z. B. IDF",
     "license_no": "Lizenznr.",
     "unranked": "Ohne Rang",
-    "save": "Speichern"
+    "save": "Speichern",
+    "category": "Kategorie",
+    "category_unknown": "Nicht angegeben"
   },
   "exportCenter": {
     "title": "Exportzentrale",

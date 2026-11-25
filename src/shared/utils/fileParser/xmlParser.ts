@@ -3,6 +3,7 @@
  * Licensed under GPL-3.0
  */
 
+import { normalizeFencerCategory } from '../../domain/fencers/fencerCategory';
 import { FencerStatus, Gender } from '../../types';
 import { normalizeDepartment } from '../departments';
 import {
@@ -118,6 +119,8 @@ export function parseXMLFile(content: string): ImportResult {
           license: getName('Licence') || undefined,
           ranking: parseInt(getName('Classement')) || undefined,
           birthDate: parseFrenchDate(getName('DateNaissance')),
+          // Catégorie du tireur quand le fichier la porte (docs/adr/0039)
+          category: normalizeFencerCategory(getName('Categorie')),
           ...(lat === 'G' || lat === 'L' ? { handedness: 'L' as const } : {}),
           ...(lat === 'D' || lat === 'R' ? { handedness: 'R' as const } : {}),
           status: FencerStatus.NOT_CHECKED_IN,

@@ -3,6 +3,10 @@
  * Licensed under GPL-3.0
  */
 
+import {
+  FENCER_CATEGORIES,
+  normalizeFencerCategory,
+} from '../../shared/domain/fencers/fencerCategory';
 import React, { useState } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useTranslation } from '../hooks/useTranslation';
@@ -24,6 +28,7 @@ const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClo
   const [lastName, setLastName] = useState(fencer.lastName);
   const [firstName, setFirstName] = useState(fencer.firstName);
   const [gender, setGender] = useState<Gender>(fencer.gender);
+  const [category, setCategory] = useState<string>(fencer.category ?? '');
   const [club, setClub] = useState(fencer.club || '');
   const [region, setRegion] = useState(fencer.region || '');
   const [department, setDepartment] = useState(fencer.department || '');
@@ -41,6 +46,7 @@ const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClo
       lastName: lastName.toUpperCase(),
       firstName,
       gender,
+      category: normalizeFencerCategory(category),
       club: club || undefined,
       region: region || undefined,
       department: department || undefined,
@@ -120,6 +126,25 @@ const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClo
                 <option value={Gender.MALE}>{t('editFencer.male')}</option>
                 <option value={Gender.FEMALE}>{t('editFencer.female')}</option>
                 <option value={Gender.MIXED}>{t('genders.mixed')}</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="edit-fencer-category">
+                {t('editFencer.category')}
+              </label>
+              <select
+                id="edit-fencer-category"
+                className="form-input form-select"
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+              >
+                <option value="">{t('editFencer.category_unknown')}</option>
+                {FENCER_CATEGORIES.map(c => (
+                  <option key={c} value={c}>
+                    {t(`categories.${c === 'SEN' ? 'senior' : c}`)}
+                  </option>
+                ))}
               </select>
             </div>
 

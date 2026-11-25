@@ -9,6 +9,7 @@ export type SortableCol =
   | 'lastName'
   | 'firstName'
   | 'birthDate'
+  | 'category'
   | 'club'
   | 'nationality'
   | 'region'
@@ -22,6 +23,7 @@ export const COLUMNS = [
   { id: 'lastName' as SortableCol, labelKey: 'fencerList.col_last_name' },
   { id: 'firstName' as SortableCol, labelKey: 'fencerList.col_first_name' },
   { id: 'birthDate' as SortableCol, labelKey: 'fencerList.col_birth', width: '70px' },
+  { id: 'category' as SortableCol, labelKey: 'fencerList.col_category', width: '70px' },
   { id: 'club' as SortableCol, labelKey: 'fencerList.col_club' },
   { id: 'nationality' as SortableCol, labelKey: 'fencerList.col_nationality', width: '110px' },
   { id: 'region' as SortableCol, labelKey: 'fencerList.col_region', width: '110px' },
@@ -42,6 +44,8 @@ export interface FencerListProps {
   onDeleteAllFencers?: () => void;
   onCheckInAll?: () => void;
   onUncheckAll?: () => void;
+  /** Catégorie d'âge calculée pour les tireurs qui n'en ont pas (docs/adr/0039) */
+  onComputeCategories?: () => void;
   /** Rend l'issue de la commande (docs/adr/0016) : « refused » n'affiche pas « Statut modifié » */
   onSetFencerStatus?: (id: string, status: FencerStatus) => void | Promise<unknown>;
   onImport?: (type: 'xml' | 'fff' | 'ranking') => void;

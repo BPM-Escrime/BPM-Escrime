@@ -240,6 +240,8 @@ export interface Fencer extends BaseEntity {
   lastName: string; // Nom
   firstName: string; // Prénom
   birthDate?: Date; // Date de naissance
+  /** Catégorie d'âge du tireur (import, calcul ou saisie ; scission par catégorie, docs/adr/0039) */
+  category?: Category;
   gender: Gender; // Sexe
   nationality: string; // Nation (code ISO)
   region?: string; // Région

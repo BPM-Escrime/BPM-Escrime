@@ -92,6 +92,7 @@ export function parseFencerRow(row: SqlRow): Fencer {
     lastName: row.last_name as string,
     firstName: row.first_name as string,
     birthDate: row.birth_date ? new Date(row.birth_date as string) : undefined,
+    category: (row.category as Category | null) || undefined,
     gender: row.gender as Gender,
     nationality: row.nationality as string,
     region: row.region as string,

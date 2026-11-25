@@ -5,6 +5,7 @@
  */
 import type { Output } from '../../shared/api/contract';
 import type { ExclusionReason, Fencer, FencerStatus, Gender } from '../../shared/types';
+import { normalizeFencerCategory } from '../../shared/domain/fencers/fencerCategory';
 
 type FencerDTO = Output<'listFencers'>[number];
 
@@ -18,6 +19,7 @@ export function fencerFromDTO(d: FencerDTO): Fencer {
     lastName: d.lastName,
     firstName: d.firstName,
     birthDate: d.birthDate ? new Date(d.birthDate) : undefined,
+    category: normalizeFencerCategory(d.category),
     gender: d.gender as Gender,
     nationality: d.nationality,
     region: opt(d.region),

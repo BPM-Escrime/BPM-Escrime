@@ -250,6 +250,12 @@ describe('parseXMLFile', () => {
     expect(result.success).toBe(false);
   });
 
+  it('catégorie du tireur lue si le fichier la porte (docs/adr/0039)', () => {
+    const xml = `<Competition><Tireur Nom="A" Prenom="a" Sexe="M" Categorie="V2"/><Tireur Nom="B" Prenom="b" Sexe="M" Categorie="M17"/><Tireur Nom="C" Prenom="c" Sexe="M"/></Competition>`;
+    const result = parseXMLFile(xml);
+    expect(result.fencers.map(f => f.category)).toEqual(['V2', 'U17', undefined]);
+  });
+
   it('un tireur complet', () => {
     const xml = `<Competition><Tireur Nom="DUPONT" Prenom="Jean" Sexe="M" Nation="FRA" Ligue="IDF" Club="CE PARIS" Licence="123456" Classement="5"/></Competition>`;
     const result = parseXMLFile(xml);

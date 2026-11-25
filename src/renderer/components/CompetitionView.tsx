@@ -467,6 +467,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onDeleteAllFencers={deleteAllFencers}
             onCheckInAll={checkInAll}
             onUncheckAll={uncheckAll}
+            onComputeCategories={isRapieres ? undefined : competitionCore.computeCategories}
             onImport={isRapieres ? undefined : type => handleOpenImportDialog(type)}
             onImportFFEConnect={isRapieres ? undefined : () => modals.setShowFFEConnect(true)}
             onFencersImported={loadFencers}

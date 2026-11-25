@@ -1886,7 +1886,11 @@
     "deleted": "已刪除 {{name}}",
     "col_handedness": "慣用手",
     "withdraw_failed": "退出未儲存：{{message}}",
-    "reinstate_failed": "恢復未儲存：{{message}}"
+    "reinstate_failed": "恢復未儲存：{{message}}",
+    "col_category": "組別",
+    "compute_categories": "計算組別",
+    "compute_categories_title": "按出生日期及比賽季度，為未有組別的劍手計算年齡組別",
+    "compute_categories_done": "已計算 {{count}} 個組別；{{missing}} 名劍手沒有出生日期"
   },
   "questPhase": {
     "running_title": "Quest 回合進行中",
@@ -2273,7 +2277,9 @@
     "region_ph": "例如：IDF",
     "license_no": "牌照編號",
     "unranked": "未排名",
-    "save": "儲存"
+    "save": "儲存",
+    "category": "組別",
+    "category_unknown": "未填寫"
   },
   "exportCenter": {
     "title": "匯出中心",

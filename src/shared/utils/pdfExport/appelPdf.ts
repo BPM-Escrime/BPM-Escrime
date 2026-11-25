@@ -4,6 +4,7 @@
  * Licensed under GPL-3.0
  */
 
+import { categoryShortLabel } from '../../domain/fencers/fencerCategory';
 import { Fencer } from '../../types';
 import type { PdfTemplate } from '../../types/pdfTemplate.types';
 import { savePDF, buildCssOverrides, assembleBody, BASE_CSS, pdfLang, pdfT } from './core';
@@ -47,6 +48,8 @@ function getFencerCellValue(fencer: Fencer, col: string): string {
       return fencer.firstName ?? '';
     case 'birthDate':
       return fencer.birthDate ? String(new Date(fencer.birthDate).getFullYear()) : '-';
+    case 'category':
+      return categoryShortLabel(fencer.category) || '-';
     case 'club':
       return fencer.club || '-';
     case 'nationality':

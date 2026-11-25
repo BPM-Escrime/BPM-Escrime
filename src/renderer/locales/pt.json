@@ -1886,7 +1886,11 @@
     "deleted": "{{name}} eliminado",
     "col_handedness": "Lateralidade",
     "withdraw_failed": "Retirada não registada: {{message}}",
-    "reinstate_failed": "Reintegração não registada: {{message}}"
+    "reinstate_failed": "Reintegração não registada: {{message}}",
+    "col_category": "Cat.",
+    "compute_categories": "Calcular as categorias",
+    "compute_categories_title": "Categoria de idade dos atiradores que não a têm, pela data de nascimento e pela época da prova",
+    "compute_categories_done": "{{count}} categorias calculadas; {{missing}} atiradores sem data de nascimento"
   },
   "questPhase": {
     "running_title": "Ronda Quest em curso",
@@ -2273,7 +2277,9 @@
     "region_ph": "Ex.: LVT",
     "license_no": "N.º de licença",
     "unranked": "Sem classificação",
-    "save": "Guardar"
+    "save": "Guardar",
+    "category": "Categoria",
+    "category_unknown": "Não indicada"
   },
   "exportCenter": {
     "title": "Centro de exportação",

@@ -21,6 +21,7 @@ import {
   type ApiContract,
   type OperationKind,
   FencerSchema,
+  FencerCategoryField,
   SplitGroup,
 } from './contractDef';
 import { reportOperations } from './contractReports';
@@ -148,6 +149,7 @@ const Text = z.string().trim().max(200);
 /** Identité d'un tireur, sans règle (updateFencerDetails, registerFencers) */
 const FencerDetailsShape = {
   birthDate: z.string().date().nullable().optional().describe('AAAA-MM-JJ ; null : effacée'),
+  category: FencerCategoryField,
   gender: z.enum(['M', 'F', 'X']).optional(),
   nationality: z.string().trim().min(2).max(3).optional().describe('Code ISO (FRA)'),
   region: Text.nullable().optional(),

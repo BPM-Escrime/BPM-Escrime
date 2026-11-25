@@ -23,8 +23,8 @@ export class FencerRepo {
     const ref = fencer.ref || maxRef + 1;
     try {
       this.sql.run(
-        `INSERT INTO fencers (id, competition_id, ref, last_name, first_name, birth_date, gender, nationality, club, region, department, license, ranking, status, photo, handedness, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO fencers (id, competition_id, ref, last_name, first_name, birth_date, gender, nationality, club, region, department, license, ranking, status, photo, handedness, category, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           competitionId,
@@ -42,6 +42,7 @@ export class FencerRepo {
           fencer.status || 'N',
           fencer.photo || null,
           fencer.handedness === 'L' ? 'L' : 'R',
+          fencer.category ?? null,
           now,
           now,
         ]
@@ -160,6 +161,7 @@ export class FencerRepo {
     const fieldMap: Record<string, string> = {
       lastName: 'last_name',
       firstName: 'first_name',
+      category: 'category',
       gender: 'gender',
       nationality: 'nationality',
       club: 'club',

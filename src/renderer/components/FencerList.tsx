@@ -26,6 +26,7 @@ const FencerListComponent: React.FC<FencerListProps> = (props: FencerListProps) 
     readOnly,
     onCheckInAll,
     onUncheckAll,
+    onComputeCategories,
     onDeleteAllFencers,
     confirm,
     customImport,
@@ -99,6 +100,15 @@ const FencerListComponent: React.FC<FencerListProps> = (props: FencerListProps) 
               {checkedInCount > 0 && onUncheckAll && (
                 <Button onClick={onUncheckAll} title={t('fencer.uncheck_all')}>
                   ✗ {t('actions.uncheck_all')}
+                </Button>
+              )}
+              {onComputeCategories && (
+                <Button
+                  onClick={onComputeCategories}
+                  title={t('fencerList.compute_categories_title')}
+                  data-testid="compute-categories"
+                >
+                  {t('fencerList.compute_categories')}
                 </Button>
               )}
               {onDeleteAllFencers && (

@@ -17,6 +17,7 @@ import { useConfirm } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { useDebounce } from '../useDebounce';
 import { SortableCol, COLUMNS, FencerListProps } from '../../components/fencerListShared';
+import { ageCategoryRank } from '../../../shared/utils/clubAge';
 import { usePlatform } from '../../platform/PlatformContext';
 import { DATA_FILE_FILTERS, openDataFile, saveDataFile, useFilesApi } from '../../api/filesApi';
 
@@ -37,6 +38,7 @@ export function useFencerListState(ctx: Ctx) {
     onDeleteAllFencers,
     onCheckInAll,
     onUncheckAll,
+    onComputeCategories,
     onSetFencerStatus,
     onImport,
     onImportFFEConnect,
@@ -106,6 +108,11 @@ export function useFencerListState(ctx: Ctx) {
         for (const added of ['nationality', 'region', 'department'] as SortableCol[]) {
           if (!parsed.includes(added) && parsed.includes('club'))
             parsed.splice(parsed.indexOf('club') + 1 + (added === 'nationality' ? 0 : 1), 0, added);
+        }
+        // Catégorie (docs/adr/0039) : après la naissance
+        if (!parsed.includes('category')) {
+          const at = parsed.indexOf('birthDate');
+          parsed.splice(at >= 0 ? at + 1 : parsed.length, 0, 'category');
         }
         // Latéralité (#1504) : avant le classement
         if (!parsed.includes('handedness')) {
@@ -216,6 +223,8 @@ export function useFencerListState(ctx: Ctx) {
             return (
               dir * (new Date(a.birthDate ?? 0).getTime() - new Date(b.birthDate ?? 0).getTime())
             );
+          case 'category':
+            return dir * (ageCategoryRank(a.category) - ageCategoryRank(b.category));
           case 'club':
             return dir * (a.club || '').localeCompare(b.club || '');
           case 'nationality':
@@ -444,6 +453,7 @@ export function useFencerListState(ctx: Ctx) {
     onDeleteAllFencers,
     onCheckInAll,
     onUncheckAll,
+    onComputeCategories,
     onSetFencerStatus,
     onImport,
     onImportFFEConnect,

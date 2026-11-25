@@ -1886,7 +1886,11 @@
     "deleted": "{{name}} eliminato",
     "col_handedness": "Lateralità",
     "withdraw_failed": "Ritiro non salvato: {{message}}",
-    "reinstate_failed": "Reintegro non salvato: {{message}}"
+    "reinstate_failed": "Reintegro non salvato: {{message}}",
+    "col_category": "Cat.",
+    "compute_categories": "Calcolare le categorie",
+    "compute_categories_title": "Categoria d'età degli schermidori che non ne hanno, dalla data di nascita e dalla stagione della gara",
+    "compute_categories_done": "{{count}} categorie calcolate; {{missing}} schermidori senza data di nascita"
   },
   "questPhase": {
     "running_title": "Turno Quest in corso",
@@ -2273,7 +2277,9 @@
     "region_ph": "Es.: LAZ",
     "license_no": "N. licenza",
     "unranked": "Non classificato",
-    "save": "Salva"
+    "save": "Salva",
+    "category": "Categoria",
+    "category_unknown": "Non indicata"
   },
   "exportCenter": {
     "title": "Centro esportazioni",
