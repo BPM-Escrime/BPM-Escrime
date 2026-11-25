@@ -3,7 +3,8 @@
  * Licensed under GPL-3.0
  */
 
-import { rankAfterStages } from '../../shared/domain/tableau/tableauStage';
+import { entrySeeds, rankAfterStages } from '../../shared/domain/tableau/tableauStage';
+import { formulaSegment } from '../../shared/domain/formula/formulaSteps';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
 import React, { Suspense, useState } from 'react';
@@ -310,6 +311,17 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
   const storedFormula = competition.settings?.formula;
   const tableauFirst = !!storedFormula && startsWithTableau(storedFormula);
   const organizerNotes = useOrganizerNotes(competition, onUpdate);
+
+  // Tableau arrêté et clos (docs/adr/0037) : consultable en lecture seule, classement d'entrée
+  // = tour de poules qui le précède, tireurs du tableau seulement
+  const { stageHistory } = competitionCore;
+  const closedStage = hasDirectElimination ? undefined : stageHistory[stageHistory.length - 1];
+  const closedStageRanking = React.useMemo(() => {
+    if (!closedStage || !storedFormula) return [];
+    const pre = formulaSegment(storedFormula, 0)?.poolRounds ?? 0;
+    const seeds = entrySeeds(closedStage.matches);
+    return computeOverallRanking(poolHistory[pre - 1] ?? []).filter(r => seeds.has(r.fencer.id));
+  }, [closedStage, storedFormula, poolHistory, computeOverallRanking]);
 
   // Tableau arrêté (docs/adr/0037) : restants, puis éliminés du tableau (Q5), puis les autres
   const stagedRanking = React.useMemo(
@@ -667,8 +679,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             activeSplitGroup={activeSplitGroup}
             splitGroups={splitGroups}
             onSwitchSplitGroup={handleSwitchSplitGroup}
-            ranking={effectiveTableauRanking}
-            tableauMatches={tableauMatches}
+            ranking={closedStage ? closedStageRanking : effectiveTableauRanking}
+            tableauMatches={closedStage ? closedStage.matches : tableauMatches}
             setTableauMatches={setTableauMatches}
             consolationBrackets={consolationBrackets}
             setConsolationBrackets={setConsolationBrackets}
@@ -694,7 +706,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onGenerateTableau={generateTableau}
             onClearScore={clearScore}
             onAssign={assignMatches}
-            stopAt={competitionCore.tableauStopAt}
+            stopAt={closedStage ? closedStage.stopAt : competitionCore.tableauStopAt}
+            closedStage={!!closedStage}
           />
         )}
 
@@ -706,7 +719,9 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             finalResults={finalResults}
             fencers={fencers}
             pools={[...poolHistory.flat(), ...pools]}
-            tableauMatches={tableauMatches}
+            tableauMatches={
+              closedStage && tableauMatches.length === 0 ? closedStage.matches : tableauMatches
+            }
             consolationBrackets={consolationBrackets}
             isLaserSabre={isLaserSabre}
             appelFencers={appelFencers.length > 0 ? appelFencers : undefined}

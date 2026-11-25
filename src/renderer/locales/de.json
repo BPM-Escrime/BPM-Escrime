@@ -285,7 +285,8 @@
     "state_current": "aktuell",
     "state_todo": "offen",
     "state_blocked": "gesperrt",
-    "unavailable": "Bereich nicht verfügbar"
+    "unavailable": "Bereich nicht verfügbar",
+    "tableau_closed": "Tableau (abgeschlossen)"
   },
   "pools": {
     "change_pool": "Pool Wechseln",
@@ -4817,6 +4818,8 @@
     "hint": "Fechten Sie, bis {{n}} Fechter übrig sind: die weiteren Runden werden nicht gefochten.",
     "close": "Zur nächsten Phase",
     "confirm": "{{qualified}} Fechter kommen in die nächste Phase, {{eliminated}} scheiden aus. Fortfahren?",
-    "closed": "Tableau abgeschlossen: Melden Sie die {{n}} verbleibenden Fechter für die nächste Phase an."
+    "closed": "Tableau abgeschlossen: Melden Sie die {{n}} verbleibenden Fechter für die nächste Phase an.",
+    "closed_title": "Tableau bei {{n}} Fechtern angehalten: abgeschlossen",
+    "closed_hint": "Nur Ansicht. Die verbleibenden Fechter haben das Turnier fortgesetzt; ihre Endplatzierung steht unter Ergebnisse."
   }
 }

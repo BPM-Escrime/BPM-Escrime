@@ -154,6 +154,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     // Formule enregistrée sans tour de poules : le tableau suit l'appel (ADR-0037)
     tableauFirst:
       !!competition.settings?.formula && startsWithTableau(competition.settings.formula),
+    closedTableau: !hasDirectElimination && ctx.stageHistory.length > 0,
   });
   useRemoteCheckinSync({
     competitionId: competition.id,

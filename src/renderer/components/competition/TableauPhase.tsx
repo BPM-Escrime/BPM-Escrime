@@ -75,6 +75,8 @@ interface TableauPhaseProps {
   onAssign?: (input: AssignmentsInput) => Promise<'recorded' | 'local' | 'refused'>;
   /** Tableau arrêté à N tireurs (docs/adr/0037) : bandeau et passage à la phase suivante */
   stopAt?: number;
+  /** Tableau arrêté déjà clos : consultation seule (docs/adr/0037) */
+  closedStage?: boolean;
 }
 
 const TableauPhase: React.FC<TableauPhaseProps> = ({
@@ -112,6 +114,7 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
   onClearScore,
   onAssign,
   stopAt,
+  closedStage = false,
 }) => {
   const remote = useRemoteApi();
   // Changement d'organisation seul (pistes, arbitres) : par le moteur ; le reste, à l'écran
@@ -178,7 +181,15 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
           onSelect={onSwitchSplitGroup}
         />
       )}
-      {stopAt && tableauMatches.length > 0 && (
+      {closedStage && stopAt && (
+        <div className="tableau-stage" role="status" data-testid="tableau-stage-closed">
+          <p>
+            <strong>{t('tableauStage.closed_title', { n: stopAt })}</strong>
+          </p>
+          <p>{t('tableauStage.closed_hint')}</p>
+        </div>
+      )}
+      {!closedStage && stopAt && tableauMatches.length > 0 && (
         <TableauStageBanner
           competitionId={competitionId}
           stopAt={stopAt}
@@ -189,7 +200,7 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
       {tableauDrift && onRebuildTableau && (
         <TableauDriftBanner drift={tableauDrift} onRebuild={onRebuildTableau} />
       )}
-      {finalResults.length > 0 && !tableauEditUnlocked && (
+      {!closedStage && finalResults.length > 0 && !tableauEditUnlocked && (
         <div className="tableau-phase-1">
           <span>{t('competitionView.readonly')}</span>
           <button
@@ -217,7 +228,7 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
         playAllPositions={playAllPositions}
         arenaCount={remoteArenaCount}
         stripStart={remoteStripStart}
-        readOnly={finalResults.length > 0 && !tableauEditUnlocked}
+        readOnly={closedStage || (finalResults.length > 0 && !tableauEditUnlocked)}
         competitionId={competitionId}
         weapon={weapon}
         maxRefereesPerMatch={maxRefereesPerMatch}

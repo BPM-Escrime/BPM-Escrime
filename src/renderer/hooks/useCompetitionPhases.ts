@@ -42,6 +42,8 @@ interface UseCompetitionPhasesParams {
    * du classement d'entrée
    */
   tableauFirst?: boolean;
+  /** Tableau arrêté déjà clos (docs/adr/0037) : onglet gardé, en consultation */
+  closedTableau?: boolean;
 }
 
 /** Ordre des phases, onglets de navigation, accessibilité des étapes (poules, tableau, résultats). */
@@ -69,6 +71,7 @@ export function useCompetitionPhases({
   auditLogEnabled,
   refereeFeatureEnabled,
   tableauFirst = false,
+  closedTableau = false,
 }: UseCompetitionPhasesParams) {
   const { t } = useTranslation();
   const phaseOrder = useMemo<Phase[]>(() => {
@@ -194,15 +197,15 @@ export function useCompetitionPhases({
           ? t('phases.tableau_locked_tooltip')
           : (undefined as string | undefined),
     },
-    ...(hasDirectElimination
+    ...(hasDirectElimination || closedTableau
       ? [
           {
             id: 'tableau',
-            label: t('phases.tableau'),
+            label: closedTableau ? t('phases.tableau_closed') : t('phases.tableau'),
             icon: PHASE_ICONS.tableau,
-            disabled: !isTableauUnlocked && finalResults.length === 0,
+            disabled: !closedTableau && !isTableauUnlocked && finalResults.length === 0,
             title:
-              !isTableauUnlocked && finalResults.length === 0
+              !closedTableau && !isTableauUnlocked && finalResults.length === 0
                 ? t('phases.tableau_locked_tooltip')
                 : (undefined as string | undefined),
           },

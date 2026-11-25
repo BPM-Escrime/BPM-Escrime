@@ -141,7 +141,8 @@
     "state_current": "in progress",
     "state_todo": "to do",
     "state_blocked": "blocked",
-    "unavailable": "Section unavailable"
+    "unavailable": "Section unavailable",
+    "tableau_closed": "Bracket (closed)"
   },
   "pools": {
     "generate": "Generate Pools",
@@ -4817,6 +4818,8 @@
     "hint": "Fence the bouts until {{n}} fencers remain: later rounds are not fenced.",
     "close": "Go to the next phase",
     "confirm": "{{qualified}} fencers go on to the next phase, {{eliminated}} are eliminated. Continue?",
-    "closed": "Bracket closed: check in the {{n}} remaining fencers for the next phase."
+    "closed": "Bracket closed: check in the {{n}} remaining fencers for the next phase.",
+    "closed_title": "Bracket stopped at {{n}} fencers: closed",
+    "closed_hint": "Read only. The remaining fencers went on in the competition; their final place is in Results."
   }
 }

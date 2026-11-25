@@ -141,7 +141,8 @@
     "state_current": "en curso",
     "state_todo": "pendiente",
     "state_blocked": "bloqueado",
-    "unavailable": "Sección no disponible"
+    "unavailable": "Sección no disponible",
+    "tableau_closed": "Cuadro (cerrado)"
   },
   "pools": {
     "generate": "Generar Poules",
@@ -4817,6 +4818,8 @@
     "hint": "Dispute los asaltos hasta que queden {{n}} tiradores: las rondas siguientes no se disputan.",
     "close": "Pasar a la fase siguiente",
     "confirm": "{{qualified}} tiradores pasan a la fase siguiente, {{eliminated}} quedan eliminados. ¿Continuar?",
-    "closed": "Cuadro cerrado: pase lista a los {{n}} tiradores restantes para la fase siguiente."
+    "closed": "Cuadro cerrado: pase lista a los {{n}} tiradores restantes para la fase siguiente.",
+    "closed_title": "Cuadro detenido en {{n}} tiradores: cerrado",
+    "closed_hint": "Solo consulta. Los tiradores restantes siguieron en la competición; su puesto final está en Resultados."
   }
 }

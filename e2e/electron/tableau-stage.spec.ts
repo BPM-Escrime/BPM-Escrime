@@ -109,8 +109,8 @@ test('tableau arrêté à 4 : poule finale des restants et classement final', as
   // Éliminés du tableau sortis de l'appel : 4 pointés sur 8
   await expect(win.getByText('4 pointés', { exact: false })).toBeVisible();
   await shot(win, '4-appel-restants');
-  // Plus d'onglet tableau : la suite est la poule des restants
-  await expect(win.locator('.phase-step', { hasText: 'Tableau' })).toHaveCount(0);
+  // Onglet tableau gardé, en consultation : la suite est la poule des restants
+  await expect(win.locator('.phase-step', { hasText: 'Tableau (clos)' })).toHaveCount(1);
 
   // Tour 2 : poule finale des 4 restants
   await win.getByRole('button', { name: /pr[eé]parer les poules/i }).click();
@@ -139,4 +139,15 @@ test('tableau arrêté à 4 : poule finale des restants et classement final', as
     since: 0,
   });
   expect(events.events.map(e => e.type)).toContain('TableauStageClosed');
+
+  // Tableau clos revu depuis les résultats : lecture seule, quarts joués visibles
+  await win.locator('.phase-step', { hasText: 'Tableau (clos)' }).click();
+  await expect(win.getByTestId('tableau-stage-closed')).toContainText(
+    'Tableau arrêté à 4 tireurs : clos'
+  );
+  await expect(win.getByTestId('tableau-stage-close')).toHaveCount(0);
+  await expect(win.locator('.match-card').filter({ hasText: '15' })).toHaveCount(4);
+  await shot(win, '7-tableau-clos');
+  await win.locator('.phase-step', { hasText: 'Résultats' }).click();
+  await expect(win.locator('table tbody tr')).toHaveCount(8);
 });

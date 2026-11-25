@@ -141,7 +141,8 @@
     "state_current": "em curso",
     "state_todo": "por fazer",
     "state_blocked": "bloqueado",
-    "unavailable": "Secção indisponível"
+    "unavailable": "Secção indisponível",
+    "tableau_closed": "Quadro (fechado)"
   },
   "pools": {
     "generate": "Gerar poules",
@@ -4817,6 +4818,8 @@
     "hint": "Disputem os assaltos até restarem {{n}} atiradores: as voltas seguintes não se disputam.",
     "close": "Passar à fase seguinte",
     "confirm": "{{qualified}} atiradores passam à fase seguinte, {{eliminated}} são eliminados. Continuar?",
-    "closed": "Quadro fechado: faça a chamada dos {{n}} atiradores restantes para a fase seguinte."
+    "closed": "Quadro fechado: faça a chamada dos {{n}} atiradores restantes para a fase seguinte.",
+    "closed_title": "Quadro parado em {{n}} atiradores: fechado",
+    "closed_hint": "Só consulta. Os atiradores restantes seguiram na prova; o seu lugar final está nos Resultados."
   }
 }

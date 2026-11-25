@@ -141,7 +141,8 @@
     "state_current": "en cours",
     "state_todo": "à faire",
     "state_blocked": "bloqué",
-    "unavailable": "Section non disponible"
+    "unavailable": "Section non disponible",
+    "tableau_closed": "Tableau (clos)"
   },
   "pools": {
     "generate": "Générer les poules",
@@ -4817,6 +4818,8 @@
     "hint": "Jouez les matchs jusqu'à ce qu'il reste {{n}} tireurs : les tours suivants ne se tirent pas.",
     "close": "Passer à la phase suivante",
     "confirm": "{{qualified}} tireurs passent à la phase suivante, {{eliminated}} sont éliminés. Continuer ?",
-    "closed": "Tableau clos : pointez les {{n}} tireurs restants pour la phase suivante."
+    "closed": "Tableau clos : pointez les {{n}} tireurs restants pour la phase suivante.",
+    "closed_title": "Tableau arrêté à {{n}} tireurs : clos",
+    "closed_hint": "Consultation seule. Les tireurs restants ont poursuivi l'épreuve ; leur place finale est aux Résultats."
   }
 }

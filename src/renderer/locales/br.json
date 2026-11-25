@@ -141,7 +141,8 @@
     "state_current": "o vont en-dro",
     "state_todo": "da ober",
     "state_blocked": "stanket",
-    "unavailable": "Rann dizimplijus"
+    "unavailable": "Rann dizimplijus",
+    "tableau_closed": "Taolenn (serret)"
   },
   "pools": {
     "generate": "Genelañ ar poullou",
@@ -4817,6 +4818,8 @@
     "hint": "C'hoariit ar c'hrogadoù betek ma chomo {{n}} c'hoarier : n'eo ket c'hoariet an troioù war-lerc'h.",
     "close": "Mont d'ar prantad war-lerc'h",
     "confirm": "{{qualified}} c'hoarier a dremen d'ar prantad war-lerc'h, {{eliminated}} a zo lamet. Kenderc'hel ?",
-    "closed": "Taolenn serret : galvit an {{n}} c'hoarier a chom evit ar prantad war-lerc'h."
+    "closed": "Taolenn serret : galvit an {{n}} c'hoarier a chom evit ar prantad war-lerc'h.",
+    "closed_title": "Taolenn paouezet da {{n}} c'hoarier : serret",
+    "closed_hint": "Lenn hepken. Ar c'hoarierien a chom o deus kendalc'het ; o renk diwezhañ a zo en Disoc'hoù."
   }
 }
