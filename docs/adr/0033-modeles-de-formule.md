@@ -1,8 +1,8 @@
-# ADR-0033 — Modèles de formule : catalogue fourni en lecture seule, modèles personnels du poste par le contrat
+# ADR-0033 — Modèles de formule et formule d'une épreuve par le contrat, MCP compris
 
 - **Statut** : Proposée
 - **Date** : 2026-11-25
-- **Tickets** : #2013 (étape B2, décisions D6, D7, D8, D12 ; questions Q13, Q14, Q20, Q22), #1948 (lot 5) ; complète [ADR-0012](0012-formule-domaine.md), [ADR-0022](0022-fonctions-du-poste-contrat.md) et [ADR-0032](0032-formule-interface-unique-apercu.md)
+- **Tickets** : #2013 (étape B2, décisions D6, D7, D8, D12 ; questions Q13, Q14, Q20, Q22), #1948 (lots 5 et 7) ; complète [ADR-0012](0012-formule-domaine.md), [ADR-0022](0022-fonctions-du-poste-contrat.md) et [ADR-0032](0032-formule-interface-unique-apercu.md)
 
 ## Contexte
 
@@ -17,6 +17,11 @@
   - des modèles fournis en lecture seule (D12), dont « Tournoi des rapières » (D8) ;
   - un badge Standard / Adaptée calculé à partir du modèle d'origine (§ 9 de #2013).
 - Jusqu'à l'étape C de #2013, deux modèles de formule coexistent (ADR-0032).
+- **Le MCP ne peut pas modifier la formule d'une épreuve.** `updateCompetitionSettings` existe
+  dans le contrat mais n'a pas d'outil MCP. `create_competition` n'accepte que l'épée, le fleuret
+  et le sabre, avec les réglages par défaut. Or l'ADR-0012 place la formule dans le domaine
+  précisément pour que le MCP puisse l'éditer, et #1948 (lot 7) veut un agent qui propose et
+  applique une formule.
 
 ## Décision
 
@@ -88,12 +93,46 @@ fonction que celle des épreuves.
 - Modèle fourni `bpm/tournoi-des-rapieres` : arme « Autre », `specialMode: 'rapieres'`, formule
   poules → tableau. Choisir ce modèle crée une épreuve identique à celle du mode spécial actuel.
 
+**Formule d'une épreuve par le contrat et le MCP** (amendement du 2026-11-25)
+
+| Opération                       | Nature   | Outil MCP                               | Effet                                                                                                                                                                   |
+| ------------------------------- | -------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getCompetitionFormula`         | requête  | `get_competition_formula` (lecture)     | Phases de la frise, réglages par phase, origine, état Standard / Adaptée / Libre et écarts, relevé de cohérence avec la catégorie, briques autorisées à chaque position |
+| `applyFormulaTemplate`          | commande | `apply_formula_template` (écriture)     | Applique un modèle fourni ou personnel compatible ; enregistre `formulaOrigin`                                                                                          |
+| `updateCompetitionFormula`      | commande | `update_competition_formula` (écriture) | Une opération de frise par appel : `insertPhase` (brique, position), `removePhase` (phase), `setPhase` (phase, réglages), `setGeneral` (réglages généraux)              |
+| `createCompetition` (existante) | commande | `create_competition` (étendu)           | Accepte aussi le Sabre Laser et l'arme « Autre », et un `templateId` facultatif                                                                                         |
+
+- **Mêmes règles que l'écran, un seul code** : les commandes appellent les opérations de la frise
+  du domaine (`formulaFrieze.ts`, ADR-0032) et la validation `validateFormulaSettings`
+  (ADR-0012). Une brique interdite à une position, ou une formule incohérente, est refusée par
+  `invalid_settings` ; une épreuve déjà tirée, par `draw_done` (codes existants, ADR-0009).
+  L'agent ne voit jamais d'option que le moteur n'exécute pas (P2).
+- **Droit `competition:write`**, comme `updateCompetitionSettings` : ce sont des faits de
+  l'épreuve, **journalisés** (ADR-0005), avec `dryRun`, `expectedRevision` et `commandId`
+  (ADR-0006, ADR-0008). Aucune exception à l'ADR-0022 n'est nécessaire pour ces opérations ;
+  les outils d'écriture restent soumis à l'autorisation d'écriture du MCP.
+- **Verrou** : formule figée après le tirage (`draw_done`, comme `updateCompetitionSettings`
+  aujourd'hui), puis verrou par phase commencée quand l'étape D de #2013 l'apportera (P8).
+- **Le réglage `formulaPreview` ne s'applique pas** (ADR-0032) : l'agent voit et modifie toute la
+  formule, quel que soit l'écran du poste.
+- **Ce que l'agent peut régler suit les étapes de #2013** : à l'étape B2, ce que le moteur
+  exécute aujourd'hui (1 à 5 tours, touches, qualifiés, tableau, 3ᵉ place, Tour Quest, barème de
+  l'arme « Autre ») ; après les étapes C et D, réglages par tour, 0 tour, tableau intercalé ;
+  après #1948, tirages, exemptés, consolante et `suggest_formula` (lot 7).
+- L'écran passe par les mêmes commandes : Organisation ▸ Formule et la fenêtre de création
+  cessent d'écrire la formule par `updateCompetitionSettings` (un fait, un chemin).
+
 ## Conséquences
 
 - Le sélecteur et le badge sont derrière le réglage `formulaPreview` (ADR-0032) ; les opérations
   du contrat et les outils MCP sont livrés directement (D13).
 - Les modèles personnels restent propres au poste jusqu'à #1982, qui dira s'ils se partagent.
 - `docs/MCP.md` et `docs/API_CONTRACT.md` sont régénérés (`npm run docs:mcp`).
+- `contractNaming.test.ts` couvre les nouveaux noms ; chaque outil MCP a un test de refus
+  (brique interdite, épreuve tirée, révision périmée).
+- `updateCompetitionSettings` garde les réglages qui ne sont pas de la formule (arme, catégorie,
+  arbitrage…). Les champs de formule y restent acceptés jusqu'à l'étape C pour la
+  compatibilité, puis passent par `updateCompetitionFormula` seulement.
 - Un modèle personnel enregistré sous une formule d'un type (`draft`) ne s'applique pas à
   l'arme « Autre », ni l'inverse, jusqu'à l'étape C. Le sélecteur ne propose que les modèles
   compatibles.
@@ -109,3 +148,8 @@ fonction que celle des épreuves.
 - **Modèles fournis modifiables sur place** : une mise à jour de saison écraserait les
   modifications ou figerait le catalogue, et le badge perdrait sa référence.
 - **Stocker l'état Standard / Adaptée** : il dériverait de la formule réelle.
+- **Exposer `updateCompetitionSettings` tel quel au MCP** : un patch de réglages plats, sans la
+  grammaire de la frise ; l'agent pourrait écrire une suite de phases que l'écran refuse, et
+  le contrat changerait de forme à l'étape C.
+- **Une seule commande qui remplace toute la formule** : simple, mais l'agent devrait
+  reconstruire la formule entière et les refus ne désigneraient pas la phase fautive.
