@@ -58,6 +58,13 @@
   'referee.club_card_pick': 'Escolher um atirador presente',
   'referee.club_card_no_camera_list':
     'Câmara indisponível: escolha o atirador na lista ou escreva o código do cartão.',
+  'referee.club_camera_insecure':
+    'Câmara bloqueada: a página usa HTTP. Ative o HTTPS nas definições da pontuação remota do clube.',
+  'referee.club_camera_unsupported':
+    'Este navegador não dá acesso à câmara: abra a página no Chrome ou no Safari.',
+  'referee.club_camera_denied': 'Acesso à câmara recusado: autorize-o nas definições do navegador.',
+  'referee.club_camera_busy': 'Câmara ocupada por outra aplicação.',
+  'referee.club_camera_none': 'Nenhuma câmara encontrada neste dispositivo.',
   'referee.club_card_code': 'Código do cartão',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Saltar (atirador não identificado)',

@@ -59,6 +59,13 @@
   'referee.club_card_pick': 'Anwesenden Fechter wählen',
   'referee.club_card_no_camera_list':
     'Kamera nicht verfügbar: Fechter aus der Liste wählen oder Kartencode eingeben.',
+  'referee.club_camera_insecure':
+    'Kamera blockiert: Die Seite nutzt HTTP. HTTPS in den Einstellungen der Fernerfassung des Vereins aktivieren.',
+  'referee.club_camera_unsupported':
+    'Dieser Browser erlaubt keinen Kamerazugriff: Seite in Chrome oder Safari öffnen.',
+  'referee.club_camera_denied': 'Kamerazugriff verweigert: in den Browsereinstellungen erlauben.',
+  'referee.club_camera_busy': 'Kamera wird von einer anderen App verwendet.',
+  'referee.club_camera_none': 'Keine Kamera auf diesem Gerät gefunden.',
   'referee.club_card_code': 'Kartencode',
   'referee.club_card_ok': 'Bestätigen',
   'referee.club_card_skip': 'Überspringen (Fechter nicht identifiziert)',

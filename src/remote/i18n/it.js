@@ -54,6 +54,14 @@
   'referee.club_card_pick': 'Scegli uno schermidore presente',
   'referee.club_card_no_camera_list':
     "Fotocamera non disponibile: scegli lo schermidore dall'elenco o digita il codice della tessera.",
+  'referee.club_camera_insecure':
+    'Fotocamera bloccata: la pagina usa HTTP. Attiva HTTPS nelle impostazioni del punteggio remoto del club.',
+  'referee.club_camera_unsupported':
+    'Questo browser non dà accesso alla fotocamera: apri la pagina in Chrome o Safari.',
+  'referee.club_camera_denied':
+    'Accesso alla fotocamera negato: consentilo nelle impostazioni del browser.',
+  'referee.club_camera_busy': "Fotocamera usata da un'altra app.",
+  'referee.club_camera_none': 'Nessuna fotocamera trovata su questo dispositivo.',
   'referee.club_card_code': 'Codice della tessera',
   'referee.club_card_ok': 'Conferma',
   'referee.club_card_skip': 'Salta (schermidore non identificato)',

@@ -68,19 +68,74 @@
   }
 
   /**
-   * Démarre la caméra arrière dans `video` et appelle onText(texte) à chaque QR lu.
-   * Renvoie une fonction d'arrêt, ou null si la caméra est indisponible.
+   * Motif d'une caméra indisponible : 'insecure' (page en HTTP), 'unsupported' (navigateur
+   * intégré d'une appli, ancien navigateur), 'denied', 'busy', 'none', sinon 'error'.
+   */
+  function cameraFailure(win, err) {
+    if (!win || !win.isSecureContext) return 'insecure';
+    var md = win.navigator && win.navigator.mediaDevices;
+    if (!md || !md.getUserMedia) return 'unsupported';
+    switch (err && err.name) {
+      case 'NotAllowedError':
+      case 'SecurityError':
+        return 'denied';
+      case 'NotReadableError':
+      case 'AbortError':
+        return 'busy';
+      case 'NotFoundError':
+      case 'OverconstrainedError':
+        return 'none';
+      default:
+        return 'error';
+    }
+  }
+
+  function cameraFailureText(reason) {
+    switch (reason) {
+      case 'insecure':
+        return tr(
+          'referee.club_camera_insecure',
+          'Caméra bloquée : la page est en HTTP. Activez HTTPS dans les réglages de la saisie distante du club.'
+        );
+      case 'unsupported':
+        return tr(
+          'referee.club_camera_unsupported',
+          'Ce navigateur ne donne pas accès à la caméra : ouvrez la page dans Chrome ou Safari.'
+        );
+      case 'denied':
+        return tr(
+          'referee.club_camera_denied',
+          'Accès à la caméra refusé : autorisez-le dans les réglages du navigateur.'
+        );
+      case 'busy':
+        return tr('referee.club_camera_busy', 'Caméra occupée par une autre application.');
+      case 'none':
+        return tr('referee.club_camera_none', 'Aucune caméra trouvée sur cet appareil.');
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Démarre la caméra (arrière de préférence) dans `video` et appelle onText(texte) à chaque
+   * QR lu. Renvoie { stop } ou { reason } si la caméra est indisponible.
    */
   async function startCamera(win, video, onText) {
-    if (!cameraUsable(win)) return null;
+    if (!cameraUsable(win)) return { reason: cameraFailure(win, null) };
     var stream;
+    var md = win.navigator.mediaDevices;
     try {
-      stream = await win.navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false,
-      });
-    } catch (_) {
-      return null;
+      stream = await md.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    } catch (err) {
+      // Refus : inutile de redemander. Sinon (pas de caméra arrière…) : n'importe quelle caméra
+      if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+        return { reason: cameraFailure(win, err) };
+      }
+      try {
+        stream = await md.getUserMedia({ video: true, audio: false });
+      } catch (err2) {
+        return { reason: cameraFailure(win, err2) };
+      }
     }
     video.srcObject = stream;
     video.setAttribute('playsinline', '');
@@ -129,13 +184,15 @@
       if (!stopped) timer = win.setTimeout(tick, 250);
     }
     tick();
-    return function stop() {
-      stopped = true;
-      if (timer) win.clearTimeout(timer);
-      stream.getTracks().forEach(function (t) {
-        t.stop();
-      });
-      video.srcObject = null;
+    return {
+      stop: function stop() {
+        stopped = true;
+        if (timer) win.clearTimeout(timer);
+        stream.getTracks().forEach(function (t) {
+          t.stop();
+        });
+        video.srcObject = null;
+      },
     };
   }
 
@@ -305,14 +362,17 @@
       cancel.addEventListener('click', function () {
         finish('cancel');
       });
-      startCamera(win, video, tryText).then(function (stop) {
+      startCamera(win, video, tryText).then(function (cam) {
+        var stop = cam && cam.stop;
         if (done) {
           if (stop) stop();
           return;
         }
-        stopCam = stop;
+        stopCam = stop || null;
         if (!stop) {
           video.style.display = 'none';
+          var why = cameraFailureText(cam && cam.reason);
+          if (why) error.textContent = errorText ? errorText + ' — ' + why : why;
           hint.textContent = select
             ? tr(
                 'referee.club_card_no_camera_list',
@@ -463,6 +523,8 @@
     parseCard: parseCard,
     arenaFromPath: arenaFromPath,
     cameraUsable: cameraUsable,
+    cameraFailure: cameraFailure,
+    cameraFailureText: cameraFailureText,
     errorMessage: errorMessage,
     memberSelect: memberSelect,
     sideFields: sideFields,

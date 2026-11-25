@@ -128,4 +128,44 @@ describe('refereeClubCards (#1872)', () => {
     expect(cards.sideFields({ member: 'p' }, 'B')).toEqual({ memberB: 'p' });
     expect(cards.sideFields(null, 'B')).toEqual({ codeB: null });
   });
+
+  it('motif de la caméra indisponible', () => {
+    const md = { getUserMedia: () => null };
+    expect(cards.cameraFailure({ isSecureContext: false }, null)).toBe('insecure');
+    expect(cards.cameraFailure({ isSecureContext: true, navigator: {} }, null)).toBe('unsupported');
+    const ok = { isSecureContext: true, navigator: { mediaDevices: md } };
+    expect(cards.cameraFailure(ok, { name: 'NotAllowedError' })).toBe('denied');
+    expect(cards.cameraFailure(ok, { name: 'NotReadableError' })).toBe('busy');
+    expect(cards.cameraFailure(ok, { name: 'NotFoundError' })).toBe('none');
+    expect(cards.cameraFailure(ok, { name: 'Weird' })).toBe('error');
+    expect(cards.cameraFailureText('insecure')).toMatch(/HTTPS/);
+    expect(cards.cameraFailureText('error')).toBe('');
+  });
+
+  it('caméra arrière absente : second essai avec n’importe quelle caméra', async () => {
+    document.body.innerHTML =
+      '<div class="header"><button id="btn-header-menu"></button></div>' +
+      '<div><button id="btn-back-to-list" class="btn-x">Retour</button></div>';
+    const getUserMedia = vi
+      .fn()
+      .mockRejectedValueOnce(Object.assign(new Error('x'), { name: 'OverconstrainedError' }))
+      .mockRejectedValueOnce(Object.assign(new Error('x'), { name: 'NotFoundError' }));
+    const win = {
+      location: { pathname: '/arene1/arbitre', search: '' },
+      isSecureContext: true,
+      navigator: { mediaDevices: { getUserMedia } },
+      fetch: vi.fn().mockResolvedValue({
+        json: () => Promise.resolve({ active: true, club: 'Cercle', hasMatch: false, members: [] }),
+      }),
+      document,
+    };
+    expect(await cards.install(win, () => null)).toBe(true);
+    await vi.waitFor(() => expect(getUserMedia).toHaveBeenCalledTimes(2));
+    expect(getUserMedia.mock.calls[1][0]).toEqual({ video: true, audio: false });
+    await vi.waitFor(() =>
+      expect(document.querySelector('#club-card-overlay [role="alert"]')?.textContent).toMatch(
+        /Aucune caméra/
+      )
+    );
+  });
 });

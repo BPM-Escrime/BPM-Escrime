@@ -57,6 +57,14 @@
   'referee.club_card_pick': "Dibab ur c'hlezeier bezant",
   'referee.club_card_no_camera_list':
     "Kamera dihegerz : dibabit ar c'hlezeier er roll pe skrivit kod e gartenn.",
+  'referee.club_camera_insecure':
+    "Kamera stanket : ar bajenn a implij HTTP. Gweredekait HTTPS e arventennoù an notenniñ a-bell ar c'hlub.",
+  'referee.club_camera_unsupported':
+    "Ar merdeer-mañ ne ro ket tro d'ar gamera : digorit ar bajenn gant Chrome pe Safari.",
+  'referee.club_camera_denied':
+    "Nac'het eo an tremen d'ar gamera : aotreit anezhañ e arventennoù ar merdeer.",
+  'referee.club_camera_busy': 'Implijet eo ar gamera gant un arload all.',
+  'referee.club_camera_none': 'Kamera ebet kavet war an trevnad-mañ.',
   'referee.club_card_code': 'Kod ar gartenn',
   'referee.club_card_ok': 'Kadarnaat',
   'referee.club_card_skip': 'Tremen (kleziad anidentelaet)',

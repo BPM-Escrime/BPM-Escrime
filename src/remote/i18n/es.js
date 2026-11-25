@@ -59,6 +59,14 @@
   'referee.club_card_pick': 'Elegir un tirador presente',
   'referee.club_card_no_camera_list':
     'Cámara no disponible: elija al tirador en la lista o escriba el código de su tarjeta.',
+  'referee.club_camera_insecure':
+    'Cámara bloqueada: la página usa HTTP. Active HTTPS en los ajustes de la puntuación remota del club.',
+  'referee.club_camera_unsupported':
+    'Este navegador no da acceso a la cámara: abra la página en Chrome o Safari.',
+  'referee.club_camera_denied':
+    'Acceso a la cámara denegado: autorícelo en los ajustes del navegador.',
+  'referee.club_camera_busy': 'Cámara ocupada por otra aplicación.',
+  'referee.club_camera_none': 'No se ha encontrado ninguna cámara en este dispositivo.',
   'referee.club_card_code': 'Código de la tarjeta',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Omitir (tirador no identificado)',

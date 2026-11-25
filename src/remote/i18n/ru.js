@@ -57,6 +57,13 @@
   'referee.club_card_pick': 'Выберите присутствующего фехтовальщика',
   'referee.club_card_no_camera_list':
     'Камера недоступна: выберите фехтовальщика из списка или введите код карты.',
+  'referee.club_camera_insecure':
+    'Камера заблокирована: страница открыта по HTTP. Включите HTTPS в настройках удалённого судейства клуба.',
+  'referee.club_camera_unsupported':
+    'Этот браузер не даёт доступа к камере: откройте страницу в Chrome или Safari.',
+  'referee.club_camera_denied': 'Доступ к камере запрещён: разрешите его в настройках браузера.',
+  'referee.club_camera_busy': 'Камера занята другим приложением.',
+  'referee.club_camera_none': 'На этом устройстве не найдена камера.',
   'referee.club_card_code': 'Код карты',
   'referee.club_card_ok': 'Подтвердить',
   'referee.club_card_skip': 'Пропустить (не опознан)',

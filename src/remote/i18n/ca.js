@@ -58,6 +58,14 @@
   'referee.club_card_pick': 'Trieu un tirador present',
   'referee.club_card_no_camera_list':
     'Càmera no disponible: trieu el tirador a la llista o escriviu el codi del carnet.',
+  'referee.club_camera_insecure':
+    'Càmera bloquejada: la pàgina fa servir HTTP. Activeu HTTPS als paràmetres de la puntuació remota del club.',
+  'referee.club_camera_unsupported':
+    'Aquest navegador no dona accés a la càmera: obriu la pàgina amb Chrome o Safari.',
+  'referee.club_camera_denied':
+    'Accés a la càmera denegat: autoritzeu-lo als paràmetres del navegador.',
+  'referee.club_camera_busy': 'Càmera ocupada per una altra aplicació.',
+  'referee.club_camera_none': "No s'ha trobat cap càmera en aquest dispositiu.",
   'referee.club_card_code': 'Codi del carnet',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Ometre (tirador no identificat)',
