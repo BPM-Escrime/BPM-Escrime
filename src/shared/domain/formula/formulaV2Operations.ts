@@ -11,15 +11,17 @@ import {
   AdvancementRule,
   Category,
   CompetitionSettings,
+  CustomFormulaConfig,
   CustomScoringConfig,
   QuestPhaseConfig,
   Weapon,
 } from '../../types';
 import { getCoherenceIssues, CoherenceIssue } from '../../utils/formulaCoherence';
 import { MAX_POOL_ROUNDS } from './formulaDraft';
-import type { FriezeBrick, FriezePhase } from './formulaFrieze';
+import type { FormulaSummaryPart, FriezeBrick, FriezePhase } from './formulaFrieze';
 import { FormulaOperation, FormulaOperationError } from './formulaOperations';
 import {
+  customFormulaOf,
   flatSettingsOf,
   formulaOf,
   type FormulaPhaseV2,
@@ -108,7 +110,7 @@ function newTableau(ctx: FormulaV2Context, id: string): TableauPhase {
   };
 }
 
-function insertV2(
+export function insertV2(
   f: FormulaV2,
   ctx: FormulaV2Context,
   brick: FriezeBrick,
@@ -134,7 +136,7 @@ function insertV2(
   return withQuestPools({ ...f, phases });
 }
 
-function removeV2(f: FormulaV2, phase: FriezePhase): FormulaV2 {
+export function removeV2(f: FormulaV2, phase: FriezePhase): FormulaV2 {
   if (phase.kind === 'tableau') return { ...f, phases: f.phases.filter(p => !isTableau(p)) };
   if (phase.kind === 'quest') return { ...f, phases: f.phases.filter(p => !isQuest(p)) };
   let round = -1;
@@ -439,4 +441,97 @@ export function formulaViewV2(ctx: FormulaV2Context): {
             hasDirectElimination: !!tableau,
           }),
   };
+}
+
+// ── Opérations qui mènent d'une formule v2 à une autre (écran → updateCompetitionFormula) ──
+
+const POOL_DIFF = [
+  'label',
+  'sizeMin',
+  'sizeMax',
+  'maxScore',
+  'timerSeconds',
+  'scoring',
+  'qualification',
+  'seeding',
+  'boutOrder',
+] as const;
+const TABLEAU_DIFF = [
+  'label',
+  'maxScore',
+  'timerSeconds',
+  'thirdPlace',
+  'allPlaces',
+  'scoring',
+] as const;
+const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+function changed(from: object, to: object, keys: readonly string[]) {
+  const out: Record<string, unknown> = {};
+  for (const k of keys) {
+    const b = (to as Record<string, unknown>)[k];
+    if (!same((from as Record<string, unknown>)[k], b)) out[k] = b ?? null;
+  }
+  return out;
+}
+
+/**
+ * Liste d'opérations (noms v2, réglage par tour) qui mène la formule `from` à `to` : structure
+ * d'abord (tableau, Tour Quest, nombre de tours), puis réglages de chaque phase et généraux.
+ */
+export function operationsBetweenV2(from: FormulaV2, to: FormulaV2): FormulaOperation[] {
+  const ops: FormulaOperation[] = [];
+  const pools = (f: FormulaV2) => f.phases.filter(isPool);
+  const quest = (f: FormulaV2) => f.phases.find(isQuest);
+  const tableau = (f: FormulaV2) => f.phases.find(isTableau);
+  if (tableau(from) && !tableau(to)) ops.push({ op: 'removePhase', phase: 'tableau' });
+  if (quest(from) && !quest(to)) ops.push({ op: 'removePhase', phase: 'quest' });
+  const have = pools(from).length;
+  const want = pools(to).length;
+  for (let n = have; n > want; n--) ops.push({ op: 'removePhase', phase: `pool-${n - 1}` });
+  for (let n = have; n < want; n++) ops.push({ op: 'insertPhase', brick: 'pool', at: n });
+  if (!quest(from) && quest(to)) ops.push({ op: 'insertPhase', brick: 'quest', at: want });
+  if (!tableau(from) && tableau(to))
+    ops.push({ op: 'insertPhase', brick: 'tableau', at: want + (quest(to) ? 1 : 0) });
+
+  pools(to).forEach((p, r) => {
+    // Tour inséré : il reprend le tour voisin, tous qualifiés ; on règle tout ce qui diffère
+    const before = r < have ? pools(from)[r] : newPool(from, have, 'new');
+    const diff = changed(before, p, POOL_DIFF);
+    if (Object.keys(diff).length) ops.push({ op: 'setPhase', phase: `pool-${r}`, settings: diff });
+  });
+  const qTo = quest(to);
+  if (qTo) {
+    const diff = changed(quest(from)?.config ?? {}, qTo.config, QUEST_FIELDS);
+    if (Object.keys(diff).length) ops.push({ op: 'setPhase', phase: 'quest', settings: diff });
+  }
+  const tTo = tableau(to);
+  if (tTo) {
+    const diff = changed(tableau(from) ?? {}, tTo, TABLEAU_DIFF);
+    if (Object.keys(diff).length) ops.push({ op: 'setPhase', phase: 'tableau', settings: diff });
+  }
+  const general = changed(from.general, to.general, GENERAL_FIELDS);
+  if (Object.keys(general).length) ops.push({ op: 'setGeneral', settings: general });
+  return ops;
+}
+
+/** Résumé sur une ligne ; tours aux touches différentes : un élément par tour */
+export function summarizeFormulaV2(f: FormulaV2): FormulaSummaryPart[] {
+  const parts: FormulaSummaryPart[] = [];
+  const pools = f.phases.filter(isPool);
+  if (pools.length > 0) {
+    const scores = new Set(pools.map(p => p.maxScore));
+    if (scores.size === 1)
+      parts.push({ kind: 'pools', rounds: pools.length, maxScore: pools[0].maxScore });
+    else for (const p of pools) parts.push({ kind: 'pools', rounds: 1, maxScore: p.maxScore });
+  }
+  if (f.phases.some(isQuest)) parts.push({ kind: 'quest' });
+  const t = f.phases.find(isTableau);
+  if (t)
+    parts.push({ kind: 'tableau', maxScore: t.maxScore, thirdPlace: t.thirdPlace || t.allPlaces });
+  return parts;
+}
+
+/** Formule v2 pour la simulation existante (effectifs, poules, matchs, durée) */
+export function simulationFormulaOf(f: FormulaV2): CustomFormulaConfig {
+  return customFormulaOf(f);
 }

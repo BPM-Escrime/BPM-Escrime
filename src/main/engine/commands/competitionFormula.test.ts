@@ -121,10 +121,10 @@ d('formule d’une épreuve (docs/adr/0033)', () => {
     const f = await op('getCompetitionFormula', { competitionId });
     expect(f.phases.map((p: { key: string }) => p.key)).toEqual(['pool-0', 'pool-1', 'tableau']);
     expect(f.state).toBe('adapted');
+    // Écarts phase par phase (ADR-0034) : un tour ajouté, les touches du tableau
     expect(f.deviations.map((x: { field: string }) => x.field).sort()).toEqual([
-      'poolRoundQualifiers',
-      'poolRounds',
-      'tableMaxScore',
+      '+pool',
+      'tableau.maxScore',
     ]);
   });
 

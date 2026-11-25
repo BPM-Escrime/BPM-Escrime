@@ -84,7 +84,7 @@ export const formulaOperations = {
 
   updateCompetitionFormula: command({
     description:
-      'Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau, position « at » comme insertOptions), removePhase (clé de phase), setPhase (clé, réglages de la phase), setGeneral (réglages généraux). Grammaire et bornes de l’écran ; refus : invalid_settings, draw_done.',
+      'Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau, position « at » comme insertOptions), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode, count, percentage } ou qualifiers, seeding previous_round | cumulative, boutOrder, scoring ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring ; Tour Quest qualifiersCount), setGeneral (restTimeSeconds, ruleSet, postPoolSplitCriteria). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour ; refus : invalid_settings, draw_done.',
     input: z.object({
       competitionId: CompetitionId,
       operations: z

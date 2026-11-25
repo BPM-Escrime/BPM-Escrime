@@ -952,3 +952,8 @@ button.formula-frieze__step {
 .formula-editor__sim-count input {
   width: 5.5rem;
 }
+.formula-editor__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0 1rem;
+}

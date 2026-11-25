@@ -4747,7 +4747,11 @@
     "modal_title": "Fórmula da competição",
     "round_settings_hint": "Toques, cronómetro e pontuação: os da volta 1, aplicados a todas as voltas.",
     "save_error": "Não foi possível guardar a fórmula.",
-    "sim_fencers": "Atiradores simulados"
+    "sim_fencers": "Atiradores simulados",
+    "seeding": "Distribuição desta volta",
+    "seeding_previous": "Classificação da volta anterior",
+    "seeding_cumulative": "Acumulado das voltas disputadas",
+    "seeding_hint": "Os atiradores qualificados são distribuídos pelas poules desta volta segundo esta classificação."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",

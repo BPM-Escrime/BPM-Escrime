@@ -15,58 +15,76 @@ vi.mock('../../hooks/useFormulaPreview', () => ({ useFormulaPreview: () => true 
 import { FormulaEditor } from './FormulaEditor';
 import { formulaSettingsUpdate } from './CompetitionFormulaModal';
 import NewCompetitionModal from '../NewCompetitionModal';
-import { Category, CompetitionSettings, CustomFormulaConfig, Weapon } from '../../../shared/types';
-import { FormulaDraft, draftFromSettings } from '../../../shared/domain/formula/formulaDraft';
+import { Category, CompetitionSettings, Weapon } from '../../../shared/types';
+import { formulaOf, phaseSettings, type FormulaV2 } from '../../../shared/domain/formula/formulaV2';
 import { createDefaultCustomFormula } from '../../../shared/utils/tournamentTemplates';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
 
+let last: FormulaV2 | null = null;
 const Harness: React.FC<{ weapon: Weapon }> = ({ weapon }) => {
-  const [draft, setDraft] = useState<FormulaDraft>(() =>
-    draftFromSettings(weapon, Category.SENIOR, undefined)
+  const [formula, setFormula] = useState<FormulaV2>(() =>
+    formulaOf({
+      weapon,
+      category: Category.SENIOR,
+      settings:
+        weapon === Weapon.CUSTOM
+          ? { customFormula: createDefaultCustomFormula() }
+          : (buildDefaultCompetitionSettings({
+              weapon,
+              category: Category.SENIOR,
+            }) as CompetitionSettings),
+    })
   );
-  const [custom, setCustom] = useState<CustomFormulaConfig>(createDefaultCustomFormula);
+  last = formula;
   return (
     <FormulaEditor
       weapon={weapon}
       category={Category.SENIOR}
-      draft={draft}
-      onDraftChange={p => setDraft(d => ({ ...d, ...p }))}
-      customFormula={custom}
-      onCustomChange={setCustom}
+      formula={formula}
+      onChange={setFormula}
     />
   );
 };
 
-describe('FormulaEditor', () => {
+describe('FormulaEditor (formule v2)', () => {
   it('frise : appel, poules, tableau, classement ; pas de « + Classement »', () => {
     render(<Harness weapon={Weapon.EPEE} />);
     expect(screen.getByTestId('formula-step-pool-0')).toBeInTheDocument();
     expect(screen.getByTestId('formula-step-tableau')).toBeInTheDocument();
     expect(screen.getByText('properties.phase_final_ranking')).toBeInTheDocument();
     expect(screen.queryByText('formulaBuilder.cls_btn')).toBeNull();
-    // Les boutons de l'ancienne frise ne sont pas rendus : le « ＋ » les remplace
     expect(screen.queryByText('properties.add_pool_round')).toBeNull();
-    expect(screen.queryByText('properties.remove_tableau')).toBeNull();
     // Rien après le tableau : pas de « ＋ » en fin de frise
     expect(screen.queryByTestId('formula-plus-2')).toBeNull();
   });
 
-  it('simulation : effectif modifiable, recalculée avec la formule', () => {
+  it('simulation : effectif modifiable', () => {
     render(<Harness weapon={Weapon.EPEE} />);
-    const panel = screen.getByTestId('formula-simulation');
-    expect(panel).toHaveTextContent('formulaSim.title');
+    expect(screen.getByTestId('formula-simulation')).toHaveTextContent('formulaSim.title');
     fireEvent.change(screen.getByLabelText('formulaEditor.sim_fencers'), {
       target: { value: '48' },
     });
     expect(screen.getByLabelText('formulaEditor.sim_fencers')).toHaveValue(48);
   });
 
-  it('« ＋ » propose les briques autorisées et insère un tour', () => {
+  it('« ＋ » insère un tour ; le tour 2 se règle seul (touches, répartition)', () => {
     render(<Harness weapon={Weapon.EPEE} />);
     fireEvent.click(screen.getByTestId('formula-plus-1'));
     expect(screen.queryByTestId('formula-add-tableau-1')).toBeNull();
     fireEvent.click(screen.getByTestId('formula-add-pool-1'));
     expect(screen.getByTestId('formula-step-pool-1')).toBeInTheDocument();
+    fireEvent.change(document.getElementById('pool-1-score')!, { target: { value: '4' } });
+    fireEvent.change(document.getElementById('pool-1-seeding')!, {
+      target: { value: 'cumulative' },
+    });
+    expect(phaseSettings(last!, { kind: 'pool', round: 0 }).maxScore).toBe(5);
+    expect(phaseSettings(last!, { kind: 'pool', round: 1 })).toMatchObject({
+      maxScore: 4,
+      seeding: 'cumulative',
+    });
+    // Le tour 1 n'a pas de réglage de répartition (rien avant lui)
+    fireEvent.click(screen.getByTestId('formula-step-pool-0'));
+    expect(document.getElementById('pool-0-seeding')).toBeNull();
   });
 
   it('retirer le tableau rend le « ＋ » de fin de frise', () => {
@@ -78,62 +96,31 @@ describe('FormulaEditor', () => {
     expect(screen.getByTestId('formula-step-tableau')).toBeInTheDocument();
   });
 
-  it('arme « Autre » : même frise, « Classement final » implicite', () => {
-    render(<Harness weapon={Weapon.CUSTOM} />);
-    expect(screen.getByTestId('formula-step-pool-0')).toBeInTheDocument();
-    expect(screen.getByTestId('formula-step-tableau')).toBeInTheDocument();
-    expect(screen.getAllByText('properties.phase_final_ranking')).toHaveLength(1);
-    expect(screen.getByLabelText('formula.rule_set')).toBeInTheDocument();
+  it('dernier tour avant le tableau (épée) : seule la règle « vainqueurs de poule »', () => {
+    render(<Harness weapon={Weapon.EPEE} />);
+    expect(screen.queryByText('formulaPhase.advancement')).toBeNull();
+    expect(screen.getByText('properties.pool_winners_only')).toBeInTheDocument();
   });
 
-  it('arme « Autre » : seuls les réglages exécutés sont proposés (P2)', () => {
+  it('arme « Autre » : règles, barème, qualification complète', () => {
     render(<Harness weapon={Weapon.CUSTOM} />);
-    expect(screen.getByText('formulaPhase.max_score')).toBeInTheDocument();
+    expect(screen.getByLabelText('formula.rule_set')).toBeInTheDocument();
     expect(screen.getByText('formulaPhase.advancement')).toBeInTheDocument();
-    expect(screen.queryByText('formulaPhase.pool_size')).toBeNull();
-    expect(screen.queryByText('formula.ranking_criteria')).toBeNull();
-    // Tour 2 : touches, chrono et barème du tour 1
-    fireEvent.click(screen.getByTestId('formula-plus-1'));
-    fireEvent.click(screen.getByTestId('formula-add-pool-1'));
-    expect(screen.getByText('formulaEditor.round_settings_hint')).toBeInTheDocument();
-    expect(screen.queryByText('formulaPhase.max_score')).toBeNull();
-    // Tableau : ni taille forcée, ni 5ᵉ place
-    fireEvent.click(screen.getByTestId('formula-step-tableau'));
-    expect(screen.getByText('formulaPhase.third_place')).toBeInTheDocument();
-    expect(screen.queryByText('formulaPhase.bracket_size')).toBeNull();
-    expect(screen.queryByText('formulaPhase.fifth_place')).toBeNull();
+    expect(screen.getAllByText('formulaPhase.scoring').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('properties.phase_final_ranking')).toHaveLength(1);
   });
 });
 
-describe('Organisation ▸ Formule : réglages enregistrés', () => {
-  it('épée : réglages plats, comme l’onglet Formule des Propriétés', () => {
+describe('Organisation ▸ Formule : réglages affichés après enregistrement', () => {
+  it('formule v2 et réglages plats du 1er tour', () => {
     const settings = buildDefaultCompetitionSettings({
       weapon: Weapon.EPEE,
       category: Category.SENIOR,
     }) as CompetitionSettings;
-    const draft = { ...draftFromSettings(Weapon.EPEE, Category.SENIOR, settings), poolRounds: 2 };
-    const out = formulaSettingsUpdate(
-      { weapon: Weapon.EPEE, settings },
-      draft,
-      createDefaultCustomFormula()
-    );
-    expect(out.poolRounds).toBe(2);
-    expect(out.poolRoundQualifiers).toEqual([0]);
-    expect(out.customFormula).toBeUndefined();
-  });
-
-  it('arme « Autre » : formule normalisée et réglages dérivés', () => {
-    const custom = createDefaultCustomFormula();
-    const out = formulaSettingsUpdate(
-      { weapon: Weapon.CUSTOM, settings: { customFormula: custom } as CompetitionSettings },
-      draftFromSettings(Weapon.CUSTOM, Category.SENIOR, undefined),
-      custom
-    );
-    expect(out.customFormula?.phases.map(p => p.type)).toEqual([
-      'pool_round',
-      'direct_elimination',
-    ]);
-    expect(out.hasDirectElimination).toBe(true);
+    const f = formulaOf({ weapon: Weapon.EPEE, category: Category.SENIOR, settings });
+    const out = formulaSettingsUpdate({ weapon: Weapon.EPEE, settings }, f);
+    expect(out.formula).toBe(f);
+    expect(out.poolRounds).toBe(1);
     expect(out.defaultTableMaxScore).toBe(15);
   });
 });

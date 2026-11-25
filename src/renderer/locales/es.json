@@ -4747,7 +4747,11 @@
     "modal_title": "Fórmula de la competición",
     "round_settings_hint": "Tocados, cronómetro y baremo: los de la ronda 1, aplicados a todas las rondas.",
     "save_error": "No se pudo guardar la fórmula.",
-    "sim_fencers": "Tiradores simulados"
+    "sim_fencers": "Tiradores simulados",
+    "seeding": "Reparto de esta ronda",
+    "seeding_previous": "Clasificación de la ronda anterior",
+    "seeding_cumulative": "Acumulado de las rondas disputadas",
+    "seeding_hint": "Los tiradores clasificados se reparten en las poules de esta ronda según esta clasificación."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",

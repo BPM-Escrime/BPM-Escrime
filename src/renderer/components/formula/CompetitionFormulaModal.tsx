@@ -1,59 +1,45 @@
 /**
- * BPM - Escrime - Organisation ▸ Formule (#2013 D11, docs/adr/0032)
- * Formule d'une épreuve existante dans l'interface unique. Enregistre les mêmes réglages que
- * l'onglet Formule des Propriétés (réglages plats, ou formule de l'arme « Autre »).
+ * BPM - Escrime - Organisation ▸ Formule (#2013 D11 ; docs/adr/0032, 0033, 0034)
+ * Formule v2 d'une épreuve existante dans l'interface unique, réglages de chaque tour compris.
+ * Écrite par les mêmes commandes que l'agent : applyFormulaTemplate (autre modèle), puis
+ * updateCompetitionFormula (opérations calculées par le domaine).
  * Licensed under GPL-3.0
  */
 
 import React, { useState } from 'react';
-import {
-  Competition,
-  CompetitionSettings,
-  CustomFormulaConfig,
-  Weapon,
-} from '../../../shared/types';
-import {
-  FormulaDraft,
-  draftFromSettings,
-  draftToSettings,
-} from '../../../shared/domain/formula/formulaDraft';
-import { normalizeCustomFormula } from '../../../shared/domain/formula/formulaFrieze';
-import {
-  deriveSettingsFromFormula,
-  isRapieresMode,
-} from '../../../shared/utils/customFormulaSettings';
-import { createDefaultCustomFormula } from '../../../shared/utils/tournamentTemplates';
-import { useTranslation } from '../../hooks/useTranslation';
-import { Modal } from '../common/Modal';
-import { Button } from '../common/Button';
-import { FormulaEditor } from './FormulaEditor';
-import { useBpmClient } from '../../api/BpmClientContext';
+import { Competition, CompetitionSettings, Weapon } from '../../../shared/types';
 import { ApiError } from '../../../shared/api/client';
-import { useToast } from '../Toast';
-import { formulaOperationsBetween } from '../../../shared/domain/formula/formulaOperations';
-import { FormulaTemplatePicker } from './FormulaTemplatePicker';
-import { useFormulaTemplates } from '../../hooks/useFormulaTemplates';
+import { isRapieresMode } from '../../../shared/utils/customFormulaSettings';
+import {
+  flatSettingsOf,
+  formulaOf,
+  type FormulaV2,
+} from '../../../shared/domain/formula/formulaV2';
+import { operationsBetweenV2 } from '../../../shared/domain/formula/formulaV2Operations';
 import {
   formulaDeviations,
   templateToSettings,
   type FormulaTemplate,
   type FormulaTemplateBody,
 } from '../../../shared/domain/formula/formulaTemplate';
+import { useTranslation } from '../../hooks/useTranslation';
+import { useFormulaTemplates } from '../../hooks/useFormulaTemplates';
+import { useBpmClient } from '../../api/BpmClientContext';
+import { Modal } from '../common/Modal';
+import { Button } from '../common/Button';
+import { useToast } from '../Toast';
+import { FormulaEditor } from './FormulaEditor';
+import { FormulaTemplatePicker } from './FormulaTemplatePicker';
 
-/** Réglages enregistrés après modification de la formule (fonction pure, testée) */
+/** Réglages de l'épreuve après modification de la formule (affichage immédiat, fonction pure) */
 export function formulaSettingsUpdate(
   competition: Pick<Competition, 'weapon' | 'settings'>,
-  draft: FormulaDraft,
-  customFormula: CustomFormulaConfig
+  formula: FormulaV2
 ): CompetitionSettings {
-  const settings = (competition.settings ?? {}) as CompetitionSettings;
-  if (competition.weapon === Weapon.CUSTOM) {
-    const norm = normalizeCustomFormula(customFormula);
-    return { ...settings, customFormula: norm, ...deriveSettingsFromFormula(norm) };
-  }
   return {
-    ...settings,
-    ...draftToSettings(draft, competition.weapon, settings.questConfig),
+    ...((competition.settings ?? {}) as CompetitionSettings),
+    ...flatSettingsOf(formula, competition.weapon),
+    formula,
   };
 }
 
@@ -68,52 +54,55 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onApplie
   const { t } = useTranslation();
   const client = useBpmClient();
   const { showToast } = useToast();
-  const [draft, setDraft] = useState<FormulaDraft>(() =>
-    draftFromSettings(competition.weapon, competition.category, competition.settings)
-  );
-  const [customFormula, setCustomFormula] = useState<CustomFormulaConfig>(
-    () => competition.settings?.customFormula ?? createDefaultCustomFormula()
-  );
+  const { weapon, category } = competition;
+  const [formula, setFormula] = useState<FormulaV2>(() => formulaOf(competition));
   const [saving, setSaving] = useState(false);
-  const rapieres = isRapieresMode(competition.weapon, competition.settings);
+  const rapieres = isRapieresMode(weapon, competition.settings);
   // Modèle d'origine (docs/adr/0033) : gardé tant qu'on n'en choisit pas un autre
   const [origin, setOrigin] = useState(competition.settings?.formulaOrigin);
   const [specialMode, setSpecialMode] = useState(competition.settings?.specialMode);
   const templates = useFormulaTemplates({
-    weapon: competition.weapon,
-    category: competition.category,
+    weapon,
+    category,
     isTeamEvent: !!competition.isTeamEvent,
   });
 
   const nextSettings = (): CompetitionSettings => ({
-    ...formulaSettingsUpdate(competition, draft, customFormula),
-    ...(competition.weapon === Weapon.CUSTOM ? { specialMode } : {}),
+    ...formulaSettingsUpdate(competition, formula),
+    ...(weapon === Weapon.CUSTOM ? { specialMode } : {}),
     formulaOrigin: origin,
   });
   const { state, deviations } = formulaDeviations(
-    { weapon: competition.weapon, category: competition.category, settings: nextSettings() },
+    { weapon, category, settings: nextSettings() },
     templates.all
   );
   const selected = origin ? templates.all.find(x => x.id === origin.templateId) : undefined;
 
+  /** Formule v2 d'un modèle appliqué aux réglages actuels de l'épreuve */
+  const formulaOfTemplate = (tpl: FormulaTemplate) =>
+    formulaOf({
+      weapon,
+      category,
+      settings: {
+        ...competition.settings,
+        formula: undefined,
+        ...templateToSettings(tpl, weapon, competition.settings),
+      },
+    });
+
   const selectTemplate = (tpl: FormulaTemplate) => {
     setOrigin({ templateId: tpl.id, ...(tpl.season ? { season: tpl.season } : {}) });
-    if (tpl.body.kind === 'draft') setDraft(tpl.body.draft);
-    else {
-      setCustomFormula(tpl.body.formula);
-      setSpecialMode(tpl.body.specialMode);
-    }
+    setFormula(formulaOfTemplate(tpl));
+    if (tpl.body.kind !== 'draft') setSpecialMode(tpl.body.specialMode);
   };
 
   const saveAs = async (name: string) => {
-    const body: FormulaTemplateBody =
-      competition.weapon === Weapon.CUSTOM
-        ? {
-            kind: 'custom',
-            formula: normalizeCustomFormula(customFormula),
-            ...(specialMode ? { specialMode } : {}),
-          }
-        : { kind: 'draft', draft };
+    const body: FormulaTemplateBody = {
+      kind: 'formula',
+      formula,
+      ...(weapon === Weapon.CUSTOM ? { other: true } : {}),
+      ...(weapon === Weapon.CUSTOM && specialMode ? { specialMode } : {}),
+    };
     const from = selected?.source === 'provided' ? origin : selected?.origin;
     const { template } = await templates.save({ name, body, ...(from ? { origin: from } : {}) });
     templates.reload();
@@ -125,22 +114,18 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onApplie
   const save = async () => {
     setSaving(true);
     const competitionId = competition.id;
-    const target = nextSettings();
     try {
-      let base = (competition.settings ?? {}) as CompetitionSettings;
+      let base = formulaOf(competition);
       if (origin && origin.templateId !== competition.settings?.formulaOrigin?.templateId) {
         await client.call('applyFormulaTemplate', { competitionId, templateId: origin.templateId });
         const tpl = templates.all.find(x => x.id === origin.templateId);
-        if (tpl) base = { ...base, ...templateToSettings(tpl, competition.weapon, base) };
+        if (tpl) base = formulaOfTemplate(tpl);
       }
-      const operations = formulaOperationsBetween(
-        { weapon: competition.weapon, category: competition.category, settings: base },
-        target
-      );
+      const operations = operationsBetweenV2(base, formula);
       if (operations.length > 0) {
         await client.call('updateCompetitionFormula', { competitionId, operations });
       }
-      onApplied(target);
+      onApplied(nextSettings());
       onClose();
     } catch (e) {
       showToast(e instanceof ApiError ? e.message : t('formulaEditor.save_error'), 'error');
@@ -183,12 +168,10 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onApplie
         onSaveAs={templates.available ? saveAs : undefined}
       />
       <FormulaEditor
-        weapon={competition.weapon}
-        category={competition.category}
-        draft={draft}
-        onDraftChange={patch => setDraft(prev => ({ ...prev, ...patch }))}
-        customFormula={customFormula}
-        onCustomChange={setCustomFormula}
+        weapon={weapon}
+        category={category}
+        formula={formula}
+        onChange={setFormula}
         rapieres={rapieres}
         fencerCount={competition.fencerCount || 32}
       />

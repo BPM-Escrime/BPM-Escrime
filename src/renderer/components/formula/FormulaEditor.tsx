@@ -1,58 +1,51 @@
 /**
- * BPM - Escrime - Interface unique de la formule (#2013 étape B1, docs/adr/0032)
- * Nouvelle interface (réglage du poste `formulaPreview`) : frise Appel → phases → Classement
- * final, « ＋ » entre les phases limité aux briques autorisées, réglages de la phase
- * sélectionnée. Même composant à la création et dans Organisation ▸ Formule, pour toutes les
- * armes. Règles de la frise : shared/domain/formula/formulaFrieze.ts.
+ * BPM - Escrime - Interface unique de la formule (#2013 B1, C ; docs/adr/0032, 0034)
+ * Nouvelle interface (réglage du poste `formulaPreview`) sur la formule v2, pour toutes les
+ * armes : frise Appel → phases → Classement final, « ＋ » limité aux briques autorisées,
+ * réglages **de chaque tour**, relevé de cohérence et simulation. Même composant à la création et
+ * dans Organisation ▸ Formule. Règles : shared/domain/formula/formulaV2Operations.ts.
  * Licensed under GPL-3.0
  */
 
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import {
+  AdvancementRule,
   Category,
   CompetitionSpecialMode,
-  CustomDEConfig,
-  CustomFormulaConfig,
-  CustomPoolRoundConfig,
-  FormulaPhaseNode,
+  CustomScoringConfig,
   Weapon,
 } from '../../../shared/types';
-import { FormulaDraft, FormulaPhaseId } from '../../../shared/domain/formula/formulaDraft';
+import type { FriezeBrick, FriezePhase } from '../../../shared/domain/formula/formulaFrieze';
+import type {
+  FormulaV2,
+  PoolRoundPhase,
+  QuestPhase,
+  TableauPhase,
+} from '../../../shared/domain/formula/formulaV2';
 import {
-  FriezeBrick,
-  FriezePhase,
-  customCanRemove,
-  customFrieze,
-  customInsert,
-  customInsertOptions,
-  customPhaseNode,
-  customRemove,
-  draftCanRemove,
-  draftFrieze,
-  draftInsert,
-  draftInsertOptions,
-  draftRemove,
-  draftToSimulationFormula,
-  normalizeCustomFormula,
-} from '../../../shared/domain/formula/formulaFrieze';
-import { createDefaultCustomFormula } from '../../../shared/utils/tournamentTemplates';
-import { useTranslation } from '../../hooks/useTranslation';
-import { PropertiesFormulaTab } from './PropertiesFormulaTab';
-import { FormulaPhaseCard } from './FormulaPhaseCard';
-import { FormulaSimulationPreview } from './FormulaSimulationPreview';
+  canRemoveV2,
+  formulaViewV2,
+  friezeOfV2,
+  insertOptionsV2,
+  insertV2,
+  removeV2,
+  simulationFormulaOf,
+} from '../../../shared/domain/formula/formulaV2Operations';
+import { isOlympicWeapon } from '../../../shared/utils/defaultMaxScores';
 import { simulateFormula } from '../../../shared/utils/customRankingCalculator';
+import { useTranslation } from '../../hooks/useTranslation';
 import { useDurationSources } from '../../hooks/useDurationSources';
+import { Button } from '../common/Button';
+import { AdvancementRuleEditor } from './AdvancementRuleEditor';
+import { ScoringZoneEditor } from './ScoringZoneEditor';
+import { FormulaSimulationPreview } from './FormulaSimulationPreview';
 
 export interface FormulaEditorProps {
   weapon: Weapon;
   category: Category;
-  /** Épée, fleuret, sabre, Sabre Laser */
-  draft: FormulaDraft;
-  onDraftChange: (patch: Partial<FormulaDraft>) => void;
-  /** Arme « Autre » (code 'C') */
-  customFormula: CustomFormulaConfig;
-  onCustomChange: (formula: CustomFormulaConfig) => void;
+  formula: FormulaV2;
+  onChange: (formula: FormulaV2) => void;
   /** Mode spécial de l'arme « Autre » (création seulement, #1118) */
   specialMode?: CompetitionSpecialMode;
   onSpecialModeChange?: (mode: CompetitionSpecialMode | undefined) => void;
@@ -66,89 +59,90 @@ const SPECIAL_MODES: CompetitionSpecialMode[] = ['rapieres'];
 
 const newPhaseId = () => `phase_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
-function customDefaults() {
-  const f = createDefaultCustomFormula();
-  return {
-    pool: f.phases[0].config as CustomPoolRoundConfig,
-    tableau: f.phases[1].config as CustomDEConfig,
-  };
-}
-
-const toPhaseId = (p: FriezePhase | undefined): FormulaPhaseId | null =>
-  !p ? null : p.kind === 'pool' ? { kind: 'pool', round: p.round } : { kind: p.kind };
+const int = (v: string, fallback: number) => {
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) ? n : fallback;
+};
 
 export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   weapon,
   category,
-  draft,
-  onDraftChange,
-  customFormula,
-  onCustomChange,
+  formula,
+  onChange,
   specialMode,
   onSpecialModeChange,
   rapieres,
   fencerCount = 32,
 }) => {
   const { t } = useTranslation();
-  // Simulation (effectifs, poules, matchs, durée), comme le constructeur « À la carte »
-  const [simCount, setSimCount] = useState(fencerCount);
-  const durationSources = useDurationSources();
   const isOther = weapon === Weapon.CUSTOM;
-  const custom = normalizeCustomFormula(customFormula);
-  const phases = isOther ? customFrieze(custom) : draftFrieze(draft, weapon);
+  const phases = friezeOfV2(formula);
   const [selectedKey, setSelectedKey] = useState<string>(phases[0]?.key ?? '');
   const [openPlus, setOpenPlus] = useState<number | null>(null);
+  const [simCount, setSimCount] = useState(fencerCount);
+  const durationSources = useDurationSources();
   const current = phases.find(p => p.key === selectedKey) ?? phases[0];
-  const poolCount = phases.filter(p => p.kind === 'pool').length;
-
-  const insertOptions = (at: number): FriezeBrick[] =>
-    isOther ? customInsertOptions(custom, at) : draftInsertOptions(draft, weapon, at);
+  const pools = formula.phases.filter((p): p is PoolRoundPhase => p.kind === 'pool');
+  const view = formulaViewV2({ weapon, category, settings: { formula } });
+  const categoryLabel = t(`categories.${category === Category.SENIOR ? 'senior' : category}`);
 
   const insert = (brick: FriezeBrick, at: number) => {
-    if (isOther) onCustomChange(customInsert(custom, brick, at, newPhaseId, customDefaults()));
-    else onDraftChange(draftInsert(draft, weapon, brick, at));
+    onChange(insertV2(formula, { weapon, category }, brick, at, newPhaseId));
     setSelectedKey(brick === 'pool' ? `pool-${at}` : brick);
     setOpenPlus(null);
   };
-
-  const canRemove = (p: FriezePhase) =>
-    isOther ? customCanRemove(custom, p) : draftCanRemove(draft, weapon, p);
-
   const remove = (p: FriezePhase) => {
-    if (isOther) onCustomChange(customRemove(custom, p));
-    else onDraftChange(draftRemove(draft, weapon, p));
+    onChange(removeV2(formula, p));
     setSelectedKey(phases[0]?.key ?? '');
   };
 
+  /** Remplace, dans la formule, la phase `p` de la frise */
+  const patchPhase = <T extends PoolRoundPhase | TableauPhase | QuestPhase>(
+    p: FriezePhase,
+    patch: Partial<T>
+  ) => {
+    let round = -1;
+    onChange({
+      ...formula,
+      phases: formula.phases.map(x => {
+        const hit =
+          p.kind === 'pool' ? x.kind === 'pool' && ++round === p.round : x.kind === p.kind;
+        return hit ? ({ ...x, ...patch } as typeof x) : x;
+      }),
+    });
+  };
+  const patchGeneral = (patch: Partial<FormulaV2['general']>) =>
+    onChange({ ...formula, general: { ...formula.general, ...patch } });
+
   const title = (p: FriezePhase) =>
     p.kind === 'pool'
-      ? poolCount > 1
+      ? pools.length > 1
         ? t('properties.phase_pool_round', { n: p.round + 1 })
         : t('properties.phase_pools')
       : p.kind === 'quest'
         ? t('properties.quest_round')
         : t('properties.phase_tableau');
 
+  const tableau = formula.phases.find((x): x is TableauPhase => x.kind === 'tableau');
   const summary = (p: FriezePhase): string => {
-    if (isOther) {
-      const node = customPhaseNode(custom, p)?.node;
-      const score = (node?.config as CustomPoolRoundConfig | CustomDEConfig | undefined)?.maxScore;
-      return score ? t('formulaPhase.n_touches', { n: score }) : '';
+    if (p.kind === 'pool') {
+      const pool = pools[p.round];
+      return pool
+        ? t('properties.summary_pool', {
+            min: pool.sizeMin,
+            max: pool.sizeMax,
+            score: pool.maxScore,
+          })
+        : '';
     }
-    if (p.kind === 'pool')
-      return t('properties.summary_pool', {
-        min: draft.poolSizeMin,
-        max: draft.poolSizeMax,
-        score: draft.poolMaxScore,
-      });
-    if (p.kind === 'quest') return '';
-    return draft.tableMaxScore === 0
+    if (p.kind === 'quest' || !tableau) return '';
+    return tableau.maxScore === 0
       ? t('properties.summary_tableau_unlimited')
-      : t('properties.summary_tableau', { score: draft.tableMaxScore });
+      : t('properties.summary_tableau', { score: tableau.maxScore });
   };
 
   const plus = (at: number) => {
-    const options = insertOptions(at);
+    const options = insertOptionsV2(formula, weapon, at);
     if (options.length === 0 || specialMode) return null;
     return (
       <span key={`plus-${at}`} className="formula-editor__plus">
@@ -202,7 +196,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
           <span className="formula-frieze__title">{title(p)}</span>
           <span className="formula-frieze__summary">{summary(p)}</span>
         </button>
-        {canRemove(p) && !specialMode && (
+        {canRemoveV2(formula, p) && !specialMode && (
           <button
             type="button"
             className="formula-editor__remove"
@@ -224,39 +218,234 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
     </span>
   );
 
-  const updateNode = (index: number, node: FormulaPhaseNode) => {
-    const next = [...custom.phases];
-    next[index] = node;
-    onCustomChange({ ...custom, phases: next });
-  };
-
-  function renderOtherPhase() {
-    if (!current) return null;
-    const found = customPhaseNode(custom, current);
-    if (!found) return null;
-    return (
-      <FormulaPhaseCard
-        key={found.node.id}
-        node={found.node}
-        index={0}
-        inputFencers={32}
-        onUpdate={node => updateNode(found.index, node)}
-        onRemove={() => remove(current)}
-        canMoveUp={false}
-        canMoveDown={false}
-        advancementDisabled={rapieres || specialMode === 'rapieres'}
-        embedded
+  const numberField = (
+    id: string,
+    label: string,
+    value: number,
+    onValue: (v: number) => void,
+    opts: { min?: number; max?: number; hint?: string } = {}
+  ) => (
+    <div className="form-group">
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id}
+        type="number"
+        className="form-input"
+        min={opts.min}
+        max={opts.max}
+        value={value}
+        onChange={e => onValue(Math.max(opts.min ?? 0, int(e.target.value, opts.min ?? 0)))}
       />
+      {opts.hint && <small className="u-hint">{opts.hint}</small>}
+    </div>
+  );
+
+  function renderPool(p: FriezePhase & { kind: 'pool' }) {
+    const pool = pools[p.round];
+    if (!pool) return null;
+    const isLast = p.round === pools.length - 1;
+    const set = (patch: Partial<PoolRoundPhase>) => patchPhase<PoolRoundPhase>(p, patch);
+    const id = `pool-${p.round}`;
+    return (
+      <>
+        <fieldset className="properties-group">
+          <legend>{t('properties.group_essential')}</legend>
+          <div className="formula-editor__grid">
+            {numberField(
+              `${id}-min`,
+              t('properties.pool_size_min'),
+              pool.sizeMin,
+              v => set({ sizeMin: Math.max(3, v), sizeMax: Math.max(3, v, pool.sizeMax) }),
+              { min: 3, max: 64 }
+            )}
+            {numberField(
+              `${id}-max`,
+              t('properties.pool_size_max'),
+              pool.sizeMax,
+              v => set({ sizeMax: Math.min(64, Math.max(pool.sizeMin, v)) }),
+              { min: pool.sizeMin, max: 64 }
+            )}
+            {numberField(
+              `${id}-score`,
+              t('properties.pool_max_score'),
+              pool.maxScore,
+              v => set({ maxScore: Math.max(1, v) }),
+              { min: 1, hint: t('properties.pool_max_score_hint') }
+            )}
+            {numberField(
+              `${id}-timer`,
+              t('properties.pool_timer'),
+              pool.timerSeconds,
+              v => set({ timerSeconds: Math.max(1, v) }),
+              { min: 1 }
+            )}
+          </div>
+          <small className="u-hint">{t('properties.pool_size_hint')}</small>
+          {/* Dernier tour avant le tableau : seule la règle « vainqueurs de poule » est exécutée
+              hors arme « Autre » (P2) */}
+          {!isLast || isOther ? (
+            <div className={rapieres ? 'form-group form-group--disabled' : 'form-group'}>
+              <label className="form-label">{t('formulaPhase.advancement')}</label>
+              <AdvancementRuleEditor
+                rule={pool.qualification}
+                onChange={(rule: AdvancementRule) => set({ qualification: rule })}
+                inputFencers={simCount}
+                readOnly={rapieres}
+              />
+            </div>
+          ) : (
+            tableau && (
+              <label className="u-row cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={pool.qualification.mode === 'pool_winner'}
+                  onChange={e =>
+                    set({
+                      qualification: e.target.checked ? { mode: 'pool_winner' } : { mode: 'all' },
+                    })
+                  }
+                />
+                <span>{t('properties.pool_winners_only')}</span>
+              </label>
+            )
+          )}
+        </fieldset>
+        <details className="properties-expert">
+          <summary>{t('properties.expert_settings')}</summary>
+          {p.round > 0 && (
+            <div className="form-group">
+              <label htmlFor={`${id}-seeding`}>{t('formulaEditor.seeding')}</label>
+              <select
+                id={`${id}-seeding`}
+                className="form-input form-select"
+                value={pool.seeding}
+                onChange={e => set({ seeding: e.target.value as PoolRoundPhase['seeding'] })}
+              >
+                <option value="previous_round">{t('formulaEditor.seeding_previous')}</option>
+                <option value="cumulative">{t('formulaEditor.seeding_cumulative')}</option>
+              </select>
+              <small className="u-hint">{t('formulaEditor.seeding_hint')}</small>
+            </div>
+          )}
+          {!isOther && (
+            <div className="form-group">
+              <label htmlFor={`${id}-order`}>{t('properties.bout_order')}</label>
+              <select
+                id={`${id}-order`}
+                className="form-input form-select"
+                value={pool.boutOrder}
+                onChange={e => set({ boutOrder: e.target.value as 'fie' | 'free' })}
+              >
+                <option value="fie">{t('properties.bout_order_fie')}</option>
+                <option value="free">{t('properties.bout_order_free')}</option>
+              </select>
+              <small className="u-hint">{t('properties.bout_order_hint')}</small>
+            </div>
+          )}
+          {isOther && (
+            <div className="form-group">
+              <label className="form-label">{t('formulaPhase.scoring')}</label>
+              <ScoringZoneEditor
+                scoring={pool.scoring ?? { type: 'standard', maxScore: pool.maxScore }}
+                onChange={(s: CustomScoringConfig) => set({ scoring: s })}
+              />
+            </div>
+          )}
+        </details>
+      </>
     );
   }
 
-  function renderOtherGeneral() {
-    const ruleSet = custom.ruleSet ?? (rapieres || specialMode ? 'modern' : 'laser');
-    const rest = custom.restTimeSeconds ?? 60;
+  function renderTableau(p: FriezePhase) {
+    if (!tableau) return null;
+    const set = (patch: Partial<TableauPhase>) => patchPhase<TableauPhase>(p, patch);
+    return (
+      <>
+        <fieldset className="properties-group">
+          <legend>{t('properties.group_essential')}</legend>
+          <div className="formula-editor__grid">
+            {numberField(
+              'tableau-score',
+              t('properties.table_max_score'),
+              tableau.maxScore,
+              v => set({ maxScore: Math.max(0, v) }),
+              { min: 0, hint: t('properties.table_max_score_hint') }
+            )}
+            {numberField(
+              'tableau-timer',
+              t('properties.table_timer'),
+              tableau.timerSeconds,
+              v => set({ timerSeconds: Math.max(1, v) }),
+              { min: 1 }
+            )}
+          </div>
+          <label className="u-row cursor-pointer">
+            <input
+              type="checkbox"
+              checked={tableau.thirdPlace}
+              onChange={e => set({ thirdPlace: e.target.checked })}
+            />
+            <span>{t('competition.third_place_match_label')}</span>
+          </label>
+        </fieldset>
+        <details className="properties-expert">
+          <summary>{t('properties.expert_settings')}</summary>
+          <label className="u-row cursor-pointer">
+            <input
+              type="checkbox"
+              checked={tableau.allPlaces}
+              onChange={e => set({ allPlaces: e.target.checked })}
+            />
+            <span>{t('properties.all_places')}</span>
+          </label>
+          <small className="u-hint">{t('properties.all_places_hint')}</small>
+          {isOther && (
+            <div className="form-group">
+              <label className="form-label">{t('formulaPhase.scoring')}</label>
+              <ScoringZoneEditor
+                scoring={tableau.scoring ?? { type: 'standard', maxScore: tableau.maxScore }}
+                onChange={(s: CustomScoringConfig) => set({ scoring: s })}
+              />
+            </div>
+          )}
+        </details>
+      </>
+    );
+  }
+
+  function renderQuest(p: FriezePhase) {
+    const quest = formula.phases.find((x): x is QuestPhase => x.kind === 'quest');
+    if (!quest) return null;
+    return (
+      <fieldset className="properties-group">
+        <legend>{t('properties.quest_round')}</legend>
+        {quest.config.hasPreliminaryPools &&
+          numberField(
+            'quest-qualified',
+            t('properties.quest_qualified'),
+            quest.config.qualifiersCount ?? 8,
+            v =>
+              patchPhase<QuestPhase>(p, {
+                config: { ...quest.config, qualifiersCount: Math.max(2, v) },
+              }),
+            { min: 2 }
+          )}
+        <small className="u-hint">
+          {quest.config.hasPreliminaryPools
+            ? t('properties.quest_with_pools')
+            : t('properties.quest_without_pools')}
+        </small>
+      </fieldset>
+    );
+  }
+
+  function renderGeneral() {
+    const ruleSet = formula.general.ruleSet ?? (rapieres || specialMode ? 'modern' : 'laser');
+    const showRest = isOlympicWeapon(weapon) || (isOther && ruleSet === 'modern');
     return (
       <details className="properties-expert formula-editor__general">
-        <summary>{t('properties.expert_settings')}</summary>
-        {onSpecialModeChange && (
+        <summary>{t('properties.formula_general')}</summary>
+        {isOther && onSpecialModeChange && (
           <div className="form-group">
             <label className="form-label" htmlFor="formula-special-mode">
               {t('rapieres.special_modes')}
@@ -278,43 +467,97 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             </select>
           </div>
         )}
-        <div className="form-group">
-          <label className="form-label" htmlFor="formula-editor-rule-set">
-            {t('formula.rule_set')}
-          </label>
-          <select
-            id="formula-editor-rule-set"
-            className="form-input form-select"
-            value={ruleSet}
-            onChange={e =>
-              onCustomChange({ ...custom, ruleSet: e.target.value as 'modern' | 'laser' })
-            }
-          >
-            <option value="laser">{t('formula.rule_set_laser')}</option>
-            <option value="modern">{t('formula.rule_set_modern')}</option>
-          </select>
-        </div>
-        {ruleSet === 'modern' && (
+        {isOther && (
           <div className="form-group">
-            <label className="form-label" htmlFor="formula-editor-rest">
-              {t('formula.rest_time')}
+            <label className="form-label" htmlFor="formula-editor-rule-set">
+              {t('formula.rule_set')}
             </label>
-            <input
-              id="formula-editor-rest"
-              type="number"
-              className="form-input"
-              min={0}
-              value={rest}
+            <select
+              id="formula-editor-rule-set"
+              className="form-input form-select"
+              value={ruleSet}
+              onChange={e => patchGeneral({ ruleSet: e.target.value as 'modern' | 'laser' })}
+            >
+              <option value="laser">{t('formula.rule_set_laser')}</option>
+              <option value="modern">{t('formula.rule_set_modern')}</option>
+            </select>
+          </div>
+        )}
+        {showRest &&
+          numberField(
+            'formula-editor-rest',
+            t('properties.rest_time'),
+            formula.general.restTimeSeconds ?? 60,
+            v => patchGeneral({ restTimeSeconds: Math.max(0, v) }),
+            { min: 0, hint: t('properties.rest_time_hint') }
+          )}
+        {!isOther && pools.length > 0 && tableau && (
+          <div className="form-group">
+            <label htmlFor="formula-editor-coupled">{t('properties.coupled')}</label>
+            <select
+              id="formula-editor-coupled"
+              className="form-input form-select"
+              value={formula.general.postPoolSplitCriteria ?? ''}
               onChange={e =>
-                onCustomChange({
-                  ...custom,
-                  restTimeSeconds: Math.max(0, parseInt(e.target.value, 10) || 0),
+                patchGeneral({
+                  postPoolSplitCriteria: (e.target.value || undefined) as 'gender' | undefined,
                 })
               }
-            />
+            >
+              <option value="">{t('properties.coupled_none')}</option>
+              <option value="gender">{t('properties.coupled_gender')}</option>
+            </select>
+            <small className="u-hint">{t('properties.coupled_hint')}</small>
           </div>
         )}
       </details>
+    );
+  }
+
+  function renderCoherence() {
+    if (isOther) return null;
+    const issues = view.coherence;
+    return (
+      <div
+        className={`formula-coherence${issues.length ? ' has-issues' : ''}`}
+        data-testid="formula-coherence"
+      >
+        <strong>{t('properties.coherence_title')}</strong>
+        {issues.length === 0 ? (
+          <p>{t('properties.coherence_ok', { category: categoryLabel })}</p>
+        ) : (
+          <ul>
+            {issues.map(issue => (
+              <li key={issue.field}>
+                {t(
+                  issue.field === 'poolMaxScore'
+                    ? 'properties.coherence_pools'
+                    : 'properties.coherence_tableau',
+                  { actual: issue.actual, expected: issue.expected, category: categoryLabel }
+                )}{' '}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() =>
+                    onChange({
+                      ...formula,
+                      phases: formula.phases.map(x =>
+                        (issue.field === 'poolMaxScore' && x.kind === 'pool') ||
+                        (issue.field === 'tableMaxScore' && x.kind === 'tableau')
+                          ? { ...x, maxScore: issue.expected }
+                          : x
+                      ),
+                    })
+                  }
+                >
+                  {t('properties.coherence_apply')}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <small className="u-hint">{t('properties.coherence_source')}</small>
+      </div>
     );
   }
 
@@ -326,23 +569,20 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
       <div className="formula-builder-content">
         <div className="formula-editor__settings">
-          {isOther && specialMode && (
+          {isOther && specialMode ? (
             <div className="card formula-builder-3">
               <strong>{t(`rapieres.mode_${specialMode}`)}</strong>
               <p className="formula-builder-4">{t('rapieres.mode_description')}</p>
             </div>
+          ) : (
+            <>
+              {current?.kind === 'pool' && renderPool(current)}
+              {current?.kind === 'tableau' && renderTableau(current)}
+              {current?.kind === 'quest' && renderQuest(current)}
+            </>
           )}
-          {isOther && !specialMode && renderOtherPhase()}
-          {!isOther && (
-            <PropertiesFormulaTab
-              draft={draft}
-              onChange={onDraftChange}
-              weapon={weapon}
-              category={category}
-              controlledPhase={toPhaseId(current)}
-            />
-          )}
-          {isOther && renderOtherGeneral()}
+          {renderGeneral()}
+          {renderCoherence()}
         </div>
         {!specialMode && (
           <aside className="formula-simulation-panel" data-testid="formula-simulation">
@@ -362,7 +602,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             <FormulaSimulationPreview
               simulation={simulateFormula(
                 simCount,
-                isOther ? custom : draftToSimulationFormula(draft, weapon),
+                simulationFormulaOf(formula),
                 weapon,
                 durationSources
               )}

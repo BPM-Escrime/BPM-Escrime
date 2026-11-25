@@ -4747,7 +4747,11 @@
     "modal_title": "Formel des Wettbewerbs",
     "round_settings_hint": "Treffer, Zeit und Wertung: die der Runde 1, für alle Runden.",
     "save_error": "Die Formel konnte nicht gespeichert werden.",
-    "sim_fencers": "Simulierte Fechter"
+    "sim_fencers": "Simulierte Fechter",
+    "seeding": "Setzung dieser Runde",
+    "seeding_previous": "Rangliste der vorherigen Runde",
+    "seeding_cumulative": "Kumulierte Rangliste aller Runden",
+    "seeding_hint": "Die qualifizierten Fechter werden nach dieser Rangliste auf die Pools dieser Runde verteilt."
   },
   "formulaTemplates": {
     "template": "Formelvorlage",

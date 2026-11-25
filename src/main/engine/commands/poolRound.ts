@@ -7,17 +7,10 @@
  * Licensed under GPL-3.0
  */
 import { FencerStatus, type Fencer, type Pool } from '../../../shared/types';
-import { getRoundQualifierCount, selectNextRoundFencers } from '../../../shared/utils/poolRounds';
-import {
-  getActiveFormula,
-  getAdvancementCount,
-  getPoolRoundAdvancement,
-} from '../../../shared/utils/customFormulaSettings';
-import {
-  computeOverallRankingAllRoundsFor,
-  computeOverallRankingFor,
-} from '../../../shared/utils/poolOrchestration';
+import { selectNextRoundFencers } from '../../../shared/utils/poolRounds';
+import { computeOverallRankingAllRoundsFor } from '../../../shared/utils/poolOrchestration';
 import { areAllPoolsComplete } from '../../../shared/domain/pools/poolCompletion';
+import { nextRoundPlan } from '../../../shared/domain/pools/roundSeeding';
 import { isTableauEligible } from '../../../shared/domain/fencers/fencerStatus';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
@@ -59,13 +52,17 @@ export function closePoolRound(ctx: CommandContext, input: ClosePoolRoundInput) 
     );
   }
   const round = Math.max(1, Number(session.currentPoolRound ?? 1) || 1);
-  const ranking = computeOverallRankingFor(pools, isLaser(comp));
-  const formula = getActiveFormula(comp.weapon, comp.settings);
-  const qualifierCount =
-    input.qualifierCount ??
-    (formula
-      ? getAdvancementCount(ranking.length, getPoolRoundAdvancement(formula, round - 1))
-      : getRoundQualifierCount(comp.settings?.poolRoundQualifiers, round + 1));
+  // Classement du tour ou cumul des tours (Q4), qualifiés de la formule (ADR-0034)
+  const plan = nextRoundPlan({
+    weapon: comp.weapon,
+    settings: comp.settings,
+    round,
+    pools,
+    history: sessionPoolHistory(session),
+    isLaserSabre: isLaser(comp),
+  });
+  const ranking = plan.ranking;
+  const qualifierCount = input.qualifierCount ?? plan.qualifierCount;
   const { qualified, eliminated } = selectNextRoundFencers(ranking, qualifierCount);
   if (qualified.length < MIN_ROUND_QUALIFIERS) {
     throw new CommandError(

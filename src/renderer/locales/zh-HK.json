@@ -4747,7 +4747,11 @@
     "modal_title": "賽事賽制",
     "round_settings_hint": "劍數、計時及計分：沿用第 1 輪，適用於所有輪次。",
     "save_error": "無法儲存賽制。",
-    "sim_fencers": "模擬劍手人數"
+    "sim_fencers": "模擬劍手人數",
+    "seeding": "本輪分組方式",
+    "seeding_previous": "上一輪排名",
+    "seeding_cumulative": "所有已賽輪次累計",
+    "seeding_hint": "晉級劍手按此排名分配到本輪各分組。"
   },
   "formulaTemplates": {
     "template": "賽制範本",

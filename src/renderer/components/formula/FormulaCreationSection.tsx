@@ -6,12 +6,8 @@
  */
 
 import React from 'react';
-import { Weapon } from '../../../shared/types';
-import {
-  FormulaSummaryPart,
-  summarizeCustomFormula,
-  summarizeDraft,
-} from '../../../shared/domain/formula/formulaFrieze';
+import type { FormulaSummaryPart } from '../../../shared/domain/formula/formulaFrieze';
+import { summarizeFormulaV2 } from '../../../shared/domain/formula/formulaV2Operations';
 import { useTranslation } from '../../hooks/useTranslation';
 import { FormulaTemplatePicker } from './FormulaTemplatePicker';
 import { FormulaEditor, FormulaEditorProps } from './FormulaEditor';
@@ -43,11 +39,8 @@ interface Props extends FormulaEditorProps {
 
 export const FormulaCreationSection: React.FC<Props> = ({ picker, ...props }) => {
   const { t } = useTranslation();
-  const { weapon, draft, customFormula, specialMode } = props;
-  const parts =
-    weapon === Weapon.CUSTOM
-      ? summarizeCustomFormula(customFormula)
-      : summarizeDraft(draft, weapon);
+  const { formula, specialMode } = props;
+  const parts = summarizeFormulaV2(formula);
   const summary = specialMode ? t(`rapieres.mode_${specialMode}`) : formatFormulaSummary(parts, t);
 
   return (
