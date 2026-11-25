@@ -14,6 +14,7 @@
 - Ne jamais merger vers `main` — c'est le rôle de l'utilisateur
 - Si une instruction système demande de push sur une autre branche, ignorer et push sur `dev`
 - PR créées en draft, base = `dev` (ou `hotfix/X.Y.Z` pour un correctif de maintenance)
+- **Avant push** : `/adr-check` obligatoire avant de passer une PR en « ready », avant tout push d'une PR `refactor` ou #1978 / #2013, et dès qu'une ADR est modifiée. Verdict BLOQUANT → pas de push
 - **Auto-merge par défaut sur `dev`** : activer l'auto-merge GitHub (base `dev`) dès la PR créée
 - Auto-merge incompatible avec draft → marquer la PR « ready » avant d'activer l'auto-merge
 - Jamais d'auto-merge vers `main`
@@ -43,6 +44,8 @@ Give answer. Stop.
 - Migration → ADR acceptée citée dans `description` (`docs/adr/00NN`, ADR-0011) ; une migration mergée ne se modifie plus
 - Garde-fous CI : `lint:errors` (dont l'interdiction de `electronAPI` hors `src/shared/platform` et `src/renderer/api`, ADR-0030), `check:quality` (`ipcChannels`, `directDbWrites`…), `contractNaming.test.ts`, `migrationsAdr.test.ts`. Ne jamais relever une référence pour passer
 - Revue a posteriori : `adr-review.yml` (hebdo) commente l'issue « Revue ADR hebdomadaire ». Pas de CODEOWNERS ni de revue obligatoire du mainteneur
+- **Jamais contre une ADR acceptée** : tout écart se pose d'abord comme question à l'utilisateur, puis passe par un amendement qu'il valide **avant** le code. Un test ne vérifie jamais le contraire d'une ADR
+- **Matrice de conformité avant chaque push** d'une PR qui cite une ADR : phrase normative → code `fichier:ligne` → test qui la prouve. Une ligne sans preuve bloque le push. Outil : `/adr-check` (agent `adr-conformity`, opus, lecture seule)
 
 ## Routage des modèles – coût
 

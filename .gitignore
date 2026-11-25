@@ -10,6 +10,7 @@ out/
 .idea/
 .claude/*
 !.claude/agents/
+!.claude/skills/
 *.swp
 *.swo
 
