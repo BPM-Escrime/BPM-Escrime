@@ -4758,7 +4758,11 @@
     "seeding": "Setzung dieser Runde",
     "seeding_previous": "Rangliste der vorherigen Runde",
     "seeding_cumulative": "Kumulierte Rangliste aller Runden",
-    "seeding_hint": "Die qualifizierten Fechter werden nach dieser Rangliste auf die Pools dieser Runde verteilt."
+    "seeding_hint": "Die qualifizierten Fechter werden nach dieser Rangliste auf die Pools dieser Runde verteilt.",
+    "stop_at": "Tableau anhalten",
+    "stop_at_none": "Bis zum Finale",
+    "stop_at_n": "Wenn {{n}} Fechter übrig sind",
+    "stop_at_hint": "Die verbleibenden Fechter gehen nach dem Tableau in eine Vorrunde."
   },
   "formulaTemplates": {
     "template": "Formelvorlage",
@@ -4807,5 +4811,12 @@
     "copied": "Kopiert",
     "copy_failed": "Kopieren in die Zwischenablage fehlgeschlagen",
     "open_count": "{{n}} offene(r) Punkt(e)"
+  },
+  "tableauStage": {
+    "title": "Tableau bei {{n}} Fechtern angehalten",
+    "hint": "Fechten Sie, bis {{n}} Fechter übrig sind: die weiteren Runden werden nicht gefochten.",
+    "close": "Zur nächsten Phase",
+    "confirm": "{{qualified}} Fechter kommen in die nächste Phase, {{eliminated}} scheiden aus. Fortfahren?",
+    "closed": "Tableau abgeschlossen: Melden Sie die {{n}} verbleibenden Fechter für die nächste Phase an."
   }
 }

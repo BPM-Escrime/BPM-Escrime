@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { Fencer } from '../../types';
+import type { Fencer, PoolRanking } from '../../types';
 import type { TableauMatch } from './tableauTypes';
-import { closeStage, isStageDone, stageMatches } from './tableauStage';
+import {
+  closeStage,
+  isStageDone,
+  rankAfterStages,
+  stageMatches,
+  type TableauStageRecord,
+} from './tableauStage';
 
 const f = (id: string) => ({ id, lastName: id, firstName: id }) as Fencer;
 let n = 0;
@@ -60,5 +66,41 @@ describe('tableau arrêté à N (ADR-0037)', () => {
 
   it('étape non terminée : pas de clôture', () => {
     expect(closeStage([...quarters, { ...semis[0], winner: null }, semis[1]], 2)).toBeNull();
+  });
+});
+
+describe('classement final après un tableau arrêté (Q5)', () => {
+  const out = closeStage([...quarters, ...semis, final], 2)!;
+  const stage: TableauStageRecord = {
+    kind: 'tableau',
+    stopAt: 2,
+    matches: [...quarters, ...semis, final],
+    eliminated: out.eliminated.map(e => ({ fencerId: e.fencer.id, round: e.round, seed: e.seed })),
+  };
+  const row = (id: string, rank: number) => ({ fencer: f(id), rank }) as PoolRanking;
+  // Classement des tours : poule finale (E 1, B 2), puis tour d'avant le tableau (I, J éliminés)
+  const merged = ['E', 'B', 'A', 'C', 'D', 'F', 'G', 'H', 'I', 'J'].map((id, i) => row(id, i + 1));
+
+  it('restants, puis éliminés du tableau (tour, rang d’entrée), puis éliminés des poules', () => {
+    const r = rankAfterStages(merged, [stage]);
+    expect(r.ranking.map(x => [x.fencer.id, x.rank])).toEqual([
+      ['E', 1],
+      ['B', 2],
+      ['A', 3],
+      ['F', 4],
+      ['C', 5],
+      ['D', 6],
+      ['G', 7],
+      ['H', 8],
+      ['I', 9],
+      ['J', 10],
+    ]);
+    expect(r.eliminatedAt.get('F')).toBe('Tableau de 4');
+    expect(r.eliminatedAt.get('H')).toBe('Tableau de 8');
+    expect(r.eliminatedAt.has('I')).toBe(false);
+  });
+
+  it('sans étape close : classement inchangé', () => {
+    expect(rankAfterStages(merged, []).ranking).toBe(merged);
   });
 });

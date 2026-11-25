@@ -3,6 +3,7 @@
  * Licensed under GPL-3.0
  */
 
+import { rankAfterStages } from '../../shared/domain/tableau/tableauStage';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
 import React, { Suspense, useState } from 'react';
@@ -309,6 +310,12 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
   const storedFormula = competition.settings?.formula;
   const tableauFirst = !!storedFormula && startsWithTableau(storedFormula);
   const organizerNotes = useOrganizerNotes(competition, onUpdate);
+
+  // Tableau arrêté (docs/adr/0037) : restants, puis éliminés du tableau (Q5), puis les autres
+  const stagedRanking = React.useMemo(
+    () => rankAfterStages(effectiveTableauRanking, competitionCore.stageHistory),
+    [effectiveTableauRanking, competitionCore.stageHistory]
+  );
 
   return (
     <div style={CV_STYLES.root}>
@@ -687,13 +694,15 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onGenerateTableau={generateTableau}
             onClearScore={clearScore}
             onAssign={assignMatches}
+            stopAt={competitionCore.tableauStopAt}
           />
         )}
 
         {currentPhase === 'results' && (
           <ResultsView
             competition={competition}
-            poolRanking={effectiveTableauRanking}
+            poolRanking={stagedRanking.ranking}
+            stageEliminatedAt={stagedRanking.eliminatedAt}
             finalResults={finalResults}
             fencers={fencers}
             pools={[...poolHistory.flat(), ...pools]}

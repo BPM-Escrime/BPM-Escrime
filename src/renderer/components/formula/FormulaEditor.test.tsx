@@ -102,6 +102,17 @@ describe('FormulaEditor (formule v2)', () => {
     expect(screen.getByText('advancement.mode_percentage')).toBeInTheDocument();
   });
 
+  it('tableau arrêté à N : un tour de poules s’ajoute après le tableau (ADR-0037)', () => {
+    render(<Harness weapon={Weapon.EPEE} />);
+    fireEvent.click(screen.getByTestId('formula-step-tableau'));
+    fireEvent.change(screen.getByLabelText('formulaEditor.stop_at'), { target: { value: '8' } });
+    expect(last?.phases.map(p => p.kind)).toEqual(['pool', 'tableau', 'pool']);
+    expect(screen.getByTestId('formula-step-pool-1')).toBeInTheDocument();
+    // Jusqu'à la finale : le tour d'après disparaît
+    fireEvent.change(screen.getByLabelText('formulaEditor.stop_at'), { target: { value: '0' } });
+    expect(last?.phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
+  });
+
   it('arme « Autre » : règles, barème, qualification complète', () => {
     render(<Harness weapon={Weapon.CUSTOM} />);
     expect(screen.getByLabelText('formula.rule_set')).toBeInTheDocument();

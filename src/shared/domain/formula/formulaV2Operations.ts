@@ -52,18 +52,23 @@ export function friezeOfV2(f: FormulaV2): FriezePhase[] {
 
 /**
  * Briques autorisées au « ＋ » d'indice `at` (0 = après l'appel) : tours de poules avant le Tour
- * Quest et le tableau, Tour Quest (Sabre Laser) après les poules, un tableau toujours en dernier.
+ * Quest et le tableau, Tour Quest (Sabre Laser) après les poules, un tableau en dernier ; après
+ * un tableau arrêté à N tireurs, des tours de poules pour les restants (ADR-0037, D2).
  */
 export function insertOptionsV2(f: FormulaV2, weapon: Weapon, at: number): FriezeBrick[] {
   const rounds = f.phases.filter(isPool).length;
   const quest = f.phases.some(isQuest);
-  const tableau = f.phases.some(isTableau);
+  const tableauAt = f.phases.findIndex(isTableau);
+  const tableau = tableauAt >= 0 ? (f.phases[tableauAt] as TableauPhase) : undefined;
+  const preRounds = tableau ? f.phases.slice(0, tableauAt).filter(isPool).length : rounds;
   const total = friezeOfV2(f).length;
   const out: FriezeBrick[] = [];
   // Tour Quest : au plus un tour de poules préliminaire
   const maxRounds = quest ? 1 : MAX_POOL_ROUNDS;
-  if (at <= rounds && rounds < maxRounds) out.push('pool');
-  if (weapon === Weapon.LASER && !quest && at === rounds && rounds <= 1) out.push('quest');
+  const afterStopped = !!tableau?.stopAt && !quest && at > tableauAt;
+  if (rounds < maxRounds && (at <= preRounds || afterStopped)) out.push('pool');
+  if (weapon === Weapon.LASER && !quest && !tableau?.stopAt && at === preRounds && preRounds <= 1)
+    out.push('quest');
   if (!tableau && at === total) out.push('tableau');
   return out;
 }
@@ -71,13 +76,26 @@ export function insertOptionsV2(f: FormulaV2, weapon: Weapon, at: number): Friez
 export function canRemoveV2(f: FormulaV2, phase: FriezePhase): boolean {
   if (friezeOfV2(f).length <= 1) return false;
   if (phase.kind === 'tableau') return f.phases.some(isPool) || f.phases.some(isQuest);
+  if (phase.kind === 'pool') {
+    // Tableau arrêté (ADR-0037) : au moins un tour avant lui
+    const at = f.phases.findIndex(isTableau);
+    const tableau = f.phases[at] as TableauPhase | undefined;
+    if (tableau?.stopAt) {
+      const pre = f.phases.slice(0, at).filter(isPool).length;
+      const post = f.phases.slice(at + 1).filter(isPool).length;
+      // Dernier tour d'après : retiré avec l'arrêt du tableau (removeV2)
+      if (phase.round < pre && pre <= 1) return false;
+    }
+  }
   return true;
 }
 
 /** Réglages d'un tour neuf : ceux du tour voisin, tous qualifiés */
 function newPool(f: FormulaV2, at: number, id: string): PoolRoundPhase {
   const list = f.phases.filter(isPool);
-  const neighbour = list[at - 1] ?? list[at];
+  // `at` : position dans la frise ; voisin = tour qui précède (ou suit) cette position
+  const before = f.phases.slice(0, at).filter(isPool).length;
+  const neighbour = list[before - 1] ?? list[before];
   const base: PoolRoundPhase = neighbour ?? {
     kind: 'pool',
     id,
@@ -130,7 +148,7 @@ export function insertV2(
     };
     phases.splice(rounds, 0, { kind: 'quest', id: newId(), config });
   } else {
-    // Le tour neuf se place avant le `at`-ième tour (les poules sont en tête de frise)
+    // Le tour neuf se place à la position `at` de la frise (avant ou après un tableau arrêté)
     phases.splice(at, 0, newPool(f, at, newId()));
   }
   return withQuestPools({ ...f, phases });
@@ -140,10 +158,15 @@ export function removeV2(f: FormulaV2, phase: FriezePhase): FormulaV2 {
   if (phase.kind === 'tableau') return { ...f, phases: f.phases.filter(p => !isTableau(p)) };
   if (phase.kind === 'quest') return { ...f, phases: f.phases.filter(p => !isQuest(p)) };
   let round = -1;
-  return withQuestPools({
-    ...f,
-    phases: f.phases.filter(p => !(isPool(p) && ++round === phase.round)),
-  });
+  const phases = f.phases.filter(p => !(isPool(p) && ++round === phase.round));
+  // Plus de tour après un tableau arrêté : le tableau va de nouveau jusqu'à la finale
+  const at = phases.findIndex(isTableau);
+  const tableau = phases[at] as TableauPhase | undefined;
+  if (tableau?.stopAt && !phases.slice(at + 1).some(isPool)) {
+    const { stopAt: _stopAt, ...full } = tableau;
+    phases[at] = full;
+  }
+  return withQuestPools({ ...f, phases });
 }
 
 /** Tour Quest : « poules préliminaires » suit la présence d'un tour de poules */
@@ -179,7 +202,11 @@ const TABLEAU_FIELDS = [
   'thirdPlace',
   'allPlaces',
   'scoring',
+  'stopAt',
 ] as const;
+
+/** Arrêt du tableau : puissance de 2, de 2 à 128 tireurs restants (ADR-0037) */
+export const TABLEAU_STOP_AT = [2, 4, 8, 16, 32, 64, 128] as const;
 const QUEST_FIELDS = [
   'qualifiersCount',
   'fightsPerFencer',
@@ -261,7 +288,17 @@ function setPool(
 function setTableau(p: TableauPhase, raw: Record<string, unknown>, where: string): TableauPhase {
   const s = renamed(raw, TABLEAU_ALIASES);
   checkFields(s, TABLEAU_FIELDS, where);
-  const next = { ...p, ...(s as Partial<TableauPhase>) };
+  const { stopAt, ...rest } = s;
+  const next: TableauPhase = { ...p, ...(rest as Partial<TableauPhase>) };
+  if (stopAt !== undefined) {
+    // null ou 0 : tableau jusqu'à la finale
+    if (stopAt === null || stopAt === 0) delete next.stopAt;
+    else if (!(TABLEAU_STOP_AT as readonly unknown[]).includes(stopAt))
+      throw new FormulaOperationError(
+        `${where} : « stopAt » attend ${TABLEAU_STOP_AT.join(', ')} (ou 0 : jusqu'à la finale)`
+      );
+    else next.stopAt = stopAt as number;
+  }
   return s.maxScore !== undefined && next.scoring?.type === 'standard'
     ? { ...next, scoring: { ...next.scoring, maxScore: next.maxScore } }
     : next;
@@ -348,10 +385,11 @@ export function applyOperationsV2(
           if (Object.keys(common).length)
             phases[k] = setPool(q, common, where, round >= rounds - 1);
         }
-        // « Vainqueurs de poule seulement » : qualification du dernier tour
+        // « Vainqueurs de poule seulement » : qualification du dernier tour avant le tableau
         if (poolWinnersOnly !== undefined) {
+          const tableauAt = phases.findIndex(isTableau);
           const last = phases
-            .map((x, k) => (isPool(x) ? k : -1))
+            .map((x, k) => (isPool(x) && (tableauAt < 0 || k < tableauAt) ? k : -1))
             .filter(k => k >= 0)
             .pop();
           if (last !== undefined)
@@ -411,6 +449,17 @@ export function formulaV2Issues(
     out.push(...issues.map(i => `tableau : ${i.field} (${i.message})`));
   }
   if (pools.length > MAX_POOL_ROUNDS) out.push(`${MAX_POOL_ROUNDS} tours de poules au plus`);
+  // Tableau arrêté (ADR-0037, D2) : des tours de poules le suivent, et rien d'autre
+  if (tableau) {
+    const after = f.phases.slice(f.phases.indexOf(tableau) + 1);
+    if (tableau.stopAt && !after.some(isPool))
+      out.push(`tableau arrêté à ${tableau.stopAt} : ajouter un tour de poules après le tableau`);
+    if (!tableau.stopAt && after.some(isPool))
+      out.push('tours de poules après le tableau : arrêter le tableau à N tireurs');
+    if (tableau.stopAt && !f.phases.slice(0, f.phases.indexOf(tableau)).some(isPool))
+      out.push('tableau arrêté : un tour de poules avant le tableau');
+    if (tableau.stopAt && f.phases.some(isQuest)) out.push('tableau arrêté : sans Tour Quest');
+  }
   return out;
 }
 
@@ -463,6 +512,7 @@ const TABLEAU_DIFF = [
   'thirdPlace',
   'allPlaces',
   'scoring',
+  'stopAt',
 ] as const;
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 function changed(from: object, to: object, keys: readonly string[]) {
@@ -480,22 +530,52 @@ function changed(from: object, to: object, keys: readonly string[]) {
  */
 export function operationsBetweenV2(from: FormulaV2, to: FormulaV2): FormulaOperation[] {
   const ops: FormulaOperation[] = [];
-  const pools = (f: FormulaV2) => f.phases.filter(isPool);
   const quest = (f: FormulaV2) => f.phases.find(isQuest);
   const tableau = (f: FormulaV2) => f.phases.find(isTableau);
+  // Tours avant / après le tableau (après : tableau arrêté, ADR-0037). Tableau retiré : tous
+  // les tours de `from` comptent comme tours d'avant.
+  const split = (f: FormulaV2, keepTableau: boolean) => {
+    const at = keepTableau ? f.phases.findIndex(isTableau) : -1;
+    const pre = (at >= 0 ? f.phases.slice(0, at) : f.phases).filter(isPool);
+    const post = at >= 0 ? f.phases.slice(at + 1).filter(isPool) : [];
+    return { pre, post };
+  };
+  const keep = !!tableau(from) && !!tableau(to);
+  const src = split(from, keep);
+  const dst = split(to, true);
   if (tableau(from) && !tableau(to)) ops.push({ op: 'removePhase', phase: 'tableau' });
   if (quest(from) && !quest(to)) ops.push({ op: 'removePhase', phase: 'quest' });
-  const have = pools(from).length;
-  const want = pools(to).length;
-  for (let n = have; n > want; n--) ops.push({ op: 'removePhase', phase: `pool-${n - 1}` });
-  for (let n = have; n < want; n++) ops.push({ op: 'insertPhase', brick: 'pool', at: n });
+  // Retraits : tours d'après d'abord (indices les plus grands), puis tours d'avant
+  for (let n = src.post.length; n > dst.post.length; n--)
+    ops.push({ op: 'removePhase', phase: `pool-${src.pre.length + n - 1}` });
+  for (let n = src.pre.length; n > dst.pre.length; n--)
+    ops.push({ op: 'removePhase', phase: `pool-${n - 1}` });
+  // Ajouts : tours d'avant (en tête de frise), Tour Quest, tableau, puis tours d'après
+  for (let n = src.pre.length; n < dst.pre.length; n++)
+    ops.push({ op: 'insertPhase', brick: 'pool', at: n });
+  const want = dst.pre.length;
   if (!quest(from) && quest(to)) ops.push({ op: 'insertPhase', brick: 'quest', at: want });
+  const tableauAt = want + (quest(to) ? 1 : 0);
   if (!tableau(from) && tableau(to))
-    ops.push({ op: 'insertPhase', brick: 'tableau', at: want + (quest(to) ? 1 : 0) });
-
-  pools(to).forEach((p, r) => {
+    ops.push({ op: 'insertPhase', brick: 'tableau', at: tableauAt });
+  // Réglages du tableau (dont l'arrêt à N) avant les tours d'après (grammaire, ADR-0037)
+  const tTo = tableau(to);
+  if (tTo) {
+    const diff = changed(tableau(from) ?? {}, tTo, TABLEAU_DIFF);
+    // Arrêt retiré par le retrait du dernier tour d'après (removeV2) : rien à régler
+    if (src.post.length > 0 && dst.post.length === 0 && diff.stopAt === null) delete diff.stopAt;
+    if (Object.keys(diff).length) ops.push({ op: 'setPhase', phase: 'tableau', settings: diff });
+  }
+  const kept = Math.min(src.post.length, dst.post.length);
+  for (let n = kept; n < dst.post.length; n++)
+    ops.push({ op: 'insertPhase', brick: 'pool', at: tableauAt + 1 + n });
+  const pairs: Array<[PoolRoundPhase | undefined, PoolRoundPhase]> = [
+    ...dst.pre.map((p, r): [PoolRoundPhase | undefined, PoolRoundPhase] => [src.pre[r], p]),
+    ...dst.post.map((p, r): [PoolRoundPhase | undefined, PoolRoundPhase] => [src.post[r], p]),
+  ];
+  pairs.forEach(([old, p], r) => {
     // Tour inséré : il reprend le tour voisin, tous qualifiés ; on règle tout ce qui diffère
-    const before = r < have ? pools(from)[r] : newPool(from, have, 'new');
+    const before = old ?? newPool(from, src.pre.length, 'new');
     const diff = changed(before, p, POOL_DIFF);
     if (Object.keys(diff).length) ops.push({ op: 'setPhase', phase: `pool-${r}`, settings: diff });
   });
@@ -503,11 +583,6 @@ export function operationsBetweenV2(from: FormulaV2, to: FormulaV2): FormulaOper
   if (qTo) {
     const diff = changed(quest(from)?.config ?? {}, qTo.config, QUEST_FIELDS);
     if (Object.keys(diff).length) ops.push({ op: 'setPhase', phase: 'quest', settings: diff });
-  }
-  const tTo = tableau(to);
-  if (tTo) {
-    const diff = changed(tableau(from) ?? {}, tTo, TABLEAU_DIFF);
-    if (Object.keys(diff).length) ops.push({ op: 'setPhase', phase: 'tableau', settings: diff });
   }
   const general = changed(from.general, to.general, GENERAL_FIELDS);
   if (Object.keys(general).length) ops.push({ op: 'setGeneral', settings: general });

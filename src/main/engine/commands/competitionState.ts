@@ -4,6 +4,7 @@
  * relit quand le journal avance au lieu de relire le bloc par sa propre API.
  * Licensed under GPL-3.0
  */
+import { tableauStagesOf } from '../../../shared/domain/tableau/tableauStage';
 import type { CompetitionStateDTO } from '../../../shared/api/contract';
 import type { Competition } from '../../../shared/types';
 import type { TeamsStateDTO } from '../../../shared/api/contractTeams';
@@ -69,6 +70,10 @@ export function competitionState(
       : {}),
     ...(session.rapieres ? { rapieres: session.rapieres as CompetitionStateDTO['rapieres'] } : {}),
     ...(prep ? { poolPrepParams: prep } : {}),
+    // Étapes closes (tableau arrêté, docs/adr/0037) : classement final de l'écran
+    ...(Array.isArray(session.stageHistory) && session.stageHistory.length > 0
+      ? { stageHistory: tableauStagesOf(session.stageHistory) }
+      : {}),
     // Tableaux séparés après les poules (docs/adr/0024) : onglets de l'écran (lot A2)
     ...(groups
       ? { groupTableaux: groups }

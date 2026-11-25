@@ -31,6 +31,7 @@ import {
   insertV2,
   removeV2,
   simulationFormulaOf,
+  TABLEAU_STOP_AT,
 } from '../../../shared/domain/formula/formulaV2Operations';
 import { isOlympicWeapon } from '../../../shared/utils/defaultMaxScores';
 import { simulateFormula } from '../../../shared/utils/customRankingCalculator';
@@ -344,6 +345,20 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   function renderTableau(p: FriezePhase) {
     if (!tableau) return null;
     const set = (patch: Partial<TableauPhase>) => patchPhase<TableauPhase>(p, patch);
+    // Tableau arrêté à N (ADR-0037) : un tour de poules le suit ; sans arrêt, plus de tour après
+    const setStopAt = (n: number) => {
+      const at = formula.phases.indexOf(tableau);
+      const { stopAt: _old, ...rest } = tableau;
+      let next: FormulaV2 = {
+        ...formula,
+        phases: formula.phases.map(x => (x === tableau ? (n ? { ...rest, stopAt: n } : rest) : x)),
+      };
+      const hasAfter = next.phases.slice(at + 1).some(x => x.kind === 'pool');
+      if (n && !hasAfter) next = insertV2(next, { weapon, category }, 'pool', at + 1, newPhaseId);
+      if (!n)
+        next = { ...next, phases: next.phases.filter((x, i) => i <= at || x.kind !== 'pool') };
+      onChange(next);
+    };
     return (
       <>
         <fieldset className="properties-group">
@@ -384,6 +399,27 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             <span>{t('properties.all_places')}</span>
           </label>
           <small className="u-hint">{t('properties.all_places_hint')}</small>
+          {!formula.phases.some(x => x.kind === 'quest') && (
+            <div className="form-group">
+              <label htmlFor="tableau-stop-at" className="form-label">
+                {t('formulaEditor.stop_at')}
+              </label>
+              <select
+                id="tableau-stop-at"
+                className="form-input form-select"
+                value={tableau.stopAt ?? 0}
+                onChange={e => setStopAt(Number(e.target.value))}
+              >
+                <option value={0}>{t('formulaEditor.stop_at_none')}</option>
+                {TABLEAU_STOP_AT.map(n => (
+                  <option key={n} value={n}>
+                    {t('formulaEditor.stop_at_n', { n })}
+                  </option>
+                ))}
+              </select>
+              <small className="u-hint">{t('formulaEditor.stop_at_hint')}</small>
+            </div>
+          )}
           {isOther && (
             <div className="form-group">
               <label className="form-label">{t('formulaPhase.scoring')}</label>

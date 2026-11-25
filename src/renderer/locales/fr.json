@@ -4758,7 +4758,11 @@
     "seeding": "Répartition de ce tour",
     "seeding_previous": "Classement du tour précédent",
     "seeding_cumulative": "Cumul des tours joués",
-    "seeding_hint": "Les tireurs qualifiés sont répartis dans les poules de ce tour d'après ce classement."
+    "seeding_hint": "Les tireurs qualifiés sont répartis dans les poules de ce tour d'après ce classement.",
+    "stop_at": "Arrêter le tableau",
+    "stop_at_none": "Jusqu'à la finale",
+    "stop_at_n": "Quand il reste {{n}} tireurs",
+    "stop_at_hint": "Les tireurs restants passent à un tour de poules après le tableau."
   },
   "formulaTemplates": {
     "template": "Modèle de formule",
@@ -4807,5 +4811,12 @@
     "copied": "Copié",
     "copy_failed": "Copie impossible dans le presse-papiers",
     "open_count": "{{n}} point(s) à traiter"
+  },
+  "tableauStage": {
+    "title": "Tableau arrêté à {{n}} tireurs",
+    "hint": "Jouez les matchs jusqu'à ce qu'il reste {{n}} tireurs : les tours suivants ne se tirent pas.",
+    "close": "Passer à la phase suivante",
+    "confirm": "{{qualified}} tireurs passent à la phase suivante, {{eliminated}} sont éliminés. Continuer ?",
+    "closed": "Tableau clos : pointez les {{n}} tireurs restants pour la phase suivante."
   }
 }

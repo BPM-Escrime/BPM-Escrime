@@ -204,6 +204,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setMinFencersPerPool,
     setMaxFencersPerPool,
     setPoolsLaunched,
+    setStageHistory: ctx.setStageHistory,
   });
 
   // Hors Electron (pas de moteur) : état tenu en mémoire seulement, rien d'écrit

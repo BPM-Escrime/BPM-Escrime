@@ -42,6 +42,8 @@ interface ResultsViewProps {
   competition: Competition;
   poolRanking: PoolRanking[];
   finalResults: FinalResult[];
+  /** Éliminés d'un tableau arrêté (docs/adr/0037) : « Tableau de N » au lieu de « Poules » */
+  stageEliminatedAt?: Map<string, string>;
   fencers?: Fencer[];
   pools?: Pool[];
   tableauMatches?: TableauMatch[];
@@ -295,6 +297,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   competition,
   poolRanking,
   finalResults,
+  stageEliminatedAt,
   fencers,
   pools,
   tableauMatches,
@@ -352,7 +355,11 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     if (finalResults.length === 0) {
       return poolRanking.map((pr, idx) => {
         const fencer = freshFencer(pr.fencer);
-        return { rank: idx + 1, fencer, eliminatedAt: poolEliminatedAt(fencer) };
+        return {
+          rank: idx + 1,
+          fencer,
+          eliminatedAt: stageEliminatedAt?.get(fencer.id) ?? poolEliminatedAt(fencer),
+        };
       });
     }
     const tableauIds = new Set(finalResults.map(r => r.fencer.id));

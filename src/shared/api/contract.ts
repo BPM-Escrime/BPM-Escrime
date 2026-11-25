@@ -41,6 +41,7 @@ import { ArenaPlanSchema } from './arenaPlanSchema';
 import { Category, Gender, Weapon, type Fencer, type Pool, type PoolRanking } from '../types';
 import { formulaOperations, TemplateId } from './contractFormula';
 import type { ConsolationBracket, FinalResult, TableauMatch } from '../domain/tableau/tableauTypes';
+import type { TableauStageRecord } from '../domain/tableau/tableauStage';
 import type { RapieresLegacyState, RapieresSession } from '../domain/rapieres/rapieres.types';
 import type { GroupTableau } from '../domain/ranking/splitGroups';
 
@@ -202,6 +203,8 @@ const CompetitionStateSchema = z.object({
   poolsLaunched: z.boolean().optional(),
   remoteArenaCount: z.number().int().optional(),
   rapieres: z.custom<RapieresSession | RapieresLegacyState>().optional(),
+  /** Étapes closes : tableau arrêté à N tireurs (docs/adr/0037) */
+  stageHistory: z.array(z.custom<TableauStageRecord>()).optional(),
   /** Tableaux séparés après les poules : un tableau par groupe (docs/adr/0024) */
   groupTableaux: z.record(z.string(), z.custom<GroupTableau>()).optional(),
   /** Épreuve par équipes (docs/adr/0024) : équipes, rencontres, relais ; null : individuelle */

@@ -26,6 +26,7 @@ import type {
 } from '../../../shared/domain/tableau/tableauTypes';
 import { SplitGroupTabs } from './SplitGroupTabs';
 import { TableauDriftBanner } from '../tableau/TableauDriftBanner';
+import { TableauStageBanner } from '../tableau/TableauStageBanner';
 import type { PoolCorrectionImpact } from '../../../shared/utils/poolCorrectionImpact';
 import { useRemoteApi } from '../../api/remoteApi';
 
@@ -72,6 +73,8 @@ interface TableauPhaseProps {
   onClearScore?: TableauViewProps['onClearScore'];
   /** Pistes et arbitres des matchs écrits par le moteur (assignMatches, docs/adr/0017) */
   onAssign?: (input: AssignmentsInput) => Promise<'recorded' | 'local' | 'refused'>;
+  /** Tableau arrêté à N tireurs (docs/adr/0037) : bandeau et passage à la phase suivante */
+  stopAt?: number;
 }
 
 const TableauPhase: React.FC<TableauPhaseProps> = ({
@@ -108,6 +111,7 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
   onGenerateTableau,
   onClearScore,
   onAssign,
+  stopAt,
 }) => {
   const remote = useRemoteApi();
   // Changement d'organisation seul (pistes, arbitres) : par le moteur ; le reste, à l'écran
@@ -172,6 +176,14 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
           groups={splitGroups}
           active={activeSplitGroup}
           onSelect={onSwitchSplitGroup}
+        />
+      )}
+      {stopAt && tableauMatches.length > 0 && (
+        <TableauStageBanner
+          competitionId={competitionId}
+          stopAt={stopAt}
+          matches={tableauMatches}
+          onClosed={() => setCurrentPhase('checkin')}
         />
       )}
       {tableauDrift && onRebuildTableau && (

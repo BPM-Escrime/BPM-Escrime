@@ -7,7 +7,7 @@
  * Licensed under GPL-3.0
  */
 
-import type { Fencer } from '../../types';
+import type { Fencer, PoolRanking } from '../../types';
 import type { TableauMatch } from './tableauTypes';
 
 /** Matchs joués avant l'arrêt : tours où il reste plus de `stopAt` tireurs */
@@ -63,4 +63,71 @@ export function closeStage(matches: TableauMatch[], stopAt: number): StageOutcom
     .sort((a, b) => seedOf(a) - seedOf(b));
   eliminated.sort((a, b) => a.round - b.round || a.seed - b.seed);
   return { qualified, eliminated };
+}
+
+/** Étape close gardée dans l'état de session (`stageHistory`, ADR-0037) */
+export interface TableauStageRecord {
+  kind: 'tableau';
+  stopAt: number;
+  matches: TableauMatch[];
+  /** Éliminés dans l'ordre du classement (Q5) ; `round` : tour où le tireur a perdu */
+  eliminated: Array<{ fencerId: string; round: number; seed: number }>;
+}
+
+/** Étapes « tableau » closes d'un état de session (absent, mal formé : aucune) */
+export const tableauStagesOf = (stageHistory: unknown): TableauStageRecord[] =>
+  Array.isArray(stageHistory)
+    ? (stageHistory as TableauStageRecord[]).filter(
+        s => s?.kind === 'tableau' && Array.isArray(s.eliminated) && Array.isArray(s.matches)
+      )
+    : [];
+
+/** Libellé « éliminé à » d'un tireur sorti d'un tableau arrêté */
+export const stageEliminatedAt = (round: number): string => `Tableau de ${round}`;
+
+/**
+ * Classement final d'une épreuve dont un tableau a été arrêté (Q5, ADR-0037) : les restants
+ * selon la phase suivante (ordre du classement reçu), puis les éliminés du tableau arrêté
+ * (tour atteint, puis rang d'entrée), puis les autres (éliminés des poules, ordre reçu). Rangs
+ * renumérotés, égalités gardées. Sans étape close : classement inchangé.
+ */
+export function rankAfterStages(
+  ranking: PoolRanking[],
+  stages: TableauStageRecord[]
+): { ranking: PoolRanking[]; eliminatedAt: Map<string, string> } {
+  const eliminatedAt = new Map<string, string>();
+  if (stages.length === 0) return { ranking, eliminatedAt };
+  const byId = new Map(ranking.map(r => [r.fencer.id, r]));
+  // Étape la plus récente d'abord : ses éliminés sont allés le plus loin
+  const stageOut: PoolRanking[] = [];
+  const out = new Set<string>();
+  for (const stage of [...stages].reverse()) {
+    for (const e of stage.eliminated) {
+      const row = byId.get(e.fencerId);
+      if (!row || out.has(e.fencerId)) continue;
+      out.add(e.fencerId);
+      stageOut.push(row);
+      eliminatedAt.set(e.fencerId, stageEliminatedAt(e.round));
+    }
+  }
+  const last = stages[stages.length - 1];
+  const entered = new Set(
+    last.matches.flatMap(m => [m.fencerA?.id, m.fencerB?.id]).filter((id): id is string => !!id)
+  );
+  const front = ranking.filter(r => entered.has(r.fencer.id) && !out.has(r.fencer.id));
+  const frontIds = new Set(front.map(r => r.fencer.id));
+  const rest = ranking.filter(r => !frontIds.has(r.fencer.id) && !out.has(r.fencer.id));
+  const result: PoolRanking[] = [...front];
+  stageOut.forEach((r, i) => result.push({ ...r, rank: front.length + i + 1 }));
+  // Autres : égalités du classement reçu gardées
+  let prev = NaN;
+  let tieStart = 0;
+  rest.forEach((r, i) => {
+    if (r.rank !== prev) {
+      tieStart = i;
+      prev = r.rank;
+    }
+    result.push({ ...r, rank: front.length + stageOut.length + tieStart + 1 });
+  });
+  return { ranking: result, eliminatedAt };
 }

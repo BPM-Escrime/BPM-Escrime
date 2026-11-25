@@ -4758,7 +4758,11 @@
     "seeding": "Distribuzione di questo turno",
     "seeding_previous": "Classifica del turno precedente",
     "seeding_cumulative": "Cumulo dei turni disputati",
-    "seeding_hint": "Gli schermidori qualificati sono distribuiti nei gironi di questo turno secondo questa classifica."
+    "seeding_hint": "Gli schermidori qualificati sono distribuiti nei gironi di questo turno secondo questa classifica.",
+    "stop_at": "Fermare il tabellone",
+    "stop_at_none": "Fino alla finale",
+    "stop_at_n": "Quando restano {{n}} schermidori",
+    "stop_at_hint": "Gli schermidori rimasti passano a un turno di gironi dopo il tabellone."
   },
   "formulaTemplates": {
     "template": "Modello di formula",
@@ -4807,5 +4811,12 @@
     "copied": "Copiato",
     "copy_failed": "Impossibile copiare negli appunti",
     "open_count": "{{n}} punto/i da gestire"
+  },
+  "tableauStage": {
+    "title": "Tabellone fermato a {{n}} schermidori",
+    "hint": "Disputate gli assalti finché restano {{n}} schermidori: i turni successivi non si disputano.",
+    "close": "Passare alla fase successiva",
+    "confirm": "{{qualified}} schermidori passano alla fase successiva, {{eliminated}} sono eliminati. Continuare?",
+    "closed": "Tabellone chiuso: fate l'appello dei {{n}} schermidori rimasti per la fase successiva."
   }
 }

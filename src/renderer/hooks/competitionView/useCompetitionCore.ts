@@ -12,6 +12,8 @@ import {
 } from '../../components/competition/competitionViewState';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { phaseSettings } from '../../../shared/domain/formula/formulaV2';
+import { formulaSegment } from '../../../shared/domain/formula/formulaSteps';
+import type { TableauStageRecord } from '../../../shared/domain/tableau/tableauStage';
 import { getDefaultMaxScores } from '../../../shared/utils/defaultMaxScores';
 import { Fencer, FencerStatus, Weapon } from '../../../shared/types';
 import { useToast } from '../../components/Toast';
@@ -51,9 +53,16 @@ export function useCompetitionCore(ctx: Ctx) {
   // Settings avec valeurs par défaut (formule personnalisée prioritaire, #1125)
   const customFormula = getActiveFormula(competition.weapon, competition.settings);
   const effectiveSettings = resolveCompetitionSettings(competition.weapon, competition.settings);
-  const poolRounds = effectiveSettings?.poolRounds ?? 1;
+  // Tableau arrêté à N tireurs (ADR-0037, D2) : tours et tableau de la partie en cours
+  const [stageHistory, setStageHistory] = useState<TableauStageRecord[]>([]);
+  const segment = competition.settings?.formula
+    ? formulaSegment(competition.settings.formula, stageHistory.length)
+    : null;
+  const poolRounds = segment?.poolRounds ?? effectiveSettings?.poolRounds ?? 1;
   const poolRoundQualifiers = competition.settings?.poolRoundQualifiers;
-  const hasDirectElimination = effectiveSettings?.hasDirectElimination ?? true;
+  const hasDirectElimination =
+    segment?.hasDirectElimination ?? effectiveSettings?.hasDirectElimination ?? true;
+  const tableauStopAt = segment?.stopAt;
   const thirdPlaceMatch = effectiveSettings?.thirdPlaceMatch ?? false;
   const playAllPositions = competition.settings?.playAllPositions ?? false;
   const defaultScores = getDefaultMaxScores(competition.weapon, competition.category);
@@ -325,6 +334,9 @@ export function useCompetitionCore(ctx: Ctx) {
     poolRounds,
     poolRoundQualifiers,
     hasDirectElimination,
+    stageHistory,
+    setStageHistory,
+    tableauStopAt,
     thirdPlaceMatch,
     playAllPositions,
     poolMaxScore,

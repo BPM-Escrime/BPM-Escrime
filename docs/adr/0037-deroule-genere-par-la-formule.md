@@ -55,6 +55,19 @@ eliminatedIds }`.
   lecteurs actuels. La projection du journal (ADR-0017) rejoue `TableauStageClosed`.
 - Les tablettes, l'arène et les PDF lisent l'étape en cours ; une étape close reste
   consultable, comme un tour de poules terminé aujourd'hui.
+- **Écran (D2b, 2026-11-25)** :
+  - grammaire : `stopAt` (2 à 128, puissance de 2) réglé sur le tableau ; un tableau arrêté
+    est suivi d'au moins un tour de poules et précédé d'au moins un ; pas de Tour Quest. Le
+    retrait du dernier tour d'après rend le tableau complet ;
+  - les tours d'après réutilisent les écrans des tours de poules (préparation, poules,
+    classement), numérotés à la suite : pas d'identifiant d'écran indexé tant qu'une seule
+    phase suit le tableau. `formulaSegment` donne à l'écran les tours et le tableau de la
+    partie en cours (avant / après la clôture) ;
+  - au-dessus du tableau, un bandeau appelle `closeTableauStage` une fois les tours avant
+    l'arrêt joués ; les tours suivants du tableau restent affichés mais ne comptent pas ;
+  - classement final, export CSV, XML et PDF de l'écran : `rankAfterStages` (Q5), libellé
+    « Tableau de N » pour les éliminés du tableau arrêté. La publication GREG / FTP par le
+    moteur et le pilotage par le MCP relèvent de l'étape F.
 
 ## Conséquences
 
