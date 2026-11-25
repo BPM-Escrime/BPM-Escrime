@@ -128,4 +128,22 @@ describe('driverTables', () => {
       strips: { '1': 1, '2': 2 },
     });
   });
+
+  it('appareil sans HELLO (Saint-George, ADR-0038) : transmis au pilote ; autre valeur ignorée', () => {
+    expect(toStripDevice({ protocol: 'cyrano', ip: '192.168.1.101', hello: false })).toEqual({
+      protocol: 'cyrano',
+      ip: '192.168.1.101',
+      hello: false,
+    });
+    expect(toStripDevice({ protocol: 'cyrano', ip: '192.168.1.101', hello: 'non' })).toEqual({
+      protocol: 'cyrano',
+      ip: '192.168.1.101',
+    });
+    const devices = effectiveStripDevices([
+      { number: 3, deviceConfig: { protocol: 'cyrano', ip: '192.168.1.103', hello: false } },
+    ]);
+    expect(driverTables(devices).cyrano).toEqual([
+      { piste: '3', ip: '192.168.1.103', arena: 3, hello: false },
+    ]);
+  });
 });

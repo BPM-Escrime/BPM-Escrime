@@ -58,17 +58,29 @@ describe('buildStripDeviceBatch', () => {
     ]);
   });
 
-  it('profil Saint-George : IP déduite du numéro de piste ; sans IP : piste écartée', () => {
+  it('profil Saint-George : IP déduite du numéro de piste, sans HELLO ; sans IP : piste écartée', () => {
     expect(
       buildStripDeviceBatch({ from: 1, count: 2, protocol: 'cyrano', profile: 'saintgeorge' })
     ).toEqual([
       {
         strip: 1,
-        device: { protocol: 'cyrano', ip: '192.168.1.101', port: 50101, version: 'auto' },
+        device: {
+          protocol: 'cyrano',
+          ip: '192.168.1.101',
+          port: 50101,
+          version: 'auto',
+          hello: false,
+        },
       },
       {
         strip: 2,
-        device: { protocol: 'cyrano', ip: '192.168.1.102', port: 50101, version: 'auto' },
+        device: {
+          protocol: 'cyrano',
+          ip: '192.168.1.102',
+          port: 50101,
+          version: 'auto',
+          hello: false,
+        },
       },
     ]);
     expect(buildStripDeviceBatch({ from: 1, count: 2, protocol: 'cyrano' })).toEqual([]);

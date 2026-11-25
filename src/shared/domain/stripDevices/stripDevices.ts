@@ -63,6 +63,8 @@ export function toStripDevice(raw: unknown): StripDevice | null {
     ip,
     port: int(raw.port, 1, 65535),
     version: versionOf(legacy ? raw.protocol : raw.version),
+    // Seul `false` est gardé : HELLO par défaut (ADR-0038)
+    hello: raw.hello === false ? false : undefined,
     mode,
     arena,
   });
@@ -151,6 +153,8 @@ export interface CyranoDriverPiste {
   port?: number;
   arena: number;
   protocol?: CyranoVersion;
+  /** false : aucun HELLO (ADR-0038) */
+  hello?: false;
   mode?: StripDeviceMode;
 }
 
@@ -188,6 +192,7 @@ export function driverTables(devices: readonly EffectiveStripDevice[]): {
           port: d.device.port,
           arena: d.arena,
           protocol: d.device.version,
+          hello: d.device.hello === false ? (false as const) : undefined,
           mode: d.device.mode,
         })
       );

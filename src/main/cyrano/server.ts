@@ -45,6 +45,11 @@ export interface CyranoPisteConfig {
   arena?: number;
   /** Version du protocole : imposée, ou `auto` (celle de la dernière trame reçue) */
   protocol?: CyranoProtocolSetting;
+  /**
+   * false : aucun HELLO vers l'appareil, ni battement ni accusé d'affichage (ADR-0038). Le
+   * Saint-George SG32 bloque son chrono à la réception d'un HELLO ; il émet seul ses INFO.
+   */
+  hello?: boolean;
   /** Mode de la piste ; `master` par défaut */
   mode?: CyranoPisteMode;
 }
@@ -262,6 +267,7 @@ export class CyranoServer extends EventEmitter<CyranoServerEvents> {
         port: cfg.port ?? CYRANO_DEFAULT_PORT,
         arena: cfg.arena,
         protocol: cfg.protocol ?? 'auto',
+        ...(cfg.hello === false ? { hello: false } : {}),
         mode: CYRANO_PISTE_MODES.includes(cfg.mode as CyranoPisteMode)
           ? (cfg.mode as CyranoPisteMode)
           : 'master',
@@ -323,6 +329,8 @@ export class CyranoServer extends EventEmitter<CyranoServerEvents> {
   }
 
   sendHello(piste: string): boolean {
+    const entry = [...this.pistes.values()].find(p => p.piste === piste);
+    if (entry?.hello === false) return false;
     return this.send(piste, { command: 'HELLO' });
   }
 
@@ -333,6 +341,7 @@ export class CyranoServer extends EventEmitter<CyranoServerEvents> {
    */
   sendHelloAll(): void {
     for (const p of this.pistes.values()) {
+      if (p.hello === false) continue;
       const probing = (p.protocol ?? 'auto') === 'auto' && !p.detectedProtocol;
       if (!probing) {
         this.probes.delete(p.key);

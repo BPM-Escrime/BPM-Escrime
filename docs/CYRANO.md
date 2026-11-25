@@ -186,7 +186,7 @@ externe qui envoyait les ordres aux appareils). Capture : [26-pilotage-salle](sc
   épreuve reprend la main.
 - **Accusé de réception** : Cyrano n'acquitte pas un `DISP` (seule la fin de match a ACK /
   NAK). Le pilote envoie un `HELLO` juste derrière le `DISP` : l'appareil répond par un `INFO`
-  complet. **Reçu** quand un `INFO` renvoie les noms envoyés et l'arme ; **refusé** quand
+  complet (appareil sans `HELLO`, ADR-0038 : son prochain `INFO` spontané en tient lieu). **Reçu** quand un `INFO` renvoie les noms envoyés et l'arme ; **refusé** quand
   l'appareil est en plein combat (`F`, `H`, `P`, `E`) sans les afficher (un appareil conforme
   ignore un `DISP` en état actif, § 4) ; un `INFO` croisé au repos est ignoré. OPP2 : l'écho
   `apparatus/fencers` (noms) fait foi, `apparatus/state` actif vaut refus ; l'arme n'est pas
@@ -197,7 +197,7 @@ externe qui envoyait les ordres aux appareils). Capture : [26-pilotage-salle](sc
   que des identifiants.
 - **Déclaration en masse** : ajout en lot (première piste, nombre, protocole, IP de la première
   piste incrémentée, port, version, profil constructeur Standard / EFP1.1 / Saint-George, dont
-  l'IP `192.168.1.(100 + piste)`), export et import JSON des appareils de la salle (format
+  l'IP `192.168.1.(100 + piste)` et `hello: false`), export et import JSON des appareils de la salle (format
   `bellepoule-strip-devices` version 1 ; l'ancien export du panneau Cyrano est relu). Le fichier
   circule par contenu (`usePlatform`), jamais par chemin. Import contrôlé d'abord : une ligne
   invalide et rien n'est écrit, erreurs rendues ligne par ligne. Capture :
@@ -392,6 +392,14 @@ depuis 50101 en **diffusion** vers `192.168.1.255:50100` toutes les 2 à 4 s (au
 à régler sur l'appareil). Côté poste : port UDP 50100, IP dans `192.168.1.0/24` hors 101 à 112,
 profil `Saint-George`, numéro de piste BPM - Escrime = numéro de l'appareil. La télécommande n'agit que
 si elle est appairée à l'appareil (socle de charge) ; BEGIN fait passer de `W` à `H` (spéc. § 4).
+Le bip de la télécommande accuse seulement la réception de la touche.
+
+**Aucun HELLO** : un seul `HELLO` reçu sur 50101 (venu du port 50100) bloque le chrono du SG32 —
+BEGIN / STOP / GO bipent sans effet jusqu'au redémarrage de l'appareil. Un `DISP`, vide ou avec un
+match, ne bloque rien. Le profil `Saint-George` déclare donc `hello: false` ([ADR-0038](adr/0038-cyrano-sans-hello-saint-george.md)) :
+le pilote n'envoie jamais de `HELLO` à ces pistes, la supervision repose sur les `INFO` spontanés.
+Une salle déclarée avant ce correctif : la redéclarer avec le profil (ajout en lot), puis
+redémarrer les appareils.
 
 ### Pare-feu
 
@@ -409,7 +417,7 @@ validation à l'écran avec quatre appareils simulés.
 | Point de la spécification                                        | État                                                                                                                                                        |
 | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | § 2 UDP, port 50100 modifiable, IP fixes, table IP ↔ piste       | conforme                                                                                                                                                    |
-| § 3 HELLO toutes les 15 s, champs obligatoires seuls             | conforme                                                                                                                                                    |
+| § 3 HELLO toutes les 15 s, champs obligatoires seuls             | conforme ; sauf appareil déclaré `hello: false` (Saint-George SG31 / SG32 : un `HELLO` bloque son chrono jusqu'au redémarrage, ADR-0038)                    |
 | § 3 Champ Compe (obligatoire)                                    | conforme : épreuve suivie par la piste (8 premiers caractères de son identifiant), reprise par les HELLO / ACK / NAK qui suivent le DISP                    |
 | § 3 Champ Phase                                                  | conforme : tour de poules en cours ; tableau = dernier tour de poules + 1                                                                                   |
 | § 3 Chrono (champ 10)                                            | conforme : centièmes obligatoires sous 10 s en EFP1.1, absents en EFP1                                                                                      |
@@ -532,8 +540,9 @@ Chaque anomalie : exporter le journal (il se rejoue dans le simulateur, § 3) et
       `192.168.1.255:50100` ; le poste reçoit (piste « en ligne », pastille verte), le DISP arrive
       bien sur 50101. Piste « jamais vue » : pare-feu, interface d'écoute, IP de la table.
 - [ ] **Version EFP1.1** : la version détectée affichée à côté de la piste est `EFP1.1` (champ 12 des
-      zones tireur présent) ; en `auto`, le HELLO alterne EFP1.1 / EFP1 tant que l'appareil n'a rien
-      répondu.
+      zones tireur présent), déduite des INFO spontanés (aucun HELLO, ADR-0038).
+- [ ] **Aucun HELLO** : journal sans `OUT … HELLO` vers les SG32 ; GO de la télécommande lance
+      le chrono, pilote démarré.
 - [ ] **Rythme des INFO** : un INFO toutes les 2 à 4 s à l'arrêt, au plus 1 par seconde chrono en
       marche ; aucune trame collée perdue (datagramme de plusieurs trames : la dernière fait foi).
 

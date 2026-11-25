@@ -264,6 +264,29 @@ describe('détection de la version du protocole (piste en auto)', () => {
   });
 });
 
+describe('appareil sans HELLO (Saint-George, ADR-0038)', () => {
+  it('ni au démarrage, ni au battement, ni derrière un affichage : seul le DISP part', async () => {
+    const app = await fakeApparatus();
+    const server = new CyranoServer({ port: 0, host: '127.0.0.1', helloIntervalMs: 60_000 });
+    server.setPistes([{ piste: '1', ip: '127.0.0.1', port: app.port, arena: 1, hello: false }]);
+    try {
+      const port = await server.start();
+      server.tick();
+      expect(server.sendHello('1')).toBe(false);
+      // L'appareil émet seul ses INFO : il passe en ligne sans HELLO
+      const heard = new Promise<void>(resolve => server.once('info', () => resolve()));
+      await app.send('|EFP1.1|INFO|1|||||||03:00.00|I|F|N|W|%|', port);
+      await heard;
+      expect(server.findPiste('1')?.status).toBe('online');
+      server.sendDisp('1', {});
+      expect(parseCyrano(await app.next())?.command).toBe('DISP');
+    } finally {
+      await server.stop();
+      await app.close();
+    }
+  });
+});
+
 describe('champ Compe', () => {
   it('DISP d’une épreuve : repris par les HELLO, ACK et NAK suivants de la piste', async () => {
     const app = await fakeApparatus();

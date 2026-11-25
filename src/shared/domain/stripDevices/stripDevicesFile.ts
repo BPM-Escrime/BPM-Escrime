@@ -26,16 +26,20 @@ export interface StripDeviceProfile {
   version: CyranoVersion;
   /** IP déduite du numéro de piste quand le constructeur l'impose */
   ipOf?: (strip: number) => string;
+  /** false : l'appareil ne doit recevoir aucun HELLO (ADR-0038) */
+  hello?: false;
 }
 
 export const STRIP_DEVICE_PROFILES: readonly StripDeviceProfile[] = [
   { id: 'standard', port: 50100, version: 'auto' },
   { id: 'efp11', port: 50101, version: 'EFP1.1' },
-  // Saint-George SG31 / SG32 : IP fixe 192.168.1.(100 + piste), écoute sur 50101
+  // Saint-George SG31 / SG32 : IP fixe 192.168.1.(100 + piste), écoute sur 50101. Un HELLO
+  // bloque son chrono jusqu'au redémarrage ; il émet un INFO toutes les 4 s sans y être invité
   {
     id: 'saintgeorge',
     port: 50101,
     version: 'auto',
+    hello: false,
     ipOf: n => (n >= 1 && n <= 154 ? `192.168.1.${100 + n}` : ''),
   },
 ];
@@ -94,6 +98,7 @@ export function buildStripDeviceBatch(batch: StripDeviceBatch): StripDeviceDecla
         ip,
         ...(port ? { port } : {}),
         ...(version ? { version } : {}),
+        ...(profile?.hello === false ? { hello: false } : {}),
         ...mode,
       },
     });
