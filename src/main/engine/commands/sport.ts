@@ -82,7 +82,7 @@ import { EVENT, recordEvents } from './eventLog';
 import { resolveSetting } from './settings';
 import { bracketMatchView, fencerRef, readSession, summarizePool } from './sessionView';
 import { areAllPoolsComplete, isPoolComplete } from '../../../shared/domain/pools/poolCompletion';
-import { phaseSettings } from '../../../shared/domain/formula/formulaV2';
+import { phaseSettings, tableauQualificationOf } from '../../../shared/domain/formula/formulaV2';
 import type { PoolSeparation } from '../../../shared/domain/pools/poolDraw';
 import {
   composePools,
@@ -809,6 +809,9 @@ export function tableauRanking(
     rapieresTableauMode: isRapieres(comp) ? rapieres?.tableauMode : undefined,
     poolWinnersOnly: effectiveSettings(comp).poolWinnersOnly,
     customFormula: getActiveFormula(comp.weapon, comp.settings),
+    tableauQualification: comp.settings?.formula
+      ? tableauQualificationOf(comp.settings.formula)
+      : undefined,
     postPoolSplitCriteria: undefined,
     activeSplitGroup: null,
     splitOffCompetitionIds: undefined,

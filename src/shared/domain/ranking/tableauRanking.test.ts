@@ -90,4 +90,13 @@ describe('computeEffectiveTableauRanking', () => {
     });
     expect(result.map(r => r.fencer.id)).toEqual(['a', 'c']);
   });
+
+  it('formule v2 (épée) : % de qualifiés vers le tableau, égalité à la coupe gardée (#2013 R1)', () => {
+    const five = [1, 2, 3, 3, 5].map((r, i) => rank(`f${i}`, 'M', r));
+    const result = computeEffectiveTableauRanking(five, [], {
+      ...baseOptions,
+      tableauQualification: { mode: 'percentage', percentage: 60 },
+    });
+    expect(result.map(r => r.fencer.id)).toEqual(['f0', 'f1', 'f2', 'f3']);
+  });
 });

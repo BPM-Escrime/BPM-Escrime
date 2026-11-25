@@ -27,6 +27,7 @@ import { useCompetitionCore } from './useCompetitionCore';
 import { usePoolCorrection } from './usePoolCorrection';
 import { useToast } from '../../components/Toast';
 import { startsWithTableau } from '../../../shared/domain/formula/formulaSteps';
+import { tableauQualificationOf } from '../../../shared/domain/formula/formulaV2';
 
 type Ctx = CompetitionViewProps &
   ReturnType<typeof useCompetitionCore> &
@@ -203,6 +204,13 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     return () => document.removeEventListener('mousedown', handler);
   }, [modals.showActionsMenu, setShowActionsMenu]);
 
+  // Qualification vers le tableau de la formule v2, toutes armes (#2013 R1)
+  const storedFormula = competition.settings?.formula;
+  const tableauQualification = useMemo(
+    () => (storedFormula ? tableauQualificationOf(storedFormula) : undefined),
+    [storedFormula]
+  );
+
   // Classement effectif pour le tableau (filtré par vainqueurs de poule et/ou groupe actif)
   const effectiveTableauRanking = useMemo(
     () =>
@@ -211,6 +219,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
         rapieresTableauMode: rapieres.tableauMode,
         poolWinnersOnly,
         customFormula,
+        tableauQualification,
         postPoolSplitCriteria,
         activeSplitGroup,
         splitOffCompetitionIds,
@@ -222,6 +231,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
       rapieres.tableauMode,
       poolWinnersOnly,
       customFormula,
+      tableauQualification,
       postPoolSplitCriteria,
       activeSplitGroup,
       splitOffCompetitionIds,

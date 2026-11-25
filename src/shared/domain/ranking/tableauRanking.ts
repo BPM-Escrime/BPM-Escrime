@@ -4,7 +4,7 @@
  * Licensed under GPL-3.0
  */
 import { MatchStatus } from '../../types';
-import type { Pool, PoolRanking } from '../../types';
+import type { AdvancementRule, Pool, PoolRanking } from '../../types';
 import { filterPoolWinners } from '../../utils/poolCalculations';
 import { countTableauBouts } from '../../utils/tableauBouts';
 import { applyTableauAdvancement, getTableauAdvancement } from '../../utils/customFormulaSettings';
@@ -45,6 +45,8 @@ export interface TableauRankingOptions {
   rapieresTableauMode: RapieresTableauMode | undefined;
   poolWinnersOnly: boolean;
   customFormula: ReturnType<typeof getActiveFormula>;
+  /** Qualification du dernier tour vers le tableau, formule v2 (`tableauQualificationOf`) */
+  tableauQualification?: AdvancementRule;
   postPoolSplitCriteria: string | undefined;
   activeSplitGroup: string | null;
   splitOffCompetitionIds: Partial<Record<string, string>> | undefined;
@@ -59,6 +61,7 @@ export function computeEffectiveTableauRanking(
     rapieresTableauMode,
     poolWinnersOnly,
     customFormula,
+    tableauQualification,
     postPoolSplitCriteria,
     activeSplitGroup,
     splitOffCompetitionIds,
@@ -70,9 +73,13 @@ export function computeEffectiveTableauRanking(
     ranking = rapieresTableauQualifiers(pools, ranking, rapieresTableauMode);
   } else if (poolWinnersOnly && pools.length > 0) {
     ranking = filterPoolWinners(pools, ranking);
-  } else if (customFormula) {
-    // Qualifiés pour le tableau selon la formule (pourcentage, nombre, taille de tableau)
-    ranking = applyTableauAdvancement(ranking, getTableauAdvancement(customFormula));
+  } else if (customFormula || tableauQualification) {
+    // Qualifiés pour le tableau selon la formule (pourcentage, nombre, taille de tableau) :
+    // arme « Autre » (v1), sinon formule v2 pour toutes les armes (#2013 R1)
+    ranking = applyTableauAdvancement(
+      ranking,
+      customFormula ? getTableauAdvancement(customFormula) : tableauQualification
+    );
   }
   // Tableaux séparés : groupe affiché, ou groupes extraits écartés (docs/adr/0024)
   return filterSplitGroup(ranking, postPoolSplitCriteria, activeSplitGroup, splitOffCompetitionIds);

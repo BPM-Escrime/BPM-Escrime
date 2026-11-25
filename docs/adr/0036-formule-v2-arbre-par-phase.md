@@ -121,6 +121,10 @@ interface SplitPhase {
   - appareils de piste : `main/cyrano/matchCoords.ts` (nombre de tours).
 - Le bridage (ADR-0032) se lève **réglage par réglage**, une fois que tous ses lecteurs
   passent par `phaseSettings` ; un test liste les lecteurs plats restants (cliquet).
+  - Levé le 2026-11-25 (#2013 R1) : qualification du dernier tour vers le tableau
+    (pourcentage, nombre, taille de tableau) pour toutes les armes. Seul lecteur :
+    `computeEffectiveTableauRanking` (écran et moteur), par `tableauQualificationOf`. Épreuve
+    sans formule v2 : inchangée (vainqueurs de poule ou tous).
 
 **Modèles de formule** (ADR-0033) : nouveau corps `{ kind: 'formula'; formula: FormulaV2 }`.
 Les corps `draft` et `custom` restent lisibles et sont convertis à la lecture ; les modèles

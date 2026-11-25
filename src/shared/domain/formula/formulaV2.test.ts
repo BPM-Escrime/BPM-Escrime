@@ -23,6 +23,7 @@ import {
   formulaFromCustom,
   formulaOf,
   phaseSettings,
+  tableauQualificationOf,
   type FormulaV2,
 } from './formulaV2';
 
@@ -276,5 +277,40 @@ describe('arme « Autre » : customFormula v1 ↔ v2', () => {
     expect(phaseSettings(v2, { kind: 'pool', round: 0 }).maxScore).toBe(5);
     expect(phaseSettings(v2, { kind: 'pool', round: 1 }).maxScore).toBe(4);
     expect(phaseSettings(v2, { kind: 'pool', round: 2 }).scoring?.type).toBe('zones');
+  });
+});
+
+describe('qualification vers le tableau (#2013 R1)', () => {
+  const pool = (id: string, qualification: object) =>
+    ({ kind: 'pool', id, qualification }) as unknown as FormulaV2['phases'][number];
+  const tableau = { kind: 'tableau', id: 'tableau' } as unknown as FormulaV2['phases'][number];
+  const f = (...phases: FormulaV2['phases']): FormulaV2 =>
+    ({ version: 2, phases, general: {} }) as FormulaV2;
+  const pct = { mode: 'percentage', percentage: 80 };
+
+  it('règle du tour juste avant le tableau', () => {
+    expect(
+      tableauQualificationOf(f(pool('p1', { mode: 'all' }), pool('p2', pct), tableau))
+    ).toEqual(pct);
+  });
+
+  it('tous qualifiés, sans tableau ou tableau en tête : aucune', () => {
+    expect(tableauQualificationOf(f(pool('p1', { mode: 'all' }), tableau))).toBeUndefined();
+    expect(tableauQualificationOf(f(pool('p1', pct)))).toBeUndefined();
+    expect(tableauQualificationOf(f(tableau))).toBeUndefined();
+  });
+
+  it('Tour Quest avant le tableau : aucune', () => {
+    const quest = { kind: 'quest', id: 'quest' } as unknown as FormulaV2['phases'][number];
+    expect(tableauQualificationOf(f(pool('p1', pct), quest, tableau))).toBeUndefined();
+  });
+
+  it('épreuve sans formule v2 : réglages plats, aucune qualification en % (comportement historique)', () => {
+    const settings = buildDefaultCompetitionSettings({
+      weapon: Weapon.EPEE,
+      category: Category.SENIOR,
+    }) as CompetitionSettings;
+    const built = formulaOf({ weapon: Weapon.EPEE, category: Category.SENIOR, settings });
+    expect(tableauQualificationOf(built)).toBeUndefined();
   });
 });

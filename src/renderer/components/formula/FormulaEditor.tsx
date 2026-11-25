@@ -281,9 +281,9 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             )}
           </div>
           <small className="u-hint">{t('properties.pool_size_hint')}</small>
-          {/* Dernier tour avant le tableau : seule la règle « vainqueurs de poule » est exécutée
-              hors arme « Autre » (P2) */}
-          {!isLast || isOther ? (
+          {/* Qualification : vers le tour suivant, ou vers le tableau pour toutes les armes
+              (#2013 R1) ; dernier tour sans tableau : rien à qualifier */}
+          {(!isLast || isOther || tableau) && (
             <div className={rapieres ? 'form-group form-group--disabled' : 'form-group'}>
               <label className="form-label">{t('formulaPhase.advancement')}</label>
               <AdvancementRuleEditor
@@ -293,21 +293,6 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 readOnly={rapieres}
               />
             </div>
-          ) : (
-            tableau && (
-              <label className="u-row cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={pool.qualification.mode === 'pool_winner'}
-                  onChange={e =>
-                    set({
-                      qualification: e.target.checked ? { mode: 'pool_winner' } : { mode: 'all' },
-                    })
-                  }
-                />
-                <span>{t('properties.pool_winners_only')}</span>
-              </label>
-            )
           )}
         </fieldset>
         <details className="properties-expert">

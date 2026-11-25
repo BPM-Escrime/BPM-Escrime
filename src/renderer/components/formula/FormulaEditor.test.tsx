@@ -96,10 +96,10 @@ describe('FormulaEditor (formule v2)', () => {
     expect(screen.getByTestId('formula-step-tableau')).toBeInTheDocument();
   });
 
-  it('dernier tour avant le tableau (épée) : seule la règle « vainqueurs de poule »', () => {
+  it('dernier tour avant le tableau (épée) : qualification complète (#2013 R1)', () => {
     render(<Harness weapon={Weapon.EPEE} />);
-    expect(screen.queryByText('formulaPhase.advancement')).toBeNull();
-    expect(screen.getByText('properties.pool_winners_only')).toBeInTheDocument();
+    expect(screen.getByText('formulaPhase.advancement')).toBeInTheDocument();
+    expect(screen.getByText('advancement.mode_percentage')).toBeInTheDocument();
   });
 
   it('arme « Autre » : règles, barème, qualification complète', () => {
