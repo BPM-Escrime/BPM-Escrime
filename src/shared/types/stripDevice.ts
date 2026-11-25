@@ -250,6 +250,8 @@ export interface StripControlRow {
   piste: string | null;
   /** Liaison ; null : pilote arrêté ou appareil non chargé */
   link: StripDeviceLink | null;
+  /** Alerte de la piste (BAD MATCH) ; null : aucune */
+  alert: StripDeviceAlert | null;
   busy: StripBusy | null;
   last: StripLastSend | null;
 }

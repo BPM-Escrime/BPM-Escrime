@@ -28,6 +28,7 @@ const grid = (opp2Running = false) => ({
       protocol: 'cyrano',
       piste: '1',
       link: 'online',
+      alert: null,
       busy: null,
       last: { at: 0, ack: 'acked', clear: false, panel: {} },
     },
@@ -36,11 +37,12 @@ const grid = (opp2Running = false) => ({
       protocol: 'cyrano',
       piste: '2',
       link: 'online',
+      alert: { kind: 'bad_match', since: 0, arena: 'arena2', device: 'DUVAL J – MOREL L' },
       busy: { competitionId: 'c1', title: 'Open Sabre' },
       last: null,
     },
-    { strip: 3, protocol: 'opp2', piste: 'b', link: null, busy: null, last: null },
-    { strip: 4, protocol: null, piste: null, link: null, busy: null, last: null },
+    { strip: 3, protocol: 'opp2', piste: 'b', link: null, alert: null, busy: null, last: null },
+    { strip: 4, protocol: null, piste: null, link: null, alert: null, busy: null, last: null },
   ],
 });
 
@@ -62,6 +64,7 @@ function install(extra: Record<string, (i: Record<string, unknown>) => unknown> 
         { strip: 2, outcome: 'busy', competitionId: 'c1' },
       ]),
       startOpp2Broker: record('startOpp2Broker', () => ({ port: 1883 })),
+      runStripDeviceAction: record('runStripDeviceAction', () => ({ done: true })),
       setStripDevices: record('setStripDevices', () => ({})),
       getStripDevicesFile: record('getStripDevicesFile', () => ({
         content: '{"strips":[]}',
@@ -93,6 +96,26 @@ describe('VenueStripControlPanel', () => {
     expect(screen.getAllByText('En ligne')).toHaveLength(2);
     expect(screen.getByLabelText('Sélectionner la piste 4')).toBeDisabled();
     expect(calls.listVenueStripControl[0]).toEqual({ venueId: 'v1' });
+  });
+
+  it('BAD MATCH signalé ; secours ACK et Resynchroniser sur les pistes chargées', async () => {
+    render(<VenueStripControlPanel venueId="v1" />);
+    const badge = await screen.findByText('BAD MATCH');
+    expect(badge.closest('.cyrano-alert')).toHaveAttribute(
+      'title',
+      expect.stringContaining('DUVAL J – MOREL L')
+    );
+    // Piste 3 (pilote OPP2 arrêté) et 4 (sans appareil) : aucun secours
+    expect(screen.queryByRole('button', { name: 'ACK 3' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'ACK 4' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'ACK 2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Resynchroniser 1' }));
+    await waitFor(() =>
+      expect(calls.runStripDeviceAction).toEqual([
+        { piste: '2', action: 'ack' },
+        { piste: '1', action: 'resync' },
+      ])
+    );
   });
 
   it('envoi en masse : arme, noms, nations ; résultat par piste ; toutes ; remise à blanc', async () => {

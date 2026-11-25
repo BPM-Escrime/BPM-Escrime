@@ -13,6 +13,7 @@ import { ApiError } from '../../../shared/api/client';
 import { Category, Gender, Weapon } from '../../../shared/types';
 import type {
   EffectiveStripDevice,
+  StripDeviceAlert,
   StripDeviceLink,
   StripLastSend,
   StripPanel,
@@ -30,6 +31,7 @@ const d = hasNodeSqlite ? describe : describe.skip;
 let db: DatabaseManager;
 let ctx: CommandContext;
 let links: Record<string, StripDeviceLink | null>;
+let alerts: Record<string, StripDeviceAlert>;
 let arenas: { competitionId: string; arenas: number[] }[];
 let sent: { piste: string; panel: StripPanel }[];
 let last: Map<string, StripLastSend & { venueId: string; strip: number }>;
@@ -58,6 +60,7 @@ function fakePort(): DevicesPort {
       watchVenue: watch,
       activeArenas: () => arenas,
       link: (dev: EffectiveStripDevice) => links[dev.piste] ?? null,
+      alert: (piste: string) => alerts[piste] ?? null,
       send: (target, panel) => {
         if (target.piste === 'perdue') return false;
         sent.push({ piste: target.piste, panel });
@@ -85,6 +88,7 @@ beforeEach(async () => {
   db = new DatabaseManager(':memory:');
   await db.open(':memory:');
   links = {};
+  alerts = {};
   arenas = [];
   sent = [];
   last = new Map();
@@ -135,12 +139,15 @@ async function hall() {
 }
 
 d('pilotage de la salle hors compétition', () => {
-  it('grille : protocole, liaison, piste occupée, dernier envoi ; salle chargée dans les pilotes', async () => {
+  it('grille : protocole, liaison, BAD MATCH, piste occupée, dernier envoi ; salle chargée dans les pilotes', async () => {
     const venue = await hall();
     const comp = competition('Open Sabre');
     db.settings.setCompetitionVenue(comp.id, venue.id);
     arenas = [{ competitionId: comp.id, arenas: [2] }];
     links = { '1': 'online', '2': 'online', '3': 'offline' };
+    alerts = {
+      '2': { kind: 'bad_match', since: 1, arena: 'arena2', device: 'DUVAL J – MOREL L' },
+    };
     const grid = await op('listVenueStripControl', { venueId: venue.id });
     expect(watch).toHaveBeenCalledWith(venue.id);
     expect(grid).toMatchObject({
@@ -155,6 +162,7 @@ d('pilotage de la salle hors compétition', () => {
         protocol: 'cyrano',
         piste: '1',
         link: 'online',
+        alert: null,
         busy: null,
         last: null,
       },
@@ -163,12 +171,29 @@ d('pilotage de la salle hors compétition', () => {
         protocol: 'cyrano',
         piste: '2',
         link: 'online',
+        alert: { kind: 'bad_match', since: 1, arena: 'arena2', device: 'DUVAL J – MOREL L' },
         busy: { competitionId: comp.id, title: 'Open Sabre' },
         last: null,
       },
-      { strip: 3, protocol: 'cyrano', piste: '3', link: 'offline', busy: null, last: null },
-      { strip: 4, protocol: 'opp2', piste: 'bleue', link: null, busy: null, last: null },
-      { strip: 5, protocol: null, piste: null, link: null, busy: null, last: null },
+      {
+        strip: 3,
+        protocol: 'cyrano',
+        piste: '3',
+        link: 'offline',
+        alert: null,
+        busy: null,
+        last: null,
+      },
+      {
+        strip: 4,
+        protocol: 'opp2',
+        piste: 'bleue',
+        link: null,
+        alert: null,
+        busy: null,
+        last: null,
+      },
+      { strip: 5, protocol: null, piste: null, link: null, alert: null, busy: null, last: null },
     ]);
     expect((await refusal(op('listVenueStripControl', { venueId: 'x' }))).code).toBe(
       'venue_not_found'

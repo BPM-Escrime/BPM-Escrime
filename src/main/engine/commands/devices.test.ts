@@ -62,6 +62,7 @@ function fakePort() {
       watchVenue: vi.fn(),
       activeArenas: vi.fn((): { competitionId: string; arenas: number[] }[] => []),
       link: vi.fn((): string | null => 'online'),
+      alert: vi.fn(() => null),
       send: vi.fn(() => true),
       last: vi.fn(() => null),
     },

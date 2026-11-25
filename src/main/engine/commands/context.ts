@@ -32,6 +32,7 @@ import type {
   Opp2Status,
   EffectiveStripDevice,
   StripDeviceAction,
+  StripDeviceAlert,
   StripDeviceLink,
   StripDeviceOptions,
   StripLastSend,
@@ -258,6 +259,8 @@ export interface DevicesPort {
     activeArenas(): { competitionId: string; arenas: number[] }[];
     /** Liaison d'une piste chargée dans le pilote ; null : pilote arrêté ou appareil non chargé */
     link(device: EffectiveStripDevice): StripDeviceLink | null;
+    /** Alerte de la piste (BAD MATCH : l'appareil affiche un autre match) ; null : aucune */
+    alert(piste: string): StripDeviceAlert | null;
     /** Affichage libre envoyé ; false : piste inconnue du pilote */
     send(target: StripControlTarget, panel: StripPanel): boolean;
     /** Dernier envoi à la piste ; `match` : seulement s'il visait cette piste de cette salle */

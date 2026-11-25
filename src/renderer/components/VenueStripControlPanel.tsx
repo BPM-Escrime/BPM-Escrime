@@ -2,13 +2,14 @@
  * BPM - Escrime - Pilotage de la salle hors compétition (#2117, docs/adr/0023)
  * Grille des pistes de la salle (protocole, liaison, épreuve en cours, dernier envoi et son
  * accusé), sélection de plusieurs pistes ou de toutes, envoi en une fois de l'arme, des noms
- * et des nationalités (ou clubs), remise à blanc. Pilotes Cyrano / OPP2 : StripDriversPanel.
+ * et des nationalités (ou clubs), remise à blanc ; alerte BAD MATCH et secours ACK / Resynchroniser
+ * par piste. Pilotes Cyrano / OPP2 : StripDriversPanel.
  * Tout passe par le contrat (useDevicesApi) : ordres d'affichage, aucun fait d'épreuve.
  * Licensed under GPL-3.0
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Circle, Eraser, Send, Wifi, WifiOff } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Circle, Eraser, Send, Wifi, WifiOff } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from './Toast';
 import { Button } from './common/Button';
@@ -46,6 +47,9 @@ const OUTCOME_BADGE: Record<StripSendOutcome, string> = {
   not_declared: 'badge',
   unavailable: 'badge badge-warning',
 };
+
+/** Secours proposés depuis la salle : propres à l'appareil, quelle que soit l'épreuve (#1829) */
+const RESCUE_ACTIONS = ['ack', 'resync'] as const;
 
 /** Rafraîchissement de la liaison tant que la grille est ouverte */
 const POLL_MS = 4000;
@@ -123,6 +127,17 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
       return next;
     });
 
+  /** Secours sur une piste chargée dans le pilote : ACK forcé, renvoi de l'affichage */
+  const rescue = async (piste: string, action: (typeof RESCUE_ACTIONS)[number]) => {
+    try {
+      const done = await api.action(piste, action);
+      if (!done) showToast(t('stripControl.failed'), 'error');
+      await reload();
+    } catch {
+      showToast(t('stripControl.failed'), 'error');
+    }
+  };
+
   const send = async (clear: boolean) => {
     if (selected.size === 0) {
       showToast(t('stripControl.no_selection'), 'error');
@@ -198,6 +213,7 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
                   <th>{t('stripControl.col_use')}</th>
                   <th>{t('stripControl.col_last')}</th>
                   <th>{t('stripControl.col_result')}</th>
+                  <th>{t('rsm.cyrano_actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,6 +240,16 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
                           (row.link ? (
                             <span className="strip-control-link">
                               {LINK_ICON[row.link]} {t(`stripControl.link_${row.link}`)}
+                              {row.alert?.kind === 'bad_match' && (
+                                <span
+                                  className="cyrano-alert"
+                                  title={t('rsm.cyrano_bad_match_hint', {
+                                    device: row.alert.device,
+                                  })}
+                                >
+                                  <Icon icon={AlertTriangle} /> {t('rsm.cyrano_bad_match')}
+                                </span>
+                              )}
                             </span>
                           ) : (
                             <span className="cyrano-muted">{t('stripControl.link_none')}</span>
@@ -244,6 +270,24 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
                         {outcome && (
                           <span className={OUTCOME_BADGE[outcome]}>
                             {t(`stripControl.outcome_${outcome}`)}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        {/* Secours : piste chargée dans un pilote démarré */}
+                        {row.piste && row.link && (
+                          <span className="cyrano-inline">
+                            {RESCUE_ACTIONS.map(action => (
+                              <Button
+                                key={action}
+                                size="sm"
+                                title={t(`rsm.cyrano_action_${action}_title`)}
+                                aria-label={`${t(`rsm.cyrano_action_${action}`)} ${row.strip}`}
+                                onClick={() => void rescue(row.piste!, action)}
+                              >
+                                {t(`rsm.cyrano_action_${action}`)}
+                              </Button>
+                            ))}
                           </span>
                         )}
                       </td>

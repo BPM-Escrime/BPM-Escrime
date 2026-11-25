@@ -68,7 +68,7 @@ const hub = {
   refreshManualStrips: vi.fn(),
   attach: vi.fn(),
   detach: vi.fn(),
-  getAlerts: () => ({}),
+  getAlerts: vi.fn((): Record<string, unknown> => ({})),
   getRoutes: () => ({}),
   setOptions: vi.fn(),
   clearDispCache: vi.fn(),
@@ -218,6 +218,12 @@ d('createDevicesPort', () => {
     expect(devices.control.link(cyr)).toBe('stale');
     driver.findPiste.mockReturnValue({ status: 'online' });
     expect(devices.control.link(opp)).toBe('online');
+    // Alerte BAD MATCH de la piste (grille de la salle)
+    const bad = { kind: 'bad_match', since: 1, arena: 'arena1', device: 'X – Y' };
+    hub.getAlerts.mockReturnValue({ '1': bad });
+    expect(devices.control.alert('1')).toEqual(bad);
+    expect(devices.control.alert('b')).toBeNull();
+    hub.getAlerts.mockReturnValue({});
     expect(devices.control.activeArenas()).toEqual([{ competitionId: 'c1', arenas: [1] }]);
     const target = { venueId: hall.id, strip: 1, piste: '1', protocol: 'cyrano' as const };
     expect(devices.control.send(target, { weapon: 'S' })).toBe(true);
