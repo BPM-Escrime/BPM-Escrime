@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 46 | 571 |
+| `src/shared/domain/` | 47 | 577 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **628** | **4979** |
+| **Total** | **629** | **4985** |
 
-Unitaires : 609 fichiers, 4926 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 610 fichiers, 4932 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -9453,6 +9453,19 @@ Unitaires : 609 fichiers, 4926 tests. E2E : 19 fichiers, 53 tests (comptage stat
 - **passivityCardAllowed (t.124.3)**
   - aucun carton P à limite − 1 des deux côtés (14:14, 44:44)
   - limite inconnue, nulle ou infinie : permis
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/organizerNotes/organizerNotes.test.ts</code> — 6 tests</summary>
+
+- **organizerNotes**
+  - ajoute en tête, horodate, garde la phase, ignore le vide
+  - tronque le texte et borne la liste
+  - bascule, modifie, supprime
+  - compte les incidents et améliorations ouverts
+  - filtre par catégorie, statut et texte
+  - produit un compte rendu groupé et chronologique
 
 </details>
 
