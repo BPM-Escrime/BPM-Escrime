@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 282 |
-| `src/main/` | 160 | 1389 |
+| `src/main/` | 160 | 1390 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 136 | 766 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 52 | 602 |
+| `src/shared/domain/` | 52 | 603 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **636** | **5025** |
+| **Total** | **636** | **5027** |
 
-Unitaires : 617 fichiers, 4971 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 617 fichiers, 4973 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -4187,13 +4187,14 @@ Unitaires : 617 fichiers, 4971 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/piste/stripControl.test.ts</code> — 6 tests</summary>
+<summary><code>src/main/piste/stripControl.test.ts</code> — 7 tests</summary>
 
 - **affichage libre Cyrano**
   - DISP : arme, noms translittérés et tronqués, nations sur 3 caractères, sans Id
 - **StripControl**
   - Cyrano : DISP puis HELLO, piste gardée, INFO qui reflète l’envoi = reçu
   - Cyrano : appareil en plein combat = refusé ; sans INFO = sans réponse
+  - Cyrano : INFO au repos qui ne reflète pas l’envoi = affichage différent au délai
   - OPP2 : fencers + match publiés sans Id ; écho apparatus/fencers = reçu
   - OPP2 : appareil en combat = refusé ; piste inconnue ou pilote arrêté : pas d’envoi
 - **PisteHub : affichage libre gardé sur une piste libre**
@@ -9932,7 +9933,7 @@ Unitaires : 617 fichiers, 4971 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/stripDevices/stripControl.test.ts</code> — 12 tests</summary>
+<summary><code>src/shared/domain/stripDevices/stripControl.test.ts</code> — 13 tests</summary>
 
 - **selectStrips**
   - toutes : pistes déclarées ; liste : sans doublon, triée, gardée telle quelle
@@ -9948,7 +9949,8 @@ Unitaires : 617 fichiers, 4971 tests. E2E : 19 fichiers, 54 tests (comptage stat
   - affichage vide, demande vide
 - **stripAckVerdict**
   - noms et arme renvoyés : reçu (casse et espaces ignorés)
-  - appareil en plein combat sans l’affichage : refusé ; au repos : on attend
+  - appareil en plein combat sans l’affichage : refusé ; au repos : affichage différent
+  - champs en écart : arme, gauche, droite (absents : non comparés)
   - morceau sans nom ni arme : rien de conclusif ; remise à blanc : noms vides
   - délai d’attente
 
