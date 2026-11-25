@@ -1,6 +1,6 @@
 # ADR-0036 — Formule v2 : un arbre de phases pour toutes les armes, lu par phase par le moteur, sans migration de schéma
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : arbre, sans migration SQL, réglage de répartition du tour suivant, nouvelle clé `settings.formula`)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : arbre, sans migration SQL, réglage de répartition du tour suivant, nouvelle clé `settings.formula`) ; amendée le 2026-11-26 (forme de `SplitPhase.branches` renvoyée à ADR-0039, validé par le mainteneur)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape C ; questions Q3, Q4, Q19), #1948 (ex-lot 0) ; complète [ADR-0012](0012-formule-domaine.md), [ADR-0032](0032-formule-interface-unique-apercu.md) et [ADR-0033](0033-modeles-de-formule.md), soumise à [ADR-0011](0011-migrations-schema-3-0.md)
 
@@ -71,9 +71,14 @@ interface SplitPhase {
   kind: 'split';
   id: string;
   criterion: 'gender' | 'category' | 'rank' | 'manual';
-  branches: { label: string; phases: FormulaPhaseV2[] }[];
+  branches: SplitBranch[]; // forme précisée par ADR-0039 (libellé, phases, règle du critère)
 } // étape E
 ```
+
+- _(Amendé le 2026-11-26, étape E, validé par le mainteneur : `branches` remplace
+  « `{ label: string; phases: FormulaPhaseV2[] }[]` ». La branche, ses champs par critère
+  (`gender`, `categories`, `take`, `stayInCompetition`) et l'exécution de la scission sont
+  décidés par [ADR-0039](0039-scission-competitions-filles.md).)_
 
 - **Arbre** : une suite de phases ; une scission porte ses branches, chacune suite de phases.
   Les exemptés et le tableau préliminaire de #1948 seront des réglages du tableau, pas des
