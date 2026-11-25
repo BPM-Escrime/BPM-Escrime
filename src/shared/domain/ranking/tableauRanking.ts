@@ -6,7 +6,7 @@
 import { MatchStatus } from '../../types';
 import type { Pool, PoolRanking } from '../../types';
 import { filterPoolWinners } from '../pools/poolRanking';
-import { countTableauBouts } from '../../utils/tableauBouts';
+import { countTableauBouts } from '../tableau/tableauBouts';
 import { applyTableauAdvancement, getTableauAdvancement } from '../../utils/customFormulaSettings';
 import type { getActiveFormula } from '../../utils/customFormulaSettings';
 import { rapieresTableauQualifiers, type RapieresTableauMode } from '../rapieres/tableauQualifiers';

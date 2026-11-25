@@ -6,7 +6,7 @@
 
 import { Team, TeamBout, TeamMatch, TeamRow, TeamMatchRow } from './team.types';
 import { Weapon } from '../../types';
-import { calculateTableSize, generateSeedingChart } from '../../utils/tableCalculations';
+import { calculateTableSize, generateSeedingChart } from '../tableau/tableSeeding';
 
 export interface TeamTargetRule {
   mode: 'touches' | 'points';
