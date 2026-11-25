@@ -1,6 +1,6 @@
 # ADR-0037 — Déroulé généré par la formule v2 : navigation, 0 tour de poules, tableau arrêté à N, phase après un tableau
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) »)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape D ; question Q5), #1948 ; complète [ADR-0036](0036-formule-v2-arbre-par-phase.md), [ADR-0007](0007-format-evenement.md) et [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -22,9 +22,18 @@
 - `formulaSteps(formula)` rend la suite des étapes de l'épreuve : appel ; une étape « poules »
   par suite de tours consécutifs (préparation, poules, classement) ; Tour Quest ; tableau, avec
   son `stopAt` éventuel ; phase qui suit un tableau arrêté ; résultats.
-- L'écran construit sa barre de navigation à partir de ces étapes. Les identifiants d'écran
-  existants (`poolprep`, `pools`, `ranking`, `tableau`, `results`, `quest`) sont gardés ; une
-  étape qui suit un tableau arrêté reçoit un identifiant indexé (D2).
+- L'écran dérive sa barre de navigation de la formule par les fonctions de `formulaSteps.ts` :
+  `startsWithTableau` (0 tour), `formulaSegment` (tours et tableau de la partie en cours,
+  tableau arrêté). `formulaSteps` rend le déroulé complet (agent, documentation) ; un test
+  vérifie que les onglets suivent `formulaSteps` (`useCompetitionPhases.test.tsx`).
+  *(Amendé le 2026-11-25, D2b : remplace « construit sa barre de navigation à partir de ces
+  étapes ».)*
+- Les identifiants d'écran existants (`poolprep`, `pools`, `ranking`, `tableau`, `results`,
+  `quest`) sont gardés. Les tours de poules qui suivent un tableau arrêté réutilisent les
+  écrans des tours de poules, numérotés à la suite ; un identifiant indexé ne sera introduit
+  que si plusieurs phases distinctes peuvent suivre un tableau (#1948). *(Amendé le
+  2026-11-25, D2b : remplace « une étape qui suit un tableau arrêté reçoit un identifiant
+  indexé ».)*
 - Une épreuve sans formule enregistrée garde le déroulé actuel : `formulaOf` construit la même
   suite depuis ses réglages (ADR-0036).
 
@@ -55,19 +64,19 @@ eliminatedIds }`.
   lecteurs actuels. La projection du journal (ADR-0017) rejoue `TableauStageClosed`.
 - Les tablettes, l'arène et les PDF lisent l'étape en cours ; une étape close reste
   consultable, comme un tour de poules terminé aujourd'hui.
-- **Écran (D2b, 2026-11-25)** :
-  - grammaire : `stopAt` (2 à 128, puissance de 2) réglé sur le tableau ; un tableau arrêté
-    est suivi d'au moins un tour de poules et précédé d'au moins un ; pas de Tour Quest. Le
-    retrait du dernier tour d'après rend le tableau complet ;
-  - les tours d'après réutilisent les écrans des tours de poules (préparation, poules,
-    classement), numérotés à la suite : pas d'identifiant d'écran indexé tant qu'une seule
-    phase suit le tableau. `formulaSegment` donne à l'écran les tours et le tableau de la
-    partie en cours (avant / après la clôture) ;
+- **Écran (D2b, amendement du 2026-11-25)** :
+  - `stopAt` de 2 à 128 (puissance de 2) réglé sur le tableau ; un tableau arrêté est précédé
+    et suivi d'au moins un tour de poules, sans Tour Quest ; le retrait du dernier tour d'après
+    rend le tableau complet ;
+  - les tours du tableau après l'arrêt restent affichés ; leur score est refusé par le moteur
+    (`tableau_round_after_stop`), pour l'écran, les tablettes et les appareils ;
   - au-dessus du tableau, un bandeau appelle `closeTableauStage` une fois les tours avant
-    l'arrêt joués ; les tours suivants du tableau restent affichés mais ne comptent pas ;
-  - classement final, export CSV, XML et PDF de l'écran : `rankAfterStages` (Q5), libellé
-    « Tableau de N » pour les éliminés du tableau arrêté. La publication GREG / FTP par le
-    moteur et le pilotage par le MCP relèvent de l'étape F.
+    l'arrêt joués ; le tour suivant est réparti par rang d'entrée au tableau
+    (`rankingAfterStage`, comme le moteur) ;
+  - étape close : onglet « Tableau (clos) » en lecture seule ; classement final, CSV, XML, PDF
+    du classement et livret par `rankAfterStages` (libellé « Tableau de N ») et
+    `resultsTableauMatches` (tableau clos). La publication GREG / FTP par le moteur et le
+    pilotage par le MCP relèvent de l'étape F.
 
 ## Conséquences
 
