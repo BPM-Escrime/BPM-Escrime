@@ -754,7 +754,6 @@
   'referee.fault_laser_2_02': 'Negarse a obedecer',
   'referee.fault_laser_2_03': 'Petición de parada por lesión no reconocida',
   'referee.fault_laser_2_04': 'Tocado de estocada',
-  'referee.fault_laser_2_05': 'Tocado muy brutal',
   'referee.fault_laser_2_06':
     'Tocado durante / después de una caída o desplazamiento descontrolado',
   'referee.fault_laser_2_07': 'Salir voluntariamente de la arena para evitar un tocado',

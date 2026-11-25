@@ -127,7 +127,7 @@ describe("determineCardType - Système d'escalade FFE", () => {
         createMockCard(CardGroup.GROUP_2, CardType.RED),
       ];
 
-      const result = determineCardType(CardReason.HEAVY_HIT, previousCards);
+      const result = determineCardType(CardReason.UNARMED_HAND, previousCards);
 
       expect(result.type).toBe(CardType.RED);
       expect(result.points).toBe(1);
@@ -618,10 +618,10 @@ describe('Sabre Laser et arme à la carte', () => {
     voluntary_drop: CardGroup.GROUP_1,
     time_wasting: CardGroup.GROUP_1,
     non_compliant_gear: CardGroup.GROUP_1,
+    heavy_hit: CardGroup.GROUP_1,
     estoc: CardGroup.GROUP_2,
     unarmed_hand: CardGroup.GROUP_2,
     voluntary_exit: CardGroup.GROUP_2,
-    heavy_hit: CardGroup.GROUP_2,
     brutality: CardGroup.GROUP_3,
     dangerous: CardGroup.GROUP_3,
     refusal: CardGroup.GROUP_4,
@@ -656,7 +656,7 @@ describe('Sabre Laser et arme à la carte', () => {
         `yellow:${y}`,
         `yellow:${y}`,
       ]);
-      expect(seq([CardReason.ESTOC, CardReason.HEAVY_HIT, CardReason.ESTOC])).toEqual([
+      expect(seq([CardReason.ESTOC, CardReason.UNARMED_HAND, CardReason.ESTOC])).toEqual([
         `yellow:${y}`,
         `red:${r}`,
         `red:${r}`,

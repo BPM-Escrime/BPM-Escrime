@@ -750,7 +750,6 @@
   'referee.fault_laser_2_02': 'Negar-se a obeir',
   'referee.fault_laser_2_03': "Petició d'aturada per lesió no reconeguda",
   'referee.fault_laser_2_04': "Tocat d'estocada",
-  'referee.fault_laser_2_05': 'Tocat molt brutal',
   'referee.fault_laser_2_06': "Tocat durant / després d'una caiguda o desplaçament descontrolat",
   'referee.fault_laser_2_07': "Sortir voluntàriament de l'arena per evitar un tocat",
   'referee.fault_laser_2_08': 'Ús del braç o la mà no armada',

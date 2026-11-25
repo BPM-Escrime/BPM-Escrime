@@ -743,7 +743,6 @@
   'referee.fault_laser_2_02': 'Rifiuto di obbedire',
   'referee.fault_laser_2_03': 'Richiesta di sospensione per trauma non riconosciuto',
   'referee.fault_laser_2_04': 'Tocco di punta',
-  'referee.fault_laser_2_05': 'Tocco portato con grande brutalità',
   'referee.fault_laser_2_06': 'Tocco durante / dopo una caduta o uno spostamento non controllato',
   'referee.fault_laser_2_07': "Uscita volontaria dall'arena per evitare un tocco",
   'referee.fault_laser_2_08': 'Uso del braccio o della mano non armata',

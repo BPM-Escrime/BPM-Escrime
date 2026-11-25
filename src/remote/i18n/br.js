@@ -748,7 +748,6 @@
   'referee.fault_laser_2_02': "Nac'h sentiñ",
   'referee.fault_laser_2_03': "Goulenn ehan evit ur gloaz n'eo ket anavezet",
   'referee.fault_laser_2_04': 'Taol beg',
-  'referee.fault_laser_2_05': 'Taol garv-tre',
   'referee.fault_laser_2_06': "Taol e-pad / goude ur c'hwitadenn pe ur fiñv dizorn",
   'referee.fault_laser_2_07': "Kuitaat an dachenn a-ratozh evit tec'hout diouzh un taol",
   'referee.fault_laser_2_08': "Implij ar vrec'h pe an dorn diarm",

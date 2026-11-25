@@ -17,10 +17,11 @@ const LASER_REASON_TO_GROUP: Partial<Record<CardReason, CardGroup>> = {
   [CardReason.VOLUNTARY_DROP]: CardGroup.GROUP_1,
   [CardReason.TIME_WASTING]: CardGroup.GROUP_1,
   [CardReason.NON_COMPLIANT_GEAR]: CardGroup.GROUP_1,
+  // Livret 2 VI.14, VII.2.5 : touche lourde = 1er groupe (#2209)
+  [CardReason.HEAVY_HIT]: CardGroup.GROUP_1,
   [CardReason.ESTOC]: CardGroup.GROUP_2,
   [CardReason.UNARMED_HAND]: CardGroup.GROUP_2,
   [CardReason.VOLUNTARY_EXIT]: CardGroup.GROUP_2,
-  [CardReason.HEAVY_HIT]: CardGroup.GROUP_2,
   [CardReason.BRUTALITY]: CardGroup.GROUP_3,
   [CardReason.DANGEROUS]: CardGroup.GROUP_3,
   [CardReason.REFUSAL]: CardGroup.GROUP_4,
