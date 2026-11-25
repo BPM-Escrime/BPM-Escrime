@@ -3,7 +3,7 @@ import '@testing-library/jest-dom';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { CyranoPanel } from './CyranoPanel';
+import { StripDevicesCard, devicesInRange } from './StripDevicesCard';
 import { remoteElectron } from '../../testUtils/remoteBridge';
 import type { ApiHandlers } from '../../testUtils/apiBridge';
 
@@ -32,12 +32,20 @@ const devices = (manualStrips: number[] = []) => ({
       piste: 'bleue',
       manual: manualStrips.includes(2),
     },
+    {
+      strip: 5,
+      device: { protocol: 'cyrano', ip: '192.168.1.105', port: 50101 },
+      arena: 5,
+      piste: '5',
+      manual: false,
+    },
   ],
 });
 
-const cyranoStatus = (alert: unknown = null) => ({
-  running: true,
+const cyranoStatus = (alert: unknown = null, running = true) => ({
+  running,
   port: 50100,
+  hello: 'device',
   pistes: [
     {
       piste: '1',
@@ -55,14 +63,14 @@ const cyranoStatus = (alert: unknown = null) => ({
 
 let api: Record<string, ReturnType<typeof vi.fn>>;
 
-function mount(alert: unknown = null) {
+function mount(alert: unknown = null, running = true) {
   api = {
     getCompetitionStripDevices: vi.fn().mockResolvedValue(devices()),
     listVenues: vi.fn().mockResolvedValue([
       { id: 'v1', name: 'Gymnase', isDefault: true, strips: [] },
       { id: 'v2', name: 'Halle', isDefault: false, strips: [] },
     ]),
-    getCyranoStatus: vi.fn().mockResolvedValue(cyranoStatus(alert)),
+    getCyranoStatus: vi.fn().mockResolvedValue(cyranoStatus(alert, running)),
     getOpp2Status: vi.fn().mockResolvedValue({
       running: false,
       port: 1883,
@@ -95,15 +103,31 @@ function mount(alert: unknown = null) {
     },
     { api: api as unknown as ApiHandlers }
   );
-  return render(<CyranoPanel competitionId="c1" />);
+  return render(<StripDevicesCard competitionId="c1" start={1} end={2} />);
 }
 
-describe('CyranoPanel — appareils de la salle (docs/adr/0023)', () => {
+describe('devicesInRange', () => {
+  it('garde les appareils dont l’arène est dans la plage de l’épreuve', () => {
+    const list = devices().devices as unknown as Parameters<typeof devicesInRange>[0];
+    expect(devicesInRange(list, 3, 4)).toEqual([]);
+    expect(devicesInRange(list, 2, 5).map(d => d.strip)).toEqual([2, 5]);
+  });
+});
+
+describe('StripDevicesCard — appareils des pistes de l’épreuve (docs/adr/0023)', () => {
   beforeEach(() => localStorage.clear());
 
-  it('affiche les appareils de la salle sans édition d’adresse', async () => {
+  it('pilotes arrêtés : rien n’est affiché', async () => {
+    const { container } = mount(null, false);
+    await waitFor(() => expect(api.getCyranoStatus).toHaveBeenCalled());
+    expect(container).toBeEmptyDOMElement();
+    expect(api.getCompetitionStripDevices).not.toHaveBeenCalled();
+  });
+
+  it('seules les pistes de l’épreuve, sans édition d’adresse', async () => {
     mount();
     expect(await screen.findByText('127.0.0.1:50101')).toBeInTheDocument();
+    expect(screen.queryByText('192.168.1.105:50101')).toBeNull();
     expect(screen.getByText('bleue')).toBeInTheDocument();
     expect(screen.getByText('2 · Bleue')).toBeInTheDocument();
     expect(screen.queryByPlaceholderText('192.168.1.100')).toBeNull();
@@ -130,19 +154,9 @@ describe('CyranoPanel — appareils de la salle (docs/adr/0023)', () => {
       expect(api.setCompetitionVenue).toHaveBeenCalledWith({ competitionId: 'c1', venueId: 'v2' })
     );
   });
-
-  it('démarre le broker OPP2 pour l’épreuve', async () => {
-    mount();
-    await screen.findByText('bleue');
-    const buttons = screen.getAllByRole('button', { name: 'Démarrer' });
-    fireEvent.click(buttons[0]);
-    await waitFor(() =>
-      expect(api.startOpp2Broker).toHaveBeenCalledWith({ port: 1883, competitionId: 'c1' })
-    );
-  });
 });
 
-describe('CyranoPanel — alerte, secours et journal (#1720, #1829)', () => {
+describe('StripDevicesCard — alerte et secours (#1720, #1829)', () => {
   beforeEach(() => localStorage.clear());
 
   it('signale la piste dont l’appareil affiche un autre match', async () => {
@@ -160,31 +174,5 @@ describe('CyranoPanel — alerte, secours et journal (#1720, #1829)', () => {
     await waitFor(() =>
       expect(api.runStripDeviceAction).toHaveBeenCalledWith({ piste: '1', action: 'ack' })
     );
-  });
-
-  it('journal affiché à la demande ; interfaces proposées', async () => {
-    mount();
-    fireEvent.click(await screen.findByText('Journal des trames'));
-    expect(await screen.findByText(/\|EFP1\.1\|INFO\|1\|/)).toBeInTheDocument();
-    expect(await screen.findByText('eth0 (10.1.1.1)')).toBeInTheDocument();
-    // « Toutes les interfaces » proposé une seule fois (0.0.0.0 non répété)
-    expect(screen.getAllByRole('option', { name: /Toutes les interfaces/ })).toHaveLength(1);
-  });
-
-  it('journal : défile jusqu’aux dernières trames, dans son cadre (#2001)', async () => {
-    const proto = HTMLElement.prototype;
-    const original = Object.getOwnPropertyDescriptor(proto, 'scrollHeight');
-    Object.defineProperty(proto, 'scrollHeight', { configurable: true, get: () => 480 });
-    try {
-      mount();
-      fireEvent.click(await screen.findByText('Journal des trames'));
-      const pre = await screen.findByLabelText('Journal des trames', { selector: 'pre' });
-      await screen.findByText(/\|EFP1\.1\|INFO\|1\|/);
-      expect(pre).toHaveClass('cyrano-log');
-      expect(pre.scrollTop).toBe(480);
-    } finally {
-      if (original) Object.defineProperty(proto, 'scrollHeight', original);
-      else delete (proto as unknown as Record<string, unknown>).scrollHeight;
-    }
   });
 });

@@ -20,6 +20,7 @@ import {
   type CyranoProtocol,
 } from './codec';
 import { isIP } from 'net';
+import { CYRANO_HELLO_MODES, type CyranoHelloMode } from '../../shared/types/stripDevice';
 import os from 'os';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
 
@@ -152,6 +153,7 @@ export function inIPv4Subnet(ip: string, subnet: IPv4Subnet): boolean {
 export class CyranoServer extends EventEmitter<CyranoServerEvents> {
   private socket: dgram.Socket | null = null;
   private helloTimer: NodeJS.Timeout | null = null;
+  private hello: CyranoHelloMode = 'device';
   private readonly pistes = new Map<string, PisteEntry>();
   private readonly log: CyranoFrameLogEntry[] = [];
   private readonly opts: Required<Omit<CyranoServerOptions, 'host'>> & { host?: string };
@@ -328,9 +330,25 @@ export class CyranoServer extends EventEmitter<CyranoServerEvents> {
     return this.send(piste, { command: 'NAK' });
   }
 
+  /** Envoi des HELLO choisi au démarrage (ADR-0038) */
+  get helloMode(): CyranoHelloMode {
+    return this.hello;
+  }
+
+  setHelloMode(mode: CyranoHelloMode): void {
+    this.hello = CYRANO_HELLO_MODES.includes(mode) ? mode : 'device';
+  }
+
+  /** La piste reçoit-elle des HELLO ? Selon le mode du pilote, puis sa déclaration */
+  private wantsHello(p: PisteEntry): boolean {
+    if (this.hello === 'always') return true;
+    if (this.hello === 'never') return false;
+    return p.hello !== false;
+  }
+
   sendHello(piste: string): boolean {
     const entry = [...this.pistes.values()].find(p => p.piste === piste);
-    if (entry?.hello === false) return false;
+    if (entry && !this.wantsHello(entry)) return false;
     return this.send(piste, { command: 'HELLO' });
   }
 
@@ -341,7 +359,7 @@ export class CyranoServer extends EventEmitter<CyranoServerEvents> {
    */
   sendHelloAll(): void {
     for (const p of this.pistes.values()) {
-      if (p.hello === false) continue;
+      if (!this.wantsHello(p)) continue;
       const probing = (p.protocol ?? 'auto') === 'auto' && !p.detectedProtocol;
       if (!probing) {
         this.probes.delete(p.key);

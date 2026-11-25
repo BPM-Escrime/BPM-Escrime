@@ -27,6 +27,7 @@ import type { TrainingServerInfo } from '../../../shared/types/training';
 import type { TrainingTheme } from '../../../shared/utils/trainingThemes';
 import type {
   CyranoFrameLog,
+  CyranoHelloMode,
   CyranoStatus,
   Opp2Status,
   EffectiveStripDevice,
@@ -232,7 +233,7 @@ export interface DevicesPort {
   cyrano: {
     running(): boolean;
     /** Démarre le serveur UDP ; refuse par CommandError (interface invalide, port pris) */
-    start(options: { port?: number; host?: string }): Promise<number>;
+    start(options: { port?: number; host?: string; hello?: CyranoHelloMode }): Promise<number>;
     stop(): Promise<void>;
     status(): CyranoStatus;
     log(): CyranoFrameLog[];

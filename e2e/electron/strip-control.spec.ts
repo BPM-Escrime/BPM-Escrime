@@ -58,7 +58,8 @@ test('pilotage de la salle : arme et noms envoyés à 2 pistes, accusé visible'
     await win
       .getByRole('button', { name: /Pilotage des appareils de la salle Salle Pilotage/ })
       .click();
-    await win.getByRole('button', { name: 'Démarrer le pilote Cyrano' }).click();
+    // Pilotes de la salle (StripDriversPanel) : le premier « Démarrer » est celui de Cyrano
+    await win.locator('.strip-drivers').getByRole('button', { name: 'Démarrer' }).first().click();
     // HELLO du pilote → INFO des appareils : liaison en ligne
     await expect(cell('En ligne')).toHaveCount(2, { timeout: 20_000 });
 

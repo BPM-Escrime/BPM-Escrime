@@ -287,6 +287,32 @@ describe('appareil sans HELLO (Saint-George, ADR-0038)', () => {
   });
 });
 
+describe('envoi des HELLO choisi au démarrage (ADR-0038)', () => {
+  /** Première trame reçue par l'appareil : HELLO du démarrage, sinon le DISP repère */
+  const first = async (mode: 'device' | 'always' | 'never', hello?: boolean) => {
+    const app = await fakeApparatus();
+    const server = new CyranoServer({ port: 0, host: '127.0.0.1', helloIntervalMs: 60_000 });
+    server.setHelloMode(mode);
+    server.setPistes([{ piste: '1', ip: '127.0.0.1', port: app.port, hello, protocol: 'EFP1.1' }]);
+    try {
+      await server.start();
+      server.sendDisp('1', {});
+      expect(server.helloMode).toBe(mode);
+      return parseCyrano(await app.next())?.command;
+    } finally {
+      await server.stop();
+      await app.close();
+    }
+  };
+
+  it('device : selon la déclaration ; always : à tous ; never : à aucun', async () => {
+    expect(await first('device', false)).toBe('DISP');
+    expect(await first('device')).toBe('HELLO');
+    expect(await first('always', false)).toBe('HELLO');
+    expect(await first('never')).toBe('DISP');
+  });
+});
+
 describe('champ Compe', () => {
   it('DISP d’une épreuve : repris par les HELLO, ACK et NAK suivants de la piste', async () => {
     const app = await fakeApparatus();

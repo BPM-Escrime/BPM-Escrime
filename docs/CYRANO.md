@@ -132,31 +132,51 @@ EFP1 / EFP1.1 / auto, identifiant OPP2, mode, arène — par défaut le numéro 
   numérique, configuration invalide, conflit avec une piste déclarée) sont listées au journal de
   diagnostic au démarrage. `cyrano_pistes` reste en lecture seule jusqu'à la 3.0.
 
-### Panneau des appareils (saisie distante)
+### Pilotes des appareils (Paramètres → Salles et pistes)
+
+Bouton **Appareils** d'une salle, cadre **Pilotes des appareils** (`StripDriversPanel`). Réglages
+du poste, valables pour toutes les épreuves : les boutons **Démarrer** / **Arrêter** restent
+affichés, pilote en marche ou non.
 
 | Réglage / action                 | Effet                                                                                                                                                                                                                                                                                                         |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Salle de l'épreuve               | salle propre de l'épreuve, ou « salle de la journée ou par défaut » (`setCompetitionVenue`)                                                                                                                                                                                                                   |
-| Tableau des appareils            | appareils effectifs de la salle (lecture seule : aucune adresse éditée ici), liaison, protocole détecté, BAD MATCH, épreuve suivie par la piste                                                                                                                                                               |
-| Manuel (par piste)               | passe la piste en manuel **pour cette épreuve** (`manualStrips`)                                                                                                                                                                                                                                              |
+| Cyrano : port                    | port UDP d'écoute (50100 par défaut) ; prise en compte au démarrage                                                                                                                                                                                                                                           |
+| Cyrano : HELLO                   | envoi des HELLO, choisi au démarrage ([ADR-0038](adr/0038-cyrano-sans-hello-saint-george.md)) : **selon l'appareil** (déclaration `hello: false` = aucun, profil Saint-George), **toujours** (spécification § 3 : l'appareil suit la machine à états, BEGIN avant le chrono), **jamais** (mode autonome)      |
 | Interface d'écoute               | adresse IP locale (ou toutes les interfaces) ; prise en compte au démarrage. Une interface IPv4 choisie écoute en réalité sur toutes les interfaces (sinon les diffusions `x.x.x.255` ne sont pas reçues sous Linux / macOS) : les trames d'IP non déclarées hors de son sous-réseau sont ignorées sans trace |
+| Démarrer avec la saisie distante | pilotes démarrés à chaque lancement de séance, si la salle de l'épreuve déclare un appareil du protocole (réglages ci-dessus, HELLO compris)                                                                                                                                                                  |
 | OPP2 (MQTT)                      | port et démarrage du broker intégré ([OPP2.md](OPP2.md))                                                                                                                                                                                                                                                      |
-| Démarrer avec la saisie distante | pilotes démarrés à chaque lancement de séance, si la salle de l'épreuve déclare un appareil du protocole                                                                                                                                                                                                      |
-| Secours `ACK`                    | ACK forcé : débloque un appareil resté en attente d'acquittement                                                                                                                                                                                                                                              |
-| Secours `NEXT`                   | même effet que la touche NEXT de l'appareil (mêmes garde-fous)                                                                                                                                                                                                                                                |
-| Secours `PREV`                   | même effet que la touche PREVIOUS de l'appareil : rappel du dernier match terminé (§ 2 bis)                                                                                                                                                                                                                   |
-| Secours « Resynchroniser »       | oublie l'état connu de la piste et renvoie le match de l'arène (ou un affichage vide)                                                                                                                                                                                                                         |
-| Journal des trames               | 200 dernières trames ; export texte, une trame par ligne : `horodatage ⇥ IN/OUT ⇥ ip:port ⇥ piste ⇥ trame [⇥ rejet]`                                                                                                                                                                                          |
+| Noms, nation, international      | longueur des noms, source du champ nation (pays, club, ligue), option internationale ; appliqués aussitôt si un pilote tourne                                                                                                                                                                                 |
+| Journal des trames               | trames de **toutes** les pistes du poste ; 200 dernières affichées ; export texte, une trame par ligne : `horodatage ⇥ IN/OUT ⇥ ip:port ⇥ piste ⇥ trame [⇥ rejet]`                                                                                                                                            |
 
-Port, interface, port MQTT, options de noms et démarrage automatique restent mémorisés dans le
-navigateur de l'application (`localStorage`). Contrat : `startCyranoServer`, `stopCyranoServer`,
-`getCyranoStatus`, `listCyranoLog`, `startOpp2Broker`, `stopOpp2Broker`, `getOpp2Status`,
-`listStripDeviceRoutes`, `setStripDeviceOptions`, `runStripDeviceAction` (ex-canaux `cyrano:*`,
-`opp2:*`).
+Port, interface, HELLO, port MQTT, options de noms et démarrage automatique restent mémorisés dans
+le navigateur de l'application (`localStorage`). Contrat : `startCyranoServer` (`hello`),
+`stopCyranoServer`, `getCyranoStatus` (`hello` en vigueur), `listCyranoLog`, `startOpp2Broker`,
+`stopOpp2Broker`, `getOpp2Status`, `setStripDeviceOptions` (ex-canaux `cyrano:*`, `opp2:*`).
 
-Disposition : le journal des trames
-défile jusqu'aux dernières trames (sauf si on remonte pour lire) dans son propre cadre, sans élargir
-la page ; l'export contient les 200 dernières trames et se rejoue dans le simulateur (§ 3).
+Disposition : le journal des trames défile jusqu'aux dernières trames (sauf si on remonte pour
+lire) dans son propre cadre, sans élargir la page ; l'export contient tout le journal gardé et se
+rejoue dans le simulateur (§ 3).
+
+### Appareils de l'épreuve (saisie distante, bloc Pistes)
+
+Affiché dans le bloc **Pistes** de la saisie distante (séance lancée ou non, tous modes) **dès
+qu'un pilote Cyrano ou OPP2 tourne** (`StripDevicesCard`). Seules les pistes de l'épreuve
+(arènes de la première à la dernière piste choisie) sont listées, pas toute la salle.
+
+| Réglage / action           | Effet                                                                                                                                          |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Salle de l'épreuve         | salle propre de l'épreuve, ou « salle de la journée ou par défaut » (`setCompetitionVenue`)                                                    |
+| Tableau des appareils      | appareils effectifs des pistes de l'épreuve (lecture seule : aucune adresse éditée ici), liaison, protocole détecté, BAD MATCH, épreuve suivie |
+| Manuel (par piste)         | passe la piste en manuel **pour cette épreuve** (`manualStrips`)                                                                               |
+| Secours `ACK`              | ACK forcé : débloque un appareil resté en attente d'acquittement                                                                               |
+| Secours `NEXT`             | même effet que la touche NEXT de l'appareil (mêmes garde-fous)                                                                                 |
+| Secours `PREV`             | même effet que la touche PREVIOUS de l'appareil : rappel du dernier match terminé (§ 2 bis)                                                    |
+| Secours « Resynchroniser » | oublie l'état connu de la piste et renvoie le match de l'arène (ou un affichage vide)                                                          |
+
+Contrat : `getCompetitionStripDevices`, `setCompetitionVenue`, `updateCompetitionSettings`
+(`manualStrips`), `listStripDeviceRoutes`, `runStripDeviceAction`. Le lien appareil → score passe
+par l'arène de la séance de saisie distante : sans séance lancée, l'état des appareils s'affiche
+mais aucun score n'est enregistré.
 
 ### Pilotage de la salle (hors compétition, #2117)
 
@@ -166,8 +186,8 @@ externe qui envoyait les ordres aux appareils). Capture : [26-pilotage-salle](sc
 
 - **Grille** : n° et libellé, protocole, liaison (en ligne, incertain, hors ligne, jamais vu ;
   « pilote arrêté » si le pilote du protocole ne tourne pas), épreuve en cours qui occupe la
-  piste, dernier envoi et son accusé. Pilote arrêté : bouton pour le démarrer
-  (`startCyranoServer` / `startOpp2Broker`, port et interface mémorisés du panneau). Ouvrir la
+  piste, dernier envoi et son accusé. Pilotes : cadre **Pilotes des appareils** juste au-dessus
+  (démarrage et arrêt, HELLO, journal). Ouvrir la
   grille charge les appareils de la salle dans les pilotes, après ceux des épreuves suivies
   (une piste du pilote commune aux deux reste à l'épreuve).
 - **Envoi en masse** : pistes cochées (ou toutes), puis un seul envoi de l'**arme** (épée,

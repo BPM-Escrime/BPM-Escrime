@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
  * Pilotage de la salle (#2117) : grille (liaison, occupation, accusé), sélection et envoi en
- * masse par le contrat (sendStripDisplay), résultats par piste, remise à blanc, démarrage du
- * pilote arrêté ; déclaration en masse (setStripDevices), export par contenu.
+ * masse par le contrat (sendStripDisplay), résultats par piste, remise à blanc ; déclaration en
+ * masse (setStripDevices), export par contenu. Pilotes : StripDriversPanel.test.tsx.
  */
 import '@testing-library/jest-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -86,14 +86,12 @@ describe('buildRequest', () => {
 describe('VenueStripControlPanel', () => {
   beforeEach(() => install());
 
-  it('grille : liaison, piste occupée, accusé reçu, pilote OPP2 arrêté', async () => {
+  it('grille : liaison, piste occupée, accusé reçu', async () => {
     render(<VenueStripControlPanel venueId="v1" />);
     expect(await screen.findByText('Occupée : Open Sabre')).toBeInTheDocument();
     expect(screen.getByText('Reçu')).toBeInTheDocument();
     expect(screen.getAllByText('En ligne')).toHaveLength(2);
     expect(screen.getByLabelText('Sélectionner la piste 4')).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Démarrer le broker OPP2' }));
-    await waitFor(() => expect(calls.startOpp2Broker).toHaveLength(1));
     expect(calls.listVenueStripControl[0]).toEqual({ venueId: 'v1' });
   });
 

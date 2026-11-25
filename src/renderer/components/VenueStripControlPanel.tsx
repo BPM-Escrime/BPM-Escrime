@@ -2,19 +2,18 @@
  * BPM - Escrime - Pilotage de la salle hors compétition (#2117, docs/adr/0023)
  * Grille des pistes de la salle (protocole, liaison, épreuve en cours, dernier envoi et son
  * accusé), sélection de plusieurs pistes ou de toutes, envoi en une fois de l'arme, des noms
- * et des nationalités (ou clubs), remise à blanc. Pilotes Cyrano / OPP2 démarrables d'ici.
+ * et des nationalités (ou clubs), remise à blanc. Pilotes Cyrano / OPP2 : StripDriversPanel.
  * Tout passe par le contrat (useDevicesApi) : ordres d'affichage, aucun fait d'épreuve.
  * Licensed under GPL-3.0
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Circle, Eraser, Play, Send, Wifi, WifiOff } from 'lucide-react';
+import { AlertCircle, Circle, Eraser, Send, Wifi, WifiOff } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from './Toast';
 import { Button } from './common/Button';
 import { Icon } from './common/Icon';
 import { useDevicesApi, type StripDisplayRequest } from '../api/devicesApi';
-import { readHost, readOpp2Port, readPort } from './remote/cyranoSettings';
 import { formatTime } from '../../shared/utils/localeFormat';
 import {
   STRIP_PANEL_WEAPONS,
@@ -114,7 +113,6 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
   }, [api, reload]);
 
   const declared = useMemo(() => grid?.strips.filter(s => s.protocol) ?? [], [grid]);
-  const needs = (p: 'cyrano' | 'opp2') => declared.some(s => s.protocol === p);
   const allSelected = declared.length > 0 && declared.every(s => selected.has(s.strip));
 
   const toggle = (strip: number) =>
@@ -124,16 +122,6 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
       else next.add(strip);
       return next;
     });
-
-  const start = async (p: 'cyrano' | 'opp2') => {
-    try {
-      if (p === 'cyrano') await api.cyrano.start({ port: readPort(), host: readHost() });
-      else await api.opp2.start({ port: readOpp2Port() });
-      await reload();
-    } catch {
-      showToast(t('stripControl.start_failed'), 'error');
-    }
-  };
 
   const send = async (clear: boolean) => {
     if (selected.size === 0) {
@@ -185,17 +173,6 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
     <section className="strip-control" aria-label={t('stripControl.title')}>
       <h4 className="strip-control-title">{t('stripControl.title')}</h4>
       <p className="cyrano-muted cyrano-small">{t('stripControl.hint')}</p>
-
-      {(['cyrano', 'opp2'] as const)
-        .filter(p => needs(p) && !(p === 'cyrano' ? grid.cyranoRunning : grid.opp2Running))
-        .map(p => (
-          <div key={p} className="strip-control-driver" role="status">
-            <span>{t(`stripControl.driver_stopped_${p}`)}</span>
-            <Button size="sm" icon={<Icon icon={Play} />} onClick={() => void start(p)}>
-              {t(`stripControl.start_${p}`)}
-            </Button>
-          </div>
-        ))}
 
       {declared.length === 0 ? (
         <p className="cyrano-muted">{t('stripControl.no_devices')}</p>

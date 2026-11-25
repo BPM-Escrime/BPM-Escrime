@@ -97,11 +97,12 @@ export function createDevicesPort({
     reload,
     cyrano: {
       running: () => cyranoServer.running,
-      start: async ({ port, host }) => {
+      start: async ({ port, host, hello }) => {
         // Interface d'écoute choisie (#1829) ; vide = toutes les interfaces
         if (host !== undefined && !cyranoServer.setHost(host)) {
           throw new CommandError('device_refused', `Interface d’écoute invalide : ${host}`);
         }
+        cyranoServer.setHelloMode(hello ?? 'device');
         const bound = await cyranoServer.start(port);
         pisteHub.attach();
         return bound;
@@ -116,6 +117,7 @@ export function createDevicesPort({
         return {
           running: cyranoServer.running,
           port: cyranoServer.port,
+          hello: cyranoServer.helloMode,
           pistes: cyranoServer.getStatuses().map(p => ({ ...p, alert: alerts[p.piste] ?? null })),
         };
       },

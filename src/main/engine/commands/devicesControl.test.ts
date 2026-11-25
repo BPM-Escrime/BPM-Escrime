@@ -42,7 +42,7 @@ function fakePort(): DevicesPort {
       running: () => true,
       start: vi.fn(),
       stop: vi.fn(),
-      status: () => ({ running: true, port: 50100, pistes: [] }),
+      status: () => ({ running: true, port: 50100, hello: 'device' as const, pistes: [] }),
       log: () => [],
     },
     opp2: {

@@ -5,6 +5,7 @@ import {
   formatCyranoLog,
   readOptions,
   writeAutoStart,
+  writeHelloMode,
   writeHost,
   writePort,
 } from './cyranoSettings';
@@ -32,16 +33,18 @@ describe('réglages des pilotes (#1829, docs/adr/0023)', () => {
     expect(api.cyrano.start).not.toHaveBeenCalled();
   });
 
-  it('démarrage automatique : port, interface, épreuve et options ; OPP2 si la salle en déclare', async () => {
+  it('démarrage automatique : port, interface, HELLO, épreuve et options ; OPP2 si la salle en déclare', async () => {
     writeAutoStart(true);
     writePort(50101);
     writeHost('192.168.1.10');
+    writeHelloMode('always');
     const api = fakeApi(['cyrano', 'opp2']);
     expect(await autoStartCyrano('c1', api)).toBe(true);
     expect(api.getCompetitionDevices).toHaveBeenCalledWith('c1');
     expect(api.cyrano.start).toHaveBeenCalledWith({
       port: 50101,
       host: '192.168.1.10',
+      hello: 'always',
       competitionId: 'c1',
     });
     expect(api.opp2.start).toHaveBeenCalledWith({ port: 1883, competitionId: 'c1' });
