@@ -59,7 +59,8 @@
     "foil": "Fleuret",
     "sabre": "Sabr",
     "laser": "Spaser Laser",
-    "custom": "Reoladur personelaet"
+    "custom": "Reoladur personelaet",
+    "other": "All"
   },
   "genders": {
     "male": "Gourel",
@@ -478,7 +479,11 @@
     "durations_competitions": "Istor : {{count}} kenstrivadeg",
     "durations_reset": "Adderaouekaat an istor",
     "durations_reset_confirm": "Diverkañ istor padelezh an emgannoù eus ar post ? Arventennoù ar BT a vo miret.",
-    "durations_error": "Padelezh nac'het : furmad m:ss, 30 s d'an nebeutañ"
+    "durations_error": "Padelezh nac'het : furmad m:ss, 30 s d'an nebeutañ",
+    "formula_preview_title": "Etrefas formulenn nevez (prantad)",
+    "formula_preview_hint": "An hevelep etrefas formulenn evit an holl armoù : formulenn kuzhet e-pad ar krouiñ, goude c'hallit kemmañ anezhi e Aozadur ▸ Formulenn. N'eo arloet nemet war skramm ar post-mañ ; an dournadoù a chom en-ti gant an etrefas a vremañ.",
+    "formula_preview_enable": "Gweredekaat an etrefas nevez",
+    "formula_preview_error": "Dibosupl eo enrollañ an arventenn."
   },
   "actions": {
     "undo": "Dizober",
@@ -2852,7 +2857,8 @@
     "goto_prep": "Mont d'ar prientiñ",
     "coach_dismiss": "Arabat diskouez en-dro",
     "all_places": "{{a}}/{{b}} emgann (an holl lec'hioù)",
-    "all_places_title": "Emgannoù ar genstrivadeg : taolenn bennañ ha renkadur an holl lec'hioù"
+    "all_places_title": "Emgannoù ar genstrivadeg : taolenn bennañ ha renkadur an holl lec'hioù",
+    "organization_formula_desc": "Derezhioù an dournadeg hag o arventennoù"
   },
   "offline": {
     "never": "Biken",
@@ -4723,5 +4729,41 @@
     "empty": "Lec'h ebet kavet",
     "offline": "Klask dihegerz (kevreadenn ebet)",
     "credit": "Roadennoù © OpenStreetMap, IGN"
+  },
+  "formulaEditor": {
+    "formula": "Formulenn",
+    "add_here": "Ouzhpennañ ur c’hamm amañ",
+    "brick_pool": "Ur c’helc’hiad poull",
+    "brick_quest": "Tro Quest",
+    "brick_tableau": "Taolenn",
+    "remove": "Lemel : {{phase}}",
+    "summary_pools": "Poullou {{score}} touchenn",
+    "summary_pools_rounds": "{{rounds}} tro poull {{score}} touchenn",
+    "summary_tableau": "Taolenn {{score}} touchenn",
+    "summary_tableau_unlimited": "Taolenn hep bevennadur touchennoù",
+    "summary_third_place": "3vet plas tennet",
+    "state_standard": "Standard",
+    "personalize": "Personelaat ar formulenn",
+    "modal_title": "Formulenn an dournadeg",
+    "round_settings_hint": "Taolioù, amzer ha barem : re an dro 1, lakaet e pep tro.",
+    "save_error": "N'eus ket bet gallet enrollañ ar furmulenn."
+  },
+  "formulaTemplates": {
+    "template": "Patrom furmulenn",
+    "search_ph": "Klask ur patrom",
+    "provided": "Pourchaset gant an arload",
+    "personal": "Ma fatromoù",
+    "name_standard": "Standard",
+    "name_two_rounds": "2 dro poulennoù + taolenn",
+    "name_pools_only": "Poulennoù hepken",
+    "name_rapieres": "Tournamant ar rapierennoù",
+    "state_adapted": "Azasaet · {{count}} disheñvelder",
+    "state_free": "Dieub",
+    "reset": "Distreiñ d'ar patrom",
+    "save_as": "Enrollañ evel patrom",
+    "save_name_ph": "Anv ar patrom",
+    "save": "Enrollañ",
+    "saved": "Patrom enrollet",
+    "save_error": "N'eus ket bet gallet enrollañ ar patrom."
   }
 }

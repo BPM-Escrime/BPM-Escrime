@@ -17,7 +17,7 @@ import { z } from 'zod';
 import { command, CompetitionId, Id, query, subscription } from './contractDef';
 import { StripDeviceSchema } from './contractDevices';
 import { publicationOperations } from './contractPublication';
-import { Weapon } from '../types';
+import { Category, Weapon } from '../types';
 import {
   MAX_LOGO_CHARS,
   MAX_LOGO_LIBRARY,
@@ -27,6 +27,13 @@ import {
 import type { AppSettings, LogoLibraryEntry, Venue } from '../types/appSettings';
 import type { AgentFolders } from '../types/settingsApi';
 import type { DurationRow } from '../domain/durations/matchDurations';
+import {
+  MAX_TEMPLATE_NAME,
+  templateIssues,
+  type FormulaTemplate,
+  type FormulaTemplateApplies,
+  type FormulaTemplateBody,
+} from '../domain/formula/formulaTemplate';
 import type { CustomTheme } from '../types/remote';
 import type {
   DayReferee,
@@ -53,6 +60,12 @@ import {
 } from '../domain/places/placeSearch';
 
 const Short = z.string().max(200);
+
+/** Modèle de formule à enregistrer (docs/adr/0033) : contenu jugé par le domaine */
+const FormulaTemplateBodySchema = z.custom<FormulaTemplateBody>(
+  body => templateIssues({ id: 'x', name: 'x', body }).length === 0,
+  'Formule du modèle invalide'
+);
 const Nothing = z.void();
 /** Dossier du poste choisi par desktop.pickDirectory (docs/adr/0030) ; vérifié par le poste */
 const DirPath = z.string().min(1).max(1024).describe('Chemin absolu d’un dossier du poste');
@@ -77,6 +90,7 @@ const SettingsPatchSchema = z
     remoteHttps: z.boolean(),
     remoteInterface: z.string().max(45),
     inkSaving: z.boolean(),
+    formulaPreview: z.boolean(),
   })
   .partial();
 
@@ -89,6 +103,7 @@ const ResolvableKeySchema = z.enum([
   'remoteInterface',
   'agentFolders',
   'inkSaving',
+  'formulaPreview',
   'stripCount',
 ]);
 
@@ -421,6 +436,50 @@ export const stationOperations = {
       'Efface l’historique des durées de match du poste ; les réglages du DT sont gardés.',
     input: z.object({}),
     output: MatchDurationsView,
+    permission: 'station:admin',
+  }),
+
+  // ── Modèles de formule (docs/adr/0033) : fournis en lecture seule, personnels du poste ──
+  listFormulaTemplates: query({
+    description:
+      'Modèles de formule : fournis par l’application (lecture seule) puis personnels du poste. Filtres facultatifs : arme, catégorie, épreuve par équipes, texte. « standardId » : modèle standard du contexte (arme donnée).',
+    input: z.object({
+      weapon: z.enum(Weapon).optional(),
+      category: z.enum(Category).optional(),
+      isTeamEvent: z.boolean().optional(),
+      text: z.string().max(100).optional(),
+    }),
+    output: z.object({
+      templates: z.custom<FormulaTemplate[]>(),
+      standardId: z.string().nullable(),
+    }),
+    permission: 'station:admin',
+    mcp: { name: 'list_formula_templates', title: 'Lister les modèles de formule' },
+  }),
+  saveFormulaTemplate: command({
+    description:
+      'Crée ou remplace un modèle de formule personnel du poste. Un modèle fourni ne se modifie pas : on enregistre une copie (« origin »). Refus : station_refused.',
+    input: z.object({
+      id: z.string().min(1).max(200).optional(),
+      name: z.string().trim().min(1).max(MAX_TEMPLATE_NAME),
+      applies: z
+        .custom<FormulaTemplateApplies>(v => typeof v === 'object' && v !== null)
+        .optional(),
+      origin: z
+        .strictObject({
+          templateId: z.string().min(1).max(200),
+          season: z.string().max(40).optional(),
+        })
+        .optional(),
+      body: FormulaTemplateBodySchema,
+    }),
+    output: z.object({ template: z.custom<FormulaTemplate>() }),
+    permission: 'station:admin',
+  }),
+  deleteFormulaTemplate: command({
+    description: 'Supprime un modèle de formule personnel. Modèle fourni : station_refused.',
+    input: z.object({ id: z.string().min(1).max(200) }),
+    output: Nothing,
     permission: 'station:admin',
   }),
 

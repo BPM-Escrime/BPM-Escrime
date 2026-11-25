@@ -73,6 +73,11 @@ interface Props {
   onMoveDown?: () => void;
   /** Réglage « Avancement vers la phase suivante » grisé (mode rapières : non pris en compte) (#1118) */
   advancementDisabled?: boolean;
+  /**
+   * Carte affichée sous la frise de la nouvelle interface (docs/adr/0032) : ni déplacement,
+   * ni retrait, ni repli (la frise s'en charge), corps toujours déplié
+   */
+  embedded?: boolean;
 }
 
 const NODE_TYPE_LABELS: Record<FormulaPhaseNodeType, string> = {
@@ -99,9 +104,19 @@ const FormulaPhaseCard_: React.FC<Props> = ({
   onMoveUp,
   onMoveDown,
   advancementDisabled,
+  embedded,
 }) => {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(index === 0);
+  const [expandedState, setExpanded] = useState(index === 0);
+  const expanded = embedded || expandedState;
+  // Nouvelle interface (docs/adr/0032) : seuls les réglages que le moteur exécute (P2).
+  // Taille, répartition, séparation, critères, taille de tableau, 5ᵉ place : sans effet ;
+  // touches, chrono et barème : ceux du 1er tour seulement, jusqu'à l'étape C de #2013
+  const full = !embedded;
+  const roundSettings =
+    !embedded ||
+    node.type !== 'pool_round' ||
+    (node.config as CustomPoolRoundConfig).roundIndex === 0;
 
   const updatePoolConfig = (partial: Partial<CustomPoolRoundConfig>) => {
     onUpdate({ ...node, config: { ...node.config, ...partial } });
@@ -134,7 +149,7 @@ const FormulaPhaseCard_: React.FC<Props> = ({
           />
         </div>
         <div className="phase-card-actions">
-          {!readOnly && (
+          {!readOnly && !embedded && (
             <>
               <Button
                 type="button"
@@ -165,14 +180,16 @@ const FormulaPhaseCard_: React.FC<Props> = ({
               </Button>
             </>
           )}
-          <Button
-            type="button"
-            className="btn-icon"
-            onClick={() => setExpanded(e => !e)}
-            title={expanded ? t('formulaPhase.collapse') : t('formulaPhase.expand')}
-          >
-            {expanded ? '▲' : '▼'}
-          </Button>
+          {!embedded && (
+            <Button
+              type="button"
+              className="btn-icon"
+              onClick={() => setExpanded(e => !e)}
+              title={expanded ? t('formulaPhase.collapse') : t('formulaPhase.expand')}
+            >
+              {expanded ? '▲' : '▼'}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -182,117 +199,134 @@ const FormulaPhaseCard_: React.FC<Props> = ({
           {/* Tour de poules */}
           {isPool && (
             <>
+              {!roundSettings && (
+                <p className="classification-hint">{t('formulaEditor.round_settings_hint')}</p>
+              )}
               <div className="phase-config-grid">
-                <div className="form-group">
-                  <label className="form-label">{t('formulaPhase.pool_size')}</label>
-                  <div className="input-row">
-                    <input
-                      type="number"
-                      className="form-input"
-                      min={3}
-                      max={poolCfg.maxPoolSize}
-                      value={poolCfg.minPoolSize}
-                      onChange={e => updatePoolConfig({ minPoolSize: Number(e.target.value) })}
-                      disabled={readOnly}
-                    />
-                    <span>à</span>
-                    <input
-                      type="number"
-                      className="form-input"
-                      min={poolCfg.minPoolSize}
-                      max={20}
-                      value={poolCfg.maxPoolSize}
-                      onChange={e => updatePoolConfig({ maxPoolSize: Number(e.target.value) })}
+                {full && (
+                  <div className="form-group">
+                    <label className="form-label">{t('formulaPhase.pool_size')}</label>
+                    <div className="input-row">
+                      <input
+                        type="number"
+                        className="form-input"
+                        min={3}
+                        max={poolCfg.maxPoolSize}
+                        value={poolCfg.minPoolSize}
+                        onChange={e => updatePoolConfig({ minPoolSize: Number(e.target.value) })}
+                        disabled={readOnly}
+                      />
+                      <span>à</span>
+                      <input
+                        type="number"
+                        className="form-input"
+                        min={poolCfg.minPoolSize}
+                        max={20}
+                        value={poolCfg.maxPoolSize}
+                        onChange={e => updatePoolConfig({ maxPoolSize: Number(e.target.value) })}
+                        disabled={readOnly}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {roundSettings && (
+                  <div className="form-group">
+                    <label className="form-label">{t('formulaPhase.max_score')}</label>
+                    <MaxScoreField
+                      value={poolCfg.maxScore}
+                      options={[3, 5, 8, 10, 15, 20]}
+                      onChange={maxScore => updatePoolConfig({ maxScore })}
                       disabled={readOnly}
                     />
                   </div>
-                </div>
+                )}
 
+                {roundSettings && (
+                  <div className="form-group">
+                    <label className="form-label">{t('formulaPhase.timer')}</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      min={60}
+                      max={900}
+                      step={30}
+                      value={poolCfg.timerSeconds}
+                      onChange={e => updatePoolConfig({ timerSeconds: Number(e.target.value) })}
+                      disabled={readOnly}
+                    />
+                  </div>
+                )}
+
+                {full && (
+                  <div className="form-group">
+                    <label className="form-label">{t('formulaPhase.distribution')}</label>
+                    <select
+                      className="form-input"
+                      value={poolCfg.seeding}
+                      onChange={e =>
+                        updatePoolConfig({
+                          seeding: e.target.value as 'serpentine' | 'sequential' | 'random',
+                        })
+                      }
+                      disabled={readOnly}
+                    >
+                      <option value="serpentine">{t('formulaPhase.serpentine')}</option>
+                      <option value="sequential">{t('formulaPhase.sequential')}</option>
+                      <option value="random">{t('formulaPhase.random')}</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {full && (
                 <div className="form-group">
-                  <label className="form-label">{t('formulaPhase.max_score')}</label>
-                  <MaxScoreField
-                    value={poolCfg.maxScore}
-                    options={[3, 5, 8, 10, 15, 20]}
-                    onChange={maxScore => updatePoolConfig({ maxScore })}
-                    disabled={readOnly}
+                  <label className="form-label">{t('formulaPhase.separation')}</label>
+                  <div className="checkbox-row">
+                    {(['byClub', 'byRegion', 'byNation'] as const).map(key => (
+                      <label key={key} className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={poolCfg.separation[key]}
+                          onChange={e =>
+                            updatePoolConfig({
+                              separation: { ...poolCfg.separation, [key]: e.target.checked },
+                            })
+                          }
+                          disabled={readOnly}
+                        />
+                        {key === 'byClub'
+                          ? t('formulaPhase.sep_club')
+                          : key === 'byRegion'
+                            ? t('formulaPhase.sep_region')
+                            : t('formulaPhase.sep_nation')}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {roundSettings && (
+                <div className="form-group">
+                  <label className="form-label">{t('formulaPhase.scoring')}</label>
+                  <ScoringZoneEditor
+                    scoring={poolCfg.scoring}
+                    onChange={s => updatePoolConfig({ scoring: s })}
+                    readOnly={readOnly}
                   />
                 </div>
+              )}
 
+              {full && (
                 <div className="form-group">
-                  <label className="form-label">{t('formulaPhase.timer')}</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    min={60}
-                    max={900}
-                    step={30}
-                    value={poolCfg.timerSeconds}
-                    onChange={e => updatePoolConfig({ timerSeconds: Number(e.target.value) })}
-                    disabled={readOnly}
+                  <label className="form-label">{t('formula.ranking_criteria')}</label>
+                  <RankingCriteriaEditor
+                    criteria={poolCfg.rankingCriteria}
+                    onChange={criteria => updatePoolConfig({ rankingCriteria: criteria })}
+                    readOnly={readOnly}
                   />
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">{t('formulaPhase.distribution')}</label>
-                  <select
-                    className="form-input"
-                    value={poolCfg.seeding}
-                    onChange={e =>
-                      updatePoolConfig({
-                        seeding: e.target.value as 'serpentine' | 'sequential' | 'random',
-                      })
-                    }
-                    disabled={readOnly}
-                  >
-                    <option value="serpentine">{t('formulaPhase.serpentine')}</option>
-                    <option value="sequential">{t('formulaPhase.sequential')}</option>
-                    <option value="random">{t('formulaPhase.random')}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">{t('formulaPhase.separation')}</label>
-                <div className="checkbox-row">
-                  {(['byClub', 'byRegion', 'byNation'] as const).map(key => (
-                    <label key={key} className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={poolCfg.separation[key]}
-                        onChange={e =>
-                          updatePoolConfig({
-                            separation: { ...poolCfg.separation, [key]: e.target.checked },
-                          })
-                        }
-                        disabled={readOnly}
-                      />
-                      {key === 'byClub'
-                        ? t('formulaPhase.sep_club')
-                        : key === 'byRegion'
-                          ? t('formulaPhase.sep_region')
-                          : t('formulaPhase.sep_nation')}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">{t('formulaPhase.scoring')}</label>
-                <ScoringZoneEditor
-                  scoring={poolCfg.scoring}
-                  onChange={s => updatePoolConfig({ scoring: s })}
-                  readOnly={readOnly}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">{t('formula.ranking_criteria')}</label>
-                <RankingCriteriaEditor
-                  criteria={poolCfg.rankingCriteria}
-                  onChange={criteria => updatePoolConfig({ rankingCriteria: criteria })}
-                  readOnly={readOnly}
-                />
-              </div>
+              )}
 
               <div
                 className={advancementDisabled ? 'form-group form-group--disabled' : 'form-group'}
@@ -337,25 +371,27 @@ const FormulaPhaseCard_: React.FC<Props> = ({
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">{t('formulaPhase.bracket_size')}</label>
-                  <select
-                    className="form-input"
-                    value={deCfg.bracketSizeOverride ?? 0}
-                    onChange={e => {
-                      const v = Number(e.target.value);
-                      updateDEConfig({ bracketSizeOverride: v === 0 ? undefined : v });
-                    }}
-                    disabled={readOnly}
-                  >
-                    <option value={0}>{t('formulaPhase.auto')}</option>
-                    {[4, 8, 16, 32, 64, 128].map(v => (
-                      <option key={v} value={v}>
-                        {t('formulaPhase.bracket_of', { n: v })}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {full && (
+                  <div className="form-group">
+                    <label className="form-label">{t('formulaPhase.bracket_size')}</label>
+                    <select
+                      className="form-input"
+                      value={deCfg.bracketSizeOverride ?? 0}
+                      onChange={e => {
+                        const v = Number(e.target.value);
+                        updateDEConfig({ bracketSizeOverride: v === 0 ? undefined : v });
+                      }}
+                      disabled={readOnly}
+                    >
+                      <option value={0}>{t('formulaPhase.auto')}</option>
+                      {[4, 8, 16, 32, 64, 128].map(v => (
+                        <option key={v} value={v}>
+                          {t('formulaPhase.bracket_of', { n: v })}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -369,15 +405,17 @@ const FormulaPhaseCard_: React.FC<Props> = ({
                     />
                     {t('formulaPhase.third_place')}
                   </label>
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={deCfg.fifthPlaceMatch ?? false}
-                      onChange={e => updateDEConfig({ fifthPlaceMatch: e.target.checked })}
-                      disabled={readOnly}
-                    />
-                    {t('formulaPhase.fifth_place')}
-                  </label>
+                  {full && (
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={deCfg.fifthPlaceMatch ?? false}
+                        onChange={e => updateDEConfig({ fifthPlaceMatch: e.target.checked })}
+                        disabled={readOnly}
+                      />
+                      {t('formulaPhase.fifth_place')}
+                    </label>
+                  )}
                 </div>
               </div>
 

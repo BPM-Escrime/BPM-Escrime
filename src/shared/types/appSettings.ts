@@ -10,6 +10,7 @@ import {
   validateDurationConfig,
   type MatchDurationConfig,
 } from '../domain/durations/matchDurations';
+import { validatePersonalTemplates, type FormulaTemplate } from '../domain/formula/formulaTemplate';
 
 /** Paramètres du poste, clé → type de la valeur */
 export interface AppSettings {
@@ -30,8 +31,18 @@ export interface AppSettings {
   agentFolders: string[];
   /** Économie d'encre à l'impression : fonds retirés, texte et traits en noir (PDF compris) */
   inkSaving: boolean;
+  /**
+   * Nouvelle interface de formule (aperçu, #2013 D13, docs/adr/0032) : lu par l'écran seulement,
+   * jamais par le moteur ni le MCP. Retiré à la sortie de la 3.0.
+   */
+  formulaPreview: boolean;
   /** Durées de match : réglages du DT, historique du poste, changement de piste (#1965) */
   matchDurations: MatchDurationConfig;
+  /**
+   * Modèles de formule personnels du poste (docs/adr/0033) : lus et écrits par
+   * listFormulaTemplates, saveFormulaTemplate et deleteFormulaTemplate seulement
+   */
+  formulaTemplates: FormulaTemplate[];
 }
 
 export type AppSettingKey = keyof AppSettings;
@@ -45,7 +56,9 @@ export const APP_SETTINGS_DEFAULTS: Readonly<AppSettings> = Object.freeze({
   remoteInterface: '0.0.0.0',
   agentFolders: [],
   inkSaving: false,
+  formulaPreview: false,
   matchDurations: DEFAULT_DURATION_CONFIG,
+  formulaTemplates: [],
 });
 
 export const APP_SETTING_KEYS = Object.keys(APP_SETTINGS_DEFAULTS) as AppSettingKey[];
@@ -103,10 +116,17 @@ export function validateAppSetting<K extends AppSettingKey>(
       if (typeof value !== 'string' || !IPV4.test(value)) fail('adresse IPv4');
       return value as AppSettings[K];
     case 'inkSaving':
+    case 'formulaPreview':
       if (typeof value !== 'boolean') fail('booléen');
       return value as AppSettings[K];
     case 'matchDurations':
       return validateDurationConfig(value) as AppSettings[K];
+    case 'formulaTemplates':
+      try {
+        return validatePersonalTemplates(value) as AppSettings[K];
+      } catch (e) {
+        return fail(`liste de modèles de formule (${(e as Error).message})`);
+      }
     case 'agentFolders':
       if (
         !Array.isArray(value) ||

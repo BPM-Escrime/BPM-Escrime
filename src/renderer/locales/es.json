@@ -59,7 +59,8 @@
     "foil": "Florete",
     "sabre": "Sable",
     "laser": "Sable Láser",
-    "custom": "Fórmula personalizada"
+    "custom": "Fórmula personalizada",
+    "other": "Otra"
   },
   "genders": {
     "male": "Masculino",
@@ -478,7 +479,11 @@
     "durations_competitions": "Historial: {{count}} competición(es)",
     "durations_reset": "Restablecer el historial",
     "durations_reset_confirm": "¿Borrar el historial de duración de asaltos del puesto? Se conservan los ajustes del DT.",
-    "durations_error": "Duración rechazada: formato m:ss, 30 s como mínimo"
+    "durations_error": "Duración rechazada: formato m:ss, 30 s como mínimo",
+    "formula_preview_title": "Nueva interfaz de fórmula (vista previa)",
+    "formula_preview_hint": "Una sola interfaz de fórmula para todas las armas: fórmula plegada al crear, luego editable en Organización ▸ Fórmula. Solo afecta a la pantalla de este puesto; las competiciones siguen siendo compatibles con la interfaz actual.",
+    "formula_preview_enable": "Activar la nueva interfaz",
+    "formula_preview_error": "No se pudo guardar el ajuste."
   },
   "actions": {
     "undo": "Deshacer",
@@ -2852,7 +2857,8 @@
     "goto_prep": "Ir a la preparación",
     "coach_dismiss": "No volver a mostrar",
     "all_places": "{{a}}/{{b}} asaltos (todos los puestos)",
-    "all_places_title": "Asaltos de la competición: cuadro principal y clasificación de todos los puestos"
+    "all_places_title": "Asaltos de la competición: cuadro principal y clasificación de todos los puestos",
+    "organization_formula_desc": "Fases de la competición y sus ajustes"
   },
   "offline": {
     "never": "Nunca",
@@ -4723,5 +4729,41 @@
     "empty": "Ningún lugar encontrado",
     "offline": "Búsqueda no disponible (sin conexión)",
     "credit": "Datos © OpenStreetMap, IGN"
+  },
+  "formulaEditor": {
+    "formula": "Fórmula",
+    "add_here": "Añadir una fase aquí",
+    "brick_pool": "Ronda de grupos",
+    "brick_quest": "Ronda Quest",
+    "brick_tableau": "Cuadro",
+    "remove": "Quitar: {{phase}}",
+    "summary_pools": "Poules {{score}} toques",
+    "summary_pools_rounds": "{{rounds}} rondas de grupos {{score}} toques",
+    "summary_tableau": "Cuadro {{score}} toques",
+    "summary_tableau_unlimited": "Cuadro sin límite de toques",
+    "summary_third_place": "3.er puesto por sorteo",
+    "state_standard": "Estándar",
+    "personalize": "Personalizar la fórmula",
+    "modal_title": "Fórmula de la competición",
+    "round_settings_hint": "Tocados, cronómetro y baremo: los de la ronda 1, aplicados a todas las rondas.",
+    "save_error": "No se pudo guardar la fórmula."
+  },
+  "formulaTemplates": {
+    "template": "Modelo de fórmula",
+    "search_ph": "Buscar un modelo",
+    "provided": "Proporcionados por la aplicación",
+    "personal": "Mis modelos",
+    "name_standard": "Estándar",
+    "name_two_rounds": "2 rondas de poules + cuadro",
+    "name_pools_only": "Solo poules",
+    "name_rapieres": "Torneo de las roperas",
+    "state_adapted": "Adaptada · {{count}} diferencia(s)",
+    "state_free": "Libre",
+    "reset": "Volver al modelo",
+    "save_as": "Guardar como modelo",
+    "save_name_ph": "Nombre del modelo",
+    "save": "Guardar",
+    "saved": "Modelo guardado",
+    "save_error": "No se pudo guardar el modelo."
   }
 }

@@ -41,6 +41,7 @@ import {
   draftFromSettings,
   draftToSettings,
 } from '../../shared/domain/formula/formulaDraft';
+import { useFormulaPreview } from '../hooks/useFormulaPreview';
 
 interface CompetitionPropertiesModalProps {
   competition: Competition;
@@ -55,6 +56,8 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
 }) => {
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
   const { t } = useTranslation();
+  // Nouvelle interface de formule (aperçu) : la formule passe dans Organisation (#2013 D11)
+  const formulaPreview = useFormulaPreview();
   const [title, setTitle] = useState(competition.title);
   const [date, setDate] = useState(new Date(competition.date).toISOString().split('T')[0]);
   const [location, setLocation] = useState(competition.location || '');
@@ -183,7 +186,7 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
   type TabId = 'general' | 'formula' | 'refereeing';
   const TABS: { id: TabId; label: string }[] = [
     { id: 'general', label: t('properties.general_info') },
-    { id: 'formula', label: t('properties.formula') },
+    ...(formulaPreview ? [] : [{ id: 'formula' as const, label: t('properties.formula') }]),
     { id: 'refereeing', label: t('properties.refereeing') },
   ];
   const [activeTab, setActiveTab] = useState<TabId>('general');
@@ -290,7 +293,9 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
               <option value="F">{t('weapons.foil')}</option>
               <option value="S">{t('weapons.sabre')}</option>
               <option value="L">{t('weapons.laser')}</option>
-              <option value="C">{t('properties.weapon_custom')}</option>
+              <option value="C">
+                {formulaPreview ? t('weapons.other') : t('properties.weapon_custom')}
+              </option>
             </select>
           </div>
 
@@ -349,9 +354,11 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
               <Button type="button" style={SM} onClick={() => setCoherenceKept(true)}>
                 {t('properties.coherence_keep')}
               </Button>
-              <Button type="button" style={SM} onClick={() => setActiveTab('formula')}>
-                {t('properties.coherence_show')}
-              </Button>
+              {!formulaPreview && (
+                <Button type="button" style={SM} onClick={() => setActiveTab('formula')}>
+                  {t('properties.coherence_show')}
+                </Button>
+              )}
             </div>
           </div>
         )}

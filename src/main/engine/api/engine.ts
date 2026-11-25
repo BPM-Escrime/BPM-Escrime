@@ -62,6 +62,11 @@ import { configureDtView, getDtViewStatus } from '../commands/dtView';
 import { clubHandlers } from '../commands/club';
 import { clubStationHandlers, onClubSynced } from '../commands/clubStation';
 import { onStationSettingsChanged, stationHandlers } from '../commands/station';
+import {
+  applyFormulaTemplate,
+  getCompetitionFormula,
+  updateCompetitionFormula,
+} from '../commands/competitionFormula';
 import { remoteHandlers } from '../commands/remote';
 import { remoteDisplayHandlers } from '../commands/remoteDisplay';
 import {
@@ -140,6 +145,12 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     saveArenaPlan(ctx, input),
   updateCompetitionSettings: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     updateCompetitionSettings(ctx, input),
+  // Formule d'une épreuve (docs/adr/0033)
+  getCompetitionFormula: (ctx, input) => getCompetitionFormula(ctx, input),
+  applyFormulaTemplate: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    applyFormulaTemplate(ctx, input),
+  updateCompetitionFormula: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    updateCompetitionFormula(ctx, input),
   deleteCompetition: (ctx, { commandId: _c, ...input }) => deleteCompetition(ctx, input),
   configureDtView: (ctx, { commandId: _c, ...input }) => configureDtView(ctx, input),
   getDtViewStatus: (ctx, input) => getDtViewStatus(ctx, input),

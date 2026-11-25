@@ -26,6 +26,22 @@ import { useFederalImport, type FederalCreationPayload } from '../hooks/useFeder
 import type { FederalNotice } from '../../shared/utils/fileParser/federalImport';
 import { TimeInput } from './common/TimeInput';
 import { PlaceSearchField } from './common/PlaceSearchField';
+import { useFormulaPreview } from '../hooks/useFormulaPreview';
+import { FormulaCreationSection } from './formula/FormulaCreationSection';
+import {
+  FormulaDraft,
+  draftFromSettings,
+  draftToSettings,
+} from '../../shared/domain/formula/formulaDraft';
+import { normalizeCustomFormula } from '../../shared/domain/formula/formulaFrieze';
+import { deriveSettingsFromFormula } from '../../shared/utils/customFormulaSettings';
+import {
+  formulaDeviations,
+  templateMatches,
+  type FormulaTemplate,
+  type FormulaTemplateBody,
+} from '../../shared/domain/formula/formulaTemplate';
+import { useFormulaTemplates } from '../hooks/useFormulaTemplates';
 
 interface NewCompetitionModalProps {
   onClose: () => void;
@@ -53,6 +69,12 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
     createDefaultCustomFormula()
   );
   const [specialMode, setSpecialMode] = useState<CompetitionSpecialMode | undefined>(undefined);
+  // Nouvelle interface de formule (aperçu, docs/adr/0032) : formule repliée pour toutes les
+  // armes ; standard de l'arme et de la catégorie tant qu'elle n'est pas personnalisée (Q21)
+  const formulaPreview = useFormulaPreview();
+  const [personalDraft, setPersonalDraft] = useState<FormulaDraft | null>(null);
+  const [customPersonalized, setCustomPersonalized] = useState(false);
+  const [templateId, setTemplateId] = useState<string | null>(null);
   const [isTeamEvent, setIsTeamEvent] = useState(false);
   const [teamSize, setTeamSize] = useState(3);
   const [teamReserveCount, setTeamReserveCount] = useState(1);
@@ -125,14 +147,88 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
       teamReserveCount,
       laserTeamMode,
       teamFormat,
-      customFormula,
+      customFormula: formulaPreview ? normalizeCustomFormula(customFormula) : customFormula,
       specialMode,
     });
+
+  // Modèle de départ (docs/adr/0033) : standard de l'arme × catégorie × type tant que rien
+  // n'est choisi ni personnalisé ; changer de contexte revient au standard du nouveau (Q21)
+  const templates = useFormulaTemplates({ weapon, category, isTeamEvent });
+  const personalized = personalDraft !== null || customPersonalized;
+  const chosen = templateId ? templates.all.find(x => x.id === templateId) : undefined;
+  useEffect(() => {
+    if (personalized || !chosen) return;
+    if (templateMatches(chosen, { weapon, category, isTeamEvent })) return;
+    // Modèle choisi hors du nouveau contexte : retour au standard, mode spécial compris
+    setTemplateId(null);
+    setSpecialMode(undefined);
+    setCustomFormula(createDefaultCustomFormula());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- réagit au seul changement de contexte ; chosen et personalized sont lus à ce moment-là
+  }, [weapon, category, isTeamEvent]);
+  const activeTemplate = chosen ?? templates.standard;
+
+  const standardDraft = () => draftFromSettings(weapon, category, buildSettings());
+  const baseDraft = () =>
+    activeTemplate?.body.kind === 'draft' ? activeTemplate.body.draft : standardDraft();
+  const currentDraft = () => personalDraft ?? baseDraft();
+  const originOf = (tpl: FormulaTemplate | undefined) =>
+    tpl ? { templateId: tpl.id, ...(tpl.season ? { season: tpl.season } : {}) } : undefined;
+
+  // Réglages de la formule de la nouvelle interface, appliqués par-dessus les réglages de base
+  // (et par-dessus un brouillon de Propriétés plus ancien). Standard non personnalisé : seule
+  // l'origine s'ajoute, les réglages restent ceux d'aujourd'hui.
+  const formulaSettings = (): Partial<Competition['settings']> => {
+    if (!formulaPreview) return {};
+    const formulaOrigin = originOf(activeTemplate);
+    const origin = formulaOrigin ? { formulaOrigin } : {};
+    if (weapon === Weapon.CUSTOM) {
+      const norm = normalizeCustomFormula(customFormula);
+      return { customFormula: norm, ...deriveSettingsFromFormula(norm), ...origin };
+    }
+    if (!personalDraft && activeTemplate && activeTemplate.id === templates.standard?.id)
+      return origin;
+    return { ...draftToSettings(currentDraft(), weapon, buildSettings()?.questConfig), ...origin };
+  };
+
+  const selectTemplate = (tpl: FormulaTemplate) => {
+    setTemplateId(tpl.id);
+    setPersonalDraft(null);
+    setCustomPersonalized(false);
+    if (tpl.body.kind === 'custom') {
+      setCustomFormula(tpl.body.formula);
+      setSpecialMode(tpl.body.specialMode);
+    }
+  };
+
+  const formulaState = () =>
+    formulaDeviations(
+      { weapon, category, settings: { ...buildSettings(), ...formulaSettings() } },
+      templates.all
+    );
+
+  const saveAsTemplate = async (name: string) => {
+    const body: FormulaTemplateBody =
+      weapon === Weapon.CUSTOM
+        ? {
+            kind: 'custom',
+            formula: normalizeCustomFormula(customFormula),
+            ...(specialMode ? { specialMode } : {}),
+          }
+        : { kind: 'draft', draft: currentDraft() };
+    const origin =
+      activeTemplate?.source === 'provided' ? originOf(activeTemplate) : activeTemplate?.origin;
+    const { template } = await templates.save({ name, body, ...(origin ? { origin } : {}) });
+    templates.reload();
+    setTemplateId(template.id);
+    setPersonalDraft(null);
+    setCustomPersonalized(false);
+  };
 
   // Réglages initiaux : défauts du formulaire + niveau GREG proposé à l'import (fichier
   // BPM - Escrime ou Domaine fédéral), visible et modifiable dans Propriétés (#1328)
   const initialSettings = () => {
-    const base = buildSettings();
+    const built = buildSettings();
+    const base = built && { ...built, ...formulaSettings() };
     const gregLevel = header?.fields.gregLevel;
     return base && gregLevel ? { ...base, gregLevel } : base;
   };
@@ -172,6 +268,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
     };
     const settings = baseSettings && {
       ...baseSettings,
+      ...formulaSettings(),
       ...(header
         ? { federal: { ...header.federal, ...(unlocked ? { unlocked: true } : {}) } }
         : {}),
@@ -223,7 +320,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
         <div
           ref={modalRef}
           className="modal"
-          style={isCustom ? { maxWidth: '92vw', width: '1100px' } : undefined}
+          style={isCustom && !formulaPreview ? { maxWidth: '92vw', width: '1100px' } : undefined}
           onClick={e => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
@@ -306,7 +403,9 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
                     <option value={Weapon.FOIL}>{t('weapons.foil')}</option>
                     <option value={Weapon.SABRE}>{t('weapons.sabre')}</option>
                     <option value={Weapon.LASER}>{t('weapons.laser')}</option>
-                    <option value={Weapon.CUSTOM}>{t('newCompetition.custom')}</option>
+                    <option value={Weapon.CUSTOM}>
+                      {formulaPreview ? t('weapons.other') : t('newCompetition.custom')}
+                    </option>
                   </select>
                 </div>
 
@@ -455,8 +554,38 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
                 />
               </div>
 
+              {/* Nouvelle interface : formule repliée pour toutes les armes (#2013 D3) */}
+              {formulaPreview && (
+                <FormulaCreationSection
+                  weapon={weapon}
+                  category={category}
+                  draft={currentDraft()}
+                  onDraftChange={patch =>
+                    setPersonalDraft(prev => ({ ...(prev ?? baseDraft()), ...patch }))
+                  }
+                  customFormula={customFormula}
+                  onCustomChange={f => {
+                    setCustomFormula(f);
+                    setCustomPersonalized(true);
+                  }}
+                  specialMode={isCustom ? specialMode : undefined}
+                  onSpecialModeChange={isCustom ? setSpecialMode : undefined}
+                  picker={{
+                    templates: templates.templates,
+                    selectedId: activeTemplate?.id ?? null,
+                    onSelect: selectTemplate,
+                    ...(() => {
+                      const { state, deviations } = formulaState();
+                      return { state, deviations };
+                    })(),
+                    onReset: activeTemplate ? () => selectTemplate(activeTemplate) : undefined,
+                    onSaveAs: templates.available ? saveAsTemplate : undefined,
+                  }}
+                />
+              )}
+
               {/* Constructeur de formule — visible uniquement pour arme CUSTOM */}
-              {isCustom && (
+              {isCustom && !formulaPreview && (
                 <div className="form-group custom-formula-section">
                   <label className="form-label new-competition-modal-3">
                     {t('newCompetition.formula_builder')}

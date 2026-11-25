@@ -18,6 +18,11 @@ import type { CustomTheme } from '../../shared/types/remote';
 import type { DayRefereeInput, StripRule } from '../../shared/types/eventDay';
 import type { PrivacyPersonRef, PrivacySettings } from '../../shared/types/privacy';
 import { weaponCode, type DurationKey } from '../../shared/domain/durations/matchDurations';
+import type {
+  FormulaTemplateApplies,
+  FormulaTemplateBody,
+} from '../../shared/domain/formula/formulaTemplate';
+import type { Category, Weapon } from '../../shared/types';
 import { useBpmClient } from './BpmClientContext';
 import { defaultBpmClient } from './IpcClient';
 
@@ -26,7 +31,9 @@ export const stationAvailable = (): boolean =>
   typeof window !== 'undefined' && !!window.electronAPI?.api;
 
 /** Paramètres du poste modifiables par l'écran (les dossiers de l'agent ont leurs opérations) */
-export type StationSettingsPatch = Partial<Omit<AppSettings, 'agentFolders' | 'matchDurations'>>;
+export type StationSettingsPatch = Partial<
+  Omit<AppSettings, 'agentFolders' | 'matchDurations' | 'formulaTemplates'>
+>;
 
 type WeaponCode = 'E' | 'F' | 'S' | 'L' | 'C';
 
@@ -42,7 +49,7 @@ export function createStationApi(client: BpmClient) {
       importLegacy: (values: Record<string, string | null>, mode: 'missing' | 'write') =>
         c('importLegacySettings', { values, mode }),
       resolve: (
-        key: Exclude<keyof AppSettings, 'matchDurations'> | 'stripCount',
+        key: Exclude<keyof AppSettings, 'matchDurations' | 'formulaTemplates'> | 'stripCount',
         scope?: { competitionId?: string; eventDayId?: string }
       ) => q('getResolvedSetting', { key, ...scope }),
       listVenues: () => q('listVenues', {}),
@@ -59,6 +66,23 @@ export function createStationApi(client: BpmClient) {
       /** Langue ou thème changés hors de l'écran (agent) : à relire. Renvoie la désinscription. */
       onChanged: (callback: () => void) =>
         client.subscribe('onStationSettingsChanged', {}, () => callback()),
+    },
+    /** Modèles de formule (docs/adr/0033) : fournis en lecture seule, personnels du poste */
+    formulaTemplates: {
+      list: (filter: {
+        weapon?: Weapon;
+        category?: Category;
+        isTeamEvent?: boolean;
+        text?: string;
+      }) => q('listFormulaTemplates', filter),
+      save: (input: {
+        id?: string;
+        name: string;
+        applies?: FormulaTemplateApplies;
+        origin?: { templateId: string; season?: string };
+        body: FormulaTemplateBody;
+      }) => c('saveFormulaTemplate', input),
+      delete: (id: string) => c('deleteFormulaTemplate', { id }),
     },
     /** Bibliothèque de logos du poste ; le logo actif est `settings.get().logo` */
     logos: {

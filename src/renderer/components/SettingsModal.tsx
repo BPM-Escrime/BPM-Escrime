@@ -14,6 +14,7 @@ import VenuesSettingsSection from './VenuesSettingsSection';
 import { Bell, Hourglass } from 'lucide-react';
 // Chargé à la demande : embarque jsPDF, lourd pour le bundle initial
 import { InkSavingSettingsSection } from './InkSavingSettingsSection';
+import { FormulaPreviewSettingsSection } from './FormulaPreviewSettingsSection';
 import { MatchDurationsSettingsSection } from './MatchDurationsSettingsSection';
 const PdfTemplateModal = React.lazy(() => import('./PdfTemplateModal'));
 import { restartGuidedTour } from './guidedTourFlags';
@@ -350,6 +351,8 @@ const SettingsModal: React.FC<SettingsModalProps> = (props: SettingsModalProps) 
         );
       case 'ink_saving':
         return <InkSavingSettingsSection />;
+      case 'formula_preview':
+        return <FormulaPreviewSettingsSection />;
       case 'tour':
         return (
           <>

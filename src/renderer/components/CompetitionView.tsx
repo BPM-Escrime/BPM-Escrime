@@ -41,6 +41,8 @@ import { ScoreAuditLog } from './ScoreAuditLog';
 import CompetitionHeader from './competition/CompetitionHeader';
 import CompetitionNav from './competition/CompetitionNav';
 import OrganizationModal from './competition/OrganizationModal';
+import { CompetitionFormulaModal } from './formula/CompetitionFormulaModal';
+import { useFormulaPreview } from '../hooks/useFormulaPreview';
 import CompetitionExportModals from './competition/CompetitionExportModals';
 import CompetitionSecondaryModals from './competition/CompetitionSecondaryModals';
 import RefereesPhase from './competition/RefereesPhase';
@@ -73,6 +75,9 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
   const client = useBpmClient();
   // Page Organisation (engrenage avant l'appel)
   const [showOrganization, setShowOrganization] = useState(false);
+  // Organisation ▸ Formule : nouvelle interface de formule (aperçu, docs/adr/0032)
+  const formulaPreview = useFormulaPreview();
+  const [showFormula, setShowFormula] = useState(false);
   const competitionCore = useCompetitionCore({ ...props });
   const competitionSessionSync = useCompetitionSessionSync({ ...props, ...competitionCore });
   const competitionPhaseFlow = useCompetitionPhaseFlow({
@@ -302,6 +307,15 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
           onClose={() => setShowOrganization(false)}
           onOpenArenaPlanner={props.onOpenArenaPlanner}
           onOpenRoadmap={props.onOpenRoadmap}
+          onOpenFormula={formulaPreview ? () => setShowFormula(true) : undefined}
+        />
+      )}
+      {showFormula && (
+        <CompetitionFormulaModal
+          competition={competition}
+          // Écrit par applyFormulaTemplate / updateCompetitionFormula (docs/adr/0033)
+          onApplied={settings => onUpdate({ ...competition, settings })}
+          onClose={() => setShowFormula(false)}
         />
       )}
       <CompetitionHeader
@@ -352,7 +366,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         playAllPositions={playAllPositions}
         onOpenPlanningAssistant={() => modals.setShowPlanningAssistant(true)}
         onOpenOrganization={
-          props.onOpenArenaPlanner || props.onOpenRoadmap
+          formulaPreview || props.onOpenArenaPlanner || props.onOpenRoadmap
             ? () => setShowOrganization(true)
             : undefined
         }

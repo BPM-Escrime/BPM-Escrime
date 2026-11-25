@@ -31,6 +31,11 @@ interface Props {
   onChange: (patch: Partial<FormulaDraft>) => void;
   weapon: Weapon;
   category: Category;
+  /**
+   * Nouvelle interface de formule (docs/adr/0032) : la frise et ses boutons sont rendus par
+   * `FormulaEditor`, qui fournit la phase sélectionnée ; seuls ses réglages sont affichés ici.
+   */
+  controlledPhase?: FormulaPhaseId | null;
 }
 
 const int = (v: string, fallback: number) => {
@@ -38,7 +43,14 @@ const int = (v: string, fallback: number) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-export const PropertiesFormulaTab: React.FC<Props> = ({ draft, onChange, weapon, category }) => {
+export const PropertiesFormulaTab: React.FC<Props> = ({
+  draft,
+  onChange,
+  weapon,
+  category,
+  controlledPhase,
+}) => {
+  const controlled = controlledPhase !== undefined;
   const { t } = useTranslation();
   const rounds = effectivePoolRounds(draft, weapon);
   const isLaser = weapon === Weapon.LASER;
@@ -46,8 +58,9 @@ export const PropertiesFormulaTab: React.FC<Props> = ({ draft, onChange, weapon,
     rounds > 0 ? { kind: 'pool', round: 0 } : { kind: 'tableau' }
   );
   // Sélection encore valide après ajout / retrait de phases
-  const current: FormulaPhaseId | null =
-    selected.kind === 'pool' && selected.round < rounds
+  const current: FormulaPhaseId | null = controlled
+    ? controlledPhase
+    : selected.kind === 'pool' && selected.round < rounds
       ? selected
       : selected.kind === 'quest' && isLaser && draft.questEnabled
         ? selected
@@ -383,49 +396,57 @@ export const PropertiesFormulaTab: React.FC<Props> = ({ draft, onChange, weapon,
 
   return (
     <div>
-      <nav className="formula-frieze" aria-label={t('properties.frieze_label')}>
-        {frieze}
-      </nav>
+      {!controlled && (
+        <nav className="formula-frieze" aria-label={t('properties.frieze_label')}>
+          {frieze}
+        </nav>
+      )}
 
-      <div className="formula-frieze__actions">
-        {canAddPoolRound(draft, weapon) && (
-          <Button type="button" style={SM} onClick={() => onChange(addPoolRound(draft, weapon))}>
-            {t('properties.add_pool_round')}
-          </Button>
-        )}
-        {current?.kind === 'pool' && canRemovePoolRound(draft, weapon) && (
-          <Button
-            type="button"
-            style={SM}
-            onClick={() => onChange(removePoolRound(draft, weapon, current.round))}
-          >
-            {t('properties.remove_pool_round')}
-          </Button>
-        )}
-        {isLaser && (
-          <Button
-            type="button"
-            style={SM}
-            onClick={() => onChange(setQuest(draft, !draft.questEnabled))}
-          >
-            {draft.questEnabled ? t('properties.remove_quest') : t('properties.add_quest')}
-          </Button>
-        )}
-        {!draft.hasDirectElimination && (
-          <Button type="button" style={SM} onClick={() => onChange({ hasDirectElimination: true })}>
-            {t('properties.add_tableau')}
-          </Button>
-        )}
-        {canRemoveTableau && (
-          <Button
-            type="button"
-            style={SM}
-            onClick={() => onChange({ hasDirectElimination: false })}
-          >
-            {t('properties.remove_tableau')}
-          </Button>
-        )}
-      </div>
+      {!controlled && (
+        <div className="formula-frieze__actions">
+          {canAddPoolRound(draft, weapon) && (
+            <Button type="button" style={SM} onClick={() => onChange(addPoolRound(draft, weapon))}>
+              {t('properties.add_pool_round')}
+            </Button>
+          )}
+          {current?.kind === 'pool' && canRemovePoolRound(draft, weapon) && (
+            <Button
+              type="button"
+              style={SM}
+              onClick={() => onChange(removePoolRound(draft, weapon, current.round))}
+            >
+              {t('properties.remove_pool_round')}
+            </Button>
+          )}
+          {isLaser && (
+            <Button
+              type="button"
+              style={SM}
+              onClick={() => onChange(setQuest(draft, !draft.questEnabled))}
+            >
+              {draft.questEnabled ? t('properties.remove_quest') : t('properties.add_quest')}
+            </Button>
+          )}
+          {!draft.hasDirectElimination && (
+            <Button
+              type="button"
+              style={SM}
+              onClick={() => onChange({ hasDirectElimination: true })}
+            >
+              {t('properties.add_tableau')}
+            </Button>
+          )}
+          {canRemoveTableau && (
+            <Button
+              type="button"
+              style={SM}
+              onClick={() => onChange({ hasDirectElimination: false })}
+            >
+              {t('properties.remove_tableau')}
+            </Button>
+          )}
+        </div>
+      )}
       {rounds > POOL_ROUNDS_WARNING && (
         <p style={HINT} role="note">
           {t('properties.rounds_warning', { count: rounds })}

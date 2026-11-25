@@ -1,0 +1,121 @@
+/**
+ * BPM - Escrime - Contrat : formule d'une épreuve (#2013 étape B2, docs/adr/0033)
+ * getCompetitionFormula, applyFormulaTemplate, updateCompetitionFormula : grammaire de la
+ * frise et validation du domaine ; écriture des réglages sans événement du journal (ADR-0018).
+ * Licensed under GPL-3.0
+ */
+import { z } from 'zod';
+import {
+  command,
+  CommandId,
+  CompetitionId,
+  DryRun,
+  ExpectedRevision,
+  query,
+  Revision,
+} from './contractDef';
+import { Category, Weapon, type CustomFormulaConfig } from '../types';
+import type { FormulaDraft } from '../domain/formula/formulaDraft';
+import type { CoherenceIssue } from '../utils/formulaCoherence';
+
+const WeaponEnum = z.enum(Weapon);
+const CategoryEnum = z.enum(Category);
+/** Modèle de formule (docs/adr/0033) */
+export const TemplateId = z
+  .string()
+  .min(1)
+  .max(200)
+  .describe('Modèle de formule (list_formula_templates)');
+
+export const formulaOperations = {
+  // ── Formule d'une épreuve (docs/adr/0033) : grammaire de la frise, validée par le moteur ──
+  getCompetitionFormula: query({
+    description:
+      'Formule d’une épreuve : phases de la frise (clés pool-0, pool-1…, quest, tableau), réglages, briques autorisées à chaque position (insertOptions[i] : avant la phase i ; dernier : en fin), origine, état standard / adapted / free et écarts au modèle, relevé de cohérence avec la catégorie.',
+    input: z.object({ competitionId: CompetitionId }),
+    output: z.object({
+      competitionId: z.string(),
+      weapon: WeaponEnum,
+      category: CategoryEnum,
+      isTeamEvent: z.boolean(),
+      specialMode: z.string().nullable(),
+      model: z.enum(['draft', 'custom']),
+      phases: z.array(
+        z.object({ kind: z.string(), key: z.string(), round: z.number().optional() })
+      ),
+      insertOptions: z.array(z.array(z.enum(['pool', 'quest', 'tableau']))),
+      draft: z.custom<FormulaDraft>().optional(),
+      customFormula: z.custom<CustomFormulaConfig>().optional(),
+      coherence: z.array(z.custom<CoherenceIssue>()),
+      origin: z.object({ templateId: z.string(), season: z.string().optional() }).nullable(),
+      originName: z.string().nullable(),
+      state: z.enum(['standard', 'adapted', 'free']),
+      deviations: z.array(
+        z.object({ field: z.string(), expected: z.unknown(), actual: z.unknown() })
+      ),
+    }),
+    permission: 'competition:read',
+    mcp: { name: 'get_competition_formula', title: 'Lire la formule d’une épreuve' },
+  }),
+
+  applyFormulaTemplate: command({
+    description:
+      'Applique un modèle de formule (list_formula_templates) compatible avec l’arme, la catégorie et le type de l’épreuve ; l’origine est enregistrée. Formule de l’arme « Autre » figée après le tirage (draw_done).',
+    input: z.object({
+      competitionId: CompetitionId,
+      templateId: TemplateId,
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      competitionId: z.string(),
+      changed: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'competition:write',
+    mcp: { name: 'apply_formula_template', title: 'Appliquer un modèle de formule' },
+  }),
+
+  updateCompetitionFormula: command({
+    description:
+      'Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau, position « at » comme insertOptions), removePhase (clé de phase), setPhase (clé, réglages de la phase), setGeneral (réglages généraux). Grammaire et bornes de l’écran ; refus : invalid_settings, draw_done.',
+    input: z.object({
+      competitionId: CompetitionId,
+      operations: z
+        .array(
+          z.discriminatedUnion('op', [
+            z.strictObject({
+              op: z.literal('insertPhase'),
+              brick: z.enum(['pool', 'quest', 'tableau']),
+              at: z.number().int().min(0).max(20),
+            }),
+            z.strictObject({ op: z.literal('removePhase'), phase: z.string().max(40) }),
+            z.strictObject({
+              op: z.literal('setPhase'),
+              phase: z.string().max(40),
+              settings: z.record(z.string(), z.unknown()),
+            }),
+            z.strictObject({
+              op: z.literal('setGeneral'),
+              settings: z.record(z.string(), z.unknown()),
+            }),
+          ])
+        )
+        .min(1)
+        .max(50),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      competitionId: z.string(),
+      changed: z.array(z.string()),
+      revision: Revision,
+    }),
+    permission: 'competition:write',
+    mcp: { name: 'update_competition_formula', title: 'Modifier la formule d’une épreuve' },
+  }),
+};
