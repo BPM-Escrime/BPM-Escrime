@@ -44,6 +44,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0032](0032-formule-interface-unique-apercu.md)     | Formule : interface unique derrière un réglage expérimental du poste (`formulaPreview`), lu par l'écran seulement                                                                         | Acceptée            |
 | [0033](0033-modeles-de-formule.md)                  | Modèles de formule (catalogue fourni, modèles du poste) et formule d'une épreuve par le contrat : `getCompetitionFormula`, `applyFormulaTemplate`, `updateCompetitionFormula`, outils MCP | Acceptée            |
 | [0034](0034-formule-v2-arbre-par-phase.md)          | Formule v2 : arbre de phases pour toutes les armes (`settings.formula`), lu par phase par le moteur, sans migration de schéma                                                             | Acceptée            |
+| [0035](0035-deroule-genere-par-la-formule.md)       | Déroulé généré par la formule v2 : navigation, 0 tour, tableau arrêté à N (`closeTableauStage`, `TableauStageClosed`), phase après un tableau                                             | Acceptée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.
