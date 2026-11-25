@@ -14,6 +14,8 @@ export interface ClubMember {
   clubId: string;
   firstName: string;
   lastName: string;
+  /** Surnom affiché à côté du nom (docs/adr/0032) */
+  nickname?: string;
   license?: string;
   /** 'M' | 'F' | 'X' */
   gender?: string;

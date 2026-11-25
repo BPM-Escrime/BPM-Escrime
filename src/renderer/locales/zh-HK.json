@@ -3560,6 +3560,7 @@
   },
   "club": {
     "new_member": "新成員",
+    "nickname": "暱稱",
     "tab_identity": "身分",
     "tab_members": "會員",
     "tab_sessions": "訓練",

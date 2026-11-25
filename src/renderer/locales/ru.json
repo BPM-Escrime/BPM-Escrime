@@ -3560,6 +3560,7 @@
   },
   "club": {
     "new_member": "Новый участник",
+    "nickname": "Прозвище",
     "tab_identity": "Профиль",
     "tab_members": "Члены клуба",
     "tab_sessions": "Тренировки",

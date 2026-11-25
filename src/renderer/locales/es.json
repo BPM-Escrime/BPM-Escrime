@@ -3560,6 +3560,7 @@
   },
   "club": {
     "new_member": "Nuevo miembro",
+    "nickname": "Apodo",
     "tab_identity": "Identidad",
     "tab_members": "Socios",
     "tab_sessions": "Sesiones",

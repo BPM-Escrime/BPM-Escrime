@@ -3560,6 +3560,7 @@
   },
   "club": {
     "new_member": "Neues Mitglied",
+    "nickname": "Spitzname",
     "tab_identity": "Identität",
     "tab_members": "Mitglieder",
     "tab_sessions": "Trainings",
