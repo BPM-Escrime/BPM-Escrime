@@ -69,6 +69,7 @@ export const ClubGroupLoanModal: React.FC<ClubGroupLoanModalProps> = ({
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={t('clubInventory.group_lend_title', { count: lendable.length })}
       onClose={onClose}
       size="md"

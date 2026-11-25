@@ -37,8 +37,9 @@ const SplitCompetitionModal: React.FC<SplitCompetitionModalProps> = ({
     if (title.trim()) onConfirm(title.trim());
   };
 
+  // Fenêtre de saisie : pas de fermeture par un clic à côté (croix, Annuler ou Échap)
   return (
-    <div className="modal-overlay" onClick={onCancel}>
+    <div className="modal-overlay">
       <form
         ref={trapRef}
         className="modal split-competition-modal-1"

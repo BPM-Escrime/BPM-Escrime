@@ -189,6 +189,7 @@ export const ClubItemEditor: React.FC<ClubItemEditorProps> = ({
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={item ? t('clubInventory.edit_title') : t('clubInventory.new_title')}
       onClose={onClose}
       size="lg"

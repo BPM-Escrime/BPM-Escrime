@@ -175,6 +175,7 @@ export const ClubSessionPlanner: React.FC<ClubSessionPlannerProps> = ({
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={session ? t('clubPlan.edit_title') : t('clubPlan.new_title')}
       onClose={onClose}
       size="xl"

@@ -94,6 +94,7 @@ const WifiQRModal_: React.FC<WifiQRModalProps> = ({ onClose }) => {
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={t('wifiQr.title')}
       onClose={onClose}
       size="md"

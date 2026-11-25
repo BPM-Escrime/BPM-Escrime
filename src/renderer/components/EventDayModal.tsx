@@ -233,7 +233,7 @@ export const EventDayModal: React.FC<EventDayModalProps> = ({ competitions, onCl
   };
 
   return (
-    <Modal title={t('eventDay.title')} onClose={onClose} size="xl" scroll>
+    <Modal closeOnOverlay={false} title={t('eventDay.title')} onClose={onClose} size="xl" scroll>
       <div className="event-day">
         <aside className="event-day-aside">
           <ul className="event-day-list event-day-list--days">
