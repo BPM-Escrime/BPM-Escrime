@@ -319,6 +319,20 @@ export function phaseSettings<R extends PhaseRef>(
   return list[Math.min(Math.max(0, round), list.length - 1)] as Out;
 }
 
+/**
+ * Qualification vers le tableau : règle du tour de poules qui précède le tableau (scission
+ * ignorée). Aucune (undefined) sans tableau, sans tour de poules juste avant (Tour Quest), ou si
+ * tous passent. Exécutée pour toutes les armes (#2013 R1, ADR-0036 : levée du bridage P2).
+ */
+export function tableauQualificationOf(f: FormulaV2): AdvancementRule | undefined {
+  const at = f.phases.findIndex(p => p.kind === 'tableau');
+  if (at <= 0) return undefined;
+  const before = f.phases.slice(0, at).filter(p => p.kind !== 'split');
+  const prev = before[before.length - 1];
+  if (prev?.kind !== 'pool' || prev.qualification.mode === 'all') return undefined;
+  return prev.qualification;
+}
+
 // ── Écriture : réglages plats dérivés ─────────────────────────────────────
 
 /**
