@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 282 |
-| `src/main/` | 160 | 1390 |
+| `src/main/` | 160 | 1391 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 136 | 766 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 52 | 603 |
+| `src/shared/domain/` | 52 | 604 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **636** | **5027** |
+| **Total** | **636** | **5029** |
 
-Unitaires : 617 fichiers, 4973 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 617 fichiers, 4975 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3059,7 +3059,7 @@ Unitaires : 617 fichiers, 4973 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/cyrano/server.test.ts</code> — 14 tests</summary>
+<summary><code>src/main/cyrano/server.test.ts</code> — 15 tests</summary>
 
 - **CyranoServer**
   - interface d’écoute : adresse IP ou vide, refus sinon (#1829)
@@ -3077,6 +3077,8 @@ Unitaires : 617 fichiers, 4973 tests. E2E : 19 fichiers, 54 tests (comptage stat
 - **détection de la version du protocole (piste en auto)**
   - appareil jamais entendu : HELLO alterné EFP1.1 / EFP1, puis la version entendue
   - version imposée : jamais d’alternance
+- **appareil sans HELLO (Saint-George, ADR-0038)**
+  - ni au démarrage, ni au battement, ni derrière un affichage : seul le DISP part
 - **champ Compe**
   - DISP d’une épreuve : repris par les HELLO, ACK et NAK suivants de la piste
 
@@ -9957,7 +9959,7 @@ Unitaires : 617 fichiers, 4973 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/stripDevices/stripDevices.test.ts</code> — 9 tests</summary>
+<summary><code>src/shared/domain/stripDevices/stripDevices.test.ts</code> — 10 tests</summary>
 
 - **toStripDevice**
   - ancienne configuration Cyrano : protocol devient version
@@ -9973,6 +9975,7 @@ Unitaires : 617 fichiers, 4973 tests. E2E : 19 fichiers, 54 tests (comptage stat
   - pistes manuelles de l’épreuve marquées
 - **driverTables**
   - sépare Cyrano et OPP2, première déclaration d’une piste gardée
+  - appareil sans HELLO (Saint-George, ADR-0038) : transmis au pilote ; autre valeur ignorée
 
 </details>
 
@@ -9983,7 +9986,7 @@ Unitaires : 617 fichiers, 4973 tests. E2E : 19 fichiers, 54 tests (comptage stat
   - dernier octet puis retenue ; adresse invalide ou hors plage : null
 - **buildStripDeviceBatch**
   - Cyrano : IP de départ incrémentée, port, version, mode
-  - profil Saint-George : IP déduite du numéro de piste ; sans IP : piste écartée
+  - profil Saint-George : IP déduite du numéro de piste, sans HELLO ; sans IP : piste écartée
   - OPP2 ; plage bornée à la piste 100
 - **fichier d’appareils**
   - export puis lecture : lignes numérotées
