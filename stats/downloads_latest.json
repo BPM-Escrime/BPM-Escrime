@@ -1,242 +1,242 @@
 {
-  "date": "2026-11-24T17:20:47Z",
+  "date": "2026-11-25T16:59:40Z",
   "releases": [
     {
-      "tag": "v3.0.0-dev.2102",
-      "name": "🧪 BPM - Escrime 3.0.0-dev.2102 (Build #2102)",
-      "published_at": "2026-11-24T15:17:50Z",
+      "tag": "v3.0.0-dev.2128",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2128 (Build #2128)",
+      "published_at": "2026-11-25T15:17:21Z",
       "total_downloads": 11,
       "assets": [
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-linux-amd64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2128-linux-amd64.deb",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-linux-arm64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2128-linux-arm64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-linux-arm64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2128-linux-arm64.deb",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-linux-x86_64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2128-linux-x86_64.AppImage",
           "downloads": 2
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-linux-x86_64.rpm",
+          "name": "BPM-Escrime-3.0.0-dev.2128-linux-x86_64.rpm",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-mac-arm64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2128-mac-arm64.dmg",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-mac-arm64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2128-mac-arm64.zip",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-mac-x64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2128-mac-x64.dmg",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-mac-x64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2128-mac-x64.zip",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2102-win-x64-portable.exe",
+          "name": "BPM-Escrime-3.0.0-dev.2128-win-x64-portable.exe",
           "downloads": 1
         }
       ]
     },
     {
-      "tag": "v3.0.0-dev.2101",
-      "name": "🧪 BPM - Escrime 3.0.0-dev.2101 (Build #2101)",
-      "published_at": "2026-11-24T14:11:24Z",
+      "tag": "v3.0.0-dev.2127",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2127 (Build #2127)",
+      "published_at": "2026-11-25T13:35:41Z",
+      "total_downloads": 11,
+      "assets": [
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-linux-amd64.deb",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-linux-arm64.AppImage",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-linux-arm64.deb",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-linux-x86_64.AppImage",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-linux-x86_64.rpm",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-mac-arm64.dmg",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-mac-arm64.zip",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-mac-x64.dmg",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-mac-x64.zip",
+          "downloads": 1
+        },
+        {
+          "name": "BPM-Escrime-3.0.0-dev.2127-win-x64-portable.exe",
+          "downloads": 2
+        }
+      ]
+    },
+    {
+      "tag": "v3.0.0-dev.2126",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2126 (Build #2126)",
+      "published_at": "2026-11-25T13:05:44Z",
       "total_downloads": 10,
       "assets": [
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-linux-amd64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2126-linux-amd64.deb",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-linux-arm64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2126-linux-arm64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-linux-arm64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2126-linux-arm64.deb",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-linux-x86_64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2126-linux-x86_64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-linux-x86_64.rpm",
+          "name": "BPM-Escrime-3.0.0-dev.2126-linux-x86_64.rpm",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-mac-arm64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2126-mac-arm64.dmg",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-mac-arm64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2126-mac-arm64.zip",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-mac-x64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2126-mac-x64.dmg",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-mac-x64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2126-mac-x64.zip",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2101-win-x64-portable.exe",
+          "name": "BPM-Escrime-3.0.0-dev.2126-win-x64-portable.exe",
           "downloads": 1
         }
       ]
     },
     {
-      "tag": "v3.0.0-dev.2100",
-      "name": "🧪 BPM - Escrime 3.0.0-dev.2100 (Build #2100)",
-      "published_at": "2026-11-24T13:35:04Z",
+      "tag": "v3.0.0-dev.2125",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2125 (Build #2125)",
+      "published_at": "2026-11-25T12:29:51Z",
       "total_downloads": 10,
       "assets": [
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-linux-amd64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2125-linux-amd64.deb",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-linux-arm64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2125-linux-arm64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-linux-arm64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2125-linux-arm64.deb",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-linux-x86_64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2125-linux-x86_64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-linux-x86_64.rpm",
+          "name": "BPM-Escrime-3.0.0-dev.2125-linux-x86_64.rpm",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-mac-arm64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2125-mac-arm64.dmg",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-mac-arm64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2125-mac-arm64.zip",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-mac-x64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2125-mac-x64.dmg",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-mac-x64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2125-mac-x64.zip",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2100-win-x64-portable.exe",
+          "name": "BPM-Escrime-3.0.0-dev.2125-win-x64-portable.exe",
           "downloads": 1
         }
       ]
     },
     {
-      "tag": "v3.0.0-dev.2099",
-      "name": "🧪 BPM - Escrime 3.0.0-dev.2099 (Build #2099)",
-      "published_at": "2026-11-24T13:18:54Z",
+      "tag": "v3.0.0-dev.2124",
+      "name": "🧪 BPM - Escrime 3.0.0-dev.2124 (Build #2124)",
+      "published_at": "2026-11-25T11:36:47Z",
       "total_downloads": 10,
       "assets": [
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-linux-amd64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2124-linux-amd64.deb",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-linux-arm64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2124-linux-arm64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-linux-arm64.deb",
+          "name": "BPM-Escrime-3.0.0-dev.2124-linux-arm64.deb",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-linux-x86_64.AppImage",
+          "name": "BPM-Escrime-3.0.0-dev.2124-linux-x86_64.AppImage",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-linux-x86_64.rpm",
+          "name": "BPM-Escrime-3.0.0-dev.2124-linux-x86_64.rpm",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-mac-arm64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2124-mac-arm64.dmg",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-mac-arm64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2124-mac-arm64.zip",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-mac-x64.dmg",
+          "name": "BPM-Escrime-3.0.0-dev.2124-mac-x64.dmg",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-mac-x64.zip",
+          "name": "BPM-Escrime-3.0.0-dev.2124-mac-x64.zip",
           "downloads": 1
         },
         {
-          "name": "BPM-Escrime-3.0.0-dev.2099-win-x64-portable.exe",
-          "downloads": 1
-        }
-      ]
-    },
-    {
-      "tag": "v3.0.0-dev.2098",
-      "name": "🧪 BPM - Escrime 3.0.0-dev.2098 (Build #2098)",
-      "published_at": "2026-11-24T13:04:37Z",
-      "total_downloads": 10,
-      "assets": [
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-linux-amd64.deb",
-          "downloads": 1
-        },
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-linux-arm64.AppImage",
-          "downloads": 1
-        },
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-linux-arm64.deb",
-          "downloads": 1
-        },
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-linux-x86_64.AppImage",
-          "downloads": 1
-        },
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-linux-x86_64.rpm",
-          "downloads": 1
-        },
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-mac-arm64.dmg",
-          "downloads": 1
-        },
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-mac-arm64.zip",
-          "downloads": 1
-        },
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-mac-x64.dmg",
-          "downloads": 1
-        },
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-mac-x64.zip",
-          "downloads": 1
-        },
-        {
-          "name": "BPM-Escrime-3.0.0-dev.2098-win-x64-portable.exe",
+          "name": "BPM-Escrime-3.0.0-dev.2124-win-x64-portable.exe",
           "downloads": 1
         }
       ]
@@ -245,7 +245,7 @@
       "tag": "v2.0.0",
       "name": "🚀 BellePoule Modern 2.0.0 (Build #1964)",
       "published_at": "2026-11-20T07:01:22Z",
-      "total_downloads": 100,
+      "total_downloads": 103,
       "assets": [
         {
           "name": "BellePoule-Modern-2.0.0-linux-amd64.deb",
@@ -261,7 +261,7 @@
         },
         {
           "name": "BellePoule-Modern-2.0.0-linux-x86_64.AppImage",
-          "downloads": 4
+          "downloads": 6
         },
         {
           "name": "BellePoule-Modern-2.0.0-linux-x86_64.rpm",
@@ -285,7 +285,7 @@
         },
         {
           "name": "BellePoule-Modern-2.0.0-win-x64-portable.exe",
-          "downloads": 21
+          "downloads": 22
         }
       ]
     },
