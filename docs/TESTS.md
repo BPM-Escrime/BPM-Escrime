@@ -106,12 +106,12 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 282 |
-| `src/main/` | 158 | 1379 |
+| `src/main/` | 158 | 1381 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 136 | 766 |
 | E2E Playwright (`e2e/`) | 19 | 53 |
-| `src/remote/` | 60 | 435 |
+| `src/remote/` | 60 | 439 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 47 | 577 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **629** | **4985** |
+| **Total** | **629** | **4991** |
 
-Unitaires : 610 fichiers, 4932 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -4484,7 +4484,7 @@ Unitaires : 610 fichiers, 4932 tests. E2E : 19 fichiers, 53 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/clubArena.test.ts</code> — 9 tests</summary>
+<summary><code>src/main/remote/clubArena.test.ts</code> — 11 tests</summary>
 
 - **saisie distante Mode Club (#1872)**
   - identifiant de match club
@@ -4497,6 +4497,9 @@ Unitaires : 610 fichiers, 4932 tests. E2E : 19 fichiers, 53 tests (comptage stat
   - une carte passée : combat libre non enregistré, nom connu affiché
   - erreurs : carte inconnue, même tireur, piste occupée ou absente
   - piste occupée : vue arbitre directe ; combat libre par défaut : lecture des cartes
+- **liste des présents sur la tablette arbitre**
+  - présents du club, triés, sans code de carte
+  - tireur choisi : code de sa carte s’il est présent
 
 </details>
 
@@ -8466,7 +8469,7 @@ Unitaires : 610 fichiers, 4932 tests. E2E : 19 fichiers, 53 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeClubCards.test.ts</code> — 8 tests</summary>
+<summary><code>src/remote/js/refereeClubCards.test.ts</code> — 12 tests</summary>
 
 - **refereeClubCards (#1872)**
   - lit le QR de la carte ou le code en clair
@@ -8477,6 +8480,10 @@ Unitaires : 610 fichiers, 4932 tests. E2E : 19 fichiers, 53 tests (comptage stat
   - combat déjà sur la piste : vue arbitre directe, cartes via l’en-tête
   - caméra utilisable : contexte sécurisé + getUserMedia
   - piste sans combat : lecture des cartes à l’ouverture
+  - liste des présents : tireur déjà choisi exclu, aucun présent → pas de liste
+  - champs envoyés : code lu ou tireur de la liste
+  - motif de la caméra indisponible
+  - caméra arrière absente : second essai avec n’importe quelle caméra
 
 </details>
 
