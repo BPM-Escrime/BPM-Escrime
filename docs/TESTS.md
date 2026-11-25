@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 160 | 1393 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
-| `src/renderer/components/` | 137 | 768 |
+| `src/renderer/components/` | 137 | 769 |
 | E2E Playwright (`e2e/`) | 19 | 54 |
 | `src/remote/` | 60 | 439 |
 | `src/renderer/api/` | 10 | 46 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 52 | 604 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **637** | **5033** |
+| **Total** | **637** | **5034** |
 
-Unitaires : 618 fichiers, 4979 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 618 fichiers, 4980 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3344,7 +3344,7 @@ Unitaires : 618 fichiers, 4979 tests. E2E : 19 fichiers, 54 tests (comptage stat
 <details>
 <summary><code>src/main/engine/commands/devicesControl.test.ts</code> — 7 tests</summary>
 
-- grille : protocole, liaison, piste occupée, dernier envoi ; salle chargée dans les pilotes
+- grille : protocole, liaison, BAD MATCH, piste occupée, dernier envoi ; salle chargée dans les pilotes
 - envoi en masse : verdict par piste, piste manuelle de l’épreuve libre, aucun journal
 - « toutes » les pistes déclarées ; arme seule fusionnée ; remise à blanc ; rien à envoyer refusé
 - piste inconnue du pilote au moment de l’envoi : indisponible
@@ -6671,12 +6671,13 @@ Unitaires : 618 fichiers, 4979 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/VenueStripControlPanel.test.tsx</code> — 6 tests</summary>
+<summary><code>src/renderer/components/VenueStripControlPanel.test.tsx</code> — 7 tests</summary>
 
 - **buildRequest**
   - seuls les champs saisis partent
 - **VenueStripControlPanel**
   - grille : liaison, piste occupée, accusé reçu
+  - BAD MATCH signalé ; secours ACK et Resynchroniser sur les pistes chargées
   - envoi en masse : arme, noms, nations ; résultat par piste ; toutes ; remise à blanc
   - sans sélection ni champ : rien n’est envoyé
 - **VenueStripBulkTools**
