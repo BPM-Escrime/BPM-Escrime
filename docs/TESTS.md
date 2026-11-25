@@ -106,11 +106,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 282 |
-| `src/main/` | 158 | 1381 |
+| `src/main/` | 160 | 1389 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 136 | 766 |
-| E2E Playwright (`e2e/`) | 19 | 53 |
+| E2E Playwright (`e2e/`) | 19 | 54 |
 | `src/remote/` | 60 | 439 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 47 | 577 |
+| `src/shared/domain/` | 52 | 602 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **629** | **4991** |
+| **Total** | **636** | **5025** |
 
-Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 617 fichiers, 4971 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3269,7 +3269,7 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 10 tests</summary>
+<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 14 tests</summary>
 
 - liste : fournis puis personnels, standard du contexte
 - enregistrer une copie, la retrouver, la supprimer ; un modèle fourni est refusé
@@ -3281,6 +3281,10 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
 - modèle incompatible ou inconnu refusé
 - createCompetition avec un modèle : Tournoi des rapières, arme « Autre »
 - outils MCP de la formule d’une épreuve
+- updateCompetitionFormula écrit formula et les réglages plats du 1er tour
+- bornes du tour 2 refusées
+- réglages plats écrits sans formula : formule retirée, reconstruite à la lecture
+- modèle appliqué ou choisi à la création : formula enregistrée
 
 </details>
 
@@ -3700,6 +3704,14 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
 - outils MCP : lecture du plan, écriture par la même commande
 - serveur distant : reçoit le plan relu après la commande (écran ou MCP)
 - suppression de l’épreuve et archive .bpm : parcours générique de competition\_id
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/tableauStage.test.ts</code> — 2 tests</summary>
+
+- demies jouées : finalistes au tour suivant par rang d’entrée, demi-finalistes éliminés
+- refus : demie non jouée, ou formule sans tableau arrêté
 
 </details>
 
@@ -4842,6 +4854,15 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
   - match introuvable partout : erreur « Match non trouvé »
   - match en base : mémoire seulement, jamais terminé par ce chemin (#2175)
   - match déjà terminé (hors arène) : file hors-ligne rejouée sans effet (#2175)
+
+</details>
+
+<details>
+<summary><code>src/main/remote/sessionSettings.test.ts</code> — 2 tests</summary>
+
+- **applyCompetitionSettings : tour de poules en cours**
+  - tour 1 puis tour 2 : réglages du tour
+  - sans formule enregistrée : réglages communs, comme avant
 
 </details>
 
@@ -7229,15 +7250,15 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
 <details>
 <summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 15 tests</summary>
 
-- **FormulaEditor**
+- **FormulaEditor (formule v2)**
   - frise : appel, poules, tableau, classement ; pas de « + Classement »
-  - « ＋ » propose les briques autorisées et insère un tour
+  - simulation : effectif modifiable
+  - « ＋ » insère un tour ; le tour 2 se règle seul (touches, répartition)
   - retirer le tableau rend le « ＋ » de fin de frise
-  - arme « Autre » : même frise, « Classement final » implicite
-  - arme « Autre » : seuls les réglages exécutés sont proposés (P2)
-- **Organisation ▸ Formule : réglages enregistrés**
-  - épée : réglages plats, comme l’onglet Formule des Propriétés
-  - arme « Autre » : formule normalisée et réglages dérivés
+  - dernier tour avant le tableau (épée) : seule la règle « vainqueurs de poule »
+  - arme « Autre » : règles, barème, qualification complète
+- **Organisation ▸ Formule : réglages affichés après enregistrement**
+  - formule v2 et réglages plats du 1er tour
 - **Création : formule repliée (aperçu)**
   - « À la carte » devient « Autre »
   - sans personnaliser : mêmes réglages qu’aujourd’hui, plus l’origine standard
@@ -7864,11 +7885,12 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
 </details>
 
 <details>
-<summary><code>e2e/electron/formula-preview.spec.ts</code> — 2 tests</summary>
+<summary><code>e2e/electron/formula-preview.spec.ts</code> — 3 tests</summary>
 
 - **Formule : interface actuelle et aperçu (application Electron)**
   - sans le réglage : interface actuelle inchangée
   - avec le réglage : formule repliée, personnalisée, puis Organisation ▸ Formule
+  - 0 tour de poules : l’appel mène au classement d’entrée puis au tableau (ADR-0037)
 
 </details>
 
@@ -9338,7 +9360,7 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaFrieze.test.ts</code> — 15 tests</summary>
+<summary><code>src/shared/domain/formula/formulaFrieze.test.ts</code> — 17 tests</summary>
 
 - **frise : épée, fleuret, sabre, Sabre Laser**
   - standard : un tour de poules puis le tableau
@@ -9357,6 +9379,19 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
   - retrait : il reste une phase de combat, le dernier tour ne se retire pas
   - nœud d’une phase de la frise
   - résumé sur une ligne
+- **simulation de la formule de l’épée… Sabre Laser**
+  - 2 tours (24 qualifiés) puis tableau : effectifs simulés
+  - poules seules : pas de tableau
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/formula/formulaSteps.test.ts</code> — 3 tests</summary>
+
+- **déroulé dérivé de la formule (ADR-0037)**
+  - standard : appel, poules, tableau, résultats
+  - tours consécutifs regroupés ; 5 tours
+  - 0 tour de poules : le tableau suit l’appel
 
 </details>
 
@@ -9384,6 +9419,34 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
   - épée : %s _(each)_
   - Sabre Laser : Tour Quest ajouté
   - arme « Autre » : tour ajouté, barème et règles
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/formula/formulaV2.test.ts</code> — 5 tests</summary>
+
+- **formule v2 construite à la lecture (épée… Sabre Laser)**
+  - %s : mêmes réglages qu’aujourd’hui _(each)_
+  - lecture par phase : chaque tour et le tableau
+  - formule enregistrée prioritaire sur les réglages plats
+- **arme « Autre » : customFormula v1 ↔ v2**
+  - %s : aller-retour sans perte, mêmes réglages dérivés _(each)_
+  - lecture par phase : touches du tour 2 distinctes du tour 1
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/formula/formulaV2Operations.test.ts</code> — 8 tests</summary>
+
+- **frise sur la formule v2 (ADR-0036)**
+  - mêmes briques autorisées que la frise de l’écran
+  - chaque tour se règle séparément (noms v2)
+  - anciens noms de l’écran : réglage commun à tous les tours
+  - tableau retiré puis remis : réglages enregistrés repris
+  - refus : brique mal placée, phase inconnue, réglage d’une autre phase
+  - bornes jugées tour par tour
+  - arme « Autre » : mêmes opérations, barème du tour 2
+  - Sabre Laser : Tour Quest au plus après un tour de poules
 
 </details>
 
@@ -9642,6 +9705,17 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
   - buildPools (MCP) et drawPools (écran) donnent le même tirage par défaut
   - critères de l’écran transmis au MCP : même résultat
   - ni tireur ni poule : aucun tirage
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/pools/roundSeeding.test.ts</code> — 4 tests</summary>
+
+- **répartition du tour suivant (Q4, ADR-0036)**
+  - cumul des tours : victoires et touches additionnées
+  - défaut : classement du tour terminé
+  - cumul choisi sur le tour suivant, qualifiés du tour terminé
+  - sans formule enregistrée : comportement historique
 
 </details>
 
@@ -9946,6 +10020,16 @@ Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage stat
 - **composeTableau**
   - aller-retour avec planTableau : barrages, exemptions et rangs conservés
   - refus : tireur inconnu, tireur deux fois dans un tour, case répétée, tour invalide
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/tableau/tableauStage.test.ts</code> — 3 tests</summary>
+
+- **tableau arrêté à N (ADR-0037)**
+  - seuls les tours où il reste plus de N tireurs se jouent
+  - restants par rang d’entrée ; éliminés par tour atteint puis rang d’entrée (Q5)
+  - étape non terminée : pas de clôture
 
 </details>
 
