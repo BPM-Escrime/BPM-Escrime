@@ -188,9 +188,14 @@ export interface StripEcho {
 
 /**
  * Accusé d'un affichage libre : en attente, reçu (l'appareil affiche ce qui a été envoyé),
- * refusé (appareil en plein combat : il ignore l'affichage), sans réponse (délai dépassé).
+ * refusé (appareil en plein combat : il ignore l'affichage), affichage différent (l'appareil
+ * répond, mais n'affiche pas ce qui a été envoyé, jusqu'au délai), sans réponse (rien reçu
+ * dans le délai).
  */
-export type StripAckState = 'pending' | 'acked' | 'refused' | 'no_response';
+export type StripAckState = 'pending' | 'acked' | 'refused' | 'mismatch' | 'no_response';
+
+/** Champ renvoyé par l'appareil qui diffère de l'affichage envoyé */
+export type StripEchoField = 'weapon' | 'left' | 'right';
 
 /**
  * Résultat d'un envoi, par piste : envoyé, refusé car occupé par une épreuve en cours, hors
@@ -211,6 +216,8 @@ export interface StripLastSend {
   ack: StripAckState;
   /** Heure de l'accusé (reçu, refusé ou délai dépassé) */
   ackAt?: number;
+  /** Affichage différent : champs que l'appareil renvoie autrement (dernière trame reçue) */
+  diff?: StripEchoField[];
   clear: boolean;
   panel: StripPanel;
 }

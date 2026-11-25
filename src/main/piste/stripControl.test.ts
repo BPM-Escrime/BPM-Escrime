@@ -129,6 +129,25 @@ describe('StripControl', () => {
     });
   });
 
+  it('Cyrano : INFO au repos qui ne reflète pas l’envoi = affichage différent au délai', () => {
+    control.send(target, PANEL);
+    // Trame croisée : on attend la suivante
+    info('W', 'E', 'X', 'Y');
+    expect(control.lastFor('1')?.ack).toBe('pending');
+    // Noms pris, arme gardée par l'appareil
+    info('W', 'E', 'ROSSI GIA', 'DUPONT-LEF');
+    expect(control.lastFor('1')?.ack).toBe('pending');
+    vi.advanceTimersByTime(5000);
+    expect(control.lastFor('1')).toMatchObject({ ack: 'mismatch', diff: ['weapon'] });
+    const acks = changes.filter(c => c.kind === 'ack');
+    expect(acks[acks.length - 1]).toMatchObject({ ack: 'mismatch' });
+    // Envoi suivant : écart oublié, sans réponse si rien ne revient
+    control.send(target, PANEL);
+    vi.advanceTimersByTime(5000);
+    expect(control.lastFor('1')).toMatchObject({ ack: 'no_response' });
+    expect(control.lastFor('1')?.diff).toBeUndefined();
+  });
+
   it('OPP2 : fencers + match publiés sans Id ; écho apparatus/fencers = reçu', () => {
     const published: Record<string, Record<string, unknown>> = {};
     broker.subscribe('openpiste/bleue/software/#', (t, p) => {

@@ -36,6 +36,7 @@ const ACK_BADGE: Record<string, string> = {
   pending: 'badge badge-info',
   acked: 'badge badge-success',
   refused: 'badge badge-danger',
+  mismatch: 'badge badge-warning',
   no_response: 'badge badge-warning',
 };
 
@@ -171,6 +172,11 @@ const VenueStripControlPanel: React.FC<Props> = ({ venueId }) => {
         <span className="cyrano-muted">{formatTime(row.last.at)}</span>
         {row.last.clear && <span className="cyrano-muted">{t('stripControl.last_clear')}</span>}
         <span className={ACK_BADGE[row.last.ack]}>{t(`stripControl.ack_${row.last.ack}`)}</span>
+        {row.last.ack === 'mismatch' && row.last.diff && row.last.diff.length > 0 && (
+          <span className="cyrano-muted">
+            {row.last.diff.map(f => t(`stripControl.${f}`)).join(', ')}
+          </span>
+        )}
       </span>
     );
   };

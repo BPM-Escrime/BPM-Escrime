@@ -85,6 +85,7 @@ export interface CyranoServerOptions {
   staleAfterMs?: number;
   /** Au-delà : hors ligne (la spécification fixe 40 s côté appareil) */
   offlineAfterMs?: number;
+  /** Trames gardées en mémoire (journal exporté) : 10 000, ~35 min avec 12 pistes */
   logSize?: number;
   now?: () => number;
 }
@@ -105,6 +106,12 @@ export interface CyranoServerEvents {
 interface PisteEntry extends CyranoPisteStatus {
   key: string;
 }
+
+/**
+ * Taille du journal des trames. Un appareil envoie un INFO toutes les 2 à 4 s : à 500 trames,
+ * 12 pistes ne laissaient que 2 min d'historique, trop peu pour retrouver un envoi à l'export.
+ */
+export const CYRANO_LOG_SIZE = 10000;
 
 const ipKey = (ip: string): string => ip.replace(/^::ffff:/, '').toLowerCase();
 
@@ -161,7 +168,7 @@ export class CyranoServer extends EventEmitter<CyranoServerEvents> {
       helloIntervalMs: options.helloIntervalMs ?? 15000,
       staleAfterMs: options.staleAfterMs ?? 20000,
       offlineAfterMs: options.offlineAfterMs ?? 40000,
-      logSize: options.logSize ?? 500,
+      logSize: options.logSize ?? CYRANO_LOG_SIZE,
       now: options.now ?? Date.now,
     };
   }

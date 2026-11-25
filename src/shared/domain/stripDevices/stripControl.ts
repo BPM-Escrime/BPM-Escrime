@@ -16,6 +16,7 @@ import type {
   StripBusy,
   StripDeviceLink,
   StripEcho,
+  StripEchoField,
   StripPanel,
   StripPanelSide,
   StripSendOutcome,
@@ -159,23 +160,38 @@ export interface StripEchoState {
 
 const norm = (v: string): string => v.replace(/\s+/g, ' ').trim().toUpperCase();
 
+/** Champs renvoyés par l'appareil qui diffèrent de l'affichage attendu (absents : non comparés) */
+export function stripEchoDiff(expected: StripEcho, state: StripEchoState): StripEchoField[] {
+  const diff: StripEchoField[] = [];
+  if (
+    expected.weapon !== undefined &&
+    state.weapon !== undefined &&
+    norm(state.weapon) !== norm(expected.weapon)
+  )
+    diff.push('weapon');
+  if (state.left !== undefined && norm(state.left) !== norm(expected.left)) diff.push('left');
+  if (state.right !== undefined && norm(state.right) !== norm(expected.right)) diff.push('right');
+  return diff;
+}
+
 /**
- * Accusé de réception d'un affichage libre : `acked` si l'appareil renvoie les noms (et l'arme
- * si le protocole la renvoie) envoyés ; `refused` s'il est en plein combat sans les afficher ;
- * null sinon (trame croisée, morceau sans nom : on attend la suivante, jusqu'au délai).
+ * Accusé de réception d'un affichage libre, trame par trame : `acked` si l'appareil renvoie
+ * les noms (et l'arme si le protocole la renvoie) envoyés ; `refused` s'il est en plein combat
+ * sans les afficher ; `mismatch` s'il est au repos et renvoie autre chose (trame croisée
+ * possible : l'appelant attend la suivante et ne conclut qu'au délai) ; null si la trame ne
+ * porte ni nom ni arme (morceau OPP2).
  */
 export function stripAckVerdict(
   expected: StripEcho,
   state: StripEchoState
 ): Exclude<StripAckState, 'pending' | 'no_response'> | null {
-  const checks: boolean[] = [];
-  if (state.left !== undefined) checks.push(norm(state.left) === norm(expected.left));
-  if (state.right !== undefined) checks.push(norm(state.right) === norm(expected.right));
-  if (expected.weapon !== undefined && state.weapon !== undefined)
-    checks.push(norm(state.weapon) === norm(expected.weapon));
-  if (checks.length > 0 && checks.every(Boolean)) return 'acked';
+  const compared =
+    state.left !== undefined ||
+    state.right !== undefined ||
+    (expected.weapon !== undefined && state.weapon !== undefined);
+  if (compared && stripEchoDiff(expected, state).length === 0) return 'acked';
   if (state.active) return 'refused';
-  return null;
+  return compared ? 'mismatch' : null;
 }
 
 /** Accusé en attente dont le délai est dépassé */
