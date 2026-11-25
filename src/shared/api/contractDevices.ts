@@ -190,7 +190,7 @@ export const devicesOperations = {
   // ── Pilotage de la salle hors compétition (#2117) ──
   listVenueStripControl: query({
     description:
-      'Grille du pilotage de la salle : pour chaque piste, protocole, liaison (null : pilote arrêté), épreuve en cours qui l’occupe, dernier affichage libre envoyé et son accusé (pending, acked, refused, mismatch avec les champs différents, no_response). Charge les appareils de la salle dans les pilotes. Salle inconnue : venue_not_found.',
+      'Grille du pilotage de la salle : pour chaque piste, protocole, liaison (null : pilote arrêté), alerte BAD MATCH (null : aucune), épreuve en cours qui l’occupe, dernier affichage libre envoyé et son accusé (pending, acked, refused, mismatch avec les champs différents, no_response). Charge les appareils de la salle dans les pilotes. Salle inconnue : venue_not_found.',
     input: z.strictObject({ venueId: VenueId }),
     output: z.custom<VenueStripControl>(),
     permission: 'remote:admin',

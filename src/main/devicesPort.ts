@@ -183,6 +183,7 @@ export function createDevicesPort({
         if (!broker.running) return null;
         return opp2Driver.findPiste(device.piste)?.status ?? null;
       },
+      alert: piste => pisteHub.getAlerts()[piste] ?? null,
       send: (target, panel) => stripControl.send(target, panel),
       last: (piste, match) => stripControl.lastFor(piste, match),
     },

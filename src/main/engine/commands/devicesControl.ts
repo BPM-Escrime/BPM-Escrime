@@ -128,6 +128,7 @@ export const devicesControlHandlers: { [N in DevicesControlOps]: DevicesHandler<
             protocol: d?.device.protocol ?? null,
             piste: d?.piste ?? null,
             link: link(s.number),
+            alert: d ? (ctx.devices?.control.alert(d.piste) ?? null) : null,
             busy: occupancy.get(s.number) ?? null,
             last: d ? lastOf(ctx, venue.id, s.number, d.piste) : null,
           };

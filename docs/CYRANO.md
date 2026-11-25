@@ -186,7 +186,13 @@ externe qui envoyait les ordres aux appareils). Capture : [26-pilotage-salle](sc
 
 - **Grille** : n° et libellé, protocole, liaison (en ligne, incertain, hors ligne, jamais vu ;
   « pilote arrêté » si le pilote du protocole ne tourne pas), épreuve en cours qui occupe la
-  piste, dernier envoi et son accusé. Pilotes : cadre **Pilotes des appareils** juste au-dessus
+  piste, dernier envoi et son accusé, alerte **BAD MATCH** (l'appareil affiche un autre match que
+  celui de l'arène de l'épreuve).
+- **Secours par piste** (piste chargée dans un pilote démarré) : **ACK** forcé (appareil resté en
+  attente d'acquittement) et **Resynchroniser** (état oublié, match de l'arène ou affichage libre
+  renvoyé), mêmes commandes que dans la saisie distante (`runStripDeviceAction`). NEXT / PREV
+  restent dans la saisie distante : ils agissent sur la file des matchs de l'épreuve.
+- Pilotes : cadre **Pilotes des appareils** juste au-dessus
   (démarrage et arrêt, HELLO, journal). Ouvrir la
   grille charge les appareils de la salle dans les pilotes, après ceux des épreuves suivies
   (une piste du pilote commune aux deux reste à l'épreuve).
