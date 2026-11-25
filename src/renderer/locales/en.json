@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "Table with no touch limit",
     "summary_third_place": "3rd-place bout",
     "state_standard": "Standard",
-    "state_custom": "Custom",
-    "reset_standard": "Back to standard",
     "personalize": "Customize formula",
     "modal_title": "Competition formula",
     "round_settings_hint": "Touches, timer and scoring: those of round 1, applied to every round."
+  },
+  "formulaTemplates": {
+    "template": "Formula template",
+    "search_ph": "Search templates",
+    "provided": "Provided by the application",
+    "personal": "My templates",
+    "name_standard": "Standard",
+    "name_two_rounds": "2 pool rounds + table",
+    "name_pools_only": "Pools only",
+    "name_rapieres": "Rapier tournament",
+    "state_adapted": "Adapted · {{count}} difference(s)",
+    "state_free": "Free",
+    "reset": "Back to template",
+    "save_as": "Save as template",
+    "save_name_ph": "Template name",
+    "save": "Save",
+    "saved": "Template saved",
+    "save_error": "Could not save the template."
   }
 }

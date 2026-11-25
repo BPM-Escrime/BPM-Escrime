@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "Quadro sem limite de toques",
     "summary_third_place": "3.º lugar por sorteio",
     "state_standard": "Padrão",
-    "state_custom": "Personalizada",
-    "reset_standard": "Repor o padrão",
     "personalize": "Personalizar a fórmula",
     "modal_title": "Fórmula da competição",
     "round_settings_hint": "Toques, cronómetro e pontuação: os da volta 1, aplicados a todas as voltas."
+  },
+  "formulaTemplates": {
+    "template": "Modelo de fórmula",
+    "search_ph": "Procurar um modelo",
+    "provided": "Fornecidos pela aplicação",
+    "personal": "Os meus modelos",
+    "name_standard": "Padrão",
+    "name_two_rounds": "2 voltas de poules + quadro",
+    "name_pools_only": "Apenas poules",
+    "name_rapieres": "Torneio de rapieiras",
+    "state_adapted": "Adaptada · {{count}} diferença(s)",
+    "state_free": "Livre",
+    "reset": "Voltar ao modelo",
+    "save_as": "Guardar como modelo",
+    "save_name_ph": "Nome do modelo",
+    "save": "Guardar",
+    "saved": "Modelo guardado",
+    "save_error": "Não foi possível guardar o modelo."
   }
 }

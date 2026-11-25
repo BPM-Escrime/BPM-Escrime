@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "Tabellone senza limite di tocchi",
     "summary_third_place": "3° posto per sorteggio",
     "state_standard": "Standard",
-    "state_custom": "Personalizzata",
-    "reset_standard": "Torna allo standard",
     "personalize": "Personalizza la formula",
     "modal_title": "Formula della gara",
     "round_settings_hint": "Stoccate, cronometro e punteggio: quelli del turno 1, applicati a tutti i turni."
+  },
+  "formulaTemplates": {
+    "template": "Modello di formula",
+    "search_ph": "Cerca un modello",
+    "provided": "Forniti dall'applicazione",
+    "personal": "I miei modelli",
+    "name_standard": "Standard",
+    "name_two_rounds": "2 turni di gironi + tabellone",
+    "name_pools_only": "Solo gironi",
+    "name_rapieres": "Torneo delle rapiere",
+    "state_adapted": "Adattata · {{count}} differenza/e",
+    "state_free": "Libera",
+    "reset": "Torna al modello",
+    "save_as": "Salva come modello",
+    "save_name_ph": "Nome del modello",
+    "save": "Salva",
+    "saved": "Modello salvato",
+    "save_error": "Impossibile salvare il modello."
   }
 }

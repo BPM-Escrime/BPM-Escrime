@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "Cuadro sin límite de toques",
     "summary_third_place": "3.er puesto por sorteo",
     "state_standard": "Estándar",
-    "state_custom": "Personalizada",
-    "reset_standard": "Volver al estándar",
     "personalize": "Personalizar la fórmula",
     "modal_title": "Fórmula de la competición",
     "round_settings_hint": "Tocados, cronómetro y baremo: los de la ronda 1, aplicados a todas las rondas."
+  },
+  "formulaTemplates": {
+    "template": "Modelo de fórmula",
+    "search_ph": "Buscar un modelo",
+    "provided": "Proporcionados por la aplicación",
+    "personal": "Mis modelos",
+    "name_standard": "Estándar",
+    "name_two_rounds": "2 rondas de poules + cuadro",
+    "name_pools_only": "Solo poules",
+    "name_rapieres": "Torneo de las roperas",
+    "state_adapted": "Adaptada · {{count}} diferencia(s)",
+    "state_free": "Libre",
+    "reset": "Volver al modelo",
+    "save_as": "Guardar como modelo",
+    "save_name_ph": "Nombre del modelo",
+    "save": "Guardar",
+    "saved": "Modelo guardado",
+    "save_error": "No se pudo guardar el modelo."
   }
 }

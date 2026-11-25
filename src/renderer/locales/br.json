@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "Taolenn hep bevennadur touchennoù",
     "summary_third_place": "3vet plas tennet",
     "state_standard": "Standard",
-    "state_custom": "Personelaet",
-    "reset_standard": "Distreiñ d'ar standard",
     "personalize": "Personelaat ar formulenn",
     "modal_title": "Formulenn an dournadeg",
     "round_settings_hint": "Taolioù, amzer ha barem : re an dro 1, lakaet e pep tro."
+  },
+  "formulaTemplates": {
+    "template": "Patrom furmulenn",
+    "search_ph": "Klask ur patrom",
+    "provided": "Pourchaset gant an arload",
+    "personal": "Ma fatromoù",
+    "name_standard": "Standard",
+    "name_two_rounds": "2 dro poulennoù + taolenn",
+    "name_pools_only": "Poulennoù hepken",
+    "name_rapieres": "Tournamant ar rapierennoù",
+    "state_adapted": "Azasaet · {{count}} disheñvelder",
+    "state_free": "Dieub",
+    "reset": "Distreiñ d'ar patrom",
+    "save_as": "Enrollañ evel patrom",
+    "save_name_ph": "Anv ar patrom",
+    "save": "Enrollañ",
+    "saved": "Patrom enrollet",
+    "save_error": "N'eus ket bet gallet enrollañ ar patrom."
   }
 }

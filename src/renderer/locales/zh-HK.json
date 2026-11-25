@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "淘汰賽不限擊中次數",
     "summary_third_place": "季軍以抽籤決定",
     "state_standard": "標準",
-    "state_custom": "自訂",
-    "reset_standard": "恢復標準",
     "personalize": "自訂賽制",
     "modal_title": "賽事賽制",
     "round_settings_hint": "劍數、計時及計分：沿用第 1 輪，適用於所有輪次。"
+  },
+  "formulaTemplates": {
+    "template": "賽制範本",
+    "search_ph": "搜尋範本",
+    "provided": "應用程式提供",
+    "personal": "我的範本",
+    "name_standard": "標準",
+    "name_two_rounds": "2 輪分組賽 + 淘汰賽",
+    "name_pools_only": "只有分組賽",
+    "name_rapieres": "細劍錦標賽",
+    "state_adapted": "已調整 · {{count}} 處差異",
+    "state_free": "自訂",
+    "reset": "回復範本",
+    "save_as": "另存為範本",
+    "save_name_ph": "範本名稱",
+    "save": "儲存",
+    "saved": "範本已儲存",
+    "save_error": "無法儲存範本。"
   }
 }

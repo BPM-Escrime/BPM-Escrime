@@ -43,7 +43,7 @@ test.describe('Formule : interface actuelle et aperçu (application Electron)', 
     await win.getByTestId('formula-plus-1').click();
     await win.getByTestId('formula-add-pool-1').click();
     await expect(win.getByTestId('formula-step-pool-1')).toBeVisible();
-    await expect(win.getByTestId('formula-state')).toHaveText('Personnalisée');
+    await expect(win.getByTestId('formula-state')).toContainText('Adaptée');
     await expect(win.getByTestId('formula-summary')).toContainText('2 tours de poules');
 
     await win.getByLabel('Titre').fill('E2E Formule aperçu');
@@ -55,6 +55,17 @@ test.describe('Formule : interface actuelle et aperçu (application Electron)', 
     await win.getByTestId('organization-formula').click();
     await expect(win.getByTestId('formula-step-pool-1')).toBeVisible();
     await expect(win.getByTestId('formula-step-tableau')).toBeVisible();
+
+    // Modèle d'origine gardé : formule adaptée (2 tours au lieu d'un)
+    await expect(win.getByTestId('formula-state')).toContainText('Adaptée');
+
+    // Enregistrer comme modèle personnel, puis le retrouver dans la liste
+    await win.getByTestId('formula-save-as').click();
+    await win.getByTestId('formula-save-name').fill('E2E Mon modèle');
+    await win.getByTestId('formula-save-confirm').click();
+    await expect(win.getByTestId('formula-save-status')).toHaveText('Modèle enregistré');
+    await expect(win.getByTestId('formula-template-select')).toContainText('E2E Mon modèle');
+    await expect(win.getByTestId('formula-state')).toHaveText('Standard');
 
     // Retirer le tableau puis enregistrer : la frise rouverte n'a plus de tableau
     await win.getByTestId('formula-remove-tableau').click();

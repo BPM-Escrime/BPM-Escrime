@@ -766,6 +766,11 @@ export interface CompetitionSettings {
   trainerCommentsEnabled?: boolean; // Saisie distante formateurs : commentaires d'arbitrage (#989)
   customFormula?: CustomFormulaConfig; // Formule à la carte (arme CUSTOM uniquement)
   specialMode?: CompetitionSpecialMode; // Mode spécial (arme CUSTOM) : tournoi des rapières (#1118)
+  /**
+   * Modèle d'où vient la formule (docs/adr/0033) : provenance, pas un réglage. Absent = formule
+   * libre. L'état Standard / Adaptée est calculé en comparant la formule à ce modèle.
+   */
+  formulaOrigin?: { templateId: string; season?: string };
   playAllPositions?: boolean; // Jouer toutes les places (tableaux de classement)
   expertMode?: boolean; // Mode expert : édition avancée des pistes et arbitres (actif par défaut)
   maxRefereesPerPool?: number; // Nombre max d'arbitres par poule (mode expert)

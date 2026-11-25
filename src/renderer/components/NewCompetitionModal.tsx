@@ -35,6 +35,13 @@ import {
 } from '../../shared/domain/formula/formulaDraft';
 import { normalizeCustomFormula } from '../../shared/domain/formula/formulaFrieze';
 import { deriveSettingsFromFormula } from '../../shared/utils/customFormulaSettings';
+import {
+  formulaDeviations,
+  templateMatches,
+  type FormulaTemplate,
+  type FormulaTemplateBody,
+} from '../../shared/domain/formula/formulaTemplate';
+import { useFormulaTemplates } from '../hooks/useFormulaTemplates';
 
 interface NewCompetitionModalProps {
   onClose: () => void;
@@ -67,6 +74,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
   const formulaPreview = useFormulaPreview();
   const [personalDraft, setPersonalDraft] = useState<FormulaDraft | null>(null);
   const [customPersonalized, setCustomPersonalized] = useState(false);
+  const [templateId, setTemplateId] = useState<string | null>(null);
   const [isTeamEvent, setIsTeamEvent] = useState(false);
   const [teamSize, setTeamSize] = useState(3);
   const [teamReserveCount, setTeamReserveCount] = useState(1);
@@ -143,25 +151,76 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
       specialMode,
     });
 
+  // Modèle de départ (docs/adr/0033) : standard de l'arme × catégorie × type tant que rien
+  // n'est choisi ni personnalisé ; changer de contexte revient au standard du nouveau (Q21)
+  const templates = useFormulaTemplates({ weapon, category, isTeamEvent });
+  const personalized = personalDraft !== null || customPersonalized;
+  const chosen = templateId ? templates.all.find(x => x.id === templateId) : undefined;
+  useEffect(() => {
+    if (personalized || !chosen) return;
+    if (templateMatches(chosen, { weapon, category, isTeamEvent })) return;
+    // Modèle choisi hors du nouveau contexte : retour au standard, mode spécial compris
+    setTemplateId(null);
+    setSpecialMode(undefined);
+    setCustomFormula(createDefaultCustomFormula());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- réagit au seul changement de contexte ; chosen et personalized sont lus à ce moment-là
+  }, [weapon, category, isTeamEvent]);
+  const activeTemplate = chosen ?? templates.standard;
+
   const standardDraft = () => draftFromSettings(weapon, category, buildSettings());
-  const currentDraft = () => personalDraft ?? standardDraft();
+  const baseDraft = () =>
+    activeTemplate?.body.kind === 'draft' ? activeTemplate.body.draft : standardDraft();
+  const currentDraft = () => personalDraft ?? baseDraft();
+  const originOf = (tpl: FormulaTemplate | undefined) =>
+    tpl ? { templateId: tpl.id, ...(tpl.season ? { season: tpl.season } : {}) } : undefined;
 
   // Réglages de la formule de la nouvelle interface, appliqués par-dessus les réglages de base
-  // (et par-dessus un brouillon de Propriétés plus ancien) ; standard non personnalisé : rien
+  // (et par-dessus un brouillon de Propriétés plus ancien). Standard non personnalisé : seule
+  // l'origine s'ajoute, les réglages restent ceux d'aujourd'hui.
   const formulaSettings = (): Partial<Competition['settings']> => {
     if (!formulaPreview) return {};
+    const formulaOrigin = originOf(activeTemplate);
+    const origin = formulaOrigin ? { formulaOrigin } : {};
     if (weapon === Weapon.CUSTOM) {
       const norm = normalizeCustomFormula(customFormula);
-      return { customFormula: norm, ...deriveSettingsFromFormula(norm) };
+      return { customFormula: norm, ...deriveSettingsFromFormula(norm), ...origin };
     }
-    return personalDraft
-      ? draftToSettings(personalDraft, weapon, buildSettings()?.questConfig)
-      : {};
+    if (!personalDraft && activeTemplate && activeTemplate.id === templates.standard?.id)
+      return origin;
+    return { ...draftToSettings(currentDraft(), weapon, buildSettings()?.questConfig), ...origin };
   };
 
-  const resetFormula = () => {
+  const selectTemplate = (tpl: FormulaTemplate) => {
+    setTemplateId(tpl.id);
     setPersonalDraft(null);
-    setCustomFormula(createDefaultCustomFormula());
+    setCustomPersonalized(false);
+    if (tpl.body.kind === 'custom') {
+      setCustomFormula(tpl.body.formula);
+      setSpecialMode(tpl.body.specialMode);
+    }
+  };
+
+  const formulaState = () =>
+    formulaDeviations(
+      { weapon, category, settings: { ...buildSettings(), ...formulaSettings() } },
+      templates.all
+    );
+
+  const saveAsTemplate = async (name: string) => {
+    const body: FormulaTemplateBody =
+      weapon === Weapon.CUSTOM
+        ? {
+            kind: 'custom',
+            formula: normalizeCustomFormula(customFormula),
+            ...(specialMode ? { specialMode } : {}),
+          }
+        : { kind: 'draft', draft: currentDraft() };
+    const origin =
+      activeTemplate?.source === 'provided' ? originOf(activeTemplate) : activeTemplate?.origin;
+    const { template } = await templates.save({ name, body, ...(origin ? { origin } : {}) });
+    templates.reload();
+    setTemplateId(template.id);
+    setPersonalDraft(null);
     setCustomPersonalized(false);
   };
 
@@ -502,7 +561,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
                   category={category}
                   draft={currentDraft()}
                   onDraftChange={patch =>
-                    setPersonalDraft(prev => ({ ...(prev ?? standardDraft()), ...patch }))
+                    setPersonalDraft(prev => ({ ...(prev ?? baseDraft()), ...patch }))
                   }
                   customFormula={customFormula}
                   onCustomChange={f => {
@@ -511,8 +570,17 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
                   }}
                   specialMode={isCustom ? specialMode : undefined}
                   onSpecialModeChange={isCustom ? setSpecialMode : undefined}
-                  personalized={isCustom ? customPersonalized : personalDraft !== null}
-                  onResetStandard={resetFormula}
+                  picker={{
+                    templates: templates.templates,
+                    selectedId: activeTemplate?.id ?? null,
+                    onSelect: selectTemplate,
+                    ...(() => {
+                      const { state, deviations } = formulaState();
+                      return { state, deviations };
+                    })(),
+                    onReset: activeTemplate ? () => selectTemplate(activeTemplate) : undefined,
+                    onSaveAs: templates.available ? saveAsTemplate : undefined,
+                  }}
                 />
               )}
 

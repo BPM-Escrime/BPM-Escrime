@@ -35,9 +35,13 @@ describe.each(LOCAL)('wsRefusal : opérations %s*', prefix => {
 });
 
 describe('opérations du poste : pas d’outil MCP', () => {
-  it('aucune opération club:*, station:* ou remote:* n’est exposée à l’agent', () => {
+  it('aucune opération club:*, station:* ou remote:* n’est exposée à l’agent, sauf exception d’ADR', () => {
+    // Exceptions décidées par ADR, en lecture seulement :
+    // - listFormulaTemplates : modèles de formule, ni secret ni effet externe (docs/adr/0033)
+    const ADR_EXCEPTIONS = ['listFormulaTemplates'];
     const exposed = localOps.filter(n => (contract[n] as { mcp?: unknown }).mcp);
-    expect(exposed).toEqual([]);
+    expect(exposed).toEqual(ADR_EXCEPTIONS);
+    for (const n of ADR_EXCEPTIONS) expect(contract[n as keyof typeof contract].kind).toBe('query');
   });
 });
 

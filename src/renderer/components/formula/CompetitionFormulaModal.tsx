@@ -27,6 +27,13 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { FormulaEditor } from './FormulaEditor';
+import { FormulaTemplatePicker } from './FormulaTemplatePicker';
+import { useFormulaTemplates } from '../../hooks/useFormulaTemplates';
+import {
+  formulaDeviations,
+  type FormulaTemplate,
+  type FormulaTemplateBody,
+} from '../../../shared/domain/formula/formulaTemplate';
 
 /** Réglages enregistrés après modification de la formule (fonction pure, testée) */
 export function formulaSettingsUpdate(
@@ -61,11 +68,54 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onSave, 
   );
   const [saving, setSaving] = useState(false);
   const rapieres = isRapieresMode(competition.weapon, competition.settings);
+  // Modèle d'origine (docs/adr/0033) : gardé tant qu'on n'en choisit pas un autre
+  const [origin, setOrigin] = useState(competition.settings?.formulaOrigin);
+  const [specialMode, setSpecialMode] = useState(competition.settings?.specialMode);
+  const templates = useFormulaTemplates({
+    weapon: competition.weapon,
+    category: competition.category,
+    isTeamEvent: !!competition.isTeamEvent,
+  });
+
+  const nextSettings = (): CompetitionSettings => ({
+    ...formulaSettingsUpdate(competition, draft, customFormula),
+    ...(competition.weapon === Weapon.CUSTOM ? { specialMode } : {}),
+    formulaOrigin: origin,
+  });
+  const { state, deviations } = formulaDeviations(
+    { weapon: competition.weapon, category: competition.category, settings: nextSettings() },
+    templates.all
+  );
+  const selected = origin ? templates.all.find(x => x.id === origin.templateId) : undefined;
+
+  const selectTemplate = (tpl: FormulaTemplate) => {
+    setOrigin({ templateId: tpl.id, ...(tpl.season ? { season: tpl.season } : {}) });
+    if (tpl.body.kind === 'draft') setDraft(tpl.body.draft);
+    else {
+      setCustomFormula(tpl.body.formula);
+      setSpecialMode(tpl.body.specialMode);
+    }
+  };
+
+  const saveAs = async (name: string) => {
+    const body: FormulaTemplateBody =
+      competition.weapon === Weapon.CUSTOM
+        ? {
+            kind: 'custom',
+            formula: normalizeCustomFormula(customFormula),
+            ...(specialMode ? { specialMode } : {}),
+          }
+        : { kind: 'draft', draft };
+    const from = selected?.source === 'provided' ? origin : selected?.origin;
+    const { template } = await templates.save({ name, body, ...(from ? { origin: from } : {}) });
+    templates.reload();
+    setOrigin({ templateId: template.id });
+  };
 
   const save = async () => {
     setSaving(true);
     try {
-      await onSave({ settings: formulaSettingsUpdate(competition, draft, customFormula) });
+      await onSave({ settings: nextSettings() });
       onClose();
     } finally {
       setSaving(false);
@@ -96,6 +146,15 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onSave, 
         </>
       }
     >
+      <FormulaTemplatePicker
+        templates={templates.templates}
+        selectedId={selected?.id ?? null}
+        onSelect={selectTemplate}
+        state={state}
+        deviations={deviations}
+        onReset={selected ? () => selectTemplate(selected) : undefined}
+        onSaveAs={templates.available ? saveAs : undefined}
+      />
       <FormulaEditor
         weapon={competition.weapon}
         category={competition.category}

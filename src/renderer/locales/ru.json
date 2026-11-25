@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "Таблица без ограничения уколов",
     "summary_third_place": "3-е место — по жеребьёвке",
     "state_standard": "Стандартная",
-    "state_custom": "Пользовательская",
-    "reset_standard": "Вернуть стандартную",
     "personalize": "Настроить формулу",
     "modal_title": "Формула соревнования",
     "round_settings_hint": "Уколы, время и система очков: как в первом круге, для всех кругов."
+  },
+  "formulaTemplates": {
+    "template": "Шаблон формулы",
+    "search_ph": "Найти шаблон",
+    "provided": "Встроенные в приложение",
+    "personal": "Мои шаблоны",
+    "name_standard": "Стандарт",
+    "name_two_rounds": "2 круга пулов + таблица",
+    "name_pools_only": "Только пулы",
+    "name_rapieres": "Турнир рапир",
+    "state_adapted": "Изменена · отличий: {{count}}",
+    "state_free": "Свободная",
+    "reset": "Вернуться к шаблону",
+    "save_as": "Сохранить как шаблон",
+    "save_name_ph": "Название шаблона",
+    "save": "Сохранить",
+    "saved": "Шаблон сохранён",
+    "save_error": "Не удалось сохранить шаблон."
   }
 }

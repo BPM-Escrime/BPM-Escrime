@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "Tableau sans limite de touches",
     "summary_third_place": "3ᵉ place tirée",
     "state_standard": "Standard",
-    "state_custom": "Personnalisée",
-    "reset_standard": "Revenir au standard",
     "personalize": "Personnaliser la formule",
     "modal_title": "Formule de l'épreuve",
     "round_settings_hint": "Touches, chrono et barème : ceux du tour 1, appliqués à tous les tours."
+  },
+  "formulaTemplates": {
+    "template": "Modèle de formule",
+    "search_ph": "Rechercher un modèle",
+    "provided": "Fournis par l'application",
+    "personal": "Mes modèles",
+    "name_standard": "Standard",
+    "name_two_rounds": "2 tours de poules + tableau",
+    "name_pools_only": "Poules seules",
+    "name_rapieres": "Tournoi des rapières",
+    "state_adapted": "Adaptée · {{count}} écart(s)",
+    "state_free": "Libre",
+    "reset": "Revenir au modèle",
+    "save_as": "Enregistrer comme modèle",
+    "save_name_ph": "Nom du modèle",
+    "save": "Enregistrer",
+    "saved": "Modèle enregistré",
+    "save_error": "Impossible d'enregistrer le modèle."
   }
 }

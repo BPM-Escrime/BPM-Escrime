@@ -899,3 +899,44 @@ button.formula-frieze__step {
 .formula-editor > .formula-frieze {
   padding-top: 0.5rem;
 }
+
+/* Sélecteur de modèle de formule (#2013 étape B2, docs/adr/0033) */
+.formula-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.formula-picker__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.formula-picker__search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text-muted);
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+.formula-picker__select {
+  flex: 2 1 14rem;
+  min-width: 0;
+}
+.formula-picker__name {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.formula-picker__ok {
+  color: var(--color-success);
+  font-size: 0.85rem;
+}
+.formula-picker__error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}
+.formula-collapsed__badge.is-adapted {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}

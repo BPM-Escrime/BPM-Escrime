@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "Direktausscheidungen ohne Trefferlimit",
     "summary_third_place": "3. Platz ausgelost",
     "state_standard": "Standard",
-    "state_custom": "Benutzerdefiniert",
-    "reset_standard": "Zurück zum Standard",
     "personalize": "Formel anpassen",
     "modal_title": "Formel des Wettbewerbs",
     "round_settings_hint": "Treffer, Zeit und Wertung: die der Runde 1, für alle Runden."
+  },
+  "formulaTemplates": {
+    "template": "Formelvorlage",
+    "search_ph": "Vorlage suchen",
+    "provided": "Von der Anwendung bereitgestellt",
+    "personal": "Meine Vorlagen",
+    "name_standard": "Standard",
+    "name_two_rounds": "2 Poolrunden + Tableau",
+    "name_pools_only": "Nur Pools",
+    "name_rapieres": "Rapier-Turnier",
+    "state_adapted": "Angepasst · {{count}} Abweichung(en)",
+    "state_free": "Frei",
+    "reset": "Zur Vorlage zurück",
+    "save_as": "Als Vorlage speichern",
+    "save_name_ph": "Name der Vorlage",
+    "save": "Speichern",
+    "saved": "Vorlage gespeichert",
+    "save_error": "Vorlage konnte nicht gespeichert werden."
   }
 }

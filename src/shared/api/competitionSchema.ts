@@ -104,6 +104,10 @@ export const CompetitionSettingsSchema = z.strictObject({
   trainerCommentsEnabled: z.boolean().optional(),
   customFormula: CustomFormulaSchema.optional(),
   specialMode: z.enum(['rapieres']).optional(),
+  /** Modèle d'origine de la formule (docs/adr/0033) */
+  formulaOrigin: z
+    .strictObject({ templateId: z.string().min(1).max(200), season: z.string().max(40).optional() })
+    .optional(),
   playAllPositions: z.boolean().optional(),
   expertMode: z.boolean().optional(),
   maxRefereesPerPool: Count.optional(),

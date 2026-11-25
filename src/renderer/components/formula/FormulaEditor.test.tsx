@@ -141,33 +141,72 @@ describe('Création : formule repliée (aperçu)', () => {
     expect(screen.queryByRole('option', { name: 'newCompetition.custom' })).toBeNull();
   });
 
-  it('sans personnaliser : mêmes réglages qu’aujourd’hui, aucun clic de plus', () => {
+  it('sans personnaliser : mêmes réglages qu’aujourd’hui, plus l’origine standard', () => {
     const { onCreate, submit } = setup();
     expect(screen.getByTestId('formula-state')).toHaveTextContent('formulaEditor.state_standard');
+    expect(screen.getByTestId('formula-template-select')).toHaveValue('bpm/E/SEN/ind/standard');
     submit();
     const expected = buildDefaultCompetitionSettings({
       weapon: Weapon.EPEE,
       category: Category.SENIOR,
     });
-    expect(onCreate.mock.calls[0][0].settings).toEqual(expected);
+    expect(onCreate.mock.calls[0][0].settings).toEqual({
+      ...expected,
+      formulaOrigin: { templateId: 'bpm/E/SEN/ind/standard' },
+    });
+  });
+
+  it('changer de catégorie présélectionne le standard de la nouvelle catégorie', () => {
+    setup();
+    fireEvent.change(document.getElementById('new-competition-category')!, {
+      target: { value: Category.U13 },
+    });
+    expect(screen.getByTestId('formula-template-select')).toHaveValue('bpm/E/U13/ind/standard');
+    expect(screen.getByTestId('formula-summary')).toHaveTextContent('formulaEditor.summary_pools');
+  });
+
+  it('choisir un autre modèle fourni : appliqué et enregistré avec son origine', () => {
+    const { onCreate, submit } = setup();
+    fireEvent.change(screen.getByTestId('formula-template-select'), {
+      target: { value: 'bpm/E/SEN/ind/two_rounds' },
+    });
+    expect(screen.getByTestId('formula-state')).toHaveTextContent('formulaEditor.state_standard');
+    submit();
+    const settings = onCreate.mock.calls[0][0].settings;
+    expect(settings.poolRounds).toBe(2);
+    expect(settings.formulaOrigin).toEqual({ templateId: 'bpm/E/SEN/ind/two_rounds' });
+  });
+
+  it('arme « Autre » : le modèle Tournoi des rapières active le mode spécial', () => {
+    const { onCreate, submit } = setup();
+    fireEvent.change(document.getElementById('new-competition-weapon')!, {
+      target: { value: Weapon.CUSTOM },
+    });
+    fireEvent.change(screen.getByTestId('formula-template-select'), {
+      target: { value: 'bpm/C/rapieres' },
+    });
+    submit();
+    const settings = onCreate.mock.calls[0][0].settings;
+    expect(settings.specialMode).toBe('rapieres');
+    expect(settings.formulaOrigin).toEqual({ templateId: 'bpm/C/rapieres' });
   });
 
   it('personnalisée : le tour ajouté est enregistré', () => {
     const { onCreate, submit } = setup();
     fireEvent.click(screen.getByTestId('formula-plus-1'));
     fireEvent.click(screen.getByTestId('formula-add-pool-1'));
-    expect(screen.getByTestId('formula-state')).toHaveTextContent('formulaEditor.state_custom');
+    expect(screen.getByTestId('formula-state')).toHaveTextContent('formulaTemplates.state_adapted');
     submit();
     const settings = onCreate.mock.calls[0][0].settings;
     expect(settings.poolRounds).toBe(2);
     expect(settings.hasDirectElimination).toBe(true);
   });
 
-  it('« Revenir au standard » annule la personnalisation', () => {
+  it('« Revenir au modèle » annule la personnalisation', () => {
     const { onCreate, submit } = setup();
     fireEvent.click(screen.getByTestId('formula-plus-1'));
     fireEvent.click(screen.getByTestId('formula-add-pool-1'));
-    fireEvent.click(screen.getByText('formulaEditor.reset_standard'));
+    fireEvent.click(screen.getByText('formulaTemplates.reset'));
     submit();
     expect(onCreate.mock.calls[0][0].settings.poolRounds).toBe(1);
   });

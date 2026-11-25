@@ -13,7 +13,7 @@ import {
   summarizeDraft,
 } from '../../../shared/domain/formula/formulaFrieze';
 import { useTranslation } from '../../hooks/useTranslation';
-import { Button } from '../common/Button';
+import { FormulaTemplatePicker } from './FormulaTemplatePicker';
 import { FormulaEditor, FormulaEditorProps } from './FormulaEditor';
 
 type Translate = (key: string, params?: { [key: string]: string | number }) => string;
@@ -37,14 +37,13 @@ export function formatFormulaSummary(parts: FormulaSummaryPart[], t: Translate):
 }
 
 interface Props extends FormulaEditorProps {
-  /** Formule modifiée par l'utilisateur (sinon : standard de l'arme et de la catégorie) */
-  personalized: boolean;
-  onResetStandard: () => void;
+  /** Sélecteur de modèle (docs/adr/0033) */
+  picker: React.ComponentProps<typeof FormulaTemplatePicker>;
 }
 
-export const FormulaCreationSection: React.FC<Props> = props => {
+export const FormulaCreationSection: React.FC<Props> = ({ picker, ...props }) => {
   const { t } = useTranslation();
-  const { weapon, draft, customFormula, specialMode, personalized, onResetStandard } = props;
+  const { weapon, draft, customFormula, specialMode } = props;
   const parts =
     weapon === Weapon.CUSTOM
       ? summarizeCustomFormula(customFormula)
@@ -55,18 +54,8 @@ export const FormulaCreationSection: React.FC<Props> = props => {
     <div className="form-group formula-collapsed" data-testid="formula-collapsed">
       <div className="formula-collapsed__head">
         <span className="form-label">{t('formulaEditor.formula')}</span>
-        <span
-          className={`formula-collapsed__badge${personalized ? '' : ' is-standard'}`}
-          data-testid="formula-state"
-        >
-          {personalized ? t('formulaEditor.state_custom') : t('formulaEditor.state_standard')}
-        </span>
-        {personalized && (
-          <Button type="button" variant="ghost" onClick={onResetStandard}>
-            {t('formulaEditor.reset_standard')}
-          </Button>
-        )}
       </div>
+      <FormulaTemplatePicker {...picker} />
       <p className="formula-collapsed__summary" data-testid="formula-summary">
         {summary}
       </p>

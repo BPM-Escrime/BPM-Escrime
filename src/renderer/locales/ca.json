@@ -4743,10 +4743,26 @@
     "summary_tableau_unlimited": "Quadre sense límit de tocs",
     "summary_third_place": "3r lloc per sorteig",
     "state_standard": "Estàndard",
-    "state_custom": "Personalitzada",
-    "reset_standard": "Torna a l'estàndard",
     "personalize": "Personalitza la fórmula",
     "modal_title": "Fórmula de la competició",
     "round_settings_hint": "Tocs, cronòmetre i barem: els de la ronda 1, aplicats a totes les rondes."
+  },
+  "formulaTemplates": {
+    "template": "Model de fórmula",
+    "search_ph": "Cerca un model",
+    "provided": "Proporcionats per l'aplicació",
+    "personal": "Els meus models",
+    "name_standard": "Estàndard",
+    "name_two_rounds": "2 rondes de poules + quadre",
+    "name_pools_only": "Només poules",
+    "name_rapieres": "Torneig de les roperes",
+    "state_adapted": "Adaptada · {{count}} diferència(es)",
+    "state_free": "Lliure",
+    "reset": "Torna al model",
+    "save_as": "Desa com a model",
+    "save_name_ph": "Nom del model",
+    "save": "Desa",
+    "saved": "Model desat",
+    "save_error": "No s'ha pogut desar el model."
   }
 }

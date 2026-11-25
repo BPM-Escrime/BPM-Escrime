@@ -92,7 +92,11 @@ function competitionData(args: Args) {
   if (Number.isNaN(new Date(date).getTime())) {
     throw new McpToolError('« date » invalide (AAAA-MM-JJ)');
   }
-  const weapon = pick(args.weapon, [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE], 'weapon');
+  const weapon = pick(
+    args.weapon,
+    [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE, Weapon.LASER, Weapon.CUSTOM],
+    'weapon'
+  );
   const gender = pick(args.gender, [Gender.MALE, Gender.FEMALE, Gender.MIXED], 'gender');
   const category = pick(args.category, Object.values(Category), 'category');
   return {
@@ -102,6 +106,10 @@ function competitionData(args: Args) {
     gender,
     category,
     ...(typeof args.location === 'string' ? { location: args.location.slice(0, 200) } : {}),
+    // Modèle de formule de départ (docs/adr/0033), vérifié par le moteur
+    ...(typeof args.templateId === 'string' && args.templateId
+      ? { templateId: args.templateId.slice(0, 200) }
+      : {}),
   };
 }
 
@@ -275,16 +283,17 @@ export const MCP_WRITE_TOOLS: McpWriteTool[] = [
     name: 'create_competition',
     title: 'Créer une épreuve',
     description:
-      'Crée une épreuve avec les réglages par défaut de l’application (identiques à la fenêtre « Nouvelle compétition »).',
+      'Crée une épreuve avec les réglages par défaut de l’application (identiques à la fenêtre « Nouvelle compétition »), ou ceux d’un modèle de formule (« templateId », voir list_formula_templates). Armes : E épée, F fleuret, S sabre, L Sabre Laser, C autre.',
     inputSchema: {
       type: 'object',
       properties: {
         title: { type: 'string' },
         date: { type: 'string', description: 'AAAA-MM-JJ' },
-        weapon: { type: 'string', enum: ['E', 'F', 'S'] },
+        weapon: { type: 'string', enum: ['E', 'F', 'S', 'L', 'C'] },
         gender: { type: 'string', enum: ['M', 'F', 'X'] },
         category: { type: 'string', enum: Object.values(Category) },
         location: { type: 'string' },
+        templateId: { type: 'string', description: 'Modèle de formule (list_formula_templates)' },
         ...dryRunProp,
       },
       required: ['title', 'date', 'weapon', 'gender', 'category'],
@@ -337,7 +346,7 @@ export const MCP_WRITE_TOOLS: McpWriteTool[] = [
             type: 'object',
             properties: {
               title: { type: 'string' },
-              weapon: { type: 'string', enum: ['E', 'F', 'S'] },
+              weapon: { type: 'string', enum: ['E', 'F', 'S', 'L', 'C'] },
               gender: { type: 'string', enum: ['M', 'F', 'X'] },
               category: { type: 'string', enum: Object.values(Category) },
               fencersFile: { type: 'string', description: 'Chemin absolu (facultatif)' },

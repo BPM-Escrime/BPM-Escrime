@@ -187,11 +187,11 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (69)
+## Référence des outils (73)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
-### En lecture (18)
+### En lecture (20)
 
 ### `list_competitions` — Lister les épreuves
 
@@ -326,6 +326,25 @@ Aucun argument.
 | `since` | integer |  | Dernière révision connue (0 : tout) |
 | `limit` | integer |  | Nombre maximum (1000) |
 
+### `get_competition_formula` — Lire la formule d’une épreuve
+
+*lecture.* Formule d’une épreuve : phases de la frise (clés pool-0, pool-1…, quest, tableau), réglages, briques autorisées à chaque position (insertOptions[i] : avant la phase i ; dernier : en fin), origine, état standard / adapted / free et écarts au modèle, relevé de cohérence avec la catégorie.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+
+### `list_formula_templates` — Lister les modèles de formule
+
+*lecture.* Modèles de formule : fournis par l’application (lecture seule) puis personnels du poste. Filtres facultatifs : arme, catégorie, épreuve par équipes, texte. « standardId » : modèle standard du contexte (arme donnée).
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `weapon` | `E`, `F`, `S`, `L`, `C` |  |  |
+| `category` | `U9`, `U11`, `U13`, `U15`, `U17`, `U20`, `SEN`, `V1`, `V2`, `V3`, `V4` |  |  |
+| `isTeamEvent` | boolean |  |  |
+| `text` | string |  |  |
+
 ### `get_strip_plan` — Plan des pistes
 
 *lecture.* Plan des pistes de l’épreuve : première piste et pistes indisponibles (plan par défaut : piste 1, aucune indisponible ; updatedAt null).
@@ -334,20 +353,21 @@ Aucun argument.
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 
-### En écriture, sur autorisation (51)
+### En écriture, sur autorisation (53)
 
 ### `create_competition` — Créer une épreuve
 
-*écriture.* Crée une épreuve avec les réglages par défaut de l’application (identiques à la fenêtre « Nouvelle compétition »).
+*écriture.* Crée une épreuve avec les réglages par défaut de l’application (identiques à la fenêtre « Nouvelle compétition »), ou ceux d’un modèle de formule (« templateId », voir list_formula_templates). Armes : E épée, F fleuret, S sabre, L Sabre Laser, C autre.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `title` | string | oui |  |
 | `date` | string | oui | AAAA-MM-JJ |
-| `weapon` | `E`, `F`, `S` | oui |  |
+| `weapon` | `E`, `F`, `S`, `L`, `C` | oui |  |
 | `gender` | `M`, `F`, `X` | oui |  |
 | `category` | `U9`, `U11`, `U13`, `U15`, `U17`, `U20`, `SEN`, `V1`, `V2`, `V3`, `V4` | oui |  |
 | `location` | string |  |  |
+| `templateId` | string |  | Modèle de formule (list_formula_templates) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 
 ### `import_fencers` — Importer des tireurs
@@ -792,6 +812,30 @@ Aucun argument.
 | `poolNumber` | integer |  | Numéro de la poule |
 | `matchId` | string |  | Match de poule ou de tableau (list_matches) |
 | `refereeId` | string / null | oui | Identifiant de l’arbitre (list_referees), ou null |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `apply_formula_template` — Appliquer un modèle de formule
+
+*écriture.* Applique un modèle de formule (list_formula_templates) compatible avec l’arme, la catégorie et le type de l’épreuve ; l’origine est enregistrée. Formule de l’arme « Autre » figée après le tirage (draw_done).
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `templateId` | string | oui | Modèle de formule (list_formula_templates) |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `update_competition_formula` — Modifier la formule d’une épreuve
+
+*écriture.* Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau, position « at » comme insertOptions), removePhase (clé de phase), setPhase (clé, réglages de la phase), setGeneral (réglages généraux). Grammaire et bornes de l’écran ; refus : invalid_settings, draw_done.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `operations` | valeur[] | oui |  |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
