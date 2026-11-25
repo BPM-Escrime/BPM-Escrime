@@ -11,13 +11,9 @@
  * eux viennent le plus tôt (application générale de o.70.1).
  */
 
-import type { Fencer } from '../types';
-import {
-  generatePoolMatchOrder,
-  generateRoundRobinOrder,
-  parseBoutTable,
-  type SeparationCriterionKey,
-} from './poolCalculations';
+import type { Fencer } from '../../types';
+import { generatePoolMatchOrder, generateRoundRobinOrder, parseBoutTable } from './poolMatchOrder';
+import type { SeparationCriterionKey } from './poolDistribution';
 
 /** Ordre des matchs : règlement (défaut) ou rondes de Berger sans placement (club, entraînement) */
 export type PoolBoutOrderMode = 'fie' | 'free';

@@ -21,11 +21,10 @@ import {
 } from '../types';
 import {
   calculateOptimalPoolCount,
-  calculateOverallRanking,
-  calculatePoolRanking,
   distributeFencersToPoolsSerpentine,
-  generatePoolMatchOrder,
-} from './poolCalculations';
+} from '../domain/pools/poolDistribution';
+import { calculateOverallRanking, calculatePoolRanking } from '../domain/pools/poolRanking';
+import { generatePoolMatchOrder } from '../domain/pools/poolMatchOrder';
 import {
   calculateTableRanking,
   createDirectEliminationTable,
@@ -189,7 +188,13 @@ export function simulateTournament(options: SimulationOptions): SimulationResult
 
   // --- Poules
   const poolCount = calculateOptimalPoolCount(fencerCount, minPoolSize, maxPoolSize);
-  const distribution = distributeFencersToPoolsSerpentine(fencers, poolCount, ['byClub']);
+  const distribution = distributeFencersToPoolsSerpentine(
+    fencers,
+    poolCount,
+    ['byClub'],
+    [],
+    Math.random
+  );
   // Le tirage des positions dans la poule utilise Math.random : on le refait
   // avec le PRNG pour rester déterministe.
   const pools = distribution.map((poolFencers, i) =>

@@ -13,14 +13,14 @@ import {
   type PoolRanking,
   type Score,
 } from '../types';
+import { calculateOptimalPoolCount } from '../domain/pools/poolDistribution';
 import {
-  calculateOptimalPoolCount,
   calculateOverallRanking,
   calculateOverallRankingQuest,
   calculatePoolRanking,
   calculatePoolRankingQuest,
-} from './poolCalculations';
-import type { PoolBoutOrderMode } from './poolBoutOrder';
+} from '../domain/pools/poolRanking';
+import type { PoolBoutOrderMode } from '../domain/pools/poolBoutOrder';
 import { drawPools, type PoolSeparation } from '../domain/pools/poolDraw';
 import { mergeRoundRankings } from './poolRounds';
 import { isTieAtScoreLimit } from '../domain/match/matchEndValidation';

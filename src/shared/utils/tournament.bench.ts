@@ -4,7 +4,7 @@
  */
 import { describe, test } from 'vitest';
 import { simulateTournament } from './tournamentSimulator';
-import { calculateOverallRanking, calculatePoolRanking } from './poolCalculations';
+import { calculateOverallRanking, calculatePoolRanking } from '../domain/pools/poolRanking';
 import {
   calculateTableRanking,
   createDirectEliminationTable,

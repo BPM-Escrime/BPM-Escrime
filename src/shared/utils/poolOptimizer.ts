@@ -6,7 +6,7 @@
  */
 
 import { Fencer } from '../types';
-import { SeparationCriterionKey } from './poolCalculations';
+import { SeparationCriterionKey } from '../domain/pools/poolDistribution';
 
 /** Valeur de séparation d'un tireur pour un critère (vide → aucun conflit possible) */
 export function separationValue(fencer: Fencer, key: SeparationCriterionKey): string | undefined {

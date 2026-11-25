@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { FencerStatus } from '../../shared/types';
 import type { Competition, Fencer, Pool, PoolRanking, QuestPhaseConfig } from '../../shared/types';
-import { generateInitialRanking } from '../../shared/utils/poolCalculations';
+import { generateInitialRanking } from '../../shared/domain/pools/poolRanking';
 import { getRoundQualifierCount, selectNextRoundFencers } from '../../shared/utils/poolRounds';
 import {
   getAdvancementCount,

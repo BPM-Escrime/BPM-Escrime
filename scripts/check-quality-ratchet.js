@@ -44,6 +44,9 @@
  *                  src/shared/domain (#1979, docs/adr/0002)
  *   - featuresImports : fichiers de src/main, src/shared ou src/database qui importent
  *                  src/features, couche d'interface (#1979, docs/adr/0004)
+ *   - domainUtilsImports : fichiers de src/shared/domain qui importent src/shared/utils.
+ *                  Le domaine ne dépend que de shared/types : la règle importée migre dans
+ *                  src/shared/domain (docs/adr/0002, #2197)
  *   - ipcChannels : canaux `ipcMain.handle` / `ipcMain.on` / `ipcMain.handleOnce` de src/main.
  *                  Une nouvelle écriture passe par `api:invoke` (contrat), pas par un nouveau
  *                  canal `db:*` / `club:*` (docs/adr/0005, 0018)
@@ -89,6 +92,7 @@ const COUNTERS = [
   'unnamedButton',
   'rendererImports',
   'featuresImports',
+  'domainUtilsImports',
   'ipcChannels',
   'directDbWrites',
   'depsUnjustified',
@@ -187,10 +191,12 @@ const inDir = (file, ...parts) => file.startsWith(path.join(SRC, ...parts) + pat
 /** Couche visée par un chemin importé depuis `file` : 'renderer', 'features' ou null (#1979) */
 function importedLayer(file, spec) {
   if (/^@renderer\//.test(spec)) return 'renderer';
+  if (/^@shared\/utils\//.test(spec)) return 'utils';
   if (!spec.startsWith('.')) return null;
   const target = path.resolve(path.dirname(file), spec);
   if (inDir(target, 'renderer') || target === path.join(SRC, 'renderer')) return 'renderer';
   if (inDir(target, 'features') || target === path.join(SRC, 'features')) return 'features';
+  if (inDir(target, 'shared', 'utils')) return 'utils';
   return null;
 }
 
@@ -251,6 +257,7 @@ function analyze(file) {
   const commandOnly = inDir(file, 'main', 'remote') || inDir(file, 'main', 'mcp');
   // Couches (#1979) : un fichier compte une fois par compteur
   const lowerLayer = inDir(file, 'main') || inDir(file, 'shared') || inDir(file, 'database');
+  const domain = inDir(file, 'shared', 'domain');
   const once = (key, line) => {
     if (hits[key].length === 0) hits[key].push(line);
   };
@@ -266,6 +273,7 @@ function analyze(file) {
       const layer = spec && importedLayer(file, spec);
       if (layer === 'renderer') once('rendererImports', at(node));
       if (layer === 'features') once('featuresImports', at(node));
+      if (layer === 'utils' && domain) once('domainUtilsImports', at(node));
     }
     if (
       main &&

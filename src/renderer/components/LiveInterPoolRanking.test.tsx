@@ -15,7 +15,7 @@ vi.mock('../hooks/useTranslation', () => ({
 vi.mock('../hooks/useFocusTrap', () => ({ useFocusTrap: () => ({ current: null }) }));
 
 const calculateOverallRanking = vi.fn(() => []);
-vi.mock('../../shared/utils/poolCalculations', async importOriginal => ({
+vi.mock('../../shared/domain/pools/poolRanking', async importOriginal => ({
   ...(await importOriginal<object>()),
   calculateOverallRanking: (...a: unknown[]) => (calculateOverallRanking as any)(...a),
 }));

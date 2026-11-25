@@ -4,22 +4,20 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { generatePoolMatchOrder } from '../domain/pools/poolMatchOrder';
+import { calculateFencerPoolStats } from '../domain/pools/poolStats';
 import {
-  generatePoolMatchOrder,
-  calculateFencerPoolStats,
   calculatePoolRanking,
   calculateOverallRanking,
-  formatRatio,
-  formatIndex,
   calculateOverallRankingQuest,
   calculatePoolRankingQuest,
-  formatQuestPerMatch,
-  isDnf,
-  isDnsRanking,
-  isMatchVoidedByForfeit,
+} from '../domain/pools/poolRanking';
+import { formatRatio, formatIndex, formatQuestPerMatch } from './poolCalculations';
+import { isDnf, isDnsRanking, isMatchVoidedByForfeit } from '../domain/pools/poolForfeit';
+import {
   distributeFencersGroupedByLevel,
   distributeFencersToPoolsSerpentine,
-} from './poolCalculations';
+} from '../domain/pools/poolDistribution';
 import { Fencer, FencerStatus, Match, MatchStatus, Pool, Score, Gender } from '../types';
 
 // ============================================================================
@@ -893,7 +891,7 @@ describe('distributeFencersToPoolsSerpentine — classement déplaçable', () =>
   it('club avant classement : descente hors du chapeau pour éviter le conflit', () => {
     // C : 3 tireurs / 3 poules → quota 1 par poule
     const fs = fencers.map(f => (['f5', 'f6'].includes(f.id) ? { ...f, club: f.id } : f));
-    const pools = distributeFencersToPoolsSerpentine(fs, 3, ['byClub']);
+    const pools = distributeFencersToPoolsSerpentine(fs, 3, ['byClub'], [], Math.random);
     expect(poolOf(pools, 'f4')).not.toBe(poolOf(pools, 'f3'));
     expect(poolOf(pools, 'f7')).not.toBe(poolOf(pools, 'f3'));
   });
@@ -904,7 +902,7 @@ describe('distributeFencersToPoolsSerpentine — classement déplaçable', () =>
       ranking: i + 1,
       club: i < 8 ? 'BIG' : `S${i}`,
     }));
-    const pools = distributeFencersToPoolsSerpentine(fs, 4, ['byClub']);
+    const pools = distributeFencersToPoolsSerpentine(fs, 4, ['byClub'], [], Math.random);
     pools.forEach(p => expect(p.filter(f => f.club === 'BIG').length).toBeLessThanOrEqual(2));
   });
 
@@ -916,7 +914,7 @@ describe('distributeFencersToPoolsSerpentine — classement déplaçable', () =>
       ranking: i + 1,
       club,
     }));
-    const pools = distributeFencersToPoolsSerpentine(fs, 3, [], ['byClub']);
+    const pools = distributeFencersToPoolsSerpentine(fs, 3, [], ['byClub'], Math.random);
     const total = (c: string) => fs.filter(f => f.club === c).length;
     pools.forEach(p =>
       ['A', 'B', 'C'].forEach(c =>
@@ -928,13 +926,13 @@ describe('distributeFencersToPoolsSerpentine — classement déplaçable', () =>
 
   it('têtes de poule jamais déplacées (premier chapeau)', () => {
     const fs = fencers.map(f => (f.id === 'f2' ? { ...f, club: 'A' } : f));
-    const pools = distributeFencersToPoolsSerpentine(fs, 3, ['byClub']);
+    const pools = distributeFencersToPoolsSerpentine(fs, 3, ['byClub'], [], Math.random);
     expect([0, 1, 2].map(i => poolOf(pools, `f${i + 1}`))).toEqual([0, 1, 2]);
   });
 
   it('nation vide : pas de conflit entre tireurs sans nationalité', () => {
     const fs = fencers.map(f => ({ ...f, club: f.id, nationality: '' }));
-    const pools = distributeFencersToPoolsSerpentine(fs, 3, ['byNation']);
+    const pools = distributeFencersToPoolsSerpentine(fs, 3, ['byNation'], [], Math.random);
     expect(pools.map(p => p.map(f => f.ranking).sort((x, y) => (x ?? 0) - (y ?? 0)))).toEqual([
       [1, 6, 7],
       [2, 5, 8],
@@ -943,14 +941,14 @@ describe('distributeFencersToPoolsSerpentine — classement déplaçable', () =>
   });
 
   it('club après classement : pas de descente hors du chapeau', () => {
-    const pools = distributeFencersToPoolsSerpentine(fencers, 3, [], ['byClub']);
+    const pools = distributeFencersToPoolsSerpentine(fencers, 3, [], ['byClub'], Math.random);
     expect(poolOf(pools, 'f4')).toBe(poolOf(pools, 'f3'));
     expect(pools.map(p => p.length)).toEqual([3, 3, 3]);
   });
 
   it('club après classement : échange dans le chapeau si possible', () => {
     const fs = fencers.map(f => (f.id === 'f5' ? { ...f, club: 'W' } : f));
-    const pools = distributeFencersToPoolsSerpentine(fs, 3, [], ['byClub']);
+    const pools = distributeFencersToPoolsSerpentine(fs, 3, [], ['byClub'], Math.random);
     expect(poolOf(pools, 'f5')).toBe(poolOf(pools, 'f3'));
     expect(poolOf(pools, 'f7')).not.toBe(poolOf(pools, 'f3'));
   });

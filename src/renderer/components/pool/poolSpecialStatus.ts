@@ -5,7 +5,7 @@
  */
 
 import type { Fencer } from '../../../shared/types';
-import { LASER_FORFEIT_WINNER_SCORE } from '../../../shared/utils/poolCalculations';
+import { LASER_FORFEIT_WINNER_SCORE } from '../../../shared/domain/pools/poolForfeit';
 import type { SpecialStatusFencer } from '../common/SpecialStatusPanel';
 
 export interface SpecialStatusOutcomeInput {

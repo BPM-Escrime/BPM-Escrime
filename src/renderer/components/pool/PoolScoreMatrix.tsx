@@ -1,12 +1,11 @@
 import { TipButton } from '../Tooltip';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Pool, Fencer, Score, MatchStatus, FencerStatus } from '../../../shared/types';
+import { formatRatio, formatIndex } from '../../../shared/utils/poolCalculations';
 import {
-  formatRatio,
-  formatIndex,
   isMatchCancelledByForfeit,
   isMatchVoidedByForfeit,
-} from '../../../shared/utils/poolCalculations';
+} from '../../../shared/domain/pools/poolForfeit';
 import { ColumnId } from '../../hooks/useColumnVisibility';
 import { useTranslation } from '../../hooks/useTranslation';
 import { usePoolNumbering } from '../../hooks/usePoolNumbering';

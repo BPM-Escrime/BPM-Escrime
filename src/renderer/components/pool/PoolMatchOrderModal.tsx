@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
-import { boutsForTable, type PoolBoutTable } from '../../../shared/utils/poolBoutOrder';
+import { boutsForTable, type PoolBoutTable } from '../../../shared/domain/pools/poolBoutOrder';
 
 /** Variantes réglementaires par taille (FIE o.70.3 et o.70.4, #1964) */
 const VARIANTS: Record<number, PoolBoutTable[]> = {

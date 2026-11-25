@@ -13,9 +13,8 @@ import { TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import {
   calculateOverallRanking,
   calculateOverallRankingQuest,
-  formatRatio,
-  formatIndex,
-} from '../../shared/utils/poolCalculations';
+} from '../../shared/domain/pools/poolRanking';
+import { formatRatio, formatIndex } from '../../shared/utils/poolCalculations';
 import { ChartColumn, Medal, Pause, Trophy } from 'lucide-react';
 import { RankMedal } from './common/RankMedal';
 import { Icon } from './common/Icon';

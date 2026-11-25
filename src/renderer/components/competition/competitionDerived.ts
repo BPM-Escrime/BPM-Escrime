@@ -4,7 +4,7 @@
  * Licensed under GPL-3.0
  */
 import type { Pool } from '../../../shared/types';
-import { getPoolWinnerIds } from '../../../shared/utils/poolCalculations';
+import { getPoolWinnerIds } from '../../../shared/domain/pools/poolRanking';
 
 type TranslateFn = (key: string, params?: { [key: string]: string | number }) => string;
 

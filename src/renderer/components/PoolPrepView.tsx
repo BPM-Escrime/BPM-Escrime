@@ -10,7 +10,7 @@ import {
   calculateOptimalPoolCount,
   separationQuota,
   SeparationCriterionKey,
-} from '../../shared/utils/poolCalculations';
+} from '../../shared/domain/pools/poolDistribution';
 import {
   countConflicts,
   minConflicts,
@@ -22,7 +22,7 @@ import {
   planPoolBouts,
   type PoolBoutOrderMode,
   type PoolBoutPlan,
-} from '../../shared/utils/poolBoutOrder';
+} from '../../shared/domain/pools/poolBoutOrder';
 import { useUndoStack } from '../hooks/useUndoStack';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from './Toast';

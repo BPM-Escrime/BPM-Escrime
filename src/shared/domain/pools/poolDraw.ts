@@ -10,8 +10,8 @@ import {
   distributeFencersGroupedByLevel,
   distributeFencersToPoolsSerpentine,
   type SeparationCriterionKey,
-} from '../../utils/poolCalculations';
-import { planPoolBouts, type PoolBoutOrderMode } from '../../utils/poolBoutOrder';
+} from './poolDistribution';
+import { planPoolBouts, type PoolBoutOrderMode } from './poolBoutOrder';
 
 /** Critère de séparation, dans l'ordre de priorité ; « byRanking » = position du serpentin */
 export type PoolSeparationKey = SeparationCriterionKey | 'byLevel' | 'byRanking';

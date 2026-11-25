@@ -18,18 +18,15 @@ import { statusCode } from '../../shared/utils/forfeit';
 import { usePdfTemplateStore } from '../../features/pdfTemplates/hooks/usePdfTemplateStore';
 import { CENTER, W40, W50, W60, SM, FLEX_GAP } from './poolRankingView.styles';
 import { useTranslation } from '../hooks/useTranslation';
+import { formatRatio, formatIndex, formatQuestPerMatch } from '../../shared/utils/poolCalculations';
 import {
-  formatRatio,
-  formatIndex,
-  formatQuestPerMatch,
   calculateOverallRankingQuest,
   calculateOverallRanking,
   calculatePoolRanking,
   calculatePoolRankingQuest,
   getPoolWinnerIds,
-  isDnf,
-  isDnsRanking,
-} from '../../shared/utils/poolCalculations';
+} from '../../shared/domain/pools/poolRanking';
+import { isDnf, isDnsRanking } from '../../shared/domain/pools/poolForfeit';
 import { splitRankingByGender } from '../../shared/domain/ranking/splitGroups';
 import { useToast } from './Toast';
 import { CardIcon } from './common/CardIcon';

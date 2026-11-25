@@ -5,7 +5,7 @@
  */
 
 import { Pool, Match, MatchStatus, Fencer } from '../../types';
-import { calculateFencerQuestStats } from '../poolCalculations';
+import { calculateFencerQuestStats } from '../../domain/pools/questPoints';
 import type { PdfTemplate } from '../../types/pdfTemplate.types';
 import {
   savePDF,

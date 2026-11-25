@@ -23,7 +23,7 @@ import {
   QuestFight,
   OpponentConstraint,
 } from '../../shared/utils/questScheduler';
-import { calculatePoolRankingQuest } from '../../shared/utils/poolCalculations';
+import { calculatePoolRankingQuest } from '../../shared/domain/pools/poolRanking';
 import { formatRatio } from '../../shared/utils/poolCalculations';
 import PoolView from './PoolView';
 import {
