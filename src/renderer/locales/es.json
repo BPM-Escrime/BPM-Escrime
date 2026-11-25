@@ -2859,7 +2859,8 @@
     "all_places": "{{a}}/{{b}} asaltos (todos los puestos)",
     "all_places_title": "Asaltos de la competición: cuadro principal y clasificación de todos los puestos",
     "organization_formula_desc": "Fases de la competición y sus ajustes",
-    "organization_notes_desc": "Notas, incidencias y comentarios durante toda la competición"
+    "organization_notes_desc": "Notas, incidencias y comentarios durante toda la competición",
+    "goto_entry_ranking": "Clasificación de entrada"
   },
   "offline": {
     "never": "Nunca",
@@ -4748,7 +4749,12 @@
     "personalize": "Personalizar la fórmula",
     "modal_title": "Fórmula de la competición",
     "round_settings_hint": "Tocados, cronómetro y baremo: los de la ronda 1, aplicados a todas las rondas.",
-    "save_error": "No se pudo guardar la fórmula."
+    "save_error": "No se pudo guardar la fórmula.",
+    "sim_fencers": "Tiradores simulados",
+    "seeding": "Reparto de esta ronda",
+    "seeding_previous": "Clasificación de la ronda anterior",
+    "seeding_cumulative": "Acumulado de las rondas disputadas",
+    "seeding_hint": "Los tiradores clasificados se reparten en las poules de esta ronda según esta clasificación."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",

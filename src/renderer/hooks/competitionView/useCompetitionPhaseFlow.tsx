@@ -26,6 +26,7 @@ import { useCompetitionSessionSync } from './useCompetitionSessionSync';
 import { useCompetitionCore } from './useCompetitionCore';
 import { usePoolCorrection } from './usePoolCorrection';
 import { useToast } from '../../components/Toast';
+import { startsWithTableau } from '../../../shared/domain/formula/formulaSteps';
 
 type Ctx = CompetitionViewProps &
   ReturnType<typeof useCompetitionCore> &
@@ -149,6 +150,9 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     questConfig,
     auditLogEnabled,
     refereeFeatureEnabled: !!competition.settings?.refereeFeatureEnabled,
+    // Formule enregistrée sans tour de poules : le tableau suit l'appel (ADR-0037)
+    tableauFirst:
+      !!competition.settings?.formula && startsWithTableau(competition.settings.formula),
   });
   useRemoteCheckinSync({
     competitionId: competition.id,

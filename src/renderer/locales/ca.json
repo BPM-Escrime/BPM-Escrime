@@ -2859,7 +2859,8 @@
     "all_places": "{{a}}/{{b}} assalts (tots els llocs)",
     "all_places_title": "Assalts de la competició: quadre principal i classificació de tots els llocs",
     "organization_formula_desc": "Fases de la competició i la seva configuració",
-    "organization_notes_desc": "Notes, incidències i comentaris al llarg de la competició"
+    "organization_notes_desc": "Notes, incidències i comentaris al llarg de la competició",
+    "goto_entry_ranking": "Classificació d'entrada"
   },
   "offline": {
     "never": "Mai",
@@ -4748,7 +4749,12 @@
     "personalize": "Personalitza la fórmula",
     "modal_title": "Fórmula de la competició",
     "round_settings_hint": "Tocs, cronòmetre i barem: els de la ronda 1, aplicats a totes les rondes.",
-    "save_error": "No s'ha pogut desar la fórmula."
+    "save_error": "No s'ha pogut desar la fórmula.",
+    "sim_fencers": "Tiradors simulats",
+    "seeding": "Distribució d'aquesta ronda",
+    "seeding_previous": "Classificació de la ronda anterior",
+    "seeding_cumulative": "Acumulat de les rondes jugades",
+    "seeding_hint": "Els tiradors classificats es reparteixen a les poules d'aquesta ronda segons aquesta classificació."
   },
   "formulaTemplates": {
     "template": "Model de fórmula",

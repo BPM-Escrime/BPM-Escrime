@@ -21,13 +21,14 @@ import { areAllPoolsComplete as allPoolsComplete } from '../../shared/domain/poo
 
 interface UsePoolManagementProps {
   isLaserSabre: boolean;
-  poolMaxScore: number;
+  /** Score max des poules du tour `round` (1 = 1er), lu par phase dans la formule (ADR-0036) */
+  poolMaxScoreFor: (round: number) => number;
   showToast: ReturnType<typeof useToast>['showToast'];
 }
 
 export const usePoolManagement = ({
   isLaserSabre,
-  poolMaxScore,
+  poolMaxScoreFor,
   showToast,
 }: UsePoolManagementProps) => {
   const { t } = useTranslation();
@@ -79,7 +80,7 @@ export const usePoolManagement = ({
 
       // Tirage partagé avec la couche domaine (MCP, #1880)
       const generatedPools = buildPools(checkedInFencers, {
-        poolMaxScore,
+        poolMaxScore: poolMaxScoreFor(round),
         round,
         newId: () => crypto.randomUUID(),
       });
@@ -96,7 +97,7 @@ export const usePoolManagement = ({
       showToast(`${generatedPools.length} poules créées avec succès`, 'success');
       return generatedPools;
     },
-    [poolMaxScore, computeOverallRanking, computeOverallRankingAllRounds, showToast]
+    [poolMaxScoreFor, computeOverallRanking, computeOverallRankingAllRounds, showToast]
   );
 
   // Mettre à jour un score

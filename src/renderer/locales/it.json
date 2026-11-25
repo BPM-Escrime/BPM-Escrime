@@ -2859,7 +2859,8 @@
     "all_places": "{{a}}/{{b}} assalti (tutti i posti)",
     "all_places_title": "Assalti della gara: tabellone principale e classificazione di tutti i posti",
     "organization_formula_desc": "Fasi della gara e relative impostazioni",
-    "organization_notes_desc": "Note, incidenti e riscontri per tutta la gara"
+    "organization_notes_desc": "Note, incidenti e riscontri per tutta la gara",
+    "goto_entry_ranking": "Classifica di ingresso"
   },
   "offline": {
     "never": "Mai",
@@ -4748,7 +4749,12 @@
     "personalize": "Personalizza la formula",
     "modal_title": "Formula della gara",
     "round_settings_hint": "Stoccate, cronometro e punteggio: quelli del turno 1, applicati a tutti i turni.",
-    "save_error": "Impossibile salvare la formula."
+    "save_error": "Impossibile salvare la formula.",
+    "sim_fencers": "Schermidori simulati",
+    "seeding": "Distribuzione di questo turno",
+    "seeding_previous": "Classifica del turno precedente",
+    "seeding_cumulative": "Cumulo dei turni disputati",
+    "seeding_hint": "Gli schermidori qualificati sono distribuiti nei gironi di questo turno secondo questa classifica."
   },
   "formulaTemplates": {
     "template": "Modello di formula",

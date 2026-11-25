@@ -14,6 +14,7 @@ import {
   type CompetitionSettings,
   type CustomFormulaConfig,
 } from '../types';
+import type { FormulaV2 } from '../domain/formula/formulaV2';
 
 const Count = z.number().int().min(0);
 const Text = z.string().max(500);
@@ -114,6 +115,13 @@ export const CompetitionSettingsSchema = z.strictObject({
   trainerCommentsEnabled: z.boolean().optional(),
   customFormula: CustomFormulaSchema.optional(),
   specialMode: z.enum(['rapieres']).optional(),
+  /** Formule v2 (docs/adr/0036) : forme jugée par le domaine à l'écriture */
+  formula: z
+    .custom<FormulaV2>(
+      v => typeof v === 'object' && v !== null && (v as { version?: unknown }).version === 2,
+      'Formule invalide (version 2 attendue)'
+    )
+    .optional(),
   /** Modèle d'origine de la formule (docs/adr/0033) */
   formulaOrigin: z
     .strictObject({ templateId: z.string().min(1).max(200), season: z.string().max(40).optional() })

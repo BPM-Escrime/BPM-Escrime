@@ -16,6 +16,7 @@ import {
 } from './contractDef';
 import { Category, Weapon, type CustomFormulaConfig } from '../types';
 import type { FormulaDraft } from '../domain/formula/formulaDraft';
+import type { FormulaV2 } from '../domain/formula/formulaV2';
 import type { CoherenceIssue } from '../utils/formulaCoherence';
 
 const WeaponEnum = z.enum(Weapon);
@@ -44,6 +45,9 @@ export const formulaOperations = {
         z.object({ kind: z.string(), key: z.string(), round: z.number().optional() })
       ),
       insertOptions: z.array(z.array(z.enum(['pool', 'quest', 'tableau']))),
+      formula: z
+        .custom<FormulaV2>()
+        .describe('Formule v2 (docs/adr/0036) : phases et réglages de chaque tour'),
       draft: z.custom<FormulaDraft>().optional(),
       customFormula: z.custom<CustomFormulaConfig>().optional(),
       coherence: z.array(z.custom<CoherenceIssue>()),
@@ -80,7 +84,7 @@ export const formulaOperations = {
 
   updateCompetitionFormula: command({
     description:
-      'Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau, position « at » comme insertOptions), removePhase (clé de phase), setPhase (clé, réglages de la phase), setGeneral (réglages généraux). Grammaire et bornes de l’écran ; refus : invalid_settings, draw_done.',
+      'Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau, position « at » comme insertOptions), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode, count, percentage } ou qualifiers, seeding previous_round | cumulative, boutOrder, scoring ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring ; Tour Quest qualifiersCount), setGeneral (restTimeSeconds, ruleSet, postPoolSplitCriteria). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour ; refus : invalid_settings, draw_done.',
     input: z.object({
       competitionId: CompetitionId,
       operations: z
@@ -117,5 +121,24 @@ export const formulaOperations = {
     }),
     permission: 'competition:write',
     mcp: { name: 'update_competition_formula', title: 'Modifier la formule d’une épreuve' },
+  }),
+
+  closeTableauStage: command({
+    description:
+      'Clôt un tableau arrêté à N tireurs (formule enregistrée, docs/adr/0037) : quand tous les matchs avant l’arrêt sont joués, les N restants passent à la phase suivante (classement = rang d’entrée), les éliminés sortent (classés par tour atteint puis rang d’entrée). Refus : invalid_settings (formule sans tableau arrêté suivi d’une phase), tableau_stage_not_complete.',
+    input: z.object({
+      competitionId: CompetitionId,
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({
+      dryRun: z.boolean(),
+      stopAt: z.number().int(),
+      qualified: z.number().int(),
+      eliminated: z.number().int(),
+      revision: Revision,
+    }),
+    permission: 'score:write',
   }),
 };

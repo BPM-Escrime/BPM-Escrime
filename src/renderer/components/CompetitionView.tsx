@@ -41,6 +41,7 @@ import CompetitionNav from './competition/CompetitionNav';
 import OrganizationModal from './competition/OrganizationModal';
 import { CompetitionFormulaModal } from './formula/CompetitionFormulaModal';
 import { useFormulaPreview } from '../hooks/useFormulaPreview';
+import { startsWithTableau } from '../../shared/domain/formula/formulaSteps';
 import CompetitionExportModals from './competition/CompetitionExportModals';
 import CompetitionSecondaryModals from './competition/CompetitionSecondaryModals';
 import RefereesPhase from './competition/RefereesPhase';
@@ -304,6 +305,9 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     competition.id
   );
 
+  // Formule enregistrée sans tour de poules : le tableau suit l'appel (ADR-0037)
+  const storedFormula = competition.settings?.formula;
+  const tableauFirst = !!storedFormula && startsWithTableau(storedFormula);
   const organizerNotes = useOrganizerNotes(competition, onUpdate);
 
   return (
@@ -373,7 +377,9 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         language={language}
         t={t}
         handleGoBack={handleGoBack}
-        handleGeneratePools={handleGeneratePools}
+        // Formule sans tour de poules (ADR-0037) : l'appel mène au classement d'entrée
+        handleGeneratePools={tableauFirst ? () => void handleSkipToRanking() : handleGeneratePools}
+        generateLabelKey={tableauFirst ? 'competitionNav.goto_entry_ranking' : undefined}
         checkinUnchanged={checkinUnchanged}
         poolsNextAction={poolsNextAction}
         rankingTableauAction={currentPhase === 'ranking' ? rankingTableauAction : null}

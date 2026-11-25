@@ -5,14 +5,11 @@
  */
 import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { FencerStatus } from '../../shared/types';
+import { FencerStatus, Weapon } from '../../shared/types';
+import { nextRoundPlan } from '../../shared/domain/pools/roundSeeding';
 import type { Competition, Fencer, Pool, PoolRanking, QuestPhaseConfig } from '../../shared/types';
 import { generateInitialRanking } from '../../shared/utils/poolCalculations';
-import { getRoundQualifierCount, selectNextRoundFencers } from '../../shared/utils/poolRounds';
-import {
-  getAdvancementCount,
-  getPoolRoundAdvancement,
-} from '../../shared/utils/customFormulaSettings';
+import { selectNextRoundFencers } from '../../shared/utils/poolRounds';
 import type { getActiveFormula } from '../../shared/utils/customFormulaSettings';
 import {
   rapieresSemifinalists,
@@ -44,6 +41,8 @@ interface UseCompetitionNavigationParams {
   updateFencers: ReturnType<typeof useFencerManagement>['updateFencers'];
   getCheckedInFencers: () => Fencer[];
   pools: Pool[];
+  /** Tours de poules terminés (cumul des tours, Q4) */
+  poolHistory?: Pool[][];
   setPools: Setter<Pool[]>;
   overallRanking: PoolRanking[];
   setOverallRanking: Setter<PoolRanking[]>;
@@ -85,6 +84,7 @@ export function useCompetitionNavigation({
   updateFencers,
   getCheckedInFencers,
   pools,
+  poolHistory,
   setPools,
   overallRanking,
   setOverallRanking,
@@ -92,8 +92,6 @@ export function useCompetitionNavigation({
   nextPoolRound,
   currentPoolRound,
   currentAppelFencers,
-  poolRoundQualifiers,
-  customFormula,
   thirdPlaceMatch,
   playAllPositions,
   isRapieres,
@@ -318,16 +316,16 @@ export function useCompetitionNavigation({
   const handleNextPoolRound = async () => {
     if ((await closeRoundByCommand()) !== 'local') return;
     const nextRound = currentPoolRound + 1;
-    const qualifierCount = customFormula
-      ? getAdvancementCount(
-          computeOverallRanking(pools).length,
-          getPoolRoundAdvancement(customFormula, currentPoolRound - 1)
-        )
-      : getRoundQualifierCount(poolRoundQualifiers, nextRound);
-    const { qualified, eliminated } = selectNextRoundFencers(
-      computeOverallRanking(pools),
-      qualifierCount
-    );
+    // Même plan que le moteur (classement du tour ou cumul, qualifiés de la formule, ADR-0036)
+    const plan = nextRoundPlan({
+      weapon: competition.weapon,
+      settings: competition.settings,
+      round: currentPoolRound,
+      pools,
+      history: poolHistory ?? [],
+      isLaserSabre: competition.weapon === Weapon.LASER,
+    });
+    const { qualified, eliminated } = selectNextRoundFencers(plan.ranking, plan.qualifierCount);
     if (qualified.length < 4) {
       showToast('Il faut au moins 4 qualifiés pour un nouveau tour de poules.', 'warning');
       return;

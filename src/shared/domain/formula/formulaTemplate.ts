@@ -16,11 +16,19 @@ import {
 import { deriveSettingsFromFormula } from '../../utils/customFormulaSettings';
 import { FormulaDraft, draftFromSettings, draftToSettings } from './formulaDraft';
 import { normalizeCustomFormula } from './formulaFrieze';
+import { flatSettingsOf, formulaOf, type FormulaV2 } from './formulaV2';
+import { formulaV2Issues, operationsBetweenV2 } from './formulaV2Operations';
 import { validateFormulaSettings } from './validateFormulaSettings';
 
 export type FormulaTemplateBody =
   | { kind: 'draft'; draft: FormulaDraft }
-  | { kind: 'custom'; formula: CustomFormulaConfig; specialMode?: CompetitionSpecialMode };
+  | { kind: 'custom'; formula: CustomFormulaConfig; specialMode?: CompetitionSpecialMode }
+  /** Formule v2 (ADR-0036) ; `other` : modèle de l'arme « Autre » */
+  | { kind: 'formula'; formula: FormulaV2; other?: boolean; specialMode?: CompetitionSpecialMode };
+
+/** Le modèle est-il un modèle de l'arme « Autre » ? */
+const isOtherBody = (b: FormulaTemplateBody) =>
+  b.kind === 'custom' || (b.kind === 'formula' && b.other === true);
 
 export interface FormulaTemplateApplies {
   weapons?: Weapon[];
@@ -59,7 +67,7 @@ export interface TemplateContext {
 /** Le modèle s'applique-t-il à cette épreuve ? (« Autre » : formule de l'arme 'C' seulement) */
 export function templateMatches(t: FormulaTemplate, ctx: TemplateContext): boolean {
   const isOther = ctx.weapon === Weapon.CUSTOM;
-  if ((t.body.kind === 'custom') !== isOther) return false;
+  if (isOtherBody(t.body) !== isOther) return false;
   const a = t.applies ?? {};
   if (a.weapons && !a.weapons.includes(ctx.weapon)) return false;
   if (a.categories && ctx.category && !a.categories.includes(ctx.category)) return false;
@@ -105,6 +113,14 @@ export function templateToSettings(
   base: Partial<CompetitionSettings> | undefined
 ): Partial<CompetitionSettings> {
   const formulaOrigin = { templateId: t.id, ...(t.season ? { season: t.season } : {}) };
+  if (t.body.kind === 'formula') {
+    return {
+      ...flatSettingsOf(t.body.formula, weapon),
+      formula: t.body.formula,
+      ...(weapon === Weapon.CUSTOM ? { specialMode: t.body.specialMode } : {}),
+      formulaOrigin,
+    };
+  }
   if (t.body.kind === 'custom') {
     const formula = normalizeCustomFormula(t.body.formula);
     return {
@@ -174,6 +190,20 @@ export function templateIssues(t: unknown): string[] {
       const issues = results.find(r => r.length === 0) ?? results[0];
       out.push(...issues.map(i => `body.draft (${i.field} : ${i.message})`));
     }
+  } else if (body.kind === 'formula') {
+    const f = body.formula as FormulaV2 | undefined;
+    if (!isObj(f) || f.version !== 2 || !Array.isArray(f.phases) || !isObj(f.general))
+      return [...out, 'body.formula (formule v2 attendue)'];
+    if (body.specialMode !== undefined && body.specialMode !== 'rapieres')
+      out.push('body.specialMode');
+    const applies = isObj(t.applies) ? (t.applies as FormulaTemplateApplies) : {};
+    const scopes = body.other
+      ? [{ weapon: Weapon.CUSTOM }]
+      : applies.weapons?.length
+        ? [{ weapon: applies.weapons[0], isTeamEvent: applies.team === true }]
+        : [{ weapon: Weapon.EPEE }, { weapon: Weapon.LASER }];
+    const results = scopes.map(scope => formulaV2Issues(f, scope));
+    out.push(...(results.find(r => r.length === 0) ?? results[0]).map(i => `body.formula (${i})`));
   } else if (body.kind === 'custom') {
     if (body.specialMode !== undefined && body.specialMode !== 'rapieres')
       out.push('body.specialMode');
@@ -237,6 +267,50 @@ export function formulaDeviations(
   const template = originId ? templates.find(t => t.id === originId) : undefined;
   if (!template) return { state: 'free', deviations: [] };
   const deviations: FormulaDeviation[] = [];
+  // Formule v2 enregistrée ou modèle v2 : comparaison phase par phase (ADR-0036)
+  if (competition.settings?.formula || template.body.kind === 'formula') {
+    const expected =
+      template.body.kind === 'formula'
+        ? template.body.formula
+        : formulaOf({
+            weapon: competition.weapon,
+            category: competition.category,
+            settings: {
+              ...competition.settings,
+              formula: undefined,
+              ...templateToSettings(template, competition.weapon, competition.settings),
+            },
+          });
+    const actual = formulaOf(competition);
+    for (const o of operationsBetweenV2(expected, actual)) {
+      if (o.op === 'setPhase') {
+        for (const [k, v] of Object.entries(o.settings)) {
+          // Taille de poule : réglage libre du modèle (Q9)
+          if (k === 'sizeMin' || k === 'sizeMax' || k === 'label') continue;
+          deviations.push({ field: `${o.phase}.${k}`, expected: undefined, actual: v });
+        }
+      } else if (o.op === 'setGeneral') {
+        for (const [k, v] of Object.entries(o.settings))
+          deviations.push({ field: k, expected: undefined, actual: v });
+      } else {
+        deviations.push({
+          field: o.op === 'insertPhase' ? `+${o.brick}` : `-${o.phase}`,
+          expected: undefined,
+          actual: undefined,
+        });
+      }
+    }
+    if (
+      template.body.kind !== 'draft' &&
+      (competition.settings?.specialMode ?? null) !== (template.body.specialMode ?? null)
+    )
+      deviations.push({
+        field: 'specialMode',
+        expected: template.body.specialMode,
+        actual: competition.settings?.specialMode,
+      });
+    return { state: deviations.length ? 'adapted' : 'standard', template, deviations };
+  }
   if (template.body.kind === 'custom') {
     const actual = competition.settings?.customFormula;
     const expected = template.body.formula;

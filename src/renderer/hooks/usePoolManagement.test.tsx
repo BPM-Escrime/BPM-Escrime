@@ -30,7 +30,11 @@ beforeEach(() => {
 
 const setup = () =>
   renderHook(() =>
-    usePoolManagement({ isLaserSabre: false, poolMaxScore: 5, showToast: showToast as any })
+    usePoolManagement({
+      isLaserSabre: false,
+      poolMaxScoreFor: () => 5,
+      showToast: showToast as any,
+    })
   ).result;
 
 describe('generatePools', () => {

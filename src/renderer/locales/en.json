@@ -2859,7 +2859,8 @@
     "all_places": "{{a}}/{{b}} bouts (all places)",
     "all_places_title": "Competition bouts: main table and classification of all places",
     "organization_formula_desc": "Competition phases and their settings",
-    "organization_notes_desc": "Notes, incidents and feedback throughout the event"
+    "organization_notes_desc": "Notes, incidents and feedback throughout the event",
+    "goto_entry_ranking": "Entry ranking"
   },
   "offline": {
     "never": "Never",
@@ -4748,7 +4749,12 @@
     "personalize": "Customize formula",
     "modal_title": "Competition formula",
     "round_settings_hint": "Touches, timer and scoring: those of round 1, applied to every round.",
-    "save_error": "Could not save the formula."
+    "save_error": "Could not save the formula.",
+    "sim_fencers": "Simulated fencers",
+    "seeding": "Seeding of this round",
+    "seeding_previous": "Ranking of the previous round",
+    "seeding_cumulative": "Cumulative ranking of all rounds",
+    "seeding_hint": "Qualified fencers are seeded into this round's pools from this ranking."
   },
   "formulaTemplates": {
     "template": "Formula template",

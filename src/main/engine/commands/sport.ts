@@ -82,6 +82,7 @@ import { EVENT, recordEvents } from './eventLog';
 import { resolveSetting } from './settings';
 import { bracketMatchView, fencerRef, readSession, summarizePool } from './sessionView';
 import { areAllPoolsComplete, isPoolComplete } from '../../../shared/domain/pools/poolCompletion';
+import { phaseSettings } from '../../../shared/domain/formula/formulaV2';
 import type { PoolSeparation } from '../../../shared/domain/pools/poolDraw';
 import {
   composePools,
@@ -113,15 +114,24 @@ const PHASE_LABEL: Record<number, string> = {
 
 export const isLaser = (c: Competition) => c.weapon === Weapon.LASER;
 
+/** Tour de poules en cours (1 = 1er) d'après l'état de session */
+export const sessionRound = (session: Record<string, unknown>): number =>
+  Math.max(1, Number(session.currentPoolRound ?? 1) || 1);
+
 /**
  * Réglages effectifs, comme l'écran (useCompetitionCore) : formule personnalisée prioritaire,
  * scores max par défaut selon arme et catégorie (Sabre Laser : 25 / 25, #2208). 0 = illimité.
  */
-export function effectiveSettings(comp: Competition) {
+export function effectiveSettings(comp: Competition, round = 1) {
   const eff = resolveCompetitionSettings(comp.weapon, comp.settings);
   const defaults = getDefaultMaxScores(comp.weapon, comp.category);
+  // Formule enregistrée : score max du tour `round` (ADR-0036), sinon réglage commun
+  const formula = comp.settings?.formula;
+  const roundPool = formula?.phases.some(p => p.kind === 'pool')
+    ? phaseSettings(formula, { kind: 'pool', round: round - 1 })
+    : undefined;
   return {
-    poolMaxScore: eff?.defaultPoolMaxScore ?? defaults.pool,
+    poolMaxScore: roundPool?.maxScore ?? eff?.defaultPoolMaxScore ?? defaults.pool,
     tableMaxScore: eff?.defaultTableMaxScore ?? defaults.table,
     poolRounds: eff?.poolRounds ?? 1,
     hasDirectElimination: eff?.hasDirectElimination ?? true,
@@ -271,7 +281,7 @@ export function generatePools(
   if (options.composition) {
     const all = ctx.db.getFencersByCompetition(competitionId);
     const composed = composePools(options.composition, new Map(all.map(f => [f.id, f])), {
-      poolMaxScore: effectiveSettings(comp).poolMaxScore,
+      poolMaxScore: effectiveSettings(comp, round).poolMaxScore,
       round,
       now: new Date(),
     });
@@ -296,7 +306,7 @@ export function generatePools(
     }
     try {
       pools = buildPools(fencers, {
-        poolMaxScore: effectiveSettings(comp).poolMaxScore,
+        poolMaxScore: effectiveSettings(comp, round).poolMaxScore,
         poolCount: options.poolCount,
         minPerPool: min,
         maxPerPool: max,
@@ -560,7 +570,7 @@ function recordPoolScore(
   const error = validatePoolScore({
     scoreA: input.scoreA,
     scoreB: input.scoreB,
-    maxScore: effectiveSettings(comp).poolMaxScore,
+    maxScore: effectiveSettings(comp, sessionRound(session)).poolMaxScore,
     winner: input.winner,
     priority: input.priority,
     specialStatus: input.specialStatus,

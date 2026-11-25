@@ -940,3 +940,20 @@ button.formula-frieze__step {
   border-color: var(--color-warning);
   color: var(--color-warning);
 }
+.formula-editor__settings {
+  min-width: 0;
+}
+.formula-editor__sim-count {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.formula-editor__sim-count input {
+  width: 5.5rem;
+}
+.formula-editor__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0 1rem;
+}

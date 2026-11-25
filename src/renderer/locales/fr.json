@@ -2859,7 +2859,8 @@
     "all_places": "{{a}}/{{b}} matchs (toutes les places)",
     "all_places_title": "Matchs de la compétition : tableau principal et classement de toutes les places",
     "organization_formula_desc": "Phases de l'épreuve et leurs réglages",
-    "organization_notes_desc": "Notes, incidents et retours, tout le long de l'épreuve"
+    "organization_notes_desc": "Notes, incidents et retours, tout le long de l'épreuve",
+    "goto_entry_ranking": "Classement d'entrée"
   },
   "offline": {
     "never": "Jamais",
@@ -4748,7 +4749,12 @@
     "personalize": "Personnaliser la formule",
     "modal_title": "Formule de l'épreuve",
     "round_settings_hint": "Touches, chrono et barème : ceux du tour 1, appliqués à tous les tours.",
-    "save_error": "Impossible d'enregistrer la formule."
+    "save_error": "Impossible d'enregistrer la formule.",
+    "sim_fencers": "Tireurs simulés",
+    "seeding": "Répartition de ce tour",
+    "seeding_previous": "Classement du tour précédent",
+    "seeding_cumulative": "Cumul des tours joués",
+    "seeding_hint": "Les tireurs qualifiés sont répartis dans les poules de ce tour d'après ce classement."
   },
   "formulaTemplates": {
     "template": "Modèle de formule",

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from './app';
+import { test, expect, addFencers, type Page } from './app';
 
 /**
  * Nouvelle interface de formule (aperçu, #2013 D13, docs/adr/0032) : les deux écrans
@@ -86,5 +86,35 @@ test.describe('Formule : interface actuelle et aperçu (application Electron)', 
       ok: true,
       data: { phases: [{ key: 'pool-0' }, { key: 'pool-1' }], state: 'adapted' },
     });
+  });
+
+  test('0 tour de poules : l’appel mène au classement d’entrée puis au tableau (ADR-0037)', async ({
+    win,
+  }) => {
+    await setFormulaPreview(win, true);
+    await openNewCompetition(win);
+    await win.getByTestId('formula-personalize').click();
+    await win.getByTestId('formula-remove-pool-0').click();
+    await expect(win.getByTestId('formula-step-pool-0')).toHaveCount(0);
+    await win.getByLabel('Titre').fill('E2E Sans poule');
+    await win.getByRole('button', { name: /cr[eé]er la comp[eé]tition/i }).click();
+    await expect(win.getByRole('heading', { name: 'Appel' })).toBeVisible();
+    // Ni préparation ni poules dans la navigation
+    await expect(win.locator('.phase-step', { hasText: 'Préparation' })).toHaveCount(0);
+    await expect(win.locator('.phase-step', { hasText: 'Classement' })).toHaveCount(1);
+    await addFencers(win, 6);
+    await win.getByRole('button', { name: /tout pointer/i }).click();
+    await win.getByRole('button', { name: /classement d.entr[eé]e/i }).click();
+    const events = await win.evaluate(async () => {
+      const listed = await window.electronAPI.api.invoke('listCompetitions', {});
+      const comps = (listed.ok ? listed.data : []) as Array<{ id: string; title: string }>;
+      const id = comps.find(c => c.title === 'E2E Sans poule')!.id;
+      const env = await window.electronAPI.api.invoke('getCompetitionEvents', {
+        competitionId: id,
+        since: 0,
+      });
+      return (env as { data: { events: Array<{ type: string }> } }).data.events.map(e => e.type);
+    });
+    expect(events).toContain('PoolsSkipped');
   });
 });

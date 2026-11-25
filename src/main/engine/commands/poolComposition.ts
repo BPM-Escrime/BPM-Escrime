@@ -18,6 +18,7 @@ import { readSession } from './sessionView';
 import {
   assertScoreSupported,
   effectiveSettings,
+  sessionRound,
   emitSession,
   isLaser,
   sessionPoolHistory,
@@ -49,7 +50,7 @@ export function addPoolFencer(ctx: CommandContext, input: AddPoolFencerInput) {
     throw new CommandError('fencer_already_in_pool', 'Tireur déjà placé dans une poule');
   }
   const added = addFencerToPool(pools[index], fencer, {
-    maxScore: effectiveSettings(comp).poolMaxScore,
+    maxScore: effectiveSettings(comp, sessionRound(session)).poolMaxScore,
     newId: uuidv4,
     now: new Date(),
   });

@@ -31,6 +31,7 @@ export const JOURNAL_EVENT = {
   poolsGenerated: 'PoolsGenerated',
   poolFencerAdded: 'PoolFencerAdded',
   poolRoundClosed: 'PoolRoundClosed',
+  tableauStageClosed: 'TableauStageClosed',
   tableauGenerated: 'TableauGenerated',
   rapieresWaveLaunched: 'RapieresWaveLaunched',
   rapieresWavesEnded: 'RapieresWavesEnded',
@@ -131,6 +132,15 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
     z.object({
       round: z.number().int(),
       qualifierCount: z.number().int().nullable(),
+      qualifiedIds: z.array(Id),
+      eliminatedIds: z.array(Id),
+    })
+  ),
+  // Tableau arrêté à N (docs/adr/0037) : restants par rang d'entrée, éliminés classés (Q5)
+  member(
+    JOURNAL_EVENT.tableauStageClosed,
+    z.object({
+      stopAt: z.number().int(),
       qualifiedIds: z.array(Id),
       eliminatedIds: z.array(Id),
     })

@@ -2859,7 +2859,8 @@
     "all_places": "{{a}}/{{b}} Gefechte (alle Plätze)",
     "all_places_title": "Gefechte des Turniers: Haupttableau und Ausfechten aller Plätze",
     "organization_formula_desc": "Wettbewerbsphasen und ihre Einstellungen",
-    "organization_notes_desc": "Notizen, Vorfälle und Rückmeldungen während des Turniers"
+    "organization_notes_desc": "Notizen, Vorfälle und Rückmeldungen während des Turniers",
+    "goto_entry_ranking": "Startrangliste"
   },
   "offline": {
     "never": "Nie",
@@ -4748,7 +4749,12 @@
     "personalize": "Formel anpassen",
     "modal_title": "Formel des Wettbewerbs",
     "round_settings_hint": "Treffer, Zeit und Wertung: die der Runde 1, für alle Runden.",
-    "save_error": "Die Formel konnte nicht gespeichert werden."
+    "save_error": "Die Formel konnte nicht gespeichert werden.",
+    "sim_fencers": "Simulierte Fechter",
+    "seeding": "Setzung dieser Runde",
+    "seeding_previous": "Rangliste der vorherigen Runde",
+    "seeding_cumulative": "Kumulierte Rangliste aller Runden",
+    "seeding_hint": "Die qualifizierten Fechter werden nach dieser Rangliste auf die Pools dieser Runde verteilt."
   },
   "formulaTemplates": {
     "template": "Formelvorlage",

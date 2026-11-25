@@ -2859,7 +2859,8 @@
     "all_places": "{{a}}/{{b}} emgann (an holl lec'hioù)",
     "all_places_title": "Emgannoù ar genstrivadeg : taolenn bennañ ha renkadur an holl lec'hioù",
     "organization_formula_desc": "Derezhioù an dournadeg hag o arventennoù",
-    "organization_notes_desc": "Notennoù, darvoudoù hag evezhiadennoù a-hed ar genstrivadeg"
+    "organization_notes_desc": "Notennoù, darvoudoù hag evezhiadennoù a-hed ar genstrivadeg",
+    "goto_entry_ranking": "Renkadur an deroù"
   },
   "offline": {
     "never": "Biken",
@@ -4748,7 +4749,12 @@
     "personalize": "Personelaat ar formulenn",
     "modal_title": "Formulenn an dournadeg",
     "round_settings_hint": "Taolioù, amzer ha barem : re an dro 1, lakaet e pep tro.",
-    "save_error": "N'eus ket bet gallet enrollañ ar furmulenn."
+    "save_error": "N'eus ket bet gallet enrollañ ar furmulenn.",
+    "sim_fencers": "Skrimerien simulet",
+    "seeding": "Dasparzh an dro-mañ",
+    "seeding_previous": "Renkadur an dro a-raok",
+    "seeding_cumulative": "Sammad an troioù c'hoariet",
+    "seeding_hint": "Dasparzhet eo ar skrimerien varrek e poulennoù an dro-mañ diouzh ar renkadur-se."
   },
   "formulaTemplates": {
     "template": "Patrom furmulenn",

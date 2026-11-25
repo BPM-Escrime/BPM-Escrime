@@ -74,6 +74,8 @@ interface CompetitionNavProps {
   t: (key: string, params?: { [key: string]: string | number }) => string;
   handleGoBack: () => void;
   handleGeneratePools: () => void;
+  /** Libellé du bouton de l'appel (formule sans poules : classement d'entrée, ADR-0037) */
+  generateLabelKey?: string;
   /** Appel inchangé depuis la préparation : « Aller à la préparation », sans régénérer (#1992) */
   checkinUnchanged?: boolean;
   poolsNextAction: PoolsNextAction | null;
@@ -111,6 +113,7 @@ const CompetitionNavComponent: React.FC<CompetitionNavProps> = ({
   t,
   handleGoBack,
   handleGeneratePools,
+  generateLabelKey,
   checkinUnchanged = false,
   poolsNextAction,
   rankingTableauAction = null,
@@ -295,11 +298,12 @@ const CompetitionNavComponent: React.FC<CompetitionNavProps> = ({
                   }
                 >
                   {t(
-                    pools.length === 0
-                      ? 'competitionNav.generate'
-                      : checkinUnchanged
-                        ? 'competitionNav.goto_prep'
-                        : 'competitionNav.regenerate'
+                    generateLabelKey ??
+                      (pools.length === 0
+                        ? 'competitionNav.generate'
+                        : checkinUnchanged
+                          ? 'competitionNav.goto_prep'
+                          : 'competitionNav.regenerate')
                   )}
                   {getCheckedInFencers().length < 4 && (
                     <span className="btn-count-hint">{getCheckedInFencers().length}/4</span>

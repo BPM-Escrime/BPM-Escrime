@@ -2859,7 +2859,8 @@
     "all_places": "{{a}}/{{b}} assaltos (todos os lugares)",
     "all_places_title": "Assaltos da competição: quadro principal e classificação de todos os lugares",
     "organization_formula_desc": "Fases da competição e respetivas definições",
-    "organization_notes_desc": "Notas, incidentes e comentários ao longo da prova"
+    "organization_notes_desc": "Notas, incidentes e comentários ao longo da prova",
+    "goto_entry_ranking": "Classificação de entrada"
   },
   "offline": {
     "never": "Nunca",
@@ -4748,7 +4749,12 @@
     "personalize": "Personalizar a fórmula",
     "modal_title": "Fórmula da competição",
     "round_settings_hint": "Toques, cronómetro e pontuação: os da volta 1, aplicados a todas as voltas.",
-    "save_error": "Não foi possível guardar a fórmula."
+    "save_error": "Não foi possível guardar a fórmula.",
+    "sim_fencers": "Atiradores simulados",
+    "seeding": "Distribuição desta volta",
+    "seeding_previous": "Classificação da volta anterior",
+    "seeding_cumulative": "Acumulado das voltas disputadas",
+    "seeding_hint": "Os atiradores qualificados são distribuídos pelas poules desta volta segundo esta classificação."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",
