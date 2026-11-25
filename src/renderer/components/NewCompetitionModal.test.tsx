@@ -70,6 +70,16 @@ describe('NewCompetitionModal', () => {
     expect(onCreate.mock.calls[0][0].title).toBe('Titre via propriétés');
   });
 
+  it('ni un clic à côté ni Échap ne ferment la modale ; la croix la ferme', () => {
+    const { onClose, container } = setup();
+    fireEvent.click(container.querySelector('.modal-overlay')!);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.keyDown(container.querySelector('.modal')!, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByLabelText('actions.close'));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('le bouton annuler ferme la modale', () => {
     const { onClose } = setup();
     fireEvent.click(screen.getByText('actions.cancel'));
