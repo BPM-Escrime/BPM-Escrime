@@ -65,6 +65,7 @@
   'referee.club_camera_denied': 'Acesso à câmara recusado: autorize-o nas definições do navegador.',
   'referee.club_camera_busy': 'Câmara ocupada por outra aplicação.',
   'referee.club_camera_none': 'Nenhuma câmara encontrada neste dispositivo.',
+  'referee.club_card_scan': 'Ler o código QR',
   'referee.club_card_code': 'Código do cartão',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Saltar (atirador não identificado)',

@@ -65,6 +65,7 @@
     "Nac'het eo an tremen d'ar gamera : aotreit anezhañ e arventennoù ar merdeer.",
   'referee.club_camera_busy': 'Implijet eo ar gamera gant un arload all.',
   'referee.club_camera_none': 'Kamera ebet kavet war an trevnad-mañ.',
+  'referee.club_card_scan': "Skanañ ar c'hod QR",
   'referee.club_card_code': 'Kod ar gartenn',
   'referee.club_card_ok': 'Kadarnaat',
   'referee.club_card_skip': 'Tremen (kleziad anidentelaet)',

@@ -61,6 +61,7 @@
   'referee.club_camera_denied': '鏡頭存取被拒：請在瀏覽器設定中允許。',
   'referee.club_camera_busy': '鏡頭正被其他應用程式使用。',
   'referee.club_camera_none': '此裝置上找不到鏡頭。',
+  'referee.club_card_scan': '掃描二維碼',
   'referee.club_card_code': '卡號',
   'referee.club_card_ok': '確定',
   'referee.club_card_skip': '略過（未識別劍手）',

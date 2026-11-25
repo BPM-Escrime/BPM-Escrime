@@ -66,6 +66,7 @@
     'Accés a la càmera denegat: autoritzeu-lo als paràmetres del navegador.',
   'referee.club_camera_busy': 'Càmera ocupada per una altra aplicació.',
   'referee.club_camera_none': "No s'ha trobat cap càmera en aquest dispositiu.",
+  'referee.club_card_scan': 'Escanejar el codi QR',
   'referee.club_card_code': 'Codi del carnet',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Ometre (tirador no identificat)',

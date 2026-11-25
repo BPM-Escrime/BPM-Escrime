@@ -66,6 +66,7 @@
   'referee.club_camera_denied': 'Kamerazugriff verweigert: in den Browsereinstellungen erlauben.',
   'referee.club_camera_busy': 'Kamera wird von einer anderen App verwendet.',
   'referee.club_camera_none': 'Keine Kamera auf diesem Gerät gefunden.',
+  'referee.club_card_scan': 'QR-Code scannen',
   'referee.club_card_code': 'Kartencode',
   'referee.club_card_ok': 'Bestätigen',
   'referee.club_card_skip': 'Überspringen (Fechter nicht identifiziert)',

@@ -64,6 +64,7 @@
   'referee.club_camera_denied': 'Camera access denied: allow it in the browser settings.',
   'referee.club_camera_busy': 'Camera in use by another app.',
   'referee.club_camera_none': 'No camera found on this device.',
+  'referee.club_card_scan': 'Scan the QR code',
   'referee.club_card_code': 'Card code',
   'referee.club_card_ok': 'Confirm',
   'referee.club_card_skip': 'Skip (unidentified fencer)',

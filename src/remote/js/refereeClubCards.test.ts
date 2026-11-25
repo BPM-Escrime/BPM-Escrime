@@ -167,5 +167,10 @@ describe('refereeClubCards (#1872)', () => {
         /Aucune caméra/
       )
     );
+    // Bouton « Scanner » : relance la caméra
+    const scan = document.getElementById('club-card-scan') as HTMLButtonElement;
+    expect(scan.style.display).toBe('');
+    scan.click();
+    await vi.waitFor(() => expect(getUserMedia).toHaveBeenCalledTimes(3));
   });
 });

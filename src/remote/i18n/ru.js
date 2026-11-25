@@ -64,6 +64,7 @@
   'referee.club_camera_denied': 'Доступ к камере запрещён: разрешите его в настройках браузера.',
   'referee.club_camera_busy': 'Камера занята другим приложением.',
   'referee.club_camera_none': 'На этом устройстве не найдена камера.',
+  'referee.club_card_scan': 'Сканировать QR-код',
   'referee.club_card_code': 'Код карты',
   'referee.club_card_ok': 'Подтвердить',
   'referee.club_card_skip': 'Пропустить (не опознан)',

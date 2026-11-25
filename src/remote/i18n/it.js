@@ -62,6 +62,7 @@
     'Accesso alla fotocamera negato: consentilo nelle impostazioni del browser.',
   'referee.club_camera_busy': "Fotocamera usata da un'altra app.",
   'referee.club_camera_none': 'Nessuna fotocamera trovata su questo dispositivo.',
+  'referee.club_card_scan': 'Scansiona il codice QR',
   'referee.club_card_code': 'Codice della tessera',
   'referee.club_card_ok': 'Conferma',
   'referee.club_card_skip': 'Salta (schermidore non identificato)',

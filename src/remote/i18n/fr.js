@@ -65,6 +65,7 @@
     'Accès à la caméra refusé : autorisez-le dans les réglages du navigateur.',
   'referee.club_camera_busy': 'Caméra occupée par une autre application.',
   'referee.club_camera_none': 'Aucune caméra trouvée sur cet appareil.',
+  'referee.club_card_scan': 'Scanner le QR code',
   'referee.club_card_code': 'Code de la carte',
   'referee.club_card_ok': 'Valider',
   'referee.club_card_skip': 'Passer (tireur non identifié)',

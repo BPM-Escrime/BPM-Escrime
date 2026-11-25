@@ -67,6 +67,7 @@
     'Acceso a la cámara denegado: autorícelo en los ajustes del navegador.',
   'referee.club_camera_busy': 'Cámara ocupada por otra aplicación.',
   'referee.club_camera_none': 'No se ha encontrado ninguna cámara en este dispositivo.',
+  'referee.club_card_scan': 'Escanear el código QR',
   'referee.club_card_code': 'Código de la tarjeta',
   'referee.club_card_ok': 'Validar',
   'referee.club_card_skip': 'Omitir (tirador no identificado)',

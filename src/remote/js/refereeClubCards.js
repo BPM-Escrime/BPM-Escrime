@@ -280,6 +280,17 @@
         'width:100%;max-height:45vh;background:var(--slate-800);border-radius:12px;object-fit:cover;'
       );
       box.appendChild(video);
+      // Relance de la caméra (échec, autorisation donnée entre-temps, geste requis par Safari)
+      var scan = el(
+        doc,
+        'button',
+        'display:none;padding:12px 16px;border-radius:8px;border:none;background:var(--blue-600);' +
+          'color:var(--color-white);font-size:18px;',
+        tr('referee.club_card_scan', 'Scanner le QR code')
+      );
+      scan.type = 'button';
+      scan.id = 'club-card-scan';
+      box.appendChild(scan);
       var error = el(
         doc,
         'p',
@@ -362,15 +373,32 @@
       cancel.addEventListener('click', function () {
         finish('cancel');
       });
-      startCamera(win, video, tryText).then(function (cam) {
-        var stop = cam && cam.stop;
-        if (done) {
-          if (stop) stop();
-          return;
-        }
-        stopCam = stop || null;
-        if (!stop) {
+      var starting = false;
+      function launch() {
+        if (starting || stopCam) return;
+        starting = true;
+        scan.disabled = true;
+        video.style.display = '';
+        startCamera(win, video, tryText).then(function (cam) {
+          starting = false;
+          scan.disabled = false;
+          var stop = cam && cam.stop;
+          if (done) {
+            if (stop) stop();
+            return;
+          }
+          stopCam = stop || null;
+          if (stop) {
+            scan.style.display = 'none';
+            error.textContent = errorText || '';
+            hint.textContent = tr(
+              'referee.club_card_hint',
+              'Présentez le QR code de la carte de club à la caméra.'
+            );
+            return;
+          }
           video.style.display = 'none';
+          scan.style.display = '';
           var why = cameraFailureText(cam && cam.reason);
           if (why) error.textContent = errorText ? errorText + ' — ' + why : why;
           hint.textContent = select
@@ -382,10 +410,10 @@
                 'referee.club_card_no_camera',
                 'Caméra indisponible : saisissez le code imprimé sous le QR code.'
               );
-          if (select) select.focus();
-          else input.focus();
-        }
-      });
+        });
+      }
+      scan.addEventListener('click', launch);
+      launch();
     });
   }
 
