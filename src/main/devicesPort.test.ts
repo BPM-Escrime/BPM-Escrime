@@ -28,6 +28,10 @@ const cyrano = {
   setPistes: vi.fn(),
   sendHelloAll: vi.fn(),
   setHost: vi.fn((h: string) => h !== 'x'),
+  helloMode: 'device',
+  setHelloMode: vi.fn((m: string) => {
+    cyrano.helloMode = m;
+  }),
   start: vi.fn(async (p?: number) => {
     cyrano.running = true;
     return p ?? 50100;
@@ -148,7 +152,10 @@ d('createDevicesPort', () => {
     await expect(devices.cyrano.start({ host: 'x' })).rejects.toMatchObject({
       code: 'device_refused',
     });
-    expect(await devices.cyrano.start({ port: 50105, host: '' })).toBe(50105);
+    expect(await devices.cyrano.start({ port: 50105, host: '', hello: 'never' })).toBe(50105);
+    // Envoi des HELLO choisi au démarrage (ADR-0038), relu dans l'état du pilote
+    expect(cyrano.setHelloMode).toHaveBeenLastCalledWith('never');
+    expect(devices.cyrano.status().hello).toBe('never');
     expect(await devices.opp2.start({})).toBe(1883);
     expect(driver.start).toHaveBeenCalled();
     expect(hub.attach).toHaveBeenCalledTimes(2);
