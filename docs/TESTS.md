@@ -111,7 +111,7 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 136 | 766 |
 | E2E Playwright (`e2e/`) | 19 | 53 |
-| `src/remote/` | 60 | 430 |
+| `src/remote/` | 60 | 435 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 46 | 571 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **628** | **4972** |
+| **Total** | **628** | **4977** |
 
-Unitaires : 609 fichiers, 4919 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 609 fichiers, 4924 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8403,7 +8403,7 @@ Unitaires : 609 fichiers, 4919 tests. E2E : 19 fichiers, 53 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeApp.test.ts</code> — 21 tests</summary>
+<summary><code>src/remote/js/refereeApp.test.ts</code> — 23 tests</summary>
 
 - **refereeApp.js dans referee.html**
   - referee.html ne contient plus de script inline
@@ -8432,11 +8432,13 @@ Unitaires : 609 fichiers, 4919 tests. E2E : 19 fichiers, 53 tests (comptage stat
   - Laser, chrono en marche : boutons actifs, carton jaune enregistré (+3 adverse)
   - olympique, chrono en marche : boutons grisés, carton refusé (#1826)
   - Laser : un carton qui porte les deux tireurs à 10 déclenche la mort subite challenger
+  - Laser : un carton qui porte un tireur au-delà de 15 ouvre la fin de match
+  - Laser : un carton sous la limite ne termine pas le match
 
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeCards.test.ts</code> — 14 tests</summary>
+<summary><code>src/remote/js/refereeCards.test.ts</code> — 17 tests</summary>
 
 - **refereeCards.js cartons**
   - modernYellowOrRed : rouge si déjà jaune ou rouge
@@ -8454,6 +8456,10 @@ Unitaires : 609 fichiers, 4919 tests. E2E : 19 fichiers, 53 tests (comptage stat
   - Sabre Laser : points des cartons, parité tablette / domaine (provisoire, #2208)
   - motifs olympiques de la tablette = motifs FIE du domaine, mêmes groupes (t.163, #2207)
   - referee.html charge le module et délègue
+- **penaltyReachesLimit : points de pénalité au score limite**
+  - carton qui porte un tireur à 15 ou au-delà : vrai
+  - sous la limite ou déjà au-delà : faux
+  - limite inconnue : 15 au Sabre Laser, rien ailleurs ; illimitée : faux
 
 </details>
 
