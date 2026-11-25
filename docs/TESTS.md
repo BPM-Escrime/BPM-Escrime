@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 282 |
-| `src/main/` | 158 | 1377 |
+| `src/main/` | 158 | 1379 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
 | `src/renderer/components/` | 136 | 766 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 46 | 571 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **628** | **4977** |
+| **Total** | **628** | **4979** |
 
-Unitaires : 609 fichiers, 4924 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 609 fichiers, 4926 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3906,7 +3906,7 @@ Unitaires : 609 fichiers, 4924 tests. E2E : 19 fichiers, 53 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/mcp/mcpExtraTools.test.ts</code> — 17 tests</summary>
+<summary><code>src/main/mcp/mcpExtraTools.test.ts</code> — 19 tests</summary>
 
 - sans écriture : outils de lecture seulement, écritures refusées
 - noms d’outils uniques, outils destructifs annotés
@@ -3925,6 +3925,8 @@ Unitaires : 609 fichiers, 4924 tests. E2E : 19 fichiers, 53 tests (comptage stat
 - TXT séparé par des espaces lu comme à l’écran ; fichier sans tireur signalé
 - import\_day : un fichier manquant fait échouer l’import sans rien écrire
 - manifeste de import\_day, chemins relatifs au manifeste, rejouable
+- get\_match\_durations : références par défaut (poule d’épée 3:30, tableau de sabre 8:00)
+- server\_status : fin estimée de la phase si une séance est ouverte, sinon null
 
 </details>
 
