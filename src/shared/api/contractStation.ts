@@ -408,6 +408,7 @@ export const stationOperations = {
     input: z.object({}),
     output: MatchDurationsView,
     permission: 'station:admin',
+    mcp: { name: 'get_match_durations', title: 'Durées de match de référence' },
   }),
   updateMatchDurationSettings: command({
     description:

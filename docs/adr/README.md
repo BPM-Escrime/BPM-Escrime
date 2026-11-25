@@ -44,6 +44,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0032](0032-formule-interface-unique-apercu.md)     | Formule : interface unique derrière un réglage expérimental du poste (`formulaPreview`), lu par l'écran seulement                                                                         | Acceptée            |
 | [0033](0033-modeles-de-formule.md)                  | Modèles de formule (catalogue fourni, modèles du poste) et formule d'une épreuve par le contrat : `getCompetitionFormula`, `applyFormulaTemplate`, `updateCompetitionFormula`, outils MCP | Acceptée            |
 | [0034](0034-surnom-membres-club.md)                 | Les membres du Mode Club ont un surnom (`club_members.nickname`, migration 52)                                                                                                            | Acceptée            |
+| [0035](0035-durees-de-match-mcp.md)                 | Durées de match de référence lisibles par l'agent MCP (`get_match_durations`) ; fin estimée de la phase dans `server_status`                                                              | Proposée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.
