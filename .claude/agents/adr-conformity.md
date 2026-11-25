@@ -40,10 +40,13 @@ un : tu juges sur le diff, les ADR et les tests, rien d'autre.
 3. **Tests contraires** : chercher dans les tests du diff (unitaires et `e2e/`) ceux qui
    affirment le contraire d'une phrase normative (ex. une ADR dit « reste consultable », un
    test vérifie que l'onglet disparaît). Chacun est un écart.
-4. **Amendements** : pour chaque ADR modifiée par le diff, vérifier que l'amendement ne
-   contredit pas une phrase existante sans la réécrire explicitement (relecture de
-   l'existant). Un ajout qui contredit une phrase restée en place = écart. Un amendement qui
-   change une décision d'une ADR « Acceptée » doit le dire (date, objet) ; sinon écart.
+4. **Amendements** (règle d'ADR-0001) : pour chaque ADR « Acceptée » modifiée par le diff,
+   vérifier :
+   - le Statut dit la date, l'objet et la validation du mainteneur ;
+   - chaque phrase changée est réécrite à sa place avec *(Amendé le … : remplace « … »)* ;
+   - aucun ajout ne contredit une phrase restée en place (relecture de l'existant) ;
+   - la décision principale n'est pas renversée (sinon : nouvelle ADR attendue).
+   Un manquement = écart.
 
 ## Sortie (courte, en français)
 

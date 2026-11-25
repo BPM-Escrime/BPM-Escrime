@@ -1,6 +1,6 @@
 # ADR-0001 — Les décisions d'architecture passent par une ADR et par la revue du mainteneur
 
-- **Statut** : Acceptée
+- **Statut** : Acceptée ; amendée le 2026-11-25 (amendement sur place d'une ADR acceptée, validé par le mainteneur, PR #2319)
 - **Date** : 2026-11-20
 - **Tickets** : #1978, #1979
 
@@ -27,7 +27,19 @@ sortir avec des choix que personne n'avait tranchés.
   - de nommage ou de forme du contrat d'API ;
   - de transport (IPC, MCP, WebSocket).
 - Une ADR est courte (une page), numérotée, datée. Elle suit le modèle de [README.md](README.md).
-- Une ADR acceptée ne se réécrit pas : on en écrit une nouvelle qui la remplace.
+- Une ADR acceptée se modifie par **amendement sur place** quand la décision principale tient
+  et qu'une phrase est précisée, restreinte ou corrigée. _(Amendé le 2026-11-25, PR #2319 :
+  remplace « Une ADR acceptée ne se réécrit pas : on en écrit une nouvelle qui la remplace ».)_
+  - L'écart est d'abord posé comme question au mainteneur ; l'amendement est rédigé après son
+    accord et validé par lui **avant** le code.
+  - Le **Statut** dit la date, l'objet de l'amendement et la validation du mainteneur
+    (« Acceptée ; amendée le AAAA-MM-JJ (objet, validé par le mainteneur) »).
+  - Chaque phrase changée est réécrite à sa place, suivie de
+    _(Amendé le AAAA-MM-JJ : remplace « ancienne phrase »)_ ; aucune phrase contredite ne reste
+    en place. Un ajout (nouvelle puce ou section) porte sa date.
+  - `/adr-check` (agent `adr-conformity`) contrôle l'amendement avant le push.
+- Une décision principale renversée fait l'objet d'une **nouvelle ADR**, qui remplace
+  l'ancienne (statut « Remplacée par ADR-00xx »).
 - **Relecture** : le mainteneur (`cpoisnel`) relit et accepte les ADR. Pas de revue collective
   obligatoire ; un contributeur peut commenter la PR.
 - **Pas d'auto-merge** pour une PR qui porte le label `refactor` ou qui est rattachée à l'épique

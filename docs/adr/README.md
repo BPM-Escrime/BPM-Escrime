@@ -1,8 +1,10 @@
 # Décisions d'architecture (ADR)
 
 Une ADR consigne **une** décision d'architecture : son contexte, ce qui est décidé, ce que cela coûte.
-Elle est courte, datée, numérotée, et ne se réécrit pas : une décision qui change fait l'objet
-d'une nouvelle ADR, qui **remplace** l'ancienne (statut « Remplacée par ADR-00xx »).
+Elle est courte, datée, numérotée. Une phrase précisée, restreinte ou corrigée s'amende **sur
+place**, après accord du mainteneur : statut daté avec l'objet, phrase réécrite avec la mention
+« remplace « … » » ([ADR-0001](0001-processus-adr.md)). Une décision principale renversée fait
+l'objet d'une nouvelle ADR, qui **remplace** l'ancienne (statut « Remplacée par ADR-00xx »).
 
 Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-processus-adr.md).
 
@@ -10,7 +12,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 
 | N°                                                  | Décision                                                                                                                                                                                  | Statut              |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| [0001](0001-processus-adr.md)                       | Processus : ADR, revue du mainteneur, pas d'auto-merge pour l'architecture                                                                                                                | Acceptée            |
+| [0001](0001-processus-adr.md)                       | Processus : ADR, revue du mainteneur, pas d'auto-merge pour l'architecture, amendement sur place                                                                                          | Acceptée (amendée)  |
 | [0002](0002-couches-et-dependances.md)              | Couches, sens des dépendances, domaine pur dans `src/shared/domain`                                                                                                                       | Acceptée            |
 | [0003](0003-main-domain-couche-application.md)      | `src/main/domain` devient la couche d'application (`src/main/engine/commands`)                                                                                                            | Acceptée            |
 | [0004](0004-features-couche-interface.md)           | `src/features` est une couche d'interface                                                                                                                                                 | Acceptée            |
@@ -57,7 +59,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 ```markdown
 # ADR-00xx — Titre à l'indicatif (« X devient Y », « On fait Z »)
 
-- **Statut** : Proposée | Acceptée | Remplacée par ADR-00yy
+- **Statut** : Proposée | Acceptée | Acceptée ; amendée le AAAA-MM-JJ (objet, validé par le mainteneur) | Remplacée par ADR-00yy
 - **Date** : AAAA-MM-JJ
 - **Tickets** : #…
 
