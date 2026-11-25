@@ -771,6 +771,11 @@ export interface CompetitionSettings {
    * libre. L'état Standard / Adaptée est calculé en comparant la formule à ce modèle.
    */
   formulaOrigin?: { templateId: string; season?: string };
+  /**
+   * Formule v2, commune à toutes les armes (docs/adr/0034) : arbre de phases lu par phase. Absente
+   * d'une épreuve existante tant que sa formule n'a pas été modifiée (construite à la lecture).
+   */
+  formula?: import('../domain/formula/formulaV2').FormulaV2;
   playAllPositions?: boolean; // Jouer toutes les places (tableaux de classement)
   expertMode?: boolean; // Mode expert : édition avancée des pistes et arbitres (actif par défaut)
   maxRefereesPerPool?: number; // Nombre max d'arbitres par poule (mode expert)
