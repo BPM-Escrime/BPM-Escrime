@@ -25,6 +25,18 @@
 - Pas de migration : colonne JSON existante, champ facultatif. Contrat : `StripDeviceSchema`
   (`setStripDevices`, `importStripDevices`, fichier d'export) accepte le champ.
 
+### Complément (2026-11-25) : envoi des HELLO choisi au démarrage du pilote
+
+- Lecture de la spécification (§ 3, § 4) : le `HELLO` signale que le logiciel est en ligne. Le
+  SG32 passe alors en mode Cyrano : machine à états, chrono seulement en état actif, donc
+  **BEGIN** (éventuellement avec ALT, § 4) avant GO. Sans `HELLO`, il reste autonome. Les deux
+  conduites se défendent tant que la recette en salle ne les a pas départagées.
+- `startCyranoServer` gagne un champ facultatif **`hello`** : `device` (défaut : selon la
+  déclaration de chaque appareil), `always` (à tous, spécification), `never` (à aucun).
+  `getCyranoStatus` renvoie le mode en vigueur. Choisi dans le cadre « Pilotes des appareils »
+  (Paramètres → Salles et pistes), mémorisé sur le poste, repris par le démarrage automatique.
+- Le mode vaut jusqu'à l'arrêt du pilote ; un démarrage alors que le pilote tourne ne le change pas.
+
 ## Conséquences
 
 - Une salle Saint-George déjà déclarée doit être redéclarée avec le profil (ajout en lot) ou par

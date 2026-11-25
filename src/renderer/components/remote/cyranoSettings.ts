@@ -6,7 +6,11 @@
  * Licensed under GPL-3.0
  */
 import { ApiError } from '../../../shared/api/client';
-import type { CyranoFrameLog } from '../../../shared/types/stripDevice';
+import {
+  CYRANO_HELLO_MODES,
+  type CyranoFrameLog,
+  type CyranoHelloMode,
+} from '../../../shared/types/stripDevice';
 import { devicesApi, type DevicesApi } from '../../api/devicesApi';
 
 export const PORT_KEY = 'bellepoule-cyrano-port';
@@ -14,6 +18,7 @@ export const HOST_KEY = 'bellepoule-cyrano-host';
 export const OPTIONS_KEY = 'bellepoule-cyrano-options';
 export const AUTOSTART_KEY = 'bellepoule-cyrano-autostart';
 export const OPP2_PORT_KEY = 'bellepoule-opp2-port';
+export const HELLO_KEY = 'bellepoule-cyrano-hello';
 export const DEFAULT_PORT = 50100;
 export const OPP2_DEFAULT_PORT = 1883;
 
@@ -65,6 +70,13 @@ export function readOptions(): CyranoOptions {
 }
 export const writeOptions = (o: CyranoOptions) => write(OPTIONS_KEY, JSON.stringify(o));
 
+/** Envoi des HELLO au démarrage du pilote (ADR-0038) ; `device` par défaut */
+export const readHelloMode = (): CyranoHelloMode => {
+  const v = read(HELLO_KEY) as CyranoHelloMode | null;
+  return v && CYRANO_HELLO_MODES.includes(v) ? v : 'device';
+};
+export const writeHelloMode = (m: CyranoHelloMode) => write(HELLO_KEY, m);
+
 /** Démarrage automatique avec la séance de saisie distante */
 export const readAutoStart = (): boolean => read(AUTOSTART_KEY) === 'true';
 export const writeAutoStart = (v: boolean) => write(AUTOSTART_KEY, String(v));
@@ -74,7 +86,7 @@ export const errorText = (e: unknown): string =>
   e instanceof ApiError ? e.message || e.code : e instanceof Error ? e.message : String(e);
 
 /**
- * Démarre le serveur Cyrano avec les réglages mémorisés (port, interface, options) ; le moteur
+ * Démarre le serveur Cyrano avec les réglages mémorisés (port, interface, HELLO, options) ; le moteur
  * charge les appareils Cyrano de la salle de l'épreuve. Déjà démarré : options renvoyées.
  */
 export async function startCyranoFromSaved(
@@ -85,6 +97,7 @@ export async function startCyranoFromSaved(
     await api.cyrano.start({
       port: readPort(),
       host: readHost(),
+      hello: readHelloMode(),
       ...(competitionId ? { competitionId } : {}),
     });
     await api.setOptions(readOptions());

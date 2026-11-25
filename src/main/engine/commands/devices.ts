@@ -121,12 +121,12 @@ export const devicesHandlers: { [N in DevicesOps]: DevicesHandler<N> } = {
   },
 
   // ── Pilote Cyrano ──
-  startCyranoServer: async (ctx, { port, host, competitionId }) => {
+  startCyranoServer: async (ctx, { port, host, hello, competitionId }) => {
     const devices = portOf(ctx);
     if (competitionId) getCompetitionOrThrow(ctx, competitionId);
     const bound = devices.cyrano.running()
       ? devices.cyrano.status().port
-      : await refusingAsync('device_refused', () => devices.cyrano.start({ port, host }));
+      : await refusingAsync('device_refused', () => devices.cyrano.start({ port, host, hello }));
     devices.reload(competitionId);
     return { port: bound };
   },

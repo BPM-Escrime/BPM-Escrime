@@ -22,6 +22,7 @@ import type {
   StripSendResult,
   VenueStripControl,
 } from '../types/stripDevice';
+import { CYRANO_HELLO_MODES } from '../types/stripDevice';
 
 const Nothing = z.void();
 const VenueId = Id.describe('Identifiant de la salle (listVenues)');
@@ -103,10 +104,11 @@ export const devicesOperations = {
   // ── Pilote Cyrano (UDP) ──
   startCyranoServer: command({
     description:
-      'Démarre le serveur Cyrano (UDP, 50100 par défaut) sur l’interface `host` (vide : toutes) ; charge les appareils Cyrano des salles des épreuves suivies (`competitionId` et épreuves en saisie distante). Déjà démarré : renvoie son port. Refus (port pris, interface invalide) : device_refused.',
+      'Démarre le serveur Cyrano (UDP, 50100 par défaut) sur l’interface `host` (vide : toutes) ; charge les appareils Cyrano des salles des épreuves suivies (`competitionId` et épreuves en saisie distante). `hello` : envoi des HELLO (`device` par défaut : selon la déclaration de chaque appareil ; `always` : à tous, spécification Cyrano ; `never` : à aucun, ADR-0038). Déjà démarré : renvoie son port, réglages inchangés. Refus (port pris, interface invalide) : device_refused.',
     input: z.strictObject({
       port: Port.optional(),
       host: z.string().trim().max(64).optional(),
+      hello: z.enum(CYRANO_HELLO_MODES).optional(),
       competitionId: CompetitionId.optional(),
     }),
     output: StartedPort,

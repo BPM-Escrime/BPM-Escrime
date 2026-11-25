@@ -107,10 +107,21 @@ export interface CyranoPisteStatus {
   alert?: StripDeviceAlert | null;
 }
 
+/**
+ * Envoi des HELLO choisi au démarrage du pilote Cyrano (ADR-0038) : `device` selon la
+ * déclaration de chaque appareil (`hello: false` = aucun), `always` à tous (spécification
+ * Cyrano § 3, l'appareil suit la machine à états : BEGIN avant le chrono), `never` à aucun
+ * (Saint-George SG31 / SG32 en mode autonome : GO lance le chrono).
+ */
+export type CyranoHelloMode = 'device' | 'always' | 'never';
+export const CYRANO_HELLO_MODES: readonly CyranoHelloMode[] = ['device', 'always', 'never'];
+
 /** État du serveur Cyrano (getCyranoStatus) */
 export interface CyranoStatus {
   running: boolean;
   port: number;
+  /** Envoi des HELLO en vigueur */
+  hello: CyranoHelloMode;
   pistes: CyranoPisteStatus[];
 }
 

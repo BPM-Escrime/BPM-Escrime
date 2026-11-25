@@ -10,6 +10,7 @@ import { useMemo } from 'react';
 import type { BpmClient } from '../../shared/api/client';
 import type { Venue } from '../../shared/types/appSettings';
 import type {
+  CyranoHelloMode,
   StripControlChange,
   StripDevice,
   StripDeviceAction,
@@ -45,8 +46,12 @@ export function createDevicesApi(client: BpmClient) {
     setStripDevice: (venueId: string, strip: number, device: StripDevice | null) =>
       c('setStripDevice', { venueId, strip, device }),
     cyrano: {
-      start: (options: { port?: number; host?: string; competitionId?: string }) =>
-        c('startCyranoServer', options),
+      start: (options: {
+        port?: number;
+        host?: string;
+        hello?: CyranoHelloMode;
+        competitionId?: string;
+      }) => c('startCyranoServer', options),
       stop: () => c('stopCyranoServer', {}),
       status: () => q('getCyranoStatus', {}),
       log: (limit?: number) => q('listCyranoLog', limit ? { limit } : {}),

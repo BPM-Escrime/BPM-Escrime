@@ -18,6 +18,7 @@ import VenueStripsEditor from './VenueStripsEditor';
 import { applyStripEdits, stripEditError, type StripEdit } from './venueStripsEdit';
 import { useStationApi } from '../api/stationApi';
 import VenueStripControlPanel from './VenueStripControlPanel';
+import StripDriversPanel from './StripDriversPanel';
 import VenueStripBulkTools from './VenueStripBulkTools';
 
 interface Draft {
@@ -262,6 +263,7 @@ const VenuesSettingsSection: React.FC = () => {
               {t('stripControl.close')}
             </Button>
           </div>
+          <StripDriversPanel />
           <VenueStripBulkTools
             venueId={controlled.id}
             onChanged={() => {

@@ -131,7 +131,7 @@ Arme, nombre de pistes, durée du combat, interface réseau.
 
 ## Appareils de piste (saisie distante)
 
-Saisie distante, onglet **Expert**, volet des appareils : salle de l'épreuve, appareils Cyrano et OPP2 déclarés sur la salle (lecture seule), liaison de chaque piste, case **Manuel** qui passe une piste en saisie sur tablette pour cette épreuve, pilotes Cyrano (UDP) et OPP2 (MQTT), journal des trames. Voir [CYRANO.md](CYRANO.md).
+Saisie distante, bloc **Pistes**, dès qu'un pilote tourne : salle de l'épreuve, appareils Cyrano et OPP2 des pistes de l'épreuve (lecture seule), liaison de chaque piste, case **Manuel** qui passe une piste en saisie sur tablette pour cette épreuve, secours. Pilotes et journal des trames : Paramètres → Salles et pistes. Voir [CYRANO.md](CYRANO.md).
 
 ![Appareils de piste](screenshots/17-appareils-piste.png)
 

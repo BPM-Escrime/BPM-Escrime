@@ -15,7 +15,6 @@ export type RemoteSectionId =
   | 'dtView'
   | 'trainer'
   | 'lobby'
-  | 'cyrano'
   | 'screens';
 
 export const REMOTE_FOLDS_STORAGE_KEY = 'bpm_escrime_remote_collapsed_sections';
@@ -31,7 +30,6 @@ const SECTION_LABEL_KEYS: Record<RemoteSectionId, string> = {
   dtView: 'rsm.dt_card',
   trainer: 'rsm.trainer_card',
   lobby: 'rsm.lobby_card',
-  cyrano: 'rsm.cyrano_card',
   screens: 'rsm.sec_screens',
 };
 

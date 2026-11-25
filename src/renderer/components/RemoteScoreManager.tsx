@@ -27,7 +27,7 @@ import { useRemoteServerActions } from '../hooks/remoteScoreManager/useRemoteSer
 import { useRemoteServerState } from '../hooks/remoteScoreManager/useRemoteServerState';
 import { RemoteArenaGrid } from './remote/RemoteArenaGrid';
 import { RemoteHeaderSection } from './remote/RemoteHeaderSection';
-import { CyranoPanel } from './remote/CyranoPanel';
+import { StripDevicesCard } from './remote/StripDevicesCard';
 import { useRemoteFolds, RemoteFoldAllButton, type RemoteSectionId } from './remote/RemoteFold';
 import { useRemoteApi } from '../api/remoteApi';
 
@@ -38,7 +38,7 @@ function visibleSections(isExpert: boolean, trainerEnabled: boolean): RemoteSect
   ids.push('globalTheme');
   if (isExpert) ids.push('displayOptions', 'overlay', 'checkin', 'dtView');
   if (trainerEnabled) ids.push('trainer');
-  if (isExpert) ids.push('lobby', 'cyrano');
+  if (isExpert) ids.push('lobby');
   ids.push('screens');
   return ids;
 }
@@ -216,6 +216,9 @@ const RemoteScoreManager: React.FC<RemoteScoreManagerProps> = (props: RemoteScor
             </div>
           </div>
 
+          {/* Appareils des pistes de l'épreuve : dès qu'un pilote tourne, sans saisie distante */}
+          <StripDevicesCard competitionId={competition.id} start={stripStart} end={arenaCount} />
+
           {/* CTA */}
           <button
             className="rsm-start-btn"
@@ -303,6 +306,9 @@ const RemoteScoreManager: React.FC<RemoteScoreManagerProps> = (props: RemoteScor
                 ✓
               </button>
             </div>
+
+            {/* Appareils des pistes de l'épreuve (pilote Cyrano ou OPP2 démarré) */}
+            <StripDevicesCard competitionId={competition.id} start={stripStart} end={arenaCount} />
 
             <RemoteArenaGrid ctx={ctx} />
           </>
@@ -560,7 +566,6 @@ const RemoteScoreManager: React.FC<RemoteScoreManagerProps> = (props: RemoteScor
               />
             </div>
           )}
-        {isExpert && fold('cyrano')(<CyranoPanel competitionId={competition.id} />)}
 
         {/* ── Section : Écrans connectés (+ modale kiosk) — dans le même conteneur que les autres volets ── */}
         {fold('screens')(

@@ -38,7 +38,7 @@ function fakePort() {
       stop: vi.fn(async () => {
         cyrano = false;
       }),
-      status: () => ({ running: cyrano, port: 50100, pistes: [] }),
+      status: () => ({ running: cyrano, port: 50100, hello: 'device' as const, pistes: [] }),
       log: () =>
         [1, 2, 3].map(ts => ({
           ts,
@@ -235,6 +235,7 @@ d('pilotes Cyrano et OPP2', () => {
       await op('startCyranoServer', { port: 50102, host: '', competitionId: comp.id })
     ).toEqual({ port: 50102 });
     expect(port.reload).toHaveBeenLastCalledWith(comp.id);
+    expect(port.cyrano.start).toHaveBeenLastCalledWith({ port: 50102, host: '', hello: undefined });
     expect(await op('startCyranoServer', {})).toEqual({ port: 50100 });
     expect(port.cyrano.start).toHaveBeenCalledTimes(1);
     await op('stopCyranoServer');
@@ -242,6 +243,18 @@ d('pilotes Cyrano et OPP2', () => {
     expect(await op('startOpp2Broker', { competitionId: comp.id })).toEqual({ port: 1883 });
     await op('stopOpp2Broker');
     expect(port.opp2.stop).toHaveBeenCalled();
+  });
+
+  it('envoi des HELLO choisi au démarrage (ADR-0038) ; valeur inconnue refusée', async () => {
+    await op('startCyranoServer', { hello: 'never' });
+    expect(port.cyrano.start).toHaveBeenLastCalledWith({
+      port: undefined,
+      host: undefined,
+      hello: 'never',
+    });
+    expect((await refusal(op('startCyranoServer', { hello: 'parfois' }))).code).toBe(
+      'invalid_input'
+    );
   });
 
   it('refus du pilote : device_refused (message pour l’opérateur)', async () => {
