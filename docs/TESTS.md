@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 52 | 604 |
+| `src/shared/domain/` | 52 | 609 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **637** | **5034** |
+| **Total** | **637** | **5039** |
 
-Unitaires : 618 fichiers, 4980 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 618 fichiers, 4985 tests. E2E : 19 fichiers, 54 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -7272,7 +7272,7 @@ Unitaires : 618 fichiers, 4980 tests. E2E : 19 fichiers, 54 tests (comptage stat
   - simulation : effectif modifiable
   - « ＋ » insère un tour ; le tour 2 se règle seul (touches, répartition)
   - retirer le tableau rend le « ＋ » de fin de frise
-  - dernier tour avant le tableau (épée) : seule la règle « vainqueurs de poule »
+  - dernier tour avant le tableau (épée) : qualification complète (#2013 R1)
   - arme « Autre » : règles, barème, qualification complète
 - **Organisation ▸ Formule : réglages affichés après enregistrement**
   - formule v2 et réglages plats du 1er tour
@@ -9440,7 +9440,7 @@ Unitaires : 618 fichiers, 4980 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaV2.test.ts</code> — 5 tests</summary>
+<summary><code>src/shared/domain/formula/formulaV2.test.ts</code> — 9 tests</summary>
 
 - **formule v2 construite à la lecture (épée… Sabre Laser)**
   - %s : mêmes réglages qu’aujourd’hui _(each)_
@@ -9449,6 +9449,11 @@ Unitaires : 618 fichiers, 4980 tests. E2E : 19 fichiers, 54 tests (comptage stat
 - **arme « Autre » : customFormula v1 ↔ v2**
   - %s : aller-retour sans perte, mêmes réglages dérivés _(each)_
   - lecture par phase : touches du tour 2 distinctes du tour 1
+- **qualification vers le tableau (#2013 R1)**
+  - règle du tour juste avant le tableau
+  - tous qualifiés, sans tableau ou tableau en tête : aucune
+  - Tour Quest avant le tableau : aucune
+  - épreuve sans formule v2 : réglages plats, aucune qualification en % (comportement historique)
 
 </details>
 
@@ -9760,7 +9765,7 @@ Unitaires : 618 fichiers, 4980 tests. E2E : 19 fichiers, 54 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/ranking/tableauRanking.test.ts</code> — 8 tests</summary>
+<summary><code>src/shared/domain/ranking/tableauRanking.test.ts</code> — 9 tests</summary>
 
 - **computeMatchProgress**
   - renvoie null sans poule ni tableau
@@ -9772,6 +9777,7 @@ Unitaires : 618 fichiers, 4980 tests. E2E : 19 fichiers, 54 tests (comptage stat
   - garde le classement tel quel sans option
   - ne garde que le groupe actif et renumérote
   - exclut les groupes déjà extraits dans une compétition séparée
+  - formule v2 (épée) : % de qualifiés vers le tableau, égalité à la coupe gardée (#2013 R1)
 
 </details>
 
