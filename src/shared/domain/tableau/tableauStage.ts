@@ -9,6 +9,8 @@
 
 import type { Fencer, PoolRanking } from '../../types';
 import type { TableauMatch } from './tableauTypes';
+import type { FormulaV2 } from '../formula/formulaV2';
+import { formulaSegment } from '../formula/formulaSteps';
 
 /** Matchs joués avant l'arrêt : tours où il reste plus de `stopAt` tireurs */
 export const stageMatches = (matches: TableauMatch[], stopAt: number): TableauMatch[] =>
@@ -162,3 +164,25 @@ export const resultsTableauMatches = (
   current: TableauMatch[],
   closed: TableauStageRecord | undefined
 ): TableauMatch[] => (current.length === 0 && closed ? closed.matches : current);
+
+/**
+ * Classement qui répartit le tour de poules à tirer (écran, comme le moteur) : celui du dernier
+ * tour joué ; premier tour après un tableau arrêté clos : restants par rang d'entrée au tableau
+ * (Q5, ADR-0037).
+ */
+export function seedRankingForNextRound(input: {
+  formula: FormulaV2 | undefined;
+  /** Tours joués (archivés) */
+  playedRounds: number;
+  stages: TableauStageRecord[];
+  lastRoundRanking: PoolRanking[];
+}): PoolRanking[] {
+  const stage = input.stages[input.stages.length - 1];
+  const firstAfterStage =
+    !!stage &&
+    !!input.formula &&
+    formulaSegment(input.formula, 0)?.poolRounds === input.playedRounds;
+  return firstAfterStage
+    ? rankingAfterStage(input.lastRoundRanking, stage)
+    : input.lastRoundRanking;
+}

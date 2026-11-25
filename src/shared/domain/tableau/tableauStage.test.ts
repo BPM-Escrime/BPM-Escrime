@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { Category, CompetitionSettings, Weapon } from '../../types';
 import type { Fencer, PoolRanking } from '../../types';
+import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
+import { applyOperationsV2 } from '../formula/formulaV2Operations';
 import type { TableauMatch } from './tableauTypes';
 import {
   closeStage,
@@ -7,6 +10,7 @@ import {
   rankAfterStages,
   rankingAfterStage,
   resultsTableauMatches,
+  seedRankingForNextRound,
   stageMatches,
   type TableauStageRecord,
 } from './tableauStage';
@@ -155,5 +159,47 @@ describe('tableau des résultats et des exports (ADR-0037)', () => {
     expect(resultsTableauMatches([], closed)).toBe(quarters);
     expect(resultsTableauMatches(semis, closed)).toBe(semis);
     expect(resultsTableauMatches([], undefined)).toEqual([]);
+  });
+});
+
+describe('répartition du tour à tirer, écran (Q5, ADR-0037)', () => {
+  const settings = buildDefaultCompetitionSettings({
+    weapon: Weapon.EPEE,
+    category: Category.SENIOR,
+  }) as CompetitionSettings;
+  const formula = applyOperationsV2(
+    { weapon: Weapon.EPEE, category: Category.SENIOR, settings },
+    [
+      { op: 'setPhase', phase: 'tableau', settings: { stopAt: 2 } },
+      { op: 'insertPhase', brick: 'pool', at: 2 },
+    ],
+    () => 'x'
+  );
+  const out = closeStage([...quarters, ...semis, final], 2)!;
+  const stage: TableauStageRecord = {
+    kind: 'tableau',
+    stopAt: 2,
+    matches: [...quarters, ...semis, final],
+    eliminated: out.eliminated.map(e => ({ fencerId: e.fencer.id, round: e.round, seed: e.seed })),
+  };
+  const last = ['E', 'B', 'A', 'C'].map((id, i) => ({ fencer: f(id), rank: i + 1 }) as PoolRanking);
+
+  it('premier tour après le tableau clos : restants par rang d’entrée', () => {
+    const r = seedRankingForNextRound({
+      formula,
+      playedRounds: 1,
+      stages: [stage],
+      lastRoundRanking: last,
+    });
+    expect(r.map(x => x.fencer.id)).toEqual(['B', 'E']);
+  });
+
+  it('autres tours, ou sans étape close : classement du dernier tour', () => {
+    expect(
+      seedRankingForNextRound({ formula, playedRounds: 2, stages: [stage], lastRoundRanking: last })
+    ).toBe(last);
+    expect(
+      seedRankingForNextRound({ formula, playedRounds: 1, stages: [], lastRoundRanking: last })
+    ).toBe(last);
   });
 });

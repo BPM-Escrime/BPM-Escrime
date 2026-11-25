@@ -14,7 +14,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { phaseSettings } from '../../../shared/domain/formula/formulaV2';
 import { formulaSegment } from '../../../shared/domain/formula/formulaSteps';
 import {
-  rankingAfterStage,
+  seedRankingForNextRound,
   type TableauStageRecord,
 } from '../../../shared/domain/tableau/tableauStage';
 import { getDefaultMaxScores } from '../../../shared/utils/defaultMaxScores';
@@ -270,16 +270,16 @@ export function useCompetitionCore(ctx: Ctx) {
   // Tours de poules (#1051) : seed du tirage = classement du tour précédent
   // Premier tour après un tableau arrêté clos : restants par rang d'entrée au tableau (Q5,
   // ADR-0037), comme le moteur (closeTableauStage)
-  const lastStage = stageHistory[stageHistory.length - 1];
-  const firstRoundAfterStage =
-    !!lastStage &&
-    !!competition.settings?.formula &&
-    formulaSegment(competition.settings.formula, 0)?.poolRounds === poolHistory.length;
+  const storedFormulaForSeed = competition.settings?.formula;
   const previousRoundRanking = useMemo(() => {
     if (currentPoolRound <= 1 || poolHistory.length === 0) return null;
-    const last = computeOverallRanking(poolHistory[poolHistory.length - 1]);
-    return firstRoundAfterStage && lastStage ? rankingAfterStage(last, lastStage) : last;
-  }, [currentPoolRound, poolHistory, computeOverallRanking, firstRoundAfterStage, lastStage]);
+    return seedRankingForNextRound({
+      formula: storedFormulaForSeed,
+      playedRounds: poolHistory.length,
+      stages: stageHistory,
+      lastRoundRanking: computeOverallRanking(poolHistory[poolHistory.length - 1]),
+    });
+  }, [currentPoolRound, poolHistory, computeOverallRanking, storedFormulaForSeed, stageHistory]);
   const getSeededCheckedInFencers = useCallback(() => {
     const checkedIn = getCheckedInFencers();
     return previousRoundRanking
