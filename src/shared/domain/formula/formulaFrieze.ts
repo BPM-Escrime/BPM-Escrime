@@ -252,3 +252,52 @@ export function summarizeCustomFormula(f: CustomFormulaConfig): FormulaSummaryPa
     });
   return parts;
 }
+
+// ── Simulation (effectifs, poules, matchs, durée) ─────────────────────────
+
+/**
+ * Formule de l'épée… Sabre Laser exprimée pour la simulation existante (simulateFormula) :
+ * mêmes tours, tailles, touches, chronos et qualifiés que ceux que le moteur déroulera.
+ * Le Tour Quest n'est pas simulé.
+ */
+export function draftToSimulationFormula(d: FormulaDraft, weapon: Weapon): CustomFormulaConfig {
+  const rounds = effectivePoolRounds(d, weapon);
+  const phases: FormulaPhaseNode[] = [];
+  for (let r = 0; r < rounds; r++) {
+    const last = r === rounds - 1;
+    const qualifiers = d.poolRoundQualifiers[r] ?? 0;
+    const config: CustomPoolRoundConfig = {
+      roundIndex: r,
+      minPoolSize: d.poolSizeMin,
+      maxPoolSize: d.poolSizeMax,
+      balanced: true,
+      seeding: 'serpentine',
+      separation: { byClub: true, byRegion: false, byNation: false },
+      maxScore: d.poolMaxScore,
+      timerSeconds: d.poolTimerSeconds,
+      scoring: { type: 'standard', maxScore: d.poolMaxScore },
+      rankingCriteria: [],
+      advancementRule: last
+        ? d.poolWinnersOnly && d.hasDirectElimination
+          ? { mode: 'pool_winner' }
+          : { mode: 'all' }
+        : qualifiers > 0
+          ? { mode: 'fixed_count', count: qualifiers }
+          : { mode: 'all' },
+    };
+    phases.push({ id: `sim-pool-${r}`, type: 'pool_round', config });
+  }
+  if (d.hasDirectElimination) {
+    // 0 = touches illimitées : la durée s'estime alors sur 15 touches
+    const maxScore = d.tableMaxScore || 15;
+    const config: CustomDEConfig = {
+      maxScore,
+      timerSeconds: d.tableTimerSeconds,
+      thirdPlaceMatch: d.thirdPlaceMatch,
+      placesToFence: [],
+      scoring: { type: 'standard', maxScore },
+    };
+    phases.push({ id: 'sim-tableau', type: 'direct_elimination', config });
+  }
+  return { version: 1, phases };
+}

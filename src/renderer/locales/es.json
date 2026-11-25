@@ -4746,7 +4746,8 @@
     "personalize": "Personalizar la fórmula",
     "modal_title": "Fórmula de la competición",
     "round_settings_hint": "Tocados, cronómetro y baremo: los de la ronda 1, aplicados a todas las rondas.",
-    "save_error": "No se pudo guardar la fórmula."
+    "save_error": "No se pudo guardar la fórmula.",
+    "sim_fencers": "Tiradores simulados"
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",

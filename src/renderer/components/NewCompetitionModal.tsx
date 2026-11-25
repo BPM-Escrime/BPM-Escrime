@@ -322,7 +322,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
         <div
           ref={modalRef}
           className="modal"
-          style={isCustom && !formulaPreview ? { maxWidth: '92vw', width: '1100px' } : undefined}
+          style={isCustom || formulaPreview ? { maxWidth: '94vw', width: '1200px' } : undefined}
           onClick={e => e.stopPropagation()}
           role="dialog"
           aria-modal="true"

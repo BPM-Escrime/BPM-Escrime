@@ -4746,7 +4746,8 @@
     "personalize": "Personalizza la formula",
     "modal_title": "Formula della gara",
     "round_settings_hint": "Stoccate, cronometro e punteggio: quelli del turno 1, applicati a tutti i turni.",
-    "save_error": "Impossibile salvare la formula."
+    "save_error": "Impossibile salvare la formula.",
+    "sim_fencers": "Schermidori simulati"
   },
   "formulaTemplates": {
     "template": "Modello di formula",
