@@ -46,8 +46,31 @@
   margin: var(--space-2, 8px) 0 var(--space-1, 4px);
 }
 
+/* Envoi en masse : une ligne pour l'arme, une ligne pour gauche et droite */
+.strip-control-send {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+/* Arme : seule sur sa ligne, liste à sa largeur naturelle */
+.strip-control-weapon {
+  align-self: flex-start;
+}
+.strip-control-weapon select {
+  width: auto;
+}
+
+/* Gauche et droite sur la même ligne */
+.strip-control-sides {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
 .strip-control-side {
   display: flex;
+  flex: 1 1 0;
+  min-width: 0;
   gap: var(--space-1, 4px);
   border: 1px solid var(--border, #d0d5dd);
   border-radius: var(--radius-md, 8px);
@@ -55,8 +78,19 @@
   margin: 0;
 }
 
-.strip-control-nat {
+.strip-control-side input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.strip-control-side .strip-control-nat {
+  flex: 0 0 9rem;
   width: 9rem;
+}
+
+/* Envoyer à la sélection / Remettre à blanc : de l'air au-dessus et au-dessous */
+.strip-control-actions {
+  margin: var(--space-4, 16px) 0;
 }
 
 .strip-bulk summary {
