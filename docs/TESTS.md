@@ -105,7 +105,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 24 | 281 |
+| `src/database/` | 24 | 282 |
 | `src/main/` | 158 | 1371 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 46 | 571 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **628** | **4964** |
+| **Total** | **628** | **4965** |
 
-Unitaires : 609 fichiers, 4911 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 609 fichiers, 4912 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2407,12 +2407,13 @@ Unitaires : 609 fichiers, 4911 tests. E2E : 19 fichiers, 53 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/database/repos/clubRepo.test.ts</code> — 47 tests</summary>
+<summary><code>src/database/repos/clubRepo.test.ts</code> — 48 tests</summary>
 
 - **ClubRepo (#1872)**
   - **membres**
     - crée, normalise et liste par nom
     - import en lot : création, complément, doublons
+    - surnom : enregistré, effacé par une chaîne vide (ADR-0034)
     - photo : validée, effaçable, import par licence
     - nom requis
     - archive : masqué par défaut, visible avec includeInactive
