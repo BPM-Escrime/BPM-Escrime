@@ -2858,7 +2858,8 @@
     "coach_dismiss": "Non mostrare più",
     "all_places": "{{a}}/{{b}} assalti (tutti i posti)",
     "all_places_title": "Assalti della gara: tabellone principale e classificazione di tutti i posti",
-    "organization_formula_desc": "Fasi della gara e relative impostazioni"
+    "organization_formula_desc": "Fasi della gara e relative impostazioni",
+    "organization_notes_desc": "Note, incidenti e riscontri per tutta la gara"
   },
   "offline": {
     "never": "Mai",
@@ -4766,5 +4767,35 @@
     "save": "Salva",
     "saved": "Modello salvato",
     "save_error": "Impossibile salvare il modello."
+  },
+  "organizerNotes": {
+    "title": "Note e riscontri",
+    "intro": "Diario dell'organizzazione: annotate durante la gara ciò che accade, gli incidenti, i riscontri di schermidori, arbitri e volontari e cosa migliorare la prossima volta.",
+    "kind": "Categoria",
+    "kind_note": "Nota",
+    "kind_incident": "Incidente",
+    "kind_feedback": "Riscontro",
+    "kind_improvement": "Da migliorare",
+    "placeholder_note": "Es.: sala aperta alle 8, bar pronto",
+    "placeholder_incident": "Es.: apparecchio della pedana 3 guasto, sostituito",
+    "placeholder_feedback": "Es.: gli arbitri lodano la rapidità dei gironi",
+    "placeholder_improvement": "Es.: portare più prolunghe elettriche",
+    "new_note": "Nuova nota",
+    "add": "Aggiungi",
+    "shortcut_hint": "Ctrl+Invio per aggiungere",
+    "filter_kind": "Filtra per categoria",
+    "all_kinds": "Tutte le categorie",
+    "search": "Cerca",
+    "open_only": "Solo da gestire",
+    "empty": "Ancora nessuna nota.",
+    "no_match": "Nessuna nota corrisponde al filtro.",
+    "mark_done": "Gestito",
+    "done": "gestito",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "copy_report": "Copia il resoconto",
+    "copied": "Copiato",
+    "copy_failed": "Impossibile copiare negli appunti",
+    "open_count": "{{n}} punto/i da gestire"
   }
 }

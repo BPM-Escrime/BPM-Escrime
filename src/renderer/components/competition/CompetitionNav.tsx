@@ -92,6 +92,8 @@ interface CompetitionNavProps {
   onOpenPlanningAssistant?: () => void;
   /** Engrenage avant l'appel : page Organisation (plan de salle, feuille de route) */
   onOpenOrganization?: () => void;
+  /** Pastille sur l'engrenage : incidents et améliorations non traités (Notes & retours) */
+  organizationBadge?: number;
   /** Compétition par équipes : l'appel mène à la composition des équipes (#1085) */
   isTeamEvent?: boolean;
   /** Compétition chargée : le parcours guidé (#1305) peut se proposer */
@@ -123,6 +125,7 @@ const CompetitionNavComponent: React.FC<CompetitionNavProps> = ({
   playAllPositions = false,
   onOpenPlanningAssistant,
   onOpenOrganization,
+  organizationBadge = 0,
   isTeamEvent = false,
   tourReady = false,
   remoteActive = false,
@@ -188,6 +191,11 @@ const CompetitionNavComponent: React.FC<CompetitionNavProps> = ({
               aria-label={t('competitionNav.organization')}
             >
               <Settings size={16} aria-hidden="true" />
+              {organizationBadge > 0 && (
+                <span className="phase-nav-org-badge" data-testid="organization-badge">
+                  {organizationBadge}
+                </span>
+              )}
             </button>
             <div className="phase-step-connector" />
           </>

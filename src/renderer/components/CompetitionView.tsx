@@ -11,12 +11,10 @@ import FencerList from './FencerList';
 import ResultsView from './ResultsView';
 import AddFencerModal from './AddFencerModal';
 import CompetitionPropertiesModal from './CompetitionPropertiesModal';
-import SplitCompetitionModal from './SplitCompetitionModal';
 import {
   defaultSplitCompetitionTitle,
   extractSplitGroupRanking,
 } from '../../shared/domain/ranking/splitGroups';
-import ImportModal from './ImportModal';
 import PoolPrepView from './PoolPrepView';
 import { TEAM_PHASE_VIEWS, isTeamPhase } from './competition/teamPhases';
 import type { TeamPhase } from './competition/teamPhases';
@@ -51,6 +49,7 @@ import type { CompetitionViewProps } from './competition/competitionViewTypes';
 import { useCompetitionPhaseFlow } from '../hooks/competitionView/useCompetitionPhaseFlow';
 import { useCompetitionSessionSync } from '../hooks/competitionView/useCompetitionSessionSync';
 import { useCompetitionCore } from '../hooks/competitionView/useCompetitionCore';
+import { useOrganizerNotes } from '../hooks/competitionView/useOrganizerNotes';
 import { useBlackCardReportRequest } from '../hooks/competitionView/useBlackCardReportRequest';
 import QuestSection from './competition/QuestSection';
 import PoolsPhase from './competition/PoolsPhase';
@@ -60,6 +59,10 @@ import { useBpmClient } from '../api/BpmClientContext';
 import { persistCompetitionUpdate } from '../api/competitionUpdate';
 import { writePoolDraft } from '../hooks/posteUiState';
 
+// Modales ouvertes à la demande : hors du chunk CompetitionView (budget check:bundle-size)
+const ImportModal = React.lazy(() => import('./ImportModal'));
+const SplitCompetitionModal = React.lazy(() => import('./SplitCompetitionModal'));
+const OrganizerNotesModal = React.lazy(() => import('./competition/OrganizerNotesModal'));
 const RemoteScoreManager = React.lazy(() => import('./RemoteScoreManager'));
 const MatchAuditLog = React.lazy(() =>
   import('./MatchAuditLog').then(m => ({ default: m.MatchAuditLog }))
@@ -78,6 +81,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
   // Organisation ▸ Formule : nouvelle interface de formule (aperçu, docs/adr/0032)
   const formulaPreview = useFormulaPreview();
   const [showFormula, setShowFormula] = useState(false);
+  // Organisation ▸ Notes & retours (settings.organizerNotes, updateCompetitionSettings)
+  const [showNotes, setShowNotes] = useState(false);
   const competitionCore = useCompetitionCore({ ...props });
   const competitionSessionSync = useCompetitionSessionSync({ ...props, ...competitionCore });
   const competitionPhaseFlow = useCompetitionPhaseFlow({
@@ -299,6 +304,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     competition.id
   );
 
+  const organizerNotes = useOrganizerNotes(competition, onUpdate);
+
   return (
     <div style={CV_STYLES.root}>
       {showOrganization && (
@@ -308,7 +315,22 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
           onOpenArenaPlanner={props.onOpenArenaPlanner}
           onOpenRoadmap={props.onOpenRoadmap}
           onOpenFormula={formulaPreview ? () => setShowFormula(true) : undefined}
+          onOpenNotes={() => setShowNotes(true)}
+          openNotesCount={organizerNotes.openCount}
         />
+      )}
+      {showNotes && (
+        <Suspense fallback={null}>
+          <OrganizerNotesModal
+            t={t}
+            notes={organizerNotes.notes}
+            currentPhase={currentPhase}
+            phases={phases}
+            competitionTitle={competition.title}
+            onSave={organizerNotes.save}
+            onClose={() => setShowNotes(false)}
+          />
+        </Suspense>
       )}
       {showFormula && (
         <CompetitionFormulaModal
@@ -365,11 +387,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         consolationBrackets={consolationBrackets}
         playAllPositions={playAllPositions}
         onOpenPlanningAssistant={() => modals.setShowPlanningAssistant(true)}
-        onOpenOrganization={
-          formulaPreview || props.onOpenArenaPlanner || props.onOpenRoadmap
-            ? () => setShowOrganization(true)
-            : undefined
-        }
+        onOpenOrganization={() => setShowOrganization(true)}
+        organizationBadge={organizerNotes.openCount}
         isTeamEvent={isTeamEvent}
         tourReady={isLoaded}
         remoteActive={isRemoteActive}
@@ -793,19 +812,21 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
       )}
 
       {pendingSplitOffGroup && (
-        <SplitCompetitionModal
-          groupLabel={
-            pendingSplitOffGroup === Gender.FEMALE
-              ? t('genders.female')
-              : pendingSplitOffGroup === Gender.MALE
-                ? t('genders.male')
-                : pendingSplitOffGroup
-          }
-          fencerCount={extractSplitGroupRanking(overallRanking, pendingSplitOffGroup).length}
-          defaultTitle={defaultSplitCompetitionTitle(competition.title, pendingSplitOffGroup)}
-          onConfirm={title => createSplitOffCompetition(pendingSplitOffGroup, title)}
-          onCancel={() => setPendingSplitOffGroup(null)}
-        />
+        <Suspense fallback={null}>
+          <SplitCompetitionModal
+            groupLabel={
+              pendingSplitOffGroup === Gender.FEMALE
+                ? t('genders.female')
+                : pendingSplitOffGroup === Gender.MALE
+                  ? t('genders.male')
+                  : pendingSplitOffGroup
+            }
+            fencerCount={extractSplitGroupRanking(overallRanking, pendingSplitOffGroup).length}
+            defaultTitle={defaultSplitCompetitionTitle(competition.title, pendingSplitOffGroup)}
+            onConfirm={title => createSplitOffCompetition(pendingSplitOffGroup, title)}
+            onCancel={() => setPendingSplitOffGroup(null)}
+          />
+        </Suspense>
       )}
 
       {modals.showPropertiesModal && (
@@ -823,16 +844,18 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
       )}
 
       {importData && (
-        <ImportModal
-          format={importData.format}
-          filepath={importData.filepath}
-          content={importData.content}
-          fencers={fencers}
-          onImport={handleImportFencers}
-          onImportRanking={handleImportRanking}
-          onImportReferees={handleImportReferees}
-          onClose={() => setImportData(null)}
-        />
+        <Suspense fallback={null}>
+          <ImportModal
+            format={importData.format}
+            filepath={importData.filepath}
+            content={importData.content}
+            fencers={fencers}
+            onImport={handleImportFencers}
+            onImportRanking={handleImportRanking}
+            onImportReferees={handleImportReferees}
+            onClose={() => setImportData(null)}
+          />
+        </Suspense>
       )}
 
       {matchOrderPrompt && (
