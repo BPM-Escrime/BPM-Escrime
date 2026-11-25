@@ -66,7 +66,7 @@ export function compatibleTemplate(
 export function getCompetitionFormula(ctx: CommandContext, input: { competitionId: string }) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
   const src = { weapon: comp.weapon, category: comp.category, settings: comp.settings };
-  // Frise et cohérence sur la formule v2 (ADR-0034) ; draft / customFormula gardés pour l'agent
+  // Frise et cohérence sur la formule v2 (ADR-0036) ; draft / customFormula gardés pour l'agent
   const legacy = formulaView(src);
   const v2 = formulaViewV2(src);
   const view = { ...legacy, ...v2 };
@@ -108,7 +108,7 @@ export function applyFormulaTemplate(
 }
 
 /**
- * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0034), après le contrôle des bornes
+ * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0036), après le contrôle des bornes
  * de chaque tour ; `extra` : autres réglages écrits avec elle (origine, mode spécial).
  */
 export function writeFormula(

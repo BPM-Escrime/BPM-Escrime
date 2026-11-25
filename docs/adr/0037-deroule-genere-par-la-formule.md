@@ -1,8 +1,8 @@
-# ADR-0035 — Déroulé généré par la formule v2 : navigation, 0 tour de poules, tableau arrêté à N, phase après un tableau
+# ADR-0037 — Déroulé généré par la formule v2 : navigation, 0 tour de poules, tableau arrêté à N, phase après un tableau
 
 - **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2)
 - **Date** : 2026-11-25
-- **Tickets** : #2013 (étape D ; question Q5), #1948 ; complète [ADR-0034](0034-formule-v2-arbre-par-phase.md), [ADR-0007](0007-format-evenement.md) et [ADR-0017](0017-projections-etat-epreuve.md)
+- **Tickets** : #2013 (étape D ; question Q5), #1948 ; complète [ADR-0036](0036-formule-v2-arbre-par-phase.md), [ADR-0007](0007-format-evenement.md) et [ADR-0017](0017-projections-etat-epreuve.md)
 
 ## Contexte
 
@@ -12,7 +12,7 @@
 - « Sans poule » existe déjà, mais comme un choix fait le jour J : la commande `skipPools`
   (événement `PoolsSkipped`) place le tableau au classement d'entrée.
 - Le tableau va toujours jusqu'à la finale ; rien ne peut le suivre.
-- La formule v2 (ADR-0034) sait décrire 0 à 5 tours, et déclare `TableauPhase.stopAt` sans que
+- La formule v2 (ADR-0036) sait décrire 0 à 5 tours, et déclare `TableauPhase.stopAt` sans que
   le moteur l'exécute.
 
 ## Décision
@@ -26,7 +26,7 @@
   existants (`poolprep`, `pools`, `ranking`, `tableau`, `results`, `quest`) sont gardés ; une
   étape qui suit un tableau arrêté reçoit un identifiant indexé (D2).
 - Une épreuve sans formule enregistrée garde le déroulé actuel : `formulaOf` construit la même
-  suite depuis ses réglages (ADR-0034).
+  suite depuis ses réglages (ADR-0036).
 
 **D1 : 0 tour de poules, plus de 3 tours**
 

@@ -52,7 +52,7 @@ export function closePoolRound(ctx: CommandContext, input: ClosePoolRoundInput) 
     );
   }
   const round = Math.max(1, Number(session.currentPoolRound ?? 1) || 1);
-  // Classement du tour ou cumul des tours (Q4), qualifiés de la formule (ADR-0034)
+  // Classement du tour ou cumul des tours (Q4), qualifiés de la formule (ADR-0036)
   const plan = nextRoundPlan({
     weapon: comp.weapon,
     settings: comp.settings,
@@ -111,7 +111,7 @@ export function closePoolRound(ctx: CommandContext, input: ClosePoolRoundInput) 
       overallRanking: computeOverallRankingAllRoundsFor([], history, isLaser(comp)),
       poolsLaunched: false,
     });
-    // Tablettes : chrono et score max du nouveau tour (formule lue par phase, ADR-0034)
+    // Tablettes : chrono et score max du nouveau tour (formule lue par phase, ADR-0036)
     if (comp.settings?.formula) ctx.remote?.settingsChanged(comp.id, {});
     recordEvents(ctx, comp.id, [
       {

@@ -144,6 +144,7 @@ export const ClubScheduleModal: React.FC<ClubScheduleModalProps> = ({
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={t('clubSchedule.title')}
       onClose={onClose}
       size="lg"

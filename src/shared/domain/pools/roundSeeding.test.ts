@@ -56,7 +56,7 @@ const r2 = round('t2', [
   row('A', 3, 0, 2, 4, 10),
 ]);
 
-describe('répartition du tour suivant (Q4, ADR-0034)', () => {
+describe('répartition du tour suivant (Q4, ADR-0036)', () => {
   it('cumul des tours : victoires et touches additionnées', () => {
     const r = cumulativeRanking([r1], r2, false);
     expect(r.map(x => [x.fencer.id, x.rank, x.victories, x.matchesPlayed, x.index])).toEqual([

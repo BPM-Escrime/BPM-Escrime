@@ -2859,6 +2859,7 @@
     "all_places": "{{a}}/{{b}} matchs (toutes les places)",
     "all_places_title": "Matchs de la compétition : tableau principal et classement de toutes les places",
     "organization_formula_desc": "Phases de l'épreuve et leurs réglages",
+    "organization_notes_desc": "Notes, incidents et retours, tout le long de l'épreuve",
     "goto_entry_ranking": "Classement d'entrée"
   },
   "offline": {
@@ -3567,6 +3568,7 @@
   },
   "club": {
     "new_member": "Nouveau membre",
+    "nickname": "Surnom",
     "tab_identity": "Identité",
     "tab_members": "Membres",
     "tab_sessions": "Séances",
@@ -4771,5 +4773,35 @@
     "save": "Enregistrer",
     "saved": "Modèle enregistré",
     "save_error": "Impossible d'enregistrer le modèle."
+  },
+  "organizerNotes": {
+    "title": "Notes & retours",
+    "intro": "Journal de bord de l'organisation : notez au fil de l'épreuve ce qui se passe, les incidents, les retours des tireurs, arbitres et bénévoles, et ce qu'il faudra améliorer la prochaine fois.",
+    "kind": "Catégorie",
+    "kind_note": "Note",
+    "kind_incident": "Incident",
+    "kind_feedback": "Retour",
+    "kind_improvement": "À améliorer",
+    "placeholder_note": "Ex. : salle ouverte à 8 h, buvette en place",
+    "placeholder_incident": "Ex. : appareil de la piste 3 en panne, remplacé",
+    "placeholder_feedback": "Ex. : les arbitres saluent la rapidité des poules",
+    "placeholder_improvement": "Ex. : prévoir plus de rallonges électriques",
+    "new_note": "Nouvelle note",
+    "add": "Ajouter",
+    "shortcut_hint": "Ctrl+Entrée pour ajouter",
+    "filter_kind": "Filtrer par catégorie",
+    "all_kinds": "Toutes les catégories",
+    "search": "Rechercher",
+    "open_only": "Non traités seulement",
+    "empty": "Aucune note pour l'instant.",
+    "no_match": "Aucune note ne correspond au filtre.",
+    "mark_done": "Traité",
+    "done": "traité",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "copy_report": "Copier le compte rendu",
+    "copied": "Copié",
+    "copy_failed": "Copie impossible dans le presse-papiers",
+    "open_count": "{{n}} point(s) à traiter"
   }
 }

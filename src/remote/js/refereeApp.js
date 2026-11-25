@@ -767,6 +767,9 @@ class RefereeApp extends RefereeAppBase {
 
   showFinishModal() {
     if (!this.currentMatch || this.matchStatus !== 'in_progress') return;
+    // Déjà ouverte (contrôle local puis avis du serveur) : pas de second appel
+    const modal = document.getElementById('finish-modal');
+    if (modal && modal.classList.contains('active')) return;
 
     if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 600]);
 

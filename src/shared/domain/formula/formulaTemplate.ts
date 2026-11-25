@@ -23,7 +23,7 @@ import { validateFormulaSettings } from './validateFormulaSettings';
 export type FormulaTemplateBody =
   | { kind: 'draft'; draft: FormulaDraft }
   | { kind: 'custom'; formula: CustomFormulaConfig; specialMode?: CompetitionSpecialMode }
-  /** Formule v2 (ADR-0034) ; `other` : modèle de l'arme « Autre » */
+  /** Formule v2 (ADR-0036) ; `other` : modèle de l'arme « Autre » */
   | { kind: 'formula'; formula: FormulaV2; other?: boolean; specialMode?: CompetitionSpecialMode };
 
 /** Le modèle est-il un modèle de l'arme « Autre » ? */
@@ -267,7 +267,7 @@ export function formulaDeviations(
   const template = originId ? templates.find(t => t.id === originId) : undefined;
   if (!template) return { state: 'free', deviations: [] };
   const deviations: FormulaDeviation[] = [];
-  // Formule v2 enregistrée ou modèle v2 : comparaison phase par phase (ADR-0034)
+  // Formule v2 enregistrée ou modèle v2 : comparaison phase par phase (ADR-0036)
   if (competition.settings?.formula || template.body.kind === 'formula') {
     const expected =
       template.body.kind === 'formula'

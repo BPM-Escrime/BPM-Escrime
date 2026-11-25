@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Clôture d'un tableau arrêté à N tireurs (#2013 étape D2, docs/adr/0035)
+ * BPM - Escrime - Clôture d'un tableau arrêté à N tireurs (#2013 étape D2, docs/adr/0037)
  * Formule enregistrée dont le tableau porte `stopAt` et qu'une phase suit : quand tous les
  * matchs avant l'arrêt sont décidés, les N restants passent à la phase suivante (classement =
  * rang d'entrée), les éliminés sortent (classés par tour atteint puis rang d'entrée, Q5).

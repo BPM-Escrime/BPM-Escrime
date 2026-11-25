@@ -278,7 +278,7 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
         break;
       }
       case JOURNAL_EVENT.tableauStageClosed: {
-        // Étape close : les éliminés sortent, le tableau est archivé (ADR-0035)
+        // Étape close : les éliminés sortent, le tableau est archivé (ADR-0037)
         for (const id of event.payload.eliminatedIds) {
           facts.fencerStatus[id] = FencerStatus.ELIMINATED;
         }

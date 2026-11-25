@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Déroulé de l'épreuve dérivé de la formule v2 (#2013 étape D, ADR-0035)
+ * BPM - Escrime - Déroulé de l'épreuve dérivé de la formule v2 (#2013 étape D, ADR-0037)
  * Étapes dans l'ordre : appel, poules (suite de tours consécutifs), Tour Quest, tableau (arrêté
  * à N ou non), résultats. L'écran en déduit sa navigation ; une épreuve sans formule enregistrée
  * obtient la même suite depuis ses réglages (formulaOf). Domaine pur.

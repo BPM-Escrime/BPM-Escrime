@@ -520,3 +520,36 @@ d('import par lot (--batch-import)', () => {
     });
   });
 });
+
+d('Durées de match et état de la salle (#1965, lot 4)', () => {
+  it('get_match_durations : références par défaut (poule d’épée 3:30, tableau de sabre 8:00)', async () => {
+    const view = await ok('get_match_durations');
+    const ref = (weapon: string, phase: string) =>
+      view.rows.find(
+        (r: { key: { weapon: string; phase: string; gender?: string; category?: string } }) =>
+          r.key.weapon === weapon && r.key.phase === phase && !r.key.gender && !r.key.category
+      ).reference;
+    expect(ref('E', 'pool')).toMatchObject({ medianMs: 210_000, basis: 'default' });
+    expect(ref('S', 'tableau')).toMatchObject({ medianMs: 480_000, basis: 'default' });
+    expect(view.changeoverMs).toBe(60_000);
+  });
+
+  it('server_status : fin estimée de la phase si une séance est ouverte, sinon null', async () => {
+    const eta = { finishAt: '2026-12-06T14:20:00.000Z', basis: 'default', phase: 'pools' };
+    const server = (open: boolean) => ({
+      getServerUrl: () => 'https://x:8066',
+      hasSession: () => open,
+      clients: { list: () => [] },
+      getAllArenas: () => [],
+      computePhaseEta: () => eta,
+    });
+    deps.remoteServers = () =>
+      [
+        ['c1', { server: server(true) }],
+        ['c2', { server: server(false) }],
+      ] as never;
+    const [a, b] = await ok('server_status');
+    expect(a.phaseEta).toEqual(eta);
+    expect(b.phaseEta).toBeNull();
+  });
+});

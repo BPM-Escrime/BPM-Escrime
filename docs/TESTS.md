@@ -105,13 +105,13 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 24 | 281 |
-| `src/main/` | 157 | 1361 |
+| `src/database/` | 24 | 282 |
+| `src/main/` | 158 | 1381 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 40 | 214 |
-| `src/renderer/components/` | 135 | 749 |
-| E2E Playwright (`e2e/`) | 18 | 51 |
-| `src/remote/` | 60 | 430 |
+| `src/renderer/components/` | 136 | 766 |
+| E2E Playwright (`e2e/`) | 19 | 53 |
+| `src/remote/` | 60 | 439 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 44 | 539 |
+| `src/shared/domain/` | 47 | 577 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **623** | **4904** |
+| **Total** | **629** | **4991** |
 
-Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 610 fichiers, 4938 tests. E2E : 19 fichiers, 53 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2407,12 +2407,13 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/database/repos/clubRepo.test.ts</code> — 47 tests</summary>
+<summary><code>src/database/repos/clubRepo.test.ts</code> — 48 tests</summary>
 
 - **ClubRepo (#1872)**
   - **membres**
     - crée, normalise et liste par nom
     - import en lot : création, complément, doublons
+    - surnom : enregistré, effacé par une chaîne vide (ADR-0034)
     - photo : validée, effaçable, import par licence
     - nom requis
     - archive : masqué par défaut, visible avec includeInactive
@@ -3221,7 +3222,7 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - aucun droit du groupe n’est servi sur le réseau
   - %s est refusé (permission\_denied) _(each)_
 - **opérations du poste : pas d’outil MCP**
-  - aucune opération club:\*, station:\* ou remote:\* n’est exposée à l’agent
+  - aucune opération club:\*, station:\* ou remote:\* n’est exposée à l’agent, sauf exception d’ADR
 - **STATION\_PERMISSIONS (pas de journal, pas de réseau)**
   - couvre exactement les droits club:, station: et remote: du contrat
 
@@ -3264,6 +3265,22 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - aucune opération club:\* n’a d’outil MCP
 - **erreurs du Mode Club**
   - refus du dépôt : club\_refused avec son message ; panne SQLite : erreur interne
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 10 tests</summary>
+
+- liste : fournis puis personnels, standard du contexte
+- enregistrer une copie, la retrouver, la supprimer ; un modèle fourni est refusé
+- formule hors bornes refusée à l’entrée
+- MCP : liste en lecture, aucun outil d’écriture des modèles
+- lecture : frise, briques autorisées, état libre sans origine
+- appliquer le standard : état standard ; modifier : adaptée avec l’écart
+- tout ou rien : une opération refusée n’écrit rien
+- modèle incompatible ou inconnu refusé
+- createCompetition avec un modèle : Tournoi des rapières, arme « Autre »
+- outils MCP de la formule d’une épreuve
 
 </details>
 
@@ -3660,7 +3677,7 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 - adresse invalide ou avec identifiants : station\_refused, réglage inchangé
 - contenu JSON en base64, nom horodaté, liste blanche de champs
 - **contrat du poste**
-  - 61 opérations, chacune avec son gestionnaire
+  - 64 opérations, chacune avec son gestionnaire
 - **listPlaceSuggestions (docs/adr/0026)**
   - texte nettoyé transmis au port, langue par défaut fr
   - texte trop court : refus du contrat ; poste sans service : indisponible
@@ -3889,7 +3906,7 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/mcp/mcpExtraTools.test.ts</code> — 17 tests</summary>
+<summary><code>src/main/mcp/mcpExtraTools.test.ts</code> — 19 tests</summary>
 
 - sans écriture : outils de lecture seulement, écritures refusées
 - noms d’outils uniques, outils destructifs annotés
@@ -3908,6 +3925,8 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 - TXT séparé par des espaces lu comme à l’écran ; fichier sans tireur signalé
 - import\_day : un fichier manquant fait échouer l’import sans rien écrire
 - manifeste de import\_day, chemins relatifs au manifeste, rejouable
+- get\_match\_durations : références par défaut (poule d’épée 3:30, tableau de sabre 8:00)
+- server\_status : fin estimée de la phase si une séance est ouverte, sinon null
 
 </details>
 
@@ -4465,7 +4484,7 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/clubArena.test.ts</code> — 9 tests</summary>
+<summary><code>src/main/remote/clubArena.test.ts</code> — 11 tests</summary>
 
 - **saisie distante Mode Club (#1872)**
   - identifiant de match club
@@ -4478,6 +4497,9 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - une carte passée : combat libre non enregistré, nom connu affiché
   - erreurs : carte inconnue, même tireur, piste occupée ou absente
   - piste occupée : vue arbitre directe ; combat libre par défaut : lecture des cartes
+- **liste des présents sur la tablette arbitre**
+  - présents du club, triés, sans code de carte
+  - tireur choisi : code de sa carte s’il est présent
 
 </details>
 
@@ -5195,7 +5217,7 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/updateReleases.test.ts</code> — 13 tests</summary>
+<summary><code>src/main/updateReleases.test.ts</code> — 19 tests</summary>
 
 - **parseReleaseBuild**
   - lit le build dans le nom, sinon le tag, sinon le corps
@@ -5215,6 +5237,13 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - un 3.0.0-dev ne se voit pas proposer la 2.0.1
   - un 2.0.0 stable se voit proposer la 2.0.1
   - un testeur 3.0.0-dev.1995 ne redescend pas vers la 3.0.0 (Build #1990)
+- **isChannelDowngrade (passage dev → stable)**
+  - build dev 2086, canal stable, stable 1986 : retour proposé
+  - même version X.Y.Z, build dev plus élevé : retour proposé
+  - build rc de maintenance, canal stable : retour proposé
+  - canal dev conservé : pas de retour
+  - build stable installé : jamais de retour
+  - release dev ou stable plus récente : pas un retour
 
 </details>
 
@@ -6006,9 +6035,10 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/AddFencerModal.test.tsx</code> — 7 tests</summary>
+<summary><code>src/renderer/components/AddFencerModal.test.tsx</code> — 8 tests</summary>
 
 - **AddFencerModal**
+  - fenêtre de saisie : un clic à côté ne la ferme pas
   - ajoute un tireur avec nom en majuscules puis ferme
   - ne soumet pas sans nom/prénom
   - annuler efface les champs sans fermer la modale
@@ -6406,12 +6436,13 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/NewCompetitionModal.test.tsx</code> — 6 tests</summary>
+<summary><code>src/renderer/components/NewCompetitionModal.test.tsx</code> — 7 tests</summary>
 
 - **NewCompetitionModal**
   - crée une compétition avec le titre saisi
   - génère un titre par défaut si vide
   - propriétés saisies à la création : appliquées à cette compétition seulement
+  - ni un clic à côté ni Échap ne ferment la modale ; la croix la ferme
   - le bouton annuler ferme la modale
   - pré-remplit et verrouille les champs depuis le .zip de l'extranet (#1938)
   - niveau GREG de l'import visible et modifiable dans Propriétés à la création (#1328)
@@ -7196,6 +7227,30 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 15 tests</summary>
+
+- **FormulaEditor**
+  - frise : appel, poules, tableau, classement ; pas de « + Classement »
+  - « ＋ » propose les briques autorisées et insère un tour
+  - retirer le tableau rend le « ＋ » de fin de frise
+  - arme « Autre » : même frise, « Classement final » implicite
+  - arme « Autre » : seuls les réglages exécutés sont proposés (P2)
+- **Organisation ▸ Formule : réglages enregistrés**
+  - épée : réglages plats, comme l’onglet Formule des Propriétés
+  - arme « Autre » : formule normalisée et réglages dérivés
+- **Création : formule repliée (aperçu)**
+  - « À la carte » devient « Autre »
+  - sans personnaliser : mêmes réglages qu’aujourd’hui, plus l’origine standard
+  - changer de catégorie présélectionne le standard de la nouvelle catégorie
+  - choisir un autre modèle fourni : appliqué et enregistré avec son origine
+  - arme « Autre » : le modèle Tournoi des rapières active le mode spécial
+  - personnalisée : le tour ajouté est enregistré
+  - « Revenir au modèle » annule la personnalisation
+  - arme « Autre » : formule enregistrée sans « Classement final »
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/guidedTourFlags.test.ts</code> — 6 tests</summary>
 
 - **guidedTour**
@@ -7809,6 +7864,15 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
+<summary><code>e2e/electron/formula-preview.spec.ts</code> — 2 tests</summary>
+
+- **Formule : interface actuelle et aperçu (application Electron)**
+  - sans le réglage : interface actuelle inchangée
+  - avec le réglage : formule repliée, personnalisée, puis Organisation ▸ Formule
+
+</details>
+
+<details>
 <summary><code>e2e/electron/persistence.spec.ts</code> — 1 test</summary>
 
 - poules lancées et score saisi retrouvés après rechargement de la fenêtre
@@ -8344,7 +8408,7 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeApp.test.ts</code> — 21 tests</summary>
+<summary><code>src/remote/js/refereeApp.test.ts</code> — 23 tests</summary>
 
 - **refereeApp.js dans referee.html**
   - referee.html ne contient plus de script inline
@@ -8373,11 +8437,13 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - Laser, chrono en marche : boutons actifs, carton jaune enregistré (+3 adverse)
   - olympique, chrono en marche : boutons grisés, carton refusé (#1826)
   - Laser : un carton qui porte les deux tireurs à 10 déclenche la mort subite challenger
+  - Laser : un carton qui porte un tireur au-delà de 15 ouvre la fin de match
+  - Laser : un carton sous la limite ne termine pas le match
 
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeCards.test.ts</code> — 14 tests</summary>
+<summary><code>src/remote/js/refereeCards.test.ts</code> — 17 tests</summary>
 
 - **refereeCards.js cartons**
   - modernYellowOrRed : rouge si déjà jaune ou rouge
@@ -8395,11 +8461,15 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - Sabre Laser : points des cartons, parité tablette / domaine (provisoire, #2208)
   - motifs olympiques de la tablette = motifs FIE du domaine, mêmes groupes (t.163, #2207)
   - referee.html charge le module et délègue
+- **penaltyReachesLimit : points de pénalité au score limite**
+  - carton qui porte un tireur à 15 ou au-delà : vrai
+  - sous la limite ou déjà au-delà : faux
+  - limite inconnue : 15 au Sabre Laser, rien ailleurs ; illimitée : faux
 
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeClubCards.test.ts</code> — 8 tests</summary>
+<summary><code>src/remote/js/refereeClubCards.test.ts</code> — 12 tests</summary>
 
 - **refereeClubCards (#1872)**
   - lit le QR de la carte ou le code en clair
@@ -8410,6 +8480,10 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
   - combat déjà sur la piste : vue arbitre directe, cartes via l’en-tête
   - caméra utilisable : contexte sécurisé + getUserMedia
   - piste sans combat : lecture des cartes à l’ouverture
+  - liste des présents : tireur déjà choisi exclu, aucun présent → pas de liste
+  - champs envoyés : code lu ou tireur de la liste
+  - motif de la caméra indisponible
+  - caméra arrière absente : second essai avec n’importe quelle caméra
 
 </details>
 
@@ -9264,6 +9338,56 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/formula/formulaFrieze.test.ts</code> — 15 tests</summary>
+
+- **frise : épée, fleuret, sabre, Sabre Laser**
+  - standard : un tour de poules puis le tableau
+  - « ＋ » : poules avant le tableau, rien après le tableau
+  - tableau proposé en fin de frise seulement quand il est absent
+  - insérer un tour en tête décale les qualifiés
+  - brique interdite : aucun changement
+  - retrait : il reste toujours une phase de combat
+  - Sabre Laser : Tour Quest après les poules
+  - résumé sur une ligne
+- **frise : arme « Autre »**
+  - « Classement final » retiré, il est implicite
+  - normalisation : premier tableau seul, en dernier ; réglages exécutés inchangés
+  - insérer un tour reprend les réglages du tour voisin, tous qualifiés
+  - tableau : seulement en fin de frise, et une seule fois
+  - retrait : il reste une phase de combat, le dernier tour ne se retire pas
+  - nœud d’une phase de la frise
+  - résumé sur une ligne
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/formula/formulaTemplate.test.ts</code> — 17 tests</summary>
+
+- **catalogue fourni (docs/adr/0033)**
+  - identifiants uniques, modèles valides, lecture seule
+  - un standard par arme × catégorie × type, égal aux défauts de création
+  - épée M13 : standard 4 / 8 touches
+  - arme « Autre » : standard et Tournoi des rapières, rien d’autre
+  - recherche sans accents ni casse
+- **compatibilité, modèles personnels**
+  - un modèle « draft » ne s’applique pas à l’arme « Autre », ni l’inverse
+  - personnels après les fournis
+  - bibliothèque validée : formule hors bornes refusée
+  - état : libre sans origine, adaptée avec écart
+- **opérations de formule (updateCompetitionFormula)**
+  - insère un tour, règle les qualifiés et le tableau, tout ou rien
+  - refus : brique interdite, phase inconnue, réglage non modifiable ici
+  - arme « Autre » : barème et règles, classement final implicite
+  - vue : briques autorisées à chaque position, relevé de cohérence
+- **opérations entre deux formules (écran → updateCompetitionFormula)**
+  - épée : aucune modification, aucune opération
+  - épée : %s _(each)_
+  - Sabre Laser : Tour Quest ajouté
+  - arme « Autre » : tour ajouté, barème et règles
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/formula/laserMaxScores.test.ts</code> — 4 tests</summary>
 
 - **readLaserMaxScores**
@@ -9336,6 +9460,19 @@ Unitaires : 605 fichiers, 4853 tests. E2E : 18 fichiers, 51 tests (comptage stat
 - **passivityCardAllowed (t.124.3)**
   - aucun carton P à limite − 1 des deux côtés (14:14, 44:44)
   - limite inconnue, nulle ou infinie : permis
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/organizerNotes/organizerNotes.test.ts</code> — 6 tests</summary>
+
+- **organizerNotes**
+  - ajoute en tête, horodate, garde la phase, ignore le vide
+  - tronque le texte et borne la liste
+  - bascule, modifie, supprime
+  - compte les incidents et améliorations ouverts
+  - filtre par catégorie, statut et texte
+  - produit un compte rendu groupé et chronologique
 
 </details>
 

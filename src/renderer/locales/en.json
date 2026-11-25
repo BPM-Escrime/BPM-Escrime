@@ -2859,6 +2859,7 @@
     "all_places": "{{a}}/{{b}} bouts (all places)",
     "all_places_title": "Competition bouts: main table and classification of all places",
     "organization_formula_desc": "Competition phases and their settings",
+    "organization_notes_desc": "Notes, incidents and feedback throughout the event",
     "goto_entry_ranking": "Entry ranking"
   },
   "offline": {
@@ -3567,6 +3568,7 @@
   },
   "club": {
     "new_member": "New member",
+    "nickname": "Nickname",
     "tab_identity": "Identity",
     "tab_members": "Members",
     "tab_sessions": "Sessions",
@@ -4771,5 +4773,35 @@
     "save": "Save",
     "saved": "Template saved",
     "save_error": "Could not save the template."
+  },
+  "organizerNotes": {
+    "title": "Notes & feedback",
+    "intro": "Organisers' logbook: record what happens during the event, incidents, feedback from fencers, referees and volunteers, and what to improve next time.",
+    "kind": "Category",
+    "kind_note": "Note",
+    "kind_incident": "Incident",
+    "kind_feedback": "Feedback",
+    "kind_improvement": "To improve",
+    "placeholder_note": "E.g. hall opened at 8 am, refreshments ready",
+    "placeholder_incident": "E.g. strip 3 scoring box failed, replaced",
+    "placeholder_feedback": "E.g. referees praise how fast the pools ran",
+    "placeholder_improvement": "E.g. bring more extension cords",
+    "new_note": "New note",
+    "add": "Add",
+    "shortcut_hint": "Ctrl+Enter to add",
+    "filter_kind": "Filter by category",
+    "all_kinds": "All categories",
+    "search": "Search",
+    "open_only": "Open items only",
+    "empty": "No notes yet.",
+    "no_match": "No note matches the filter.",
+    "mark_done": "Done",
+    "done": "done",
+    "edit": "Edit",
+    "delete": "Delete",
+    "copy_report": "Copy report",
+    "copied": "Copied",
+    "copy_failed": "Could not copy to the clipboard",
+    "open_count": "{{n}} item(s) to handle"
   }
 }

@@ -2859,6 +2859,7 @@
     "all_places": "{{a}}/{{b}} emgann (an holl lec'hioù)",
     "all_places_title": "Emgannoù ar genstrivadeg : taolenn bennañ ha renkadur an holl lec'hioù",
     "organization_formula_desc": "Derezhioù an dournadeg hag o arventennoù",
+    "organization_notes_desc": "Notennoù, darvoudoù hag evezhiadennoù a-hed ar genstrivadeg",
     "goto_entry_ranking": "Renkadur an deroù"
   },
   "offline": {
@@ -3567,6 +3568,7 @@
   },
   "club": {
     "new_member": "Ezel nevez",
+    "nickname": "Lesanv",
     "tab_identity": "Identelezh",
     "tab_members": "Izili",
     "tab_sessions": "Abadennoù",
@@ -4771,5 +4773,35 @@
     "save": "Enrollañ",
     "saved": "Patrom enrollet",
     "save_error": "N'eus ket bet gallet enrollañ ar patrom."
+  },
+  "organizerNotes": {
+    "title": "Notennoù & evezhiadennoù",
+    "intro": "Kaier an aozadur : notennit e-pad ar genstrivadeg ar pezh a c'hoarvez, an darvoudoù, evezhiadennoù ar c'hlezeidi, ar varnerien hag an eilerien, hag ar pezh a vo da wellaat ar wech all.",
+    "kind": "Rummad",
+    "kind_note": "Notenn",
+    "kind_incident": "Darvoud",
+    "kind_feedback": "Evezhiadenn",
+    "kind_improvement": "Da wellaat",
+    "placeholder_note": "Sk. : sal digor da 8 e, tavarn prest",
+    "placeholder_incident": "Sk. : ardivink ar roudenn 3 en dic'houd, erlec'hiet",
+    "placeholder_feedback": "Sk. : ar varnerien a veul buander ar poulloù",
+    "placeholder_improvement": "Sk. : degas muioc'h a hirlinennoù tredan",
+    "new_note": "Notenn nevez",
+    "add": "Ouzhpennañ",
+    "shortcut_hint": "Ctrl+Enankañ evit ouzhpennañ",
+    "filter_kind": "Silañ dre rummad",
+    "all_kinds": "An holl rummadoù",
+    "search": "Klask",
+    "open_only": "Ar re da gempenn hepken",
+    "empty": "Notenn ebet c'hoazh.",
+    "no_match": "Notenn ebet ne glot gant ar sil.",
+    "mark_done": "Graet",
+    "done": "graet",
+    "edit": "Kemmañ",
+    "delete": "Dilemel",
+    "copy_report": "Eilañ an danevell",
+    "copied": "Eilet",
+    "copy_failed": "Dibosupl eilañ er golver",
+    "open_count": "{{n}} poent da gempenn"
   }
 }

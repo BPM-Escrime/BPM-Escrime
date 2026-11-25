@@ -74,7 +74,7 @@ interface CompetitionNavProps {
   t: (key: string, params?: { [key: string]: string | number }) => string;
   handleGoBack: () => void;
   handleGeneratePools: () => void;
-  /** Libellé du bouton de l'appel (formule sans poules : classement d'entrée, ADR-0035) */
+  /** Libellé du bouton de l'appel (formule sans poules : classement d'entrée, ADR-0037) */
   generateLabelKey?: string;
   /** Appel inchangé depuis la préparation : « Aller à la préparation », sans régénérer (#1992) */
   checkinUnchanged?: boolean;
@@ -94,6 +94,8 @@ interface CompetitionNavProps {
   onOpenPlanningAssistant?: () => void;
   /** Engrenage avant l'appel : page Organisation (plan de salle, feuille de route) */
   onOpenOrganization?: () => void;
+  /** Pastille sur l'engrenage : incidents et améliorations non traités (Notes & retours) */
+  organizationBadge?: number;
   /** Compétition par équipes : l'appel mène à la composition des équipes (#1085) */
   isTeamEvent?: boolean;
   /** Compétition chargée : le parcours guidé (#1305) peut se proposer */
@@ -126,6 +128,7 @@ const CompetitionNavComponent: React.FC<CompetitionNavProps> = ({
   playAllPositions = false,
   onOpenPlanningAssistant,
   onOpenOrganization,
+  organizationBadge = 0,
   isTeamEvent = false,
   tourReady = false,
   remoteActive = false,
@@ -191,6 +194,11 @@ const CompetitionNavComponent: React.FC<CompetitionNavProps> = ({
               aria-label={t('competitionNav.organization')}
             >
               <Settings size={16} aria-hidden="true" />
+              {organizationBadge > 0 && (
+                <span className="phase-nav-org-badge" data-testid="organization-badge">
+                  {organizationBadge}
+                </span>
+              )}
             </button>
             <div className="phase-step-connector" />
           </>

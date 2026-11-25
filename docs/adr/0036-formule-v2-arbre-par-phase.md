@@ -1,4 +1,4 @@
-# ADR-0034 — Formule v2 : un arbre de phases pour toutes les armes, lu par phase par le moteur, sans migration de schéma
+# ADR-0036 — Formule v2 : un arbre de phases pour toutes les armes, lu par phase par le moteur, sans migration de schéma
 
 - **Statut** : Acceptée (arbitrage du 2026-11-25 : arbre, sans migration SQL, réglage de répartition du tour suivant, nouvelle clé `settings.formula`)
 - **Date** : 2026-11-25

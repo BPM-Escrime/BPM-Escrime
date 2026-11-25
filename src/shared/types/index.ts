@@ -772,7 +772,7 @@ export interface CompetitionSettings {
    */
   formulaOrigin?: { templateId: string; season?: string };
   /**
-   * Formule v2, commune à toutes les armes (docs/adr/0034) : arbre de phases lu par phase. Absente
+   * Formule v2, commune à toutes les armes (docs/adr/0036) : arbre de phases lu par phase. Absente
    * d'une épreuve existante tant que sa formule n'a pas été modifiée (construite à la lecture).
    */
   formula?: import('../domain/formula/formulaV2').FormulaV2;
@@ -790,6 +790,23 @@ export interface CompetitionSettings {
   gregLevel?: 'L' | 'Z' | 'CN' | 'A' | 'F' | 'IE' | 'X'; // Niveau GREG (publication, #1328) ; absent = X (Autre)
   poolBoutOrder?: 'fie' | 'free'; // Ordre des matchs de poule : FIE o.69/o.70 (défaut) ou libre, rondes de Berger (#1964)
   manualStrips?: number[]; // Pistes de la salle dont l'appareil est ignoré pour cette épreuve (docs/adr/0023)
+  /** Notes et retours de l'organisation, tenus tout le long de l'épreuve (shared/domain/organizerNotes) */
+  organizerNotes?: OrganizerNote[];
+}
+
+/** Note libre, incident, retour d'un participant, piste d'amélioration */
+export type OrganizerNoteKind = 'note' | 'incident' | 'feedback' | 'improvement';
+
+export interface OrganizerNote {
+  id: string;
+  kind: OrganizerNoteKind;
+  text: string;
+  /** Horodatage ISO 8601 de la saisie */
+  createdAt: string;
+  /** Étape de l'épreuve au moment de la saisie (appel, poules, tableau…) */
+  phase?: string;
+  /** Point traité (incident réglé, retour pris en compte) */
+  done?: boolean;
 }
 
 export interface Phase extends BaseEntity {

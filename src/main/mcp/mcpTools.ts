@@ -76,6 +76,16 @@ const poolsOf = (deps: McpDeps, competitionId: string): Pool[] =>
     } as unknown as Pool;
   });
 
+/** Fin estimée de la phase (#1965, lot 4) : même durée que le dashboard ; null sans séance */
+const phaseEtaOf = (server: RemoteScoreServer) => {
+  if (!server.hasSession()) return null;
+  try {
+    return server.computePhaseEta();
+  } catch {
+    return null;
+  }
+};
+
 export const MCP_TOOLS: McpTool[] = [
   {
     name: 'list_competitions',
@@ -252,7 +262,7 @@ export const MCP_TOOLS: McpTool[] = [
     name: 'server_status',
     title: 'Serveur de saisie distante',
     description:
-      'Serveurs distants actifs : URL, séance ouverte, arènes (match, score, statut), écrans connectés.',
+      'Serveurs distants actifs : URL, séance ouverte, arènes (match, score, statut), écrans connectés, fin estimée de la phase en cours (durées de référence ajustées en direct).',
     inputSchema: { type: 'object', properties: {} },
     annotations: { readOnlyHint: true },
     run: ({ remoteServers }) =>
@@ -261,6 +271,7 @@ export const MCP_TOOLS: McpTool[] = [
         url: server.getServerUrl(),
         sessionOpen: server.hasSession(),
         connectedScreens: server.clients.list().length,
+        phaseEta: phaseEtaOf(server),
         arenas: server.getAllArenas().map(a => ({
           id: a.id,
           number: a.number,

@@ -21,7 +21,7 @@ import { areAllPoolsComplete as allPoolsComplete } from '../../shared/domain/poo
 
 interface UsePoolManagementProps {
   isLaserSabre: boolean;
-  /** Score max des poules du tour `round` (1 = 1er), lu par phase dans la formule (ADR-0034) */
+  /** Score max des poules du tour `round` (1 = 1er), lu par phase dans la formule (ADR-0036) */
   poolMaxScoreFor: (round: number) => number;
   showToast: ReturnType<typeof useToast>['showToast'];
 }

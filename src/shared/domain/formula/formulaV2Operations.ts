@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Opérations de frise sur la formule v2 (#2013 étape C, ADR-0034)
+ * BPM - Escrime - Opérations de frise sur la formule v2 (#2013 étape C, ADR-0036)
  * Même grammaire que la frise de l'écran (ADR-0032) et même forme d'opérations
  * qu'updateCompetitionFormula (ADR-0033), sur un seul modèle pour toutes les armes. `setPhase`
  * règle **chaque tour** séparément. Les anciens noms de réglages (poolMaxScore, tableMaxScore,

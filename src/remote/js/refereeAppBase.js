@@ -917,6 +917,8 @@ class RefereeAppBase {
     });
     if (eff.secondWhite) this.showNotification(window.T('referee.second_white'));
     cards.push(eff.cardType);
+    const prevA = this.scoreA;
+    const prevB = this.scoreB;
     if (eff.opponentPoints) {
       if (ef === 'A') this.scoreB += eff.opponentPoints;
       else this.scoreA += eff.opponentPoints;
@@ -929,6 +931,21 @@ class RefereeAppBase {
     this.updateCardsDisplay();
     this.broadcastUpdate();
     this.saveScore();
+    this._finishIfPenaltyLimit(prevA, prevB);
+  }
+
+  // Points de pénalité au score limite : fin de match proposée sans attendre l'avis
+  // `score_limit_reached` du serveur, perdu si la mise à jour est filtrée ou hors ligne
+  _finishIfPenaltyLimit(prevA, prevB) {
+    const hit = BPRefereeCards.penaltyReachesLimit({
+      scoreA: this.scoreA,
+      scoreB: this.scoreB,
+      prevA,
+      prevB,
+      scoreLimit: this.scoreLimit,
+      isLaserSabre: this.isLaserSabre,
+    });
+    if (hit && typeof this.showFinishModal === 'function') this.showFinishModal();
   }
 
   // ── Gestion carton avec sélecteur de raison ──────────────────────────
@@ -1397,14 +1414,19 @@ class RefereeAppBase {
     const ef = this._effectiveFencer(fencer);
     // Escrime olympique : une seule touche ; Sabre Laser : 3 points (#1027)
     const points = this.isModernFencing ? 1 : 3;
+    const prevA = this.scoreA;
+    const prevB = this.scoreB;
     if (ef === 'A') {
       this.scoreB += points;
     } else {
       this.scoreA += points;
     }
     this.updateScores();
+    // Sabre Laser : les deux tireurs à 10 → mort subite challenger, comme au carton (#2254)
+    if (BPRefereeScoring.shouldTriggerChallenger(this)) this.triggerSuddenDeathChallenger();
     this.broadcastUpdate();
     this.saveScore();
+    this._finishIfPenaltyLimit(prevA, prevB);
     this.socket.emit('arena_control', {
       arenaId: this.arenaId,
       action: 'arena_exit',

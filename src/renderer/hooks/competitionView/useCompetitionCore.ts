@@ -57,7 +57,7 @@ export function useCompetitionCore(ctx: Ctx) {
   const thirdPlaceMatch = effectiveSettings?.thirdPlaceMatch ?? false;
   const playAllPositions = competition.settings?.playAllPositions ?? false;
   const defaultScores = getDefaultMaxScores(competition.weapon, competition.category);
-  // Score max des poules par tour (ADR-0034) : formule enregistrée, sinon réglage commun
+  // Score max des poules par tour (ADR-0036) : formule enregistrée, sinon réglage commun
   const storedFormula = competition.settings?.formula;
   const flatPoolMaxScore = effectiveSettings?.defaultPoolMaxScore ?? defaultScores.pool;
   const poolMaxScoreFor = useCallback(
@@ -229,7 +229,7 @@ export function useCompetitionCore(ctx: Ctx) {
   const poolMaxScore = poolMaxScoreFor(currentPoolRound);
 
   // Formule modifiée, ou tour suivant : la taille de poule cible du tour remplace la valeur de
-  // préparation (formule enregistrée : taille du tour, ADR-0034 ; sinon réglage commun)
+  // préparation (formule enregistrée : taille du tour, ADR-0036 ; sinon réglage commun)
   const roundPool = storedFormula?.phases.some(p => p.kind === 'pool')
     ? phaseSettings(storedFormula, { kind: 'pool', round: currentPoolRound - 1 })
     : undefined;

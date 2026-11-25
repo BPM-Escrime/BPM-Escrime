@@ -56,6 +56,17 @@
   'referee.club_card_a': 'Karte von Fechter A',
   'referee.club_card_b': 'Karte von Fechter B',
   'referee.club_card_hint': 'Halten Sie den QR-Code der Vereinskarte vor die Kamera.',
+  'referee.club_card_pick': 'Anwesenden Fechter wählen',
+  'referee.club_card_no_camera_list':
+    'Kamera nicht verfügbar: Fechter aus der Liste wählen oder Kartencode eingeben.',
+  'referee.club_camera_insecure':
+    'Kamera blockiert: Die Seite nutzt HTTP. HTTPS in den Einstellungen der Fernerfassung des Vereins aktivieren.',
+  'referee.club_camera_unsupported':
+    'Dieser Browser erlaubt keinen Kamerazugriff: Seite in Chrome oder Safari öffnen.',
+  'referee.club_camera_denied': 'Kamerazugriff verweigert: in den Browsereinstellungen erlauben.',
+  'referee.club_camera_busy': 'Kamera wird von einer anderen App verwendet.',
+  'referee.club_camera_none': 'Keine Kamera auf diesem Gerät gefunden.',
+  'referee.club_card_scan': 'QR-Code scannen',
   'referee.club_card_code': 'Kartencode',
   'referee.club_card_ok': 'Bestätigen',
   'referee.club_card_skip': 'Überspringen (Fechter nicht identifiziert)',
@@ -186,7 +197,8 @@
   'referee.opp_plus5': '+5 Punkte für den Gegner',
   'referee.passivity_yellow': 'Passivität: P-Gelb, Verwarnung für beide Fechter',
   'referee.passivity_red': 'Passivität: P-Rot, +1 Punkt für jeden Fechter',
-  'referee.passivity_last_touch': 'Keine P-Karte, wenn beide Fechter einen Treffer vor dem Ende stehen (14:14)',
+  'referee.passivity_last_touch':
+    'Keine P-Karte, wenn beide Fechter einen Treffer vor dem Ende stehen (14:14)',
   'referee.no_card_to_remove': 'Keine Karte zum Entfernen',
   'referee.passivity_undone': 'Letzte Passivitätskarte zurückgenommen',
   'referee.undo_white': 'Letzte weiße Karte zurückgenommen',

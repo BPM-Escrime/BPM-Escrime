@@ -85,6 +85,17 @@
   }
 
   /**
+   * Points de pénalité (carton, sortie d'arène) qui portent un tireur au score limite :
+   * franchissement seulement. Limite inconnue (0) : 15 au Sabre Laser, sinon rien.
+   * Même règle que `crossedScoreLimit` (src/shared/domain/match/matchEndValidation.ts).
+   */
+  function penaltyReachesLimit(s) {
+    const limit = s.scoreLimit > 0 ? s.scoreLimit : s.isLaserSabre ? 15 : 0;
+    if (!Number.isFinite(limit) || limit <= 0) return false;
+    return (s.scoreA >= limit && s.prevA < limit) || (s.scoreB >= limit && s.prevB < limit);
+  }
+
+  /**
    * P-noir : vainqueur = score le plus haut ; à égalité, le mieux classé au départ (rang du
    * tableau en cours `tableauSeed` s'il est fourni, FFE dès M15, sinon classement initial) ;
    * sans classement, tirage au sort.
@@ -123,6 +134,7 @@
     cardVibration,
     nextPassivityCard,
     passivityCardAllowed,
+    penaltyReachesLimit,
     passivityWinner,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

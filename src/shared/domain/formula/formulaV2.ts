@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Formule v2 : arbre de phases pour toutes les armes (#2013 étape C, ADR-0034)
+ * BPM - Escrime - Formule v2 : arbre de phases pour toutes les armes (#2013 étape C, ADR-0036)
  * Clé `CompetitionSettings.formula`. Sans migration de schéma : une épreuve qui n'a pas encore de
  * formule v2 la reçoit à la lecture (`formulaOf`), construite depuis ses réglages plats (épée…
  * Sabre Laser) ou depuis `customFormula` v1 (arme « Autre »). Les réglages plats restent écrits
@@ -322,7 +322,7 @@ export function phaseSettings<R extends PhaseRef>(
 // ── Écriture : réglages plats dérivés ─────────────────────────────────────
 
 /**
- * Réglages plats écrits avec `formula` tant que des lecteurs plats existent (ADR-0034) :
+ * Réglages plats écrits avec `formula` tant que des lecteurs plats existent (ADR-0036) :
  * valeurs du premier tour et du tableau. Arme « Autre » : mêmes réglages que
  * deriveSettingsFromFormula, plus `customFormula` v1 équivalente.
  */

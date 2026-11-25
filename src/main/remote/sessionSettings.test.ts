@@ -1,5 +1,5 @@
 /**
- * Tablettes et arène : chrono et score max du tour de poules en cours (docs/adr/0034).
+ * Tablettes et arène : chrono et score max du tour de poules en cours (docs/adr/0036).
  */
 import { describe, expect, it } from 'vitest';
 import { Category, Competition, CompetitionSettings, Gender, Weapon } from '../../shared/types';

@@ -38,7 +38,7 @@ interface UseCompetitionPhasesParams {
   auditLogEnabled: boolean;
   refereeFeatureEnabled: boolean;
   /**
-   * Formule sans tour de poules (ADR-0035, 0 tour) : ni préparation ni poules, le tableau part
+   * Formule sans tour de poules (ADR-0037, 0 tour) : ni préparation ni poules, le tableau part
    * du classement d'entrée
    */
   tableauFirst?: boolean;

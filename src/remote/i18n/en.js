@@ -54,6 +54,17 @@
   'referee.club_card_a': "Fencer A's card",
   'referee.club_card_b': "Fencer B's card",
   'referee.club_card_hint': 'Show the club card QR code to the camera.',
+  'referee.club_card_pick': 'Choose a checked-in fencer',
+  'referee.club_card_no_camera_list':
+    'Camera unavailable: pick the fencer from the list or type their card code.',
+  'referee.club_camera_insecure':
+    "Camera blocked: the page uses HTTP. Turn on HTTPS in the club's remote scoring settings.",
+  'referee.club_camera_unsupported':
+    'This browser gives no camera access: open the page in Chrome or Safari.',
+  'referee.club_camera_denied': 'Camera access denied: allow it in the browser settings.',
+  'referee.club_camera_busy': 'Camera in use by another app.',
+  'referee.club_camera_none': 'No camera found on this device.',
+  'referee.club_card_scan': 'Scan the QR code',
   'referee.club_card_code': 'Card code',
   'referee.club_card_ok': 'Confirm',
   'referee.club_card_skip': 'Skip (unidentified fencer)',

@@ -121,7 +121,7 @@ d('formule d’une épreuve (docs/adr/0033)', () => {
     const f = await op('getCompetitionFormula', { competitionId });
     expect(f.phases.map((p: { key: string }) => p.key)).toEqual(['pool-0', 'pool-1', 'tableau']);
     expect(f.state).toBe('adapted');
-    // Écarts phase par phase (ADR-0034) : un tour ajouté, les touches du tableau
+    // Écarts phase par phase (ADR-0036) : un tour ajouté, les touches du tableau
     expect(f.deviations.map((x: { field: string }) => x.field).sort()).toEqual([
       '+pool',
       'tableau.maxScore',
@@ -175,7 +175,7 @@ d('formule d’une épreuve (docs/adr/0033)', () => {
   });
 });
 
-d('formule v2 écrite et lue par phase (docs/adr/0034)', () => {
+d('formule v2 écrite et lue par phase (docs/adr/0036)', () => {
   it('updateCompetitionFormula écrit formula et les réglages plats du 1er tour', async () => {
     await op('updateCompetitionFormula', {
       competitionId,

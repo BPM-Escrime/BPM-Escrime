@@ -54,6 +54,17 @@
   'referee.club_card_a': 'Карта фехтовальщика A',
   'referee.club_card_b': 'Карта фехтовальщика B',
   'referee.club_card_hint': 'Поднесите QR-код клубной карты к камере.',
+  'referee.club_card_pick': 'Выберите присутствующего фехтовальщика',
+  'referee.club_card_no_camera_list':
+    'Камера недоступна: выберите фехтовальщика из списка или введите код карты.',
+  'referee.club_camera_insecure':
+    'Камера заблокирована: страница открыта по HTTP. Включите HTTPS в настройках удалённого судейства клуба.',
+  'referee.club_camera_unsupported':
+    'Этот браузер не даёт доступа к камере: откройте страницу в Chrome или Safari.',
+  'referee.club_camera_denied': 'Доступ к камере запрещён: разрешите его в настройках браузера.',
+  'referee.club_camera_busy': 'Камера занята другим приложением.',
+  'referee.club_camera_none': 'На этом устройстве не найдена камера.',
+  'referee.club_card_scan': 'Сканировать QR-код',
   'referee.club_card_code': 'Код карты',
   'referee.club_card_ok': 'Подтвердить',
   'referee.club_card_skip': 'Пропустить (не опознан)',
@@ -184,7 +195,8 @@
   'referee.opp_plus5': '+5 очков сопернику',
   'referee.passivity_yellow': 'Пассивность: жёлтая P, предупреждение обоим фехтовальщикам',
   'referee.passivity_red': 'Пассивность: красная P, +1 очко каждому фехтовальщику',
-  'referee.passivity_last_touch': 'Без карточки P, когда обоим фехтовальщикам остаётся один укол (14:14)',
+  'referee.passivity_last_touch':
+    'Без карточки P, когда обоим фехтовальщикам остаётся один укол (14:14)',
   'referee.no_card_to_remove': 'Нет карточки для отмены',
   'referee.passivity_undone': 'Последняя карточка за пассивность отменена',
   'referee.undo_white': 'Последняя белая карточка отменена',

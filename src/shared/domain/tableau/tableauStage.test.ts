@@ -36,7 +36,7 @@ const quarters = [
 const semis = [m(4, s1, s5, s5), m(4, s6, s2, s2)];
 const final = m(2, s5, s2, null);
 
-describe('tableau arrêté à N (ADR-0035)', () => {
+describe('tableau arrêté à N (ADR-0037)', () => {
   it('seuls les tours où il reste plus de N tireurs se jouent', () => {
     expect(stageMatches([...quarters, ...semis, final], 2)).toHaveLength(6);
     expect(isStageDone([...quarters, ...semis, final], 2)).toBe(true);

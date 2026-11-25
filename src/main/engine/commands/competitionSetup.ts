@@ -39,7 +39,7 @@ function assertFormula(issues: FormulaIssue[]): void {
 /**
  * Réglages plats de la formule : écrits sans `formula` (anciennes fenêtres, agent par
  * updateCompetitionSettings), ils rendent la formule v2 enregistrée périmée. Elle est alors
- * retirée et reconstruite à la lecture depuis ces réglages (ADR-0034).
+ * retirée et reconstruite à la lecture depuis ces réglages (ADR-0036).
  */
 const FORMULA_FLAT_KEYS: ReadonlySet<string> = new Set([
   'poolRounds',
@@ -131,7 +131,7 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
     ...fromTemplate,
     ...patch,
   } as CompetitionSettings;
-  // Modèle choisi : formule v2 enregistrée dès la création (ADR-0034)
+  // Modèle choisi : formule v2 enregistrée dès la création (ADR-0036)
   const settings: CompetitionSettings =
     input.templateId && !merged.formula
       ? {

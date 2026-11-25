@@ -68,6 +68,7 @@ export const ClubExerciseEditor: React.FC<ClubExerciseEditorProps> = ({
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={exercise ? t('clubExercises.edit_title') : t('clubExercises.new_title')}
       onClose={onClose}
       size="lg"

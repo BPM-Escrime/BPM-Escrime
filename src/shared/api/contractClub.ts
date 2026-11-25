@@ -88,6 +88,8 @@ const ClubUpdateSchema = z.object({
 const MemberFields = {
   firstName: Short,
   lastName: Short,
+  /** Surnom (docs/adr/0034) ; chaîne vide = effacé */
+  nickname: Short.optional(),
   license: Short.optional(),
   /** 'M' | 'F' | 'X' */
   gender: z.string().max(10).optional(),

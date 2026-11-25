@@ -136,7 +136,7 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
       eliminatedIds: z.array(Id),
     })
   ),
-  // Tableau arrêté à N (docs/adr/0035) : restants par rang d'entrée, éliminés classés (Q5)
+  // Tableau arrêté à N (docs/adr/0037) : restants par rang d'entrée, éliminés classés (Q5)
   member(
     JOURNAL_EVENT.tableauStageClosed,
     z.object({

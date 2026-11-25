@@ -1,5 +1,5 @@
 /**
- * Tableau arrêté à N tireurs (docs/adr/0035), base SQLite réelle.
+ * Tableau arrêté à N tireurs (docs/adr/0037), base SQLite réelle.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseManager } from '../../../database';
@@ -83,7 +83,7 @@ afterEach(() => db.close());
 const op = (name: string, input: Record<string, unknown>) =>
   invoke(ctx, name as never, { competitionId, ...input } as never) as Promise<any>;
 
-d('closeTableauStage (docs/adr/0035)', () => {
+d('closeTableauStage (docs/adr/0037)', () => {
   it('demies jouées : finalistes au tour suivant par rang d’entrée, demi-finalistes éliminés', async () => {
     const [a, b, c, dd] = fencers;
     db.saveSessionState(competitionId, {

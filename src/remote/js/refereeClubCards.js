@@ -2,7 +2,7 @@
  * BPM - Escrime - Arbitre : identification des tireurs par leur carte de club (#1872).
  * Séance du Mode Club reliée au serveur d'entraînement : combat déjà sur la piste (scanné ou
  * lancé depuis le poste) → vue arbitre directe ; sinon la tablette demande la carte du tireur A
- * puis celle du tireur B (caméra ou code en clair), chacune pouvant être passée. Bouton
+ * puis celle du tireur B (caméra, code en clair ou liste des présents de la séance), chacune pouvant être passée. Bouton
  * « Cartes » (en-tête et vue du combat) : nouvelle identification. Deux cartes : combat enregistré dans la séance ; sinon combat libre.
  * Caméra : BarcodeDetector si disponible, sinon jsQR (/js/jsQR.js) ; HTTPS requis.
  * Script classique : window.BPRefereeClubCards. Servi en /js (CSP 'self').
@@ -68,19 +68,74 @@
   }
 
   /**
-   * Démarre la caméra arrière dans `video` et appelle onText(texte) à chaque QR lu.
-   * Renvoie une fonction d'arrêt, ou null si la caméra est indisponible.
+   * Motif d'une caméra indisponible : 'insecure' (page en HTTP), 'unsupported' (navigateur
+   * intégré d'une appli, ancien navigateur), 'denied', 'busy', 'none', sinon 'error'.
+   */
+  function cameraFailure(win, err) {
+    if (!win || !win.isSecureContext) return 'insecure';
+    var md = win.navigator && win.navigator.mediaDevices;
+    if (!md || !md.getUserMedia) return 'unsupported';
+    switch (err && err.name) {
+      case 'NotAllowedError':
+      case 'SecurityError':
+        return 'denied';
+      case 'NotReadableError':
+      case 'AbortError':
+        return 'busy';
+      case 'NotFoundError':
+      case 'OverconstrainedError':
+        return 'none';
+      default:
+        return 'error';
+    }
+  }
+
+  function cameraFailureText(reason) {
+    switch (reason) {
+      case 'insecure':
+        return tr(
+          'referee.club_camera_insecure',
+          'Caméra bloquée : la page est en HTTP. Activez HTTPS dans les réglages de la saisie distante du club.'
+        );
+      case 'unsupported':
+        return tr(
+          'referee.club_camera_unsupported',
+          'Ce navigateur ne donne pas accès à la caméra : ouvrez la page dans Chrome ou Safari.'
+        );
+      case 'denied':
+        return tr(
+          'referee.club_camera_denied',
+          'Accès à la caméra refusé : autorisez-le dans les réglages du navigateur.'
+        );
+      case 'busy':
+        return tr('referee.club_camera_busy', 'Caméra occupée par une autre application.');
+      case 'none':
+        return tr('referee.club_camera_none', 'Aucune caméra trouvée sur cet appareil.');
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Démarre la caméra (arrière de préférence) dans `video` et appelle onText(texte) à chaque
+   * QR lu. Renvoie { stop } ou { reason } si la caméra est indisponible.
    */
   async function startCamera(win, video, onText) {
-    if (!cameraUsable(win)) return null;
+    if (!cameraUsable(win)) return { reason: cameraFailure(win, null) };
     var stream;
+    var md = win.navigator.mediaDevices;
     try {
-      stream = await win.navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false,
-      });
-    } catch (_) {
-      return null;
+      stream = await md.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    } catch (err) {
+      // Refus : inutile de redemander. Sinon (pas de caméra arrière…) : n'importe quelle caméra
+      if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+        return { reason: cameraFailure(win, err) };
+      }
+      try {
+        stream = await md.getUserMedia({ video: true, audio: false });
+      } catch (err2) {
+        return { reason: cameraFailure(win, err2) };
+      }
     }
     video.srcObject = stream;
     video.setAttribute('playsinline', '');
@@ -129,23 +184,59 @@
       if (!stopped) timer = win.setTimeout(tick, 250);
     }
     tick();
-    return function stop() {
-      stopped = true;
-      if (timer) win.clearTimeout(timer);
-      stream.getTracks().forEach(function (t) {
-        t.stop();
-      });
-      video.srcObject = null;
+    return {
+      stop: function stop() {
+        stopped = true;
+        if (timer) win.clearTimeout(timer);
+        stream.getTracks().forEach(function (t) {
+          t.stop();
+        });
+        video.srcObject = null;
+      },
     };
   }
 
   // ─── Fenêtre d'identification ───────────────────────────────────────────────
 
   /**
-   * Demande la carte d'un tireur. Résout le code lu, null si passé, ou 'cancel'
-   * (identification abandonnée : la piste garde son combat libre).
+   * Liste déroulante des présents de la séance (sans caméra ou carte oubliée).
+   * `exclude` : tireur déjà choisi pour l'autre côté. null si aucun présent.
    */
-  function askCard(win, side, clubName, errorText) {
+  function memberSelect(doc, members, exclude) {
+    var list = (Array.isArray(members) ? members : []).filter(function (m) {
+      return m && typeof m.id === 'string' && m.id !== exclude;
+    });
+    if (!list.length) return null;
+    var select = el(
+      doc,
+      'select',
+      'width:100%;padding:10px;border-radius:8px;border:1px solid var(--slate-600);' +
+        'background:var(--slate-800);color:var(--color-white);font-size:18px;'
+    );
+    var label = tr('referee.club_card_pick', 'Choisir un tireur pointé présent');
+    select.setAttribute('aria-label', label);
+    select.appendChild(el(doc, 'option', '', label)).value = '';
+    list.forEach(function (m) {
+      var o = el(doc, 'option', '', String(m.name || ''));
+      o.value = m.id;
+      select.appendChild(o);
+    });
+    return select;
+  }
+
+  /** Choix d'un côté → champs envoyés au serveur (code de carte ou tireur de la liste) */
+  function sideFields(choice, side) {
+    var out = {};
+    if (choice && typeof choice === 'object') out['member' + side] = choice.member;
+    else out['code' + side] = choice || null;
+    return out;
+  }
+
+  /**
+   * Demande la carte d'un tireur. Résout le code lu, { member } si choisi dans la liste,
+   * null si passé, ou 'cancel' (identification abandonnée : la piste garde son combat libre).
+   */
+  function askCard(win, side, clubName, errorText, members, exclude) {
     var doc = win.document;
     return new Promise(function (resolve) {
       var overlay = el(
@@ -189,6 +280,17 @@
         'width:100%;max-height:45vh;background:var(--slate-800);border-radius:12px;object-fit:cover;'
       );
       box.appendChild(video);
+      // Relance de la caméra (échec, autorisation donnée entre-temps, geste requis par Safari)
+      var scan = el(
+        doc,
+        'button',
+        'display:none;padding:12px 16px;border-radius:8px;border:none;background:var(--blue-600);' +
+          'color:var(--color-white);font-size:18px;',
+        tr('referee.club_card_scan', 'Scanner le QR code')
+      );
+      scan.type = 'button';
+      scan.id = 'club-card-scan';
+      box.appendChild(scan);
       var error = el(
         doc,
         'p',
@@ -218,6 +320,8 @@
       row.appendChild(input);
       row.appendChild(ok);
       box.appendChild(row);
+      var select = memberSelect(doc, members, exclude);
+      if (select) box.appendChild(select);
       var actions = el(doc, 'div', 'display:flex;gap:8px;justify-content:center;flex-wrap:wrap;');
       var skip = el(
         doc,
@@ -258,27 +362,58 @@
         e.preventDefault();
         tryText(input.value);
       });
+      if (select) {
+        select.addEventListener('change', function () {
+          if (select.value) finish({ member: select.value });
+        });
+      }
       skip.addEventListener('click', function () {
         finish(null);
       });
       cancel.addEventListener('click', function () {
         finish('cancel');
       });
-      startCamera(win, video, tryText).then(function (stop) {
-        if (done) {
-          if (stop) stop();
-          return;
-        }
-        stopCam = stop;
-        if (!stop) {
+      var starting = false;
+      function launch() {
+        if (starting || stopCam) return;
+        starting = true;
+        scan.disabled = true;
+        video.style.display = '';
+        startCamera(win, video, tryText).then(function (cam) {
+          starting = false;
+          scan.disabled = false;
+          var stop = cam && cam.stop;
+          if (done) {
+            if (stop) stop();
+            return;
+          }
+          stopCam = stop || null;
+          if (stop) {
+            scan.style.display = 'none';
+            error.textContent = errorText || '';
+            hint.textContent = tr(
+              'referee.club_card_hint',
+              'Présentez le QR code de la carte de club à la caméra.'
+            );
+            return;
+          }
           video.style.display = 'none';
-          hint.textContent = tr(
-            'referee.club_card_no_camera',
-            'Caméra indisponible : saisissez le code imprimé sous le QR code.'
-          );
-          input.focus();
-        }
-      });
+          scan.style.display = '';
+          var why = cameraFailureText(cam && cam.reason);
+          if (why) error.textContent = errorText ? errorText + ' — ' + why : why;
+          hint.textContent = select
+            ? tr(
+                'referee.club_card_no_camera_list',
+                'Caméra indisponible : choisissez le tireur dans la liste ou saisissez le code de sa carte.'
+              )
+            : tr(
+                'referee.club_card_no_camera',
+                'Caméra indisponible : saisissez le code imprimé sous le QR code.'
+              );
+        });
+      }
+      scan.addEventListener('click', launch);
+      launch();
     });
   }
 
@@ -296,12 +431,12 @@
   }
 
   /** Cartes A puis B ; erreur serveur : on recommence en indiquant le motif */
-  async function identify(win, arena, clubName) {
+  async function identify(win, arena, clubName, members) {
     var message = '';
     for (var attempt = 0; attempt < 5; attempt++) {
-      var a = await askCard(win, 'A', clubName, message);
+      var a = await askCard(win, 'A', clubName, message, members, null);
       if (a === 'cancel') return false;
-      var b = await askCard(win, 'B', clubName, '');
+      var b = await askCard(win, 'B', clubName, '', members, a && a.member);
       if (b === 'cancel') return false;
       if (a === null && b === null) return false; // aucune carte : combat libre inchangé
       var res = null;
@@ -309,7 +444,9 @@
         var r = await win.fetch('/api/club/identify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ arena: arena, codeA: a, codeB: b }),
+          body: JSON.stringify(
+            Object.assign({ arena: arena }, sideFields(a, 'A'), sideFields(b, 'B'))
+          ),
         });
         res = await r.json();
       } catch (_) {
@@ -381,19 +518,32 @@
     if (!info || !info.active) return false;
     var clubName = typeof info.club === 'string' ? info.club : '';
     var running = false;
-    async function run() {
+    /** Présents relus à chaque identification (pointages faits depuis le poste) */
+    async function attendees() {
+      try {
+        var r = await (await win.fetch('/api/club/identify?arena=' + arena)).json();
+        return r && Array.isArray(r.members) ? r.members : [];
+      } catch (_) {
+        return [];
+      }
+    }
+    async function run(initial) {
       var a = app && app();
       if (running || (a && a.timerRunning)) return;
       running = true;
       try {
-        if (await identify(win, arena, clubName)) reloadOnMatch(win);
+        var members = Array.isArray(initial) ? initial : await attendees();
+        if (await identify(win, arena, clubName, members)) reloadOnMatch(win);
       } finally {
         running = false;
       }
     }
-    addButton(win.document, run);
-    addHeaderButton(win.document, run);
-    if (!info.hasMatch) run();
+    function onClick() {
+      run(null);
+    }
+    addButton(win.document, onClick);
+    addHeaderButton(win.document, onClick);
+    if (!info.hasMatch) run(Array.isArray(info.members) ? info.members : []);
     return true;
   }
 
@@ -401,7 +551,11 @@
     parseCard: parseCard,
     arenaFromPath: arenaFromPath,
     cameraUsable: cameraUsable,
+    cameraFailure: cameraFailure,
+    cameraFailureText: cameraFailureText,
     errorMessage: errorMessage,
+    memberSelect: memberSelect,
+    sideFields: sideFields,
     addButton: addButton,
     addHeaderButton: addHeaderButton,
     install: install,

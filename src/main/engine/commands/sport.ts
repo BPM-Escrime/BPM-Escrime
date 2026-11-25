@@ -125,7 +125,7 @@ export const sessionRound = (session: Record<string, unknown>): number =>
 export function effectiveSettings(comp: Competition, round = 1) {
   const eff = resolveCompetitionSettings(comp.weapon, comp.settings);
   const defaults = getDefaultMaxScores(comp.weapon, comp.category);
-  // Formule enregistrée : score max du tour `round` (ADR-0034), sinon réglage commun
+  // Formule enregistrée : score max du tour `round` (ADR-0036), sinon réglage commun
   const formula = comp.settings?.formula;
   const roundPool = formula?.phases.some(p => p.kind === 'pool')
     ? phaseSettings(formula, { kind: 'pool', round: round - 1 })

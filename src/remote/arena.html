@@ -960,6 +960,12 @@
         display: none;
       }
 
+      /* Tireur de droite : face au tireur de gauche */
+      .photo-card-b .default-icon,
+      .next-fighter-b .next-default-icon {
+        transform: scaleX(-1);
+      }
+
       .photo-circle .default-icon {
         width: 65%;
         height: 65%;
@@ -1308,6 +1314,8 @@
     </style><link rel="stylesheet" href="/passivityCards.css" />
   </head>
   <body>
+    <!-- Tireur en garde, tourné vers la droite (miroir CSS pour le côté droit) -->
+    <svg width="0" height="0" aria-hidden="true"><symbol id="bp-fencer" viewBox="0 0 100 120"><g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M41 38 L30 31 L27 17" stroke-width="7"/><path d="M44 66 L30 86 L17 112 M17 112 L9 112" stroke-width="9"/><path d="M49 66 L64 86 L69 112 M69 112 L79 112" stroke-width="9"/><path d="M53 40 L65 50 L76 47" stroke-width="7"/><path d="M80 45 L100 36" stroke-width="2.5"/></g><path d="M39 36 Q48 32 57 37 L54 68 Q46 70 40 67 Z"/><ellipse cx="78" cy="46" rx="2.5" ry="6" transform="rotate(-25 78 46)"/><circle cx="47" cy="21" r="12"/><path d="M50 12 Q61 14 60 25 Q58 32 51 31 Z" opacity="0.35" fill="var(--color-black)"/></symbol></svg>
     <!-- Overlay tirage au sort (pièce 3D) -->
     <div id="coin-flip-overlay" class="hidden">
       <div class="coin-flip-content">
@@ -1364,15 +1372,7 @@
             <div class="photo-card photo-card-a">
               <div class="photo-circle">
                 <img id="idle-photo-a" src="" alt="" />
-                <svg id="idle-icon-a" class="default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="50" cy="18" r="15"/>
-                  <rect x="37" y="10" width="26" height="13" rx="3" opacity="0.35" fill="var(--color-black)"/>
-                  <path d="M33 38 Q50 34 67 38 L70 82 Q50 78 30 82 Z"/>
-                  <line x1="67" y1="47" x2="92" y2="31" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-                  <line x1="92" y1="31" x2="100" y2="9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                  <line x1="86" y1="35" x2="97" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M36 82 L28 118 M64 82 L72 118" stroke="currentColor" stroke-width="9" stroke-linecap="round" fill="none"/>
-                </svg>
+                <svg id="idle-icon-a" class="default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><use href="#bp-fencer"/></svg>
               </div>
               <div class="intro-fencer-name" id="idle-name-a">-</div>
               <div class="intro-fencer-club" id="idle-club-a"></div>
@@ -1383,15 +1383,7 @@
             <div class="photo-card photo-card-b">
               <div class="photo-circle">
                 <img id="idle-photo-b" src="" alt="" />
-                <svg id="idle-icon-b" class="default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="50" cy="18" r="15"/>
-                  <rect x="37" y="10" width="26" height="13" rx="3" opacity="0.35" fill="var(--color-black)"/>
-                  <path d="M33 38 Q50 34 67 38 L70 82 Q50 78 30 82 Z"/>
-                  <line x1="67" y1="47" x2="92" y2="31" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-                  <line x1="92" y1="31" x2="100" y2="9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                  <line x1="86" y1="35" x2="97" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M36 82 L28 118 M64 82 L72 118" stroke="currentColor" stroke-width="9" stroke-linecap="round" fill="none"/>
-                </svg>
+                <svg id="idle-icon-b" class="default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><use href="#bp-fencer"/></svg>
               </div>
               <div class="intro-fencer-name" id="idle-name-b">-</div>
               <div class="intro-fencer-club" id="idle-club-b"></div>
@@ -1410,15 +1402,7 @@
         <div class="photo-card photo-card-a">
           <div class="photo-circle">
             <img id="photo-a" src="" alt="" />
-            <svg id="default-icon-a" class="default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="50" cy="18" r="15"/>
-              <rect x="37" y="10" width="26" height="13" rx="3" opacity="0.35" fill="var(--color-black)"/>
-              <path d="M33 38 Q50 34 67 38 L70 82 Q50 78 30 82 Z"/>
-              <line x1="67" y1="47" x2="92" y2="31" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-              <line x1="92" y1="31" x2="100" y2="9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-              <line x1="86" y1="35" x2="97" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M36 82 L28 118 M64 82 L72 118" stroke="currentColor" stroke-width="9" stroke-linecap="round" fill="none"/>
-            </svg>
+            <svg id="default-icon-a" class="default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><use href="#bp-fencer"/></svg>
           </div>
           <div class="intro-fencer-name" id="intro-name-a">-</div>
           <div class="intro-fencer-club" id="intro-club-a"></div>
@@ -1431,15 +1415,7 @@
         <div class="photo-card photo-card-b">
           <div class="photo-circle">
             <img id="photo-b" src="" alt="" />
-            <svg id="default-icon-b" class="default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="50" cy="18" r="15"/>
-              <rect x="37" y="10" width="26" height="13" rx="3" opacity="0.35" fill="var(--color-black)"/>
-              <path d="M33 38 Q50 34 67 38 L70 82 Q50 78 30 82 Z"/>
-              <line x1="67" y1="47" x2="92" y2="31" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-              <line x1="92" y1="31" x2="100" y2="9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-              <line x1="86" y1="35" x2="97" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M36 82 L28 118 M64 82 L72 118" stroke="currentColor" stroke-width="9" stroke-linecap="round" fill="none"/>
-            </svg>
+            <svg id="default-icon-b" class="default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><use href="#bp-fencer"/></svg>
           </div>
           <div class="intro-fencer-name" id="intro-name-b">-</div>
           <div class="intro-fencer-club" id="intro-club-b"></div>
@@ -1487,11 +1463,7 @@
             <div class="next-fighter next-fighter-a">
               <div class="next-photo-wrap">
                 <img id="next-photo-a" src="" alt="" />
-                <svg id="next-icon-a" class="next-default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="50" cy="18" r="15"/>
-                  <path d="M33 38 Q50 34 67 38 L70 82 Q50 78 30 82 Z"/>
-                  <path d="M36 82 L28 118 M64 82 L72 118" stroke="currentColor" stroke-width="9" stroke-linecap="round" fill="none"/>
-                </svg>
+                <svg id="next-icon-a" class="next-default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><use href="#bp-fencer"/></svg>
               </div>
               <span class="next-fighter-name" id="next-name-a">-</span>
             </div>
@@ -1499,11 +1471,7 @@
             <div class="next-fighter next-fighter-b">
               <div class="next-photo-wrap">
                 <img id="next-photo-b" src="" alt="" />
-                <svg id="next-icon-b" class="next-default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="50" cy="18" r="15"/>
-                  <path d="M33 38 Q50 34 67 38 L70 82 Q50 78 30 82 Z"/>
-                  <path d="M36 82 L28 118 M64 82 L72 118" stroke="currentColor" stroke-width="9" stroke-linecap="round" fill="none"/>
-                </svg>
+                <svg id="next-icon-b" class="next-default-icon" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><use href="#bp-fencer"/></svg>
               </div>
               <span class="next-fighter-name" id="next-name-b">-</span>
             </div>

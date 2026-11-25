@@ -143,7 +143,7 @@ export function applyCompetitionSettings(
   competition: Competition
 ): void {
   const settings = resolveCompetitionSettings(competition.weapon, competition.settings);
-  // Formule enregistrée : chrono et score max du tour de poules en cours (ADR-0034)
+  // Formule enregistrée : chrono et score max du tour de poules en cours (ADR-0036)
   const formula = competition.settings?.formula;
   const state = formula ? ctx.db.getSessionState(competition.id) : null;
   const round = Math.max(

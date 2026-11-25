@@ -11,7 +11,7 @@ const settings = buildDefaultCompetitionSettings({
 }) as CompetitionSettings;
 const ctx = { weapon: Weapon.EPEE, category: Category.SENIOR, settings };
 
-describe('déroulé dérivé de la formule (ADR-0035)', () => {
+describe('déroulé dérivé de la formule (ADR-0037)', () => {
   it('standard : appel, poules, tableau, résultats', () => {
     expect(formulaSteps(formulaOf(ctx))).toEqual([
       { kind: 'checkin' },

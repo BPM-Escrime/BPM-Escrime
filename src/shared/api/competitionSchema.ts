@@ -64,6 +64,16 @@ const FederalSchema = z.strictObject({
   unlocked: z.boolean().optional(),
 });
 
+/** Notes et retours de l'organisation (shared/domain/organizerNotes) */
+const OrganizerNoteSchema = z.strictObject({
+  id: z.string().min(1).max(100),
+  kind: z.enum(['note', 'incident', 'feedback', 'improvement']),
+  text: z.string().min(1).max(2000),
+  createdAt: z.string().max(40),
+  phase: z.string().max(40).optional(),
+  done: z.boolean().optional(),
+});
+
 const ScheduleSchema = z.strictObject({
   checkIn: Text.optional(),
   scratch: Text.optional(),
@@ -105,7 +115,7 @@ export const CompetitionSettingsSchema = z.strictObject({
   trainerCommentsEnabled: z.boolean().optional(),
   customFormula: CustomFormulaSchema.optional(),
   specialMode: z.enum(['rapieres']).optional(),
-  /** Formule v2 (docs/adr/0034) : forme jugée par le domaine à l'écriture */
+  /** Formule v2 (docs/adr/0036) : forme jugée par le domaine à l'écriture */
   formula: z
     .custom<FormulaV2>(
       v => typeof v === 'object' && v !== null && (v as { version?: unknown }).version === 2,
@@ -130,6 +140,7 @@ export const CompetitionSettingsSchema = z.strictObject({
   poolBoutOrder: z.enum(['fie', 'free']).optional(),
   /** Pistes dont l'appareil est ignoré pour cette épreuve (docs/adr/0023) */
   manualStrips: z.array(z.number().int().min(1).max(100)).max(100).optional(),
+  organizerNotes: z.array(OrganizerNoteSchema).max(500).optional(),
 });
 
 /** Fusion de réglages (createCompetition, updateCompetitionSettings) : clés connues, valeurs vérifiées */

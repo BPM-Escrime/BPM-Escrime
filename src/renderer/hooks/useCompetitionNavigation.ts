@@ -316,7 +316,7 @@ export function useCompetitionNavigation({
   const handleNextPoolRound = async () => {
     if ((await closeRoundByCommand()) !== 'local') return;
     const nextRound = currentPoolRound + 1;
-    // Même plan que le moteur (classement du tour ou cumul, qualifiés de la formule, ADR-0034)
+    // Même plan que le moteur (classement du tour ou cumul, qualifiés de la formule, ADR-0036)
     const plan = nextRoundPlan({
       weapon: competition.weapon,
       settings: competition.settings,

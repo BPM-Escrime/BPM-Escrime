@@ -47,7 +47,7 @@ export const formulaOperations = {
       insertOptions: z.array(z.array(z.enum(['pool', 'quest', 'tableau']))),
       formula: z
         .custom<FormulaV2>()
-        .describe('Formule v2 (docs/adr/0034) : phases et réglages de chaque tour'),
+        .describe('Formule v2 (docs/adr/0036) : phases et réglages de chaque tour'),
       draft: z.custom<FormulaDraft>().optional(),
       customFormula: z.custom<CustomFormulaConfig>().optional(),
       coherence: z.array(z.custom<CoherenceIssue>()),
@@ -125,7 +125,7 @@ export const formulaOperations = {
 
   closeTableauStage: command({
     description:
-      'Clôt un tableau arrêté à N tireurs (formule enregistrée, docs/adr/0035) : quand tous les matchs avant l’arrêt sont joués, les N restants passent à la phase suivante (classement = rang d’entrée), les éliminés sortent (classés par tour atteint puis rang d’entrée). Refus : invalid_settings (formule sans tableau arrêté suivi d’une phase), tableau_stage_not_complete.',
+      'Clôt un tableau arrêté à N tireurs (formule enregistrée, docs/adr/0037) : quand tous les matchs avant l’arrêt sont joués, les N restants passent à la phase suivante (classement = rang d’entrée), les éliminés sortent (classés par tour atteint puis rang d’entrée). Refus : invalid_settings (formule sans tableau arrêté suivi d’une phase), tableau_stage_not_complete.',
     input: z.object({
       competitionId: CompetitionId,
       dryRun: DryRun,

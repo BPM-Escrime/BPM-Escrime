@@ -2859,6 +2859,7 @@
     "all_places": "{{a}}/{{b}} assaltos (todos os lugares)",
     "all_places_title": "Assaltos da competição: quadro principal e classificação de todos os lugares",
     "organization_formula_desc": "Fases da competição e respetivas definições",
+    "organization_notes_desc": "Notas, incidentes e comentários ao longo da prova",
     "goto_entry_ranking": "Classificação de entrada"
   },
   "offline": {
@@ -3567,6 +3568,7 @@
   },
   "club": {
     "new_member": "Novo membro",
+    "nickname": "Alcunha",
     "tab_identity": "Identidade",
     "tab_members": "Sócios",
     "tab_sessions": "Sessões",
@@ -4771,5 +4773,35 @@
     "save": "Guardar",
     "saved": "Modelo guardado",
     "save_error": "Não foi possível guardar o modelo."
+  },
+  "organizerNotes": {
+    "title": "Notas e comentários",
+    "intro": "Diário da organização: registe durante a prova o que acontece, os incidentes, os comentários de atiradores, árbitros e voluntários e o que melhorar na próxima vez.",
+    "kind": "Categoria",
+    "kind_note": "Nota",
+    "kind_incident": "Incidente",
+    "kind_feedback": "Comentário",
+    "kind_improvement": "A melhorar",
+    "placeholder_note": "Ex.: sala aberta às 8 h, bar pronto",
+    "placeholder_incident": "Ex.: aparelho da pista 3 avariado, substituído",
+    "placeholder_feedback": "Ex.: os árbitros elogiam a rapidez das poules",
+    "placeholder_improvement": "Ex.: prever mais extensões elétricas",
+    "new_note": "Nova nota",
+    "add": "Adicionar",
+    "shortcut_hint": "Ctrl+Enter para adicionar",
+    "filter_kind": "Filtrar por categoria",
+    "all_kinds": "Todas as categorias",
+    "search": "Pesquisar",
+    "open_only": "Apenas pendentes",
+    "empty": "Ainda sem notas.",
+    "no_match": "Nenhuma nota corresponde ao filtro.",
+    "mark_done": "Tratado",
+    "done": "tratado",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "copy_report": "Copiar o relatório",
+    "copied": "Copiado",
+    "copy_failed": "Não foi possível copiar para a área de transferência",
+    "open_count": "{{n}} ponto(s) a tratar"
   }
 }

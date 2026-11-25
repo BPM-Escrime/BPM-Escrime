@@ -88,7 +88,7 @@ test.describe('Formule : interface actuelle et aperçu (application Electron)', 
     });
   });
 
-  test('0 tour de poules : l’appel mène au classement d’entrée puis au tableau (ADR-0035)', async ({
+  test('0 tour de poules : l’appel mène au classement d’entrée puis au tableau (ADR-0037)', async ({
     win,
   }) => {
     await setFormulaPreview(win, true);

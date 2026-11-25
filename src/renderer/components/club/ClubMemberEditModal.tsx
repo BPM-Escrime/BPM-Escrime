@@ -1,6 +1,6 @@
 /**
  * BPM - Escrime - Mode Club (#1872) : fiche d'un membre, en création (« Nouveau membre »)
- * ou en correction (nom, prénom, licence, date de naissance, latéralité, catégorie d'âge).
+ * ou en correction (nom, prénom, surnom, licence, date de naissance, latéralité, catégorie d'âge).
  * Présences, combats et code carte sont conservés à la modification.
  * Licensed under GPL-3.0
  */
@@ -36,6 +36,7 @@ export const ClubMemberEditModal: React.FC<ClubMemberEditModalProps> = ({
   const { t } = useTranslation();
   const [lastName, setLastName] = useState(member?.lastName ?? '');
   const [firstName, setFirstName] = useState(member?.firstName ?? '');
+  const [nickname, setNickname] = useState(member?.nickname ?? '');
   const [license, setLicense] = useState(member?.license ?? '');
   const [birthDate, setBirthDate] = useState(member?.birthDate ?? '');
   const [laterality, setLaterality] = useState<string>(member?.laterality ?? '');
@@ -57,6 +58,8 @@ export const ClubMemberEditModal: React.FC<ClubMemberEditModalProps> = ({
       const data: ClubMemberInput = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        // Chaîne vide : efface un surnom existant
+        nickname: nickname.trim() || (member?.nickname ? '' : undefined),
         license: license.trim() || undefined,
         laterality: laterality === 'R' || laterality === 'L' ? laterality : undefined,
       };
@@ -74,6 +77,7 @@ export const ClubMemberEditModal: React.FC<ClubMemberEditModalProps> = ({
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={
         member
           ? `${t('actions.edit')} : ${member.firstName} ${member.lastName}`
@@ -112,6 +116,15 @@ export const ClubMemberEditModal: React.FC<ClubMemberEditModalProps> = ({
             className="form-input"
             value={firstName}
             onChange={e => setFirstName(e.target.value)}
+          />
+        </label>
+        <label className="form-label">
+          {t('club.nickname')}
+          <input
+            className="form-input"
+            value={nickname}
+            maxLength={100}
+            onChange={e => setNickname(e.target.value)}
           />
         </label>
         <label className="form-label">

@@ -150,7 +150,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     questConfig,
     auditLogEnabled,
     refereeFeatureEnabled: !!competition.settings?.refereeFeatureEnabled,
-    // Formule enregistrée sans tour de poules : le tableau suit l'appel (ADR-0035)
+    // Formule enregistrée sans tour de poules : le tableau suit l'appel (ADR-0037)
     tableauFirst:
       !!competition.settings?.formula && startsWithTableau(competition.settings.formula),
   });

@@ -79,6 +79,7 @@ const FormulaTemplateModal_: React.FC<Props> = ({ mode, currentFormula, onLoad, 
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={mode === 'save' ? t('formulaTemplate.save_title') : t('formulaTemplate.load_title')}
       onClose={onClose}
     >

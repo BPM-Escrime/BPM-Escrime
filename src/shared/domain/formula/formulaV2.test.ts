@@ -1,5 +1,5 @@
 /**
- * Formule v2 (ADR-0034) : non-régression. Pour chaque épreuve du corpus, la formule construite à
+ * Formule v2 (ADR-0036) : non-régression. Pour chaque épreuve du corpus, la formule construite à
  * la lecture redonne exactement les réglages que le moteur lit aujourd'hui, et la formule v1 de
  * l'arme « Autre » fait l'aller-retour sans perte.
  */

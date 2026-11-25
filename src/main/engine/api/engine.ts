@@ -152,7 +152,7 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     applyFormulaTemplate(ctx, input),
   updateCompetitionFormula: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     updateCompetitionFormula(ctx, input),
-  // Tableau arrêté à N tireurs (docs/adr/0035)
+  // Tableau arrêté à N tireurs (docs/adr/0037)
   closeTableauStage: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     closeTableauStage(ctx, input),
   deleteCompetition: (ctx, { commandId: _c, ...input }) => deleteCompetition(ctx, input),

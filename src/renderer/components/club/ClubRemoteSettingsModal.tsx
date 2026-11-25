@@ -50,6 +50,7 @@ export const ClubRemoteSettingsModal: React.FC<ClubRemoteSettingsModalProps> = (
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={t('clubRemote.title')}
       onClose={onClose}
       size="md"

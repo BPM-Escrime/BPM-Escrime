@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Passage au tour de poules suivant (#2013 étape C, ADR-0034, Q4)
+ * BPM - Escrime - Passage au tour de poules suivant (#2013 étape C, ADR-0036, Q4)
  * Classement qui qualifie et répartit le tour suivant : celui du tour terminé (défaut,
  * comportement historique) ou le cumul de tous les tours joués. Nombre de qualifiés : règle de
  * qualification du tour dans la formule v2, sinon réglages historiques. Domaine pur.

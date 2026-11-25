@@ -41,6 +41,7 @@ export const ClubSessionFeedbackModal: React.FC<ClubSessionFeedbackProps> = ({
 
   return (
     <Modal
+      closeOnOverlay={false}
       title={t('clubFeedback.title', { date: session.date })}
       onClose={onClose}
       size="lg"

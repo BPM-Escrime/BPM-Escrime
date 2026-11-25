@@ -2,11 +2,12 @@
  * BPM - Escrime - Organisation de l'épreuve : raccourcis vers le plan de salle (arènes)
  * et la feuille de route, ouverts par l'engrenage placé avant l'appel. Nouvelle interface de
  * formule (aperçu, docs/adr/0032) : la formule de l'épreuve en premier (#2013 D11).
+ * Notes & retours : journal de bord de l'organisation, ouvert à toute étape.
  * Licensed under GPL-3.0
  */
 
 import React from 'react';
-import { FileText, LayoutGrid, ListOrdered } from 'lucide-react';
+import { FileText, LayoutGrid, ListOrdered, NotebookPen } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Modal from '../common/Modal';
 
@@ -16,6 +17,10 @@ interface OrganizationModalProps {
   onOpenArenaPlanner?: () => void;
   onOpenRoadmap?: () => void;
   onOpenFormula?: () => void;
+  /** Notes & retours de l'organisation, tenus tout le long de l'épreuve */
+  onOpenNotes?: () => void;
+  /** Incidents et améliorations non traités (pastille) */
+  openNotesCount?: number;
 }
 
 interface Shortcut {
@@ -32,6 +37,8 @@ export const OrganizationModal: React.FC<OrganizationModalProps> = ({
   onOpenArenaPlanner,
   onOpenRoadmap,
   onOpenFormula,
+  onOpenNotes,
+  openNotesCount = 0,
 }) => {
   const shortcuts: Shortcut[] = [];
   if (onOpenFormula)
@@ -57,6 +64,17 @@ export const OrganizationModal: React.FC<OrganizationModalProps> = ({
       label: t('app.roadmap'),
       desc: t('competitionNav.organization_roadmap_desc'),
       action: onOpenRoadmap,
+    });
+  if (onOpenNotes)
+    shortcuts.push({
+      id: 'notes',
+      icon: NotebookPen,
+      label: t('organizerNotes.title'),
+      desc:
+        openNotesCount > 0
+          ? t('organizerNotes.open_count', { n: openNotesCount })
+          : t('competitionNav.organization_notes_desc'),
+      action: onOpenNotes,
     });
 
   return (

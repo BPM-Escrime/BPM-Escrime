@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Tableau arrêté quand il reste N tireurs (#2013 étape D2, ADR-0035)
+ * BPM - Escrime - Tableau arrêté quand il reste N tireurs (#2013 étape D2, ADR-0037)
  * Le tableau est construit comme d'habitude ; seuls les tours où il reste plus de N tireurs se
  * jouent. À l'arrêt, les N restants passent à la phase suivante dans l'ordre de leur rang
  * d'entrée ; les éliminés sont classés par tour atteint (le plus loin devant), puis par rang

@@ -70,7 +70,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
   // Nouvelle interface de formule (aperçu, docs/adr/0032) : formule repliée pour toutes les
   // armes ; standard de l'arme et de la catégorie tant qu'elle n'est pas personnalisée (Q21)
   const formulaPreview = useFormulaPreview();
-  // Formule v2 personnalisée (ADR-0034) ; null : celle du modèle choisi ou standard
+  // Formule v2 personnalisée (ADR-0036) ; null : celle du modèle choisi ou standard
   const [personalFormula, setPersonalFormula] = useState<FormulaV2 | null>(null);
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [isTeamEvent, setIsTeamEvent] = useState(false);
@@ -188,7 +188,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
   // Réglages de la formule de la nouvelle interface, appliqués par-dessus les réglages de base
   // (et par-dessus un brouillon de Propriétés plus ancien). Standard non personnalisé : seule
   // l'origine s'ajoute, les réglages restent ceux d'aujourd'hui. Sinon : formule v2 et réglages
-  // plats dérivés (ADR-0034).
+  // plats dérivés (ADR-0036).
   const formulaSettings = (): Partial<Competition['settings']> => {
     if (!formulaPreview) return {};
     const formulaOrigin = originOf(activeTemplate);

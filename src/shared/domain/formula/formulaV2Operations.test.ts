@@ -25,7 +25,7 @@ const epee = (patch: Partial<CompetitionSettings> = {}) => ({
   },
 });
 
-describe('frise sur la formule v2 (ADR-0034)', () => {
+describe('frise sur la formule v2 (ADR-0036)', () => {
   it('mêmes briques autorisées que la frise de l’écran', () => {
     const v = formulaViewV2(epee());
     expect(v.phases.map(p => p.key)).toEqual(['pool-0', 'tableau']);

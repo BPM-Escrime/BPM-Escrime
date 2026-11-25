@@ -187,11 +187,11 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (73)
+## Référence des outils (74)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
-### En lecture (20)
+### En lecture (21)
 
 ### `list_competitions` — Lister les épreuves
 
@@ -259,7 +259,7 @@ Aucun argument.
 
 ### `server_status` — Serveur de saisie distante
 
-*lecture.* Serveurs distants actifs : URL, séance ouverte, arènes (match, score, statut), écrans connectés.
+*lecture.* Serveurs distants actifs : URL, séance ouverte, arènes (match, score, statut), écrans connectés, fin estimée de la phase en cours (durées de référence ajustées en direct).
 
 Aucun argument.
 
@@ -333,6 +333,12 @@ Aucun argument.
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+
+### `get_match_durations` — Durées de match de référence
+
+*lecture.* Durées de match de référence du poste par arme, phase, score, sexe et catégorie : référence effective, historique mesuré, réglage du DT, changement de piste.
+
+Aucun argument.
 
 ### `list_formula_templates` — Lister les modèles de formule
 

@@ -116,6 +116,9 @@ export const MENU_LABELS: Record<MenuLang, Record<string, string>> = {
     updCurrentVersion: 'Version actuelle : v{version} (Build #{build})',
     updAvailableTitle: '🚀 Mise à jour disponible',
     updAvailableMsg: 'Une nouvelle version est disponible !',
+    updDowngradeTitle: '⬇️ Retour à la version stable',
+    updDowngradeMsg:
+      'Vous utilisez une version de développement plus récente que la dernière version stable. Revenir à la version stable ?',
     updAvailableDetail:
       'Version actuelle : Build #{current}\nNouvelle version : Build #{latest} (v{version})',
     updReleaseNotes: 'Notes de version :',
@@ -234,6 +237,9 @@ export const MENU_LABELS: Record<MenuLang, Record<string, string>> = {
     updCurrentVersion: 'Current version: v{version} (Build #{build})',
     updAvailableTitle: '🚀 Update available',
     updAvailableMsg: 'A new version is available!',
+    updDowngradeTitle: '⬇️ Back to the stable version',
+    updDowngradeMsg:
+      'You are running a development build newer than the latest stable release. Go back to the stable version?',
     updAvailableDetail:
       'Current version: Build #{current}\nNew version: Build #{latest} (v{version})',
     updReleaseNotes: 'Release notes:',
@@ -353,6 +359,9 @@ export const MENU_LABELS: Record<MenuLang, Record<string, string>> = {
     updCurrentVersion: 'Aktuelle Version: v{version} (Build #{build})',
     updAvailableTitle: '🚀 Update verfügbar',
     updAvailableMsg: 'Eine neue Version ist verfügbar!',
+    updDowngradeTitle: '⬇️ Zurück zur stabilen Version',
+    updDowngradeMsg:
+      'Sie verwenden einen Entwicklungs-Build, der neuer als die letzte stabile Version ist. Zur stabilen Version zurückkehren?',
     updAvailableDetail:
       'Aktuelle Version: Build #{current}\nNeue Version: Build #{latest} (v{version})',
     updReleaseNotes: 'Versionshinweise:',
@@ -471,6 +480,9 @@ export const MENU_LABELS: Record<MenuLang, Record<string, string>> = {
     updCurrentVersion: 'Versão atual: v{version} (Build #{build})',
     updAvailableTitle: '🚀 Atualização disponível',
     updAvailableMsg: 'Está disponível uma nova versão!',
+    updDowngradeTitle: '⬇️ Voltar à versão estável',
+    updDowngradeMsg:
+      'Está a usar uma versão de desenvolvimento mais recente do que a última versão estável. Voltar à versão estável?',
     updAvailableDetail: 'Versão atual: Build #{current}\nNova versão: Build #{latest} (v{version})',
     updReleaseNotes: 'Notas da versão:',
     updDownloadNow: '📥 Transferir agora',
@@ -588,6 +600,9 @@ export const MENU_LABELS: Record<MenuLang, Record<string, string>> = {
     updCurrentVersion: 'Versione attuale: v{version} (Build #{build})',
     updAvailableTitle: '🚀 Aggiornamento disponibile',
     updAvailableMsg: 'È disponibile una nuova versione!',
+    updDowngradeTitle: '⬇️ Ritorno alla versione stabile',
+    updDowngradeMsg:
+      "Stai usando una build di sviluppo più recente dell'ultima versione stabile. Tornare alla versione stabile?",
     updAvailableDetail:
       'Versione attuale: Build #{current}\nNuova versione: Build #{latest} (v{version})',
     updReleaseNotes: 'Note di rilascio:',
@@ -705,6 +720,9 @@ export const MENU_LABELS: Record<MenuLang, Record<string, string>> = {
     updCurrentVersion: 'Текущая версия: v{version} (Build #{build})',
     updAvailableTitle: '🚀 Доступно обновление',
     updAvailableMsg: 'Доступна новая версия!',
+    updDowngradeTitle: '⬇️ Возврат к стабильной версии',
+    updDowngradeMsg:
+      'У вас сборка для разработки новее последней стабильной версии. Вернуться к стабильной версии?',
     updAvailableDetail:
       'Текущая версия: Build #{current}\nНовая версия: Build #{latest} (v{version})',
     updReleaseNotes: 'Примечания к выпуску:',
@@ -821,6 +839,8 @@ export const MENU_LABELS: Record<MenuLang, Record<string, string>> = {
     updCurrentVersion: '目前版本：v{version}（Build #{build}）',
     updAvailableTitle: '🚀 有可用更新',
     updAvailableMsg: '有新版本可用！',
+    updDowngradeTitle: '⬇️ 返回穩定版',
+    updDowngradeMsg: '你正在使用比最新穩定版更新的開發版本。要返回穩定版嗎？',
     updAvailableDetail: '目前版本：Build #{current}\n新版本：Build #{latest}（v{version}）',
     updReleaseNotes: '版本說明：',
     updDownloadNow: '📥 立即下載',

@@ -89,6 +89,7 @@ interface MemberRow {
   club_id: string | null;
   first_name: string | null;
   last_name: string | null;
+  nickname?: string | null;
   license: string | null;
   gender: string | null;
   birth_year: number | null;
@@ -221,6 +222,7 @@ function rowToMember(r: MemberRow): ClubMember {
     clubId: r.club_id ?? '',
     firstName: r.first_name ?? '',
     lastName: r.last_name ?? '',
+    nickname: opt(r.nickname ?? null),
     license: opt(r.license),
     gender: opt(r.gender),
     birthYear: opt(r.birth_year),
@@ -469,6 +471,7 @@ export class ClubRepo {
     const cols: Record<string, unknown> = {};
     if (data.firstName !== undefined) cols.first_name = str(data.firstName) ?? '';
     if (data.lastName !== undefined) cols.last_name = str(data.lastName) ?? '';
+    if (data.nickname !== undefined) cols.nickname = str(data.nickname);
     if (data.license !== undefined) cols.license = str(data.license);
     if (data.gender !== undefined) cols.gender = str(data.gender);
     if (data.birthYear !== undefined) cols.birth_year = optInt(data.birthYear, 1900, 2100);

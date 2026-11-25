@@ -1,11 +1,18 @@
 /**
  * BPM - Escrime - Mode Club (#1872) : identification des tireurs par leur carte de club
  * depuis la tablette arbitre (serveur d'entraînement relié à une séance ouverte).
- * GET /api/club/identify?arena=N (scan proposé ? combat déjà sur la piste ?), POST /api/club/identify (cartes A et B lues).
+ * GET /api/club/identify?arena=N (scan proposé ? combat déjà sur la piste ? présents de la séance),
+ * POST /api/club/identify (cartes A et B lues, ou tireurs choisis dans la liste des présents).
  * Licensed under GPL-3.0
  */
 import type { ApiRouteContext } from './apiRoutes';
-import { arenaHasMatch, identifyClubBout, linkedOpenSession } from '../clubArena';
+import {
+  arenaHasMatch,
+  attendeeCardCode,
+  identifyClubBout,
+  linkedOpenSession,
+  listSessionAttendees,
+} from '../clubArena';
 import { normalizeCardCode, parseClubQr } from '../../../shared/utils/clubQr';
 
 /** Code lu (QR `BPC1:M:<code>` ou code en clair), null = identification passée */
@@ -28,7 +35,9 @@ export function registerClubRoutes(ctx: ApiRouteContext): void {
       Number.isInteger(arena) &&
       arena > 0 &&
       arenaHasMatch(ctx.getArena(`arena${arena}`));
-    res.json({ active: !!session, club: club?.name ?? '', hasMatch });
+    // Présents : liste déroulante de la tablette (caméra indisponible, carte oubliée)
+    const members = session ? listSessionAttendees(ctx.db) : [];
+    res.json({ active: !!session, club: club?.name ?? '', hasMatch, members });
   });
 
   ctx.app.post('/api/club/identify', (req, res) => {
@@ -39,9 +48,20 @@ export function registerClubRoutes(ctx: ApiRouteContext): void {
     if (!ctx.checkScoreRateLimit(ctx.getClientIp(req))) {
       return res.status(429).json({ ok: false, error: 'rate_limited' });
     }
-    const body = (req.body ?? {}) as { arena?: unknown; codeA?: unknown; codeB?: unknown };
-    const codeA = readCode(body.codeA);
-    const codeB = readCode(body.codeB);
+    const body = (req.body ?? {}) as {
+      arena?: unknown;
+      codeA?: unknown;
+      codeB?: unknown;
+      memberA?: unknown;
+      memberB?: unknown;
+    };
+    // Tireur choisi dans la liste : présent de la séance seulement
+    const pick = (v: unknown, code: unknown) =>
+      v === null || v === undefined || v === ''
+        ? readCode(code)
+        : (attendeeCardCode(ctx.db, v) ?? 'invalid');
+    const codeA = pick(body.memberA, body.codeA);
+    const codeB = pick(body.memberB, body.codeB);
     if (codeA === 'invalid' || codeB === 'invalid') {
       return res
         .status(400)

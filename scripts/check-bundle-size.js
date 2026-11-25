@@ -20,8 +20,8 @@ const BUDGETS = {
   // Vue DT dans un navigateur (ADR-0020, webpack.dt.config.js) : dt.js ≈ 1.65 MiB en build dev (nov. 2026)
   dt: 2.25 * MiB,
   initial: 2.75 * MiB,
-  chunk: 1.25 * MiB, // CompetitionView ≈ 1.0 MiB en build dev (nov. 2026)
-  total: 9.25 * MiB, // ≈ 9.00 MiB en build dev (nov. 2026, ADR-0028 lots C1-C3 ; 8.51 MiB avec #1981)
+  chunk: 1.25 * MiB, // CompetitionView ≈ 1.23 MiB en build dev (25 nov. 2026, modales rares en React.lazy)
+  total: 9.5 * MiB, // ≈ 9.25 MiB en build dev (25 nov. 2026 ; 9.00 MiB avec ADR-0028 lots C1-C3, 8.51 MiB avec #1981)
 };
 
 function walkJsFiles(dir) {
