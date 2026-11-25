@@ -59,7 +59,8 @@
     "foil": "Floret",
     "sabre": "Sabre",
     "laser": "Sabre Làser",
-    "custom": "Fórmula personalitzada"
+    "custom": "Fórmula personalitzada",
+    "other": "Altra"
   },
   "genders": {
     "male": "Masculí",
@@ -478,7 +479,11 @@
     "durations_competitions": "Historial: {{count}} competició(ns)",
     "durations_reset": "Restablir l'historial",
     "durations_reset_confirm": "Esborrar l'historial de durada dels assalts del lloc? Es conserven els ajustos del DT.",
-    "durations_error": "Durada rebutjada: format m:ss, 30 s com a mínim"
+    "durations_error": "Durada rebutjada: format m:ss, 30 s com a mínim",
+    "formula_preview_title": "Nova interfície de fórmula (vista prèvia)",
+    "formula_preview_hint": "Una sola interfície de fórmula per a totes les armes: fórmula plegada en crear-la, després editable a Organització ▸ Fórmula. Només afecta la pantalla d'aquest punt; les competicions segueixen sent compatibles amb la interfície actual.",
+    "formula_preview_enable": "Activa la nova interfície",
+    "formula_preview_error": "No s'ha pogut desar la configuració."
   },
   "actions": {
     "undo": "Desfés",
@@ -2852,7 +2857,8 @@
     "goto_prep": "Anar a la preparació",
     "coach_dismiss": "No ho tornis a mostrar",
     "all_places": "{{a}}/{{b}} assalts (tots els llocs)",
-    "all_places_title": "Assalts de la competició: quadre principal i classificació de tots els llocs"
+    "all_places_title": "Assalts de la competició: quadre principal i classificació de tots els llocs",
+    "organization_formula_desc": "Fases de la competició i la seva configuració"
   },
   "offline": {
     "never": "Mai",
@@ -4723,5 +4729,23 @@
     "empty": "No s'ha trobat cap lloc",
     "offline": "Cerca no disponible (sense connexió)",
     "credit": "Dades © OpenStreetMap, IGN"
+  },
+  "formulaEditor": {
+    "formula": "Fórmula",
+    "add_here": "Afegeix una fase aquí",
+    "brick_pool": "Ronda de grups",
+    "brick_quest": "Ronda Quest",
+    "brick_tableau": "Quadre",
+    "remove": "Treu: {{phase}}",
+    "summary_pools": "Grups {{score}} tocs",
+    "summary_pools_rounds": "{{rounds}} rondes de grups {{score}} tocs",
+    "summary_tableau": "Quadre {{score}} tocs",
+    "summary_tableau_unlimited": "Quadre sense límit de tocs",
+    "summary_third_place": "3r lloc per sorteig",
+    "state_standard": "Estàndard",
+    "state_custom": "Personalitzada",
+    "reset_standard": "Torna a l'estàndard",
+    "personalize": "Personalitza la fórmula",
+    "modal_title": "Fórmula de la competició"
   }
 }

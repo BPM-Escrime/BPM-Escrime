@@ -59,7 +59,8 @@
     "foil": "Fleuret",
     "sabre": "Sabre",
     "laser": "Sabre Laser",
-    "custom": "À la carte"
+    "custom": "À la carte",
+    "other": "Autre"
   },
   "genders": {
     "male": "Masculin",
@@ -478,7 +479,11 @@
     "durations_competitions": "Historique : {{count}} épreuve(s)",
     "durations_reset": "Réinitialiser l'historique",
     "durations_reset_confirm": "Effacer l'historique des durées de match du poste ? Les réglages du DT sont gardés.",
-    "durations_error": "Durée refusée : format m:ss, 30 s au moins"
+    "durations_error": "Durée refusée : format m:ss, 30 s au moins",
+    "formula_preview_title": "Nouvelle interface de formule (aperçu)",
+    "formula_preview_hint": "Une seule interface de formule pour toutes les armes : formule repliée à la création, puis modifiable dans Organisation ▸ Formule. N'agit que sur l'écran de ce poste ; les épreuves restent compatibles avec l'interface actuelle.",
+    "formula_preview_enable": "Activer la nouvelle interface",
+    "formula_preview_error": "Impossible d'enregistrer le réglage."
   },
   "actions": {
     "undo": "Annuler",
@@ -2852,7 +2857,8 @@
     "goto_prep": "Aller à la préparation",
     "coach_dismiss": "Ne plus afficher",
     "all_places": "{{a}}/{{b}} matchs (toutes les places)",
-    "all_places_title": "Matchs de la compétition : tableau principal et classement de toutes les places"
+    "all_places_title": "Matchs de la compétition : tableau principal et classement de toutes les places",
+    "organization_formula_desc": "Phases de l'épreuve et leurs réglages"
   },
   "offline": {
     "never": "Jamais",
@@ -4723,5 +4729,23 @@
     "empty": "Aucun lieu trouvé",
     "offline": "Recherche indisponible (pas de connexion)",
     "credit": "Données © OpenStreetMap, IGN"
+  },
+  "formulaEditor": {
+    "formula": "Formule",
+    "add_here": "Ajouter une phase ici",
+    "brick_pool": "Tour de poules",
+    "brick_quest": "Tour Quest",
+    "brick_tableau": "Tableau",
+    "remove": "Retirer : {{phase}}",
+    "summary_pools": "Poules {{score}} touches",
+    "summary_pools_rounds": "{{rounds}} tours de poules {{score}} touches",
+    "summary_tableau": "Tableau {{score}} touches",
+    "summary_tableau_unlimited": "Tableau sans limite de touches",
+    "summary_third_place": "3ᵉ place tirée",
+    "state_standard": "Standard",
+    "state_custom": "Personnalisée",
+    "reset_standard": "Revenir au standard",
+    "personalize": "Personnaliser la formule",
+    "modal_title": "Formule de l'épreuve"
   }
 }

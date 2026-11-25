@@ -77,6 +77,7 @@ const SettingsPatchSchema = z
     remoteHttps: z.boolean(),
     remoteInterface: z.string().max(45),
     inkSaving: z.boolean(),
+    formulaPreview: z.boolean(),
   })
   .partial();
 
@@ -89,6 +90,7 @@ const ResolvableKeySchema = z.enum([
   'remoteInterface',
   'agentFolders',
   'inkSaving',
+  'formulaPreview',
   'stripCount',
 ]);
 

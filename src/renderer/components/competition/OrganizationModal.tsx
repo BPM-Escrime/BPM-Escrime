@@ -1,11 +1,12 @@
 /**
  * BPM - Escrime - Organisation de l'épreuve : raccourcis vers le plan de salle (arènes)
- * et la feuille de route, ouverts par l'engrenage placé avant l'appel.
+ * et la feuille de route, ouverts par l'engrenage placé avant l'appel. Nouvelle interface de
+ * formule (aperçu, docs/adr/0032) : la formule de l'épreuve en premier (#2013 D11).
  * Licensed under GPL-3.0
  */
 
 import React from 'react';
-import { FileText, LayoutGrid } from 'lucide-react';
+import { FileText, LayoutGrid, ListOrdered } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Modal from '../common/Modal';
 
@@ -14,6 +15,7 @@ interface OrganizationModalProps {
   onClose: () => void;
   onOpenArenaPlanner?: () => void;
   onOpenRoadmap?: () => void;
+  onOpenFormula?: () => void;
 }
 
 interface Shortcut {
@@ -29,8 +31,17 @@ export const OrganizationModal: React.FC<OrganizationModalProps> = ({
   onClose,
   onOpenArenaPlanner,
   onOpenRoadmap,
+  onOpenFormula,
 }) => {
   const shortcuts: Shortcut[] = [];
+  if (onOpenFormula)
+    shortcuts.push({
+      id: 'formula',
+      icon: ListOrdered,
+      label: t('formulaEditor.formula'),
+      desc: t('competitionNav.organization_formula_desc'),
+      action: onOpenFormula,
+    });
   if (onOpenArenaPlanner)
     shortcuts.push({
       id: 'arena-planner',

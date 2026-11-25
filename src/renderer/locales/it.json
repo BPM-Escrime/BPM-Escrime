@@ -59,7 +59,8 @@
     "foil": "Fioretto",
     "sabre": "Sciabola",
     "laser": "Sciabola Laser",
-    "custom": "Su misura"
+    "custom": "Su misura",
+    "other": "Altra"
   },
   "genders": {
     "male": "Maschile",
@@ -478,7 +479,11 @@
     "durations_competitions": "Storico: {{count}} gara/e",
     "durations_reset": "Azzera lo storico",
     "durations_reset_confirm": "Cancellare lo storico delle durate degli assalti della postazione? Le impostazioni del DT vengono mantenute.",
-    "durations_error": "Durata rifiutata: formato m:ss, almeno 30 s"
+    "durations_error": "Durata rifiutata: formato m:ss, almeno 30 s",
+    "formula_preview_title": "Nuova interfaccia della formula (anteprima)",
+    "formula_preview_hint": "Un'unica interfaccia della formula per tutte le armi: formula ridotta alla creazione, poi modificabile in Organizzazione ▸ Formula. Vale solo per la schermata di questa postazione; le gare restano compatibili con l'interfaccia attuale.",
+    "formula_preview_enable": "Attiva la nuova interfaccia",
+    "formula_preview_error": "Impossibile salvare l'impostazione."
   },
   "actions": {
     "undo": "Annulla",
@@ -2852,7 +2857,8 @@
     "goto_prep": "Vai alla preparazione",
     "coach_dismiss": "Non mostrare più",
     "all_places": "{{a}}/{{b}} assalti (tutti i posti)",
-    "all_places_title": "Assalti della gara: tabellone principale e classificazione di tutti i posti"
+    "all_places_title": "Assalti della gara: tabellone principale e classificazione di tutti i posti",
+    "organization_formula_desc": "Fasi della gara e relative impostazioni"
   },
   "offline": {
     "never": "Mai",
@@ -4723,5 +4729,23 @@
     "empty": "Nessun luogo trovato",
     "offline": "Ricerca non disponibile (nessuna connessione)",
     "credit": "Dati © OpenStreetMap, IGN"
+  },
+  "formulaEditor": {
+    "formula": "Formula",
+    "add_here": "Aggiungi qui una fase",
+    "brick_pool": "Turno di gironi",
+    "brick_quest": "Turno Quest",
+    "brick_tableau": "Tabellone",
+    "remove": "Rimuovi: {{phase}}",
+    "summary_pools": "Gironi {{score}} tocchi",
+    "summary_pools_rounds": "{{rounds}} turni di gironi {{score}} tocchi",
+    "summary_tableau": "Tabellone {{score}} tocchi",
+    "summary_tableau_unlimited": "Tabellone senza limite di tocchi",
+    "summary_third_place": "3° posto per sorteggio",
+    "state_standard": "Standard",
+    "state_custom": "Personalizzata",
+    "reset_standard": "Torna allo standard",
+    "personalize": "Personalizza la formula",
+    "modal_title": "Formula della gara"
   }
 }

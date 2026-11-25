@@ -775,3 +775,123 @@ button.formula-frieze__step {
 .formula-coherence p {
   margin: 0;
 }
+
+/* Interface unique de la formule (#2013 étape B1, docs/adr/0032) */
+.formula-editor__phase {
+  position: relative;
+  display: inline-flex;
+}
+.formula-editor__remove {
+  position: absolute;
+  top: -0.45rem;
+  right: -0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0;
+  border: 1px solid var(--color-border-dark);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.formula-editor__remove:hover,
+.formula-editor__remove:focus-visible {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.formula-editor__plus {
+  position: relative;
+  align-self: center;
+}
+.formula-editor__plus-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px dashed var(--color-border-dark);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.formula-editor__plus-btn:hover,
+.formula-editor__plus-btn[aria-expanded='true'] {
+  border-style: solid;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.formula-editor__menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.25rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  min-width: 9rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border-dark);
+  border-radius: 6px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md, 0 4px 12px rgb(0 0 0 / 15%));
+}
+.formula-editor__menu button {
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.formula-editor__menu button:hover,
+.formula-editor__menu button:focus-visible {
+  background: var(--color-surface-2);
+}
+.formula-editor__general {
+  margin-top: 1rem;
+}
+
+/* Création : formule repliée, résumé sur une ligne (D3) */
+.formula-collapsed {
+  border: 1px solid var(--color-border-dark);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-surface-2);
+}
+.formula-collapsed__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.formula-collapsed__summary {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.formula-collapsed__badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-dark);
+}
+.formula-collapsed__badge.is-standard {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.formula-collapsed details {
+  margin-top: 0.5rem;
+}
+.formula-collapsed summary {
+  cursor: pointer;
+  font-weight: 600;
+}

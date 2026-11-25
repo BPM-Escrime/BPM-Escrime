@@ -59,7 +59,8 @@
     "foil": "Foil",
     "sabre": "Sabre",
     "laser": "Laser Sabre",
-    "custom": "Custom formula"
+    "custom": "Custom formula",
+    "other": "Other"
   },
   "genders": {
     "male": "Male",
@@ -478,7 +479,11 @@
     "durations_competitions": "History: {{count}} competition(s)",
     "durations_reset": "Reset history",
     "durations_reset_confirm": "Clear this station's match duration history? DT settings are kept.",
-    "durations_error": "Duration rejected: m:ss format, at least 30 s"
+    "durations_error": "Duration rejected: m:ss format, at least 30 s",
+    "formula_preview_title": "New formula interface (preview)",
+    "formula_preview_hint": "One formula interface for all weapons: formula collapsed at creation, then editable in Organisation ▸ Formula. Applies only to this station's screen; competitions remain compatible with the current interface.",
+    "formula_preview_enable": "Enable the new interface",
+    "formula_preview_error": "Unable to save the setting."
   },
   "actions": {
     "undo": "Undo",
@@ -2852,7 +2857,8 @@
     "goto_prep": "Go to preparation",
     "coach_dismiss": "Don't show again",
     "all_places": "{{a}}/{{b}} bouts (all places)",
-    "all_places_title": "Competition bouts: main table and classification of all places"
+    "all_places_title": "Competition bouts: main table and classification of all places",
+    "organization_formula_desc": "Competition phases and their settings"
   },
   "offline": {
     "never": "Never",
@@ -4723,5 +4729,23 @@
     "empty": "No place found",
     "offline": "Search unavailable (no connection)",
     "credit": "Data © OpenStreetMap, IGN"
+  },
+  "formulaEditor": {
+    "formula": "Formula",
+    "add_here": "Add a phase here",
+    "brick_pool": "Pool round",
+    "brick_quest": "Quest round",
+    "brick_tableau": "Table",
+    "remove": "Remove: {{phase}}",
+    "summary_pools": "Pools {{score}} touches",
+    "summary_pools_rounds": "{{rounds}} pool rounds {{score}} touches",
+    "summary_tableau": "Table {{score}} touches",
+    "summary_tableau_unlimited": "Table with no touch limit",
+    "summary_third_place": "3rd-place bout",
+    "state_standard": "Standard",
+    "state_custom": "Custom",
+    "reset_standard": "Back to standard",
+    "personalize": "Customize formula",
+    "modal_title": "Competition formula"
   }
 }

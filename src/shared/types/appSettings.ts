@@ -30,6 +30,11 @@ export interface AppSettings {
   agentFolders: string[];
   /** Économie d'encre à l'impression : fonds retirés, texte et traits en noir (PDF compris) */
   inkSaving: boolean;
+  /**
+   * Nouvelle interface de formule (aperçu, #2013 D13, docs/adr/0032) : lu par l'écran seulement,
+   * jamais par le moteur ni le MCP. Retiré à la sortie de la 3.0.
+   */
+  formulaPreview: boolean;
   /** Durées de match : réglages du DT, historique du poste, changement de piste (#1965) */
   matchDurations: MatchDurationConfig;
 }
@@ -45,6 +50,7 @@ export const APP_SETTINGS_DEFAULTS: Readonly<AppSettings> = Object.freeze({
   remoteInterface: '0.0.0.0',
   agentFolders: [],
   inkSaving: false,
+  formulaPreview: false,
   matchDurations: DEFAULT_DURATION_CONFIG,
 });
 
@@ -103,6 +109,7 @@ export function validateAppSetting<K extends AppSettingKey>(
       if (typeof value !== 'string' || !IPV4.test(value)) fail('adresse IPv4');
       return value as AppSettings[K];
     case 'inkSaving':
+    case 'formulaPreview':
       if (typeof value !== 'boolean') fail('booléen');
       return value as AppSettings[K];
     case 'matchDurations':

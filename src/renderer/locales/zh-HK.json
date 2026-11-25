@@ -59,7 +59,8 @@
     "foil": "花劍",
     "sabre": "軍刀",
     "laser": "激光軍刀",
-    "custom": "自訂賽制"
+    "custom": "自訂賽制",
+    "other": "其他"
   },
   "genders": {
     "male": "男子",
@@ -478,7 +479,11 @@
     "durations_competitions": "紀錄：{{count}} 個比賽",
     "durations_reset": "重設紀錄",
     "durations_reset_confirm": "刪除本機的比賽時長紀錄？裁判長設定會保留。",
-    "durations_error": "時長無效：格式 m:ss，至少 30 秒"
+    "durations_error": "時長無效：格式 m:ss，至少 30 秒",
+    "formula_preview_title": "新賽制介面（預覽）",
+    "formula_preview_hint": "所有武器共用一個賽制介面：建立時賽制預設收合，之後可在「籌備 ▸ 賽制」中修改。只影響此工作站的畫面；現有賽事仍可使用目前的介面。",
+    "formula_preview_enable": "啟用新介面",
+    "formula_preview_error": "無法儲存設定。"
   },
   "actions": {
     "undo": "復原",
@@ -2852,7 +2857,8 @@
     "goto_prep": "前往準備",
     "coach_dismiss": "不再顯示",
     "all_places": "{{a}}/{{b}} 場（全部名次）",
-    "all_places_title": "比賽場次：主淘汰賽及全部名次排位賽"
+    "all_places_title": "比賽場次：主淘汰賽及全部名次排位賽",
+    "organization_formula_desc": "賽事階段及其設定"
   },
   "offline": {
     "never": "從未",
@@ -4723,5 +4729,23 @@
     "empty": "找不到地點",
     "offline": "無法搜尋（沒有網絡連線）",
     "credit": "資料 © OpenStreetMap、IGN"
+  },
+  "formulaEditor": {
+    "formula": "賽制",
+    "add_here": "在此新增階段",
+    "brick_pool": "分組賽",
+    "brick_quest": "Quest 回合",
+    "brick_tableau": "淘汰賽",
+    "remove": "移除：{{phase}}",
+    "summary_pools": "分組賽 {{score}} 劍",
+    "summary_pools_rounds": "{{rounds}} 輪分組賽，每場 {{score}} 劍",
+    "summary_tableau": "淘汰賽 {{score}} 劍",
+    "summary_tableau_unlimited": "淘汰賽不限擊中次數",
+    "summary_third_place": "季軍以抽籤決定",
+    "state_standard": "標準",
+    "state_custom": "自訂",
+    "reset_standard": "恢復標準",
+    "personalize": "自訂賽制",
+    "modal_title": "賽事賽制"
   }
 }
