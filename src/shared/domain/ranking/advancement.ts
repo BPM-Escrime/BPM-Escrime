@@ -46,24 +46,30 @@ export interface TiedAtBar {
   places: number;
 }
 
-/** Ligne de classement coupée : rang, et rang d'entrée du tireur (`fencer.ranking`) */
+/** Ligne de classement coupée : rang, rang d'entrée (`fencer.ranking`) et nom du tireur */
 interface CutRow {
   rank: number;
-  fencer: { id: string; ranking?: number };
+  fencer: { id: string; ranking?: number; lastName?: string; firstName?: string };
 }
+
+/** Rang d'entrée du tour par défaut : `fencer.ranking` (classement initial, puis place au tour) */
+const fencerEntryRank = (r: CutRow): number | undefined => r.fencer.ranking;
+const nameOf = (r: CutRow) => `${r.fencer.lastName ?? ''} ${r.fencer.firstName ?? ''}`.trim();
 
 /**
  * Coupe à la barre, une seule pour le tour suivant, le tableau et la scission par rang
  * (docs/adr/0040). `sorted` : classement trié par rang, tireurs à couper seulement.
  * `count` absent ou ≥ effectif : tout le monde passe. Ex aequo à la barre au-delà du quota :
  * 'all' les garde tous ; 'initial_ranking' les départage par le rang d'entrée du tour
- * (`fencer.ranking`), puis l'ordre du classement ; le quota est tenu. 'barrage' (lot F1b)
+ * (`entryRank`, par défaut `fencer.ranking`) ; rang d'entrée égal ou absent : ordre du
+ * classement (rang), puis nom ; le quota est tenu. 'barrage' (lot F1b)
  * est refusé par la grammaire et les commandes avant d'arriver ici : traité comme 'all'.
  */
 export function cutAtBar<T extends CutRow>(
   sorted: readonly T[],
   count: number | undefined,
-  ties: TiesAtBar | undefined = 'all'
+  ties: TiesAtBar | undefined = 'all',
+  entryRank: (row: T) => number | undefined = fencerEntryRank
 ): { qualified: T[]; eliminated: T[]; tiedAtBar: TiedAtBar | null } {
   if (count === undefined || count >= sorted.length) {
     return { qualified: [...sorted], eliminated: [], tiedAtBar: null };
@@ -83,10 +89,16 @@ export function cutAtBar<T extends CutRow>(
   if (ties !== 'initial_ranking') {
     return { qualified: sorted.slice(0, end), eliminated: sorted.slice(end), tiedAtBar };
   }
-  const entry = (r: T) => r.fencer.ranking ?? Number.POSITIVE_INFINITY;
+  const entry = (r: T) => entryRank(r) ?? Number.POSITIVE_INFINITY;
   const byEntry = tied
     .map((r, i) => ({ r, i }))
-    .sort((a, b) => entry(a.r) - entry(b.r) || a.i - b.i)
+    .sort(
+      (a, b) =>
+        entry(a.r) - entry(b.r) ||
+        a.r.rank - b.r.rank ||
+        nameOf(a.r).localeCompare(nameOf(b.r), 'fr') ||
+        a.i - b.i
+    )
     .map(x => x.r);
   // Départagés : dans l'ordre du rang d'entrée, de part et d'autre de la barre
   return {

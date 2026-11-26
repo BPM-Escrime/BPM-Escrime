@@ -38,16 +38,32 @@ describe('cutAtBar : ex aequo à la barre (docs/adr/0040)', () => {
     expect(cut.tiedAtBar).toEqual({ rank: 2, fencerIds: ['b', 'c', 'd', 'e'], places: 3 });
   });
 
-  it('« initial_ranking » : rang d’entrée égal ou absent → ordre du classement', () => {
-    const r = rows([
-      ['a', 1, 1],
-      ['b', 2],
-      ['c', 2, 4],
-      ['d', 2, 4],
-      ['e', 2],
+  it('« initial_ranking » : rang d’entrée égal ou absent → ordre du classement, puis nom', () => {
+    const named = (id: string, rank: number, entry: number | undefined, lastName: string) => ({
+      rank,
+      fencer: { id, ranking: entry, lastName, firstName: 'P' },
+    });
+    const r = [
+      named('a', 1, 1, 'ZOLA'),
+      named('b', 2, undefined, 'DURAND'),
+      named('c', 2, 4, 'MARTIN'),
+      named('d', 2, 4, 'BERNARD'),
+      named('e', 2, undefined, 'ARNAUD'),
+    ];
+    // Rang d'entrée 4 : BERNARD avant MARTIN ; sans rang d'entrée : ARNAUD avant DURAND
+    expect(ids(cutAtBar(r, 2, 'initial_ranking').qualified)).toEqual(['a', 'd']);
+    expect(ids(cutAtBar(r, 4, 'initial_ranking').qualified)).toEqual(['a', 'd', 'c', 'e']);
+  });
+
+  it('rang d’entrée fourni par l’appelant (4e paramètre `entryRank`)', () => {
+    const entry = new Map([
+      ['b', 3],
+      ['c', 1],
+      ['d', 2],
+      ['e', 4],
     ]);
-    expect(ids(cutAtBar(r, 3, 'initial_ranking').qualified)).toEqual(['a', 'c', 'd']);
-    expect(ids(cutAtBar(r, 4, 'initial_ranking').qualified)).toEqual(['a', 'c', 'd', 'b']);
+    const cut = cutAtBar(ranking, 2, 'initial_ranking', r => entry.get(r.fencer.id));
+    expect(ids(cut.qualified)).toEqual(['a', 'c']);
   });
 
   it('quota absent ou ≥ effectif : tout le monde passe', () => {

@@ -72,6 +72,33 @@ function formula(rounds: 1 | 2, ties?: TiesAtBar): FormulaV2 {
   };
 }
 
+/** Poules puis scission par rang : « Tableau A » prend 4 tireurs (`ties`), « Tableau B » le reste */
+function rankSplit(ties?: TiesAtBar): FormulaV2 {
+  const f = applyOperationsV2(
+    fctx,
+    [
+      { op: 'removePhase', phase: 'tableau' },
+      { op: 'insertPhase', brick: 'split', at: 1 },
+    ],
+    newId
+  );
+  return {
+    ...f,
+    phases: f.phases.map(p =>
+      p.kind === 'split'
+        ? {
+            ...p,
+            branches: p.branches.map((b, i) =>
+              i === 0
+                ? { ...b, take: { mode: 'fixed_count', count: 4, ...(ties ? { ties } : {}) } }
+                : b
+            ),
+          }
+        : p
+    ),
+  };
+}
+
 /** Épreuve de 6 tireurs pointés, rang d'entrée 1 à 6 */
 function competition(f: FormulaV2) {
   const comp = db.createCompetition({
@@ -198,6 +225,46 @@ d('ex aequo à la barre (docs/adr/0040)', () => {
         false
       );
     }
+  });
+
+  it('scission par rang : simulation, réglage de la branche, « ties » qui prime, GroupSplitOff', async () => {
+    const { comp, ids } = competition(rankSplit('initial_ranking'));
+    await playCircles(comp.id, 1, circles(ids));
+    const sim = await call('splitCompetition', { competitionId: comp.id, dryRun: true });
+    expect(sim.tiedAtBar).toHaveLength(1);
+    expect(sim.tiedAtBar[0]).toMatchObject({ rank: 1, places: 4 });
+    expect(sim.branches[0].fencers.map((f: any) => f.id)).toEqual(ids.slice(0, 4));
+    // « all » pour cette scission : les 6 ex aequo dans « Tableau A »
+    const all = await call('splitCompetition', {
+      competitionId: comp.id,
+      dryRun: true,
+      ties: 'all',
+    });
+    expect(all.branches.map((b: any) => b.fencers.length)).toEqual([6, 0]);
+    // Coupe figée par les événements existants de la scission
+    const out = await call('splitCompetition', { competitionId: comp.id });
+    const split = events(comp.id).filter(e => e.type === 'GroupSplitOff');
+    expect(split.map(e => (e.payload as any).group)).toEqual(['Tableau A', 'Tableau B']);
+    const a = out.branches[0].competitionId as string;
+    const imported = events(a).find(e => e.type === 'SplitRankingImported')!.payload as any;
+    expect(JSON.stringify(imported)).toContain(ids[0]);
+    expect(
+      db
+        .getFencersByCompetition(a)
+        .map(f => f.lastName)
+        .sort()
+    ).toEqual(['NOM1', 'NOM2', 'NOM3', 'NOM4']);
+  });
+
+  it('scission : « barrage » refusé (invalid_settings), aucune fille créée', async () => {
+    const { comp, ids } = competition(rankSplit());
+    await playCircles(comp.id, 1, circles(ids));
+    const before = db.getAllCompetitions().length;
+    await expect(
+      call('splitCompetition', { competitionId: comp.id, ties: 'barrage' })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    expect(db.getAllCompetitions()).toHaveLength(before);
+    expect(events(comp.id).some(e => e.type === 'GroupSplitOff')).toBe(false);
   });
 
   it('MCP : même champ « ties » sur les outils de coupe (ADR-0008)', () => {
