@@ -230,7 +230,7 @@ d('ex aequo à la barre (docs/adr/0040)', () => {
   });
 
   it('« barrage » refusé jusqu’au lot F1b (invalid_settings), rien d’écrit', async () => {
-    // Tableau : épreuve à un tour (le MCP refuse plusieurs tours sans placement, ADR-0037)
+    // Tableau : épreuve à un tour (le tableau après plusieurs tours : multiRound.test.ts)
     for (const [rounds, op] of [
       [2, 'closePoolRound'],
       [1, 'generateTableau'],

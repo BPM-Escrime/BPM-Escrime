@@ -57,7 +57,7 @@ export function assignPoolReferees(
 ) {
   const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
-  assertSupported(comp, session);
+  assertSupported(comp);
   const pools = sessionPools(session);
   if (pools.length === 0)
     throw new CommandError('no_pools', 'Aucune poule : generate_pools d’abord');
@@ -259,7 +259,7 @@ export function assignPoolReferee(
   }
   const comp = getCompetitionOrThrow(ctx, competitionId);
   const session = readSession(ctx, competitionId);
-  assertSupported(comp, session);
+  assertSupported(comp);
   const pools = sessionPools(session);
   const pool = pools.find(p => p.number === input.poolNumber);
   if (!pool) throw new CommandError('pool_not_found', `Poule ${input.poolNumber} introuvable`);

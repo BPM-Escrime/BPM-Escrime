@@ -29,6 +29,7 @@ import {
   buildMatchScores,
   buildPools,
   computeOverallRankingAllRoundsFor,
+  computeOverallRankingFor,
   validatePoolScore,
   type PoolSpecialStatus,
 } from '../../../shared/utils/poolOrchestration';
@@ -88,7 +89,11 @@ import { areAllPoolsComplete, isPoolComplete } from '../../../shared/domain/pool
 import { phaseSettings, tableauQualificationOf } from '../../../shared/domain/formula/formulaV2';
 import { stoppedTableauOf } from '../../../shared/domain/formula/formulaSteps';
 import { originFinalRanking, splitHistoryOf } from '../../../shared/domain/formula/splitPlan';
-import { tableauStagesOf } from '../../../shared/domain/tableau/tableauStage';
+import {
+  seedRankingForNextRound,
+  tableauStagesOf,
+} from '../../../shared/domain/tableau/tableauStage';
+import { seedFencersFromRanking } from '../../../shared/utils/poolRounds';
 import type { PoolSeparation } from '../../../shared/domain/pools/poolDraw';
 import {
   composePools,
@@ -148,20 +153,17 @@ export function effectiveSettings(comp: Competition, round = 1) {
   };
 }
 
-/** Formats non pilotables hors écran : erreur explicite */
-export function assertSupported(comp: Competition, session: Record<string, unknown>): void {
+/**
+ * Formats non pilotables hors écran : erreur explicite. Seuls restent refusés les équipes
+ * (commandes d'équipe, ADR-0024) et le mode spécial (rapières, étape F4) ; les formules à
+ * plusieurs tours sont pilotées par le moteur (ADR-0042).
+ */
+export function assertSupported(comp: Competition): void {
   if (comp.isTeamEvent) {
     throw new CommandError('unsupported_format', 'Épreuve par équipes : à piloter à l’écran');
   }
   if (comp.settings?.specialMode) {
     throw new CommandError('unsupported_format', 'Mode spécial (rapières) : à piloter à l’écran');
-  }
-  if (
-    effectiveSettings(comp).poolRounds > 1 ||
-    Number(session.currentPoolRound ?? 1) > 1 ||
-    (Array.isArray(session.poolHistory) && session.poolHistory.length > 0)
-  ) {
-    throw new CommandError('unsupported_format', 'Plusieurs tours de poules : à piloter à l’écran');
   }
 }
 
@@ -267,7 +269,7 @@ export function generatePools(
     );
   }
   if (options.composition) assertScoreSupported(comp);
-  else assertSupported(comp, session);
+  else assertSupported(comp);
   const existing = sessionPools(session);
   const played = existing.some(p => p.matches?.some(m => m.status === MatchStatus.FINISHED));
   if (played && !options.replace) {
@@ -281,8 +283,19 @@ export function generatePools(
   }
   const round = Math.max(1, Number(session.currentPoolRound ?? 1) || 1);
   const poolHistory = sessionPoolHistory(session);
-  const min = options.minPerPool ?? 5;
-  const max = options.maxPerPool ?? 7;
+  // Tour suivant (ADR-0042) : tailles du tour lues dans la formule, comme l'écran (ADR-0036)
+  const roundPool =
+    round > 1 && comp.settings?.formula?.phases.some(p => p.kind === 'pool')
+      ? phaseSettings(comp.settings.formula, { kind: 'pool', round: round - 1 })
+      : undefined;
+  const min =
+    options.minPerPool ??
+    (round > 1 ? (roundPool?.sizeMin ?? comp.settings?.poolSizeMin) : undefined) ??
+    5;
+  const max =
+    options.maxPerPool ??
+    (round > 1 ? (roundPool?.sizeMax ?? comp.settings?.poolSizeMax) : undefined) ??
+    7;
   let pools: Pool[];
   let fencers: Fencer[];
   if (options.composition) {
@@ -304,6 +317,22 @@ export function generatePools(
     fencers = ctx.db
       .getFencersByCompetition(competitionId)
       .filter(f => f.status === FencerStatus.CHECKED_IN);
+    // Tour suivant : répartition par le classement du tour précédent, ou par le rang d'entrée au
+    // tableau après un tableau arrêté (Q5, ADR-0037) ; mêmes fonctions que l'écran (ADR-0042)
+    if (round > 1 && poolHistory.length > 0) {
+      fencers = seedFencersFromRanking(
+        fencers,
+        seedRankingForNextRound({
+          formula: comp.settings?.formula,
+          playedRounds: poolHistory.length,
+          stages: tableauStagesOf(session.stageHistory),
+          lastRoundRanking: computeOverallRankingFor(
+            poolHistory[poolHistory.length - 1],
+            isLaser(comp)
+          ),
+        })
+      );
+    }
     if (min > max) throw new CommandError('invalid_pool_size', 'minPerPool > maxPerPool');
     if (options.poolCount !== undefined && options.poolCount > Math.floor(fencers.length / 3)) {
       throw new CommandError(
@@ -314,6 +343,7 @@ export function generatePools(
     try {
       pools = buildPools(fencers, {
         poolMaxScore: effectiveSettings(comp, round).poolMaxScore,
+        round,
         poolCount: options.poolCount,
         minPerPool: min,
         maxPerPool: max,
@@ -949,7 +979,7 @@ export function buildBracket(
     );
   }
   if (options.composition) assertScoreSupported(comp);
-  else assertSupported(comp, session);
+  else assertSupported(comp);
   const group = assertTableauGroup(comp, session, options.group);
   if (!options.composition && comp.settings?.playAllPositions) {
     throw new CommandError(
@@ -960,6 +990,14 @@ export function buildBracket(
   const eff = effectiveSettings(comp);
   if (!eff.hasDirectElimination) {
     throw new CommandError('no_direct_elimination', 'Épreuve sans élimination directe');
+  }
+  // Un seul tableau dans la formule : une fois arrêté et clos, les tours de poules qui suivent
+  // terminent l'épreuve (ADR-0037, formulaSegment)
+  if (!options.composition && tableauStagesOf(session.stageHistory).length > 0) {
+    throw new CommandError(
+      'no_direct_elimination',
+      'Tableau arrêté déjà clos : les tours de poules qui suivent terminent l’épreuve'
+    );
   }
   const pools = sessionPools(session);
   // Épreuve séparée (docs/adr/0024, lot A3) : classement après poules importé, sans poules

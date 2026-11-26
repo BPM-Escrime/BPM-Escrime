@@ -326,7 +326,7 @@ export const contract = {
 
   generatePools: command({
     description:
-      'Poules du tour courant, lancées (phase Poules). Sans « composition » : tirage sur les tireurs pointés par la même fonction que l’écran (serpentin sur le classement, puis clubs et régions séparés, ou les critères de « separation »), poule n sur la piste n ; épreuve individuelle, un tour de poules. ' +
+      'Poules du tour courant, lancées (phase Poules). Sans « composition » : tirage sur les tireurs pointés par la même fonction que l’écran (serpentin sur le classement, puis clubs et régions séparés, ou les critères de « separation »), poule n sur la piste n ; épreuve individuelle. Tour suivant (après « closePoolRound » ou « closeTableauStage ») : tireurs pointés répartis sur le classement du tour précédent, ou sur le rang d’entrée au tableau après un tableau arrêté, tailles et score maximum du tour lus dans la formule (« minPerPool » et « maxPerPool » priment), comme l’écran (docs/adr/0042). ' +
       'Avec « composition » : poules et ordre des matchs retenus par le DT à la préparation, tels quels (tous formats individuels, tours multiples compris). ' +
       '« replace: true » efface des poules déjà jouées ou un tableau : accord du DT indispensable.',
     input: z.object({
@@ -429,7 +429,7 @@ export const contract = {
 
   generateTableau: command({
     description:
-      'Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, un tour, tableau simple). ' +
+      'Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, tableau simple) : après plusieurs tours de poules, classement de tous les tours (docs/adr/0042) ; refus « no_direct_elimination » une fois le tableau arrêté clos, les tours de poules qui suivent terminent l’épreuve (docs/adr/0037). ' +
       'Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. ' +
       'Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »). ' +
       'Sans « composition » : « tiedAtBar » liste les ex aequo à la barre de qualification au-delà du quota, « ties » choisit leur sort pour ce tableau (docs/adr/0040).',
