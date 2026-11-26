@@ -749,6 +749,26 @@ button.formula-frieze__step {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px var(--color-primary-glow);
 }
+.formula-frieze__step.has-remark {
+  border-color: var(--color-danger);
+}
+.formula-frieze__remark {
+  display: inline-block;
+  margin-right: 0.25rem;
+  color: var(--color-danger);
+  vertical-align: text-bottom;
+}
+.formula-coherence.is-blocking {
+  border-left-color: var(--color-danger);
+}
+.formula-editor__expert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+}
 .formula-frieze__title {
   display: block;
   font-weight: 600;

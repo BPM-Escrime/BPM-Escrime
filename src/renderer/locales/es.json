@@ -4801,7 +4801,11 @@
     "split_rest": "El resto de tiradores",
     "split_add_branch": "Añadir una rama",
     "split_remove_branch": "Quitar la rama {{label}}",
-    "split_issues": "A corregir antes de guardar"
+    "split_issues": "A corregir antes de guardar",
+    "expert_mode": "Modo experto",
+    "expert_hint": "Escisión, Ronda Quest, cuadro detenido y ajustes avanzados (empates en la barra, rondas acumuladas, orden de los combates, baremo por zonas). Preferencia de este equipo.",
+    "expert_forced": "Esta fórmula contiene un bloque o un ajuste experto: el modo experto sigue activo para esta edición.",
+    "remark_on_phase": "Observación sobre esta fase"
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",

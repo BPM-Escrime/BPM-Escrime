@@ -4801,7 +4801,11 @@
     "split_rest": "Remaining fencers",
     "split_add_branch": "Add a branch",
     "split_remove_branch": "Remove branch {{label}}",
-    "split_issues": "To fix before saving"
+    "split_issues": "To fix before saving",
+    "expert_mode": "Expert mode",
+    "expert_hint": "Split, Quest round, stopped bracket and advanced settings (ties at the cut, cumulative rounds, bout order, zone scoring). Preference of this workstation.",
+    "expert_forced": "This formula contains an expert block or setting: expert mode stays on for this edit.",
+    "remark_on_phase": "Remark on this phase"
   },
   "formulaTemplates": {
     "template": "Formula template",

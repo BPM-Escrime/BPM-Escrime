@@ -338,6 +338,7 @@ const FormulaPhaseCard_: React.FC<Props> = ({
                   onChange={r => updatePoolConfig({ advancementRule: r })}
                   inputFencers={inputFencers}
                   readOnly={readOnly || advancementDisabled}
+                  expert
                 />
               </div>
             </>

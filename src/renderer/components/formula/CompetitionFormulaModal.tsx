@@ -15,7 +15,11 @@ import {
   formulaOf,
   type FormulaV2,
 } from '../../../shared/domain/formula/formulaV2';
-import { operationsBetweenV2 } from '../../../shared/domain/formula/formulaV2Operations';
+import {
+  formulaV2Issues,
+  operationsBetweenV2,
+} from '../../../shared/domain/formula/formulaV2Operations';
+import type { FormulaProgress } from '../../../shared/domain/formula/formulaRemarks';
 import {
   formulaDeviations,
   templateToSettings,
@@ -45,12 +49,19 @@ export function formulaSettingsUpdate(
 
 interface Props {
   competition: Competition;
+  /** Phases déjà commencées de l'épreuve (S6, ADR-0041) ; absent : rien de commencé */
+  progress?: FormulaProgress;
   /** Réglages écrits par le moteur : mise à jour de l'écran (aucune écriture ici) */
   onApplied: (settings: CompetitionSettings) => void;
   onClose: () => void;
 }
 
-export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onApplied, onClose }) => {
+export const CompetitionFormulaModal: React.FC<Props> = ({
+  competition,
+  progress,
+  onApplied,
+  onClose,
+}) => {
   const { t } = useTranslation();
   const client = useBpmClient();
   const { showToast } = useToast();
@@ -66,6 +77,14 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onApplie
     category,
     isTeamEvent: !!competition.isTeamEvent,
   });
+
+  // Jugement en direct (ADR-0041) : mêmes fonctions que le moteur, qui reste le dernier rempart
+  const knownFencerCount = competition.fencerCount || undefined;
+  const remarks = formulaV2Issues(
+    formula,
+    { weapon, isTeamEvent: !!competition.isTeamEvent, fencerCount: knownFencerCount },
+    progress
+  );
 
   const nextSettings = (): CompetitionSettings => ({
     ...formulaSettingsUpdate(competition, formula),
@@ -149,7 +168,7 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onApplie
           <Button
             type="button"
             variant="primary"
-            disabled={saving}
+            disabled={saving || remarks.length > 0}
             data-testid="formula-modal-save"
             onClick={() => void save()}
           >
@@ -174,6 +193,10 @@ export const CompetitionFormulaModal: React.FC<Props> = ({ competition, onApplie
         onChange={setFormula}
         rapieres={rapieres}
         fencerCount={competition.fencerCount || 32}
+        isTeamEvent={!!competition.isTeamEvent}
+        knownFencerCount={knownFencerCount}
+        progress={progress}
+        remarks={remarks}
       />
     </Modal>
   );

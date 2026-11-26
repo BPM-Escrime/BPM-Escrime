@@ -11,6 +11,23 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 vi.mock('../../hooks/useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 vi.mock('../../hooks/useFormulaPreview', () => ({ useFormulaPreview: () => true }));
+// Mode expert de l'éditeur (ADR-0041) : préférence du poste, allumée par défaut dans ces tests
+const prefs = vi.hoisted(() => ({ expert: true, saved: [] as boolean[] }));
+vi.mock('../../hooks/useFormulaExpert', async () => {
+  const { useState } = await import('react');
+  return {
+    useFormulaExpert: () => {
+      const [expert, setLocal] = useState(prefs.expert);
+      return {
+        expert,
+        setExpert: (v: boolean) => {
+          prefs.saved.push(v);
+          setLocal(v);
+        },
+      };
+    },
+  };
+});
 
 import { FormulaEditor } from './FormulaEditor';
 import { formulaSettingsUpdate } from './CompetitionFormulaModal';

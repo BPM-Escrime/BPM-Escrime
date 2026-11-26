@@ -4801,7 +4801,11 @@
     "split_rest": "Il resto degli schermidori",
     "split_add_branch": "Aggiungi un ramo",
     "split_remove_branch": "Rimuovi il ramo {{label}}",
-    "split_issues": "Da correggere prima di salvare"
+    "split_issues": "Da correggere prima di salvare",
+    "expert_mode": "Modalità esperto",
+    "expert_hint": "Scissione, Turno Quest, tabellone interrotto e impostazioni avanzate (parità sulla soglia, turni cumulati, ordine degli assalti, punteggio per zone). Preferenza di questa postazione.",
+    "expert_forced": "Questa formula contiene un blocco o un'impostazione da esperto: la modalità esperto resta attiva per questa modifica.",
+    "remark_on_phase": "Osservazione su questa fase"
   },
   "formulaTemplates": {
     "template": "Modello di formula",

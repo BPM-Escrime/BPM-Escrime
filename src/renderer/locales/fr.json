@@ -4801,7 +4801,11 @@
     "split_rest": "Le reste des tireurs",
     "split_add_branch": "Ajouter une branche",
     "split_remove_branch": "Retirer la branche {{label}}",
-    "split_issues": "À corriger avant d'enregistrer"
+    "split_issues": "À corriger avant d'enregistrer",
+    "expert_mode": "Mode expert",
+    "expert_hint": "Scission, Tour Quest, tableau arrêté et réglages avancés (ex aequo à la barre, cumul des tours, ordre des matchs, barème à zones). Préférence de ce poste.",
+    "expert_forced": "Cette formule contient une brique ou un réglage expert : le mode expert reste actif pour cette modification.",
+    "remark_on_phase": "Remarque sur cette phase"
   },
   "formulaTemplates": {
     "template": "Modèle de formule",

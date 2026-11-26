@@ -4801,7 +4801,11 @@
     "split_rest": "Os restantes atiradores",
     "split_add_branch": "Adicionar um ramo",
     "split_remove_branch": "Remover o ramo {{label}}",
-    "split_issues": "A corrigir antes de guardar"
+    "split_issues": "A corrigir antes de guardar",
+    "expert_mode": "Modo especialista",
+    "expert_hint": "Divisão, Ronda Quest, quadro interrompido e definições avançadas (empates na barra, rondas acumuladas, ordem dos combates, pontuação por zonas). Preferência deste posto.",
+    "expert_forced": "Esta fórmula contém um bloco ou uma definição de especialista: o modo especialista continua ativo nesta edição.",
+    "remark_on_phase": "Observação sobre esta fase"
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",

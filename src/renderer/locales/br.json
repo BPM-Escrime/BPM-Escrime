@@ -4801,7 +4801,11 @@
     "split_rest": "Ar re all",
     "split_add_branch": "Ouzhpennañ ur skourr",
     "split_remove_branch": "Lemel ar skourr {{label}}",
-    "split_issues": "Da reizhañ a-raok enrollañ"
+    "split_issues": "Da reizhañ a-raok enrollañ",
+    "expert_mode": "Mod arbennigour",
+    "expert_hint": "Rannadur, tro Quest, taolenn paouezet ha kefluniadurioù araokaet (par-ha-par e bord ar vevenn, tro-ioù kumulet, urzh ar stourmoù, jedadur dre gevennoù). Dibab ar c'hoskor-mañ.",
+    "expert_forced": "Ur vrik pe ur c'hefluniadur arbennigour zo er furmskrid-mañ : mod arbennigour a chom enaouet evit ar cheñchamant-mañ.",
+    "remark_on_phase": "Evezhiadenn war ar bazenn-mañ"
   },
   "formulaTemplates": {
     "template": "Patrom furmulenn",
