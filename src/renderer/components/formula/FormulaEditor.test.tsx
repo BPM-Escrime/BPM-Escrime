@@ -15,8 +15,13 @@ vi.mock('../../hooks/useFormulaPreview', () => ({ useFormulaPreview: () => true 
 import { FormulaEditor } from './FormulaEditor';
 import { formulaSettingsUpdate } from './CompetitionFormulaModal';
 import NewCompetitionModal from '../NewCompetitionModal';
-import { Category, CompetitionSettings, Weapon } from '../../../shared/types';
-import { formulaOf, phaseSettings, type FormulaV2 } from '../../../shared/domain/formula/formulaV2';
+import { Category, CompetitionSettings, Gender, Weapon } from '../../../shared/types';
+import {
+  formulaOf,
+  phaseSettings,
+  type FormulaV2,
+  type SplitPhase,
+} from '../../../shared/domain/formula/formulaV2';
 import { createDefaultCustomFormula } from '../../../shared/utils/tournamentTemplates';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
 
@@ -111,6 +116,111 @@ describe('FormulaEditor (formule v2)', () => {
     // Jusqu'à la finale : le tour d'après disparaît
     fireEvent.change(screen.getByLabelText('formulaEditor.stop_at'), { target: { value: '0' } });
     expect(last?.phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
+  });
+
+  it('scission (ADR-0039) : ajoutée par le « ＋ » après les poules, panneau des branches', () => {
+    render(<Harness weapon={Weapon.EPEE} />);
+    fireEvent.click(screen.getByTestId('formula-remove-tableau'));
+    fireEvent.click(screen.getByTestId('formula-plus-1'));
+    fireEvent.click(screen.getByTestId('formula-add-split-1'));
+    expect(last?.phases.map(p => p.kind)).toEqual(['pool', 'split']);
+    expect(screen.getByTestId('formula-split')).toBeInTheDocument();
+    // Critères : sexe, catégorie, rang ; pas de « Manuelle » (étape E3)
+    const criterion = screen.getByLabelText('formulaEditor.split_criterion');
+    expect([...criterion.querySelectorAll('option')].map(o => o.value)).toEqual([
+      'gender',
+      'category',
+      'rank',
+    ]);
+    // Rang : part de la branche A, la dernière prend le reste
+    fireEvent.change(screen.getByTestId('split-take-0'), { target: { value: '4' } });
+    expect(screen.getByText('formulaEditor.split_rest')).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId('split-take-mode-0'), {
+      target: { value: 'percentage' },
+    });
+    fireEvent.change(screen.getByTestId('split-take-0'), { target: { value: '25' } });
+    const split = () => last!.phases.find(p => p.kind === 'split') as SplitPhase;
+    expect(split().branches.map(b => b.take)).toEqual([
+      { mode: 'percentage', percentage: 25 },
+      undefined,
+    ]);
+    // Libellé et modèle de branche
+    fireEvent.change(
+      screen.getByLabelText('formulaEditor.split_label', { selector: '#split-label-1' }),
+      {
+        target: { value: 'N2' },
+      }
+    );
+    fireEvent.change(document.getElementById('split-preset-1')!, {
+      target: { value: 'pools_tableau' },
+    });
+    expect(split().branches[1].label).toBe('N2');
+    expect(split().branches[1].phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
+    expect(screen.queryByTestId('split-issues')).toBeNull();
+  });
+
+  it('scission : sexe, catégories, ajout et retrait de branche, problèmes affichés', () => {
+    render(<Harness weapon={Weapon.EPEE} />);
+    fireEvent.click(screen.getByTestId('formula-remove-tableau'));
+    fireEvent.click(screen.getByTestId('formula-plus-1'));
+    fireEvent.click(screen.getByTestId('formula-add-split-1'));
+    const split = () => last!.phases.find(p => p.kind === 'split') as SplitPhase;
+    fireEvent.change(screen.getByLabelText('formulaEditor.split_criterion'), {
+      target: { value: 'gender' },
+    });
+    expect(split().branches.map(b => b.gender)).toEqual([Gender.MALE, Gender.FEMALE]);
+    fireEvent.change(screen.getByLabelText('formulaEditor.split_criterion'), {
+      target: { value: 'category' },
+    });
+    // Catégories à cocher : tant qu'une branche n'en a pas, le problème s'affiche
+    expect(screen.getByTestId('split-issues')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('split-category-0-V1'));
+    fireEvent.click(screen.getByTestId('split-category-1-V2'));
+    fireEvent.click(screen.getByTestId('split-category-1-V3'));
+    expect(split().branches.map(b => b.categories)).toEqual([
+      [Category.V1],
+      [Category.V2, Category.V3],
+    ]);
+    expect(screen.queryByTestId('split-issues')).toBeNull();
+    // Deux branches au moins : pas de retrait ; une troisième se retire
+    expect(screen.queryByTestId('split-remove-0')).toBeNull();
+    fireEvent.click(screen.getByTestId('split-add-branch'));
+    expect(split().branches).toHaveLength(3);
+    fireEvent.click(screen.getByTestId('split-remove-2'));
+    expect(split().branches).toHaveLength(2);
+  });
+
+  it('scission manuelle enregistrée : lecture seule, avec une mention', () => {
+    const base = formulaOf({ weapon: Weapon.EPEE, category: Category.SENIOR });
+    const pool = base.phases[0];
+    const formula: FormulaV2 = {
+      ...base,
+      phases: [
+        pool,
+        {
+          kind: 'split',
+          id: 's',
+          criterion: 'manual',
+          branches: [
+            { label: 'A', phases: [{ ...base.phases[1], id: 'a' }] },
+            { label: 'B', phases: [{ ...base.phases[1], id: 'b' }] },
+          ],
+        },
+      ],
+    };
+    render(
+      <FormulaEditor
+        weapon={Weapon.EPEE}
+        category={Category.SENIOR}
+        formula={formula}
+        onChange={() => undefined}
+      />
+    );
+    fireEvent.click(screen.getByTestId('formula-step-split'));
+    expect(screen.getByTestId('split-manual-readonly')).toBeInTheDocument();
+    expect(screen.getByLabelText('formulaEditor.split_criterion')).toBeDisabled();
+    expect(document.getElementById('split-label-0')).toBeDisabled();
+    expect(screen.queryByTestId('split-add-branch')).toBeNull();
   });
 
   it('arme « Autre » : règles, barème, qualification complète', () => {

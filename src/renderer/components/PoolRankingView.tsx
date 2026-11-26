@@ -63,8 +63,8 @@ interface PoolRankingViewProps {
   splitOffGroups?: Partial<Record<string, string>>;
   /** Extraire un groupe dans une compétition séparée (filles) */
   onSplitOff?: (group: string) => void;
-  /** Tour de poules intermédiaire : remplace le passage au tableau (#1051) */
-  nextRoundAction?: { label: string; onClick: () => void };
+  /** Tour de poules intermédiaire, ou scission (docs/adr/0039) : remplace le passage au tableau (#1051) */
+  nextRoundAction?: { label: string; onClick: () => void; testId?: string };
   /** Tournoi des rapières : « Nom » / « Prénom » deviennent « Équipe » / « Tireurs » (#1279) */
   rapieres?: boolean;
   /** Tableau tiré : classement figé, ni recalcul ni modification manuelle (#1996) */
@@ -784,7 +784,11 @@ const PoolRankingView: React.FC<PoolRankingViewProps> = ({
         </div>
         <div style={FLEX_GAP}>
           {nextRoundAction ? (
-            <Button variant="primary" onClick={nextRoundAction.onClick}>
+            <Button
+              variant="primary"
+              onClick={nextRoundAction.onClick}
+              data-testid={nextRoundAction.testId}
+            >
               {nextRoundAction.label}
             </Button>
           ) : hasDirectElimination ? (

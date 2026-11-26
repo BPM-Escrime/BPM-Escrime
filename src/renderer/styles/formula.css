@@ -957,3 +957,112 @@ button.formula-frieze__step {
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: 0 1rem;
 }
+
+/* Brique Scission : branches en compétitions filles (#2013 étape E2b, docs/adr/0039) */
+.formula-split__branches {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.formula-split__branch {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 0.75rem;
+}
+.formula-split__branch-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+.formula-split__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
+  border: 1px solid var(--color-border-dark);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.formula-split__remove:hover,
+.formula-split__remove:focus-visible {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.formula-split__take {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.formula-split__take input {
+  width: 5.5rem;
+}
+.formula-split__rest {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+.formula-split__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.9rem;
+}
+/* Lancement de la scission et branches aux résultats de l'épreuve d'origine (E2b) */
+.split-launch__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0 1rem;
+}
+.split-launch__table th,
+.split-launch__table td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+.split-launch__missing {
+  border-left: 3px solid var(--color-danger);
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface-2);
+}
+.split-launch__missing ul {
+  margin: 0.25rem 0;
+  padding-left: 1.1rem;
+}
+.split-branches {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background: var(--color-raised);
+}
+.split-branches__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.2rem;
+}
+.split-branches__list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+.split-branches__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.split-branches__label {
+  font-weight: 600;
+  flex: 1 1 10rem;
+}
+.split-branches__count {
+  color: var(--color-text-muted);
+}

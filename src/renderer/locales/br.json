@@ -2513,7 +2513,11 @@
     "print": "Moullañ",
     "copy": "Eilañ",
     "copied": "Disoc'hoù eilet er golver !",
-    "legend": "(MED) = Yec'hed • (F) = Forfed • (X) = Skarzhet • DNF / DNS = er-maez er poulloù / a-raok an emgann kentañ"
+    "legend": "(MED) = Yec'hed • (F) = Forfed • (X) = Skarzhet • DNF / DNS = er-maez er poulloù / a-raok an emgann kentañ",
+    "branches_title": "Skourroù",
+    "branches_hint": "Ar c'hleze-c'hoarierien tremenet en ur skourr a vez renket en e genstrivadeg merc'h.",
+    "branch_fencers": "Kleze-c'hoarierien: {{n}}",
+    "open_branch": "Digeriñ"
   },
   "ffeConnect": {
     "title": "Enporzhiañ eus FFE Connect",
@@ -4769,7 +4773,31 @@
     "stop_at": "Paouez an daolenn",
     "stop_at_none": "Betek ar c'hourfenn",
     "stop_at_n": "Pa chom {{n}} c'hoarier",
-    "stop_at_hint": "Ar c'hoarierien a chom a dremen d'un dro poulloù goude an daolenn."
+    "stop_at_hint": "Ar c'hoarierien a chom a dremen d'un dro poulloù goude an daolenn.",
+    "brick_split": "Rannadur",
+    "split_criterion": "Rannañ hervez",
+    "split_criterion_gender": "Reizh",
+    "split_criterion_category": "Rummad",
+    "split_criterion_rank": "Renk",
+    "split_criterion_manual": "Gant an dorn",
+    "split_manual_readonly": "Rannadur gant an dorn: da reizhañ war ar skramm en ur stumm da zont. Lenn hepken amañ.",
+    "split_branch": "Skourr {{n}}",
+    "split_label": "Anv",
+    "split_preset": "Patrom ar skourr",
+    "split_preset_tableau": "Taolenn",
+    "split_preset_pools_tableau": "Poulloù ha goude taolenn",
+    "split_preset_pools": "Poulloù",
+    "split_preset_custom": "Personelaet",
+    "split_preset_hint": "Pep skourr a zeu da vezañ ur genstrivadeg merc'h, renket a-ziforc'h. An arventennoù resis (taolioù, troioù, taolenn) a vez graet goude e Aozadur ▸ Formulenn ar genstrivadeg merc'h.",
+    "split_gender": "Reizh ar skourr",
+    "split_gender_male": "Paotred",
+    "split_gender_female": "Merc'hed",
+    "split_categories": "Rummadoù ar skourr",
+    "split_take": "Kleze-c'hoarierien ar skourr",
+    "split_rest": "Ar re all",
+    "split_add_branch": "Ouzhpennañ ur skourr",
+    "split_remove_branch": "Lemel ar skourr {{label}}",
+    "split_issues": "Da reizhañ a-raok enrollañ"
   },
   "formulaTemplates": {
     "template": "Patrom furmulenn",
@@ -4826,6 +4854,20 @@
     "confirm": "{{qualified}} c'hoarier a dremen d'ar prantad war-lerc'h, {{eliminated}} a zo lamet. Kenderc'hel ?",
     "closed": "Taolenn serret : galvit an {{n}} c'hoarier a chom evit ar prantad war-lerc'h.",
     "closed_title": "Taolenn paouezet da {{n}} c'hoarier : serret",
-    "closed_hint": "Lenn hepken. Ar c'hoarierien a chom o deus kendalc'het ; o renk diwezhañ a zo en Disoc'hoù."
+    "closed_hint": "Lenn hepken. Ar c'hoarierien a chom o deus kendalc'het ; o renk diwezhañ a zo en Disoc'hoù.",
+    "closed_split": "Taolenn serret: rannit an amprouenn diwar ar Renkadur evit an {{n}} kleze-c'hoarier a chom."
+  },
+  "splitLaunch": {
+    "action": "Rannañ an amprouenn",
+    "title": "Rannañ an amprouenn",
+    "loading": "O jediñ ar rannadur…",
+    "intro": "Pep skourr a zeu da vezañ ur genstrivadeg merc'h, renket a-ziforc'h. Ar c'hleze-c'hoarierien a vez eilet enni gant o renk.",
+    "col_branch": "Skourr",
+    "col_fencers": "Kleze-c'hoarierien",
+    "confirm": "Rannañ",
+    "missing_title": "{{n}} kleze-c'hoarier hep talvoud evit an dezverk: rannadur dibosupl",
+    "missing_fix_gender": "Leuniit reizh ar c'hleze-c'hoarierien-se (Galv ▸ kemmañ), ha rannit en-dro.",
+    "missing_fix_category": "Leuniit rummad ar c'hleze-c'hoarierien-se er Galv (gant an dorn pe « Jediñ ar rummadoù »), ha rannit en-dro.",
+    "done": "Amprouenn rannet: {{n}} kenstrivadeg merc'h krouet."
   }
 }

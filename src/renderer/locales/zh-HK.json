@@ -2513,7 +2513,11 @@
     "print": "列印",
     "copy": "複製",
     "copied": "結果已複製到剪貼簿！",
-    "legend": "(MED) = 傷病 • (F) = 棄權 • (X) = 取消資格 • DNF / DNS = 分組賽中退出 / 首場前退出"
+    "legend": "(MED) = 傷病 • (F) = 棄權 • (X) = 取消資格 • DNF / DNS = 分組賽中退出 / 首場前退出",
+    "branches_title": "分支",
+    "branches_hint": "進入分支的劍手於該子比賽排名。",
+    "branch_fencers": "劍手：{{n}}",
+    "open_branch": "開啟"
   },
   "ffeConnect": {
     "title": "從 FFE Connect 匯入",
@@ -4769,7 +4773,31 @@
     "stop_at": "停止淘汰賽表",
     "stop_at_none": "直至決賽",
     "stop_at_n": "剩下 {{n}} 名劍手時",
-    "stop_at_hint": "餘下劍手在淘汰賽表後進入一輪小組賽。"
+    "stop_at_hint": "餘下劍手在淘汰賽表後進入一輪小組賽。",
+    "brick_split": "分組",
+    "split_criterion": "分組依據",
+    "split_criterion_gender": "性別",
+    "split_criterion_category": "組別",
+    "split_criterion_rank": "排名",
+    "split_criterion_manual": "手動",
+    "split_manual_readonly": "手動分組：將於日後版本在畫面上設定。此處唯讀。",
+    "split_branch": "分支 {{n}}",
+    "split_label": "名稱",
+    "split_preset": "分支範本",
+    "split_preset_tableau": "淘汰賽",
+    "split_preset_pools_tableau": "小組賽後淘汰賽",
+    "split_preset_pools": "小組賽",
+    "split_preset_custom": "自訂",
+    "split_preset_hint": "每個分支成為獨立排名的子比賽。細節設定（劍數、輪次、淘汰賽）其後於子比賽的「組織 ▸ 賽制」進行。",
+    "split_gender": "分支性別",
+    "split_gender_male": "男子",
+    "split_gender_female": "女子",
+    "split_categories": "分支組別",
+    "split_take": "分支劍手",
+    "split_rest": "其餘劍手",
+    "split_add_branch": "新增分支",
+    "split_remove_branch": "移除分支 {{label}}",
+    "split_issues": "儲存前須修正"
   },
   "formulaTemplates": {
     "template": "賽制範本",
@@ -4826,6 +4854,20 @@
     "confirm": "{{qualified}} 名劍手進入下一階段，{{eliminated}} 名被淘汰。繼續？",
     "closed": "淘汰賽表已結束：為下一階段點名 {{n}} 名餘下劍手。",
     "closed_title": "淘汰賽表在 {{n}} 名劍手時停止：已結束",
-    "closed_hint": "只供查看。餘下劍手已繼續比賽；最終名次見「結果」。"
+    "closed_hint": "只供查看。餘下劍手已繼續比賽；最終名次見「結果」。",
+    "closed_split": "淘汰賽已結束：請於「排名」為餘下 {{n}} 名劍手分拆比賽。"
+  },
+  "splitLaunch": {
+    "action": "分拆比賽",
+    "title": "分拆比賽",
+    "loading": "正在計算分組…",
+    "intro": "每個分支成為獨立排名的子比賽。劍手連同名次複製過去。",
+    "col_branch": "分支",
+    "col_fencers": "劍手",
+    "confirm": "分拆",
+    "missing_title": "{{n}} 名劍手缺少分組依據的資料：無法分拆",
+    "missing_fix_gender": "請補上這些劍手的性別（點名 ▸ 編輯劍手），然後再次分拆。",
+    "missing_fix_category": "請在點名補上這些劍手的組別（手動或「計算組別」），然後再次分拆。",
+    "done": "比賽已分拆：已建立 {{n}} 個子比賽。"
   }
 }

@@ -2513,7 +2513,11 @@
     "print": "Imprimer",
     "copy": "Copier",
     "copied": "Résultats copiés dans le presse-papier !",
-    "legend": "(MED) = Médical • (F) = Forfait • (X) = Exclu • DNF / DNS = sorti en poules / avant son premier match"
+    "legend": "(MED) = Médical • (F) = Forfait • (X) = Exclu • DNF / DNS = sorti en poules / avant son premier match",
+    "branches_title": "Branches",
+    "branches_hint": "Les tireurs passés dans une branche sont classés dans sa compétition fille.",
+    "branch_fencers": "Tireurs : {{n}}",
+    "open_branch": "Ouvrir"
   },
   "ffeConnect": {
     "title": "Importer depuis FFE Connect",
@@ -4769,7 +4773,31 @@
     "stop_at": "Arrêter le tableau",
     "stop_at_none": "Jusqu'à la finale",
     "stop_at_n": "Quand il reste {{n}} tireurs",
-    "stop_at_hint": "Les tireurs restants passent à un tour de poules après le tableau."
+    "stop_at_hint": "Les tireurs restants passent à un tour de poules après le tableau.",
+    "brick_split": "Scission",
+    "split_criterion": "Répartir par",
+    "split_criterion_gender": "Sexe",
+    "split_criterion_category": "Catégorie",
+    "split_criterion_rank": "Rang",
+    "split_criterion_manual": "Manuelle",
+    "split_manual_readonly": "Répartition manuelle : se réglera à l'écran dans une prochaine version. Lecture seule ici.",
+    "split_branch": "Branche {{n}}",
+    "split_label": "Libellé",
+    "split_preset": "Modèle de branche",
+    "split_preset_tableau": "Tableau",
+    "split_preset_pools_tableau": "Poules puis tableau",
+    "split_preset_pools": "Poules",
+    "split_preset_custom": "Personnalisé",
+    "split_preset_hint": "Chaque branche devient une compétition fille, classée à part. Ses réglages fins (touches, tours, tableau) se font ensuite dans Organisation ▸ Formule de la compétition fille.",
+    "split_gender": "Sexe de la branche",
+    "split_gender_male": "Hommes",
+    "split_gender_female": "Dames",
+    "split_categories": "Catégories de la branche",
+    "split_take": "Tireurs de la branche",
+    "split_rest": "Le reste des tireurs",
+    "split_add_branch": "Ajouter une branche",
+    "split_remove_branch": "Retirer la branche {{label}}",
+    "split_issues": "À corriger avant d'enregistrer"
   },
   "formulaTemplates": {
     "template": "Modèle de formule",
@@ -4826,6 +4854,20 @@
     "confirm": "{{qualified}} tireurs passent à la phase suivante, {{eliminated}} sont éliminés. Continuer ?",
     "closed": "Tableau clos : pointez les {{n}} tireurs restants pour la phase suivante.",
     "closed_title": "Tableau arrêté à {{n}} tireurs : clos",
-    "closed_hint": "Consultation seule. Les tireurs restants ont poursuivi l'épreuve ; leur place finale est aux Résultats."
+    "closed_hint": "Consultation seule. Les tireurs restants ont poursuivi l'épreuve ; leur place finale est aux Résultats.",
+    "closed_split": "Tableau clos : scindez l'épreuve depuis le Classement pour les {{n}} tireurs restants."
+  },
+  "splitLaunch": {
+    "action": "Scinder l'épreuve",
+    "title": "Scinder l'épreuve",
+    "loading": "Calcul de la répartition…",
+    "intro": "Chaque branche devient une compétition fille, classée à part. Les tireurs y sont copiés avec leur rang.",
+    "col_branch": "Branche",
+    "col_fencers": "Tireurs",
+    "confirm": "Scinder",
+    "missing_title": "{{n}} tireur(s) sans valeur pour le critère : scission impossible",
+    "missing_fix_gender": "Complétez le sexe de ces tireurs (Appel ▸ modifier le tireur), puis relancez la scission.",
+    "missing_fix_category": "Complétez la catégorie de ces tireurs à l'Appel (saisie ou « Calculer les catégories »), puis relancez la scission.",
+    "done": "Épreuve scindée : {{n}} compétitions filles créées."
   }
 }

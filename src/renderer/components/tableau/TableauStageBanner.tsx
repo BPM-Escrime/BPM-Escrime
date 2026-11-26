@@ -21,6 +21,8 @@ interface TableauStageBannerProps {
   matches: TableauMatch[];
   /** Après la clôture : appel des restants pour la phase suivante */
   onClosed: () => void;
+  /** Scission après le tableau (docs/adr/0039) : les restants passent aux compétitions filles */
+  thenSplit?: boolean;
 }
 
 export const TableauStageBanner: React.FC<TableauStageBannerProps> = ({
@@ -28,6 +30,7 @@ export const TableauStageBanner: React.FC<TableauStageBannerProps> = ({
   stopAt,
   matches,
   onClosed,
+  thenSplit,
 }) => {
   const { t } = useTranslation();
   const { confirm } = useConfirm();
@@ -43,7 +46,10 @@ export const TableauStageBanner: React.FC<TableauStageBannerProps> = ({
       );
       if (!ok) return;
       await client.call('closeTableauStage', { competitionId });
-      showToast(t('tableauStage.closed', { n: sim.qualified }), 'success');
+      showToast(
+        t(thenSplit ? 'tableauStage.closed_split' : 'tableauStage.closed', { n: sim.qualified }),
+        'success'
+      );
       onClosed();
     } catch (e) {
       showToast((e as Error).message ?? String(e), 'error');

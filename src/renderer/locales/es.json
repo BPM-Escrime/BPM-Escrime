@@ -2513,7 +2513,11 @@
     "print": "Imprimir",
     "copy": "Copiar",
     "copied": "¡Resultados copiados al portapapeles!",
-    "legend": "(MED) = Médico • (F) = Forfait • (X) = Excluido • DNF / DNS = retirado en poules / antes del primer combate"
+    "legend": "(MED) = Médico • (F) = Forfait • (X) = Excluido • DNF / DNS = retirado en poules / antes del primer combate",
+    "branches_title": "Ramas",
+    "branches_hint": "Los tiradores que pasaron a una rama se clasifican en su competición hija.",
+    "branch_fencers": "Tiradores: {{n}}",
+    "open_branch": "Abrir"
   },
   "ffeConnect": {
     "title": "Importar desde FFE Connect",
@@ -4769,7 +4773,31 @@
     "stop_at": "Detener el cuadro",
     "stop_at_none": "Hasta la final",
     "stop_at_n": "Cuando queden {{n}} tiradores",
-    "stop_at_hint": "Los tiradores restantes pasan a una vuelta de poules después del cuadro."
+    "stop_at_hint": "Los tiradores restantes pasan a una vuelta de poules después del cuadro.",
+    "brick_split": "División",
+    "split_criterion": "Dividir por",
+    "split_criterion_gender": "Sexo",
+    "split_criterion_category": "Categoría",
+    "split_criterion_rank": "Clasificación",
+    "split_criterion_manual": "Manual",
+    "split_manual_readonly": "División manual: se configurará en pantalla en una próxima versión. Solo lectura aquí.",
+    "split_branch": "Rama {{n}}",
+    "split_label": "Nombre",
+    "split_preset": "Modelo de rama",
+    "split_preset_tableau": "Cuadro",
+    "split_preset_pools_tableau": "Poules y luego cuadro",
+    "split_preset_pools": "Poules",
+    "split_preset_custom": "Personalizado",
+    "split_preset_hint": "Cada rama se convierte en una competición hija, clasificada aparte. Los ajustes finos (tocados, rondas, cuadro) se hacen después en Organización ▸ Fórmula de la competición hija.",
+    "split_gender": "Sexo de la rama",
+    "split_gender_male": "Hombres",
+    "split_gender_female": "Mujeres",
+    "split_categories": "Categorías de la rama",
+    "split_take": "Tiradores de la rama",
+    "split_rest": "El resto de tiradores",
+    "split_add_branch": "Añadir una rama",
+    "split_remove_branch": "Quitar la rama {{label}}",
+    "split_issues": "A corregir antes de guardar"
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",
@@ -4826,6 +4854,20 @@
     "confirm": "{{qualified}} tiradores pasan a la fase siguiente, {{eliminated}} quedan eliminados. ¿Continuar?",
     "closed": "Cuadro cerrado: pase lista a los {{n}} tiradores restantes para la fase siguiente.",
     "closed_title": "Cuadro detenido en {{n}} tiradores: cerrado",
-    "closed_hint": "Solo consulta. Los tiradores restantes siguieron en la competición; su puesto final está en Resultados."
+    "closed_hint": "Solo consulta. Los tiradores restantes siguieron en la competición; su puesto final está en Resultados.",
+    "closed_split": "Cuadro cerrado: divida la prueba desde la Clasificación para los {{n}} tiradores restantes."
+  },
+  "splitLaunch": {
+    "action": "Dividir la prueba",
+    "title": "Dividir la prueba",
+    "loading": "Calculando la división…",
+    "intro": "Cada rama se convierte en una competición hija, clasificada aparte. Los tiradores se copian con su puesto.",
+    "col_branch": "Rama",
+    "col_fencers": "Tiradores",
+    "confirm": "Dividir",
+    "missing_title": "{{n}} tirador(es) sin valor para el criterio: división imposible",
+    "missing_fix_gender": "Complete el sexo de estos tiradores (Llamada ▸ editar tirador) y vuelva a dividir.",
+    "missing_fix_category": "Complete la categoría de estos tiradores en la Llamada (a mano o «Calcular las categorías») y vuelva a dividir.",
+    "done": "Prueba dividida: {{n}} competiciones hijas creadas."
   }
 }

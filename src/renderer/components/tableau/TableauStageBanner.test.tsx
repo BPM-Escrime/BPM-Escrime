@@ -16,7 +16,8 @@ const call = vi.fn(async (_name: string, input: { dryRun?: boolean }) => ({
 vi.mock('../../hooks/useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 vi.mock('../../api/BpmClientContext', () => ({ useBpmClient: () => ({ call }) }));
 vi.mock('../ConfirmDialog', () => ({ useConfirm: () => ({ confirm: async () => true }) }));
-vi.mock('../Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+const showToast = vi.fn();
+vi.mock('../Toast', () => ({ useToast: () => ({ showToast }) }));
 
 import { TableauStageBanner } from './TableauStageBanner';
 
@@ -56,5 +57,21 @@ describe('TableauStageBanner', () => {
       dryRun: true,
     });
     expect(call).toHaveBeenNthCalledWith(2, 'closeTableauStage', { competitionId: 'c' });
+  });
+
+  it('scission après le tableau (ADR-0039) : message propre à la scission', async () => {
+    const onClosed = vi.fn();
+    render(
+      <TableauStageBanner
+        competitionId="c"
+        stopAt={2}
+        matches={[m(4, 'A', 'D', 'A'), m(4, 'B', 'C', 'B')]}
+        onClosed={onClosed}
+        thenSplit
+      />
+    );
+    fireEvent.click(screen.getByTestId('tableau-stage-close'));
+    await waitFor(() => expect(onClosed).toHaveBeenCalled());
+    expect(showToast).toHaveBeenLastCalledWith('tableauStage.closed_split', 'success');
   });
 });

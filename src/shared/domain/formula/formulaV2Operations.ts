@@ -207,6 +207,99 @@ function newSplit(ctx: FormulaV2Context, newId: () => string): SplitPhase {
   };
 }
 
+/** Modèle d'une branche d'après ses phases ; null : autre suite (réglée dans la fille) */
+export function branchPresetOf(phases: FormulaPhaseV2[]): BranchPreset | null {
+  if (phases.some(p => !isPool(p) && !isTableau(p))) return null;
+  const pools = phases.some(isPool);
+  const tableau = phases.some(isTableau);
+  if (pools && tableau) return isTableau(phases[phases.length - 1]) ? 'pools_tableau' : null;
+  if (tableau) return phases.length === 1 ? 'tableau' : null;
+  return pools ? 'pools' : null;
+}
+
+/** Part par défaut d'une branche par rang : 16 premiers */
+const DEFAULT_TAKE: AdvancementRule = { mode: 'fixed_count', count: 16 };
+
+/** Branche sans les champs d'un critère (sexe, catégories, part) */
+function bareBranch(b: SplitBranch): SplitBranch {
+  const { gender: _g, categories: _c, take: _t, ...rest } = b;
+  return rest;
+}
+
+/** Champ propre au critère pour la branche `i` sur `count` (ADR-0039) */
+function criterionFields(
+  criterion: SplitCriterion,
+  i: number,
+  count: number,
+  prev?: SplitBranch
+): Partial<SplitBranch> {
+  if (criterion === 'rank') return i < count - 1 ? { take: prev?.take ?? DEFAULT_TAKE } : {};
+  if (criterion === 'gender') {
+    const g = prev?.gender ?? [Gender.MALE, Gender.FEMALE][i];
+    return g ? { gender: g } : {};
+  }
+  if (criterion === 'category') return { categories: prev?.categories ?? [] };
+  return {};
+}
+
+/**
+ * Critère changé à l'écran (ADR-0039) : chaque branche perd les champs de l'ancien critère et
+ * reçoit ceux du nouveau (rang : 16 premiers sauf la dernière ; sexe : hommes puis dames ;
+ * catégorie : à cocher).
+ */
+export function withSplitCriterion(split: SplitPhase, criterion: SplitCriterion): SplitPhase {
+  const n = split.branches.length;
+  return {
+    ...split,
+    criterion,
+    branches: split.branches.map((b, i) => ({
+      ...bareBranch(b),
+      ...criterionFields(criterion, i, n),
+    })),
+  };
+}
+
+/** Lettre de la branche `i` : « Tableau A », « Tableau B »… */
+const branchLabel = (i: number) => `Tableau ${String.fromCharCode(65 + (i % 26))}`;
+
+/**
+ * Branche ajoutée en dernier (modèle « Tableau ») ; par rang, elle prend le reste et l'ancienne
+ * dernière reçoit une part.
+ */
+export function addSplitBranch(
+  split: SplitPhase,
+  ctx: FormulaV2Context,
+  newId: () => string
+): SplitPhase {
+  const used = new Set(split.branches.map(b => b.label));
+  let k = split.branches.length;
+  while (used.has(branchLabel(k))) k++;
+  const added: SplitBranch = { label: branchLabel(k), phases: branchPhases('tableau', ctx, newId) };
+  const branches = [...split.branches, added];
+  const n = branches.length;
+  return {
+    ...split,
+    branches: branches.map((b, i) => ({
+      ...bareBranch(b),
+      ...criterionFields(split.criterion, i, n, i < n - 1 ? b : undefined),
+    })),
+  };
+}
+
+/** Branche `index` retirée (deux branches au moins) ; par rang, la nouvelle dernière prend le reste */
+export function removeSplitBranch(split: SplitPhase, index: number): SplitPhase {
+  if (split.branches.length <= 2) return split;
+  const branches = split.branches.filter((_, i) => i !== index);
+  const n = branches.length;
+  return {
+    ...split,
+    branches: branches.map((b, i) => ({
+      ...bareBranch(b),
+      ...criterionFields(split.criterion, i, n, b),
+    })),
+  };
+}
+
 export function insertV2(
   f: FormulaV2,
   ctx: FormulaV2Context,

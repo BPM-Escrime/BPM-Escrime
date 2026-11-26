@@ -2513,7 +2513,11 @@
     "print": "Print",
     "copy": "Copy",
     "copied": "Results copied to the clipboard!",
-    "legend": "(MED) = Medical • (F) = Forfeit • (X) = Excluded • DNF / DNS = out in pools / before first bout"
+    "legend": "(MED) = Medical • (F) = Forfeit • (X) = Excluded • DNF / DNS = out in pools / before first bout",
+    "branches_title": "Branches",
+    "branches_hint": "Fencers who moved to a branch are ranked in its child competition.",
+    "branch_fencers": "Fencers: {{n}}",
+    "open_branch": "Open"
   },
   "ffeConnect": {
     "title": "Import from FFE Connect",
@@ -4769,7 +4773,31 @@
     "stop_at": "Stop the bracket",
     "stop_at_none": "Up to the final",
     "stop_at_n": "When {{n}} fencers remain",
-    "stop_at_hint": "The remaining fencers go on to a pool round after the bracket."
+    "stop_at_hint": "The remaining fencers go on to a pool round after the bracket.",
+    "brick_split": "Split",
+    "split_criterion": "Split by",
+    "split_criterion_gender": "Gender",
+    "split_criterion_category": "Category",
+    "split_criterion_rank": "Rank",
+    "split_criterion_manual": "Manual",
+    "split_manual_readonly": "Manual split: will be set on screen in a future version. Read-only here.",
+    "split_branch": "Branch {{n}}",
+    "split_label": "Label",
+    "split_preset": "Branch template",
+    "split_preset_tableau": "Table",
+    "split_preset_pools_tableau": "Pools then table",
+    "split_preset_pools": "Pools",
+    "split_preset_custom": "Custom",
+    "split_preset_hint": "Each branch becomes a child competition, ranked separately. Fine settings (touches, rounds, table) are then made in Organisation ▸ Formula of the child competition.",
+    "split_gender": "Branch gender",
+    "split_gender_male": "Men",
+    "split_gender_female": "Women",
+    "split_categories": "Branch categories",
+    "split_take": "Branch fencers",
+    "split_rest": "Remaining fencers",
+    "split_add_branch": "Add a branch",
+    "split_remove_branch": "Remove branch {{label}}",
+    "split_issues": "To fix before saving"
   },
   "formulaTemplates": {
     "template": "Formula template",
@@ -4826,6 +4854,20 @@
     "confirm": "{{qualified}} fencers go on to the next phase, {{eliminated}} are eliminated. Continue?",
     "closed": "Bracket closed: check in the {{n}} remaining fencers for the next phase.",
     "closed_title": "Bracket stopped at {{n}} fencers: closed",
-    "closed_hint": "Read only. The remaining fencers went on in the competition; their final place is in Results."
+    "closed_hint": "Read only. The remaining fencers went on in the competition; their final place is in Results.",
+    "closed_split": "Table closed: split the event from the Ranking for the {{n}} remaining fencers."
+  },
+  "splitLaunch": {
+    "action": "Split the event",
+    "title": "Split the event",
+    "loading": "Computing the split…",
+    "intro": "Each branch becomes a child competition, ranked separately. Fencers are copied there with their rank.",
+    "col_branch": "Branch",
+    "col_fencers": "Fencers",
+    "confirm": "Split",
+    "missing_title": "{{n}} fencer(s) without a value for the criterion: split impossible",
+    "missing_fix_gender": "Fill in these fencers' gender (Roll call ▸ edit fencer), then split again.",
+    "missing_fix_category": "Fill in these fencers' category in the Roll call (entry or “Compute categories”), then split again.",
+    "done": "Event split: {{n}} child competitions created."
   }
 }

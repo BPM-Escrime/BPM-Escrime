@@ -77,6 +77,8 @@ interface TableauPhaseProps {
   stopAt?: number;
   /** Tableau arrêté déjà clos : consultation seule (docs/adr/0037) */
   closedStage?: boolean;
+  /** Scission après le tableau arrêté (docs/adr/0039) : retour au Classement à la clôture */
+  stageThenSplit?: boolean;
 }
 
 const TableauPhase: React.FC<TableauPhaseProps> = ({
@@ -115,6 +117,7 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
   onAssign,
   stopAt,
   closedStage = false,
+  stageThenSplit = false,
 }) => {
   const remote = useRemoteApi();
   // Changement d'organisation seul (pistes, arbitres) : par le moteur ; le reste, à l'écran
@@ -194,7 +197,8 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
           competitionId={competitionId}
           stopAt={stopAt}
           matches={tableauMatches}
-          onClosed={() => setCurrentPhase('checkin')}
+          thenSplit={stageThenSplit}
+          onClosed={() => setCurrentPhase(stageThenSplit ? 'ranking' : 'checkin')}
         />
       )}
       {tableauDrift && onRebuildTableau && (

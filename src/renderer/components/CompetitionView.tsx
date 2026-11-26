@@ -6,6 +6,7 @@
 import { entrySeeds, resultsTableauMatches } from '../../shared/domain/tableau/tableauStage';
 import { formulaSegment } from '../../shared/domain/formula/formulaSteps';
 import { originFinalRanking } from '../../shared/domain/formula/splitPlan';
+import { splitOf } from '../../shared/domain/formula/formulaV2';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
 import React, { Suspense, useState } from 'react';
@@ -66,6 +67,7 @@ import { writePoolDraft } from '../hooks/posteUiState';
 // Modales ouvertes à la demande : hors du chunk CompetitionView (budget check:bundle-size)
 const ImportModal = React.lazy(() => import('./ImportModal'));
 const SplitCompetitionModal = React.lazy(() => import('./SplitCompetitionModal'));
+const SplitLaunchDialog = React.lazy(() => import('./competition/SplitLaunchDialog'));
 const OrganizerNotesModal = React.lazy(() => import('./competition/OrganizerNotesModal'));
 const RemoteScoreManager = React.lazy(() => import('./RemoteScoreManager'));
 const MatchAuditLog = React.lazy(() =>
@@ -87,6 +89,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
   const [showFormula, setShowFormula] = useState(false);
   // Organisation ▸ Notes & retours (settings.organizerNotes, updateCompetitionSettings)
   const [showNotes, setShowNotes] = useState(false);
+  // Scission (docs/adr/0039) : simulation et confirmation avant splitCompetition
+  const [showSplitLaunch, setShowSplitLaunch] = useState(false);
   const competitionCore = useCompetitionCore({ ...props });
   const competitionSessionSync = useCompetitionSessionSync({ ...props, ...competitionCore });
   const competitionPhaseFlow = useCompetitionPhaseFlow({
@@ -281,13 +285,25 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     tableauMatches
   );
 
+  // Scission en attente (docs/adr/0039) : phase qui la précède close (dernier tour de poules,
+  // ou tableau arrêté clos), branches pas encore parties en compétitions filles
+  const pendingSplit =
+    competition.settings?.formula && competitionCore.splitHistory.length === 0
+      ? splitOf(competition.settings.formula)
+      : undefined;
   const rankingNextRound =
     !isLastPoolRound && pools.length > 0 && canAdvanceFromPools
       ? {
           label: t('pools.next_round_n', { n: currentPoolRound + 1 }),
           onClick: handleNextPoolRound,
         }
-      : undefined;
+      : pendingSplit && isLastPoolRound && !hasDirectElimination
+        ? {
+            label: t('splitLaunch.action'),
+            onClick: () => setShowSplitLaunch(true),
+            testId: 'split-launch',
+          }
+        : undefined;
   // « Voir le tableau » dans la barre du haut, entre « Retour » et « Journal » (#2008)
   const rankingTableauAction = rankingTableauNavAction({
     t,
@@ -347,6 +363,23 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
           onOpenNotes={() => setShowNotes(true)}
           openNotesCount={organizerNotes.openCount}
         />
+      )}
+      {showSplitLaunch && pendingSplit && (
+        <Suspense fallback={null}>
+          <SplitLaunchDialog
+            competitionId={competition.id}
+            criterion={pendingSplit.criterion}
+            onClose={() => setShowSplitLaunch(false)}
+            onDone={result => {
+              setShowSplitLaunch(false);
+              competitionCore.showToast(
+                t('splitLaunch.done', { n: result.branches.length }),
+                'success'
+              );
+              setCurrentPhase('results');
+            }}
+          />
+        </Suspense>
       )}
       {showNotes && (
         <Suspense fallback={null}>
@@ -714,6 +747,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onClearScore={clearScore}
             onAssign={assignMatches}
             stopAt={closedStage ? closedStage.stopAt : competitionCore.tableauStopAt}
+            stageThenSplit={!!storedFormula && !!splitOf(storedFormula)}
             closedStage={!!closedStage}
           />
         )}
@@ -732,6 +766,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             appelFencers={appelFencers.length > 0 ? appelFencers : undefined}
             appelHistory={appelHistory}
             appelVisibleColumns={appelVisibleColumns.length > 0 ? appelVisibleColumns : undefined}
+            splitBranches={competitionCore.splitHistory}
+            onOpenCompetition={props.onOpenCompetition}
           />
         )}
         {currentPhase === 'results' && isRapieres && (
