@@ -52,6 +52,8 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0038](0038-cyrano-sans-hello-saint-george.md)      | Appareil Cyrano sans `HELLO` (`hello: false`, profil Saint-George) ; envoi des HELLO choisi au démarrage du pilote (`device`, `always`, `never`)                                          | Acceptée            |
 | [0039](0039-scission-competitions-filles.md)        | Scission dans la formule : chaque branche devient une compétition fille classée à part (`splitCompetition`) ; catégorie du tireur (`fencers.category`, migration 53)                      | Acceptée (amendée)  |
 | [0040](0040-ex-aequo-a-la-barre.md)                 | Ex aequo à la barre de qualification : réglage `ties` (`all`, `initial_ranking`, `barrage`), une seule coupe dans le domaine, proposition à l'exécution                                   | Acceptée (amendée)  |
+| [0041](0041-controles-structure-mode-expert.md)     | Contrôles de structure S1 à S6 dans le domaine, affichés en direct sur la phase ; mode expert de l'éditeur, préférence du poste                                                           | Proposée            |
+| [0042](0042-moteur-formules-multi-tours.md)         | Le moteur tire les tours suivants et le tableau après plusieurs tours ; formules à plusieurs tours ouvertes au MCP                                                                        | Proposée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.

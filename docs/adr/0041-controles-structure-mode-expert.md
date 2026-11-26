@@ -1,0 +1,86 @@
+# ADR-0041 — Contrôles de structure de la formule (S1 à S6) en direct, mode expert de l'éditeur
+
+- **Statut** : Proposée
+- **Date** : 2026-11-26
+- **Tickets** : #2013 (étape F, lot F2 ; questions Q17, S1 à S6), #1948 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (grammaire de la frise), [ADR-0032](0032-formule-interface-unique-apercu.md) (éditeur unique, aperçu), [ADR-0012](0012-formule-domaine.md) (validation)
+
+## Contexte
+
+- Le domaine juge la formule (`formulaV2Issues`) ; le moteur refuse une formule fautive à
+  l'écriture (`writeFormula`, `invalid_settings`). L'écran ne montre ce refus qu'à
+  l'enregistrement, par une notification ; seule la scission affiche ses erreurs en direct.
+- État des contrôles de #2013 : S2 fait ; S1 et S5 partiels (dernière phase non retirable,
+  une phase par branche) ; S3, S4 et S6 absents. Avertissements : exempts > 50 % fait ; poules
+  de moins de 4 (seuil actuel : 3), moins de 4 qualifiés absent, plus de 3 tours affiché
+  seulement dans l'ancien onglet.
+- L'éditeur n'a pas de niveaux : scission, Tour Quest et tableau arrêté sont proposés à tous.
+  Le réglage d'épreuve `expertMode` ne règle que pistes et arbitres.
+- Arbitrage du 2026-11-26 : contrôles en direct sur la phase fautive ; mode expert selon le
+  tableau de #2013, préférence du poste (Q17).
+
+## Décision
+
+**Contrôles de structure, dans le domaine**
+
+- `formulaV2Issues(formula, scope, progress?)` rend des remarques **situées** :
+  `{ code, phase, message }` (`phase` : clé de la frise, `pool-0`, `tableau`, `split`…, ou
+  `null` pour la formule entière), bloquantes. Le moteur les applique comme aujourd'hui
+  (`invalid_settings`), l'écran les affiche sur la carte de la phase, le MCP les reçoit dans
+  le message de refus.
+  - **S1** : au moins une phase de combat (tour de poules, Tour Quest ou tableau) dans la
+    formule et dans chaque branche.
+  - **S2** : inchangé (tableau arrêté suivi, tableau complet jamais suivi, place de la
+    scission).
+  - **S3** : quand la règle de qualification fixe un nombre (`fixed_count`, `fixed_bracket`,
+    `take` d'une branche), ce nombre suffit à la phase suivante : au moins `sizeMin` pour un
+    tour de poules, au moins 2 pour un tableau, plus de `stopAt` pour un tableau arrêté. Un
+    pourcentage dépend de l'effectif : avertissement de la simulation, pas de blocage.
+  - **S4** : ce nombre est compatible avec la phase suivante : il se répartit en poules de
+    `sizeMin` à `sizeMax` ; la somme des `take` d'une scission par rang reste sous l'effectif
+    connu.
+  - **S5** : chaque branche se termine par une phase qui classe (tour de poules ou tableau
+    complet), jamais par un tableau arrêté.
+  - **S6** : avec `progress` (tours joués, tableau tiré, étapes closes, scission faite, lu dans
+    l'état de session par le moteur et par l'écran), une phase commencée ne se retire pas, ne
+    change pas de nature, et rien ne s'insère avant elle. Ses réglages restent soumis aux
+    règles actuelles (Q15).
+- **Avertissements**, non bloquants, rendus par la simulation (`simulateFormula`) et affichés
+  dans l'aperçu : plus de la moitié d'exempts au premier tour du tableau, poules de moins de 4,
+  moins de 4 qualifiés, plus de 3 tours de poules.
+
+**Écran**
+
+- L'éditeur juge la formule à chaque changement par les mêmes fonctions ; une remarque
+  bloquante s'affiche sur la carte de sa phase (ou en tête pour la formule entière) et grise
+  « Enregistrer ». Le refus du moteur reste le dernier rempart.
+
+**Mode expert de l'éditeur (Q17)**
+
+- Préférence du poste `formulaExpert` (réglages du poste, `updateStationSettings`), éteinte
+  par défaut. Elle ne change que ce que l'éditeur propose ; une formule reste valide quel que
+  soit le mode.
+- Niveau simple : tours de poules, tableau complet, réglages courants (taille des poules,
+  scores, durées, qualification, petite finale).
+- Mode expert, en plus : scission, Tour Quest, tableau arrêté, réglages avancés (ex aequo à la
+  barre, répartition par cumul des tours, ordre des matchs, barème à zones).
+- Une formule ouverte qui contient une brique ou un réglage expert rallume le mode expert pour
+  cette édition, sans changer la préférence.
+- Le réglage d'épreuve `expertMode` (pistes, arbitres) reste distinct.
+
+## Conséquences
+
+- Lot F2 : domaine (S1, S3 à S6, remarques situées), simulation (avertissements), éditeur
+  (affichage en direct, mode expert), réglage du poste, MCP (messages). Pas de migration, pas
+  d'événement.
+- Le message de refus du moteur change de forme (une ligne par remarque, clé de phase) : la
+  référence MCP est régénérée (`npm run docs:mcp`).
+- Chaque PR en draft, sans auto-merge (ticket `refactor`).
+
+## Alternatives écartées
+
+- **Contrôles à l'enregistrement seulement** : l'organisateur découvre l'erreur après coup,
+  sans savoir quelle phase corriger.
+- **Fusion avec `expertMode` de l'épreuve** : mêle pistes, arbitres et formule ; contraire à
+  Q17 (préférence du poste).
+- **Pas de niveaux** : l'éditeur montre d'emblée scission, Tour Quest et tableau arrêté, rares
+  et sources d'erreurs pour un club.
