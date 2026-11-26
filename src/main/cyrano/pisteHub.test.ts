@@ -222,6 +222,18 @@ describe('PisteHub — mode appareil maître (#1720)', () => {
     });
   });
 
+  it('sous-piste (#2300) : son match ni son effacement ne passent sur l’appareil de la piste', () => {
+    const before = disps.length;
+    hub.onArenaUpdate('arena1s2', { arenaId: 'arena1s2', match: null, status: 'idle' } as any);
+    hub.onArenaUpdate('arena1s2', {
+      arenaId: 'arena1s2',
+      match: { ...arena().currentMatch!, id: 'autre' },
+      status: 'ready',
+    } as any);
+    expect(disps.length).toBe(before);
+    expect(cyrano.sendDisp).toHaveBeenCalledTimes(before);
+  });
+
   it('INFO actif : score et cartons de l’appareil appliqués à l’arène malgré la troncature des Id', () => {
     const n = disps.length;
     device(info('H', { id: short(ID.ef), score: 2, y: 1 }, { id: short(ID.ab), score: 1, r: 2 }));

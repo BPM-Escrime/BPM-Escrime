@@ -1281,7 +1281,7 @@ class RefereeApp extends RefereeAppBase {
   }
 
   async loadNextMatches() {
-    // Vague lancée ou terminée depuis le chargement : changer de sous-piste (#1118)
+    // Vague lancée ou terminée, piste libérée ou prise depuis le chargement : changer de sous-piste (#1118, #2300)
     const idle = !this.timerRunning && this.matchStatus !== 'in_progress';
     if (idle && (await window.bpClaimArenaSlot(this.baseArenaId, this.arenaId)) !== this.arenaId)
       return window.location.reload();

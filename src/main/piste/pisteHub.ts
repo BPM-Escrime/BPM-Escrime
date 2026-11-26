@@ -425,8 +425,10 @@ export class PisteHub {
    * de l'appareil (correction depuis la tablette). Jamais d'affichage d'un match terminé.
    */
   onArenaUpdate = (arenaId: string, update: ArenaUpdate, source?: RemoteScoreServer): void => {
-    const arenaNumber = parseInt(arenaId.replace(/^arena/, ''), 10);
-    if (isNaN(arenaNumber)) return;
+    // Sous-piste (`arena3s2`, #1118, #2300) : l'appareil suit la piste seule
+    const m = /^(?:arena)?(\d+)$/.exec(arenaId);
+    if (!m) return;
+    const arenaNumber = Number(m[1]);
     // Toutes les pistes de l'arène : maître et afficheurs qui la partagent reçoivent l'affichage
     for (const piste of this.driver.findAllByArena(arenaNumber)) {
       // Pistes partagées (#1878) : seule l'épreuve suivie par la piste pilote l'appareil

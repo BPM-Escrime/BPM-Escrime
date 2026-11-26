@@ -17,12 +17,14 @@ import {
   isCyranoMasterOnline,
   isDeviceSocket,
 } from './cyranoLock';
+import { isArenaBusy, siblingArenas } from './arenaSlots';
 
 type S = RemoteScoreServer;
 
 /** État et services du serveur utilisés par ce module (accesseurs : valeurs toujours à jour). */
 export interface ArenaControlContext {
   readonly SCORE_UPDATE_DEBOUNCE_MS: S['SCORE_UPDATE_DEBOUNCE_MS'];
+  readonly arenas: S['arenas'];
   readonly arenaCards: S['arenaCards'];
   readonly arenaEventTimes: S['arenaEventTimes'];
   readonly arenaExits: S['arenaExits'];
@@ -171,6 +173,13 @@ export function handleArenaControl(
         ctx.arenaTouches.set(data.arenaId, { touchesA: [], touchesB: [] });
         ctx.arenaExits.set(data.arenaId, []);
         ctx.arenaEventTimes.delete(data.arenaId);
+        // Même match seulement préchargé sur une autre sous-piste de la piste : elle passe au
+        // suivant, l'écran et l'appareil de la piste n'affichent pas un match arbitré ailleurs (#2300)
+        for (const sib of siblingArenas(ctx.arenas, data.arenaId)) {
+          if (sib.currentMatch?.id === m.id && !isArenaBusy(sib, ctx.arenaRefereeSelected)) {
+            ctx.loadNextMatch(sib.id);
+          }
+        }
       }
       break;
     case 'release_match':
@@ -571,6 +580,7 @@ export function handleArenaControl(
 export const ARENA_CONTROL_CONTEXT_KEYS = {
   state: [
     'SCORE_UPDATE_DEBOUNCE_MS',
+    'arenas',
     'arenaCards',
     'arenaEventTimes',
     'arenaExits',
