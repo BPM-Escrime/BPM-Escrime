@@ -106,6 +106,7 @@ journalisée). Données jointes : `revision_conflict` → `{ revision, missing }
 | `tableau_complete` | rule | Tableau terminé |
 | `tableau_stage_not_complete` | rule | Tableau : matchs avant l’arrêt à N tireurs non terminés |
 | `tableau_round_after_stop` | rule | Tableau arrêté à N tireurs : ce tour ne se tire pas |
+| `split_value_missing` | rule | Scission : tireur sans valeur pour le critère (sexe, catégorie) |
 | `invalid_composition` | rule | Composition invalide |
 | `team_incomplete` | rule | Équipe sans tous ses titulaires au tirage |
 | `relay_out_of_order` | rule | Relais hors ordre : précédents non terminés ou déjà terminé |

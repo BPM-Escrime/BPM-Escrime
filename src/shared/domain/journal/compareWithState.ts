@@ -38,7 +38,8 @@ export type DivergenceKind =
   | 'team_relay'
   | 'team_match_result'
   | 'team_cards'
-  | 'strip_plan';
+  | 'strip_plan'
+  | 'split_history';
 
 export interface Divergence {
   kind: DivergenceKind;
@@ -108,6 +109,11 @@ export interface CompetitionStateView {
    * Groupes extraits (réglage splitOffCompetitionIds de l'épreuve) ; undefined : non comparés
    */
   splitOffCompetitionIds?: Partial<Record<string, string>>;
+  /**
+   * Scission de la formule (docs/adr/0039) : `splitHistory` de l'état de session ; undefined :
+   * épreuve jamais scindée par splitCompetition, non comparée (tableaux séparés : splitOff)
+   */
+  splitHistory?: Array<{ label: string; competitionId: string; fencerIds: string[] }>;
   /** Épreuve par équipes : tables des rencontres ; undefined : non comparées */
   teams?: TeamStateView;
   /** Plan des pistes en base (docs/adr/0015) ; undefined : non comparé */
@@ -275,6 +281,19 @@ export function compareWithState(
       if (actual !== fact.targetCompetitionId) {
         out.push({ kind: 'split_off', id: group, expected: fact.targetCompetitionId, actual });
       }
+    }
+  }
+  // Scission de la formule (docs/adr/0039) : historique rejoué depuis GroupSplitOff
+  if (state.splitHistory) {
+    const key = (h: { label: string; competitionId: string; fencerIds: string[] }) => ({
+      label: h.label,
+      competitionId: h.competitionId,
+      fencerIds: [...h.fencerIds].sort(),
+    });
+    const expected = facts.splitHistory.map(key);
+    const actual = state.splitHistory.map(key);
+    if (!same(expected, actual)) {
+      out.push({ kind: 'split_history', id: 'splitHistory', expected, actual });
     }
   }
   // Épreuve séparée : tireurs du classement importé (les rangs peuvent être ajustés ensuite)
@@ -488,6 +507,9 @@ export function stateView(
     consolationBrackets: list<ConsolationBracket>(session.consolationBrackets),
     groupTableaux: sessionGroupTableaux(session),
     rapieres: session.rapieres as CompetitionStateView['rapieres'],
+    ...(Array.isArray(session.splitHistory)
+      ? { splitHistory: session.splitHistory as CompetitionStateView['splitHistory'] }
+      : {}),
   };
 }
 

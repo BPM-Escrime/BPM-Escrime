@@ -32,6 +32,7 @@ import { clearScore } from '../commands/scoreClear';
 import { assignMatches } from '../commands/assignments';
 import { adjustRanking, clearTableau, skipPools } from '../commands/ranking';
 import { splitOffGroup } from '../commands/splitOff';
+import { splitCompetition } from '../commands/splitCompetition';
 import { teamHandlers, teamsState } from '../commands/teams';
 import { teamRelayHandlers } from '../commands/teamRelays';
 import { teamCardHandlers } from '../commands/teamCards';
@@ -137,6 +138,9 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     clearTableau(ctx, input),
   splitOffGroup: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     splitOffGroup(ctx, input),
+  // Scission de la formule en compétitions filles (docs/adr/0039)
+  splitCompetition: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    splitCompetition(ctx, input),
   rebuildCompetitionState: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     rebuildCompetitionState(ctx, input),
   createCompetition: (ctx, { commandId: _c, ...input }) => createCompetition(ctx, input),

@@ -147,6 +147,11 @@ export interface CompetitionFacts {
    */
   splitOffGroups: Record<string, { targetCompetitionId: string; fencerIds: string[] }>;
   /**
+   * Scission de la formule (docs/adr/0039) : GroupSplitOff dans l'ordre du journal, rejoués en
+   * `splitHistory` de l'état de session (libellé de la branche, fille, tireurs partis)
+   */
+  splitHistory: Array<{ label: string; competitionId: string; fencerIds: string[] }>;
+  /**
    * Épreuve séparée : classement après poules importé (SplitRankingImported), son premier fait
    */
   importedRanking: {
@@ -196,6 +201,7 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
     groupTableaux: {},
     bracketResults: {},
     splitOffGroups: {},
+    splitHistory: [],
     importedRanking: null,
     teams: null,
     strips: null,
@@ -410,6 +416,10 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
       case JOURNAL_EVENT.groupSplitOff: {
         const { group, targetCompetitionId, fencerIds } = event.payload;
         facts.splitOffGroups[group] = { targetCompetitionId, fencerIds: [...fencerIds] };
+        facts.splitHistory = [
+          ...facts.splitHistory.filter(h => h.label !== group),
+          { label: group, competitionId: targetCompetitionId, fencerIds: [...fencerIds] },
+        ];
         // Le groupe extrait n'a plus de tableau ici (le tirage est refusé avant l'extraction)
         clearGroupResults(group);
         delete facts.groupTableaux[group];

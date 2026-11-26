@@ -3,6 +3,8 @@
  * Formule enregistrée dont le tableau porte `stopAt` et qu'une phase suit : quand tous les
  * matchs avant l'arrêt sont décidés, les N restants passent à la phase suivante (classement =
  * rang d'entrée), les éliminés sortent (classés par tour atteint puis rang d'entrée, Q5).
+ * Scission après le tableau (docs/adr/0039) : pas de nouveau tour de poules ; les restants
+ * passent dans les compétitions filles par splitCompetition.
  * Écritures dans la transaction de runCommand : tireurs, état de session, TableauStageClosed.
  * Licensed under GPL-3.0
  */
@@ -77,6 +79,9 @@ export function closeTableauStage(
     })),
   };
   stageHistory.push(record);
+  // Phase qui suit le tableau arrêté : tour de poules, ou scission (ADR-0039)
+  const at = formula!.phases.indexOf(tableau);
+  const thenSplit = formula!.phases[at + 1]?.kind === 'split';
   ctx.db.transaction(() => {
     for (const e of toEliminate)
       ctx.db.updateFencer(e.fencer.id, { status: FencerStatus.ELIMINATED });
@@ -84,18 +89,24 @@ export function closeTableauStage(
     outcome.qualified.forEach((f, i) => {
       if (byId.get(f.id)?.ranking !== i + 1) ctx.db.updateFencer(f.id, { ranking: i + 1 });
     });
-    writeSession(ctx, comp.id, {
-      currentPhase: PHASE.checkin,
-      // Phase suivante : nouveau tour de poules, après ceux déjà joués
-      currentPoolRound: poolHistory.length + 1,
-      poolHistory,
-      stageHistory,
-      tableauMatches: [],
-      consolationBrackets: [],
-      finalResults: [],
-      pools: [],
-      poolsLaunched: false,
-    });
+    const closed = { stageHistory, tableauMatches: [], consolationBrackets: [], finalResults: [] };
+    writeSession(
+      ctx,
+      comp.id,
+      thenSplit
+        ? // Scission (ADR-0039) : pas de tour suivant ; le dernier tour reste le tour courant,
+          // le classement attend splitCompetition
+          { ...closed, currentPhase: PHASE.ranking }
+        : {
+            ...closed,
+            currentPhase: PHASE.checkin,
+            // Phase suivante : nouveau tour de poules, après ceux déjà joués
+            currentPoolRound: poolHistory.length + 1,
+            poolHistory,
+            pools: [],
+            poolsLaunched: false,
+          }
+    );
     recordEvents(ctx, comp.id, [
       {
         type: EVENT.tableauStageClosed,

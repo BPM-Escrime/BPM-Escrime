@@ -33,7 +33,7 @@ import { trainingOperations } from './contractTraining';
 import { devicesOperations } from './contractDevices';
 import { fileOperations } from './contractFiles';
 import { simulationOperations } from './contractSimulation';
-import { splitOperations } from './contractSplit';
+import { SplitHistorySchema, splitOperations } from './contractSplit';
 import { teamOperations, TeamsStateSchema } from './contractTeams';
 import { stripOperations } from './contractStrips';
 import { JournalEventSchema } from './events';
@@ -144,7 +144,6 @@ const MatchEventEntrySchema = z.object({
 });
 
 /** Tireur exposé par le contrat (docs/adr/0018) : dates en ISO 8601 */
-
 const Text = z.string().trim().max(200);
 /** Identité d'un tireur, sans règle (updateFencerDetails, registerFencers) */
 const FencerDetailsShape = {
@@ -207,6 +206,7 @@ const CompetitionStateSchema = z.object({
   rapieres: z.custom<RapieresSession | RapieresLegacyState>().optional(),
   /** Étapes closes : tableau arrêté à N tireurs (docs/adr/0037) */
   stageHistory: z.array(z.custom<TableauStageRecord>()).optional(),
+  splitHistory: SplitHistorySchema.optional(), // Scission faite : filles (docs/adr/0039)
   /** Tableaux séparés après les poules : un tableau par groupe (docs/adr/0024) */
   groupTableaux: z.record(z.string(), z.custom<GroupTableau>()).optional(),
   /** Épreuve par équipes (docs/adr/0024) : équipes, rencontres, relais ; null : individuelle */
