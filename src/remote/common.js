@@ -219,8 +219,9 @@
   root.bpScreenId = screenId;
 
   /**
-   * Tournoi des rapières (#1118) : sous-piste attribuée à cette tablette arbitre pendant
-   * les vagues (plusieurs matchs d'une même piste en simultané), sinon la piste elle-même.
+   * Sous-piste attribuée à cette tablette arbitre (plusieurs matchs d'une même piste en
+   * simultané) : vagues des rapières (#1118), piste de poule déjà tenue par une autre
+   * tablette (#2300) ; sinon la piste elle-même.
    * Résout `current` (ou la piste) si le serveur est injoignable ou refuse.
    */
   /**

@@ -822,6 +822,81 @@ describe('RemoteScoreServer', () => {
       expect(check('arena1s2', `bp_token_arena1s2=${token}`)).toBe(false);
     });
 
+    describe('plusieurs tablettes sur une piste de poule, hors rapières (#2300)', () => {
+      const online = new Set<string>();
+      const select = (arenaId: string, id: string) =>
+        (server as any).handleArenaControl(
+          { id: `s-${arenaId}`, emit: vi.fn() },
+          { arenaId, action: 'select_match', match: { id, poolId: 'p1', scoreA: 0, scoreB: 0 } }
+        );
+      beforeEach(() => {
+        online.clear();
+        // Tablettes arbitre connectées : une socket par arène de `online`
+        (server as any).io.sockets = {
+          get sockets() {
+            const entries = [...online].map(id => [
+              id,
+              { connected: true, data: { refereeArenaId: id } },
+            ]);
+            return new Map(entries as [string, unknown][]);
+          },
+        };
+      });
+
+      it('une deuxième tablette arbitre un autre match sans couper celui de la piste', () => {
+        const arena1 = (server as any).arenas.get('arena1');
+        expect(server.claimArenaSlot('arena1', 'devA')).toBe('arena1');
+        online.add('arena1');
+        select('arena1', 'p1-m1');
+        server.startArenaMatch('arena1');
+        expect(server.claimArenaSlot('arena1', 'devB')).toBe('arena1s2');
+        online.add('arena1s2');
+        expect(matchesOf('arena1s2')).toEqual(['p1-m2']);
+        select('arena1s2', 'p1-m2');
+        // Le match de la piste continue ; chaque liste ignore le match de l'autre
+        expect(arena1.currentMatch.id).toBe('p1-m1');
+        expect(arena1.status).toBe('in_progress');
+        expect((server as any).arenas.get('arena1s2').currentMatch.id).toBe('p1-m2');
+        expect(matchesOf('arena1')).toEqual(['p1-m1']);
+        // Rechargement : chaque tablette garde son arène
+        expect(server.claimArenaSlot('arena1', 'devA')).toBe('arena1');
+        expect(server.claimArenaSlot('arena1s2', 'devB')).toBe('arena1s2');
+        // Fin du match de la piste : le match ouvert sur la sous-piste n'y est pas rechargé
+        (server as any).sessionMatchScores.set('p1-m1', {
+          scoreA: 5,
+          scoreB: 0,
+          status: 'finished',
+        });
+        (server as any).loadNextMatch('arena1');
+        expect(arena1.currentMatch).toBeNull();
+      });
+
+      it('match préchargé sur la piste pris par la sous-piste : la piste passe au suivant', () => {
+        const arena1 = (server as any).arenas.get('arena1');
+        server.claimArenaSlot('arena1', 'devA');
+        online.add('arena1');
+        expect(arena1.currentMatch.id).toBe('p1-m1');
+        expect(server.claimArenaSlot('arena1', 'devB')).toBe('arena1s2');
+        select('arena1s2', 'p1-m1');
+        expect(arena1.currentMatch.id).toBe('p1-m2');
+      });
+
+      it('tablette de la piste partie : la suivante reprend la piste', () => {
+        server.claimArenaSlot('arena1', 'devA');
+        select('arena1', 'p1-m1');
+        server.startArenaMatch('arena1');
+        expect(server.claimArenaSlot('arena1', 'devA2')).toBe('arena1');
+      });
+
+      it('piste de tableau : pas de sous-piste', () => {
+        const arena1 = (server as any).arenas.get('arena1');
+        arena1.currentMatch = { ...arena1.currentMatch, poolId: undefined, isTableau: true };
+        server.claimArenaSlot('arena1', 'devA');
+        online.add('arena1');
+        expect(server.claimArenaSlot('arena1', 'devB')).toBe('arena1');
+      });
+    });
+
     it('les réassignations suivantes se rajoutent par le haut', () => {
       server.updateMatchArena('p2-m1', 2, 1);
       server.updateMatchArena('p2-m2', 2, 1);

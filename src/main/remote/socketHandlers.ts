@@ -132,6 +132,8 @@ export function setupSocketHandlers(ctx: SocketHandlersContext): void {
           socket.disconnect(true);
           return;
         }
+        // Tablette présente sur l'arène : sa sous-piste lui reste (#2300)
+        (socket.data ??= {}).refereeArenaId = data.arenaId;
       }
       socket.join(`arena:${data.arenaId}`);
 

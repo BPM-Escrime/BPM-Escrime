@@ -23,6 +23,7 @@ describe('arena_control select_match (#1882)', () => {
       arenaTouches: new Map(),
       arenaExits: new Map(),
       arenaEventTimes: new Map(),
+      arenas: new Map(),
     } as unknown as ArenaControlContext;
     handleArenaControl(ctx, { id: 's1', emit: vi.fn() } as unknown as Socket, {
       arenaId: '1',
@@ -59,6 +60,7 @@ describe('arena_control select_match, appareil maître (#1999)', () => {
       arenaExits: new Map(),
       arenaEventTimes: new Map(),
       arenaRefereeSelected: new Map(),
+      arenas: new Map(),
     } as unknown as ArenaControlContext;
     const emit = vi.fn();
     handleArenaControl(ctx, { id: 's1', emit } as unknown as Socket, {
@@ -85,5 +87,47 @@ describe('arena_control select_match, appareil maître (#1999)', () => {
     expect(setup({ mode: 'manual', online: true }).assignMatchToArena).toHaveBeenCalled();
     expect(setup({ mode: 'master', online: false }).assignMatchToArena).toHaveBeenCalled();
     expect(setup(null).assignMatchToArena).toHaveBeenCalled();
+  });
+});
+
+describe('arena_control select_match, sous-pistes (#2300)', () => {
+  const setup = (baseStatus: string, opened = false) => {
+    const m1 = { id: 'm1', poolId: 'p1', status: 'not_started', startTime: null };
+    const arenas = new Map<string, unknown>([
+      ['arena1', { id: 'arena1', status: baseStatus, currentMatch: { ...m1 } }],
+      ['arena1s2', { id: 'arena1s2', status: 'idle', currentMatch: null }],
+      ['arena2', { id: 'arena2', status: 'ready', currentMatch: { ...m1 } }],
+    ]);
+    const loadNextMatch = vi.fn();
+    const ctx = {
+      getArena: (id: string) => arenas.get(id),
+      sessionMatches: [],
+      assignMatchToArena: vi.fn(),
+      loadNextMatch,
+      logDiag: () => {},
+      arenaCards: new Map(),
+      arenaTouches: new Map(),
+      arenaExits: new Map(),
+      arenaEventTimes: new Map(),
+      arenaRefereeSelected: new Map([['arena1', opened]]),
+      arenas,
+    } as unknown as ArenaControlContext;
+    handleArenaControl(ctx, { id: 's2', emit: vi.fn() } as unknown as Socket, {
+      arenaId: 'arena1s2',
+      action: 'select_match',
+      match: { id: 'm1', scoreA: 0, scoreB: 0 } as never,
+    });
+    return loadNextMatch;
+  };
+
+  it('match préchargé sur la piste : la piste passe au suivant, pas les autres pistes', () => {
+    const loadNextMatch = setup('ready');
+    expect(loadNextMatch).toHaveBeenCalledTimes(1);
+    expect(loadNextMatch).toHaveBeenCalledWith('arena1');
+  });
+
+  it('match ouvert ou lancé sur la piste : jamais remplacé', () => {
+    expect(setup('ready', true)).not.toHaveBeenCalled();
+    expect(setup('in_progress')).not.toHaveBeenCalled();
   });
 });
