@@ -205,7 +205,7 @@ export function createMenu(
         {
           label: L.docs,
           click: () => {
-            shell.openExternal('https://github.com/BellePoule-Modern/bellepoule-modern/wiki');
+            shell.openExternal('https://github.com/BPM-Escrime/BPM-Escrime/wiki');
           },
         },
         {
@@ -219,7 +219,7 @@ export function createMenu(
         {
           label: 'GitHub',
           click: () => {
-            shell.openExternal('https://github.com/BellePoule-Modern/bellepoule-modern');
+            shell.openExternal('https://github.com/BPM-Escrime/BPM-Escrime');
           },
         },
       ],

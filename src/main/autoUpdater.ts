@@ -44,7 +44,7 @@ function pendingVersionLabel(info: { latestVersion: string; latestBuild: number 
   return `${info.latestVersion} (Build #${info.latestBuild})`;
 }
 
-const GITHUB_API = 'https://api.github.com/repos/BellePoule-Modern/bellepoule-modern';
+const GITHUB_API = 'https://api.github.com/repos/BPM-Escrime/BPM-Escrime';
 
 /**
  * Page de release reconstruite sur la base constante (jamais l'URL renvoyée par
@@ -52,11 +52,11 @@ const GITHUB_API = 'https://api.github.com/repos/BellePoule-Modern/bellepoule-mo
  */
 function releasePageUrl(build: number): string {
   return Number.isInteger(build) && build > 0
-    ? `https://github.com/BellePoule-Modern/bellepoule-modern/releases?q=${build}`
+    ? `https://github.com/BPM-Escrime/BPM-Escrime/releases?q=${build}`
     : RELEASES_URL;
 }
 
-const RELEASES_URL = 'https://github.com/BellePoule-Modern/bellepoule-modern/releases/latest';
+const RELEASES_URL = 'https://github.com/BPM-Escrime/BPM-Escrime/releases/latest';
 
 /** Release GitHub telle que lue par l'API (champs utilisés par la mise à jour). */
 interface GitHubRelease extends ReleaseLike {
@@ -285,7 +285,7 @@ export class AutoUpdater {
         latestVersion,
         downloadUrl:
           release.html_url ||
-          `https://github.com/BellePoule-Modern/bellepoule-modern/releases/tag/v${latestVersion}`,
+          `https://github.com/BPM-Escrime/BPM-Escrime/releases/tag/v${latestVersion}`,
         releaseNotes: release.body || '',
         assets: release.assets || [],
       };
@@ -323,7 +323,7 @@ export class AutoUpdater {
         return {
           name: latestTag.name,
           tag_name: latestTag.name,
-          html_url: `https://github.com/BellePoule-Modern/bellepoule-modern/releases/tag/${latestTag.name}`,
+          html_url: `https://github.com/BPM-Escrime/BPM-Escrime/releases/tag/${latestTag.name}`,
           body: `Release: ${latestTag.name}`,
           prerelease: false,
           assets: [],
