@@ -23,7 +23,7 @@ import {
   type PoolBoutOrderMode,
   type PoolBoutPlan,
 } from '../../shared/utils/poolBoutOrder';
-import { isWavesOrder, POOL_WAVES_SIZE } from '../../shared/domain/pools/waves';
+import { wavesSizeBounds } from '../../shared/domain/pools/waves';
 import { useUndoStack } from '../hooks/useUndoStack';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from './Toast';
@@ -342,8 +342,8 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
     }
   };
 
-  // Tour en vagues : poules de 2 à 10 tireurs (docs/adr/0043) ; sinon 3 à 64
-  const sizeBounds = isWavesOrder(boutOrderMode) ? POOL_WAVES_SIZE : { min: 3, max: 64 };
+  // Tour en vagues : poules de 2 à 10 (vagues classiques : 15) tireurs (docs/adr/0043) ; sinon 3 à 64
+  const sizeBounds = wavesSizeBounds(boutOrderMode) ?? { min: 3, max: 64 };
 
   const handleMinFencersChange = (value: number) => {
     if (value >= sizeBounds.min && value <= maxFencersPerPool) {

@@ -12,6 +12,7 @@ import { poolWavesOf, waveMatchIds } from '../../../shared/domain/pools/waves';
 import { computeOverallRankingAllRoundsFor } from '../../../shared/utils/poolOrchestration';
 import type { Competition } from '../../../shared/types';
 import { CommandError, type CommandContext } from './context';
+import { pushActiveWave } from './wavesRemote';
 import { getCompetitionOrThrow } from './competitions';
 import { EVENT, recordEvents } from './eventLog';
 import { readSession } from './sessionView';
@@ -62,6 +63,8 @@ export function launchPoolWave(
     ]);
   });
   emitSession(ctx, comp.id);
+  // Tablettes : vague active poussée par le moteur, sans passer par l'écran (docs/adr/0043)
+  pushActiveWave(ctx, comp.id, readSession(ctx, comp.id));
   return report;
 }
 
@@ -91,5 +94,7 @@ export function endPoolWaves(
     recordEvents(ctx, comp.id, [{ type: EVENT.poolWavesEnded, payload: { ended: input.ended } }]);
   });
   emitSession(ctx, comp.id);
+  // Tablettes : vague active poussée par le moteur, sans passer par l'écran (docs/adr/0043)
+  pushActiveWave(ctx, comp.id, readSession(ctx, comp.id));
   return report;
 }

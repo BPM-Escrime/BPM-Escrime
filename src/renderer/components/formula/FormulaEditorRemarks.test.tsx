@@ -196,6 +196,18 @@ describe('mode expert de l’éditeur (ADR-0041, Q17)', () => {
     expect(screen.queryByTestId('formula-remarks')).toBeNull();
   });
 
+  it('vagues classiques : poules jusqu’à 15 (docs/adr/0043)', () => {
+    render(<Harness initial={withPools([{}])} />);
+    fireEvent.click(screen.getByTestId('formula-expert-toggle'));
+    fireEvent.change(document.getElementById('pool-0-order')!, {
+      target: { value: 'waves_classic' },
+    });
+    expect(document.getElementById('pool-0-max')).toHaveAttribute('max', '15');
+    fireEvent.change(document.getElementById('pool-0-max')!, { target: { value: '30' } });
+    expect((last!.phases[0] as PoolRoundPhase).sizeMax).toBe(15);
+    expect(screen.queryByTestId('formula-remarks')).toBeNull();
+  });
+
   it('formule en vagues : mode expert rallumé pour cette édition', () => {
     render(
       <Harness initial={withPools([{ boutOrder: 'waves_classic', sizeMin: 2, sizeMax: 10 }])} />

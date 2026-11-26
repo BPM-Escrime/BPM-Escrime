@@ -32,7 +32,7 @@ import {
   type TableauPhase,
 } from '../../../shared/domain/formula/formulaV2';
 import { simulateSplit } from '../../../shared/domain/formula/splitPlan';
-import { isWavesOrder, POOL_WAVES_SIZE } from '../../../shared/domain/pools/waves';
+import { isWavesOrder, wavesSizeBounds } from '../../../shared/domain/pools/waves';
 import { bricksForLevel, formulaNeedsExpert } from '../../../shared/domain/formula/formulaExpert';
 import type { FormulaProgress, FormulaRemark } from '../../../shared/domain/formula/formulaRemarks';
 import {
@@ -331,7 +331,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
     const isLast = p.round === pools.length - 1;
     const set = (patch: Partial<PoolRoundPhase>) => patchPhase<PoolRoundPhase>(p, patch);
     const id = `pool-${p.round}`;
-    const sizeBounds = isWavesOrder(pool.boutOrder) ? POOL_WAVES_SIZE : POOL_SIZE;
+    const sizeBounds = wavesSizeBounds(pool.boutOrder) ?? POOL_SIZE;
     return (
       <>
         <fieldset className="properties-group">
@@ -412,8 +412,8 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 value={pool.boutOrder}
                 onChange={e => {
                   const boutOrder = e.target.value as PoolBoutOrder;
-                  // Tour en vagues : poules de 2 à 10 tireurs (docs/adr/0043) ; sinon 3 à 64
-                  const bounds = isWavesOrder(boutOrder) ? POOL_WAVES_SIZE : POOL_SIZE;
+                  // Tour en vagues : poules de 2 à 10 (vagues classiques : 15) tireurs (docs/adr/0043) ; sinon 3 à 64
+                  const bounds = wavesSizeBounds(boutOrder) ?? POOL_SIZE;
                   const fit = (n: number) => Math.min(bounds.max, Math.max(bounds.min, n));
                   set({ boutOrder, sizeMin: fit(pool.sizeMin), sizeMax: fit(pool.sizeMax) });
                 }}

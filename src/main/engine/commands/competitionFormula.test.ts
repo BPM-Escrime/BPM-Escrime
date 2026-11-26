@@ -217,6 +217,27 @@ d('formule v2 écrite et lue par phase (docs/adr/0036)', () => {
         operations: [{ op: 'setPhase', phase: 'pool-0', settings: { sizeMax: 11 } }],
       })
     ).rejects.toMatchObject({ code: 'invalid_settings' });
+    // Vagues classiques : jusqu'à 15
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [
+        {
+          op: 'setPhase',
+          phase: 'pool-0',
+          settings: { boutOrder: 'waves_classic', sizeMax: 15 },
+        },
+      ],
+    });
+    expect(db.getCompetition(competitionId)?.settings).toMatchObject({
+      poolBoutOrder: 'waves_classic',
+      poolSizeMax: 15,
+    });
+    await expect(
+      op('updateCompetitionFormula', {
+        competitionId,
+        operations: [{ op: 'setPhase', phase: 'pool-0', settings: { boutOrder: 'waves' } }],
+      })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
     // Retour à l'ordre FIE : poules de 2 refusées de nouveau
     await expect(
       op('updateCompetitionFormula', {

@@ -17,7 +17,7 @@ import {
   MatchStatus,
 } from '../shared/types';
 import { maxScoreLimits } from '../shared/domain/formula/laserMaxScores';
-import { isWavesOrder, POOL_WAVES_SIZE } from '../shared/domain/pools/waves';
+import { wavesSizeBounds } from '../shared/domain/pools/waves';
 
 // ============================================================================
 // Validation Error Class
@@ -193,9 +193,8 @@ export const validateCompetitionSettings = (
       validateNumber(n, `poolRoundQualifiers[${i}]`, 0, 10000)
     );
   }
-  // Tour en vagues : poules de 2 à 10 tireurs (docs/adr/0043) ; sinon 3 à 64
-  const waves = isWavesOrder(settings.poolBoutOrder);
-  const sizeBounds = waves ? POOL_WAVES_SIZE : { min: 3, max: 64 };
+  // Tour en vagues : poules de 2 à 10 (vagues classiques : 15) tireurs (docs/adr/0043) ; sinon 3 à 64
+  const sizeBounds = wavesSizeBounds(settings.poolBoutOrder) ?? { min: 3, max: 64 };
   if (settings.poolSizeMin !== undefined)
     validateNumber(settings.poolSizeMin, 'poolSizeMin', sizeBounds.min, sizeBounds.max);
   if (settings.poolSizeMax !== undefined)

@@ -51,6 +51,11 @@ describe('validateFormulaSettings', () => {
     expect(sizes('waves', 2, 11)).toEqual(['poolSizeMax']);
     expect(sizes('waves', 1, 8)).toEqual(['poolSizeMin']);
     expect(sizes('fie', 2, 7)).toEqual(['poolSizeMin']);
+    // Vagues classiques : tables jusqu'à 15
+    const classic = (min: number, max: number) =>
+      fields({ ...base(), poolBoutOrder: 'waves_classic', poolSizeMin: min, poolSizeMax: max });
+    expect(classic(2, 15)).toEqual([]);
+    expect(classic(2, 16)).toEqual(['poolSizeMax']);
   });
 
   it('score max du Sabre Laser individuel : 15 à 50 (#2208) ; équipes et olympique : 1-15', () => {

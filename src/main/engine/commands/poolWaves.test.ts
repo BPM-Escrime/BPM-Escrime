@@ -22,13 +22,20 @@ vi.mock('better-sqlite3-multiple-ciphers', async () => ({
 
 const d = hasNodeSqlite ? describe : describe.skip;
 
+const setActiveWave = vi.fn();
 let db: DatabaseManager;
 let ctx: CommandContext;
 
 beforeEach(async () => {
   db = new DatabaseManager(':memory:');
   await db.open(':memory:');
-  ctx = { db, emitChange: () => {} };
+  setActiveWave.mockClear();
+  ctx = {
+    db,
+    emitChange: () => {},
+    // Faux port distant : seul le filtre de vague des tablettes est observé
+    remote: { stop: () => {}, settingsChanged: () => {}, admin: { setActiveWave } as never },
+  };
 });
 afterEach(() => db.close());
 
@@ -143,6 +150,39 @@ d('tour en vagues hors mode rapières (docs/adr/0043, F4a)', () => {
     expect(fixed.repaired.map((x: { kind: string }) => x.kind)).toEqual(['waves']);
     expect(session(comp.id).waves).toEqual({ launched: 2, ended: false });
     expect(replay(comp.id)).toEqual([]);
+  });
+
+  it('tablettes : le moteur pousse la vague active (lancée, arrêtée, reprise, tirage)', async () => {
+    const comp = setup(6, { poolBoutOrder: 'waves', poolSizeMin: 2, poolSizeMax: 10 });
+    await call('generatePools', { competitionId: comp.id, poolCount: 1 });
+    // Tirage : vagues à zéro, aucun match proposé
+    expect(setActiveWave).toHaveBeenLastCalledWith(comp.id, [], false);
+    const { matchIds } = await call('launchPoolWave', { competitionId: comp.id, wave: 1 });
+    expect(setActiveWave).toHaveBeenLastCalledWith(comp.id, matchIds, false);
+    await call('endPoolWaves', { competitionId: comp.id, ended: true });
+    expect(setActiveWave).toHaveBeenLastCalledWith(comp.id, null, true);
+    await call('endPoolWaves', { competitionId: comp.id, ended: false });
+    expect(setActiveWave).toHaveBeenLastCalledWith(comp.id, matchIds, false);
+    // Simulation (dryRun) : rien poussé
+    setActiveWave.mockClear();
+    await call('launchPoolWave', { competitionId: comp.id, wave: 2, dryRun: true });
+    expect(setActiveWave).not.toHaveBeenCalled();
+    // Nouveau tirage hors tour en vagues : filtre levé
+    db.updateCompetition(comp.id, {
+      settings: { ...comp.settings, poolBoutOrder: 'fie', poolSizeMin: 3, poolSizeMax: 7 },
+    } as never);
+    await call('generatePools', { competitionId: comp.id, poolCount: 1, replace: true });
+    expect(setActiveWave).toHaveBeenLastCalledWith(comp.id, null, false);
+  });
+
+  it('vagues classiques : poules de 11 à 15 tirées avec la table fixe', async () => {
+    const comp = setup(12, { poolBoutOrder: 'waves_classic', poolSizeMin: 2, poolSizeMax: 15 });
+    await call('generatePools', { competitionId: comp.id, poolCount: 1 });
+    expect(session(comp.id).pools[0].fencers).toHaveLength(12);
+    expect(session(comp.id).pools[0].matches).toHaveLength(66);
+    const res = await call('launchPoolWave', { competitionId: comp.id, wave: 1 });
+    // Première ligne de la table de 12 : six matchs
+    expect(res.matchIds).toHaveLength(6);
   });
 
   it('un nouveau tirage remet les vagues à zéro', async () => {

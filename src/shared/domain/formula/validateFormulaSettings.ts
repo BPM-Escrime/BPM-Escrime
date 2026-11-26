@@ -9,7 +9,7 @@ import type { CompetitionSettings, CustomFormulaConfig, FormulaPhaseNode } from 
 import { MAX_POOL_ROUNDS } from './formulaDraft';
 import { FormulaScope, MAX_SCORE_LIMITS, maxScoreLimits } from './laserMaxScores';
 import { tiesIssue } from '../ranking/advancement';
-import { isWavesOrder, POOL_WAVES_SIZE } from '../pools/waves';
+import { POOL_WAVES_SIZE, wavesSizeBounds } from '../pools/waves';
 
 export { maxScoreLimits };
 export type { FormulaScope };
@@ -26,7 +26,7 @@ export const FORMULA_LIMITS = {
   tableMaxScore: MAX_SCORE_LIMITS.table,
   poolRounds: { min: 1, max: MAX_POOL_ROUNDS },
   poolSize: { min: 3, max: 64 },
-  /** Tour en vagues (poolBoutOrder « waves », « waves_classic ») : 2 à 10, docs/adr/0043 */
+  /** Tour en vagues (poolBoutOrder « waves » : 2 à 10 ; « waves_classic » : 2 à 15, docs/adr/0043) */
   poolSizeWaves: POOL_WAVES_SIZE,
   timerSeconds: { min: 1, max: 3600 },
 } as const;
@@ -148,9 +148,7 @@ export function validateFormulaSettings(
     });
   }
   // Tour en vagues : poules de 2 à 10 tireurs (borne basse 2 pour ce seul ordre)
-  const sizeLimits = isWavesOrder(s.poolBoutOrder)
-    ? FORMULA_LIMITS.poolSizeWaves
-    : FORMULA_LIMITS.poolSize;
+  const sizeLimits = wavesSizeBounds(s.poolBoutOrder) ?? FORMULA_LIMITS.poolSize;
   range(out, 'poolSizeMin', s.poolSizeMin, sizeLimits);
   range(out, 'poolSizeMax', s.poolSizeMax, sizeLimits);
   if (isInt(s.poolSizeMin) && isInt(s.poolSizeMax) && s.poolSizeMax < s.poolSizeMin) {

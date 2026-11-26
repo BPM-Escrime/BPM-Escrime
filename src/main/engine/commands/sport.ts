@@ -85,6 +85,7 @@ import { EVENT, recordEvents } from './eventLog';
 import { resolveSetting } from './settings';
 import { bracketMatchView, fencerRef, readSession, summarizePool } from './sessionView';
 import { areAllPoolsComplete, isPoolComplete } from '../../../shared/domain/pools/poolCompletion';
+import { clearActiveWave, pushActiveWave } from './wavesRemote';
 import { isPoolRoundFinished, poolWavesOf } from '../../../shared/domain/pools/waves';
 import {
   phaseSettings,
@@ -455,6 +456,10 @@ export function generatePools(
     ]);
   });
   emitSession(ctx, competitionId);
+  // Tablettes : vagues remises à zéro par le tirage (docs/adr/0043)
+  if (isWavesRound(comp.settings, round))
+    pushActiveWave(ctx, competitionId, readSession(ctx, competitionId));
+  else if (session.waves) clearActiveWave(ctx, competitionId);
   return summary;
 }
 

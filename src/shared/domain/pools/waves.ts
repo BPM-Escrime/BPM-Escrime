@@ -15,8 +15,20 @@ import { classicMatchOrder, classicWaves } from './wavesClassicOrder';
 
 export { hasClassicOrder } from './wavesClassicOrder';
 
-/** Taille d'une poule d'un tour en vagues : 2 à 10 tireurs (borne basse 2 pour ce seul ordre) */
+/** Taille d'une poule d'un tour en vagues : 2 à 10 tireurs (docs/adr/0043) */
 export const POOL_WAVES_SIZE = { min: 2, max: 10 } as const;
+/** Vagues classiques : 2 à 15 tireurs, tables fixes jusqu'à 15 (docs/adr/0043, amendée le 2026-11-27) */
+export const POOL_WAVES_CLASSIC_SIZE = { min: 2, max: 15 } as const;
+
+/** Bornes de taille d'une poule selon l'ordre ; undefined : ordre hors vagues */
+export const wavesSizeBounds = (
+  order: PoolBoutOrder | string | null | undefined
+): { readonly min: number; readonly max: number } | undefined =>
+  order === 'waves_classic'
+    ? POOL_WAVES_CLASSIC_SIZE
+    : order === 'waves'
+      ? POOL_WAVES_SIZE
+      : undefined;
 
 /** Ordre des matchs d'un tour en vagues (« waves », « waves_classic ») */
 export const isWavesOrder = (order: PoolBoutOrder | string | null | undefined): boolean =>
