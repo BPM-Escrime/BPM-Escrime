@@ -12,6 +12,7 @@ import {
 } from '../../components/competition/competitionViewState';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { phaseSettings } from '../../../shared/domain/formula/formulaV2';
+import type { SplitHistoryEntry } from '../../../shared/domain/formula/splitPlan';
 import { formulaSegment } from '../../../shared/domain/formula/formulaSteps';
 import {
   seedRankingForNextRound,
@@ -58,6 +59,8 @@ export function useCompetitionCore(ctx: Ctx) {
   const effectiveSettings = resolveCompetitionSettings(competition.weapon, competition.settings);
   // Tableau arrêté à N tireurs (ADR-0037, D2) : tours et tableau de la partie en cours
   const [stageHistory, setStageHistory] = useState<TableauStageRecord[]>([]);
+  // Scission faite (docs/adr/0039) : branches parties en compétitions filles
+  const [splitHistory, setSplitHistory] = useState<SplitHistoryEntry[]>([]);
   const segment = competition.settings?.formula
     ? formulaSegment(competition.settings.formula, stageHistory.length)
     : null;
@@ -345,6 +348,8 @@ export function useCompetitionCore(ctx: Ctx) {
     hasDirectElimination,
     stageHistory,
     setStageHistory,
+    splitHistory,
+    setSplitHistory,
     tableauStopAt,
     thirdPlaceMatch,
     playAllPositions,

@@ -62,6 +62,8 @@ const DRAFT_PHASE_FIELDS: Record<FriezePhase['kind'], Array<keyof FormulaDraft |
   ],
   quest: ['questQualifiers'],
   tableau: ['tableMaxScore', 'tableTimerSeconds', 'thirdPlaceMatch', 'playAllPositions'],
+  // Scission : formule v2 seulement (formulaV2Operations, ADR-0039)
+  split: [],
 };
 const DRAFT_GENERAL_FIELDS: Array<keyof FormulaDraft> = [
   'restTimeSeconds',

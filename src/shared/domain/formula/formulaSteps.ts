@@ -1,7 +1,7 @@
 /**
  * BPM - Escrime - Déroulé de l'épreuve dérivé de la formule v2 (#2013 étape D, ADR-0037)
  * Étapes dans l'ordre : appel, poules (suite de tours consécutifs), Tour Quest, tableau (arrêté
- * à N ou non), résultats. L'écran en déduit sa navigation ; une épreuve sans formule enregistrée
+ * à N ou non), scission (compétitions filles, ADR-0039), résultats. L'écran en déduit sa navigation ; une épreuve sans formule enregistrée
  * obtient la même suite depuis ses réglages (formulaOf). Domaine pur.
  * Licensed under GPL-3.0
  */
@@ -13,6 +13,8 @@ export type FormulaStep =
   | { kind: 'pools'; rounds: number }
   | { kind: 'quest'; hasPreliminaryPools: boolean }
   | { kind: 'tableau'; stopAt?: number }
+  /** Scission (ADR-0039) : les branches deviennent des compétitions filles, pas d'onglet */
+  | { kind: 'split' }
   | { kind: 'results' };
 
 export function formulaSteps(f: FormulaV2): FormulaStep[] {
@@ -26,6 +28,8 @@ export function formulaSteps(f: FormulaV2): FormulaStep[] {
       steps.push({ kind: 'quest', hasPreliminaryPools: p.config.hasPreliminaryPools });
     } else if (p.kind === 'tableau') {
       steps.push({ kind: 'tableau', ...(p.stopAt ? { stopAt: p.stopAt } : {}) });
+    } else if (p.kind === 'split') {
+      steps.push({ kind: 'split' });
     }
   }
   steps.push({ kind: 'results' });
@@ -38,20 +42,22 @@ export const startsWithTableau = (f: FormulaV2): boolean =>
   f.phases.some(p => p.kind === 'tableau');
 
 /**
- * Tableau arrêté à N tireurs et suivi d'au moins un tour de poules (ADR-0037, D2) ; sinon null.
- * Un `stopAt` sans phase après le tableau est sans effet : le tableau va jusqu'à la finale.
+ * Tableau arrêté à N tireurs et suivi d'au moins un tour de poules (ADR-0037, D2) ou d'une
+ * scission (ADR-0039) ; sinon null. Un `stopAt` sans phase après le tableau est sans effet :
+ * le tableau va jusqu'à la finale.
  */
 export function stoppedTableauOf(f: FormulaV2): TableauPhase | null {
   const at = f.phases.findIndex(p => p.kind === 'tableau');
   const tableau = f.phases[at] as TableauPhase | undefined;
   if (!tableau?.stopAt) return null;
-  return f.phases.slice(at + 1).some(p => p.kind === 'pool') ? tableau : null;
+  return f.phases.slice(at + 1).some(p => p.kind === 'pool' || p.kind === 'split') ? tableau : null;
 }
 
 /**
  * Partie de la formule en cours quand un tableau est arrêté (ADR-0037, D2) : avant sa clôture,
  * les tours de poules qui le précèdent puis le tableau ; après, tous les tours et pas de
- * tableau (les restants finissent par les tours qui suivent). null : formule sans tableau
+ * tableau (les restants finissent par les tours qui suivent, ou passent dans les compétitions
+ * filles d'une scission, ADR-0039). null : formule sans tableau
  * arrêté, réglages habituels.
  */
 export function formulaSegment(

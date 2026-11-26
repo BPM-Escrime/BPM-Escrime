@@ -5,6 +5,7 @@
  * Licensed under GPL-3.0
  */
 import { tableauStagesOf } from '../../../shared/domain/tableau/tableauStage';
+import { splitHistoryOf } from '../../../shared/domain/formula/splitPlan';
 import type { CompetitionStateDTO } from '../../../shared/api/contract';
 import type { Competition } from '../../../shared/types';
 import type { TeamsStateDTO } from '../../../shared/api/contractTeams';
@@ -73,6 +74,10 @@ export function competitionState(
     // Étapes closes (tableau arrêté, docs/adr/0037) : classement final de l'écran
     ...(Array.isArray(session.stageHistory) && session.stageHistory.length > 0
       ? { stageHistory: tableauStagesOf(session.stageHistory) }
+      : {}),
+    // Scission de la formule (docs/adr/0039) : compétitions filles créées par splitCompetition
+    ...(splitHistoryOf(session.splitHistory).length > 0
+      ? { splitHistory: splitHistoryOf(session.splitHistory) }
       : {}),
     // Tableaux séparés après les poules (docs/adr/0024) : onglets de l'écran (lot A2)
     ...(groups

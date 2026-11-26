@@ -12,6 +12,7 @@ import type {
   FinalResult,
   TableauMatch,
 } from '../../shared/domain/tableau/tableauTypes';
+import type { SplitHistoryEntry } from '../../shared/domain/formula/splitPlan';
 import type { TableauStageRecord } from '../../shared/domain/tableau/tableauStage';
 import { inferPoolsLaunched } from '../components/poolLaunchState';
 import type { useRapieresSessionState } from '../../features/rapieres/useRapieresSessionState';
@@ -55,6 +56,8 @@ interface UseCompetitionRestoreParams {
   setPoolsLaunched: Setter<boolean>;
   /** Étapes closes (tableau arrêté, docs/adr/0037) */
   setStageHistory?: Setter<TableauStageRecord[]>;
+  /** Scission faite (docs/adr/0039) */
+  setSplitHistory?: Setter<SplitHistoryEntry[]>;
 }
 
 /** Relit l'état de l'épreuve (phase, poules, tableau…) et l'applique à l'écran. */
@@ -84,6 +87,7 @@ export function useCompetitionRestore({
   setMaxFencersPerPool,
   setPoolsLaunched,
   setStageHistory,
+  setSplitHistory,
 }: UseCompetitionRestoreParams) {
   // État de l'épreuve relu (getCompetitionState), écrit par le moteur seul
   const { isLoaded, restoredState, preparedPools } = useCompetitionSession({ competitionId });
@@ -159,6 +163,7 @@ export function useCompetitionRestore({
       }
       if (restoredState.rapieres) setRapieresState(restoredState.rapieres);
       setStageHistory?.(restoredState.stageHistory ?? []);
+      setSplitHistory?.(restoredState.splitHistory ?? []);
     }
   }, [restoredState, isLoaded]);
 

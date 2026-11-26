@@ -184,9 +184,10 @@ describe('tableau arrêté à N (ADR-0037, D2)', () => {
       [{ op: 'setPhase', phase: 'tableau', settings: { stopAt: 8 } }],
       id
     );
-    expect(insertOptionsV2(f, Weapon.EPEE, 2)).toEqual(['pool']);
+    // Tour de poules ou scission après un tableau arrêté (ADR-0037 amendée, ADR-0039)
+    expect(insertOptionsV2(f, Weapon.EPEE, 2)).toEqual(['pool', 'split']);
     expect(formulaV2Issues(f, { weapon: Weapon.EPEE })).toEqual([
-      'tableau arrêté à 8 : ajouter un tour de poules après le tableau',
+      'tableau arrêté à 8 : ajouter un tour de poules ou une scission après le tableau',
     ]);
   });
 

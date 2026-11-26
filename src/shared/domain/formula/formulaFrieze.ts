@@ -31,10 +31,12 @@ import {
 export type FriezePhase =
   | { kind: 'pool'; round: number; key: string }
   | { kind: 'quest'; key: 'quest' }
-  | { kind: 'tableau'; key: 'tableau' };
+  | { kind: 'tableau'; key: 'tableau' }
+  /** Scission (formule v2 seulement, ADR-0039) : toujours en dernier */
+  | { kind: 'split'; key: 'split' };
 
-/** Brique proposée par un « ＋ » */
-export type FriezeBrick = 'pool' | 'quest' | 'tableau';
+/** Brique proposée par un « ＋ » (scission : formule v2 seulement, ADR-0039) */
+export type FriezeBrick = 'pool' | 'quest' | 'tableau' | 'split';
 
 const poolPhase = (round: number): FriezePhase => ({ kind: 'pool', round, key: `pool-${round}` });
 

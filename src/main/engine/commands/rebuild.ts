@@ -246,6 +246,7 @@ export function rebuildCompetitionState(
         settings: { ...comp.settings, splitOffCompetitionIds } as Competition['settings'],
       });
     }
+    if (plan.splitHistory) patch.splitHistory = facts.splitHistory;
     if (plan.importRanking && facts.importedRanking) {
       patch.overallRanking = rebuildImportedRanking(ctx, comp.id, facts.importedRanking);
     }
@@ -296,6 +297,7 @@ function planRepair(
   const bracketChanged = new Set<TableauSlot>();
   let rapieres: { launchedWave: number; wavesEnded: boolean } | null = null;
   let splitOff: Record<string, string> | null = null;
+  let splitHistory = false;
   let importRanking = false;
 
   for (const d of divergences) {
@@ -345,6 +347,11 @@ function planRepair(
         importRanking = true;
         repaired.push(d);
         break;
+      // Scission de la formule (docs/adr/0039) : historique rejoué depuis GroupSplitOff
+      case 'split_history':
+        splitHistory = true;
+        repaired.push(d);
+        break;
       default:
         break;
     }
@@ -355,5 +362,5 @@ function planRepair(
       slot,
       ...settleBracket(comp, session, slot.matches, slot.brackets, mainChanged.has(slot), slot),
     }));
-  return { repaired, statuses, pools, tableaux, rapieres, splitOff, importRanking };
+  return { repaired, statuses, pools, tableaux, rapieres, splitOff, splitHistory, importRanking };
 }

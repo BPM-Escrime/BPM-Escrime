@@ -6,6 +6,7 @@
  * Licensed under GPL-3.0
  */
 
+import { splitHistoryOf, type SplitHistoryEntry } from '../../shared/domain/formula/splitPlan';
 import type { TableauStageRecord } from '../../shared/domain/tableau/tableauStage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Fencer, Pool, PoolRanking } from '../../shared/types';
@@ -97,6 +98,8 @@ export interface SessionState {
   };
   /** Étapes closes : tableau arrêté à N tireurs (docs/adr/0037), lu seulement */
   stageHistory?: TableauStageRecord[];
+  /** Scission faite : branches parties en compétitions filles (docs/adr/0039), lu seulement */
+  splitHistory?: SplitHistoryEntry[];
   /** Tableaux séparés après les poules : un tableau par groupe, lu seulement (docs/adr/0024) */
   groupTableaux?: Record<string, GroupTableau>;
   /** Révision de l'état : incrémentée par la couche domaine (MCP, #1880) */
@@ -188,6 +191,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
             remoteArenaCount: state.remoteArenaCount,
             rapieres: state.rapieres,
             stageHistory: state.stageHistory ?? [],
+            splitHistory: splitHistoryOf(state.splitHistory),
             ...(state.groupTableaux ? { groupTableaux: state.groupTableaux } : {}),
             poolPrepParams: state.poolPrepParams || {
               poolCount: 0,

@@ -6,7 +6,7 @@
  * Licensed under GPL-3.0
  */
 import { Category, type Fencer } from '../../types';
-import { ageCategoryFromBirthYear, normalizeAgeCategory } from '../../utils/clubAge';
+import { ageCategoryFromBirthYear, normalizeAgeCategory } from './ageCategory';
 
 /** Codes acceptés par le contrat, de la plus jeune à la plus âgée */
 export const FENCER_CATEGORIES = [
