@@ -155,7 +155,10 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
   scission par sexe dont les deux branches sont un tableau qui reste dans l'épreuve ;
   `flatSettingsOf` écrit `postPoolSplitCriteria` pour cette forme seulement. Jusque-là, la
   compétition couplée reste un réglage hors de la scission, inchangé. », amendement précédent
-  du même jour.)_
+  du même jour, qui remplaçait lui-même la phrase acceptée « `formulaOf` lit
+  `postPoolSplitCriteria = 'gender'` comme une scission par sexe dont les deux branches sont un
+  tableau qui reste dans l'épreuve ; `flatSettingsOf` écrit `postPoolSplitCriteria` pour cette
+  forme seulement. »)_
 
 ## Conséquences
 
