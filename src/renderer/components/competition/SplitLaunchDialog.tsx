@@ -158,12 +158,7 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
             <tbody>
               {plan.branches.map(b => (
                 <tr key={b.label}>
-                  <td>
-                    {b.label}
-                    {b.stayInCompetition && (
-                      <small className="u-hint"> · {t('splitLaunch.stays')}</small>
-                    )}
-                  </td>
+                  <td>{b.label}</td>
                   <td>{b.fencers.length}</td>
                 </tr>
               ))}

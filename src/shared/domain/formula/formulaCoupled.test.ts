@@ -1,6 +1,7 @@
 /**
  * Scission par sexe restée dans l'épreuve (docs/adr/0039, amendée le 2026-11-26, étape E3) :
- * grammaire de `stayInCompetition` (critère sexe, branche réduite à un tableau), reprise de la
+ * grammaire de `stayInCompetition` (critère sexe, branches réduites à un tableau, toutes ou aucune :
+ * pas de mélange d'une branche restée et d'une fille, amendement du 2026-11-26), reprise de la
  * compétition couplée (`postPoolSplitCriteria = 'gender'`) dans la formule, aller-retour avec
  * les réglages plats et non-régression des tableaux séparés (ADR-0024).
  */
@@ -70,6 +71,18 @@ describe('rester dans l’épreuve : grammaire (ADR-0039, E3)', () => {
     ]);
     expect(formulaV2Issues(pools, scope)).toContain(
       'branche « Dames » : rester dans l’épreuve, seulement une branche réduite à un tableau'
+    );
+  });
+
+  it('toutes restées : deux branches, Hommes et Dames, seulement', () => {
+    const [h, d] = split(f).branches;
+    const three = withBranches(f, [h, d, { ...d, label: 'Mixte', gender: Gender.MIXED }]);
+    expect(formulaV2Issues(three, scope)).toContain(
+      'rester dans l’épreuve : deux branches, Hommes et Dames'
+    );
+    const mixte = withBranches(f, [h, { ...d, gender: Gender.MIXED }]);
+    expect(formulaV2Issues(mixte, scope)).toContain(
+      'rester dans l’épreuve : deux branches, Hommes et Dames'
     );
   });
 
@@ -222,14 +235,33 @@ describe('reprise de la compétition couplée (ADR-0039, E3)', () => {
     expect(pendingSplitOf(daughters)).toBeDefined();
   });
 
-  it('mélange (une branche reste, l’autre part) : tableaux séparés gardés, scission à lancer', () => {
+  it('une branche reste, l’autre part : refusée, pas de tableaux séparés écrits', () => {
     const f = formulaOf(src(coupledSettings()));
     const [h, d] = split(f).branches;
-    const mixed = withBranches(f, [h, { ...d, stayInCompetition: false }]);
-    expect(formulaV2Issues(mixed, scope)).toEqual([]);
-    expect(flatSettingsOf(mixed, Weapon.EPEE).postPoolSplitCriteria).toBe('gender');
-    expect(pendingSplitOf(mixed)).toBeDefined();
-    expect(isCoupledSplit(split(mixed))).toBe(false);
+    for (const mixed of [
+      withBranches(f, [h, { ...d, stayInCompetition: false }]),
+      withBranches(f, [{ ...h, stayInCompetition: undefined }, d]),
+    ]) {
+      expect(formulaV2Issues(mixed, scope)).toContain(
+        'rester dans l’épreuve : toutes les branches ou aucune (dès qu’une branche part en compétition fille, toutes partent)'
+      );
+      expect(isCoupledSplit(split(mixed))).toBe(false);
+      expect(flatSettingsOf(mixed, Weapon.EPEE).postPoolSplitCriteria).toBeUndefined();
+      // Relue sans `postPoolSplitCriteria` : la scission reste celle de la formule
+      const again = formulaOf(
+        src({ ...base(), ...flatSettingsOf(mixed, Weapon.EPEE), formula: mixed })
+      );
+      expect(isCoupledSplit(splitOf(again))).toBe(false);
+    }
+  });
+
+  it('aller-retour de la compétition couplée : postPoolSplitCriteria écrit puis relu', () => {
+    const f = formulaOf(src(coupledSettings()));
+    const flat = flatSettingsOf(f, Weapon.EPEE);
+    expect(flat.postPoolSplitCriteria).toBe('gender');
+    // Sans formule enregistrée : relue depuis le seul réglage plat
+    const { formula: _f, ...noFormula } = { ...base(), ...flat } as CompetitionSettings;
+    expect(isCoupledSplit(splitOf(formulaOf(src(noFormula))))).toBe(true);
   });
 });
 

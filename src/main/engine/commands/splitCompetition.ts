@@ -11,10 +11,9 @@
  * SplitRankingImported (premier fait de chaque fille), GroupSplitOff (épreuve d'origine,
  * `group` = libellé de la branche), même commandId (docs/adr/0007).
  *
- * Branches restées dans l'épreuve (scission par sexe, étape E3) : rien à créer pour elles, elles
- * se jouent en tableaux séparés (ADR-0024). Toutes restées (compétition couplée) : refus. Une
- * part, l'autre reste : la fille est créée, et le sexe de la branche partie est noté comme
- * groupe extrait (`splitOffCompetitionIds`, comme `splitOffGroup`), sans tableau dans l'origine.
+ * Compétition couplée (scission par sexe dont toutes les branches restent dans l'épreuve, étape
+ * E3) : rien à créer, refus ; elle se joue en tableaux séparés (ADR-0024). Sinon, toutes les
+ * branches partent en compétitions filles (amendement du 2026-11-26 : pas de mélange).
  * Licensed under GPL-3.0
  */
 import {
@@ -26,10 +25,8 @@ import {
 } from '../../../shared/types';
 import {
   coupledFormula,
-  departingBranches,
   flatSettingsOf,
   isCoupledSplit,
-  stayingBranches,
   type FormulaV2,
   type SplitBranch,
   type SplitPhase,
@@ -44,7 +41,6 @@ import {
 import {
   allTableauMatches,
   buildSplitCompetitionData,
-  isGroupMatchId,
   remapRankingFencers,
   splitOffSessionState,
   toSplitFencerData,
@@ -112,14 +108,11 @@ function entryRanking(
   ctx: CommandContext,
   comp: Competition,
   formula: FormulaV2,
-  split: SplitPhase,
   session: Record<string, unknown>
 ): PoolRanking[] {
   const prev = formula.phases[formula.phases.length - 2];
   const history = sessionPoolHistory(session);
-  // Tableaux séparés des branches restées (ADR-0024) : déjà tirés, ils n'empêchent rien
-  const staying = stayingBranches(split).map(b => b.gender as string);
-  const drawn = allTableauMatches(session).filter(m => !staying.some(g => isGroupMatchId(g, m.id)));
+  const drawn = allTableauMatches(session);
   let ranking: PoolRanking[];
   if (prev.kind === 'pool') {
     const pools = sessionPools(session);
@@ -233,16 +226,10 @@ export function splitCompetition(
   const { formula, split } = storedSplit(source);
   const session = readSession(ctx, source.id);
   const done = source.settings?.splitOffCompetitionIds ?? {};
-  const leaving = departingBranches(split);
-  const staysByGender = stayingBranches(split).length > 0;
-  if (
-    splitHistoryOf(session.splitHistory).length > 0 ||
-    split.branches.some(b => done[b.label]) ||
-    (staysByGender && leaving.some(b => b.gender && done[b.gender]))
-  ) {
+  if (splitHistoryOf(session.splitHistory).length > 0 || split.branches.some(b => done[b.label])) {
     throw new CommandError('split_group_not_found', 'Épreuve déjà scindée en compétitions filles');
   }
-  const ranking = entryRanking(ctx, source, formula, split, session);
+  const ranking = entryRanking(ctx, source, formula, session);
   checkAssignments(split, ranking, input.assignments);
   const plan = planSplit(ranking, split, input.assignments);
   const byId = new Map(ranking.map(r => [r.fencer.id, r.fencer]));
@@ -253,7 +240,8 @@ export function splitCompetition(
       label: b.label,
       competitionId: ids[i],
       fencers: b.rows.map(r => ({ ...fencerRef(r.fencer), rank: r.rank })),
-      stayInCompetition: !leaving.includes(split.branches[i]),
+      // Toutes les branches partent : la compétition couplée est refusée plus haut
+      stayInCompetition: false,
     })),
     missing,
     // Classement d'entrée, dans l'ordre (répartition manuelle à l'écran, étape E3)
@@ -280,9 +268,7 @@ export function splitCompetition(
       `${missing.length} tireur(s) sans valeur pour le critère « ${split.criterion} » : ${names}${missing.length > 10 ? '…' : ''}`
     );
   }
-  const empty = plan.branches.find(
-    (b, i) => b.rows.length === 0 && leaving.includes(split.branches[i])
-  );
+  const empty = plan.branches.find(b => b.rows.length === 0);
   if (empty) {
     throw new CommandError('not_enough_fencers', `Branche « ${empty.label} » sans tireur`);
   }
@@ -293,8 +279,6 @@ export function splitCompetition(
   const ids: Array<string | null> = plan.branches.map(() => null);
   plan.branches.forEach((planned, i) => {
     const branch = split.branches[i];
-    // Branche restée : tableau séparé dans l'épreuve d'origine (ADR-0024), rien à créer
-    if (!leaving.includes(branch)) return;
     const bf = branchFormula(formula, branch);
     const data = buildSplitCompetitionData(
       source,
@@ -349,15 +333,9 @@ export function splitCompetition(
   });
 
   // Épreuve d'origine : filles notées, historique de la scission, un GroupSplitOff par branche
-  // Branche par sexe partie alors qu'une autre reste : son sexe est un groupe extrait des
-  // tableaux séparés (ADR-0024), comme avec splitOffGroup
-  const extractedGroups = staysByGender
-    ? leaving.flatMap((b, k) => (b.gender ? [[b.gender as string, history[k].competitionId]] : []))
-    : [];
   const splitOffCompetitionIds = {
     ...source.settings?.splitOffCompetitionIds,
     ...Object.fromEntries(history.map(h => [h.label, h.competitionId])),
-    ...Object.fromEntries(extractedGroups),
   };
   ctx.db.updateCompetition(source.id, {
     settings: { ...source.settings, splitOffCompetitionIds } as CompetitionSettings,

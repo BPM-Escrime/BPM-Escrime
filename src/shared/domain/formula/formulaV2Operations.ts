@@ -26,8 +26,8 @@ import {
   customFormulaOf,
   flatSettingsOf,
   formulaOf,
+  isCoupledSplit,
   playedTableauOf,
-  stayingBranches,
   uncoupledFormula,
   type FormulaPhaseV2,
   type FormulaV2,
@@ -615,7 +615,7 @@ export function applyOperationsV2(
       o.op === 'setPhase' &&
       o.phase === 'tableau' &&
       !f.phases.some(isTableau) &&
-      stayingBranches(f.phases.find(isSplit)).length > 0
+      isCoupledSplit(f.phases.find(isSplit))
     ) {
       // Tableau joué dans l'épreuve par les branches restées (compétition couplée, ADR-0039 E3) :
       // mêmes réglages pour chacune
@@ -683,7 +683,7 @@ export function applyOperationsV2(
         f = coupled
           ? coupledFormula({ ...f, general: { ...f.general, postPoolSplitCriteria: 'gender' } })
           : uncoupledFormula(f);
-        if (coupled && !stayingBranches(f.phases.find(isSplit)).length)
+        if (coupled && !isCoupledSplit(f.phases.find(isSplit)))
           throw new FormulaOperationError(
             `${where} : compétition couplée seulement avec un tableau final après un tour de poules`
           );
@@ -700,14 +700,12 @@ export function applyOperationsV2(
 /** Réglages du tableau des branches restées dans l'épreuve (mêmes pour toutes) */
 function setStayingTableaux(f: FormulaV2, settings: Record<string, unknown>, where: string) {
   const split = f.phases.find(isSplit)!;
-  const staying = stayingBranches(split);
   const next: SplitPhase = {
     ...split,
-    branches: split.branches.map(b =>
-      staying.includes(b)
-        ? { ...b, phases: b.phases.map(p => (isTableau(p) ? setTableau(p, settings, where) : p)) }
-        : b
-    ),
+    branches: split.branches.map(b => ({
+      ...b,
+      phases: b.phases.map(p => (isTableau(p) ? setTableau(p, settings, where) : p)),
+    })),
   };
   return { ...f, phases: f.phases.map(p => (p === split ? next : p)) };
 }
@@ -796,8 +794,24 @@ export function splitIssues(
     if (b.stayInCompetition && !(b.phases.length === 1 && isTableau(b.phases[0])))
       out.push(`${name} : rester dans l’épreuve, seulement une branche réduite à un tableau`);
   });
+  // Rester dans l'épreuve : toutes les branches ou aucune (compétition couplée, ADR-0039,
+  // amendement du 2026-11-26 : pas de mélange d'une branche restée et d'une fille)
+  const staying = branches.filter(b => b.stayInCompetition);
+  if (staying.length > 0 && staying.length < branches.length)
+    out.push(
+      'rester dans l’épreuve : toutes les branches ou aucune (dès qu’une branche part en compétition fille, toutes partent)'
+    );
+  // Compétition couplée : deux branches, Hommes et Dames
+  const genders = new Set(branches.map(b => b.gender));
+  if (
+    staying.length > 0 &&
+    staying.length === branches.length &&
+    criterion === 'gender' &&
+    !(branches.length === 2 && genders.has(Gender.MALE) && genders.has(Gender.FEMALE))
+  )
+    out.push('rester dans l’épreuve : deux branches, Hommes et Dames');
   // Un seul tableau joué pour les branches restées (réglages communs, ADR-0024)
-  const kept = stayingBranches(split)
+  const kept = staying
     .map(b => b.phases[0])
     .filter(isTableau)
     .map(t =>

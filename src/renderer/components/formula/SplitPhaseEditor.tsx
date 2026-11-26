@@ -2,8 +2,9 @@
  * BPM - Escrime - Réglages de la brique Scission dans l'éditeur de formule (#2013 étape E2b,
  * docs/adr/0039) : critère (sexe, catégorie, rang), branches (libellé, modèle, valeur du
  * critère), ajout et retrait. Étape E3 : répartition manuelle (libellé et modèle ; les tireurs
- * sont affectés au lancement, SplitLaunchDialog) ; scission par sexe, branche « Tableau » restée
- * dans l'épreuve (tableaux séparés, ADR-0024).
+ * sont affectés au lancement, SplitLaunchDialog) ; scission par sexe en deux branches
+ * « Tableau » : une case fait rester toute la scission dans l'épreuve (compétition couplée,
+ * tableaux séparés, ADR-0024), jamais une branche seule (ADR-0039, amendement du 2026-11-26).
  * Règles : shared/domain/formula/formulaV2Operations.ts (withSplitCriterion, addSplitBranch…).
  * Licensed under GPL-3.0
  */
@@ -42,17 +43,37 @@ const PRESETS: BranchPreset[] = ['tableau', 'pools_tableau', 'pools'];
 const CATEGORIES = Object.values(Category);
 const categoryKey = (c: Category) => `categories.${c === Category.SENIOR ? 'senior' : c}`;
 
+/** Rester dans l'épreuve possible : par sexe, deux branches réduites à un tableau */
+const canStay = (s: SplitPhase) =>
+  s.criterion === 'gender' &&
+  s.branches.length === 2 &&
+  s.branches.every(b => branchPresetOf(b.phases) === 'tableau');
+
+/** Toutes les branches restent, ou aucune */
+const withStay = (s: SplitPhase, stay: boolean): SplitPhase => ({
+  ...s,
+  branches: s.branches.map(({ stayInCompetition: _stay, ...b }) =>
+    stay ? { ...b, stayInCompetition: true } : b
+  ),
+});
+
 export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
   split,
   weapon,
   category,
-  onChange,
+  onChange: emit,
   newId,
 }) => {
   const { t } = useTranslation();
   const ctx = { weapon, category };
   const issues = splitIssues(split, { weapon });
   const last = split.branches.length - 1;
+  const staying = split.branches.some(b => b.stayInCompetition);
+  // Hors de la forme « couplée » (critère, nombre ou modèle des branches), personne ne reste
+  const onChange = (next: SplitPhase) =>
+    emit(
+      canStay(next) || !next.branches.some(b => b.stayInCompetition) ? next : withStay(next, false)
+    );
 
   const setBranch = (i: number, patch: Partial<SplitBranch>) =>
     onChange({
@@ -206,11 +227,7 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
                     value={preset ?? ''}
                     onChange={e => {
                       const next = e.target.value as BranchPreset;
-                      setBranch(i, {
-                        phases: branchPhases(next, ctx, newId),
-                        // Rester dans l'épreuve : branche réduite à un tableau seulement
-                        ...(next !== 'tableau' ? { stayInCompetition: undefined } : {}),
-                      });
+                      setBranch(i, { phases: branchPhases(next, ctx, newId) });
                     }}
                   >
                     {!preset && (
@@ -228,24 +245,22 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
               </div>
               {split.criterion === 'rank' && takeField(b, i)}
               {split.criterion === 'gender' && genderField(b, i)}
-              {split.criterion === 'gender' && preset === 'tableau' && (
-                <label className="u-row cursor-pointer">
-                  <input
-                    type="checkbox"
-                    data-testid={`split-stay-${i}`}
-                    checked={!!b.stayInCompetition}
-                    onChange={e =>
-                      setBranch(i, { stayInCompetition: e.target.checked || undefined })
-                    }
-                  />
-                  <span>{t('formulaEditor.split_stay')}</span>
-                </label>
-              )}
               {split.criterion === 'category' && categoryField(b, i)}
             </div>
           );
         })}
       </fieldset>
+      {canStay(split) && (
+        <label className="u-row cursor-pointer">
+          <input
+            type="checkbox"
+            data-testid="split-stay"
+            checked={staying}
+            onChange={e => onChange(withStay(split, e.target.checked))}
+          />
+          <span>{t('formulaEditor.split_stay')}</span>
+        </label>
+      )}
       <Button
         type="button"
         variant="ghost"

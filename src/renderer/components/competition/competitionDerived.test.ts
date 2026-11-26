@@ -7,7 +7,11 @@ import {
   type Pool,
 } from '../../../shared/types';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
-import { formulaOf, type FormulaV2 } from '../../../shared/domain/formula/formulaV2';
+import {
+  flatSettingsOf,
+  formulaOf,
+  type FormulaV2,
+} from '../../../shared/domain/formula/formulaV2';
 import {
   applyOperationsV2,
   branchPhases,
@@ -139,14 +143,10 @@ describe('rankingNextRoundAction (docs/adr/0039)', () => {
     expect(launched).toBe(true);
   });
 
-  it('mélange (une branche reste en tableau séparé) : la scission d’abord', () => {
-    expect(
-      rankingNextRoundAction({
-        ...base,
-        formula: genderSplit(true, false),
-        hasDirectElimination: true,
-      })?.testId
-    ).toBe('split-launch');
+  it('par sexe, toutes les branches partent : la scission, pas de tableau dans l’épreuve', () => {
+    const f = genderSplit(false, false);
+    expect(flatSettingsOf(f, Weapon.EPEE).hasDirectElimination).toBe(false);
+    expect(rankingNextRoundAction({ ...base, formula: f })?.testId).toBe('split-launch');
   });
 
   it('déjà scindée (splitHistory non vide) : pas d’action', () => {
@@ -154,7 +154,7 @@ describe('rankingNextRoundAction (docs/adr/0039)', () => {
     expect(
       rankingNextRoundAction({
         ...base,
-        formula: genderSplit(true, false),
+        formula: genderSplit(true, true),
         hasDirectElimination: true,
         splitDone: true,
       })

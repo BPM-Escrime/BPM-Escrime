@@ -545,102 +545,53 @@ d('splitCompetition, étape E3 : manuelle, branches restées (docs/adr/0039)', (
     ).rejects.toMatchObject({ code: 'invalid_settings' });
   });
 
-  it('mélange : Dames en fille, Hommes restés en tableau séparé', async () => {
+  it('une branche restée, l’autre partie : formule refusée (pas de mélange)', async () => {
     const f = coupled();
     const split = f.phases[f.phases.length - 1] as SplitPhase;
-    const formula = withBranches(f, 'gender', [
-      split.branches[0],
-      { ...split.branches[1], stayInCompetition: false },
-    ]);
-    const comp = competition(formula);
-    expect(comp.settings?.postPoolSplitCriteria).toBe('gender');
+    const comp = competition(
+      withBranches(f, 'gender', [
+        split.branches[0],
+        { ...split.branches[1], stayInCompetition: false },
+      ])
+    );
+    // Pas une compétition couplée : pas de tableaux séparés par sexe
+    expect(comp.settings?.postPoolSplitCriteria).toBeUndefined();
+    await playPools(comp.id);
+    await expect(
+      call('splitCompetition', { competitionId: comp.id, dryRun: true })
+    ).rejects.toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('toutes les branches ou aucune'),
+    });
+  });
+
+  it('par sexe, toutes les branches partent : deux filles, aucun groupe extrait par sexe', async () => {
+    const f = coupled();
+    const split = f.phases[f.phases.length - 1] as SplitPhase;
+    const comp = competition(
+      withBranches(
+        f,
+        'gender',
+        split.branches.map(({ stayInCompetition: _stay, ...b }) => b)
+      )
+    );
+    expect(comp.settings?.postPoolSplitCriteria).toBeUndefined();
     await playPools(comp.id);
     const out = await call('splitCompetition', { competitionId: comp.id });
     expect(out.branches.map((b: any) => [b.label, b.stayInCompetition, !!b.competitionId])).toEqual(
       [
-        ['Hommes', true, false],
+        ['Hommes', false, true],
         ['Dames', false, true],
       ]
     );
-    const dames = db.getCompetition(out.branches[1].competitionId)!;
-    expect(db.getFencersByCompetition(dames.id)).toHaveLength(4);
-    // Origine : Dames notées comme groupe extrait, plus de tableau F ; tableau M tiré
+    const [hommes, dames] = out.branches.map((b: any) => b.competitionId as string);
+    // Origine : filles notées par libellé seulement, pas de clé de sexe (M, F)
     const origin = db.getCompetition(comp.id)!;
-    expect(origin.settings?.splitOffCompetitionIds).toMatchObject({
-      Dames: dames.id,
-      F: dames.id,
-    });
-    expect(splitHistoryOf(session(comp.id).splitHistory).map(h => h.label)).toEqual(['Dames']);
-    await expect(
-      call('generateTableau', { competitionId: comp.id, group: 'F' })
-    ).rejects.toBeDefined();
-    await call('generateTableau', { competitionId: comp.id, group: 'M' });
-    expect(Object.keys(session(comp.id).groupTableaux)).toEqual(['M']);
+    expect(origin.settings?.splitOffCompetitionIds).toEqual({ Hommes: hommes, Dames: dames });
+    expect(splitHistoryOf(session(comp.id).splitHistory).map(h => h.label)).toEqual([
+      'Hommes',
+      'Dames',
+    ]);
     expect(replay(comp.id).divergences).toEqual([]);
-    // Pas une seconde fois
-    await expect(call('splitCompetition', { competitionId: comp.id })).rejects.toMatchObject({
-      code: 'split_group_not_found',
-    });
-  });
-
-  it('mélange : la branche restée a son propre classement, numéroté depuis 1', async () => {
-    const f = coupled();
-    const split = f.phases[f.phases.length - 1] as SplitPhase;
-    const comp = competition(
-      withBranches(f, 'gender', [
-        split.branches[0],
-        { ...split.branches[1], stayInCompetition: false },
-      ])
-    );
-    await playPools(comp.id);
-    const out = await call('splitCompetition', { competitionId: comp.id });
-    expect(db.getFencersByCompetition(out.branches[1].competitionId)).toHaveLength(4);
-    await call('generateTableau', { competitionId: comp.id, group: 'M' });
-    for (let guard = 0; guard < 50; guard++) {
-      const ready = listMatches(ctx, comp.id, { state: 'ready' }).filter(m => m.kind === 'bracket');
-      if (ready.length === 0) break;
-      for (const [i, m] of ready.entries()) {
-        await call('recordScore', {
-          competitionId: comp.id,
-          matchId: m.matchId,
-          scoreA: 15,
-          scoreB: i % 4,
-        });
-      }
-    }
-    const data = resultsData(ctx, comp.id);
-    const men = db
-      .getFencersByCompetition(comp.id)
-      .filter(f => f.gender === Gender.MALE)
-      .map(f => f.id);
-    expect(data.finalResults.map(r => r.fencer.id).sort()).toEqual([...men].sort());
-    // Tableau joué jusqu'au bout : un vainqueur, rangs numérotés depuis 1
-    expect(listMatches(ctx, comp.id, { state: 'ready' }).filter(m => m.kind === 'bracket')).toEqual(
-      []
-    );
-    expect(data.finalResults.map(r => r.rank).sort((a, b) => a - b)).toEqual([1, 2, 3, 3]);
-    // Tireuses parties dans la fille : absentes du classement de l'origine
-    const women = db
-      .getFencersByCompetition(comp.id)
-      .filter(f => f.gender === Gender.FEMALE)
-      .map(f => f.id);
-    expect(women).toHaveLength(4);
-    expect(data.finalResults.some(r => women.includes(r.fencer.id))).toBe(false);
-    expect(data.overallRanking.some(r => women.includes(r.fencer.id))).toBe(false);
-  });
-
-  it('mélange : tableau de la branche restée déjà tiré, la scission reste possible', async () => {
-    const f = coupled();
-    const split = f.phases[f.phases.length - 1] as SplitPhase;
-    const comp = competition(
-      withBranches(f, 'gender', [
-        split.branches[0],
-        { ...split.branches[1], stayInCompetition: false },
-      ])
-    );
-    await playPools(comp.id);
-    await call('generateTableau', { competitionId: comp.id, group: 'M' });
-    const out = await call('splitCompetition', { competitionId: comp.id });
-    expect(out.branches[1].competitionId).toBeTruthy();
   });
 });

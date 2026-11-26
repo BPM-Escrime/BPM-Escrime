@@ -67,7 +67,7 @@ export const splitOperations = {
       '(sexe ou catégorie du tireur ; rang : nombre ou pourcentage de l’effectif entrant, ex aequo à la borne gardés, la dernière branche prend le reste ; manuelle : « assignments »). ' +
       'Dans une seule transaction, chaque branche devient une compétition fille (titre « titre d’origine – libellé », formule de la branche, tireurs copiés avec leur rang dans la branche) ; l’épreuve d’origine garde les autres tireurs. ' +
       '« dryRun: true » rend la répartition, les tireurs sans valeur pour le critère et le classement d’entrée (« entrants »), sans refus. ' +
-      'Scission par sexe : une branche « stayInCompetition » reste dans l’épreuve (tableau séparé, pas de fille) ; toutes restées (compétition couplée) : refus invalid_settings. ' +
+      'Toutes les branches partent en compétitions filles (« stayInCompetition » vaut false) ; scission par sexe dont toutes les branches restent dans l’épreuve (compétition couplée, tableaux séparés) : refus invalid_settings. ' +
       'Refus : invalid_settings (pas de scission en dernière phase), pools_not_complete, tableau_stage_not_complete, split_value_missing (tireur sans sexe, sans catégorie ou non affecté), split_group_not_found (épreuve déjà scindée), not_enough_fencers (branche vide).',
     input: z.object({
       competitionId: CompetitionId,

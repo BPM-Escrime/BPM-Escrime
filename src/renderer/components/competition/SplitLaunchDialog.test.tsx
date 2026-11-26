@@ -205,18 +205,4 @@ describe('SplitLaunchDialog (ADR-0039)', () => {
       ],
     });
   });
-
-  it('branche restée dans l’épreuve : signalée dans la répartition', async () => {
-    const p = plan();
-    call.mockResolvedValueOnce({
-      ...p,
-      branches: [{ ...p.branches[0], stayInCompetition: true }, p.branches[1]],
-    });
-    render(
-      <SplitLaunchDialog competitionId="c" criterion="gender" onClose={vi.fn()} onDone={vi.fn()} />
-    );
-    await screen.findByTestId('split-launch-plan');
-    expect(screen.getByText(/splitLaunch\.stays/)).toBeInTheDocument();
-    expect(screen.queryByTestId('split-launch-entrants')).toBeNull();
-  });
 });

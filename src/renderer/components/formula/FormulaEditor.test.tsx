@@ -212,35 +212,48 @@ describe('FormulaEditor (formule v2)', () => {
       ['Tableau B', ['pool', 'tableau']],
     ]);
     // Ni sexe ni case « rester dans l'épreuve » en manuelle
-    expect(screen.queryByTestId('split-stay-0')).toBeNull();
+    expect(screen.queryByTestId('split-stay')).toBeNull();
     fireEvent.click(screen.getByTestId('split-add-branch'));
     expect(split().branches).toHaveLength(3);
     expect(screen.queryByTestId('split-issues')).toBeNull();
   });
 
-  it('scission par sexe : « Rester dans l’épreuve » pour une branche Tableau seulement', () => {
+  it('scission par sexe : « Rester dans l’épreuve » pour toute la scission, jamais une branche', () => {
     render(<Harness weapon={Weapon.EPEE} />);
     fireEvent.click(screen.getByTestId('formula-remove-tableau'));
     fireEvent.click(screen.getByTestId('formula-plus-1'));
     fireEvent.click(screen.getByTestId('formula-add-split-1'));
     const split = () => last!.phases.find(p => p.kind === 'split') as SplitPhase;
-    expect(screen.queryByTestId('split-stay-0')).toBeNull();
+    expect(screen.queryByTestId('split-stay')).toBeNull();
     fireEvent.change(screen.getByLabelText('formulaEditor.split_criterion'), {
       target: { value: 'gender' },
     });
-    fireEvent.click(screen.getByTestId('split-stay-0'));
-    expect(split().branches.map(b => !!b.stayInCompetition)).toEqual([true, false]);
+    // Une seule case, pour les deux branches
+    expect(screen.queryByTestId('split-stay-0')).toBeNull();
+    fireEvent.click(screen.getByTestId('split-stay'));
+    expect(split().branches.map(b => !!b.stayInCompetition)).toEqual([true, true]);
     expect(screen.queryByTestId('split-issues')).toBeNull();
-    // Branche restée : son tableau se règle dans l'éditeur
+    // Branches restées : leur tableau se règle dans l'éditeur
     expect(screen.getByTestId('split-kept-tableau')).toBeInTheDocument();
-    // Modèle « Poules puis tableau » : la case disparaît, la branche part en fille
+    // Modèle « Poules puis tableau » sur une branche : la case disparaît, toutes partent en fille
     fireEvent.change(document.getElementById('split-preset-0')!, {
       target: { value: 'pools_tableau' },
     });
-    expect(screen.queryByTestId('split-stay-0')).toBeNull();
-    expect(split().branches[0].stayInCompetition).toBeUndefined();
+    expect(screen.queryByTestId('split-stay')).toBeNull();
+    expect(split().branches.some(b => b.stayInCompetition)).toBe(false);
+    // Retour au tableau, case cochée, puis troisième branche : plus de forme couplée
+    fireEvent.change(document.getElementById('split-preset-0')!, { target: { value: 'tableau' } });
+    fireEvent.click(screen.getByTestId('split-stay'));
+    fireEvent.click(screen.getByTestId('split-add-branch'));
+    expect(screen.queryByTestId('split-stay')).toBeNull();
+    expect(split().branches.some(b => b.stayInCompetition)).toBe(false);
+    // Décochée : toutes les branches partent
+    fireEvent.click(screen.getByTestId('split-remove-2'));
+    fireEvent.click(screen.getByTestId('split-stay'));
+    fireEvent.click(screen.getByTestId('split-stay'));
+    expect(split().branches.some(b => b.stayInCompetition)).toBe(false);
     // Critère rang : plus de branche restée
-    fireEvent.click(screen.getByTestId('split-stay-1'));
+    fireEvent.click(screen.getByTestId('split-stay'));
     fireEvent.change(screen.getByLabelText('formulaEditor.split_criterion'), {
       target: { value: 'rank' },
     });
@@ -259,9 +272,7 @@ describe('FormulaEditor (formule v2)', () => {
       ['Dames', true],
     ]);
     fireEvent.click(screen.getByTestId('formula-step-split'));
-    expect(screen.getAllByTestId(/^split-stay-/).every(c => (c as HTMLInputElement).checked)).toBe(
-      true
-    );
+    expect(screen.getByTestId('split-stay')).toBeChecked();
     fireEvent.change(screen.getByLabelText('properties.table_max_score'), {
       target: { value: '10' },
     });

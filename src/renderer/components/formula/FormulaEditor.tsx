@@ -22,7 +22,6 @@ import {
   coupledFormula,
   isCoupledSplit,
   playedTableauOf,
-  stayingBranches,
   uncoupledFormula,
   type FormulaV2,
   type PoolRoundPhase,
@@ -142,18 +141,13 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const coupled = isCoupledSplit(split);
   /** Réglages du tableau des branches restées, les mêmes pour chacune */
   const patchKeptTableau = (patch: Partial<TableauPhase>) => {
-    if (!split) return;
-    const kept = stayingBranches(split);
+    if (!split || !coupled) return;
     const next: SplitPhase = {
       ...split,
-      branches: split.branches.map(b =>
-        kept.includes(b)
-          ? {
-              ...b,
-              phases: b.phases.map(x => (x.kind === 'tableau' ? { ...x, ...patch } : x)),
-            }
-          : b
-      ),
+      branches: split.branches.map(b => ({
+        ...b,
+        phases: b.phases.map(x => (x.kind === 'tableau' ? { ...x, ...patch } : x)),
+      })),
     };
     onChange({ ...formula, phases: formula.phases.map(x => (x === split ? next : x)) });
   };

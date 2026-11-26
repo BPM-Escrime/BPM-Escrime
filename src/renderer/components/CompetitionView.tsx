@@ -378,8 +378,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
                 }),
                 'success'
               );
-              // Branche restée (tableau séparé) : son tableau se tire ensuite, depuis le classement
-              if (!result.branches.some(b => b.stayInCompetition)) setCurrentPhase('results');
+              // Toutes les branches sont parties (pas de mélange, ADR-0039) : résultats de l'origine
+              setCurrentPhase('results');
             }}
           />
         </Suspense>

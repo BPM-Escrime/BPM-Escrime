@@ -90,8 +90,9 @@ export interface SplitBranch {
   /** Critère rank : fixed_count ou percentage ; absent = le reste */
   take?: AdvancementRule;
   /**
-   * Branche réduite à un tableau restée dans l'épreuve (étape E3) : critère sexe seulement ;
-   * elle se joue en tableau séparé (`groupTableaux`, ADR-0024)
+   * Branche réduite à un tableau restée dans l'épreuve (étape E3) : critère sexe seulement, et
+   * toutes les branches ou aucune (compétition couplée) ; tableaux séparés (`groupTableaux`,
+   * ADR-0024)
    */
   stayInCompetition?: boolean;
 }
@@ -140,32 +141,34 @@ export const splitOf = (f: FormulaV2): SplitPhase | undefined =>
 
 // ── Branches restées dans l'épreuve (ADR-0039, étape E3) ──────────────────
 
-/** Branches d'une scission par sexe restées dans l'épreuve (tableaux séparés, ADR-0024) */
-export const stayingBranches = (split: SplitPhase | undefined): SplitBranch[] =>
-  split?.criterion === 'gender' ? split.branches.filter(b => !!b.stayInCompetition) : [];
-
-/** Branches qui deviennent des compétitions filles */
-export const departingBranches = (split: SplitPhase): SplitBranch[] =>
-  split.branches.filter(b => !stayingBranches(split).includes(b));
-
 /**
- * Compétition couplée : scission par sexe dont toutes les branches restent dans l'épreuve.
- * Rien à créer : le déroulé est celui des tableaux séparés (ADR-0024).
+ * Compétition couplée : scission par sexe dont toutes les branches restent dans l'épreuve (la
+ * grammaire refuse qu'une partie seulement reste). Rien à créer : le déroulé est celui des
+ * tableaux séparés (ADR-0024).
  */
 export const isCoupledSplit = (split: SplitPhase | undefined): boolean =>
-  !!split && split.branches.length > 0 && stayingBranches(split).length === split.branches.length;
+  !!split &&
+  split.criterion === 'gender' &&
+  split.branches.length > 0 &&
+  split.branches.every(b => !!b.stayInCompetition);
 
-/** Scission à lancer (`splitCompetition`) : au moins une branche devient une compétition fille */
+/** Scission à lancer (`splitCompetition`) : toutes les branches deviennent des compétitions filles */
 export function pendingSplitOf(f: FormulaV2): SplitPhase | undefined {
   const split = splitOf(f);
   return split && !isCoupledSplit(split) ? split : undefined;
 }
 
-/** Tableau joué dans l'épreuve : le tableau de la formule, sinon celui d'une branche restée */
+/** Tableau des branches restées de la compétition couplée ; undefined : pas de couplée */
+const coupledTableauOf = (f: FormulaV2) => {
+  const split = splitOf(f);
+  return split && isCoupledSplit(split) ? split.branches[0].phases[0] : undefined;
+};
+
+/** Tableau joué dans l'épreuve : le tableau de la formule, sinon celui des branches restées */
 export function playedTableauOf(f: FormulaV2): TableauPhase | undefined {
   const own = f.phases.find((p): p is TableauPhase => p.kind === 'tableau');
   if (own) return own;
-  const phase = stayingBranches(splitOf(f))[0]?.phases[0];
+  const phase = coupledTableauOf(f);
   return phase?.kind === 'tableau' ? phase : undefined;
 }
 
@@ -343,7 +346,7 @@ export function customFormulaOf(f: FormulaV2): CustomFormulaConfig {
   let round = 0;
   const phases: FormulaPhaseNode[] = [];
   // Branches restées dans l'épreuve : leur tableau se joue dans l'épreuve (ADR-0039, E3)
-  const kept = stayingBranches(splitOf(f))[0]?.phases[0];
+  const kept = coupledTableauOf(f);
   const played = f.phases.map(p =>
     p.kind === 'split' && kept?.kind === 'tableau' && !f.phases.some(x => x.kind === 'tableau')
       ? kept
@@ -456,10 +459,11 @@ export function tableauQualificationOf(f: FormulaV2): AdvancementRule | undefine
  * deriveSettingsFromFormula, plus `customFormula` v1 équivalente.
  */
 export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<CompetitionSettings> {
-  // Tableaux séparés par sexe (ADR-0024) : scission par sexe dont une branche au moins reste
+  // Tableaux séparés par sexe (ADR-0024) : scission par sexe dont toutes les branches restent
   // dans l'épreuve (ADR-0039, E3) ; ancienne forme gardée telle quelle
-  const postPoolSplitCriteria: PostPoolSplitCriteria | undefined =
-    stayingBranches(splitOf(f)).length > 0 ? 'gender' : f.general.postPoolSplitCriteria;
+  const postPoolSplitCriteria: PostPoolSplitCriteria | undefined = isCoupledSplit(splitOf(f))
+    ? 'gender'
+    : f.general.postPoolSplitCriteria;
   if (weapon === Weapon.CUSTOM) {
     const customFormula = customFormulaOf(f);
     return {

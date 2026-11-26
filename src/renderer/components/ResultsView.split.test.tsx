@@ -2,8 +2,8 @@
 /**
  * Résultats de l'épreuve d'origine après une scission (#2013 E2b, docs/adr/0039) : classement
  * des tireurs restés dans l'origine, bloc « Branches » qui renvoie aux compétitions filles,
- * sans champion ni podium quand toutes les branches sont parties ; mélange (une branche restée
- * avec son tableau) : champion et podium de la branche restée.
+ * sans champion ni podium tant que l'épreuve scindée n'a pas de résultats finals (toutes les
+ * branches parties : pas de mélange, amendement du 2026-11-26).
  */
 import '@testing-library/jest-dom';
 import React from 'react';
@@ -79,42 +79,32 @@ describe('Résultats de l’épreuve d’origine scindée (ADR-0039)', () => {
     expect(screen.queryByText('resultsView.first')).toBeNull();
   });
 
-  it('mélange : branche restée avec ses résultats finals, champion et podium affichés', async () => {
-    // Hommes (A, B, C, D) restés en tableau séparé ; Dames (E, F) parties en fille
-    const men = ['A', 'B', 'C', 'D'].map(fencer);
-    const dames: SplitHistoryEntry[] = [
+  it('par sexe, Hommes et Dames partis : ni champion ni podium, seuls les éliminés classés', async () => {
+    // A, B, C, D en « Hommes » ; E, F en « Dames » ; G éliminé avant la scission
+    const people = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(fencer);
+    const byGender: SplitHistoryEntry[] = [
+      { label: 'Hommes', competitionId: 'fh', fencerIds: ['A', 'B', 'C', 'D'] },
       { label: 'Dames', competitionId: 'fd', fencerIds: ['E', 'F'] },
     ];
-    const pool = [...men, fencer('E'), fencer('F')].map(
-      (f, i) => ({ fencer: f, rank: i + 1 }) as PoolRanking
-    );
-    const staged = originFinalRanking(pool, [], dames);
+    const pool = people.map((f, i) => ({ fencer: f, rank: i + 1 }) as PoolRanking);
+    const staged = originFinalRanking(pool, [], byGender);
     render(
       <ResultsView
         competition={{ id: 'c', title: 'Coupe' } as Competition}
         poolRanking={staged.ranking}
-        finalResults={[
-          { rank: 1, fencer: men[1], eliminatedAt: '' },
-          { rank: 2, fencer: men[0], eliminatedAt: 'Finale' },
-          { rank: 3, fencer: men[2], eliminatedAt: '1/2' },
-          { rank: 3, fencer: men[3], eliminatedAt: '1/2' },
-        ]}
-        fencers={[...men, fencer('E'), fencer('F')]}
+        finalResults={[]}
+        fencers={people}
         isLaserSabre={false}
-        splitBranches={dames}
+        splitBranches={byGender}
         onOpenCompetition={vi.fn()}
       />
     );
     expect(await screen.findByTestId('split-branches')).toBeInTheDocument();
-    expect(screen.getByText('resultsView.champion')).toBeInTheDocument();
-    expect(screen.getByText('resultsView.first')).toBeInTheDocument();
+    expect(screen.queryByText('resultsView.champion')).toBeNull();
+    expect(screen.queryByText('resultsView.first')).toBeNull();
     const rows = screen.getAllByRole('row').slice(1);
-    expect(rows.map(r => r.textContent)).toEqual([
-      expect.stringMatching(/^1.*B/),
-      expect.stringMatching(/^2.*A/),
-      expect.stringMatching(/^3.*C/),
-      expect.stringMatching(/^3.*D/),
-    ]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveTextContent('G');
   });
 
   it('épreuve non scindée : pas de bloc « Branches »', () => {
