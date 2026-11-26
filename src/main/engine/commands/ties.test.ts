@@ -380,6 +380,49 @@ d('ex aequo à la barre (docs/adr/0040)', () => {
     expect(results.map(r => r.fencer.id).sort()).toEqual(ids.slice(0, 4).sort());
   });
 
+  it('« draw » (F1c) : tirage au sort par le moteur au moment de la coupe, figé par l’événement', async () => {
+    const { comp, ids } = competition(formula(2));
+    await playCircles(comp.id, 1, circles(ids));
+    // Hasard du moteur fixé pour le test
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    try {
+      const sim = await call('closePoolRound', {
+        competitionId: comp.id,
+        dryRun: true,
+        ties: 'draw',
+      });
+      expect(sim).toMatchObject({ qualified: 4, eliminated: 2 });
+      await call('closePoolRound', { competitionId: comp.id, ties: 'draw' });
+    } finally {
+      spy.mockRestore();
+    }
+    const closed = events(comp.id).find(e => e.type === 'PoolRoundClosed')!.payload as any;
+    expect(closed.qualifiedIds).toHaveLength(4);
+    // Rejeu : le tirage n'est pas refait, la coupe vient de l'événement
+    const statuses = db.getFencersByCompetition(comp.id);
+    expect(
+      statuses
+        .filter(f => f.status === FencerStatus.ELIMINATED)
+        .map(f => f.id)
+        .sort()
+    ).toEqual([...closed.eliminatedIds].sort());
+  });
+
+  it('« draw » : tableau et scission tirés au sort par le moteur, quota tenu', async () => {
+    const t = competition(formula(1));
+    await playCircles(t.comp.id, 1, circles(t.ids));
+    const tab = await call('generateTableau', {
+      competitionId: t.comp.id,
+      ties: 'draw',
+      dryRun: true,
+    });
+    expect(tab.qualified).toBe(4);
+    const sp = competition(rankSplit('draw'));
+    await playCircles(sp.comp.id, 1, circles(sp.ids));
+    const split = await call('splitCompetition', { competitionId: sp.comp.id, dryRun: true });
+    expect(split.branches.map((b: any) => b.fencers.length)).toEqual([4, 2]);
+  });
+
   it('MCP : même champ « ties » sur les outils de coupe (ADR-0008)', () => {
     for (const name of ['close_pool_round', 'build_bracket', 'split_competition']) {
       const tool = CONTRACT_MCP_TOOLS.write.find(t => t.name === name)!;

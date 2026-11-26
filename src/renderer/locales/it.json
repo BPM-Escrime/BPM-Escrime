@@ -4889,6 +4889,7 @@
     "label": "Ex aequo al taglio",
     "all": "Tutti qualificati",
     "initial_ranking": "Spareggio per classifica d'ingresso",
+    "draw": "Sorteggio",
     "keep": "Secondo la formula",
     "notice": "{{n}} schermidori ex aequo al {{rank}}º posto per {{places}} posto/i: {{names}}",
     "choose": "Cosa fare con questi ex aequo per questo taglio?",

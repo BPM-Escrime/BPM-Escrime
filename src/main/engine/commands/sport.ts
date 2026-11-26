@@ -841,6 +841,8 @@ export function tableauRankingCut(
       ? tableauQualificationOf(comp.settings.formula)
       : undefined,
     ties,
+    // Tirage au sort des ex aequo (ADR-0040) : hasard de la coupe, figé par TableauGenerated
+    random: Math.random,
     postPoolSplitCriteria: undefined,
     activeSplitGroup: null,
     splitOffCompetitionIds: undefined,

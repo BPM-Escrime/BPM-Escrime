@@ -4889,6 +4889,7 @@
     "label": "晉級線同分",
     "all": "全部晉級",
     "initial_ranking": "按入場排名決定",
+    "draw": "抽籤決定",
     "keep": "按賽制設定",
     "notice": "{{n}} 名劍手同列第 {{rank}} 名，爭奪 {{places}} 個名額：{{names}}",
     "choose": "此輪晉級如何處理同分劍手？",

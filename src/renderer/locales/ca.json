@@ -4889,6 +4889,7 @@
     "label": "Empats a la tall",
     "all": "Tots classificats",
     "initial_ranking": "Desempatats per la classificació d'entrada",
+    "draw": "Sorteig",
     "keep": "Segons la fórmula",
     "notice": "{{n}} tiradors empatats a la {{rank}}a posició per a {{places}} plaça(es): {{names}}",
     "choose": "Què cal fer amb aquests empats en aquest tall?",

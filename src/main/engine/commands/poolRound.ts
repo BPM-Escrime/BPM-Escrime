@@ -69,7 +69,9 @@ export function closePoolRound(ctx: CommandContext, input: ClosePoolRoundInput) 
   const { qualified, eliminated, tiedAtBar } = selectNextRoundFencers(
     ranking,
     qualifierCount,
-    assertTies(input.ties) ?? plan.ties
+    assertTies(input.ties) ?? plan.ties,
+    // Tirage au sort des ex aequo (ADR-0040) : hasard de la coupe, figé par PoolRoundClosed
+    Math.random
   );
   if (qualified.length < MIN_ROUND_QUALIFIERS) {
     throw new CommandError(

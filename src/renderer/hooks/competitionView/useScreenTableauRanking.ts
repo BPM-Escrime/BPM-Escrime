@@ -11,7 +11,7 @@ import {
   tableauRankingOfScreen,
   type TableauRankingOptions,
 } from '../../../shared/domain/ranking/tableauRanking';
-import { useTableauTies } from '../tableauTiesChoice';
+import { replayDraws, useTableauTies } from '../tableauTiesChoice';
 
 export function useScreenTableauRanking({
   competitionId,
@@ -24,9 +24,9 @@ export function useScreenTableauRanking({
   overallRanking: PoolRanking[];
   pools: Pool[];
   tableauMatches: TableauMatch[];
-  options: Omit<TableauRankingOptions, 'ties'>;
+  options: Omit<TableauRankingOptions, 'ties' | 'random'>;
 }): PoolRanking[] {
-  const ties = useTableauTies(competitionId);
+  const choice = useTableauTies(competitionId);
   const {
     isRapieres,
     rapieresTableauMode,
@@ -48,7 +48,9 @@ export function useScreenTableauRanking({
           poolWinnersOnly,
           customFormula,
           tableauQualification,
-          ties,
+          ties: choice?.ties,
+          // Tirage au sort : même hasard rejoué à chaque calcul (tableau stable)
+          random: choice?.draws ? replayDraws(choice.draws) : undefined,
           postPoolSplitCriteria,
           activeSplitGroup,
           splitOffCompetitionIds,
@@ -59,7 +61,7 @@ export function useScreenTableauRanking({
       overallRanking,
       pools,
       tableauMatches,
-      ties,
+      choice,
       isRapieres,
       rapieresTableauMode,
       poolWinnersOnly,

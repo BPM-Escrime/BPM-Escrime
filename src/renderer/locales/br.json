@@ -4889,6 +4889,7 @@
     "label": "Par-ha-par ouzh ar varrenn",
     "all": "An holl a vez dibabet",
     "initial_ranking": "Disrannet hervez ar renkadur deroù",
+    "draw": "Tennañ d'ar sort",
     "keep": "Hervez ar formulenn",
     "notice": "{{n}} c'hlezeier par-ha-par d'al lec'h {{rank}} evit {{places}} lec'h : {{names}}",
     "choose": "Petra ober gant ar re bar-ha-par evit an droc'h-mañ ?",

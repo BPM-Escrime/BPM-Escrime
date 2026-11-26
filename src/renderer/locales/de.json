@@ -4889,6 +4889,7 @@
     "label": "Gleichstand an der Grenze",
     "all": "Alle qualifiziert",
     "initial_ranking": "Nach Setzliste entschieden",
+    "draw": "Auslosung",
     "keep": "Laut Formel",
     "notice": "{{n}} Fechter gleichauf auf Platz {{rank}} für {{places}} Platz/Plätze: {{names}}",
     "choose": "Wie soll dieser Gleichstand bei diesem Schnitt behandelt werden?",

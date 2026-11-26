@@ -76,4 +76,26 @@ describe('cutAtBar : ex aequo à la barre (docs/adr/0040)', () => {
       getAdvancementCount(10, { mode: 'fixed_count', count: 4, ties: 'initial_ranking' })
     ).toBe(4);
   });
+
+  it('« draw » (FIE o.73.2.f) : tirage au sort des ex aequo, hasard injecté, quota tenu', () => {
+    // Hasard fixe : Fisher-Yates sur [b, c, d, e] avec j = 0 à chaque pas → [c, d, e, b]
+    const cut = cutAtBar(ranking, 4, 'draw', undefined, () => 0);
+    expect(ids(cut.qualified)).toEqual(['a', 'c', 'd', 'e']);
+    expect(ids(cut.eliminated)).toEqual(['b', 'f']);
+    expect(cut.tiedAtBar).toEqual({ rank: 2, fencerIds: ['b', 'c', 'd', 'e'], places: 3 });
+    // Même hasard, même tirage (rejouable) ; hasard différent, autre tirage possible
+    expect(ids(cutAtBar(ranking, 4, 'draw', undefined, () => 0).qualified)).toEqual(
+      ids(cut.qualified)
+    );
+    expect(ids(cutAtBar(ranking, 4, 'draw', undefined, () => 0.99).qualified)).toEqual([
+      'a',
+      'b',
+      'c',
+      'd',
+    ]);
+  });
+
+  it('« draw » sans hasard (affichage avant la coupe) : tous les ex aequo restent', () => {
+    expect(ids(cutAtBar(ranking, 4, 'draw').qualified)).toEqual(['a', 'b', 'c', 'd', 'e']);
+  });
 });

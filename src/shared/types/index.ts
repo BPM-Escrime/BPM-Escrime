@@ -525,8 +525,8 @@ export interface AdvancementRule {
   ties?: TiesAtBar;
 }
 
-/** Ex aequo à la barre de qualification (docs/adr/0040) ; 'barrage' : lot F1b */
-export type TiesAtBar = 'all' | 'initial_ranking' | 'barrage';
+/** Ex aequo à la barre de qualification (docs/adr/0040) ; 'draw' : tirage au sort ; 'barrage' : reporté */
+export type TiesAtBar = 'all' | 'initial_ranking' | 'draw' | 'barrage';
 
 export interface CustomTouchZone {
   id: string;

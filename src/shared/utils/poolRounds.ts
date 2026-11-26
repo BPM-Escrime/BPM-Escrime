@@ -32,11 +32,13 @@ export function getRoundQualifierCount(
 export function selectNextRoundFencers(
   roundRanking: PoolRanking[],
   qualifierCount?: number,
-  ties?: TiesAtBar
+  ties?: TiesAtBar,
+  /** Hasard injecté pour le tirage au sort des ex aequo ('draw') */
+  random?: () => number
 ): { qualified: Fencer[]; eliminated: Fencer[]; tiedAtBar: TiedAtBar | null } {
   const sorted = [...roundRanking].sort((a, b) => a.rank - b.rank);
   const active = sorted.filter(r => !INACTIVE_STATUSES.has(r.fencer.status));
-  const cut = cutAtBar(active, qualifierCount, ties);
+  const cut = cutAtBar(active, qualifierCount, ties, undefined, random);
   const qualified = cut.qualified.map((r, i) => ({ ...r.fencer, ranking: i + 1 }));
   const qualifiedIds = new Set(qualified.map(f => f.id));
   const eliminated = sorted.filter(r => !qualifiedIds.has(r.fencer.id)).map(r => r.fencer);

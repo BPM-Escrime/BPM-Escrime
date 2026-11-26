@@ -37,7 +37,7 @@ describe('ex aequo à la barre dans la formule (ADR-0040)', () => {
   });
 
   it('« initial_ranking » et « all » : acceptés et gardés sur la règle du tour', () => {
-    for (const ties of ['all', 'initial_ranking']) {
+    for (const ties of ['all', 'initial_ranking', 'draw']) {
       const f = qualify(ties);
       const pool = f.phases.find(p => p.kind === 'pool');
       expect(pool?.qualification).toEqual({ mode: 'fixed_count', count: 16, ties });
@@ -50,7 +50,7 @@ describe('ex aequo à la barre dans la formule (ADR-0040)', () => {
       'tour 1 : ex aequo à la barre : barrage pas encore disponible'
     );
     expect(formulaV2Issues(qualify('tirage'), scope)).toContain(
-      'tour 1 : ex aequo à la barre : all ou initial_ranking attendu'
+      'tour 1 : ex aequo à la barre : all, initial_ranking ou draw attendu'
     );
     expect(tiesIssue(undefined)).toBeNull();
   });

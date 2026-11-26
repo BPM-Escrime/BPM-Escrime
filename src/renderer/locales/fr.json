@@ -4889,6 +4889,7 @@
     "label": "Ex aequo à la barre",
     "all": "Tous qualifiés",
     "initial_ranking": "Départagés au classement d'entrée",
+    "draw": "Tirage au sort",
     "keep": "Selon la formule",
     "notice": "{{n}} tireurs ex aequo à la {{rank}}e place pour {{places}} place(s) : {{names}}",
     "choose": "Que faire de ces ex aequo pour cette coupe ?",
