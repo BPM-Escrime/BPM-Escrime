@@ -224,6 +224,25 @@ describe('reprise de la compétition couplée (ADR-0039, E3)', () => {
     expect(flatSettingsOf(quest, Weapon.LASER).postPoolSplitCriteria).toBe('gender');
   });
 
+  it('sans place pour la scission (pas de tour de poules juste avant le tableau) : ancienne forme gardée', () => {
+    const tableauFirst: FormulaV2 = {
+      version: 2,
+      phases: [
+        {
+          kind: 'tableau',
+          id: 't',
+          maxScore: 15,
+          timerSeconds: 180,
+          thirdPlace: false,
+          allPlaces: false,
+        },
+      ],
+      general: { postPoolSplitCriteria: 'gender' },
+    };
+    expect(coupledFormula(tableauFirst)).toBe(tableauFirst);
+    expect(flatSettingsOf(tableauFirst, Weapon.EPEE).postPoolSplitCriteria).toBe('gender');
+  });
+
   it('scission sans branche restée : pas de tableaux séparés', () => {
     const f = formulaOf(src(coupledSettings()));
     const daughters = withBranches(

@@ -1,6 +1,6 @@
 # ADR-0037 — Déroulé généré par la formule v2 : navigation, 0 tour de poules, tableau arrêté à N, phase après un tableau
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b, retrait de la dernière phase d'après, Q5)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b, retrait de la dernière phase d'après, Q5, scission ouverte au MCP)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape D ; question Q5), #1948 ; complète [ADR-0036](0036-formule-v2-arbre-par-phase.md), [ADR-0007](0007-format-evenement.md) et [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -89,8 +89,14 @@ eliminatedIds }`.
 
 - D1 ne change pas le moteur : il branche la navigation sur la formule et réutilise
   `skipPools`. D2 ajoute une commande, un événement et une clé d'état de session.
-- Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) ; l'ouverture
-  au MCP des formules à plusieurs tours et du tableau arrêté relève de l'étape F.
+- Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) pour le tirage,
+  les scores et le tableau ; seule la scission (`split_competition`,
+  [ADR-0039](0039-scission-competitions-filles.md)) lui est ouverte dès l'étape E, y compris
+  après plusieurs tours ou un tableau arrêté. L'ouverture au MCP du reste des formules à
+  plusieurs tours et du tableau arrêté relève de l'étape F. _(Amendé le 2026-11-26 : remplace
+  « Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) ;
+  l'ouverture au MCP des formules à plusieurs tours et du tableau arrêté relève de l'étape
+  F. »)_
 - Chaque PR en draft, sans auto-merge (ticket `refactor`).
 
 ## Alternatives écartées
