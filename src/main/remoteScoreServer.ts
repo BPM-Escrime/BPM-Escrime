@@ -866,17 +866,10 @@ export class RemoteScoreServer {
     dropPendingPoolMatches(this.ctx<ArenaSetupContext>(ARENA_SETUP_CONTEXT_KEYS));
   }
 
-  /** Sous-piste attribuée à une tablette arbitre pendant les vagues, sinon la piste (#1118) */
+  /** Sous-piste d'une tablette arbitre : vagues des rapières (#1118), piste de poule (#2300) */
   public claimArenaSlot(arenaId: string, deviceKey: string, current?: string): string {
-    const base = slots.baseArenaId(arenaId.startsWith('arena') ? arenaId : `arena${arenaId}`);
-    if (this.activeWaveMatchIds === null || !deviceKey) return base;
-    const create = (parent: Arena, slot: number) => {
-      const arena = slots.createSlotArena(parent, slot);
-      this.arenas.set(arena.id, arena);
-      this.arenaMatchQueue.set(arena.id, []);
-      return arena;
-    };
-    return this.arenaSlots.claim(this.arenas, base, deviceKey, create, current) ?? base;
+    const ctx = this.ctx<slots.SlotClaimContext>(slots.SLOT_CLAIM_CONTEXT_KEYS);
+    return slots.claimArenaSlot(ctx, { arenaId, deviceKey, current });
   }
 
   private isMatchPlayable(m: Match | ArenaMatch): boolean {
@@ -974,8 +967,9 @@ export class RemoteScoreServer {
   /** Poule propre de la piste, même si un match réassigné d'une autre poule y est chargé */
   private arenaHomePoolId(arena: Arena): string | undefined {
     const cur = arena.currentMatch;
-    // Vagues des rapières : la piste et ses sous-pistes gardent la poule de la piste (#1118)
-    if (!cur?.poolId && this.activeWaveMatchIds !== null) return this.wavePoolId(arena);
+    // Vagues des rapières (#1118), piste partagée en sous-pistes (#2300) : poule de la piste
+    const shared = slots.siblingArenas(this.arenas, arena.id).length > 0;
+    if (!cur?.poolId && (this.activeWaveMatchIds !== null || shared)) return this.wavePoolId(arena);
     if (!cur?.poolId) return undefined;
     if (arena.activePoolId && this.poolMatchArenaOverrides.has(cur.id)) return arena.activePoolId;
     return cur.poolId;

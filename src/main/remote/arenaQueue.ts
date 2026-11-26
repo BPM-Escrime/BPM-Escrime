@@ -175,16 +175,25 @@ export function loadNextMatch(ctx: ArenaQueueContext, arenaId: string): void {
       `[RemoteScoreServer] ${poolMatches.length} matches en attente dans le pool ${currentPoolId} (ordre smart)`
     );
 
+    // Match ouvert ou lancé sur une autre sous-piste de la piste : pas rechargé ici (#2300)
+    const taken = slots.matchesTakenBySiblings(
+      ctx.arenas,
+      arenaId,
+      id => ctx.arenaRefereeSelected.get(id) === true
+    );
     // Respecter les overrides de piste : ignorer les matchs pré-assignés à une autre arène
     let nextMatch = poolMatches.find(m => {
-      if (m.id === currentMatchId) return false;
+      if (m.id === currentMatchId || taken.has(m.id)) return false;
       const override = ctx.poolMatchArenaOverrides.get(m.id);
       return !override || override === arenaId;
     });
     // Si rien de dispo pour cette arène, chercher un match explicitement redirigé ici
     if (!nextMatch) {
       nextMatch = poolMatches.find(
-        m => m.id !== currentMatchId && ctx.poolMatchArenaOverrides.get(m.id) === arenaId
+        m =>
+          m.id !== currentMatchId &&
+          !taken.has(m.id) &&
+          ctx.poolMatchArenaOverrides.get(m.id) === arenaId
       );
     }
     if (nextMatch) {
@@ -472,7 +481,9 @@ export function assignPools(
     const current = arena.currentMatch;
     const currentPool = current ? ctx.arenaHomePoolId(arena) : arena.activePoolId;
     if (!currentPool) continue;
-    if (poolIds.has(currentPool) && target.get(currentPool) === arenaId) continue;
+    // Sous-piste (#1118, #2300) : poule de sa piste
+    if (poolIds.has(currentPool) && target.get(currentPool) === slots.baseArenaId(arenaId))
+      continue;
     if (current?.status === 'in_progress') continue; // jamais interrompre un match en cours
     arena.activePoolId = undefined;
     if (current) {
