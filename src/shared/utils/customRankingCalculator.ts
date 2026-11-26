@@ -366,9 +366,10 @@ export function simulateFormula(
       const bracketSize = calcBracketSize(currentFencers, cfg.bracketSizeOverride);
       const byes = bracketSize - currentFencers;
 
-      if (byes > bracketSize / 2) {
+      // Plus de la moitié des tireurs exemptés au premier tour (ADR-0041), taille effective
+      if (byes > currentFencers / 2) {
         warnings.push(
-          `DE : ${byes} exemptions sur ${bracketSize} — considérer un tableau plus petit`
+          `DE : ${byes} exemptions pour ${currentFencers} tireurs (tableau de ${bracketSize}) — plus de la moitié d'exempts au premier tour`
         );
       }
 

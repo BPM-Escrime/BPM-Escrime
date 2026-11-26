@@ -319,11 +319,20 @@ describe('avertissements de la simulation (ADR-0041)', () => {
     expect(warn(ok, 20).some(w => w.includes('moins de 4 qualifiés'))).toBe(false);
   });
 
-  it('plus de la moitié d’exempts au premier tour du tableau', () => {
-    // Taille de tableau imposée (réglage hérité de la formule v1)
+  it('plus de la moitié d’exempts au premier tour du tableau (taille automatique)', () => {
+    const exempts = (count: number) =>
+      warn(formula(tableau()), count).filter(w => w.includes('exemptions'));
+    // 17 tireurs : tableau de 32, 15 exempts > 8,5
+    expect(exempts(17)).toHaveLength(1);
+    expect(exempts(17)[0]).toContain('15 exemptions pour 17 tireurs (tableau de 32)');
+    // 24 tireurs : tableau de 32, 8 exempts ≤ 12
+    expect(exempts(24)).toEqual([]);
+    expect(exempts(32)).toEqual([]);
+  });
+
+  it('taille de tableau imposée : la taille effective compte', () => {
     const forced = formula(tableau({ legacy: { bracketSizeOverride: 32, placesToFence: [] } }));
-    expect(warn(forced, 10).some(w => w.includes('exemptions'))).toBe(true);
-    expect(warn(formula(tableau()), 30).some(w => w.includes('exemptions'))).toBe(false);
+    expect(warn(forced, 10).some(w => w.includes('22 exemptions pour 10 tireurs'))).toBe(true);
   });
 
   it('plus de 3 tours de poules', () => {
