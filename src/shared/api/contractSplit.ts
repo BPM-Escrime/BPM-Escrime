@@ -93,7 +93,7 @@ export const splitOperations = {
           /** Compétition fille créée (null : dryRun) */
           competitionId: z.string().nullable(),
           fencers: z.array(SplitFencer.extend({ rank: z.number().int() })),
-          /** Branche restée dans l'épreuve (scission par sexe) : tableau séparé, pas de fille */
+          /** Toujours false : une scission lancée crée une fille par branche (ADR-0039, mélange retiré) */
           stayInCompetition: z.boolean(),
         })
       ),
