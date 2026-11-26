@@ -120,7 +120,18 @@ export function rankAfterStages(
   const front = ranking.filter(r => entered.has(r.fencer.id) && !out.has(r.fencer.id));
   const frontIds = new Set(front.map(r => r.fencer.id));
   const rest = ranking.filter(r => !frontIds.has(r.fencer.id) && !out.has(r.fencer.id));
-  const result: PoolRanking[] = [...front];
+  // Restants : ordre reçu, rangs renumérotés depuis 1, égalités gardées (avant le tour suivant,
+  // le classement reçu est encore celui d'avant le tableau)
+  const result: PoolRanking[] = [];
+  let frontPrev = NaN;
+  let frontTie = 0;
+  front.forEach((r, i) => {
+    if (r.rank !== frontPrev) {
+      frontTie = i;
+      frontPrev = r.rank;
+    }
+    result.push({ ...r, rank: frontTie + 1 });
+  });
   let tie = 0;
   stageOut.forEach(({ row, key }, i) => {
     if (i === 0 || stageOut[i - 1].key !== key) tie = i;
