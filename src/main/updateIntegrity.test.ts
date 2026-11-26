@@ -31,9 +31,7 @@ describe('parseSha256Digest', () => {
 describe('isTrustedDownloadUrl', () => {
   it('accepte les hôtes GitHub en HTTPS', () => {
     expect(
-      isTrustedDownloadUrl(
-        'https://github.com/BellePoule-Modern/bellepoule-modern/releases/download/x/a.exe'
-      )
+      isTrustedDownloadUrl('https://github.com/BPM-Escrime/BPM-Escrime/releases/download/x/a.exe')
     ).toBe(true);
     expect(isTrustedDownloadUrl('https://objects.githubusercontent.com/foo')).toBe(true);
     expect(isTrustedDownloadUrl('https://release-assets.githubusercontent.com/foo')).toBe(true);
@@ -82,10 +80,8 @@ describe('sha256File / verifyFileSha256', () => {
 describe('toTrustedDownloadUrl', () => {
   it('reconstruit l’URL sur l’hôte de confiance', () => {
     expect(
-      toTrustedDownloadUrl(
-        'https://github.com/BellePoule-Modern/bellepoule-modern/releases/download/v1/a.exe'
-      )
-    ).toBe('https://github.com/BellePoule-Modern/bellepoule-modern/releases/download/v1/a.exe');
+      toTrustedDownloadUrl('https://github.com/BPM-Escrime/BPM-Escrime/releases/download/v1/a.exe')
+    ).toBe('https://github.com/BPM-Escrime/BPM-Escrime/releases/download/v1/a.exe');
     expect(toTrustedDownloadUrl('https://release-assets.githubusercontent.com/x?sig=1')).toBe(
       'https://release-assets.githubusercontent.com/x?sig=1'
     );

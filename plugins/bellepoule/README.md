@@ -12,7 +12,7 @@ serveur MCP intégré à l'application (local, `127.0.0.1`). Référence des out
 2. Dans Claude Code :
 
    ```
-   /plugin install bellepoule --marketplace BellePoule-Modern/bellepoule-modern
+   /plugin install bellepoule --marketplace BPM-Escrime/BPM-Escrime
    /plugin configure bellepoule
    ```
 

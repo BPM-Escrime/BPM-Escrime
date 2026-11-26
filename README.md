@@ -42,9 +42,9 @@ Tous les écrans : **[docs/SCREENSHOTS.md](docs/SCREENSHOTS.md)**.
 - **macOS** : DMG ou ZIP (Intel x64 et Apple Silicon arm64)
 - **Linux** : AppImage, .deb ou .rpm (x64) ; AppImage ou .deb (arm64, Raspberry Pi…) ; paquet Nix ([INSTALLATION.md](INSTALLATION.md#nix-flake))
 
-### 🚀 [**Télécharger la dernière version stable**](https://github.com/BellePoule-Modern/bellepoule-modern/releases/latest)
+### 🚀 [**Télécharger la dernière version stable**](https://github.com/BPM-Escrime/BPM-Escrime/releases/latest)
 
-### 🧪 [**Télécharger la version de développement (dev)**](https://github.com/BellePoule-Modern/bellepoule-modern/releases?q=-dev.&expanded=true)
+### 🧪 [**Télécharger la version de développement (dev)**](https://github.com/BPM-Escrime/BPM-Escrime/releases?q=-dev.&expanded=true)
 
 > ⚠️ **Version de test** : Contient les dernières fonctionnalités mais peut être instable
 
@@ -113,7 +113,7 @@ Voir [docs/MCP.md](docs/MCP.md).
 
 ### 🔮 **Fonctionnalités à venir**
 
-Chantiers ouverts ([issues GitHub](https://github.com/BellePoule-Modern/bellepoule-modern/issues)) :
+Chantiers ouverts ([issues GitHub](https://github.com/BPM-Escrime/BPM-Escrime/issues)) :
 
 - 🖧 **Moteur headless multi-postes** : comptes et rôles, plusieurs écrans sur la même épreuve
 - 📐 **Formules FFE / FIE** étendues : tirages, tableaux préparés avant la fin des poules
@@ -286,7 +286,7 @@ Liste complète et versions : [docs/STACK_TECHNIQUE.md](docs/STACK_TECHNIQUE.md)
 
 ### 🚀 **Version Stable** (Production)
 
-📦 **[Voir toutes les releases stables](https://github.com/BellePoule-Modern/bellepoule-modern/releases)** | 🔄 **[Dernière version stable](https://github.com/BellePoule-Modern/bellepoule-modern/releases/latest)**
+📦 **[Voir toutes les releases stables](https://github.com/BPM-Escrime/BPM-Escrime/releases)** | 🔄 **[Dernière version stable](https://github.com/BPM-Escrime/BPM-Escrime/releases/latest)**
 
 | Plateforme | Fichiers |
 |---|---|
@@ -297,7 +297,7 @@ Liste complète et versions : [docs/STACK_TECHNIQUE.md](docs/STACK_TECHNIQUE.md)
 
 ### 🧪 **Version de Développement** (Tests)
 
-📦 **[Télécharger la dernière version dev](https://github.com/BellePoule-Modern/bellepoule-modern/releases?q=-dev.&expanded=true)**
+📦 **[Télécharger la dernière version dev](https://github.com/BPM-Escrime/BPM-Escrime/releases?q=-dev.&expanded=true)**
 
 > ⚠️ **Attention** : Cette version est destinée aux tests et peut contenir des bugs.
 
@@ -332,7 +332,7 @@ Ubuntu 24.04+ : le sandbox Chromium peut être indisponible (restriction AppArmo
 
 ```bash
 # Cloner le dépôt
-git clone https://github.com/BellePoule-Modern/bellepoule-modern.git
+git clone https://github.com/BPM-Escrime/BPM-Escrime.git
 
 # Installation des dépendances (Node.js 22 requis)
 cd bellepoule-modern
@@ -384,9 +384,9 @@ Ce projet utilise **GitHub Actions** pour créer automatiquement :
 
 ### **Liens directs**
 
-- 🟢 **Release stable** : [`/releases/latest`](https://github.com/BellePoule-Modern/bellepoule-modern/releases/latest)
-- 🧪 **Release dev** : [`/releases?q=-dev.`](https://github.com/BellePoule-Modern/bellepoule-modern/releases?q=-dev.&expanded=true)
-- 📊 **État des builds** : [GitHub Actions](https://github.com/BellePoule-Modern/bellepoule-modern/actions)
+- 🟢 **Release stable** : [`/releases/latest`](https://github.com/BPM-Escrime/BPM-Escrime/releases/latest)
+- 🧪 **Release dev** : [`/releases?q=-dev.`](https://github.com/BPM-Escrime/BPM-Escrime/releases?q=-dev.&expanded=true)
+- 📊 **État des builds** : [GitHub Actions](https://github.com/BPM-Escrime/BPM-Escrime/actions)
 
 ## 📦 **Générer ses propres executables**
 
@@ -410,8 +410,8 @@ Les executables générés seront dans le dossier `release/`.
 ## 📜 **Documentation**
 
 - 📖 **Index de la documentation** : [docs/README.md](docs/README.md)
-- 🐛 **Rapporter un bug** : [Issues GitHub](https://github.com/BellePoule-Modern/bellepoule-modern/issues)
-- 💡 **Demande de fonctionnalité** : [Discussions GitHub](https://github.com/BellePoule-Modern/bellepoule-modern/discussions)
+- 🐛 **Rapporter un bug** : [Issues GitHub](https://github.com/BPM-Escrime/BPM-Escrime/issues)
+- 💡 **Demande de fonctionnalité** : [Discussions GitHub](https://github.com/BPM-Escrime/BPM-Escrime/discussions)
 
 ## 📄 **Licence**
 
@@ -431,10 +431,10 @@ Ce logiciel est distribué sous **GPL-3.0 License**.
 
 ## 📞 **Support**
 
-- 🐛 **Rapports de bugs** : [GitHub Issues](https://github.com/BellePoule-Modern/bellepoule-modern/issues)
-- 💡 **Suggestions** : [GitHub Discussions](https://github.com/BellePoule-Modern/bellepoule-modern/discussions)
+- 🐛 **Rapports de bugs** : [GitHub Issues](https://github.com/BPM-Escrime/BPM-Escrime/issues)
+- 💡 **Suggestions** : [GitHub Discussions](https://github.com/BPM-Escrime/BPM-Escrime/discussions)
 - 📧 **Contact** : yann.deboeuf@gmail.com
-- 🌐 **Site web** : https://github.com/BellePoule-Modern/bellepoule-modern
+- 🌐 **Site web** : https://github.com/BPM-Escrime/BPM-Escrime
 
 ## 🌍 **Contribution**
 
