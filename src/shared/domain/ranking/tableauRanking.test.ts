@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MatchStatus } from '../../types';
 import type { Pool, PoolRanking } from '../../types';
 import type { TableauMatch } from '../tableau/tableauTypes';
-import { computeEffectiveTableauRanking, computeMatchProgress } from './tableauRanking';
+import { computeEffectiveTableauRanking, computeMatchProgress, tableauCut } from './tableauRanking';
 
 const pool = (statuses: MatchStatus[]): Pool =>
   ({
@@ -98,5 +98,35 @@ describe('computeEffectiveTableauRanking', () => {
       tableauQualification: { mode: 'percentage', percentage: 60 },
     });
     expect(result.map(r => r.fencer.id)).toEqual(['f0', 'f1', 'f2', 'f3']);
+  });
+});
+
+describe('tableauCut : ex aequo à la barre du tableau (docs/adr/0040)', () => {
+  // Après deux tours : rang d'entrée = place au tour précédent (fencer.ranking)
+  const tied = (id: string, entry: number): PoolRanking =>
+    ({ fencer: { id, ranking: entry, status: 'Q' }, rank: 2 }) as unknown as PoolRanking;
+  const ranking = [
+    { fencer: { id: 'a', ranking: 3, status: 'Q' }, rank: 1 } as unknown as PoolRanking,
+    tied('b', 4),
+    tied('c', 2),
+    tied('d', 1),
+  ];
+  const rule = { mode: 'fixed_count' as const, count: 2 };
+
+  it('réglage de la formule par défaut : tous les ex aequo ; simulation des ex aequo', () => {
+    const cut = tableauCut(ranking, [], { ...baseOptions, tableauQualification: rule });
+    expect(cut.ranking.map(r => r.fencer.id)).toEqual(['a', 'b', 'c', 'd']);
+    expect(cut.tiedAtBar).toEqual({ rank: 2, fencerIds: ['b', 'c', 'd'], places: 1 });
+  });
+
+  it('« ties » de l’écran ou de la commande : prime sur la formule', () => {
+    const ids = (ties?: 'all' | 'initial_ranking') =>
+      computeEffectiveTableauRanking(ranking, [], {
+        ...baseOptions,
+        tableauQualification: { ...rule, ties: 'all' },
+        ties,
+      }).map(r => r.fencer.id);
+    expect(ids('initial_ranking')).toEqual(['a', 'd']);
+    expect(ids()).toEqual(['a', 'b', 'c', 'd']);
   });
 });

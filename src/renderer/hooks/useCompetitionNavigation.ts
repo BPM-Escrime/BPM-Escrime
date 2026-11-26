@@ -7,10 +7,16 @@ import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { FencerStatus, Weapon } from '../../shared/types';
 import { nextRoundPlan } from '../../shared/domain/pools/roundSeeding';
-import type { Competition, Fencer, Pool, PoolRanking, QuestPhaseConfig } from '../../shared/types';
+import type {
+  Competition,
+  Fencer,
+  Pool,
+  PoolRanking,
+  QuestPhaseConfig,
+  TiesAtBar,
+} from '../../shared/types';
 import { generateInitialRanking } from '../../shared/utils/poolCalculations';
 import { selectNextRoundFencers } from '../../shared/utils/poolRounds';
-import type { getActiveFormula } from '../../shared/utils/customFormulaSettings';
 import {
   rapieresSemifinalists,
   rapieresTableauSettings,
@@ -23,6 +29,14 @@ import type { ConsolationBracket, TableauMatch } from '../../shared/domain/table
 import type { GroupTableau } from '../../shared/domain/ranking/splitGroups';
 import { useConfirm } from '../components/ConfirmDialog';
 import { TIES_CHOICES, tiesNotice, type TiesChoice } from '../components/ties/TiesAtBar';
+import { setTableauTies } from './tableauTiesChoice';
+import { tableauQualificationOf } from '../../shared/domain/formula/formulaV2';
+import type { TiedAtBar } from '../../shared/domain/ranking/advancement';
+import {
+  getActiveFormula,
+  getTableauAdvancement,
+  tableauAdvancementCut,
+} from '../../shared/utils/customFormulaSettings';
 import { useToast } from '../components/Toast';
 import type { Phase } from './useCompetitionSession';
 import type { useFencerManagement } from './useFencerManagement';
@@ -231,13 +245,64 @@ export function useCompetitionNavigation({
       setShowRapieresTableauDialog(true);
       return;
     }
-    // Tirer toutes les places → 3ème place implicite, pas de question
-    if (playAllPositions) {
-      handleThirdPlaceDecision(true, undefined, group);
+    const draw = () => {
+      // Tirer toutes les places → 3ème place implicite, pas de question
+      if (playAllPositions) {
+        handleThirdPlaceDecision(true, undefined, group);
+        return;
+      }
+      // 3ème place décidée dans la formule (#1125, #2013) : plus de question au lancement
+      handleThirdPlaceDecision(thirdPlaceMatch, undefined, group);
+    };
+    // Ex aequo à la barre de qualification (docs/adr/0040) : listés et choix pour ce tableau,
+    // avant sa génération ; le tableau est tiré avec le classement retenu
+    const tied = tableauTiedAtBar();
+    if (!tied) {
+      setTableauTies(competition.id, undefined);
+      draw();
       return;
     }
-    // 3ème place décidée dans la formule (#1125, #2013) : plus de question au lancement
-    handleThirdPlaceDecision(thirdPlaceMatch, undefined, group);
+    void chooseTies(tied, tableauFormulaRule()?.ties).then(ties => {
+      if (!ties) return;
+      setTableauTies(competition.id, ties);
+      draw();
+    });
+  };
+
+  /** Règle de qualification vers le tableau : formule « Autre » (v1), sinon formule v2 */
+  const tableauFormulaRule = () => {
+    const custom = getActiveFormula(competition.weapon, competition.settings);
+    if (custom) return getTableauAdvancement(custom);
+    const formula = competition.settings?.formula;
+    return formula ? tableauQualificationOf(formula) : undefined;
+  };
+
+  /** Ex aequo à la barre du tableau selon la formule (comme le moteur, tableauCut) */
+  const tableauTiedAtBar = () => {
+    if (competition.settings?.poolWinnersOnly) return null;
+    return tableauAdvancementCut(overallRanking, tableauFormulaRule()).tiedAtBar;
+  };
+
+  /** Ex aequo listés, choix pour cette coupe ; null : annulé */
+  const chooseTies = async (
+    tied: TiedAtBar,
+    formulaTies: TiesAtBar | undefined
+  ): Promise<TiesChoice | null> => {
+    const nameOf = (id: string) => {
+      const f = fencers.find(x => x.id === id);
+      return f ? `${f.lastName} ${f.firstName}` : id;
+    };
+    const picked = await choose({
+      message: `${tiesNotice(t, tied, nameOf)}\n${t('tiesAtBar.choose')}`,
+      choices: TIES_CHOICES.map(c => ({
+        value: c,
+        label:
+          c === (formulaTies ?? 'all')
+            ? t('tiesAtBar.formula', { label: t(`tiesAtBar.${c}`) })
+            : t(`tiesAtBar.${c}`),
+      })),
+    });
+    return (picked as TiesChoice | null) ?? null;
   };
 
   /** Rapières : mode de tableau choisi dans la popup (#1441) */
@@ -294,29 +359,15 @@ export function useCompetitionNavigation({
       // Ex aequo à la barre au-delà du quota (docs/adr/0040) : choix pour cette coupe
       let ties: TiesChoice | undefined;
       if (sim.tiedAtBar) {
-        const formulaTies =
-          nextRoundPlan({
-            weapon: competition.weapon,
-            settings: competition.settings,
-            round: currentPoolRound,
-            pools,
-            history: poolHistory ?? [],
-            isLaserSabre: competition.weapon === Weapon.LASER,
-          }).ties ?? 'all';
-        const nameOf = (id: string) => {
-          const f = fencers.find(x => x.id === id);
-          return f ? `${f.lastName} ${f.firstName}` : id;
-        };
-        const picked = await choose({
-          message: `${tiesNotice(t, sim.tiedAtBar, nameOf)}\n${t('tiesAtBar.choose')}`,
-          choices: TIES_CHOICES.map(c => ({
-            value: c,
-            label:
-              c === formulaTies
-                ? t('tiesAtBar.formula', { label: t(`tiesAtBar.${c}`) })
-                : t(`tiesAtBar.${c}`),
-          })),
-        });
+        const formulaTies = nextRoundPlan({
+          weapon: competition.weapon,
+          settings: competition.settings,
+          round: currentPoolRound,
+          pools,
+          history: poolHistory ?? [],
+          isLaserSabre: competition.weapon === Weapon.LASER,
+        }).ties;
+        const picked = await chooseTies(sim.tiedAtBar, formulaTies);
         if (!picked) return 'refused';
         ties = picked as TiesChoice;
         sim = await client.call('closePoolRound', {

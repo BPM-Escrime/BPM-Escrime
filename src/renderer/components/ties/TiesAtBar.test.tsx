@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
  * Ex aequo à la barre à l'écran (#2013 F1, docs/adr/0040) : réglage dans l'éditeur de formule
- * (règle de qualification du tour, nombre d'une branche de scission), bandeau du tableau,
- * choix « choose » de la fenêtre de confirmation.
+ * (règle de qualification du tour, nombre d'une branche de scission), choix « choose » de la
+ * fenêtre de confirmation.
  */
 import '@testing-library/jest-dom';
 import React from 'react';
@@ -19,7 +19,6 @@ import { Category, Weapon } from '../../../shared/types';
 import type { SplitPhase } from '../../../shared/domain/formula/formulaV2';
 import { AdvancementRuleEditor } from '../formula/AdvancementRuleEditor';
 import { SplitPhaseEditor } from '../formula/SplitPhaseEditor';
-import { TableauTiesBanner } from '../tableau/TableauTiesBanner';
 import { ConfirmProvider, useConfirm } from '../ConfirmDialog';
 
 describe('éditeur de formule : ex aequo à la barre (ADR-0040)', () => {
@@ -86,29 +85,6 @@ describe('éditeur de formule : ex aequo à la barre (ADR-0040)', () => {
       count: 8,
       ties: 'initial_ranking',
     });
-  });
-});
-
-describe('proposition à l’exécution : bandeau du tableau (ADR-0040)', () => {
-  it('ex aequo listés, choix pour ce tableau ; rien sans ex aequo', () => {
-    const onChange = vi.fn();
-    const { rerender } = render(
-      <TableauTiesBanner
-        tiedAtBar={{ rank: 16, fencerIds: ['a', 'b'], places: 1 }}
-        value={undefined}
-        onChange={onChange}
-        nameOf={id => `NOM-${id}`}
-      />
-    );
-    expect(screen.getByTestId('tableau-ties')).toHaveTextContent('NOM-a, NOM-b');
-    // « Selon la formule » par défaut
-    expect(screen.getByTestId('tableau-ties-select')).toHaveValue('');
-    fireEvent.change(screen.getByTestId('tableau-ties-select'), { target: { value: 'all' } });
-    expect(onChange).toHaveBeenCalledWith('all');
-    rerender(
-      <TableauTiesBanner tiedAtBar={null} value={undefined} onChange={onChange} nameOf={id => id} />
-    );
-    expect(screen.queryByTestId('tableau-ties')).toBeNull();
   });
 });
 

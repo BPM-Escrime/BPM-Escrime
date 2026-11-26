@@ -150,6 +150,24 @@ async function playCircles(competitionId: string, round: number, groups: string[
     }
   }
 }
+/** Tour 1 : une poule, le tireur placé le premier bat tous les suivants (5-1) */
+async function playOrdered(competitionId: string, order: string[]) {
+  const matches = order.flatMap((a, i) =>
+    order.slice(i + 1).map((b, j) => ({
+      matchId: `${competitionId}-r1-m${i}-${j}`,
+      fencerAId: a,
+      fencerBId: b,
+    }))
+  );
+  await call('generatePools', {
+    competitionId,
+    composition: [{ poolId: `${competitionId}-r1-p1`, number: 1, fencerIds: order, matches }],
+  });
+  for (const m of matches) {
+    await call('recordScore', { competitionId, matchId: m.matchId, scoreA: 5, scoreB: 1 });
+  }
+}
+
 // Poules mêlées : rang d'entrée sans lien avec la poule
 const circles = (ids: string[]) => [
   [ids[5], ids[0], ids[3]],
@@ -293,29 +311,7 @@ d('ex aequo à la barre (docs/adr/0040)', () => {
     const { comp, ids } = competition({ ...f, phases });
     // Tour 1 : une poule de 6, ordre inverse du classement initial (ids[5] bat tout le monde)
     const order = [...ids].reverse();
-    const composition = [
-      {
-        poolId: `${comp.id}-r1-p1`,
-        number: 1,
-        fencerIds: order,
-        matches: order.flatMap((a, i) =>
-          order.slice(i + 1).map((b, j) => ({
-            matchId: `${comp.id}-r1-m${i}-${j}`,
-            fencerAId: a,
-            fencerBId: b,
-          }))
-        ),
-      },
-    ];
-    await call('generatePools', { competitionId: comp.id, composition });
-    for (const m of composition[0].matches) {
-      await call('recordScore', {
-        competitionId: comp.id,
-        matchId: m.matchId,
-        scoreA: 5,
-        scoreB: 1,
-      });
-    }
+    await playOrdered(comp.id, order);
     await call('closePoolRound', { competitionId: comp.id });
     // Tour 2 : tous ex aequo ; départage par la place au tour 1 (ids[5] … ids[2])
     await playCircles(comp.id, 2, circles(ids));
@@ -324,6 +320,41 @@ d('ex aequo à la barre (docs/adr/0040)', () => {
     await call('closePoolRound', { competitionId: comp.id });
     const closed = events(comp.id).filter(e => e.type === 'PoolRoundClosed')[1].payload as any;
     expect(closed.qualifiedIds).toEqual(order.slice(0, 4));
+  });
+
+  it('scission après deux tours : rang d’entrée = place au tour précédent', async () => {
+    const f = applyOperationsV2(
+      fctx,
+      [
+        { op: 'removePhase', phase: 'tableau' },
+        { op: 'insertPhase', brick: 'pool', at: 1 },
+        { op: 'insertPhase', brick: 'split', at: 2 },
+      ],
+      newId
+    );
+    const formula2: FormulaV2 = {
+      ...f,
+      phases: f.phases.map(p =>
+        p.kind === 'split'
+          ? {
+              ...p,
+              branches: p.branches.map((b, i) =>
+                i === 0
+                  ? { ...b, take: { mode: 'fixed_count', count: 4, ties: 'initial_ranking' } }
+                  : b
+              ),
+            }
+          : p
+      ),
+    };
+    const { comp, ids } = competition(formula2);
+    // Tour 1 : ordre inverse du classement initial
+    await playOrdered(comp.id, [...ids].reverse());
+    await call('closePoolRound', { competitionId: comp.id });
+    // Tour 2 : tous ex aequo ; la branche A prend les 4 premiers du tour 1
+    await playCircles(comp.id, 2, circles(ids));
+    const sim = await call('splitCompetition', { competitionId: comp.id, dryRun: true });
+    expect(sim.branches[0].fencers.map((x: any) => x.id)).toEqual([...ids].reverse().slice(0, 4));
   });
 
   it('MCP : même champ « ties » sur les outils de coupe (ADR-0008)', () => {

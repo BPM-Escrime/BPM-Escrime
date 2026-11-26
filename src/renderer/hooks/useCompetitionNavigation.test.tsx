@@ -9,6 +9,8 @@ import type { TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import React from 'react';
 import { BpmClientProvider } from '../api/BpmClientContext';
 import type { BpmClient } from '../../shared/api/client';
+import { getTableauTies, setTableauTies } from './tableauTiesChoice';
+import { FencerStatus, type PoolRanking } from '../../shared/types';
 
 vi.mock('../components/Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 const { confirmMock, chooseMock } = vi.hoisted(() => ({
@@ -24,7 +26,8 @@ const setup = (
   tableauMatches: TableauMatch[],
   rankingChanged = false,
   thirdPlaceMatch = false,
-  client?: BpmClient
+  client?: BpmClient,
+  extra: Record<string, unknown> = {}
 ) => {
   const fns = {
     setCurrentPhase: vi.fn(),
@@ -71,6 +74,7 @@ const setup = (
     groupTableaux: {},
     showSplitGroup: vi.fn(),
     ...fns,
+    ...extra,
   };
   const { result } = renderHook(
     () =>
@@ -115,6 +119,55 @@ describe('handleGoToTableau (#1996)', () => {
       expect(s.setCurrentPhase).toHaveBeenCalledWith('tableau');
     }
   );
+});
+
+describe('passage au tableau : ex aequo à la barre (ADR-0040)', () => {
+  // Formule : un tour, 1 qualifié pour le tableau ; deux tireurs ex aequo à la 1re place
+  const formula = {
+    version: 2,
+    general: {},
+    phases: [
+      { kind: 'pool', id: 'p', qualification: { mode: 'fixed_count', count: 1 } },
+      { kind: 'tableau', id: 't' },
+    ],
+  };
+  const row = (id: string): PoolRanking =>
+    ({ fencer: { id, status: FencerStatus.QUALIFIED }, rank: 1 }) as PoolRanking;
+  const extra = {
+    competition: { id: 'c', settings: { formula } },
+    overallRanking: [row('f1'), row('f2')],
+  };
+
+  it('ex aequo listés avant la génération ; le choix vaut pour ce tableau', async () => {
+    setTableauTies('c', undefined);
+    chooseMock.mockResolvedValueOnce('initial_ranking');
+    const s = setup([], false, false, undefined, extra);
+    s.go();
+    await vi.waitFor(() => expect(s.setCurrentPhase).toHaveBeenCalledWith('tableau'));
+    const asked = chooseMock.mock.calls[chooseMock.mock.calls.length - 1][0];
+    expect(asked.message).toContain('tiesAtBar.notice');
+    expect(getTableauTies('c')).toBe('initial_ranking');
+  });
+
+  it('choix annulé : rien n’est tiré', async () => {
+    chooseMock.mockResolvedValueOnce(null);
+    const s = setup([], false, false, undefined, extra);
+    s.go();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(s.setCurrentPhase).not.toHaveBeenCalled();
+    expect(s.onUpdate).not.toHaveBeenCalled();
+  });
+
+  it('sans ex aequo à la barre : pas de question, choix précédent oublié', () => {
+    setTableauTies('c', 'all');
+    chooseMock.mockClear();
+    const s = setup([], false, false);
+    s.go();
+    expect(chooseMock).not.toHaveBeenCalled();
+    expect(getTableauTies('c')).toBeUndefined();
+    expect(s.setCurrentPhase).toHaveBeenCalledWith('tableau');
+  });
 });
 
 describe('handleNextPoolRound par le moteur (docs/adr/0017)', () => {
