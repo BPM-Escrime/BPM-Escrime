@@ -1,6 +1,6 @@
 # ADR-0037 — Déroulé généré par la formule v2 : navigation, 0 tour de poules, tableau arrêté à N, phase après un tableau
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b, retrait de la dernière phase d'après, Q5, scission ouverte au MCP)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b, retrait de la dernière phase d'après, Q5, scission ouverte au MCP, publication GREG / FTP du classement du tableau arrêté)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape D ; question Q5), #1948 ; complète [ADR-0036](0036-formule-v2-arbre-par-phase.md), [ADR-0007](0007-format-evenement.md) et [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -82,8 +82,11 @@ eliminatedIds }`.
     (`rankingAfterStage`, comme le moteur) ;
   - étape close : onglet « Tableau (clos) » en lecture seule ; classement final, CSV, XML, PDF
     du classement et livret par `rankAfterStages` (libellé « Tableau de N ») et
-    `resultsTableauMatches` (tableau clos). La publication GREG / FTP par le moteur et le
-    pilotage par le MCP relèvent de l'étape F.
+    `resultsTableauMatches` (tableau clos). La publication GREG / FTP par le moteur reprend le
+    classement de l'écran (`rankAfterStages`, `originFinalRanking`). Le pilotage du tableau
+    arrêté par le MCP relève de l'étape F, sauf la scission (`split_competition`, ADR-0039).
+    _(Amendé le 2026-11-26 : remplace « La publication GREG / FTP par le moteur et le pilotage
+    par le MCP relèvent de l'étape F. »)_
 
 ## Conséquences
 
