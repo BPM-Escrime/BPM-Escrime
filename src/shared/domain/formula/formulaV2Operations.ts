@@ -838,7 +838,7 @@ function formulaIssues(
       out.push(remark('stopped_tableau_with_quest', 'tableau', 'tableau arrêté : sans Tour Quest'));
   }
   if (inBranch) out.push(...branchEndIssues(f.phases));
-  out.push(...poolQualificationIssues(f));
+  out.push(...poolQualificationIssues(f, scope.fencerCount));
   const placement = splitPlacementIssue(f);
   if (placement) out.push(placement);
   const split = f.phases.find(isSplit);

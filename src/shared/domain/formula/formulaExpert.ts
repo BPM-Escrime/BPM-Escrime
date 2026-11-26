@@ -1,7 +1,8 @@
 /**
  * BPM - Escrime - Mode expert de l'éditeur de formule (#2013 étape F, lot F2 ; docs/adr/0041)
  * Niveau simple : tours de poules, tableau complet, réglages courants. Mode expert, en plus :
- * scission, Tour Quest, tableau arrêté, ex aequo à la barre, répartition par cumul des tours,
+ * scission, Tour Quest, tableau arrêté, ex aequo à la barre, qualification « têtes de poule »
+ * (`pool_heads`, docs/adr/0043), répartition par cumul des tours,
  * ordre des matchs libre ou en vagues, barème à zones. Une formule reste valide quel que soit le mode : il ne
  * règle que ce que l'éditeur propose. Domaine pur.
  * Licensed under GPL-3.0
@@ -30,6 +31,7 @@ function phaseNeedsExpert(p: FormulaPhaseV2): boolean {
   if (p.kind === 'tableau') return !!p.stopAt || zonesScoring(p);
   return (
     customTies(p.qualification) ||
+    p.qualification.mode === 'pool_heads' ||
     p.seeding === 'cumulative' ||
     p.boutOrder === 'free' ||
     isWavesOrder(p.boutOrder) ||

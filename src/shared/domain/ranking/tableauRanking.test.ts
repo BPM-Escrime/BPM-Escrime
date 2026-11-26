@@ -179,3 +179,67 @@ describe('tableauRankingOfScreen : classement, PDF et résultats de l’écran (
     expect(ids(tableauRankingOfScreen(overall, [], options, drawn))).toEqual(['a', 'c']);
   });
 });
+
+describe('tableauCut : têtes de poule (pool_heads, docs/adr/0043, F4b)', () => {
+  const t = (id: string): PoolRanking['fencer'] => ({ id, lastName: id }) as PoolRanking['fencer'];
+  const poolOf = (n: number, list: string[]): Pool =>
+    ({
+      number: n,
+      fencers: list.map(t),
+      matches: [],
+      ranking: list.map((id, i) => ({ fencer: t(id), rank: i + 1 })),
+    }) as unknown as Pool;
+  const overall = (list: string[]): PoolRanking[] =>
+    list.map((id, i) => ({ fencer: t(id), rank: i + 1 })) as unknown as PoolRanking[];
+  const pools = [poolOf(1, ['a1', 'a2', 'a3']), poolOf(2, ['b1', 'b2', 'b3'])];
+  const general = overall(['a1', 'b1', 'a2', 'b2', 'a3', 'b3']);
+  const heads = { mode: 'pool_heads' as const, count: 4 };
+  const ids = (x: PoolRanking[]) => x.map(y => y.fencer.id);
+
+  it('épreuve non rapières : règle de la formule v2, 4 qualifiés croisés', () => {
+    const cut = tableauCut(general, pools, { ...baseOptions, tableauQualification: heads });
+    expect(ids(cut.ranking)).toEqual(['a1', 'b1', 'a2', 'b2']);
+    expect(cut.tiedAtBar).toBeNull();
+  });
+
+  it('rapières : la formule « têtes de poule » donne les demi-finales', () => {
+    const cut = tableauCut(general, pools, {
+      ...baseOptions,
+      isRapieres: true,
+      tableauQualification: heads,
+    });
+    expect(ids(cut.ranking)).toEqual(['a1', 'b1', 'a2', 'b2']);
+  });
+
+  it('rapières : sans « têtes de poule », mode hérité « semis » (valeur par défaut) ou toutes les équipes', () => {
+    const rapieres = { ...baseOptions, isRapieres: true };
+    expect(
+      ids(tableauCut(general, pools, { ...rapieres, rapieresTableauMode: 'semis' }).ranking)
+    ).toEqual(['a1', 'b1', 'a2', 'b2']);
+    expect(ids(tableauCut(general, pools, rapieres).ranking)).toHaveLength(6);
+  });
+
+  it('rapières : la formule prime sur le mode hérité', () => {
+    const cut = tableauCut(general, pools, {
+      ...baseOptions,
+      isRapieres: true,
+      rapieresTableauMode: 'normal',
+      tableauQualification: { mode: 'pool_heads', count: 2 },
+    });
+    expect(ids(cut.ranking)).toEqual(['a1', 'b1']);
+  });
+
+  it('ex aequo à la barre : proposés, choix de l’écran appliqué', () => {
+    const tied = [poolOf(1, ['a1', 'a2']), poolOf(2, ['b1', 'b2']), poolOf(3, ['c1', 'c2'])];
+    const rows = (['a1', 'b1', 'c1', 'a2', 'b2', 'c2'] as const).map((id, i) => ({
+      fencer: { id, lastName: id, ranking: id === 'a2' ? 9 : 1 },
+      rank: [1, 2, 3, 4, 4, 6][i],
+    })) as unknown as PoolRanking[];
+    const options = { ...baseOptions, tableauQualification: heads };
+    const all = tableauCut(rows, tied, options);
+    expect(all.tiedAtBar).toEqual({ rank: 4, fencerIds: ['a2', 'b2'], places: 1 });
+    expect(ids(all.ranking)).toHaveLength(5);
+    const kept = tableauCut(rows, tied, { ...options, ties: 'initial_ranking' });
+    expect(ids(kept.ranking)).toEqual(['a1', 'b1', 'c1', 'b2']);
+  });
+});

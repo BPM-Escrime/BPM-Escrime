@@ -459,7 +459,9 @@ export const contract = {
       rapieresTableauMode: z
         .enum(['normal', 'third', 'all', 'semis'])
         .optional()
-        .describe('Tournoi des rapières : mode de tableau choisi'),
+        .describe(
+          'Tournoi des rapières : mode de tableau, ancien réglage (alias ; la formule porte maintenant le mode : qualification pool_heads, thirdPlace, allPlaces, docs/adr/0043)'
+        ),
       group: SplitGroup,
       replace: z.boolean().optional().describe('Remplacer un tableau existant'),
       ties: TiesAtBarInput,

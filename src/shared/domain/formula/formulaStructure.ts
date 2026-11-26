@@ -36,9 +36,16 @@ export function fightPhaseIssues(phases: readonly FormulaPhaseV2[]): FormulaRema
       ];
 }
 
-/** Nombre fixé par une règle de qualification (nombre ou taille de tableau) ; null : autre mode */
+/**
+ * Nombre fixé par une règle de qualification (nombre, taille de tableau, têtes de poule) ; null :
+ * autre mode
+ */
 const fixedNumber = (rule?: AdvancementRule): number | null => {
-  if (!rule || (rule.mode !== 'fixed_count' && rule.mode !== 'fixed_bracket')) return null;
+  if (
+    !rule ||
+    (rule.mode !== 'fixed_count' && rule.mode !== 'fixed_bracket' && rule.mode !== 'pool_heads')
+  )
+    return null;
   const n = Number(rule.count);
   return Number.isFinite(n) ? n : null;
 };
@@ -59,6 +66,21 @@ export function qualificationIssues(
   where: string,
   phase: string
 ): FormulaRemark[] {
+  if (rule?.mode === 'pool_heads') {
+    // Têtes de poule, puis suivants (docs/adr/0043, F4b) : un nombre, et un tableau juste après
+    if (!(Number.isInteger(rule.count) && Number(rule.count) >= 1))
+      return [
+        remark('pool_heads_count', phase, `${where} : têtes de poule, nombre de qualifiés ≥ 1`),
+      ];
+    if (next?.kind !== 'tableau')
+      return [
+        remark(
+          'pool_heads_needs_tableau',
+          phase,
+          `${where} : « têtes de poule » ne qualifie que pour un tableau qui suit le tour`
+        ),
+      ];
+  }
   const n = fixedNumber(rule);
   if (n === null || !next) return [];
   if (next.kind === 'pool') {
@@ -100,15 +122,33 @@ export function qualificationIssues(
   return [];
 }
 
-/** S3 et S4 de la qualification de chaque tour de poules, vers la phase qui le suit */
-export function poolQualificationIssues(f: FormulaV2): FormulaRemark[] {
+/**
+ * S3 et S4 de la qualification de chaque tour de poules, vers la phase qui le suit. « Têtes de
+ * poule » : avec l'effectif connu `fencerCount`, jamais moins de poules que de tireurs
+ * qualifiés (S4, docs/adr/0043) ; jugé sur le premier tour, dont l'effectif est celui de l'épreuve.
+ */
+export function poolQualificationIssues(f: FormulaV2, fencerCount?: number): FormulaRemark[] {
   const keys = phaseKeys(f.phases);
   let round = 0;
-  return f.phases.flatMap((p, i) =>
-    p.kind === 'pool'
-      ? qualificationIssues(p.qualification, f.phases[i + 1], `tour ${++round}`, keys[i])
-      : []
-  );
+  return f.phases.flatMap((p, i) => {
+    if (p.kind !== 'pool') return [];
+    const where = `tour ${++round}`;
+    const out = qualificationIssues(p.qualification, f.phases[i + 1], where, keys[i]);
+    const heads = p.qualification;
+    if (heads.mode === 'pool_heads' && out.length === 0 && i === 0 && fencerCount) {
+      // Le moins de poules possible : tireurs répartis au plus par `sizeMax`
+      const fewest = Math.ceil(fencerCount / Math.max(1, p.sizeMax));
+      if (fewest > Number(heads.count))
+        out.push(
+          remark(
+            'pool_heads_more_pools',
+            keys[i],
+            `${where} : ${fencerCount} tireurs font au moins ${fewest} poules de ${p.sizeMax} au plus, plus que les ${heads.count} qualifiés « têtes de poule »`
+          )
+        );
+    }
+    return out;
+  });
 }
 
 /**

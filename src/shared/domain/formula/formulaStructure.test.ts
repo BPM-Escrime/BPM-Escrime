@@ -187,6 +187,50 @@ describe('S4 : le nombre se répartit en poules de sizeMin à sizeMax', () => {
   });
 });
 
+describe('têtes de poule (pool_heads) : remarques S3 / S4 (docs/adr/0043, F4b, ADR-0041)', () => {
+  const heads = (count: number) => ({ mode: 'pool_heads' as const, count });
+  const withHeads = (count: number, p: Partial<PoolRoundPhase> = {}) =>
+    formula(pool({ qualification: heads(count), ...p }), tableau());
+
+  it('avant un tableau, avec assez de qualifiés : aucune remarque', () => {
+    expect(formulaV2Issues(withHeads(4), scope)).toEqual([]);
+  });
+
+  it('plus de poules que de qualifiés : remarque bloquante sur le tour (S4)', () => {
+    // 40 tireurs en poules de 10 au plus : 4 poules au moins
+    const f = withHeads(4, { sizeMin: 5, sizeMax: 10 });
+    expect(codes(f, { ...scope, fencerCount: 40 })).not.toContain('pool_heads_more_pools');
+    const issues = formulaV2Issues(f, { ...scope, fencerCount: 41 });
+    expect(issues.map(r => r.code)).toContain('pool_heads_more_pools');
+    expect(issues.find(r => r.code === 'pool_heads_more_pools')?.phase).toBe('pool-0');
+    // effectif inconnu : pas de blocage
+    expect(codes(f)).not.toContain('pool_heads_more_pools');
+  });
+
+  it('nombre de qualifiés : entier ≥ 1', () => {
+    expect(codes(withHeads(0))).toContain('pool_heads_count');
+    expect(codes(formula(pool({ qualification: { mode: 'pool_heads' } }), tableau()))).toContain(
+      'pool_heads_count'
+    );
+  });
+
+  it('ne qualifie que pour un tableau qui suit le tour', () => {
+    expect(codes(formula(pool({ qualification: heads(4) })))).toContain('pool_heads_needs_tableau');
+    expect(codes(formula(pool({ qualification: heads(4) }), pool(), tableau()))).toContain(
+      'pool_heads_needs_tableau'
+    );
+  });
+
+  it('un seul qualifié ne suffit pas au tableau (S3)', () => {
+    expect(codes(withHeads(1))).toContain('qualified_below_tableau_min');
+  });
+
+  it('réglage expert : la formule rallume le mode expert', () => {
+    expect(formulaNeedsExpert(withHeads(4))).toBe(true);
+    expect(formulaNeedsExpert(base())).toBe(false);
+  });
+});
+
 describe('S5 : chaque branche finit par une phase qui classe', () => {
   it('branche terminée par un tableau arrêté', () => {
     const s = rank(16);

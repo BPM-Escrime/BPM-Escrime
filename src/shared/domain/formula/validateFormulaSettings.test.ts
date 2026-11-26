@@ -107,6 +107,24 @@ describe('validateFormulaSettings', () => {
     expect(v1('tirage')).toEqual(['customFormula.phases[0].config.advancementRule.ties']);
   });
 
+  it('formule à la carte : « têtes de poule » connu, nombre ≥ 1 (docs/adr/0043, F4b)', () => {
+    const v1 = (rule: Record<string, unknown>) =>
+      fields({
+        ...base(),
+        customFormula: {
+          version: 1,
+          phases: [
+            { id: 'p1', type: 'pool_round', config: { advancementRule: rule } },
+            { id: 'p2', type: 'direct_elimination', config: {} },
+          ],
+        } as never,
+      });
+    expect(v1({ mode: 'pool_heads', count: 4 })).toEqual([]);
+    expect(v1({ mode: 'pool_heads', count: 0 })).toEqual([
+      'customFormula.phases[0].config.advancementRule.count',
+    ]);
+  });
+
   it('formule à la carte : version, phases, règles de passage, taille de tableau', () => {
     const issues = fields({
       ...base(),

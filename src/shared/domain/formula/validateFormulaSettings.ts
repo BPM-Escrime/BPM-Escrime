@@ -34,7 +34,14 @@ export const FORMULA_LIMITS = {
 const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
 const PHASE_TYPES = ['pool_round', 'direct_elimination', 'classification'];
 const POOL_BOUT_ORDERS: readonly string[] = ['fie', 'free', 'waves', 'waves_classic'];
-const ADVANCEMENT = ['all', 'percentage', 'fixed_count', 'fixed_bracket', 'pool_winner'];
+const ADVANCEMENT = [
+  'all',
+  'percentage',
+  'fixed_count',
+  'fixed_bracket',
+  'pool_winner',
+  'pool_heads',
+];
 
 function range(
   out: FormulaIssue[],
@@ -79,7 +86,11 @@ function checkPhase(out: FormulaIssue[], node: FormulaPhaseNode, i: number, size
           min: 1,
           max: 100,
         });
-      } else if (rule.mode === 'fixed_count' || rule.mode === 'fixed_bracket') {
+      } else if (
+        rule.mode === 'fixed_count' ||
+        rule.mode === 'fixed_bracket' ||
+        rule.mode === 'pool_heads'
+      ) {
         range(out, `${at}.config.advancementRule.count`, rule.count, { min: 1 });
       }
       // Ex aequo à la barre (ADR-0040) : 'barrage' attend le lot F1b

@@ -11,7 +11,7 @@ const positive = (n: unknown): number | undefined =>
 
 /**
  * Nombre de qualifiés selon la règle (undefined = tous).
- * `pool_winner` est géré à part (vainqueurs de poule) : undefined ici.
+ * `pool_winner` est géré à part (vainqueurs de poule) : undefined ici. `pool_heads` : `count`.
  */
 export function getAdvancementCount(
   activeCount: number,
@@ -25,6 +25,8 @@ export function getAdvancementCount(
       return Math.max(1, Math.round((activeCount * pct) / 100));
     }
     case 'fixed_count':
+    case 'pool_heads':
+      // Têtes de poule : `count` qualifiés, choisis rang de poule par rang (poolHeads.ts)
       return positive(rule.count);
     case 'fixed_bracket': {
       const target = positive(rule.count);

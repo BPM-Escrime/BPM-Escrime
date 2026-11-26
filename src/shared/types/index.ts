@@ -511,8 +511,12 @@ export interface RankingCriterion {
   enabled: boolean;
 }
 
+/**
+ * `pool_heads` (docs/adr/0043, F4b) : têtes de poule, puis suivants, jusqu'à `count` — premiers de
+ * chaque poule, puis deuxièmes, etc., chaque rang de poule pris dans l'ordre du classement général.
+ */
 export type AdvancementMode =
-  'all' | 'percentage' | 'fixed_count' | 'fixed_bracket' | 'pool_winner';
+  'all' | 'percentage' | 'fixed_count' | 'fixed_bracket' | 'pool_winner' | 'pool_heads';
 
 // Critère de séparation post-poules en deux tableaux distincts (compétition couplée)
 export type PostPoolSplitCriteria = 'gender';
@@ -520,7 +524,7 @@ export type PostPoolSplitCriteria = 'gender';
 export interface AdvancementRule {
   mode: AdvancementMode;
   percentage?: number; // 0-100, utilisé si mode === 'percentage'
-  count?: number; // utilisé si mode === 'fixed_count' ou 'fixed_bracket'
+  count?: number; // utilisé si mode === 'fixed_count', 'fixed_bracket' ou 'pool_heads'
   /** Ex aequo à la barre (docs/adr/0040) : absent = 'all' */
   ties?: TiesAtBar;
 }
