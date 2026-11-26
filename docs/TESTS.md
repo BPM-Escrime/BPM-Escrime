@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 24 | 282 |
-| `src/main/` | 160 | 1395 |
+| `src/main/` | 160 | 1410 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 41 | 217 |
 | `src/renderer/components/` | 139 | 776 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 52 | 627 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **641** | **5073** |
+| **Total** | **641** | **5088** |
 
-Unitaires : 621 fichiers, 5018 tests. E2E : 20 fichiers, 55 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 621 fichiers, 5033 tests. E2E : 20 fichiers, 55 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2976,10 +2976,11 @@ Unitaires : 621 fichiers, 5018 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/cyrano/pisteHub.test.ts</code> — 55 tests</summary>
+<summary><code>src/main/cyrano/pisteHub.test.ts</code> — 56 tests</summary>
 
 - **PisteHub — mode appareil maître (#1720)**
   - DISP du match chargé : Id tronqués à 8 caractères, arme, n° de poule et de match
+  - sous-piste (#2300) : son match ni son effacement ne passent sur l’appareil de la piste
   - INFO actif : score et cartons de l’appareil appliqués à l’arène malgré la troncature des Id
   - inversion droite/gauche : A à gauche de l’appareil, résultats non intervertis
   - chrono : F → update\_timer (en marche), H → pause\_timer, diffusés avec source device
@@ -4437,13 +4438,16 @@ Unitaires : 621 fichiers, 5018 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/arenaControl.selectMatch.test.ts</code> — 3 tests</summary>
+<summary><code>src/main/remote/arenaControl.selectMatch.test.ts</code> — 5 tests</summary>
 
 - **arena\_control select\_match (#1882)**
   - reprend fencerA / fencerB / referee de la session
 - **arena\_control select\_match, appareil maître (#1999)**
   - rouvrir le match en cours garde score et cartons, et recale la tablette
   - mode manuel ou appareil hors ligne : sélection habituelle
+- **arena\_control select\_match, sous-pistes (#2300)**
+  - match préchargé sur la piste : la piste passe au suivant, pas les autres pistes
+  - match ouvert ou lancé sur la piste : jamais remplacé
 
 </details>
 
@@ -4467,7 +4471,7 @@ Unitaires : 621 fichiers, 5018 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/arenaSlots.test.ts</code> — 7 tests</summary>
+<summary><code>src/main/remote/arenaSlots.test.ts</code> — 15 tests</summary>
 
 - **sous-pistes des rapières (#1118)**
   - identifiants : piste de base et détection
@@ -4477,6 +4481,15 @@ Unitaires : 621 fichiers, 5018 tests. E2E : 20 fichiers, 55 tests (comptage stat
   - libération : seules les sous-pistes sans match en cours
   - matchs pris par les autres sous-pistes (terminés exclus)
   - match seulement préchargé (ni ouvert, ni chrono lancé) : pas pris
+- **sous-pistes hors vagues : poule partagée par plusieurs tablettes (#2300)**
+  - une seule tablette : la piste, comme avant
+  - deuxième tablette pendant un match : sous-piste, le match de la piste continue
+  - tablette absente : sa remplaçante reprend la piste et son match
+  - piste libérée : la tablette de la sous-piste y revient, sous-piste vide supprimée
+  - sous-piste au match ouvert : gardée, même piste libre et tablette déconnectée
+  - piste inconnue ou pleine
+  - arène occupée : match ouvert ou lancé, non terminé
+  - sous-pistes pour une piste de poule seulement (ni tableau, ni entraînement)
 
 </details>
 
@@ -5032,7 +5045,7 @@ Unitaires : 621 fichiers, 5018 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remoteScoreServer.test.ts</code> — 69 tests</summary>
+<summary><code>src/main/remoteScoreServer.test.ts</code> — 73 tests</summary>
 
 - **RemoteScoreServer**
   - **démarrage du serveur**
@@ -5093,6 +5106,11 @@ Unitaires : 621 fichiers, 5018 tests. E2E : 20 fichiers, 55 tests (comptage stat
     - rapières : sous-piste authentifiée avec le jeton de la piste (#1118)
     - les réassignations suivantes se rajoutent par le haut
     - joué ensuite, puis la piste reprend sa propre poule
+    - **plusieurs tablettes sur une piste de poule, hors rapières (#2300)**
+      - une deuxième tablette arbitre un autre match sans couper celui de la piste
+      - match préchargé sur la piste pris par la sous-piste : la piste passe au suivant
+      - tablette de la piste partie : la suivante reprend la piste
+      - piste de tableau : pas de sous-piste
   - **arbitre des matchs de tableau assigné depuis l'appli (#977)**
     - arbitre transmis au match chargé sur la tablette
     - changement d'arbitre → match en cours mis à jour
