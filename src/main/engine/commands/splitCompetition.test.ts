@@ -5,6 +5,7 @@
  * projection ; après les poules et après un tableau arrêté clos ; refus, simulation, retour
  * arrière sur échec au milieu. Base SQLite réelle.
  */
+import { resultsXml } from './exportResults';
 import { originFinalRanking, splitHistoryOf } from '../../../shared/domain/formula/splitPlan';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseManager } from '../../../database';
@@ -32,7 +33,7 @@ import { projectCompetition } from '../../../shared/domain/journal/projectCompet
 import { compareWithState, stateView } from '../../../shared/domain/journal/compareWithState';
 import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import type { CommandContext } from './context';
-import { listMatches } from './sport';
+import { listMatches, resultsData } from './sport';
 import { invoke } from '../api/engine';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
@@ -193,6 +194,9 @@ d('splitCompetition après un tour de poules (docs/adr/0039)', () => {
     // Filles : titre, formule de la branche, origine notée
     expect(a.title).toBe('Coupe – Tableau A');
     expect(b.title).toBe('Coupe – Tableau B');
+    // Publication à part (GREG, FTP, PDF) : chaque fille porte le libellé de sa branche
+    expect(resultsXml(resultsData(ctx, a.id))).toContain('Coupe – Tableau A');
+    expect(resultsXml(resultsData(ctx, b.id))).toContain('Coupe – Tableau B');
     const split = formula.phases[1] as SplitPhase;
     expect(a.settings?.formula?.phases).toEqual(split.branches[0].phases);
     expect(a.settings?.splitFromCompetitionId).toBe(comp.id);
