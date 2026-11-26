@@ -29,10 +29,10 @@ Dans Claude Code : `/plugin install bpm-escrime --marketplace BPM-Escrime/BPM-Es
 (depuis un clone : `claude --plugin-dir plugins/bpm-escrime`), puis `/plugin configure bpm-escrime`
 et `/reload-plugins`. Options (`userConfig`, #1947) :
 
-| Option | Rangement | Repli si non renseignée |
-|---|---|---|
-| `mcp_token` | Stockage sécurisé du système | `BPM_ESCRIME_MCP_TOKEN` |
-| `mcp_port` | `settings.json` | `BPM_ESCRIME_MCP_PORT`, sinon 8067 |
+| Option      | Rangement                    | Repli si non renseignée            |
+| ----------- | ---------------------------- | ---------------------------------- |
+| `mcp_token` | Stockage sécurisé du système | `BPM_ESCRIME_MCP_TOKEN`            |
+| `mcp_port`  | `settings.json`              | `BPM_ESCRIME_MCP_PORT`, sinon 8067 |
 
 Le repli passe par la valeur par défaut des options (`${BPM_ESCRIME_MCP_TOKEN:-}`), développée
 par Claude Code après `${user_config.…}`. Une variable exportée dans `~/.zshrc` ou `~/.bashrc`
@@ -67,21 +67,21 @@ il n'est pas limité aux dossiers de l'agent.
 
 ## Outils (lecture)
 
-| Outil | Arguments | Rend |
-|---|---|---|
-| `list_competitions` | — | Épreuves : titre, date, arme, sexe, catégorie, journée, phase en cours |
-| `get_competition` | `competitionId` | Détail, réglages, phases, nombre de tireurs et de poules |
-| `list_fencers` | `competitionId` | Tireurs : nom, club, statut de pointage, classement |
-| `get_pool_ranking` | `competitionId`, `poolId?` | Classement de chaque poule, matchs joués / total |
-| `get_bracket` | `competitionId`, `group?` | Matchs du tableau : tour, tireurs, score, vainqueur ; tableaux séparés : groupe de chaque match, filtre `group` |
-| `list_referees` | `competitionId` | Arbitres : nom, club, catégorie, statut |
-| `day_overview` | `dayId?` | Journées ; avec `dayId` : arbitres partagés, conflits |
-| `strip_occupation` | `dayId` | Pistes de la journée : occupée, libre, réservée |
-| `server_status` | — | Serveurs distants : URL, séance, arènes, écrans connectés |
-| `cyrano_status` | — | Appareils de piste Cyrano : port, pistes, statut, alertes |
-| `list_matches` | `competitionId`, `poolNumber?`, `state?` (`pending` / `ready` / `done`) | Matchs de poule et de tableau : `matchId`, tireurs, score, état, piste |
-| `get_settings` | — | Paramètres du poste (langue, thème, HTTPS et interface du serveur distant), pistes de la salle par défaut |
-| `list_venues` | — | Salles déclarées et leurs pistes |
+| Outil               | Arguments                                                               | Rend                                                                                                            |
+| ------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `list_competitions` | —                                                                       | Épreuves : titre, date, arme, sexe, catégorie, journée, phase en cours                                          |
+| `get_competition`   | `competitionId`                                                         | Détail, réglages, phases, nombre de tireurs et de poules                                                        |
+| `list_fencers`      | `competitionId`                                                         | Tireurs : nom, club, statut de pointage, classement                                                             |
+| `get_pool_ranking`  | `competitionId`, `poolId?`                                              | Classement de chaque poule, matchs joués / total                                                                |
+| `get_bracket`       | `competitionId`, `group?`                                               | Matchs du tableau : tour, tireurs, score, vainqueur ; tableaux séparés : groupe de chaque match, filtre `group` |
+| `list_referees`     | `competitionId`                                                         | Arbitres : nom, club, catégorie, statut                                                                         |
+| `day_overview`      | `dayId?`                                                                | Journées ; avec `dayId` : arbitres partagés, conflits                                                           |
+| `strip_occupation`  | `dayId`                                                                 | Pistes de la journée : occupée, libre, réservée                                                                 |
+| `server_status`     | —                                                                       | Serveurs distants : URL, séance, arènes, écrans connectés                                                       |
+| `cyrano_status`     | —                                                                       | Appareils de piste Cyrano : port, pistes, statut, alertes                                                       |
+| `list_matches`      | `competitionId`, `poolNumber?`, `state?` (`pending` / `ready` / `done`) | Matchs de poule et de tableau : `matchId`, tireurs, score, état, piste                                          |
+| `get_settings`      | —                                                                       | Paramètres du poste (langue, thème, HTTPS et interface du serveur distant), pistes de la salle par défaut       |
+| `list_venues`       | —                                                                       | Salles déclarées et leurs pistes                                                                                |
 
 ## Outils d'écriture (lot 2)
 
@@ -89,16 +89,16 @@ Proposés seulement si **« Autoriser l'écriture »** est coché (désactivé p
 Chaque outil accepte `dryRun: true` (rapport sans écriture). Toute écriture prévient l'écran
 (`onCompetitionEvents` : `competitions:changed`, `fencers:changed`), qui se recharge.
 
-| Outil | Arguments | Effet |
-|---|---|---|
-| `import_day` | `name`, `date`, `stripCount?`, `location?`, `competitions[]` (`title`, `weapon`, `gender`, `category`, `fencersFile?`), `refereesFile?` | Journée multi-épreuves complète ; **idempotent** : journée retrouvée par nom + date, épreuve par titre, tireurs et arbitres dédoublonnés |
-| `create_competition` | `title`, `date`, `weapon` (E/F/S), `gender` (M/F/X), `category`, `location?` | Épreuve créée avec les réglages par défaut de la fenêtre « Nouvelle compétition » (`buildDefaultCompetitionSettings`) |
-| `import_fencers` | `competitionId`, `path` (absolu ; `.xml` `.cotcot` `.txt` `.csv` `.fff` `.xlsx`, 5 Mo max) | Format détecté (XML FFE / cotcot, FFF, CSV, classeur Excel, TXT) ; doublons ignorés (même licence, ou même nom et prénom) |
-| `check_in` | `competitionId`, `fencers` (ids ou dossards), `present` | Pointage ; abandons, exclusions, forfaits laissés tels quels |
-| `import_referees` | `path`, et `competitionId` ou `dayId` (+ `weapons[]`) | Arbitres (Engarde, ou XML `<Arbitres>`) d'une épreuve, ou du groupe d'une journée puis reportés dans ses épreuves ; doublons ignorés |
-| `start_remote_server` | `competitionId`, `port?` | Serveur des tablettes et écrans (HTTPS et interface : paramètres du poste) |
-| `stop_remote_server` | `competitionId` | ⚠️ Arrêt : tablettes et écrans déconnectés |
-| `delete_competition` | `competitionId`, `confirmTitle` | ⚠️ Suppression définitive ; titre exact exigé |
+| Outil                 | Arguments                                                                                                                               | Effet                                                                                                                                    |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `import_day`          | `name`, `date`, `stripCount?`, `location?`, `competitions[]` (`title`, `weapon`, `gender`, `category`, `fencersFile?`), `refereesFile?` | Journée multi-épreuves complète ; **idempotent** : journée retrouvée par nom + date, épreuve par titre, tireurs et arbitres dédoublonnés |
+| `create_competition`  | `title`, `date`, `weapon` (E/F/S), `gender` (M/F/X), `category`, `location?`                                                            | Épreuve créée avec les réglages par défaut de la fenêtre « Nouvelle compétition » (`buildDefaultCompetitionSettings`)                    |
+| `import_fencers`      | `competitionId`, `path` (absolu ; `.xml` `.cotcot` `.txt` `.csv` `.fff` `.xlsx`, 5 Mo max)                                              | Format détecté (XML FFE / cotcot, FFF, CSV, classeur Excel, TXT) ; doublons ignorés (même licence, ou même nom et prénom)                |
+| `check_in`            | `competitionId`, `fencers` (ids ou dossards), `present`                                                                                 | Pointage ; abandons, exclusions, forfaits laissés tels quels                                                                             |
+| `import_referees`     | `path`, et `competitionId` ou `dayId` (+ `weapons[]`)                                                                                   | Arbitres (Engarde, ou XML `<Arbitres>`) d'une épreuve, ou du groupe d'une journée puis reportés dans ses épreuves ; doublons ignorés     |
+| `start_remote_server` | `competitionId`, `port?`                                                                                                                | Serveur des tablettes et écrans (HTTPS et interface : paramètres du poste)                                                               |
+| `stop_remote_server`  | `competitionId`                                                                                                                         | ⚠️ Arrêt : tablettes et écrans déconnectés                                                                                               |
+| `delete_competition`  | `competitionId`, `confirmTitle`                                                                                                         | ⚠️ Suppression définitive ; titre exact exigé                                                                                            |
 
 ## Orchestration sportive (lot 3)
 
@@ -107,13 +107,13 @@ dans le main (`src/main/engine/commands/sport.ts`). Chaque écriture met à jour
 session, puis prévient l'écran (`onCompetitionEvents` : `session:changed`), qui le relit. L'état de
 session porte une révision : une sauvegarde de l'écran faite sur un état périmé est refusée, puis relue.
 
-| Outil | Arguments | Effet |
-|---|---|---|
-| `generate_pools` | `competitionId`, `poolCount?`, `minPerPool?`, `maxPerPool?`, `separation?`, `composition?`, `replace?`, `dryRun?` | Tirage sur les tireurs pointés (serpentin, clubs et régions séparés), ou composition préparée (`composition`) ; poules lancées, poule n sur la piste n ; `PoolsGenerated` au journal. ⚠️ `replace` efface des poules jouées ou un tableau |
-| `assign_referees` | `competitionId`, `replace?`, `includeUnchecked?` | Un arbitre principal par poule, pointé, hors club des tireurs, charge équilibrée |
-| `record_score` | `competitionId`, `matchId`, `scoreA`, `scoreB`, `winner?`, `specialStatus?`, `priority?`, `dryRun?` | Score de poule ou de tableau, contrôles de l'écran (score max, égalité, abandon / forfait / exclusion propagés) ; `dryRun` contrôle sans écrire |
-| `build_bracket` | `competitionId`, `thirdPlaceMatch?`, `composition?`, `replace?`, `dryRun?` | Tableau depuis le classement après poules, ou placement donné (`composition`) ; `TableauGenerated` au journal. ⚠️ `replace` efface un tableau joué |
-| `export_results` | `competitionId`, `format` (`xml` / `fff` / `csv` / `html` / `pdf`), `path`, `overwrite?` | Fichier de résultats dans un dossier accessible à l'agent |
+| Outil             | Arguments                                                                                                         | Effet                                                                                                                                                                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `generate_pools`  | `competitionId`, `poolCount?`, `minPerPool?`, `maxPerPool?`, `separation?`, `composition?`, `replace?`, `dryRun?` | Tirage sur les tireurs pointés (serpentin, clubs et régions séparés), ou composition préparée (`composition`) ; poules lancées, poule n sur la piste n ; `PoolsGenerated` au journal. ⚠️ `replace` efface des poules jouées ou un tableau |
+| `assign_referees` | `competitionId`, `replace?`, `includeUnchecked?`                                                                  | Un arbitre principal par poule, pointé, hors club des tireurs, charge équilibrée                                                                                                                                                          |
+| `record_score`    | `competitionId`, `matchId`, `scoreA`, `scoreB`, `winner?`, `specialStatus?`, `priority?`, `dryRun?`               | Score de poule ou de tableau, contrôles de l'écran (score max, égalité, abandon / forfait / exclusion propagés) ; `dryRun` contrôle sans écrire                                                                                           |
+| `build_bracket`   | `competitionId`, `thirdPlaceMatch?`, `composition?`, `replace?`, `dryRun?`                                        | Tableau depuis le classement après poules, ou placement donné (`composition`) ; `TableauGenerated` au journal. ⚠️ `replace` efface un tableau joué                                                                                        |
+| `export_results`  | `competitionId`, `format` (`xml` / `fff` / `csv` / `html` / `pdf`), `path`, `overwrite?`                          | Fichier de résultats dans un dossier accessible à l'agent                                                                                                                                                                                 |
 
 Formats pilotables : épreuve individuelle, un tour de poules, tableau simple avec ou sans petite
 finale. Équipes, rapières, tours de poules multiples et « tirer toutes les places » restent à
@@ -139,45 +139,44 @@ d'arènes proposé par le serveur distant ; chaque piste peut porter un libellé
 (IP, port, mode), repris par Cyrano tant que l'épreuve ou sa journée n'a pas sa propre table
 (Paramètres → Salles et pistes).
 
-| Outil | Arguments | Effet |
-|---|---|---|
-| `update_settings` | `language?`, `theme?`, `remoteHttps?`, `remoteInterface?` | Paramètres du poste (liste fermée : ni MCP, ni dossiers de l'agent) |
-| `upsert_venue` | `name`, `id?`, `stripCount?`, `isDefault?` | Salle et ses pistes ; la première devient la salle par défaut |
-| `set_default_venue` | `venueId` | Salle par défaut |
+| Outil               | Arguments                                                 | Effet                                                               |
+| ------------------- | --------------------------------------------------------- | ------------------------------------------------------------------- |
+| `update_settings`   | `language?`, `theme?`, `remoteHttps?`, `remoteInterface?` | Paramètres du poste (liste fermée : ni MCP, ni dossiers de l'agent) |
+| `upsert_venue`      | `name`, `id?`, `stripCount?`, `isDefault?`                | Salle et ses pistes ; la première devient la salle par défaut       |
+| `set_default_venue` | `venueId`                                                 | Salle par défaut                                                    |
 
 ## Séances du club (Mode Club, #1872)
 
 Mêmes dépôts que l'onglet Séances (`db.club`). Lecture : `list_clubs`, `list_club_sessions`,
 `get_club_session` (présents et encadrement par nom, plan, notes, bilan). Écriture, sur autorisation :
 
-| Outil | Effet |
-|---|---|
-| `create_club_session` | Séance du club : date, intitulé, arme, pistes, maîtres d'armes, objectifs, tranche d'âge ; `planned: true` la prépare sans l'ouvrir |
-| `start_club_session` | Ouvre une séance préparée |
-| `close_club_session` | Ferme une séance ouverte : combats non terminés annulés, séance déliée du serveur d'entraînement |
-| `reopen_club_session` | Rouvre une séance fermée |
-| `update_club_session` | Modifie les champs fournis, dont le bilan (`feedback` : `rating` 1 à 5, `wentWell`, `toImprove`) et les notes |
-| `check_in_club_members` | Pointe (`present: true`) ou dépointe des membres (200 au plus par appel) |
+| Outil                   | Effet                                                                                                                               |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `create_club_session`   | Séance du club : date, intitulé, arme, pistes, maîtres d'armes, objectifs, tranche d'âge ; `planned: true` la prépare sans l'ouvrir |
+| `start_club_session`    | Ouvre une séance préparée                                                                                                           |
+| `close_club_session`    | Ferme une séance ouverte : combats non terminés annulés, séance déliée du serveur d'entraînement                                    |
+| `reopen_club_session`   | Rouvre une séance fermée                                                                                                            |
+| `update_club_session`   | Modifie les champs fournis, dont le bilan (`feedback` : `rating` 1 à 5, `wentWell`, `toImprove`) et les notes                       |
+| `check_in_club_members` | Pointe (`present: true`) ou dépointe des membres (200 au plus par appel)                                                            |
 
 Pas de suppression de séance par l'agent, ni de saisie de combats : à l'écran. Pas de données
 personnelles au-delà des noms (ni licence, ni date de naissance). Aucune notification n'est
 encore envoyée à l'écran du club après une écriture de l'agent.
 
-
-| Fichier | Rôle |
-|---|---|
-| `src/main/mcp/mcpTools.ts` | Outils en lecture |
-| `src/main/mcp/mcpWriteTools.ts` | Outils d'écriture (lot 2) |
-| `src/main/mcp/mcpAdminTools.ts` | Paramétrage, salles, arbitres, serveur distant, suppression |
-| `src/main/mcp/mcpSportTools.ts` | Orchestration sportive (lot 3) |
-| `src/main/mcp/mcpClubTools.ts` | Séances du Mode Club |
-| `src/main/engine/commands/` | Commandes du moteur (ADR-0003, ex-`src/main/domain`) : `sport.ts` (poules, scores, tableau), `exportResults.ts`, `settings.ts`, `files.ts` |
-| `src/main/batchImport.ts`, `src/main/cliArgs.ts` | `--batch-import`, `--mcp*` |
-| `src/main/mcp/mcpServer.ts` | Serveur HTTP JSON-RPC, jeton, contrôle Host / Origin |
-| `src/main/mcp/mcpSettings.ts` | Réglages et jeton chiffré |
-| `src/main/mcp/mcpController.ts` | Contrôleur du serveur (réglages, jeton, journal), démarrage à l'ouverture de la base ; opérations `getMcpStatus`, `updateMcpSettings`, `regenerateMcpToken`, `listMcpLog` par le port du poste (ADR-0022) |
-| `src/renderer/components/McpSettingsSection.tsx` | Section des Paramètres |
-| `plugins/bpm-escrime/` | Plugin Claude Code : `.mcp.json`, skill, commandes `/bp-etat`, `/bp-journee`, `/bp-epreuve` ; marketplace `.claude-plugin/marketplace.json` |
+| Fichier                                          | Rôle                                                                                                                                                                                                      |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/main/mcp/mcpTools.ts`                       | Outils en lecture                                                                                                                                                                                         |
+| `src/main/mcp/mcpWriteTools.ts`                  | Outils d'écriture (lot 2)                                                                                                                                                                                 |
+| `src/main/mcp/mcpAdminTools.ts`                  | Paramétrage, salles, arbitres, serveur distant, suppression                                                                                                                                               |
+| `src/main/mcp/mcpSportTools.ts`                  | Orchestration sportive (lot 3)                                                                                                                                                                            |
+| `src/main/mcp/mcpClubTools.ts`                   | Séances du Mode Club                                                                                                                                                                                      |
+| `src/main/engine/commands/`                      | Commandes du moteur (ADR-0003, ex-`src/main/domain`) : `sport.ts` (poules, scores, tableau), `exportResults.ts`, `settings.ts`, `files.ts`                                                                |
+| `src/main/batchImport.ts`, `src/main/cliArgs.ts` | `--batch-import`, `--mcp*`                                                                                                                                                                                |
+| `src/main/mcp/mcpServer.ts`                      | Serveur HTTP JSON-RPC, jeton, contrôle Host / Origin                                                                                                                                                      |
+| `src/main/mcp/mcpSettings.ts`                    | Réglages et jeton chiffré                                                                                                                                                                                 |
+| `src/main/mcp/mcpController.ts`                  | Contrôleur du serveur (réglages, jeton, journal), démarrage à l'ouverture de la base ; opérations `getMcpStatus`, `updateMcpSettings`, `regenerateMcpToken`, `listMcpLog` par le port du poste (ADR-0022) |
+| `src/renderer/components/McpSettingsSection.tsx` | Section des Paramètres                                                                                                                                                                                    |
+| `plugins/bpm-escrime/`                           | Plugin Claude Code : `.mcp.json`, skill, commandes `/bp-etat`, `/bp-journee`, `/bp-epreuve` ; marketplace `.claude-plugin/marketplace.json`                                                               |
 
 ## Suite (épique #1880)
 
@@ -836,7 +835,7 @@ Aucun argument.
 
 ### `update_competition_formula` — Modifier la formule d’une épreuve
 
-*écriture.* Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau | split, position « at » comme insertOptions ; split : scission, toujours en dernier, après un tour de poules ou un tableau arrêté, docs/adr/0039), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode, count, percentage } ou qualifiers, seeding previous_round | cumulative, boutOrder, scoring ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring ; Tour Quest qualifiersCount ; scission criterion gender | category | rank | manual, branches [{ label, phases, gender, categories, take }]), setGeneral (restTimeSeconds, ruleSet, postPoolSplitCriteria). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour ; refus : invalid_settings, draw_done.
+*écriture.* Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau | split, position « at » comme insertOptions ; split : scission, toujours en dernier, après un tour de poules ou un tableau arrêté, docs/adr/0039), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode, count, percentage } ou qualifiers, seeding previous_round | cumulative, boutOrder, scoring ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring ; Tour Quest qualifiersCount ; scission criterion gender | category | rank | manual, branches [{ label, phases, gender, categories, take, stayInCompetition }] ; stayInCompetition : scission par sexe, toutes les branches réduites à un tableau ou aucune (compétition couplée, tableaux séparés dans l’épreuve) ; « tableau » règle alors le tableau des branches restées), setGeneral (restTimeSeconds, ruleSet, postPoolSplitCriteria : gender pose la compétition couplée, scission par sexe dont les deux branches restent, null la retire). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour ; refus : invalid_settings, draw_done.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -861,7 +860,7 @@ Aucun argument.
 
 ### `split_competition` — Scinder l’épreuve en compétitions filles
 
-*écriture.* Scission de la formule (dernière phase, docs/adr/0039) : quand la phase qui la précède est close (tour de poules terminé, tableau arrêté clos), répartit son classement entre les branches (sexe ou catégorie du tireur ; rang : nombre ou pourcentage de l’effectif entrant, ex aequo à la borne gardés, la dernière branche prend le reste ; manuelle : « assignments »). Dans une seule transaction, chaque branche devient une compétition fille (titre « titre d’origine – libellé », formule de la branche, tireurs copiés avec leur rang dans la branche) ; l’épreuve d’origine garde les autres tireurs. « dryRun: true » rend la répartition et les tireurs sans valeur pour le critère, sans refus. Refus : invalid_settings (pas de scission en dernière phase), pools_not_complete, tableau_stage_not_complete, split_value_missing (tireur sans sexe, sans catégorie ou non affecté), split_group_not_found (épreuve déjà scindée), not_enough_fencers (branche vide).
+*écriture.* Scission de la formule (dernière phase, docs/adr/0039) : quand la phase qui la précède est close (tour de poules terminé, tableau arrêté clos), répartit son classement entre les branches (sexe ou catégorie du tireur ; rang : nombre ou pourcentage de l’effectif entrant, ex aequo à la borne gardés, la dernière branche prend le reste ; manuelle : « assignments »). Dans une seule transaction, chaque branche devient une compétition fille (titre « titre d’origine – libellé », formule de la branche, tireurs copiés avec leur rang dans la branche) ; l’épreuve d’origine garde les autres tireurs. « dryRun: true » rend la répartition, les tireurs sans valeur pour le critère et le classement d’entrée (« entrants »), sans refus. Toutes les branches partent en compétitions filles (« stayInCompetition » vaut false) ; scission par sexe dont toutes les branches restent dans l’épreuve (compétition couplée, tableaux séparés) : refus invalid_settings. Refus : invalid_settings (pas de scission en dernière phase), pools_not_complete, tableau_stage_not_complete, split_value_missing (tireur sans sexe, sans catégorie ou non affecté), split_group_not_found (épreuve déjà scindée), not_enough_fencers (branche vide).
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|

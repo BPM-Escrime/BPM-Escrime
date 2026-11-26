@@ -35,6 +35,7 @@ import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import type { CommandContext } from './context';
 import { listMatches, resultsData } from './sport';
 import { invoke } from '../api/engine';
+import { contract } from '../../../shared/api/contract';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -150,6 +151,7 @@ const poolRanking = (id: string) => session(id).overallRanking as PoolRanking[];
 d('splitCompetition après un tour de poules (docs/adr/0039)', () => {
   it('outil MCP split_competition, droit competition:write', () => {
     expect(CONTRACT_MCP_TOOLS.write.some(t => t.name === 'split_competition')).toBe(true);
+    expect(contract.splitCompetition.permission).toBe('competition:write');
   });
 
   it('qualification du tour appliquée : les non-qualifiés restent classés dans l’origine', async () => {
@@ -472,6 +474,227 @@ d('splitCompetition après un tableau arrêté clos (docs/adr/0039, ADR-0037 ame
     // Branche « poules » : fille à l'appel
     const b = db.getCompetition(out.branches[1].competitionId)!;
     expect(session(b.id).currentPhase).toBe(0);
+    expect(replay(comp.id).divergences).toEqual([]);
+  });
+});
+
+d('splitCompetition, étape E3 : manuelle, branches restées (docs/adr/0039)', () => {
+  /** Compétition couplée : scission par sexe, Hommes et Dames restés dans l'épreuve */
+  const coupled = () =>
+    formulaOf({ ...fctx, settings: { ...base, postPoolSplitCriteria: 'gender' as const } });
+
+  it('manuelle : affectations de l’écran, classement d’entrée dans la simulation', async () => {
+    const comp = competition(
+      withBranches(rankSplit(), 'manual', [
+        { label: 'N1', phases: branchPhases('tableau', fctx, newId) },
+        { label: 'N2', phases: branchPhases('pools_tableau', fctx, newId) },
+      ])
+    );
+    await playPools(comp.id);
+    const dry = await call('splitCompetition', { competitionId: comp.id, dryRun: true });
+    const entry = poolRanking(comp.id);
+    expect(dry.entrants.map((e: any) => e.id)).toEqual(entry.map(r => r.fencer.id));
+    expect(dry.entrants[0]).toMatchObject({ rank: 1, club: expect.any(String) });
+    expect(dry.missing).toHaveLength(8);
+    expect(dry.branches.every((b: any) => b.stayInCompetition === false)).toBe(true);
+    // Trois premiers en N1, le reste en N2
+    const assignments = entry.map((r, i) => ({
+      fencerId: r.fencer.id,
+      branch: i < 3 ? 'N1' : 'N2',
+    }));
+    const sim = await call('splitCompetition', {
+      competitionId: comp.id,
+      dryRun: true,
+      assignments,
+    });
+    expect(sim.missing).toEqual([]);
+    expect(sim.branches.map((b: any) => b.fencers.length)).toEqual([3, 5]);
+    const out = await call('splitCompetition', { competitionId: comp.id, assignments });
+    const [n1, n2] = out.branches.map((b: any) => db.getCompetition(b.competitionId)!);
+    expect(n1.title).toBe('Coupe – N1');
+    expect(db.getFencersByCompetition(n1.id).map(f => f.ranking)).toEqual([1, 2, 3]);
+    expect(session(n2.id).currentPhase).toBe(0);
+    expect(replay(comp.id).divergences).toEqual([]);
+  });
+
+  it('compétition couplée (toutes les branches restent) : refus, tableaux séparés', async () => {
+    const comp = competition(coupled());
+    expect(comp.settings?.postPoolSplitCriteria).toBe('gender');
+    await playPools(comp.id);
+    await expect(
+      call('splitCompetition', { competitionId: comp.id, dryRun: true })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    // Déroulé des tableaux séparés (ADR-0024) inchangé
+    await call('generateTableau', { competitionId: comp.id, group: 'F' });
+    await call('generateTableau', { competitionId: comp.id, group: 'M' });
+    expect(Object.keys(session(comp.id).groupTableaux).sort()).toEqual(['F', 'M']);
+  });
+
+  it('ancienne compétition couplée (réglage seul, sans formule) : refus', async () => {
+    const comp = db.createCompetition({
+      title: 'Couplée',
+      date: new Date('2026-12-06'),
+      location: 'Gymnase',
+      weapon,
+      gender: Gender.MIXED,
+      category: Category.SENIOR,
+      settings: { ...base, postPoolSplitCriteria: 'gender' } as never,
+    });
+    await expect(
+      call('splitCompetition', { competitionId: comp.id, dryRun: true })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+  });
+
+  it('une branche restée, l’autre partie : formule refusée (pas de mélange)', async () => {
+    const f = coupled();
+    const split = f.phases[f.phases.length - 1] as SplitPhase;
+    const comp = competition(
+      withBranches(f, 'gender', [
+        split.branches[0],
+        { ...split.branches[1], stayInCompetition: false },
+      ])
+    );
+    // Pas une compétition couplée : pas de tableaux séparés par sexe
+    expect(comp.settings?.postPoolSplitCriteria).toBeUndefined();
+    await playPools(comp.id);
+    await expect(
+      call('splitCompetition', { competitionId: comp.id, dryRun: true })
+    ).rejects.toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('toutes les branches ou aucune'),
+    });
+  });
+
+  it('par sexe, toutes les branches partent : deux filles, aucun groupe extrait par sexe', async () => {
+    const f = coupled();
+    const split = f.phases[f.phases.length - 1] as SplitPhase;
+    const comp = competition(
+      withBranches(
+        f,
+        'gender',
+        split.branches.map(({ stayInCompetition: _stay, ...b }) => b)
+      )
+    );
+    expect(comp.settings?.postPoolSplitCriteria).toBeUndefined();
+    await playPools(comp.id);
+    const out = await call('splitCompetition', { competitionId: comp.id });
+    expect(out.branches.map((b: any) => [b.label, b.stayInCompetition, !!b.competitionId])).toEqual(
+      [
+        ['Hommes', false, true],
+        ['Dames', false, true],
+      ]
+    );
+    const [hommes, dames] = out.branches.map((b: any) => b.competitionId as string);
+    // Origine : filles notées par libellé seulement, pas de clé de sexe (M, F)
+    const origin = db.getCompetition(comp.id)!;
+    expect(origin.settings?.splitOffCompetitionIds).toEqual({ Hommes: hommes, Dames: dames });
+    expect(splitHistoryOf(session(comp.id).splitHistory).map(h => h.label)).toEqual([
+      'Hommes',
+      'Dames',
+    ]);
+    expect(replay(comp.id).divergences).toEqual([]);
+  });
+});
+
+d('splitCompetition après deux tours de poules (ADR-0037 amendée, docs/adr/0039)', () => {
+  /** Tour 1 (6 qualifiés sur 8), tour 2, scission par rang (3 + le reste) */
+  const twoRoundsSplit = (): FormulaV2 => {
+    const f = applyOperationsV2(
+      fctx,
+      [
+        { op: 'removePhase', phase: 'tableau' },
+        { op: 'insertPhase', brick: 'pool', at: 1 },
+        { op: 'insertPhase', brick: 'split', at: 2 },
+      ],
+      newId
+    );
+    let pools = 0;
+    const phases = f.phases.map(p =>
+      p.kind === 'pool' && pools++ === 0
+        ? { ...p, qualification: { mode: 'fixed_count' as const, count: 6 } }
+        : p
+    );
+    return withBranches({ ...f, phases }, 'rank', [
+      {
+        label: 'Tableau A',
+        phases: branchPhases('tableau', fctx, newId),
+        take: { mode: 'fixed_count', count: 3 },
+      },
+      { label: 'Tableau B', phases: branchPhases('tableau', fctx, newId) },
+    ]);
+  };
+
+  /**
+   * Poules composées (generatePools refuse plusieurs tours sans composition) puis jouées :
+   * dans chaque poule, le tireur placé le premier gagne contre tous les suivants
+   */
+  async function playComposed(competitionId: string, round: number, groups: string[][]) {
+    const composition = groups.map((ids, p) => ({
+      poolId: `r${round}-p${p + 1}`,
+      number: p + 1,
+      fencerIds: ids,
+      matches: ids.flatMap((a, i) =>
+        ids.slice(i + 1).map((b, j) => ({
+          matchId: `r${round}-p${p + 1}-m${i}-${j}`,
+          fencerAId: a,
+          fencerBId: b,
+        }))
+      ),
+    }));
+    await call('generatePools', { competitionId, composition });
+    for (const pool of composition) {
+      for (const m of pool.matches) {
+        await call('recordScore', { competitionId, matchId: m.matchId, scoreA: 5, scoreB: 1 });
+      }
+    }
+  }
+
+  it('qualifiés du deuxième tour dans l’ordre de son classement', async () => {
+    const comp = competition(twoRoundsSplit());
+    const all = db.getFencersByCompetition(comp.id).sort((x, y) => x.ranking! - y.ranking!);
+    // Tour 1 : deux poules de 4, le mieux classé gagne
+    await playComposed(comp.id, 1, [
+      all.filter((_, i) => i % 2 === 0).map(f => f.id),
+      all.filter((_, i) => i % 2 === 1).map(f => f.id),
+    ]);
+    // Avant la fin du dernier tour : refus
+    await expect(call('splitCompetition', { competitionId: comp.id })).rejects.toMatchObject({
+      code: 'pools_not_complete',
+    });
+    const closed = await call('closePoolRound', { competitionId: comp.id });
+    expect(closed).toMatchObject({ round: 1, qualified: 6, eliminated: 2 });
+    const qualified = db
+      .getFencersByCompetition(comp.id)
+      .filter(f => f.status !== FencerStatus.ELIMINATED)
+      .sort((x, y) => x.ranking! - y.ranking!);
+    expect(qualified).toHaveLength(6);
+    // Tour 2 : une poule de 6, ordre inversé (le dernier qualifié du tour 1 gagne tout)
+    const round2 = [...qualified].reverse().map(f => f.id);
+    await playComposed(comp.id, 2, [round2]);
+    expect(session(comp.id)).toMatchObject({ currentPoolRound: 2 });
+    expect(session(comp.id).poolHistory).toHaveLength(1);
+
+    const dry = await call('splitCompetition', { competitionId: comp.id, dryRun: true });
+    expect(dry.entrants.map((e: any) => e.id)).toEqual(round2);
+    const out = await call('splitCompetition', { competitionId: comp.id });
+    expect(out.branches.map((b: any) => b.fencers.map((f: any) => f.id))).toEqual([
+      round2.slice(0, 3),
+      round2.slice(3),
+    ]);
+    // Filles : rang dans la branche selon le classement du tour 2
+    const [a, b] = out.branches.map((x: any) => x.competitionId as string);
+    const nameOf = new Map(qualified.map(f => [f.id, f.lastName]));
+    const byRank = (id: string) =>
+      db
+        .getFencersByCompetition(id)
+        .sort((x, y) => x.ranking! - y.ranking!)
+        .map(f => f.lastName);
+    expect(byRank(a)).toEqual(round2.slice(0, 3).map(id => nameOf.get(id)));
+    expect(byRank(b)).toEqual(round2.slice(3).map(id => nameOf.get(id)));
+    expect(splitHistoryOf(session(comp.id).splitHistory).map(h => h.fencerIds)).toEqual([
+      round2.slice(0, 3),
+      round2.slice(3),
+    ]);
     expect(replay(comp.id).divergences).toEqual([]);
   });
 });

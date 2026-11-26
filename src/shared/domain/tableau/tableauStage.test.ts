@@ -203,3 +203,36 @@ describe('répartition du tour à tirer, écran (Q5, ADR-0037)', () => {
     ).toBe(last);
   });
 });
+
+describe('classement final avant le tour suivant (restants renumérotés)', () => {
+  it('restants rangés depuis 1 même si le classement reçu est celui d’avant le tableau', () => {
+    const out = closeStage([...quarters, ...semis, final], 2)!;
+    const stage: TableauStageRecord = {
+      kind: 'tableau',
+      stopAt: 2,
+      matches: [...quarters, ...semis, final],
+      eliminated: out.eliminated.map(e => ({
+        fencerId: e.fencer.id,
+        round: e.round,
+        seed: e.seed,
+      })),
+    };
+    // Classement d'avant le tableau : B 2e, E 5e (restants), I et J éliminés des poules
+    const before = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'].map(
+      (id, i) => ({ fencer: f(id), rank: i + 1 }) as PoolRanking
+    );
+    const r = rankAfterStages(before, [stage]).ranking;
+    expect(r.map(x => [x.fencer.id, x.rank])).toEqual([
+      ['B', 1],
+      ['E', 2],
+      ['A', 3],
+      ['F', 4],
+      ['C', 5],
+      ['D', 6],
+      ['G', 7],
+      ['H', 8],
+      ['I', 9],
+      ['J', 10],
+    ]);
+  });
+});

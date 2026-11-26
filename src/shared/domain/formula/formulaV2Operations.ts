@@ -22,9 +22,13 @@ import { MAX_POOL_ROUNDS } from './formulaDraft';
 import type { FormulaSummaryPart, FriezeBrick, FriezePhase } from './formulaFrieze';
 import { FormulaOperation, FormulaOperationError } from './formulaOperations';
 import {
+  coupledFormula,
   customFormulaOf,
   flatSettingsOf,
   formulaOf,
+  isCoupledSplit,
+  playedTableauOf,
+  uncoupledFormula,
   type FormulaPhaseV2,
   type FormulaV2,
   type PoolRoundPhase,
@@ -252,10 +256,14 @@ export function withSplitCriterion(split: SplitPhase, criterion: SplitCriterion)
   return {
     ...split,
     criterion,
-    branches: split.branches.map((b, i) => ({
-      ...bareBranch(b),
-      ...criterionFields(criterion, i, n),
-    })),
+    branches: split.branches.map((b, i) => {
+      // Rester dans l'épreuve : critère sexe seulement (ADR-0039, E3)
+      const { stayInCompetition: _stay, ...rest } = bareBranch(b);
+      return {
+        ...(criterion === 'gender' ? bareBranch(b) : rest),
+        ...criterionFields(criterion, i, n),
+      };
+    }),
   };
 }
 
@@ -603,6 +611,15 @@ export function applyOperationsV2(
           `${where} : la phase « ${o.phase} » ne peut pas être retirée`
         );
       f = removeV2(f, p);
+    } else if (
+      o.op === 'setPhase' &&
+      o.phase === 'tableau' &&
+      !f.phases.some(isTableau) &&
+      isCoupledSplit(f.phases.find(isSplit))
+    ) {
+      // Tableau joué dans l'épreuve par les branches restées (compétition couplée, ADR-0039 E3) :
+      // mêmes réglages pour chacune
+      f = setStayingTableaux(f, o.settings, where);
     } else if (o.op === 'setPhase') {
       const frieze = friezeOfV2(f);
       const p = findPhase(frieze, o.phase);
@@ -655,10 +672,42 @@ export function applyOperationsV2(
       f = { ...f, phases };
     } else {
       checkFields(o.settings, GENERAL_FIELDS, where);
-      f = { ...f, general: { ...f.general, ...(o.settings as Partial<FormulaV2['general']>) } };
+      const { postPoolSplitCriteria: coupled, ...rest } = o.settings as Partial<
+        FormulaV2['general']
+      >;
+      f = { ...f, general: { ...f.general, ...rest } };
+      // Compétition couplée : scission par sexe dont les branches restent (ADR-0039, E3)
+      if ('postPoolSplitCriteria' in o.settings) {
+        if (coupled && coupled !== 'gender')
+          throw new FormulaOperationError(`${where} : « postPoolSplitCriteria » attend gender`);
+        f = coupled
+          ? coupledFormula({ ...f, general: { ...f.general, postPoolSplitCriteria: 'gender' } })
+          : uncoupledFormula(f);
+        if (coupled && !isCoupledSplit(f.phases.find(isSplit)))
+          throw new FormulaOperationError(
+            `${where} : compétition couplée seulement avec un tableau final après un tour de poules`
+          );
+        if (!coupled) {
+          const { postPoolSplitCriteria: _old, ...general } = f.general;
+          f = { ...f, general };
+        }
+      }
     }
   });
   return f;
+}
+
+/** Réglages du tableau des branches restées dans l'épreuve (mêmes pour toutes) */
+function setStayingTableaux(f: FormulaV2, settings: Record<string, unknown>, where: string) {
+  const split = f.phases.find(isSplit)!;
+  const next: SplitPhase = {
+    ...split,
+    branches: split.branches.map(b => ({
+      ...b,
+      phases: b.phases.map(p => (isTableau(p) ? setTableau(p, settings, where) : p)),
+    })),
+  };
+  return { ...f, phases: f.phases.map(p => (p === split ? next : p)) };
 }
 
 /** Écarts de bornes de la formule (moteur, à chaque écriture, ADR-0012) */
@@ -709,6 +758,10 @@ export function formulaV2Issues(
   if (placement) out.push(placement);
   const split = f.phases.find(isSplit);
   if (split) out.push(...splitIssues(split, scope));
+  // Branche restée : tableau séparé après les poules (ADR-0024), donc juste après un tour
+  const prev = split ? f.phases[f.phases.indexOf(split) - 1] : undefined;
+  if (split?.branches.some(b => b.stayInCompetition) && prev && !isPool(prev))
+    out.push('scission : rester dans l’épreuve seulement après un tour de poules');
   return out;
 }
 
@@ -735,8 +788,37 @@ export function splitIssues(
           m => `${name} : ${m}`
         )
       );
-    if (b.stayInCompetition) out.push(`${name} : rester dans l'épreuve, à partir de l'étape E3`);
+    // Rester dans l'épreuve (ADR-0039, E3) : tableaux séparés par sexe (ADR-0024)
+    if (b.stayInCompetition && criterion !== 'gender')
+      out.push(`${name} : rester dans l’épreuve, seulement pour une scission par sexe`);
+    if (b.stayInCompetition && !(b.phases.length === 1 && isTableau(b.phases[0])))
+      out.push(`${name} : rester dans l’épreuve, seulement une branche réduite à un tableau`);
   });
+  // Rester dans l'épreuve : toutes les branches ou aucune (compétition couplée, ADR-0039,
+  // amendement du 2026-11-26 : pas de mélange d'une branche restée et d'une fille)
+  const staying = branches.filter(b => b.stayInCompetition);
+  if (staying.length > 0 && staying.length < branches.length)
+    out.push(
+      'rester dans l’épreuve : toutes les branches ou aucune (dès qu’une branche part en compétition fille, toutes partent)'
+    );
+  // Compétition couplée : deux branches, Hommes et Dames
+  const genders = new Set(branches.map(b => b.gender));
+  if (
+    staying.length > 0 &&
+    staying.length === branches.length &&
+    criterion === 'gender' &&
+    !(branches.length === 2 && genders.has(Gender.MALE) && genders.has(Gender.FEMALE))
+  )
+    out.push('rester dans l’épreuve : deux branches, Hommes et Dames');
+  // Un seul tableau joué pour les branches restées (réglages communs, ADR-0024)
+  const kept = staying
+    .map(b => b.phases[0])
+    .filter(isTableau)
+    .map(t =>
+      JSON.stringify([t.maxScore, t.timerSeconds, t.thirdPlace, t.allPlaces, t.scoring ?? null])
+    );
+  if (new Set(kept).size > 1)
+    out.push('rester dans l’épreuve : mêmes réglages de tableau pour les branches restées');
   if (criterion === 'rank') {
     branches.forEach((b, i) => {
       const last = i === branches.length - 1;
@@ -780,7 +862,7 @@ export function formulaViewV2(ctx: FormulaV2Context): {
   const formula = formulaOf(ctx);
   const phases = friezeOfV2(formula);
   const pools = formula.phases.filter(isPool);
-  const tableau = formula.phases.find(isTableau);
+  const tableau = playedTableauOf(formula);
   return {
     formula,
     phases,
@@ -934,7 +1016,7 @@ export function summarizeFormulaV2(f: FormulaV2): FormulaSummaryPart[] {
     else for (const p of pools) parts.push({ kind: 'pools', rounds: 1, maxScore: p.maxScore });
   }
   if (f.phases.some(isQuest)) parts.push({ kind: 'quest' });
-  const t = f.phases.find(isTableau);
+  const t = playedTableauOf(f);
   if (t)
     parts.push({ kind: 'tableau', maxScore: t.maxScore, thirdPlace: t.thirdPlace || t.allPlaces });
   return parts;

@@ -18,13 +18,19 @@ import {
   Weapon,
 } from '../../../shared/types';
 import type { FriezeBrick, FriezePhase } from '../../../shared/domain/formula/formulaFrieze';
-import type {
-  FormulaV2,
-  PoolRoundPhase,
-  QuestPhase,
-  SplitPhase,
-  TableauPhase,
+import {
+  coupledFormula,
+  isCoupledSplit,
+  playedTableauOf,
+  splitOf,
+  uncoupledFormula,
+  type FormulaV2,
+  type PoolRoundPhase,
+  type QuestPhase,
+  type SplitPhase,
+  type TableauPhase,
 } from '../../../shared/domain/formula/formulaV2';
+import { simulateSplit } from '../../../shared/domain/formula/splitPlan';
 import {
   canRemoveV2,
   formulaViewV2,
@@ -129,8 +135,24 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
           ? t('formulaEditor.brick_split')
           : t('properties.phase_tableau');
 
-  const tableau = formula.phases.find((x): x is TableauPhase => x.kind === 'tableau');
+  const ownTableau = formula.phases.find((x): x is TableauPhase => x.kind === 'tableau');
   const split = formula.phases.find((x): x is SplitPhase => x.kind === 'split');
+  // Tableau des branches restées dans l'épreuve (tableaux séparés, ADR-0039 E3) : réglé une fois
+  const keptTableau = ownTableau ? undefined : playedTableauOf(formula);
+  const tableau = ownTableau ?? keptTableau;
+  const coupled = isCoupledSplit(split);
+  /** Réglages du tableau des branches restées, les mêmes pour chacune */
+  const patchKeptTableau = (patch: Partial<TableauPhase>) => {
+    if (!split || !coupled) return;
+    const next: SplitPhase = {
+      ...split,
+      branches: split.branches.map(b => ({
+        ...b,
+        phases: b.phases.map(x => (x.kind === 'tableau' ? { ...x, ...patch } : x)),
+      })),
+    };
+    onChange({ ...formula, phases: formula.phases.map(x => (x === split ? next : x)) });
+  };
   const summary = (p: FriezePhase): string => {
     if (p.kind === 'split')
       return split
@@ -357,7 +379,8 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
   function renderTableau(p: FriezePhase) {
     if (!tableau) return null;
-    const set = (patch: Partial<TableauPhase>) => patchPhase<TableauPhase>(p, patch);
+    const set = (patch: Partial<TableauPhase>) =>
+      ownTableau ? patchPhase<TableauPhase>(p, patch) : patchKeptTableau(patch);
     // Tableau arrêté à N (ADR-0037) : un tour de poules le suit ; sans arrêt, plus de tour après
     const setStopAt = (n: number) => {
       const at = formula.phases.indexOf(tableau);
@@ -412,7 +435,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             <span>{t('properties.all_places')}</span>
           </label>
           <small className="u-hint">{t('properties.all_places_hint')}</small>
-          {!formula.phases.some(x => x.kind === 'quest') && (
+          {ownTableau && !formula.phases.some(x => x.kind === 'quest') && (
             <div className="form-group">
               <label htmlFor="tableau-stop-at" className="form-label">
                 {t('formulaEditor.stop_at')}
@@ -525,17 +548,26 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             v => patchGeneral({ restTimeSeconds: Math.max(0, v) }),
             { min: 0, hint: t('properties.rest_time_hint') }
           )}
-        {!isOther && pools.length > 0 && tableau && (
+        {!isOther && pools.length > 0 && ((ownTableau && !split) || coupled) && (
           <div className="form-group">
             <label htmlFor="formula-editor-coupled">{t('properties.coupled')}</label>
+            {/* Compétition couplée = scission par sexe dont les branches restent (ADR-0039 E3) */}
             <select
               id="formula-editor-coupled"
               className="form-input form-select"
-              value={formula.general.postPoolSplitCriteria ?? ''}
+              value={coupled || formula.general.postPoolSplitCriteria ? 'gender' : ''}
               onChange={e =>
-                patchGeneral({
-                  postPoolSplitCriteria: (e.target.value || undefined) as 'gender' | undefined,
-                })
+                onChange(
+                  e.target.value
+                    ? coupledFormula({
+                        ...formula,
+                        general: { ...formula.general, postPoolSplitCriteria: 'gender' },
+                      })
+                    : uncoupledFormula({
+                        ...formula,
+                        general: { ...formula.general, postPoolSplitCriteria: undefined },
+                      })
+                )
               }
             >
               <option value="">{t('properties.coupled_none')}</option>
@@ -573,15 +605,17 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                   type="button"
                   variant="ghost"
                   onClick={() =>
-                    onChange({
-                      ...formula,
-                      phases: formula.phases.map(x =>
-                        (issue.field === 'poolMaxScore' && x.kind === 'pool') ||
-                        (issue.field === 'tableMaxScore' && x.kind === 'tableau')
-                          ? { ...x, maxScore: issue.expected }
-                          : x
-                      ),
-                    })
+                    issue.field === 'tableMaxScore' && keptTableau
+                      ? patchKeptTableau({ maxScore: issue.expected })
+                      : onChange({
+                          ...formula,
+                          phases: formula.phases.map(x =>
+                            (issue.field === 'poolMaxScore' && x.kind === 'pool') ||
+                            (issue.field === 'tableMaxScore' && x.kind === 'tableau')
+                              ? { ...x, maxScore: issue.expected }
+                              : x
+                          ),
+                        })
                   }
                 >
                   {t('properties.coherence_apply')}
@@ -594,6 +628,19 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
       </div>
     );
   }
+
+  const simulation = simulateFormula(
+    simCount,
+    simulationFormulaOf(formula),
+    weapon,
+    durationSources
+  );
+  // Scission (ADR-0039) : effectif entrant = qualifiés du dernier tour de poules simulé
+  const pendingSplit = splitOf(formula);
+  const lastPool = [...simulation.phases].reverse().find(p => p.type === 'pool_round');
+  const simulatedSplit = pendingSplit
+    ? simulateSplit(pendingSplit, lastPool?.advancingFencers ?? simCount)
+    : undefined;
 
   return (
     <div className="formula-editor" data-testid="formula-editor">
@@ -627,6 +674,9 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                   }
                 />
               )}
+              {current?.kind === 'split' && keptTableau && (
+                <div data-testid="split-kept-tableau">{renderTableau(current)}</div>
+              )}
             </>
           )}
           {renderGeneral()}
@@ -648,13 +698,9 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
               />
             </label>
             <FormulaSimulationPreview
-              simulation={simulateFormula(
-                simCount,
-                simulationFormulaOf(formula),
-                weapon,
-                durationSources
-              )}
+              simulation={simulation}
               fencerCount={simCount}
+              split={simulatedSplit}
             />
           </aside>
         )}

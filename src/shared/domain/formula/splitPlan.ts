@@ -155,3 +155,28 @@ export function originFinalRanking(
 ): { ranking: PoolRanking[]; eliminatedAt: Map<string, string> } {
   return rankAfterStages(rankingWithoutSplit(ranking, history), stages);
 }
+
+/** Branche dans la simulation de la formule : effectif connu (rang) ou selon les tireurs */
+export interface SplitSimulationBranch {
+  label: string;
+  /** Rang : effectif prévu ; sexe, catégorie, manuelle : null (dépend des tireurs inscrits) */
+  fencers: number | null;
+}
+
+/**
+ * Simulation de la scission (éditeur de formule) : effectif de chaque branche pour `entrants`
+ * tireurs. Par rang : nombre ou pourcentage de l'effectif entrant, dans l'ordre, la dernière
+ * prend le reste (ex aequo ignorés). Autres critères : effectif inconnu avant l'épreuve.
+ */
+export function simulateSplit(split: SplitPhase, entrants: number): SplitSimulationBranch[] {
+  if (split.criterion !== 'rank') {
+    return split.branches.map(b => ({ label: b.label, fencers: null }));
+  }
+  let left = Math.max(0, entrants);
+  return split.branches.map((b, i) => {
+    const last = i === split.branches.length - 1;
+    const n = last ? left : Math.min(left, getAdvancementCount(entrants, b.take) ?? left);
+    left -= n;
+    return { label: b.label, fencers: n };
+  });
+}

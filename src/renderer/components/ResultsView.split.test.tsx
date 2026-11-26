@@ -2,7 +2,8 @@
 /**
  * Résultats de l'épreuve d'origine après une scission (#2013 E2b, docs/adr/0039) : classement
  * des tireurs restés dans l'origine, bloc « Branches » qui renvoie aux compétitions filles,
- * sans champion ni podium.
+ * sans champion ni podium tant que l'épreuve scindée n'a pas de résultats finals (toutes les
+ * branches parties : pas de mélange, amendement du 2026-11-26).
  */
 import '@testing-library/jest-dom';
 import React from 'react';
@@ -76,6 +77,55 @@ describe('Résultats de l’épreuve d’origine scindée (ADR-0039)', () => {
     expect(rows[0]).toHaveTextContent('E');
     expect(screen.queryByText('resultsView.champion')).toBeNull();
     expect(screen.queryByText('resultsView.first')).toBeNull();
+  });
+
+  it('par sexe, Hommes et Dames partis : ni champion ni podium, seuls les éliminés classés', async () => {
+    // A, B, C, D en « Hommes » ; E, F en « Dames » ; G éliminé avant la scission
+    const people = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(fencer);
+    const byGender: SplitHistoryEntry[] = [
+      { label: 'Hommes', competitionId: 'fh', fencerIds: ['A', 'B', 'C', 'D'] },
+      { label: 'Dames', competitionId: 'fd', fencerIds: ['E', 'F'] },
+    ];
+    const pool = people.map((f, i) => ({ fencer: f, rank: i + 1 }) as PoolRanking);
+    const staged = originFinalRanking(pool, [], byGender);
+    render(
+      <ResultsView
+        competition={{ id: 'c', title: 'Coupe' } as Competition}
+        poolRanking={staged.ranking}
+        finalResults={[]}
+        fencers={people}
+        isLaserSabre={false}
+        splitBranches={byGender}
+        onOpenCompetition={vi.fn()}
+      />
+    );
+    expect(await screen.findByTestId('split-branches')).toBeInTheDocument();
+    expect(screen.queryByText('resultsView.champion')).toBeNull();
+    expect(screen.queryByText('resultsView.first')).toBeNull();
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveTextContent('G');
+  });
+
+  it('tous les tireurs partis dans les filles : pas de tableau de classement vide', async () => {
+    const everyone: SplitHistoryEntry[] = [
+      { label: 'Tableau A', competitionId: 'fa', fencerIds: ['A', 'B', 'C'] },
+      { label: 'Tableau B', competitionId: 'fb', fencerIds: ['D', 'E'] },
+    ];
+    render(
+      <ResultsView
+        competition={{ id: 'c', title: 'Coupe' } as Competition}
+        poolRanking={originFinalRanking(ranking, [], everyone).ranking}
+        finalResults={[]}
+        fencers={all}
+        isLaserSabre={false}
+        splitBranches={everyone}
+        onOpenCompetition={vi.fn()}
+      />
+    );
+    expect(await screen.findByTestId('split-branches')).toBeInTheDocument();
+    expect(screen.queryByText('resultsView.final_title')).toBeNull();
+    expect(screen.queryByRole('table')).toBeNull();
   });
 
   it('épreuve non scindée : pas de bloc « Branches »', () => {

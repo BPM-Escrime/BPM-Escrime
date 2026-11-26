@@ -11,6 +11,7 @@ import {
   FencerStatus,
   Gender,
   Weapon,
+  type PoolRanking,
 } from '../../../shared/types';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
 import {
@@ -21,6 +22,8 @@ import {
 import type { TableauMatch } from '../../../shared/domain/tableau/tableauTypes';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
+import { resultsData } from './sport';
+import { resultsXml } from './exportResults';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -145,5 +148,60 @@ d('closeTableauStage (docs/adr/0037)', () => {
     await expect(op('generateTableau', {})).rejects.toMatchObject({
       code: 'unsupported_format',
     });
+  });
+
+  it('publication du moteur (GREG / FTP) : restants, éliminés du tableau, puis des poules', async () => {
+    // 10 tireurs : 8 au tableau (rang d'entrée = rang après poules), 2 éliminés des poules
+    const more = ['E', 'F', 'G', 'H', 'I', 'J'].map(id =>
+      db.addFencer(competitionId, {
+        lastName: id,
+        firstName: id,
+        status: ['I', 'J'].includes(id) ? FencerStatus.ELIMINATED : FencerStatus.QUALIFIED,
+      })
+    );
+    const all = [...fencers, ...more];
+    const [a, b, c, dd, e, f, g, h] = all;
+    const row = (fencer: Fencer, rank: number): PoolRanking => ({
+      fencer,
+      rank,
+      victories: 10 - rank,
+      defeats: rank,
+      matchesPlayed: 10,
+      touchesScored: 0,
+      touchesReceived: 0,
+      index: 0,
+      ratio: 0,
+    });
+    db.saveSessionState(competitionId, {
+      currentPhase: 5,
+      currentPoolRound: 1,
+      pools: [{ id: 'p1', fencers: [] }],
+      overallRanking: all.map((x, i) => row(x, i + 1)),
+      tableauMatches: [
+        // Tableau de 8 : surprises au tour de 8 (5 bat 4, 6 bat 3) et de 4 (5 bat 1)
+        m(8, a, h, a, [1, 8]),
+        m(8, dd, e, e, [4, 5]),
+        m(8, c, f, f, [3, 6]),
+        m(8, b, g, b, [2, 7]),
+        m(4, a, e, e, [1, 5]),
+        m(4, f, b, b, [6, 2]),
+        m(2, e, b, null),
+      ],
+    });
+    expect(await op('closeTableauStage', {})).toMatchObject({ qualified: 2, eliminated: 6 });
+    // Restants (ordre du classement reçu), éliminés au tour de 4, au tour de 8 (rang
+    // d'entrée), puis éliminés des poules
+    const expected = ['B', 'E', 'A', 'F', 'C', 'D', 'G', 'H', 'I', 'J'];
+    const ranking = resultsData(ctx, competitionId).overallRanking;
+    expect(ranking.map(r => r.fencer.lastName)).toEqual(expected);
+    expect(ranking.map(r => r.rank)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    // XML publié (GREG, FTP) : même ordre, même classement
+    const xml = resultsXml(resultsData(ctx, competitionId));
+    const tireurs = xml.slice(xml.indexOf('<Tireurs>'), xml.indexOf('</Tireurs>'));
+    const published = [...tireurs.matchAll(/Classement="(\d*)" Nom="([^"]*)"/g)].map(x => [
+      x[2],
+      Number(x[1]),
+    ]);
+    expect(published).toEqual(expected.map((name, i) => [name, i + 1]));
   });
 });

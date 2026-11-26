@@ -488,6 +488,12 @@
   color: #991b1b;
 }
 
+.sim-node-split {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  color: #6b21a8;
+}
+
 .sim-node-classification {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
@@ -694,6 +700,12 @@
   background: #4c1d1d;
   border-color: #dc2626;
   color: #fca5a5;
+}
+
+.theme-dark .sim-node-split {
+  background: #2e1a47;
+  border-color: #9333ea;
+  color: #d8b4fe;
 }
 
 .theme-dark .sim-node-classification {
@@ -1030,6 +1042,15 @@ button.formula-frieze__step {
   border-left: 3px solid var(--color-danger);
   padding: 0.5rem 0.75rem;
   background: var(--color-surface-2);
+}
+.split-launch__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.split-launch__tools .form-select {
+  width: auto;
 }
 .split-launch__missing ul {
   margin: 0.25rem 0;

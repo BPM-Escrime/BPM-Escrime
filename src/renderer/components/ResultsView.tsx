@@ -595,9 +595,11 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     }
   };
 
-  // Épreuve scindée (ADR-0039) : vainqueurs dans les filles, ni champion ni podium ici
+  // Épreuve scindée (ADR-0039) : bloc « Branches ». Toutes les branches parties (pas de
+  // résultats finals) : vainqueurs dans les filles, ni champion ni podium ici
   const split = (splitBranches?.length ?? 0) > 0;
-  const champion = split ? undefined : resultsToDisplay.find(r => r.rank === 1);
+  const noWinnerHere = split && finalResults.length === 0;
+  const champion = noWinnerHere ? undefined : resultsToDisplay.find(r => r.rank === 1);
 
   return (
     <div style={RV_STYLES.wrapper}>
@@ -627,7 +629,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
       )}
 
       {/* Podium visuel */}
-      {!split && (
+      {!noWinnerHere && (
         <div style={RV_STYLES.podiumRow}>
           {/* 2ème place */}
           {resultsToDisplay[1] && (
@@ -664,60 +666,62 @@ const ResultsView: React.FC<ResultsViewProps> = ({
         </div>
       )}
 
-      {/* Tableau complet des résultats */}
-      <div style={RV_STYLES.tableWrapper}>
-        <div style={RV_STYLES.tableHeader}>
-          {t('resultsView.final_title', { n: resultsToDisplay.length })}
-        </div>
+      {/* Tableau complet des résultats : masqué si l'épreuve scindée ne classe personne */}
+      {!(split && resultsToDisplay.length === 0) && (
+        <div style={RV_STYLES.tableWrapper}>
+          <div style={RV_STYLES.tableHeader}>
+            {t('resultsView.final_title', { n: resultsToDisplay.length })}
+          </div>
 
-        <table style={RV_STYLES.table}>
-          <thead>
-            <tr style={RV_STYLES.thead}>
-              <th style={RV_STYLES.thRank}>{t('resultsView.rank')}</th>
-              <th style={RV_STYLES.thLeft}>{t('resultsView.fencer')}</th>
-              <th style={RV_STYLES.thLeft}>{t('resultsView.club')}</th>
-              <th style={RV_STYLES.thCenter}>{t('resultsView.eliminated_in')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resultsToDisplay.map(result => (
-              <tr
-                key={result.fencer.id}
-                style={{
-                  ...getRowStyle(result.rank),
-                  borderBottom: '1px solid var(--color-border)',
-                }}
-              >
-                <td style={RV_STYLES.tdPad}>
-                  <span style={RV_STYLES.tdMedalSpan}>
-                    <RankMedal rank={result.rank} />
-                  </span>
-                  {finalRankLabel(result.rank, result.fencer, result.eliminatedAt)}
-                </td>
-                <td style={RV_STYLES.tdPad}>
-                  {result.fencer.firstName} {result.fencer.lastName}
-                  {(result.fencer.status === FencerStatus.ABANDONED ||
-                    result.fencer.status === FencerStatus.FORFAIT) &&
-                    ` (${statusCode(result.fencer.status)})`}
-                  {result.fencer.status === FencerStatus.EXCLUDED &&
-                    (result.fencer.exclusionReason === 'black_card' ? (
-                      <span
-                        title={t('resultsView.black_card')}
-                        aria-label={t('resultsView.black_card')}
-                        data-testid="black-card-icon"
-                        style={RV_STYLES.blackCard}
-                      />
-                    ) : (
-                      ' (X)'
-                    ))}
-                </td>
-                <td style={RV_STYLES.tdClub}>{result.fencer.club || '-'}</td>
-                <td style={RV_STYLES.tdElim}>{result.eliminatedAt || '-'}</td>
+          <table style={RV_STYLES.table}>
+            <thead>
+              <tr style={RV_STYLES.thead}>
+                <th style={RV_STYLES.thRank}>{t('resultsView.rank')}</th>
+                <th style={RV_STYLES.thLeft}>{t('resultsView.fencer')}</th>
+                <th style={RV_STYLES.thLeft}>{t('resultsView.club')}</th>
+                <th style={RV_STYLES.thCenter}>{t('resultsView.eliminated_in')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {resultsToDisplay.map(result => (
+                <tr
+                  key={result.fencer.id}
+                  style={{
+                    ...getRowStyle(result.rank),
+                    borderBottom: '1px solid var(--color-border)',
+                  }}
+                >
+                  <td style={RV_STYLES.tdPad}>
+                    <span style={RV_STYLES.tdMedalSpan}>
+                      <RankMedal rank={result.rank} />
+                    </span>
+                    {finalRankLabel(result.rank, result.fencer, result.eliminatedAt)}
+                  </td>
+                  <td style={RV_STYLES.tdPad}>
+                    {result.fencer.firstName} {result.fencer.lastName}
+                    {(result.fencer.status === FencerStatus.ABANDONED ||
+                      result.fencer.status === FencerStatus.FORFAIT) &&
+                      ` (${statusCode(result.fencer.status)})`}
+                    {result.fencer.status === FencerStatus.EXCLUDED &&
+                      (result.fencer.exclusionReason === 'black_card' ? (
+                        <span
+                          title={t('resultsView.black_card')}
+                          aria-label={t('resultsView.black_card')}
+                          data-testid="black-card-icon"
+                          style={RV_STYLES.blackCard}
+                        />
+                      ) : (
+                        ' (X)'
+                      ))}
+                  </td>
+                  <td style={RV_STYLES.tdClub}>{result.fencer.club || '-'}</td>
+                  <td style={RV_STYLES.tdElim}>{result.eliminatedAt || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Boutons d'export */}
       <div style={RV_STYLES.exportRow}>

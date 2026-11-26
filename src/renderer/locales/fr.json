@@ -2911,7 +2911,10 @@
     "total_matches": "Total matchs",
     "duration": "Durée estimée",
     "de": "Élimination directe",
-    "final_ranking": "Classement final"
+    "final_ranking": "Classement final",
+    "split": "Scission",
+    "split_branch": "{{label}} : {{n}} tireurs",
+    "split_branch_unknown": "{{label}} : selon les tireurs inscrits"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Saisie rapide",
@@ -4780,7 +4783,7 @@
     "split_criterion_category": "Catégorie",
     "split_criterion_rank": "Rang",
     "split_criterion_manual": "Manuelle",
-    "split_manual_readonly": "Répartition manuelle : se réglera à l'écran dans une prochaine version. Lecture seule ici.",
+    "split_manual_hint": "Répartition manuelle : les tireurs sont affectés à une branche au lancement de la scission, d'après le classement d'entrée.",
     "split_branch": "Branche {{n}}",
     "split_label": "Libellé",
     "split_preset": "Modèle de branche",
@@ -4792,6 +4795,7 @@
     "split_gender": "Sexe de la branche",
     "split_gender_male": "Hommes",
     "split_gender_female": "Dames",
+    "split_stay": "Les deux branches restent dans l'épreuve (compétition couplée, tableaux séparés)",
     "split_categories": "Catégories de la branche",
     "split_take": "Tireurs de la branche",
     "split_rest": "Le reste des tireurs",
@@ -4869,6 +4873,16 @@
     "missing_fix_gender": "Complétez le sexe de ces tireurs (Appel ▸ modifier le tireur), puis relancez la scission.",
     "missing_fix_category": "Complétez la catégorie de ces tireurs à l'Appel (saisie ou « Calculer les catégories »), puis relancez la scission.",
     "done": "Épreuve scindée : {{n}} compétitions filles créées.",
-    "after_stage_note": "Tableau arrêté à {{n}} tireurs clos : la scission répartit les {{n}} restants dans l'ordre de leur rang d'entrée au tableau. Le classement ci-dessous est celui des poules."
+    "after_stage_note": "Tableau arrêté à {{n}} tireurs clos : la scission répartit les {{n}} restants dans l'ordre de leur rang d'entrée au tableau. Le classement ci-dessous est celui des poules.",
+    "sort": "Trier par",
+    "sort_rank": "Rang",
+    "sort_gender": "Sexe",
+    "sort_club": "Club",
+    "sort_birthDate": "Date de naissance",
+    "all_in": "Tout dans…",
+    "all_apply": "Affecter tous",
+    "col_rank": "Rang",
+    "col_fencer": "Tireur",
+    "manual_missing": "{{n}} tireur(s) à affecter à une branche avant de scinder."
   }
 }

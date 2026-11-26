@@ -2911,7 +2911,10 @@
     "total_matches": "Total bouts",
     "duration": "Estimated duration",
     "de": "Direct elimination",
-    "final_ranking": "Final ranking"
+    "final_ranking": "Final ranking",
+    "split": "Split",
+    "split_branch": "{{label}}: {{n}} fencers",
+    "split_branch_unknown": "{{label}}: depends on the registered fencers"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Quick entry",
@@ -4780,7 +4783,7 @@
     "split_criterion_category": "Category",
     "split_criterion_rank": "Rank",
     "split_criterion_manual": "Manual",
-    "split_manual_readonly": "Manual split: will be set on screen in a future version. Read-only here.",
+    "split_manual_hint": "Manual split: fencers are assigned to a branch when the split is launched, from the entry ranking.",
     "split_branch": "Branch {{n}}",
     "split_label": "Label",
     "split_preset": "Branch template",
@@ -4792,6 +4795,7 @@
     "split_gender": "Branch gender",
     "split_gender_male": "Men",
     "split_gender_female": "Women",
+    "split_stay": "Both branches stay in the event (coupled event, separate brackets)",
     "split_categories": "Branch categories",
     "split_take": "Branch fencers",
     "split_rest": "Remaining fencers",
@@ -4869,6 +4873,16 @@
     "missing_fix_gender": "Fill in these fencers' gender (Roll call ▸ edit fencer), then split again.",
     "missing_fix_category": "Fill in these fencers' category in the Roll call (entry or “Compute categories”), then split again.",
     "done": "Event split: {{n}} child competitions created.",
-    "after_stage_note": "Bracket stopped at {{n}} fencers closed: the split distributes the {{n}} remaining fencers in the order of their entry rank in the bracket. The ranking below is the pool ranking."
+    "after_stage_note": "Bracket stopped at {{n}} fencers closed: the split distributes the {{n}} remaining fencers in the order of their entry rank in the bracket. The ranking below is the pool ranking.",
+    "sort": "Sort by",
+    "sort_rank": "Rank",
+    "sort_gender": "Gender",
+    "sort_club": "Club",
+    "sort_birthDate": "Date of birth",
+    "all_in": "All in…",
+    "all_apply": "Assign all",
+    "col_rank": "Rank",
+    "col_fencer": "Fencer",
+    "manual_missing": "{{n}} fencer(s) to assign to a branch before splitting."
   }
 }

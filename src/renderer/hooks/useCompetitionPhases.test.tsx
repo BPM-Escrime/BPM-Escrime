@@ -8,7 +8,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { Category, CompetitionSettings, Weapon } from '../../shared/types';
 import { buildDefaultCompetitionSettings } from '../../shared/utils/defaultCompetitionSettings';
-import { formulaOf, type FormulaV2 } from '../../shared/domain/formula/formulaV2';
+import {
+  coupledFormula,
+  formulaOf,
+  playedTableauOf,
+  type FormulaV2,
+} from '../../shared/domain/formula/formulaV2';
 import { applyOperationsV2 } from '../../shared/domain/formula/formulaV2Operations';
 import {
   formulaSegment,
@@ -64,8 +69,8 @@ const screenTabs = (f: FormulaV2, closedStages: number): string[] => {
       rapieresWavesEnded: false,
       currentPoolRound: 1,
       poolRounds: segment?.poolRounds ?? f.phases.filter(p => p.kind === 'pool').length,
-      hasDirectElimination:
-        segment?.hasDirectElimination ?? f.phases.some(p => p.kind === 'tableau'),
+      // Comme l'écran (réglages plats) : tableau de la formule, ou des branches restées
+      hasDirectElimination: segment?.hasDirectElimination ?? !!playedTableauOf(f),
       finalResults: [],
       tableauMatches: [],
       questEnabled: false,
@@ -128,5 +133,13 @@ describe('navigation dérivée de formulaSteps (ADR-0037)', () => {
     );
     expect(screenTabs(f, 0)).toEqual(expectedTabs(f));
     expect(screenTabs(f, 1)).toEqual(expectedTabs(f));
+  });
+
+  it('compétition couplée (branches restées) : onglet Tableau, comme les tableaux séparés', () => {
+    const f = coupledFormula(
+      formulaOf({ ...ctx, settings: { ...settings, postPoolSplitCriteria: 'gender' } })
+    );
+    expect(expectedTabs(f)).toContain('tableau');
+    expect(screenTabs(f, 0)).toEqual(expectedTabs(f));
   });
 });

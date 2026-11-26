@@ -1,10 +1,13 @@
 /**
- * BPM - Escrime - Lancement de la scission (#2013 étape E2b, docs/adr/0039) : commande
+ * BPM - Escrime - Lancement de la scission (#2013 étapes E2b, E3 ; docs/adr/0039) : commande
  * splitCompetition en simulation (branches, tireurs par branche, tireurs sans valeur pour le
- * critère), confirmation, puis scission. L'écran n'écrit rien d'autre.
+ * critère), confirmation, puis scission. Scission manuelle (E3) : classement d'entrée rendu par
+ * la simulation, une branche par tireur (tri, « Tout dans… »), simulation relancée avec les
+ * affectations à chaque changement ; confirmation tant qu'un tireur n'est pas affecté : non.
+ * L'écran n'écrit rien d'autre ; la répartition reste celle du moteur (planSplit).
  * Licensed under GPL-3.0
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { SplitCriterion } from '../../../shared/domain/formula/formulaV2';
 import type { Output } from '../../../shared/api/contract';
 import { useBpmClient } from '../../api/BpmClientContext';
@@ -14,6 +17,8 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 
 type SplitResult = Output<'splitCompetition'>;
+type Entrant = SplitResult['entrants'][number];
+type SortKey = 'rank' | 'gender' | 'club' | 'birthDate';
 
 interface SplitLaunchDialogProps {
   competitionId: string;
@@ -21,6 +26,22 @@ interface SplitLaunchDialogProps {
   onClose: () => void;
   /** Scission faite : compétitions filles créées */
   onDone: (result: SplitResult) => void;
+}
+
+const SORTS: SortKey[] = ['rank', 'gender', 'club', 'birthDate'];
+
+/** Tri d'affichage du classement d'entrée ; à égalité, le rang */
+function sortEntrants(list: readonly Entrant[], key: SortKey): Entrant[] {
+  const value = (e: Entrant): string | number =>
+    key === 'rank' ? e.rank : ((key === 'gender' ? e.gender : e[key]) ?? '￿');
+  return [...list].sort((a, b) => {
+    const x = value(a);
+    const y = value(b);
+    if (x === y) return a.rank - b.rank;
+    return typeof x === 'number' && typeof y === 'number'
+      ? x - y
+      : String(x).localeCompare(String(y));
+  });
 }
 
 export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
@@ -32,14 +53,31 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
   const { t } = useTranslation();
   const { showToast } = useToast();
   const client = useBpmClient();
+  const manual = criterion === 'manual';
   const [plan, setPlan] = useState<SplitResult | null>(null);
   const [busy, setBusy] = useState(false);
+  /** Scission manuelle : branche (libellé) de chaque tireur */
+  const [assigned, setAssigned] = useState<Record<string, string>>({});
+  const [sort, setSort] = useState<SortKey>('rank');
+  const [allTo, setAllTo] = useState('');
+  const request = useRef(0);
 
+  const assignments = useMemo(
+    () => Object.entries(assigned).map(([fencerId, branch]) => ({ fencerId, branch })),
+    [assigned]
+  );
+
+  // Simulation à l'ouverture, puis à chaque affectation (scission manuelle)
   useEffect(() => {
     let live = true;
+    const n = ++request.current;
     client
-      .call('splitCompetition', { competitionId, dryRun: true })
-      .then(sim => live && setPlan(sim))
+      .call('splitCompetition', {
+        competitionId,
+        dryRun: true,
+        ...(manual && assignments.length ? { assignments } : {}),
+      })
+      .then(sim => live && n === request.current && setPlan(sim))
       .catch((e: unknown) => {
         if (!live) return;
         showToast((e as Error).message ?? String(e), 'error');
@@ -48,17 +86,36 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
     return () => {
       live = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation une fois à l'ouverture
-  }, [competitionId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation : ouverture et affectations
+  }, [competitionId, assignments]);
 
   const run = async () => {
     setBusy(true);
     try {
-      onDone(await client.call('splitCompetition', { competitionId }));
+      onDone(
+        await client.call('splitCompetition', {
+          competitionId,
+          ...(manual ? { assignments } : {}),
+        })
+      );
     } catch (e) {
       showToast((e as Error).message ?? String(e), 'error');
       setBusy(false);
     }
+  };
+
+  const labels = plan?.branches.map(b => b.label) ?? [];
+  const entrants = useMemo(() => sortEntrants(plan?.entrants ?? [], sort), [plan, sort]);
+  const assign = (fencerId: string, branch: string) =>
+    setAssigned(prev => {
+      const next = { ...prev };
+      if (branch) next[fencerId] = branch;
+      else delete next[fencerId];
+      return next;
+    });
+  const assignAll = () => {
+    if (!allTo || !plan) return;
+    setAssigned(Object.fromEntries(plan.entrants.map(e => [e.id, allTo])));
   };
 
   const blocked = !!plan && plan.missing.length > 0;
@@ -66,7 +123,7 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
     <Modal
       title={t('splitLaunch.title')}
       onClose={onClose}
-      size="md"
+      size={manual ? 'lg' : 'md'}
       scroll
       closeOnOverlay={false}
       footer={
@@ -107,7 +164,99 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
               ))}
             </tbody>
           </table>
-          {blocked && (
+          {manual && (
+            <div className="split-launch__manual" data-testid="split-launch-manual">
+              <div className="split-launch__tools">
+                <label className="u-row">
+                  <span>{t('splitLaunch.sort')}</span>
+                  <select
+                    className="form-input form-select"
+                    data-testid="split-launch-sort"
+                    value={sort}
+                    onChange={e => setSort(e.target.value as SortKey)}
+                  >
+                    {SORTS.map(k => (
+                      <option key={k} value={k}>
+                        {t(`splitLaunch.sort_${k}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="u-row">
+                  <span>{t('splitLaunch.all_in')}</span>
+                  <select
+                    className="form-input form-select"
+                    data-testid="split-launch-all-branch"
+                    value={allTo}
+                    onChange={e => setAllTo(e.target.value)}
+                  >
+                    <option value="">—</option>
+                    {labels.map(l => (
+                      <option key={l} value={l}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  data-testid="split-launch-all"
+                  disabled={!allTo}
+                  onClick={assignAll}
+                >
+                  {t('splitLaunch.all_apply')}
+                </Button>
+              </div>
+              <table className="split-launch__table" data-testid="split-launch-entrants">
+                <thead>
+                  <tr>
+                    <th>{t('splitLaunch.col_rank')}</th>
+                    <th>{t('splitLaunch.col_fencer')}</th>
+                    <th>{t('splitLaunch.sort_gender')}</th>
+                    <th>{t('splitLaunch.sort_club')}</th>
+                    <th>{t('splitLaunch.sort_birthDate')}</th>
+                    <th>{t('splitLaunch.col_branch')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entrants.map(e => (
+                    <tr key={e.id} data-testid={`split-launch-row-${e.id}`}>
+                      <td>{e.rank}</td>
+                      <td>
+                        {e.lastName} {e.firstName}
+                      </td>
+                      <td>{e.gender ?? ''}</td>
+                      <td>{e.club ?? ''}</td>
+                      <td>{e.birthDate ? new Date(e.birthDate).toLocaleDateString() : ''}</td>
+                      <td>
+                        <select
+                          className="form-input form-select"
+                          aria-label={t('splitLaunch.col_branch')}
+                          data-testid={`split-launch-branch-${e.id}`}
+                          value={assigned[e.id] ?? ''}
+                          onChange={ev => assign(e.id, ev.target.value)}
+                        >
+                          <option value="">—</option>
+                          {labels.map(l => (
+                            <option key={l} value={l}>
+                              {l}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {blocked && manual && (
+            <p className="split-launch__missing" role="alert" data-testid="split-launch-missing">
+              {t('splitLaunch.manual_missing', { n: plan.missing.length })}
+            </p>
+          )}
+          {blocked && !manual && (
             <div className="split-launch__missing" role="alert" data-testid="split-launch-missing">
               <strong>{t('splitLaunch.missing_title', { n: plan.missing.length })}</strong>
               <ul>

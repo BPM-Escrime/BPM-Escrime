@@ -10,6 +10,10 @@
  * épreuves ; un refus ou une erreur au milieu annule tout. Journal, sans nouvel événement :
  * SplitRankingImported (premier fait de chaque fille), GroupSplitOff (épreuve d'origine,
  * `group` = libellé de la branche), même commandId (docs/adr/0007).
+ *
+ * Compétition couplée (scission par sexe dont toutes les branches restent dans l'épreuve, étape
+ * E3) : rien à créer, refus ; elle se joue en tableaux séparés (ADR-0024). Sinon, toutes les
+ * branches partent en compétitions filles (amendement du 2026-11-26 : pas de mélange).
  * Licensed under GPL-3.0
  */
 import {
@@ -20,7 +24,9 @@ import {
   type PoolRanking,
 } from '../../../shared/types';
 import {
+  coupledFormula,
   flatSettingsOf,
+  isCoupledSplit,
   type FormulaV2,
   type SplitBranch,
   type SplitPhase,
@@ -71,8 +77,18 @@ const fencerRef = (f: Pick<Fencer, 'id' | 'lastName' | 'firstName'>) => ({
 
 /** Scission en dernière phase de la formule enregistrée ; refus sinon */
 function storedSplit(comp: Competition): { formula: FormulaV2; split: SplitPhase } {
-  const formula = comp.settings?.formula;
+  const stored = comp.settings?.formula;
+  // Formule enregistrée avant E3 (ancienne compétition couplée) relue comme la scission
+  const formula = stored ? coupledFormula(stored) : undefined;
   const split = formula?.phases[formula.phases.length - 1];
+  const coupled =
+    split?.kind === 'split' ? isCoupledSplit(split) : !!comp.settings?.postPoolSplitCriteria;
+  if (coupled) {
+    throw new CommandError(
+      'invalid_settings',
+      'Toutes les branches restent dans l’épreuve : tableaux séparés, aucune compétition fille à créer'
+    );
+  }
   if (!formula || split?.kind !== 'split') {
     throw new CommandError('invalid_settings', 'Formule sans scission en dernière phase');
   }
@@ -96,6 +112,7 @@ function entryRanking(
 ): PoolRanking[] {
   const prev = formula.phases[formula.phases.length - 2];
   const history = sessionPoolHistory(session);
+  const drawn = allTableauMatches(session);
   let ranking: PoolRanking[];
   if (prev.kind === 'pool') {
     const pools = sessionPools(session);
@@ -104,7 +121,7 @@ function entryRanking(
       pools.length === 0 ||
       !areAllPoolsComplete(pools) ||
       history.length + 1 < rounds ||
-      allTableauMatches(session).length > 0
+      drawn.length > 0
     ) {
       throw new CommandError(
         'pools_not_complete',
@@ -223,8 +240,21 @@ export function splitCompetition(
       label: b.label,
       competitionId: ids[i],
       fencers: b.rows.map(r => ({ ...fencerRef(r.fencer), rank: r.rank })),
+      // Toutes les branches partent : la compétition couplée est refusée plus haut
+      stayInCompetition: false,
     })),
     missing,
+    // Classement d'entrée, dans l'ordre (répartition manuelle à l'écran, étape E3)
+    entrants: [...ranking]
+      .sort((a, b) => a.rank - b.rank)
+      .map(r => ({
+        ...fencerRef(r.fencer),
+        rank: r.rank,
+        gender: r.fencer.gender ?? null,
+        club: r.fencer.club ?? null,
+        birthDate: r.fencer.birthDate ? new Date(r.fencer.birthDate).toISOString() : null,
+        category: r.fencer.category ?? null,
+      })),
   });
   if (input.dryRun) return report(plan.branches.map(() => null));
 
@@ -246,6 +276,7 @@ export function splitCompetition(
   // Filles : épreuve, tireurs copiés, état de départ, classement importé (transaction de runCommand)
   const history: SplitHistoryEntry[] = [];
   const created: string[] = [];
+  const ids: Array<string | null> = plan.branches.map(() => null);
   plan.branches.forEach((planned, i) => {
     const branch = split.branches[i];
     const bf = branchFormula(formula, branch);
@@ -298,6 +329,7 @@ export function splitCompetition(
       fencerIds: planned.rows.map(r => r.fencer.id),
     });
     created.push(daughter.id);
+    ids[i] = daughter.id;
   });
 
   // Épreuve d'origine : filles notées, historique de la scission, un GroupSplitOff par branche
@@ -322,5 +354,5 @@ export function splitCompetition(
   ctx.emitChange?.({ scope: 'fencers', competitionIds: created });
   ctx.emitChange?.({ scope: 'session', competitionIds: [source.id, ...created] });
   ctx.remote?.settingsChanged(source.id, { splitOffCompetitionIds });
-  return report(created);
+  return report(ids);
 }

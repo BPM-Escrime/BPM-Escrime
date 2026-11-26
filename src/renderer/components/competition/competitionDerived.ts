@@ -5,6 +5,7 @@
  */
 import type { Pool } from '../../../shared/types';
 import { getPoolWinnerIds } from '../../../shared/utils/poolCalculations';
+import { pendingSplitOf, type FormulaV2 } from '../../../shared/domain/formula/formulaV2';
 
 type TranslateFn = (key: string, params?: { [key: string]: string | number }) => string;
 
@@ -41,4 +42,36 @@ export function rankingTableauNavAction(params: {
         })
       : t('poolRanking.go_tableau');
   return { label, action: params.onGoToTableau };
+}
+
+/**
+ * Action « suite » sous le classement des poules : tour suivant, ou lancement de la scission
+ * (docs/adr/0039). Scission en attente : phase qui la précède close (dernier tour de poules),
+ * branches pas encore parties (`splitHistory` vide). Compétition couplée (branches toutes
+ * restées, E3) : rien à lancer, tableaux séparés (ADR-0024). Sinon toutes les branches partent
+ * en compétitions filles (pas de mélange, ADR-0039).
+ */
+export function rankingNextRoundAction(params: {
+  t: TranslateFn;
+  formula: FormulaV2 | undefined;
+  splitDone: boolean;
+  isLastPoolRound: boolean;
+  hasPools: boolean;
+  canAdvanceFromPools: boolean;
+  currentPoolRound: number;
+  hasDirectElimination: boolean;
+  onNextRound: () => void;
+  onLaunchSplit: () => void;
+}): { label: string; onClick: () => void; testId?: string } | undefined {
+  const { t } = params;
+  if (!params.isLastPoolRound && params.hasPools && params.canAdvanceFromPools) {
+    return {
+      label: t('pools.next_round_n', { n: params.currentPoolRound + 1 }),
+      onClick: params.onNextRound,
+    };
+  }
+  const pendingSplit =
+    params.formula && !params.splitDone ? pendingSplitOf(params.formula) : undefined;
+  if (!pendingSplit || !params.isLastPoolRound || params.hasDirectElimination) return undefined;
+  return { label: t('splitLaunch.action'), onClick: params.onLaunchSplit, testId: 'split-launch' };
 }

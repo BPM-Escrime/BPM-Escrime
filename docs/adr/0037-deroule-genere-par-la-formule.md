@@ -1,6 +1,6 @@
 # ADR-0037 — Déroulé généré par la formule v2 : navigation, 0 tour de poules, tableau arrêté à N, phase après un tableau
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b et Q5)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b, retrait de la dernière phase d'après, Q5, scission ouverte au MCP, publication GREG / FTP du classement du tableau arrêté)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape D ; question Q5), #1948 ; complète [ADR-0036](0036-formule-v2-arbre-par-phase.md), [ADR-0007](0007-format-evenement.md) et [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -26,14 +26,14 @@
   `startsWithTableau` (0 tour), `formulaSegment` (tours et tableau de la partie en cours,
   tableau arrêté). `formulaSteps` rend le déroulé complet (agent, documentation) ; un test
   vérifie que les onglets suivent `formulaSteps` (`useCompetitionPhases.test.tsx`).
-  *(Amendé le 2026-11-25, D2b : remplace « construit sa barre de navigation à partir de ces
-  étapes ».)*
+  _(Amendé le 2026-11-25, D2b : remplace « construit sa barre de navigation à partir de ces
+  étapes ».)_
 - Les identifiants d'écran existants (`poolprep`, `pools`, `ranking`, `tableau`, `results`,
   `quest`) sont gardés. Les tours de poules qui suivent un tableau arrêté réutilisent les
   écrans des tours de poules, numérotés à la suite ; un identifiant indexé ne sera introduit
-  que si plusieurs phases distinctes peuvent suivre un tableau (#1948). *(Amendé le
+  que si plusieurs phases distinctes peuvent suivre un tableau (#1948). _(Amendé le
   2026-11-25, D2b : remplace « une étape qui suit un tableau arrêté reçoit un identifiant
-  indexé ».)*
+  indexé ».)_
 - Une épreuve sans formule enregistrée garde le déroulé actuel : `formulaOf` construit la même
   suite depuis ses réglages (ADR-0036).
 
@@ -61,7 +61,7 @@ eliminatedIds }`.
     tableau, puis les éliminés des poules (ordre actuel).
   - quand une scission suit le tableau arrêté (ADR-0039), les N restants sont classés dans
     les compétitions filles ; l'épreuve d'origine classe les éliminés du tableau, puis des
-    poules. *(Ajout du 2026-11-26, ADR-0039.)*
+    poules. _(Ajout du 2026-11-26, ADR-0039.)_
 - **État de session** (JSON, sans migration de schéma) : une liste `stageHistory` garde les
   étapes closes (poules d'un tour, tableau arrêté), à côté de `poolHistory`, conservé pour les
   lecteurs actuels. La projection du journal (ADR-0017) rejoue `TableauStageClosed`.
@@ -70,9 +70,11 @@ eliminatedIds }`.
 - **Écran (D2b, amendement du 2026-11-25)** :
   - `stopAt` de 2 à 128 (puissance de 2) réglé sur le tableau ; un tableau arrêté est précédé
     d'au moins un tour de poules et suivi d'un tour de poules ou d'une scission (ADR-0039),
-    sans Tour Quest *(Amendé le 2026-11-26 : remplace « un tableau arrêté est précédé et suivi
-    d'au moins un tour de poules »)* ; le retrait du dernier tour d'après rend le tableau
-    complet ;
+    sans Tour Quest _(Amendé le 2026-11-26 : remplace « un tableau arrêté est précédé et suivi
+    d'au moins un tour de poules »)_ ; le retrait de la dernière phase d'après (tour de
+    poules ou scission) rend le tableau complet ; tant qu'une scission le suit, il reste arrêté
+    _(Amendé le 2026-11-26 : remplace « le retrait du dernier tour d'après rend le tableau
+    complet »)_ ;
   - les tours du tableau après l'arrêt restent affichés ; leur score est refusé par le moteur
     (`tableau_round_after_stop`), pour l'écran, les tablettes et les appareils ;
   - au-dessus du tableau, un bandeau appelle `closeTableauStage` une fois les tours avant
@@ -80,15 +82,24 @@ eliminatedIds }`.
     (`rankingAfterStage`, comme le moteur) ;
   - étape close : onglet « Tableau (clos) » en lecture seule ; classement final, CSV, XML, PDF
     du classement et livret par `rankAfterStages` (libellé « Tableau de N ») et
-    `resultsTableauMatches` (tableau clos). La publication GREG / FTP par le moteur et le
-    pilotage par le MCP relèvent de l'étape F.
+    `resultsTableauMatches` (tableau clos). La publication GREG / FTP par le moteur reprend le
+    classement de l'écran (`rankAfterStages`, `originFinalRanking`). Le pilotage du tableau
+    arrêté par le MCP relève de l'étape F, sauf la scission (`split_competition`, ADR-0039).
+    _(Amendé le 2026-11-26 : remplace « La publication GREG / FTP par le moteur et le pilotage
+    par le MCP relèvent de l'étape F. »)_
 
 ## Conséquences
 
 - D1 ne change pas le moteur : il branche la navigation sur la formule et réutilise
   `skipPools`. D2 ajoute une commande, un événement et une clé d'état de session.
-- Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) ; l'ouverture
-  au MCP des formules à plusieurs tours et du tableau arrêté relève de l'étape F.
+- Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) pour le tirage
+  des poules et du tableau sans placement fourni par l'écran ; seule la scission (`split_competition`,
+  [ADR-0039](0039-scission-competitions-filles.md)) lui est ouverte dès l'étape E, y compris
+  après plusieurs tours ou un tableau arrêté. L'ouverture au MCP du reste des formules à
+  plusieurs tours et du tableau arrêté relève de l'étape F. _(Amendé le 2026-11-26 : remplace
+  « Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) ;
+  l'ouverture au MCP des formules à plusieurs tours et du tableau arrêté relève de l'étape
+  F. »)_
 - Chaque PR en draft, sans auto-merge (ticket `refactor`).
 
 ## Alternatives écartées

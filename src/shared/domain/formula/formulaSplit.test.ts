@@ -259,12 +259,12 @@ describe('règles de la scission (formulaV2Issues, ADR-0039)', () => {
     );
   });
 
-  it('rester dans l’épreuve : refusé jusqu’à l’étape E3', () => {
+  it('rester dans l’épreuve : refusé hors du critère sexe (étape E3)', () => {
     const stay = withSplit(f, {
       branches: [{ ...branches[0], stayInCompetition: true }, branches[1]],
     });
     expect(formulaV2Issues(stay, scope)).toContain(
-      "branche « Tableau A » : rester dans l'épreuve, à partir de l'étape E3"
+      'branche « Tableau A » : rester dans l’épreuve, seulement pour une scission par sexe'
     );
   });
 
