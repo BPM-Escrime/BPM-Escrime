@@ -4,6 +4,7 @@
  * critère), confirmation, puis scission. Scission manuelle (E3) : classement d'entrée rendu par
  * la simulation, une branche par tireur (tri, « Tout dans… »), simulation relancée avec les
  * affectations à chaque changement ; confirmation tant qu'un tireur n'est pas affecté : non.
+ * Ex aequo à une borne (docs/adr/0040) : listés, choix pour cette scission (« ties »).
  * L'écran n'écrit rien d'autre ; la répartition reste celle du moteur (planSplit).
  * Licensed under GPL-3.0
  */
@@ -15,6 +16,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { useToast } from '../Toast';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
+import { TiesAtBarSelect, tiesNotice, type TiesChoice } from '../ties/TiesAtBar';
 
 type SplitResult = Output<'splitCompetition'>;
 type Entrant = SplitResult['entrants'][number];
@@ -60,6 +62,8 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
   const [assigned, setAssigned] = useState<Record<string, string>>({});
   const [sort, setSort] = useState<SortKey>('rank');
   const [allTo, setAllTo] = useState('');
+  /** Ex aequo à une borne (docs/adr/0040) : choix pour cette scission ; absent = formule */
+  const [ties, setTies] = useState<TiesChoice | undefined>(undefined);
   const request = useRef(0);
 
   const assignments = useMemo(
@@ -76,6 +80,7 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
         competitionId,
         dryRun: true,
         ...(manual && assignments.length ? { assignments } : {}),
+        ...(ties ? { ties } : {}),
       })
       .then(sim => live && n === request.current && setPlan(sim))
       .catch((e: unknown) => {
@@ -86,8 +91,8 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
     return () => {
       live = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation : ouverture et affectations
-  }, [competitionId, assignments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation : ouverture, affectations, ex aequo
+  }, [competitionId, assignments, ties]);
 
   const run = async () => {
     setBusy(true);
@@ -96,6 +101,7 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
         await client.call('splitCompetition', {
           competitionId,
           ...(manual ? { assignments } : {}),
+          ...(ties ? { ties } : {}),
         })
       );
     } catch (e) {
@@ -105,6 +111,10 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
   };
 
   const labels = plan?.branches.map(b => b.label) ?? [];
+  const nameOf = (id: string) => {
+    const e = plan?.entrants.find(x => x.id === id);
+    return e ? `${e.lastName} ${e.firstName}` : id;
+  };
   const entrants = useMemo(() => sortEntrants(plan?.entrants ?? [], sort), [plan, sort]);
   const assign = (fencerId: string, branch: string) =>
     setAssigned(prev => {
@@ -164,6 +174,19 @@ export const SplitLaunchDialog: React.FC<SplitLaunchDialogProps> = ({
               ))}
             </tbody>
           </table>
+          {(plan.tiedAtBar.length > 0 || ties) && (
+            <div className="split-launch__ties" role="status" data-testid="split-launch-ties">
+              {plan.tiedAtBar.map(tied => (
+                <p key={`${tied.rank}-${tied.fencerIds.join()}`}>{tiesNotice(t, tied, nameOf)}</p>
+              ))}
+              <TiesAtBarSelect
+                value={ties}
+                allowKeep
+                testId="split-launch-ties-select"
+                onChange={setTies}
+              />
+            </div>
+          )}
           {manual && (
             <div className="split-launch__manual" data-testid="split-launch-manual">
               <div className="split-launch__tools">

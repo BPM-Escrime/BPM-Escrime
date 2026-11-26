@@ -4884,5 +4884,14 @@
     "col_rank": "Renk",
     "col_fencer": "Emsaver",
     "manual_missing": "{{n}} emsaver da lakaat en ur skourr a-raok rannañ."
+  },
+  "tiesAtBar": {
+    "label": "Par-ha-par ouzh ar varrenn",
+    "all": "An holl a vez dibabet",
+    "initial_ranking": "Disrannet hervez ar renkadur deroù",
+    "keep": "Hervez ar formulenn",
+    "notice": "{{n}} c'hlezeier par-ha-par d'al lec'h {{rank}} evit {{places}} lec'h : {{names}}",
+    "choose": "Petra ober gant ar re bar-ha-par evit an droc'h-mañ ?",
+    "formula": "{{label}} (formulenn)"
   }
 }

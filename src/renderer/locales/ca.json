@@ -4884,5 +4884,14 @@
     "col_rank": "Posició",
     "col_fencer": "Tirador",
     "manual_missing": "{{n}} tirador(s) per assignar a una branca abans de dividir."
+  },
+  "tiesAtBar": {
+    "label": "Empats a la tall",
+    "all": "Tots classificats",
+    "initial_ranking": "Desempatats per la classificació d'entrada",
+    "keep": "Segons la fórmula",
+    "notice": "{{n}} tiradors empatats a la {{rank}}a posició per a {{places}} plaça(es): {{names}}",
+    "choose": "Què cal fer amb aquests empats en aquest tall?",
+    "formula": "{{label}} (fórmula)"
   }
 }

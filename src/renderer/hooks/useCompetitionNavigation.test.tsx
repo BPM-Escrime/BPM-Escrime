@@ -11,8 +11,13 @@ import { BpmClientProvider } from '../api/BpmClientContext';
 import type { BpmClient } from '../../shared/api/client';
 
 vi.mock('../components/Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-const { confirmMock } = vi.hoisted(() => ({ confirmMock: vi.fn() }));
-vi.mock('../components/ConfirmDialog', () => ({ useConfirm: () => ({ confirm: confirmMock }) }));
+const { confirmMock, chooseMock } = vi.hoisted(() => ({
+  confirmMock: vi.fn(),
+  chooseMock: vi.fn(),
+}));
+vi.mock('../components/ConfirmDialog', () => ({
+  useConfirm: () => ({ confirm: confirmMock, choose: chooseMock }),
+}));
 vi.mock('./useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 const setup = (
@@ -31,7 +36,10 @@ const setup = (
   const params = {
     competition: { id: 'c', settings: {} },
     onUpdate,
-    fencers: [],
+    fencers: [
+      { id: 'f1', lastName: 'ALPHA', firstName: 'A' },
+      { id: 'f2', lastName: 'BRAVO', firstName: 'B' },
+    ],
     updateFencers: vi.fn(),
     getCheckedInFencers: () => [],
     pools: [],
@@ -131,6 +139,51 @@ describe('handleNextPoolRound par le moteur (docs/adr/0017)', () => {
   it('confirmation refusée : aucune clôture', async () => {
     const call = vi.fn(async () => ({ nextRound: 2, qualified: 8, eliminated: 4 }));
     confirmMock.mockResolvedValueOnce(false);
+    const s = setup([], false, false, { call } as unknown as BpmClient);
+    await s.nextRound();
+    expect(call).toHaveBeenCalledTimes(1);
+    expect(s.setCurrentPhase).not.toHaveBeenCalled();
+  });
+
+  it('ex aequo à la barre (ADR-0040) : listés, choix pour cette coupe, closePoolRound avec « ties »', async () => {
+    const tiedAtBar = { rank: 4, fencerIds: ['f1', 'f2'], places: 1 };
+    const call = vi.fn(async (_name: string, input: { dryRun?: boolean; ties?: string }) => ({
+      dryRun: !!input.dryRun,
+      round: 1,
+      nextRound: 2,
+      qualified: input.ties === 'initial_ranking' ? 4 : 5,
+      eliminated: 2,
+      tiedAtBar,
+    }));
+    chooseMock.mockResolvedValueOnce('initial_ranking');
+    confirmMock.mockResolvedValueOnce(true);
+    const s = setup([], false, false, { call } as unknown as BpmClient);
+    await s.nextRound();
+    const asked = chooseMock.mock.calls[0][0];
+    expect(asked.choices.map((c: { value: string }) => c.value)).toEqual([
+      'all',
+      'initial_ranking',
+    ]);
+    expect(asked.message).toContain('tiesAtBar.notice');
+    expect(call).toHaveBeenNthCalledWith(2, 'closePoolRound', {
+      competitionId: 'c',
+      dryRun: true,
+      ties: 'initial_ranking',
+    });
+    expect(call).toHaveBeenNthCalledWith(3, 'closePoolRound', {
+      competitionId: 'c',
+      ties: 'initial_ranking',
+    });
+  });
+
+  it('ex aequo à la barre : choix annulé, aucune clôture', async () => {
+    const call = vi.fn(async () => ({
+      nextRound: 2,
+      qualified: 5,
+      eliminated: 2,
+      tiedAtBar: { rank: 4, fencerIds: ['f1', 'f2'], places: 1 },
+    }));
+    chooseMock.mockResolvedValueOnce(null);
     const s = setup([], false, false, { call } as unknown as BpmClient);
     await s.nextRound();
     expect(call).toHaveBeenCalledTimes(1);

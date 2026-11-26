@@ -19,9 +19,18 @@ interface PromptOptions extends ConfirmOptions {
   placeholder?: string;
 }
 
+/** Choix parmi plusieurs actions (bouton par choix), annulation possible */
+export interface ChooseOptions {
+  message: string;
+  choices: Array<{ value: string; label: string }>;
+  cancelLabel?: string;
+}
+
 interface ConfirmContextType {
   confirm: (messageOrOptions: string | ConfirmOptions) => Promise<boolean>;
   prompt: (messageOrOptions: string | PromptOptions) => Promise<string | null>;
+  /** Valeur du choix cliqué ; null : annulé */
+  choose: (options: ChooseOptions) => Promise<string | null>;
 }
 
 const ConfirmContext = createContext<ConfirmContextType | null>(null);
@@ -32,6 +41,8 @@ interface PendingConfirm {
   cancelLabel: string;
   // Présent uniquement en mode prompt
   input?: { placeholder?: string };
+  // Présent uniquement en mode choix : un bouton par choix, à la place de « confirmer »
+  choices?: ChooseOptions['choices'];
   resolve: (value: string | null) => void;
 }
 
@@ -83,6 +94,26 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, []);
 
+  const choose = useCallback((options: ChooseOptions): Promise<string | null> => {
+    return new Promise<string | null>(resolve => {
+      setPending({
+        message: options.message,
+        confirmLabel: '',
+        cancelLabel: options.cancelLabel || translateStatic('actions.cancel'),
+        choices: options.choices,
+        resolve,
+      });
+    });
+  }, []);
+
+  const handleChoice = (value: string) => {
+    if (pending) {
+      pending.resolve(value);
+      setPending(null);
+      previousFocusRef.current?.focus();
+    }
+  };
+
   const handleConfirm = () => {
     if (pending) {
       pending.resolve(pending.input ? inputValue : '');
@@ -106,7 +137,7 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ConfirmContext.Provider value={{ confirm, prompt }}>
+    <ConfirmContext.Provider value={{ confirm, prompt, choose }}>
       {children}
 
       {pending && (
@@ -156,9 +187,24 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
               <Button type="button" onClick={handleCancel}>
                 {pending.cancelLabel}
               </Button>
-              <Button ref={confirmBtnRef} type="button" variant="primary" onClick={handleConfirm}>
-                {pending.confirmLabel}
-              </Button>
+              {pending.choices ? (
+                pending.choices.map((c, i) => (
+                  <Button
+                    key={c.value}
+                    ref={i === 0 ? confirmBtnRef : undefined}
+                    type="button"
+                    variant="primary"
+                    data-testid={`confirm-choice-${c.value}`}
+                    onClick={() => handleChoice(c.value)}
+                  >
+                    {c.label}
+                  </Button>
+                ))
+              ) : (
+                <Button ref={confirmBtnRef} type="button" variant="primary" onClick={handleConfirm}>
+                  {pending.confirmLabel}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -176,6 +222,7 @@ export const useConfirm = (): ConfirmContextType => {
       confirm: async () => false,
       // window.prompt() non supporté par Electron : annulation
       prompt: async () => null,
+      choose: async () => null,
     };
   }
   return context;

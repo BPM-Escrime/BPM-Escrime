@@ -4884,5 +4884,14 @@
     "col_rank": "Rank",
     "col_fencer": "Fencer",
     "manual_missing": "{{n}} fencer(s) to assign to a branch before splitting."
+  },
+  "tiesAtBar": {
+    "label": "Ties at the cut",
+    "all": "All qualify",
+    "initial_ranking": "Split by entry ranking",
+    "keep": "As set in the formula",
+    "notice": "{{n}} fencers tied in place {{rank}} for {{places}} spot(s): {{names}}",
+    "choose": "What should happen to these tied fencers for this cut?",
+    "formula": "{{label}} (formula)"
   }
 }

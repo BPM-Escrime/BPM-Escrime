@@ -182,6 +182,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     poolsFrozen,
     poolCorrectionDialog,
     tableauDrift,
+    tableauTiesProps,
     requestRebuild,
     rapieres,
     updateRapieres,
@@ -754,6 +755,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             tieBreakByVictory={tieBreakByVictory}
             updateFencer={updateFencer}
             tableauDrift={tableauDrift}
+            tableauTies={tableauTiesProps}
             onRebuildTableau={requestRebuild}
             onRecordScore={recordScreenScore}
             onWithdraw={handleWithdrawFencer}

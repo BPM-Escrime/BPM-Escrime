@@ -5,6 +5,7 @@
 import React, { memo } from 'react';
 import { AdvancementMode, AdvancementRule } from '../../../shared/types';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TiesAtBarSelect } from '../ties/TiesAtBar';
 
 interface Props {
   rule: AdvancementRule;
@@ -51,7 +52,8 @@ const AdvancementRuleEditor_: React.FC<Props> = ({ rule, onChange, inputFencers,
       fixed_bracket: { count: 16 },
       pool_winner: {},
     };
-    onChange({ mode, ...defaults[mode] });
+    // Ex aequo à la barre (ADR-0040) : gardé d'un mode à l'autre
+    onChange({ mode, ...defaults[mode], ...(rule.ties ? { ties: rule.ties } : {}) });
   };
 
   return (
@@ -104,6 +106,17 @@ const AdvancementRuleEditor_: React.FC<Props> = ({ rule, onChange, inputFencers,
           <span className="advancement-preview">{t('formulaSim.advancing', { n: advancing })}</span>
         )}
       </div>
+      {/* Ex aequo à la barre quand un nombre de qualifiés est fixé (docs/adr/0040) */}
+      {(rule.mode === 'percentage' ||
+        rule.mode === 'fixed_count' ||
+        rule.mode === 'fixed_bracket') && (
+        <TiesAtBarSelect
+          value={rule.ties}
+          disabled={readOnly}
+          testId="advancement-ties"
+          onChange={ties => onChange({ ...rule, ties })}
+        />
+      )}
     </div>
   );
 };

@@ -27,6 +27,7 @@ import type {
 import { SplitGroupTabs } from './SplitGroupTabs';
 import { TableauDriftBanner } from '../tableau/TableauDriftBanner';
 import { TableauStageBanner } from '../tableau/TableauStageBanner';
+import { TableauTiesBanner, type TableauTiesProps } from '../tableau/TableauTiesBanner';
 import type { PoolCorrectionImpact } from '../../../shared/utils/poolCorrectionImpact';
 import { useRemoteApi } from '../../api/remoteApi';
 
@@ -73,6 +74,8 @@ interface TableauPhaseProps {
   onClearScore?: TableauViewProps['onClearScore'];
   /** Pistes et arbitres des matchs écrits par le moteur (assignMatches, docs/adr/0017) */
   onAssign?: (input: AssignmentsInput) => Promise<'recorded' | 'local' | 'refused'>;
+  /** Ex aequo à la barre de qualification (docs/adr/0040) : choix tant que rien n'est joué */
+  tableauTies?: TableauTiesProps;
   /** Tableau arrêté à N tireurs (docs/adr/0037) : bandeau et passage à la phase suivante */
   stopAt?: number;
   /** Tableau arrêté déjà clos : consultation seule (docs/adr/0037) */
@@ -115,6 +118,7 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
   onGenerateTableau,
   onClearScore,
   onAssign,
+  tableauTies,
   stopAt,
   closedStage = false,
   stageThenSplit = false,
@@ -200,6 +204,9 @@ const TableauPhase: React.FC<TableauPhaseProps> = ({
           thenSplit={stageThenSplit}
           onClosed={() => setCurrentPhase(stageThenSplit ? 'ranking' : 'checkin')}
         />
+      )}
+      {!closedStage && tableauTies && !tableauMatches.some(m => m.winner && !m.isBye) && (
+        <TableauTiesBanner {...tableauTies} />
       )}
       {tableauDrift && onRebuildTableau && (
         <TableauDriftBanner drift={tableauDrift} onRebuild={onRebuildTableau} />

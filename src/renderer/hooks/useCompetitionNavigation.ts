@@ -22,6 +22,7 @@ import type {
 import type { ConsolationBracket, TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import type { GroupTableau } from '../../shared/domain/ranking/splitGroups';
 import { useConfirm } from '../components/ConfirmDialog';
+import { TIES_CHOICES, tiesNotice, type TiesChoice } from '../components/ties/TiesAtBar';
 import { useToast } from '../components/Toast';
 import type { Phase } from './useCompetitionSession';
 import type { useFencerManagement } from './useFencerManagement';
@@ -113,7 +114,7 @@ export function useCompetitionNavigation({
 }: UseCompetitionNavigationParams) {
   const client = useBpmClient();
   const { showToast } = useToast();
-  const { confirm } = useConfirm();
+  const { confirm, choose } = useConfirm();
   const { t } = useTranslation();
 
   const handleQuestConfigUpdate = useCallback(
@@ -286,10 +287,44 @@ export function useCompetitionNavigation({
    */
   const closeRoundByCommand = async (): Promise<'recorded' | 'local' | 'refused'> => {
     try {
-      const sim = await client.call('closePoolRound', {
+      let sim = await client.call('closePoolRound', {
         competitionId: competition.id,
         dryRun: true,
       });
+      // Ex aequo à la barre au-delà du quota (docs/adr/0040) : choix pour cette coupe
+      let ties: TiesChoice | undefined;
+      if (sim.tiedAtBar) {
+        const formulaTies =
+          nextRoundPlan({
+            weapon: competition.weapon,
+            settings: competition.settings,
+            round: currentPoolRound,
+            pools,
+            history: poolHistory ?? [],
+            isLaserSabre: competition.weapon === Weapon.LASER,
+          }).ties ?? 'all';
+        const nameOf = (id: string) => {
+          const f = fencers.find(x => x.id === id);
+          return f ? `${f.lastName} ${f.firstName}` : id;
+        };
+        const picked = await choose({
+          message: `${tiesNotice(t, sim.tiedAtBar, nameOf)}\n${t('tiesAtBar.choose')}`,
+          choices: TIES_CHOICES.map(c => ({
+            value: c,
+            label:
+              c === formulaTies
+                ? t('tiesAtBar.formula', { label: t(`tiesAtBar.${c}`) })
+                : t(`tiesAtBar.${c}`),
+          })),
+        });
+        if (!picked) return 'refused';
+        ties = picked as TiesChoice;
+        sim = await client.call('closePoolRound', {
+          competitionId: competition.id,
+          dryRun: true,
+          ties,
+        });
+      }
       const ok = await confirm(
         t('pools.next_round_confirm', {
           n: sim.nextRound,
@@ -298,7 +333,10 @@ export function useCompetitionNavigation({
         })
       );
       if (!ok) return 'refused';
-      await client.call('closePoolRound', { competitionId: competition.id });
+      await client.call('closePoolRound', {
+        competitionId: competition.id,
+        ...(ties ? { ties } : {}),
+      });
       afterRoundClosed(sim.nextRound);
       return 'recorded';
     } catch (e) {

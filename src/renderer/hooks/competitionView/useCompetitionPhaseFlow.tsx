@@ -17,10 +17,8 @@ import { useRemoteCheckinSync } from '../useRemoteCheckinSync';
 import { buildMatchAuditOptions } from '../../components/competition/matchAuditOptions';
 import CompetitionPoolCard from '../../components/competition/CompetitionPoolCard';
 import PoolRoundSelector from '../../components/competition/PoolRoundSelector';
-import {
-  computeEffectiveTableauRanking,
-  computeMatchProgress,
-} from '../../../shared/domain/ranking/tableauRanking';
+import { computeMatchProgress, tableauCut } from '../../../shared/domain/ranking/tableauRanking';
+import type { TiesChoice } from '../../components/ties/TiesAtBar';
 import type { CompetitionViewProps } from '../../components/competition/competitionViewTypes';
 import { useCompetitionSessionSync } from './useCompetitionSessionSync';
 import { useCompetitionCore } from './useCompetitionCore';
@@ -214,21 +212,26 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     [storedFormula, hasDirectElimination]
   );
 
+  // Ex aequo à la barre du tableau (docs/adr/0040) : choix de l'écran pour ce tableau seulement
+  const [tableauTies, setTableauTies] = useState<TiesChoice | undefined>(undefined);
+
   // Classement effectif pour le tableau (filtré par vainqueurs de poule et/ou groupe actif)
-  const effectiveTableauRanking = useMemo(
+  const tableauCutResult = useMemo(
     () =>
-      computeEffectiveTableauRanking(overallRanking, pools, {
+      tableauCut(overallRanking, pools, {
         isRapieres,
         rapieresTableauMode: rapieres.tableauMode,
         // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
         poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
         customFormula: hasDirectElimination ? customFormula : undefined,
         tableauQualification,
+        ties: tableauTies,
         postPoolSplitCriteria,
         activeSplitGroup,
         splitOffCompetitionIds,
       }),
     [
+      tableauTies,
       overallRanking,
       pools,
       isRapieres,
@@ -241,6 +244,19 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
       activeSplitGroup,
       splitOffCompetitionIds,
     ]
+  );
+  const effectiveTableauRanking = tableauCutResult.ranking;
+  const tableauTiesProps = useMemo(
+    () => ({
+      tiedAtBar: tableauCutResult.tiedAtBar,
+      value: tableauTies,
+      onChange: setTableauTies,
+      nameOf: (id: string) => {
+        const f = overallRanking.find(r => r.fencer.id === id)?.fencer;
+        return f ? `${f.lastName} ${f.firstName}` : id;
+      },
+    }),
+    [tableauCutResult.tiedAtBar, tableauTies, overallRanking]
   );
 
   // Calcul progression matchs
@@ -346,6 +362,7 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     setPoolPrepLaunch,
     actionsMenuRef,
     effectiveTableauRanking,
+    tableauTiesProps,
     matchProgress,
     matchAuditOptions,
     historyPoolsToShow,

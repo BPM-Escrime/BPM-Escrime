@@ -4884,5 +4884,14 @@
     "col_rank": "Posição",
     "col_fencer": "Atirador",
     "manual_missing": "{{n}} atirador(es) a atribuir a um ramo antes de dividir."
+  },
+  "tiesAtBar": {
+    "label": "Empates no corte",
+    "all": "Todos qualificados",
+    "initial_ranking": "Desempate pela classificação de entrada",
+    "keep": "Conforme a fórmula",
+    "notice": "{{n}} atiradores empatados no {{rank}}º lugar para {{places}} vaga(s): {{names}}",
+    "choose": "O que fazer com estes empates neste corte?",
+    "formula": "{{label}} (fórmula)"
   }
 }
