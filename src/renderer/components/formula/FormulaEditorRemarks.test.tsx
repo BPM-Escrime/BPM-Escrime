@@ -198,10 +198,10 @@ describe('mode expert de l’éditeur (ADR-0041, Q17)', () => {
     expect(screen.getByTestId('formula-expert-toggle')).toBeChecked();
     fireEvent.click(screen.getByTestId('formula-step-tableau'));
     expect(document.getElementById('tableau-stop-at')).toHaveValue('8');
-    // Une fois la brique retirée, l'édition retombe au niveau simple (préférence éteinte)
+    // Brique retirée : l'expert reste allumé pour cette édition (ADR-0041), préférence éteinte
     fireEvent.change(document.getElementById('tableau-stop-at')!, { target: { value: '0' } });
     expect(last?.phases.every(p => !(p.kind === 'tableau' && p.stopAt))).toBe(true);
-    expect(screen.getByTestId('formula-expert-toggle')).not.toBeChecked();
+    expect(screen.getByTestId('formula-expert-toggle')).toBeChecked();
   });
 });
 

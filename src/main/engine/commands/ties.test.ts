@@ -25,6 +25,8 @@ import { applyOperationsV2 } from '../../../shared/domain/formula/formulaV2Opera
 import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
+import { projectCompetition } from '../../../shared/domain/journal/projectCompetition';
+import { compareWithState, stateView } from '../../../shared/domain/journal/compareWithState';
 import { listMatches } from './sport';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
@@ -398,7 +400,23 @@ d('ex aequo à la barre (docs/adr/0040)', () => {
     }
     const closed = events(comp.id).find(e => e.type === 'PoolRoundClosed')!.payload as any;
     expect(closed.qualifiedIds).toHaveLength(4);
-    // Rejeu : le tirage n'est pas refait, la coupe vient de l'événement
+    // Rejeu du journal : coupe reprise de l'événement, sans nouveau tirage, aucun écart
+    const spy2 = vi.spyOn(Math, 'random');
+    const facts = projectCompetition(events(comp.id));
+    const statusById = Object.fromEntries(
+      db.getFencersByCompetition(comp.id).map(f => [f.id, f.status as string])
+    );
+    const settings = db.getCompetition(comp.id)!.settings;
+    expect(
+      compareWithState(
+        facts,
+        stateView((db.getSessionState(comp.id) ?? {}) as Record<string, unknown>, settings),
+        statusById
+      )
+    ).toEqual([]);
+    expect(spy2).not.toHaveBeenCalled();
+    spy2.mockRestore();
+    // Base : la coupe vient de l'événement
     const statuses = db.getFencersByCompetition(comp.id);
     expect(
       statuses

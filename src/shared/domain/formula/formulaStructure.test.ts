@@ -345,6 +345,15 @@ describe('avertissements de la simulation (ADR-0041)', () => {
 });
 
 describe('mode expert : briques et réglages', () => {
+  it('une formule reste valide quel que soit le mode : le jugement ignore le mode expert', () => {
+    // Formule experte valide (tableau arrêté suivi d'un tour) : aucune remarque, sans mode
+    const f = formula(pool(), tableau({ stopAt: 8 }), pool({ sizeMin: 4, sizeMax: 4 }));
+    expect(formulaNeedsExpert(f)).toBe(true);
+    expect(formulaV2Issues(f, scope)).toEqual([]);
+    // formulaV2Issues ne prend aucun paramètre de mode (scope, progress seulement)
+    expect(formulaV2Issues.length).toBeLessThanOrEqual(3);
+  });
+
   it('formule par défaut : simple', () => {
     expect(formulaNeedsExpert(base())).toBe(false);
   });

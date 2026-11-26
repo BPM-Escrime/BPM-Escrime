@@ -247,6 +247,42 @@ d('tour suivant tiré par le moteur (docs/adr/0042)', () => {
     expect(events(comp.id).filter(e => e.type === 'TableauGenerated')).toHaveLength(1);
   });
 
+  it('scission après deux tours : poules du tour 2 tirées par le moteur, puis scission', async () => {
+    // Formule : tour 1 (6 qualifiés), tour 2, scission par rang (3 + le reste)
+    const two = twoRounds();
+    const f = applyOperationsV2(
+      { ...fctx, settings: { ...base, formula: two } },
+      [
+        { op: 'removePhase', phase: 'tableau' },
+        { op: 'insertPhase', brick: 'split', at: 2 },
+      ],
+      newId
+    );
+    const withTake: FormulaV2 = {
+      ...f,
+      phases: f.phases.map(p =>
+        p.kind === 'split'
+          ? {
+              ...p,
+              branches: p.branches.map((b, i) =>
+                i === 0 ? { ...b, take: { mode: 'fixed_count', count: 3 } } : b
+              ),
+            }
+          : p
+      ),
+    };
+    const comp = competition(withTake, 12);
+    await call('generatePools', { competitionId: comp.id, poolCount: 2 });
+    await playPools(comp.id, true);
+    await call('closePoolRound', { competitionId: comp.id });
+    // Tour 2 tiré par le moteur, sans placement de l'écran
+    await call('generatePools', { competitionId: comp.id });
+    await playPools(comp.id, false, false);
+    const out = await call('splitCompetition', { competitionId: comp.id });
+    expect(out.branches.map((b: any) => b.fencers.length)).toEqual([3, 3]);
+    expect(out.branches.every((b: any) => typeof b.competitionId === 'string')).toBe(true);
+  });
+
   it('arbitres du tour courant : poules du tour 2', async () => {
     const { comp } = await closeFirstRound();
     await call('generatePools', { competitionId: comp.id });

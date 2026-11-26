@@ -85,7 +85,11 @@ import { EVENT, recordEvents } from './eventLog';
 import { resolveSetting } from './settings';
 import { bracketMatchView, fencerRef, readSession, summarizePool } from './sessionView';
 import { areAllPoolsComplete, isPoolComplete } from '../../../shared/domain/pools/poolCompletion';
-import { phaseSettings, tableauQualificationOf } from '../../../shared/domain/formula/formulaV2';
+import {
+  phaseSettings,
+  poolBoutOrderOfRound,
+  tableauQualificationOf,
+} from '../../../shared/domain/formula/formulaV2';
 import { stoppedTableauOf } from '../../../shared/domain/formula/formulaSteps';
 import { originFinalRanking, splitHistoryOf } from '../../../shared/domain/formula/splitPlan';
 import {
@@ -343,7 +347,8 @@ export function generatePools(
         poolCount: options.poolCount,
         minPerPool: min,
         maxPerPool: max,
-        boutOrder: comp.settings?.poolBoutOrder,
+        // Ordre des matchs du tour tiré (formule), comme l'écran (ADR-0042)
+        boutOrder: poolBoutOrderOfRound(comp.settings, round),
         separation: options.separation,
         newId: uuidv4,
       });

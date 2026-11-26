@@ -105,7 +105,10 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   // Mode expert (ADR-0041) : préférence du poste, rallumée pour cette édition quand la formule
   // contient une brique ou un réglage expert (la préférence ne change pas)
   const { expert: preferred, setExpert } = useFormulaExpert();
-  const forced = formulaNeedsExpert(formula);
+  // Formule ouverte avec de l'expert : rallumé pour toute l'édition, même si la brique est
+  // retirée ensuite ; une brique experte ajoutée garde aussi le mode
+  const [openedExpert] = useState(() => formulaNeedsExpert(formula));
+  const forced = openedExpert || formulaNeedsExpert(formula);
   const expert = preferred || forced;
   const isOther = weapon === Weapon.CUSTOM;
   const phases = friezeOfV2(formula);

@@ -436,6 +436,20 @@ export function phaseSettings<R extends PhaseRef>(
 }
 
 /**
+ * Ordre des matchs du tour `round` (1 = 1er) : réglage du tour dans la formule, sinon le
+ * réglage plat (ADR-0036, ADR-0042 : écran et moteur tirent le tour avec ses réglages).
+ */
+export function poolBoutOrderOfRound(
+  settings: Partial<CompetitionSettings> | undefined,
+  round: number
+): 'fie' | 'free' | undefined {
+  const f = settings?.formula;
+  if (f && pools(f).length > 0)
+    return phaseSettings(f, { kind: 'pool', round: round - 1 }).boutOrder;
+  return settings?.poolBoutOrder;
+}
+
+/**
  * Qualification vers le tableau : règle du tour de poules qui précède le tableau (scission
  * ignorée). Aucune (undefined) sans tableau, sans tour de poules juste avant (Tour Quest), ou si
  * tous passent. Exécutée pour toutes les armes (#2013 R1, ADR-0036 : levée du bridage P2).

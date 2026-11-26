@@ -23,6 +23,7 @@ import {
   formulaFromCustom,
   formulaOf,
   phaseSettings,
+  poolBoutOrderOfRound,
   tableauQualificationOf,
   type FormulaV2,
 } from './formulaV2';
@@ -312,5 +313,22 @@ describe('qualification vers le tableau (#2013 R1)', () => {
     }) as CompetitionSettings;
     const built = formulaOf({ weapon: Weapon.EPEE, category: Category.SENIOR, settings });
     expect(tableauQualificationOf(built)).toBeUndefined();
+  });
+});
+
+describe('ordre des matchs du tour tiré (ADR-0042 : réglages du tour)', () => {
+  it('réglage du tour dans la formule, sinon le réglage plat', () => {
+    const f: FormulaV2 = {
+      version: 2,
+      general: {},
+      phases: [
+        { kind: 'pool', id: 'p1', boutOrder: 'fie' } as never,
+        { kind: 'pool', id: 'p2', boutOrder: 'free' } as never,
+      ],
+    };
+    expect(poolBoutOrderOfRound({ formula: f }, 1)).toBe('fie');
+    expect(poolBoutOrderOfRound({ formula: f }, 2)).toBe('free');
+    expect(poolBoutOrderOfRound({ poolBoutOrder: 'free' }, 1)).toBe('free');
+    expect(poolBoutOrderOfRound(undefined, 1)).toBeUndefined();
   });
 });
