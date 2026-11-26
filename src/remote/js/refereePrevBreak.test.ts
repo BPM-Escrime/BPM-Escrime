@@ -121,9 +121,9 @@ describe('install sur la tablette', () => {
 });
 
 describe('câblage de la page', () => {
-  it('bouton, script, écouteurs et cache hors-ligne', () => {
-    expect(html).toContain('id="btn-prev-match"');
-    expect(html).toContain('data-click="refereeApp.requestPrevMatch"');
+  it('script, écouteurs et cache hors-ligne ; pas de bouton « Match précédent » en 2.0.x (#2300)', () => {
+    expect(html).not.toContain('id="btn-prev-match"');
+    expect(html).not.toContain('data-click="refereeApp.requestPrevMatch"');
     expect(html).toContain('<script src="/js/refereePrevBreak.js"></script>');
     expect(base).toContain(':prev_result`');
     expect(base).toContain(':sabre_break`');

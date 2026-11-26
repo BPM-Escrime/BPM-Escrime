@@ -9,7 +9,6 @@ import React from 'react';
 import {
   ChartColumn,
   ClipboardList,
-  Dices,
   Funnel,
   Gavel,
   Lock,
@@ -86,7 +85,6 @@ const PoolViewComponent: React.FC<PoolViewProps> = (props: PoolViewProps) => {
     canUndo,
     redo,
     canRedo,
-    handleAutoFillScores,
     handlePrintPool,
     isRemoteActive,
     defaultArena,
@@ -419,15 +417,6 @@ const PoolViewComponent: React.FC<PoolViewProps> = (props: PoolViewProps) => {
             >
               <Icon icon={Redo2} />
             </TipButton>
-            {!tableauFreeze && (
-              <TipButton
-                onClick={handleAutoFillScores}
-                className="pv-icon-btn is-amber"
-                tip={t('poolView.autofill')}
-              >
-                <Icon icon={Dices} />
-              </TipButton>
-            )}
             <TipButton
               onClick={handlePrintPool}
               className="pv-icon-btn is-primary"
