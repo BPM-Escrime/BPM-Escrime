@@ -1382,4 +1382,16 @@ export const ALL_MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 53,
+    description: 'Catégorie d’âge du tireur, fencers.category (docs/adr/0039)',
+    up(db) {
+      // Codes de Category (U9 … SEN, V1 … V4) ; NULL = inconnue
+      try {
+        db.run(`ALTER TABLE fencers ADD COLUMN category TEXT`);
+      } catch {
+        /* colonne déjà présente */
+      }
+    },
+  },
 ];

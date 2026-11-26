@@ -264,6 +264,7 @@ export function toSplitFencerData(r: PoolRanking): Partial<Fencer> {
     lastName: f.lastName,
     firstName: f.firstName,
     birthDate: toValidDate(f.birthDate),
+    category: f.category,
     gender: f.gender,
     nationality: f.nationality,
     region: f.region,

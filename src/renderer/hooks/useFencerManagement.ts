@@ -13,6 +13,7 @@ import { useTranslation } from './useTranslation';
 import { useCompetitionEvent } from './useCompetitionEvent';
 import { useBpmClient } from '../api/BpmClientContext';
 import { canToggleCheckIn } from '../../shared/domain/fencers/fencerStatus';
+import { computeMissingCategories } from '../../shared/domain/fencers/fencerCategory';
 import { detailsInput, fencerFromDTO, registerInput } from '../api/fencerMapping';
 
 interface UseFencerManagementProps {
@@ -158,6 +159,36 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
     },
     [fencers, competition, onUpdate]
   );
+
+  /**
+   * « Calculer les catégories » (docs/adr/0039) : catégorie des tireurs qui n'en ont pas,
+   * d'après la date de naissance et la saison de l'épreuve ; écrite par updateFencerDetails
+   */
+  const computeCategories = useCallback(async () => {
+    const date = competition.date ? new Date(competition.date) : new Date();
+    const { updates, withoutBirthDate } = computeMissingCategories(fencers, date);
+    try {
+      for (const u of updates) {
+        await client.call('updateFencerDetails', {
+          competitionId: competition.id,
+          fencerId: u.fencerId,
+          details: { category: u.category },
+        });
+      }
+    } catch (error) {
+      showToast(t('fencerList.update_failed', { message: toError(error).message }), 'error');
+    }
+    await updateFencers(
+      Object.fromEntries(updates.map(u => [u.fencerId, { category: u.category }]))
+    );
+    showToast(
+      t('fencerList.compute_categories_done', {
+        count: updates.length,
+        missing: withoutBirthDate.length,
+      }),
+      withoutBirthDate.length > 0 ? 'warning' : 'success'
+    );
+  }, [competition.date, competition.id, fencers, client, updateFencers, showToast, t]);
 
   // Changer le statut de plusieurs tireurs
   const setFencersStatus = useCallback(
@@ -429,6 +460,7 @@ export const useFencerManagement = ({ competition, onUpdate }: UseFencerManageme
     toggleCheckIn,
     checkInAll,
     uncheckAll,
+    computeCategories,
     getCheckedInFencers,
     importRanking,
   };

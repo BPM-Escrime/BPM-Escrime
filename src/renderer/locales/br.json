@@ -1886,7 +1886,11 @@
     "deleted": "{{name}} dilamet",
     "col_handedness": "Dorn",
     "withdraw_failed": "N’eo ket bet enrollet an dilez : {{message}}",
-    "reinstate_failed": "N’eo ket bet enrollet an adlakaat : {{message}}"
+    "reinstate_failed": "N’eo ket bet enrollet an adlakaat : {{message}}",
+    "col_category": "Rumm.",
+    "compute_categories": "Jediñ ar rummadoù",
+    "compute_categories_title": "Rummad oad ar c'hoarierien n'o deus hini ebet, diouzh an deiziad ganedigezh ha koulz ar genstrivadeg",
+    "compute_categories_done": "{{count}} rummad jedet ; {{missing}} c'hoarier hep deiziad ganedigezh"
   },
   "questPhase": {
     "running_title": "Tro Quest o vont en-dro",
@@ -2273,7 +2277,9 @@
     "region_ph": "Sk. : IDF",
     "license_no": "Niv. lañvaz",
     "unranked": "Dirummet",
-    "save": "Enrollañ"
+    "save": "Enrollañ",
+    "category": "Rummad",
+    "category_unknown": "Anroet"
   },
   "exportCenter": {
     "title": "Kreizenn ezporzhiañ",

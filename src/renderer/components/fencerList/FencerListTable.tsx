@@ -3,6 +3,7 @@
  * Licensed under GPL-3.0
  */
 
+import { categoryShortLabel } from '../../../shared/domain/fencers/fencerCategory';
 import React from 'react';
 import { ClipboardList, Pencil, RotateCcw, Search, Swords, Trash2 } from 'lucide-react';
 import { Icon } from '../common/Icon';
@@ -224,6 +225,12 @@ export function FencerListTable({ ctx }: { ctx: FencerListCtx }) {
                                 : fencer.birthDate
                                   ? new Date(fencer.birthDate).getFullYear()
                                   : '-'}
+                            </td>
+                          );
+                        case 'category':
+                          return (
+                            <td key="category" className="text-sm text-muted">
+                              {categoryShortLabel(fencer.category) || '-'}
                             </td>
                           );
                         case 'club':

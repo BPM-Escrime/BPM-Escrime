@@ -6,6 +6,7 @@
  */
 import type { Input } from './contract';
 import type { Fencer } from '../types';
+import { normalizeFencerCategory } from '../domain/fencers/fencerCategory';
 
 type RegisterFencer = Input<'registerFencers'>['fencers'][number];
 type RegisterReferee = Input<'registerReferees'>['referees'][number];
@@ -16,6 +17,7 @@ export const FENCER_DETAIL_KEYS = [
   'lastName',
   'firstName',
   'birthDate',
+  'category',
   'gender',
   'nationality',
   'region',
@@ -45,6 +47,7 @@ export function detailsInput(updates: Partial<Fencer>): FencerDetails {
     const v = updates[key];
     if (key === 'birthDate') out.birthDate = isoDay(v);
     else if (key === 'lastName' || key === 'firstName') out[key] = String(v ?? '').trim();
+    else if (key === 'category') out.category = normalizeFencerCategory(v) ?? null;
     else if (key === 'gender' || key === 'handedness') {
       if (v) out[key] = v;
     } else if (key === 'nationality') {

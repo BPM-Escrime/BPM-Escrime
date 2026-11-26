@@ -5,6 +5,7 @@
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';
+import { FENCER_CATEGORIES } from '../domain/fencers/fencerCategory';
 
 /** Droits (utilisés par le sous-ticket 4, rôles et permissions) */
 export type Permission =
@@ -109,12 +110,20 @@ export const CommandId = z
   );
 
 /** Tireur exposé par le contrat (listFencers, dates en ISO 8601) */
+/** Catégorie d'âge du tireur (docs/adr/0039) : entrée des commandes d'inscription */
+export const FencerCategoryField = z
+  .enum(FENCER_CATEGORIES)
+  .nullable()
+  .optional()
+  .describe('Catégorie d’âge (U9 … U20, SEN, V1 … V4 ; null : effacée, docs/adr/0039)');
+
 export const FencerSchema = z.object({
   id: z.string(),
   ref: z.number(),
   lastName: z.string(),
   firstName: z.string(),
   birthDate: z.string().nullable(),
+  category: z.string().nullable(),
   gender: z.string(),
   nationality: z.string(),
   region: z.string().nullable(),

@@ -1886,7 +1886,11 @@
     "deleted": "{{name}} eliminat",
     "col_handedness": "Lateralitat",
     "withdraw_failed": "Retirada no desada: {{message}}",
-    "reinstate_failed": "Reincorporació no desada: {{message}}"
+    "reinstate_failed": "Reincorporació no desada: {{message}}",
+    "col_category": "Cat.",
+    "compute_categories": "Calcular les categories",
+    "compute_categories_title": "Categoria d'edat dels tiradors que no en tenen, segons la data de naixement i la temporada de la competició",
+    "compute_categories_done": "{{count}} categories calculades; {{missing}} tiradors sense data de naixement"
   },
   "questPhase": {
     "running_title": "Ronda Quest en curs",
@@ -2273,7 +2277,9 @@
     "region_ph": "P. ex.: IDF",
     "license_no": "Núm. de llicència",
     "unranked": "Sense classificar",
-    "save": "Desa"
+    "save": "Desa",
+    "category": "Categoria",
+    "category_unknown": "Sense indicar"
   },
   "exportCenter": {
     "title": "Centre d'exportació",

@@ -204,6 +204,7 @@ export function useCompetitionCore(ctx: Ctx) {
     toggleCheckIn,
     checkInAll,
     uncheckAll,
+    computeCategories,
     getCheckedInFencers,
   } = useFencerManagement({ competition, onUpdate });
 
@@ -423,6 +424,7 @@ export function useCompetitionCore(ctx: Ctx) {
     toggleCheckIn,
     checkInAll,
     uncheckAll,
+    computeCategories,
     getCheckedInFencers,
     importData,
     setImportData,

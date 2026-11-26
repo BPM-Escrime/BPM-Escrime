@@ -1886,7 +1886,11 @@
     "deleted": "{{name}} deleted",
     "col_handedness": "Handedness",
     "withdraw_failed": "Withdrawal not saved: {{message}}",
-    "reinstate_failed": "Reinstatement not saved: {{message}}"
+    "reinstate_failed": "Reinstatement not saved: {{message}}",
+    "col_category": "Cat.",
+    "compute_categories": "Compute categories",
+    "compute_categories_title": "Age category of fencers who have none, from the date of birth and the season of the competition",
+    "compute_categories_done": "{{count}} categories computed; {{missing}} fencers without a date of birth"
   },
   "questPhase": {
     "running_title": "Quest round in progress",
@@ -2273,7 +2277,9 @@
     "region_ph": "E.g. IDF",
     "license_no": "Licence no.",
     "unranked": "Unranked",
-    "save": "Save"
+    "save": "Save",
+    "category": "Category",
+    "category_unknown": "Not set"
   },
   "exportCenter": {
     "title": "Export centre",

@@ -1886,7 +1886,11 @@
     "deleted": "{{name}} supprimé",
     "col_handedness": "Latéralité",
     "withdraw_failed": "Retrait non enregistré : {{message}}",
-    "reinstate_failed": "Réintégration non enregistrée : {{message}}"
+    "reinstate_failed": "Réintégration non enregistrée : {{message}}",
+    "col_category": "Cat.",
+    "compute_categories": "Calculer les catégories",
+    "compute_categories_title": "Catégorie d'âge des tireurs qui n'en ont pas, d'après la date de naissance et la saison de l'épreuve",
+    "compute_categories_done": "{{count}} catégories calculées ; {{missing}} tireurs sans date de naissance"
   },
   "questPhase": {
     "running_title": "Tour Quest en cours",
@@ -2273,7 +2277,9 @@
     "region_ph": "Ex : IDF",
     "license_no": "N° Licence",
     "unranked": "Non classé",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "category": "Catégorie",
+    "category_unknown": "Non renseignée"
   },
   "exportCenter": {
     "title": "Centre d'export",

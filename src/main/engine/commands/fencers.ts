@@ -5,7 +5,7 @@
  * précède le tirage, où le journal commence (docs/adr/0017).
  * Licensed under GPL-3.0
  */
-import { FencerStatus, Gender, type Fencer } from '../../../shared/types';
+import { FencerStatus, Gender, type Category, type Fencer } from '../../../shared/types';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { readSession } from './sessionView';
@@ -18,6 +18,8 @@ export interface FencerDetailsInput {
   firstName?: string;
   /** ISO 8601 (AAAA-MM-JJ) ; null : effacée */
   birthDate?: string | null;
+  /** Code de Category (docs/adr/0039) ; null : effacée */
+  category?: `${Category}` | null;
   gender?: 'M' | 'F' | 'X';
   nationality?: string;
   region?: string | null;
@@ -44,6 +46,7 @@ export function fencerDTO(f: Fencer) {
     lastName: f.lastName,
     firstName: f.firstName,
     birthDate: f.birthDate ? new Date(f.birthDate).toISOString() : null,
+    category: f.category ?? null,
     gender: f.gender,
     nationality: f.nationality,
     region: f.region ?? null,
@@ -80,6 +83,7 @@ function detailsPatch(d: FencerDetailsInput): Partial<Fencer> {
   set('lastName', d.lastName?.trim());
   set('firstName', d.firstName?.trim());
   set('birthDate', d.birthDate ? new Date(d.birthDate) : undefined);
+  set('category', (d.category ?? undefined) as Category | undefined);
   set('gender', d.gender);
   set('nationality', d.nationality?.trim().toUpperCase());
   set('region', d.region ?? undefined);

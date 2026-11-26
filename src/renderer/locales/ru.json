@@ -1886,7 +1886,11 @@
     "deleted": "{{name}} удалён",
     "col_handedness": "Ведущая рука",
     "withdraw_failed": "Снятие не сохранено: {{message}}",
-    "reinstate_failed": "Восстановление не сохранено: {{message}}"
+    "reinstate_failed": "Восстановление не сохранено: {{message}}",
+    "col_category": "Кат.",
+    "compute_categories": "Рассчитать категории",
+    "compute_categories_title": "Возрастная категория спортсменов без категории — по дате рождения и сезону соревнования",
+    "compute_categories_done": "Рассчитано категорий: {{count}}; без даты рождения: {{missing}}"
   },
   "questPhase": {
     "running_title": "Раунд Quest идёт",
@@ -2273,7 +2277,9 @@
     "region_ph": "Напр., МСК",
     "license_no": "№ лицензии",
     "unranked": "Без рейтинга",
-    "save": "Сохранить"
+    "save": "Сохранить",
+    "category": "Категория",
+    "category_unknown": "Не указана"
   },
   "exportCenter": {
     "title": "Центр экспорта",

@@ -98,6 +98,26 @@ d('inscription des tireurs (docs/adr/0018)', () => {
     ).rejects.toMatchObject({ code: 'fencer_not_found' });
   });
 
+  it('catégorie du tireur (docs/adr/0039) : inscrite, modifiée, effacée, refusée hors codes', async () => {
+    const [f] = (
+      await call('registerFencers', {
+        fencers: [{ lastName: 'Durand', firstName: 'Max', category: 'V2' }],
+      })
+    ).fencers;
+    expect(f.category).toBe('V2');
+    expect(db.getFencer(f.id)?.category).toBe('V2');
+    const r = await call('updateFencerDetails', { fencerId: f.id, details: { category: 'V3' } });
+    expect(r.fencer.category).toBe('V3');
+    const cleared = await call('updateFencerDetails', {
+      fencerId: f.id,
+      details: { category: null },
+    });
+    expect(cleared.fencer.category).toBeNull();
+    await expect(
+      call('updateFencerDetails', { fencerId: f.id, details: { category: 'M17' } })
+    ).rejects.toMatchObject({ code: 'invalid_input' });
+  });
+
   it('setFencerRankings et unregisterFencers : avant le tirage seulement', async () => {
     const created = (
       await call('registerFencers', {
