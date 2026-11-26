@@ -1,6 +1,6 @@
 /**
- * BPM - Escrime - Sous-pistes du tournoi des rapières (#1118) : pendant les vagues,
- * plusieurs tablettes arbitrent en même temps des matchs différents d'une même piste.
+ * BPM - Escrime - Sous-pistes (#1118, #2300) : plusieurs tablettes arbitrent en même temps
+ * des matchs différents d'une même piste (vagues des rapières, poule de la piste sinon).
  * Chaque tablette réclame une sous-piste (`arena3`, `arena3s2`, `arena3s3`…), arène à part
  * entière (score, chrono, cartons) qui partage le mot de passe et la poule de la piste.
  * Licensed under GPL-3.0
@@ -46,6 +46,32 @@ export function matchesTakenBySiblings(
     }
   }
   return taken;
+}
+
+/** Match ouvert par une tablette ou lancé, non terminé : l'arène est occupée. */
+export function isArenaBusy(
+  arena: Arena | undefined,
+  opened: { get(arenaId: string): boolean | undefined }
+): boolean {
+  if (!arena?.currentMatch || arena.status === 'finished') return false;
+  return (
+    arena.status === 'in_progress' ||
+    !!arena.currentMatch.startTime ||
+    opened.get(arena.id) === true
+  );
+}
+
+/**
+ * Hors vagues (#2300) : sous-pistes seulement pour une piste de poule (matchs partagés par la
+ * poule, comme les vagues). Ni tableau (un match à la fois sur la piste, file propre à la
+ * piste), ni entraînement ou Mode Club.
+ */
+export function sharesPool(parent: Arena, trainingMode: boolean): boolean {
+  if (trainingMode) return false;
+  const cur = parent.currentMatch;
+  if (cur?.isTableau) return false;
+  const poolId = cur?.poolId ?? parent.activePoolId;
+  return !!poolId && poolId !== '__training__';
 }
 
 /** Copie vierge de la piste pour une sous-piste (même numéro, mot de passe, réglages). */
@@ -104,6 +130,55 @@ export class ArenaSlotRegistry {
   }
 
   /**
+   * Hors vagues (#2300) : plusieurs tablettes arbitrent les matchs de la poule d'une piste.
+   * La piste d'abord ; une sous-piste seulement si la piste est tenue par une autre tablette
+   * encore connectée (`present`). Une tablette absente ne bloque rien : sa remplaçante reprend
+   * la piste et son match. La tablette garde sa sous-piste tant qu'elle y a un match ouvert ou
+   * lancé (`busy`), sinon elle revient sur la piste dès qu'elle est libre. Les sous-pistes
+   * sans tablette connectée ni match ouvert sont supprimées (`drop`). `null` si piste inconnue
+   * ou pleine.
+   */
+  claimShared(
+    arenas: Map<string, Arena>,
+    baseId: string,
+    deviceKey: string,
+    create: (parent: Arena, slot: number) => Arena,
+    present: (arenaId: string) => boolean,
+    busy: (arenaId: string) => boolean,
+    drop: (arenaId: string) => void
+  ): string | null {
+    const parent = arenas.get(baseId);
+    if (!parent) return null;
+    const mine = (id: string) => this.owners.get(id) === deviceKey;
+    const heldByOther = (id: string) => this.owners.has(id) && !mine(id) && present(id);
+    let claimed: string | null = null;
+    const own = [...this.owners.keys()].find(
+      id => mine(id) && id !== baseId && baseArenaId(id) === baseId && arenas.has(id)
+    );
+    if (own && busy(own)) claimed = own;
+    for (let slot = 1; !claimed && slot <= MAX_SLOTS_PER_ARENA; slot++) {
+      const id = slot === 1 ? baseId : `${baseId}s${slot}`;
+      if (heldByOther(id)) continue;
+      if (!arenas.has(id)) create(parent, slot);
+      claimed = id;
+    }
+    if (!claimed) return null;
+    for (const [id, key] of [...this.owners]) {
+      if (key !== deviceKey || id === claimed || baseArenaId(id) !== baseId) continue;
+      this.owners.delete(id);
+      // Sous-piste quittée par sa tablette, sans match ouvert : supprimée
+      if (isSlotArenaId(id) && arenas.has(id) && !busy(id)) drop(id);
+    }
+    this.owners.set(claimed, deviceKey);
+    for (const a of siblingArenas(arenas, claimed)) {
+      if (!isSlotArenaId(a.id) || present(a.id) || busy(a.id)) continue;
+      this.owners.delete(a.id);
+      drop(a.id);
+    }
+    return claimed;
+  }
+
+  /**
    * Nouvelle vague / fin des vagues : libère les sous-pistes sans match en cours, les
    * tablettes concernées sont réattribuées à leur prochaine demande.
    */
@@ -113,4 +188,77 @@ export class ArenaSlotRegistry {
       if (!a?.currentMatch || a.status === 'finished') this.owners.delete(id);
     }
   }
+}
+
+/** Socket.IO du serveur, pour savoir quelles tablettes arbitre sont connectées */
+interface RefereeSockets {
+  sockets?: {
+    sockets?: Map<string, { connected: boolean; data?: { refereeArenaId?: string } }>;
+  };
+}
+
+/** Tablette arbitre connectée sur l'arène (`join_arena` en rôle `referee`, #2300) */
+export function isRefereeConnected(io: RefereeSockets | undefined, arenaId: string): boolean {
+  const sockets = [...(io?.sockets?.sockets?.values() ?? [])];
+  return sockets.some(s => s.connected && s.data?.refereeArenaId === arenaId);
+}
+
+/** État du serveur lu par `claimArenaSlot` (accesseurs : valeurs toujours à jour) */
+export interface SlotClaimContext {
+  readonly arenas: Map<string, Arena>;
+  readonly arenaMatchQueue: Map<string, unknown[]>;
+  /** Match ouvert par la tablette de l'arène */
+  readonly arenaRefereeSelected: Map<string, boolean>;
+  readonly arenaSlots: ArenaSlotRegistry;
+  /** Vagues des rapières : matchs de la vague active, `null` hors vagues */
+  readonly activeWaveMatchIds: Set<string> | null;
+  readonly isTrainingMode: boolean;
+  readonly io: RefereeSockets | undefined;
+}
+
+/** Champs du serveur exposés à `SlotClaimContext` via liveContext */
+export const SLOT_CLAIM_CONTEXT_KEYS = {
+  state: [
+    'arenas',
+    'arenaMatchQueue',
+    'arenaRefereeSelected',
+    'arenaSlots',
+    'activeWaveMatchIds',
+    'isTrainingMode',
+    'io',
+  ],
+  methods: [],
+} as const;
+
+/**
+ * Sous-piste attribuée à une tablette arbitre : pendant les vagues des rapières (#1118), et
+ * hors vagues quand la piste arbitre une poule (#2300) ; sinon la piste elle-même.
+ */
+export function claimArenaSlot(
+  ctx: SlotClaimContext,
+  req: { arenaId: string; deviceKey: string; current?: string }
+): string {
+  const { arenaId, deviceKey, current } = req;
+  const { arenas, arenaMatchQueue: queues, arenaRefereeSelected: opened, arenaSlots } = ctx;
+  const base = baseArenaId(arenaId.startsWith('arena') ? arenaId : `arena${arenaId}`);
+  if (!deviceKey) return base;
+  const create = (parent: Arena, slot: number) => {
+    const arena = createSlotArena(parent, slot);
+    arenas.set(arena.id, arena);
+    queues.set(arena.id, []);
+    return arena;
+  };
+  if (ctx.activeWaveMatchIds !== null) {
+    return arenaSlots.claim(arenas, base, deviceKey, create, current) ?? base;
+  }
+  const parent = arenas.get(base);
+  if (!parent || !sharesPool(parent, ctx.isTrainingMode)) return base;
+  const present = (id: string) => isRefereeConnected(ctx.io, id);
+  const busy = (id: string) => isArenaBusy(arenas.get(id), opened);
+  const drop = (id: string) => {
+    arenas.delete(id);
+    queues.delete(id);
+    opened.delete(id);
+  };
+  return arenaSlots.claimShared(arenas, base, deviceKey, create, present, busy, drop) ?? base;
 }

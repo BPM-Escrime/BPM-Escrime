@@ -68,6 +68,17 @@ Premier écran affiché à l'ouverture.
   automatique) à l'affichage de la liste si une vague est lancée ou terminée. À la fin des
   vagues, les sous-pistes sans match en cours sont supprimées. L'écran d'arène `/arene{N}`
   n'affiche que la piste elle-même.
+- **Plusieurs tablettes sur une piste de poule, tous modes** (#2300) : une tablette qui
+  ouvre `/arene{N}/arbitre` alors qu'une autre tablette connectée tient déjà la piste reçoit
+  une sous-piste, comme pendant les vagues des rapières : elle arbitre un autre match de la
+  poule sans couper celui de la piste. Un match ouvert ou lancé sur une arène n'est proposé
+  ni rechargé sur les autres ; un match seulement préchargé sur la piste et ouvert sur une
+  sous-piste fait passer la piste au match suivant. Une tablette absente (fermée, éteinte)
+  ne bloque rien : la suivante reprend la piste et son match en cours. Une tablette sans
+  match ouvert revient sur la piste dès qu'elle est libre, et sa sous-piste vide est
+  supprimée. Pas de sous-piste en tableau, en entraînement ni en Mode Club (une tablette de
+  plus rejoint la piste, comme avant). L'écran d'arène `/arene{N}` et l'appareil de piste
+  (Cyrano, OPP2) suivent la piste seule.
 
 ---
 
