@@ -10,7 +10,7 @@
 
 import { rankAfterStages, type TableauStageRecord } from '../tableau/tableauStage';
 import type { PoolRanking } from '../../types';
-import { getAdvancementCount } from '../../utils/customFormulaSettings';
+import { getAdvancementCount } from '../ranking/advancement';
 import type { SplitBranch, SplitPhase } from './formulaV2';
 
 /** Affectation manuelle d'un tireur à une branche (libellé) */

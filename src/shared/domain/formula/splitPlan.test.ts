@@ -1,6 +1,6 @@
 /**
  * Répartition d'une scission entre ses branches (planSplit, docs/adr/0039) et classement de
- * l'épreuve d'origine après la scission (Q6 ; Q5 d'ADR-0037 amendée le 2026-11-27).
+ * l'épreuve d'origine après la scission (Q6 ; Q5 d'ADR-0037 amendée le 2026-11-26).
  */
 import { describe, expect, it } from 'vitest';
 import { Category, Fencer, FencerStatus, Gender, PoolRanking } from '../../types';

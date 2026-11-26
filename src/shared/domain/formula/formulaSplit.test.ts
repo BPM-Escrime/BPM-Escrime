@@ -1,6 +1,6 @@
 /**
  * Brique Scission de la formule v2 (docs/adr/0039 ; ADR-0036 et ADR-0037 amendées le
- * 2026-11-27) : grammaire de la frise, règles, opérations entre deux formules, déroulé.
+ * 2026-11-26) : grammaire de la frise, règles, opérations entre deux formules, déroulé.
  */
 import { describe, expect, it } from 'vitest';
 import { Category, CompetitionSettings, Gender, Weapon } from '../../types';

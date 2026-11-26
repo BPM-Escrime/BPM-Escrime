@@ -1,6 +1,6 @@
 # ADR-0036 — Formule v2 : un arbre de phases pour toutes les armes, lu par phase par le moteur, sans migration de schéma
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : arbre, sans migration SQL, réglage de répartition du tour suivant, nouvelle clé `settings.formula`) ; amendée le 2026-11-27 (forme de `SplitPhase.branches` : `SplitBranch[]` d'[ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : arbre, sans migration SQL, réglage de répartition du tour suivant, nouvelle clé `settings.formula`) ; amendée le 2026-11-26 (forme de `SplitPhase.branches` : `SplitBranch[]` d'[ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape C ; questions Q3, Q4, Q19), #1948 (ex-lot 0) ; complète [ADR-0012](0012-formule-domaine.md), [ADR-0032](0032-formule-interface-unique-apercu.md) et [ADR-0033](0033-modeles-de-formule.md), soumise à [ADR-0011](0011-migrations-schema-3-0.md)
 
@@ -75,7 +75,7 @@ interface SplitPhase {
 } // étape E
 ```
 
-*(Amendé le 2026-11-27 : `branches: SplitBranch[]` remplace
+*(Amendé le 2026-11-26 : `branches: SplitBranch[]` remplace
 « `branches: { label: string; phases: FormulaPhaseV2[] }[]` » ; `SplitBranch` est décrite par
 [ADR-0039](0039-scission-competitions-filles.md).)*
 

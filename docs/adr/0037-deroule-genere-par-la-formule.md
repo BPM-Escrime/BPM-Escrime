@@ -1,6 +1,6 @@
 # ADR-0037 — Déroulé généré par la formule v2 : navigation, 0 tour de poules, tableau arrêté à N, phase après un tableau
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-27 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b et Q5)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b et Q5)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape D ; question Q5), #1948 ; complète [ADR-0036](0036-formule-v2-arbre-par-phase.md), [ADR-0007](0007-format-evenement.md) et [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -61,7 +61,7 @@ eliminatedIds }`.
     tableau, puis les éliminés des poules (ordre actuel).
   - quand une scission suit le tableau arrêté (ADR-0039), les N restants sont classés dans
     les compétitions filles ; l'épreuve d'origine classe les éliminés du tableau, puis des
-    poules. *(Ajout du 2026-11-27, ADR-0039.)*
+    poules. *(Ajout du 2026-11-26, ADR-0039.)*
 - **État de session** (JSON, sans migration de schéma) : une liste `stageHistory` garde les
   étapes closes (poules d'un tour, tableau arrêté), à côté de `poolHistory`, conservé pour les
   lecteurs actuels. La projection du journal (ADR-0017) rejoue `TableauStageClosed`.
@@ -70,7 +70,7 @@ eliminatedIds }`.
 - **Écran (D2b, amendement du 2026-11-25)** :
   - `stopAt` de 2 à 128 (puissance de 2) réglé sur le tableau ; un tableau arrêté est précédé
     d'au moins un tour de poules et suivi d'un tour de poules ou d'une scission (ADR-0039),
-    sans Tour Quest *(Amendé le 2026-11-27 : remplace « un tableau arrêté est précédé et suivi
+    sans Tour Quest *(Amendé le 2026-11-26 : remplace « un tableau arrêté est précédé et suivi
     d'au moins un tour de poules »)* ; le retrait du dernier tour d'après rend le tableau
     complet ;
   - les tours du tableau après l'arrêt restent affichés ; leur score est refusé par le moteur
