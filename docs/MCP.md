@@ -118,8 +118,8 @@ session porte une révision : une sauvegarde de l'écran faite sur un état pér
 Formats pilotables : épreuve individuelle, tous les tours de poules d'une formule, tableau simple avec ou sans petite
 finale, tableau arrêté à N tireurs ([ADR-0037](adr/0037-deroule-genere-par-la-formule.md)). Après
 `close_pool_round` (ou `close_tableau_stage`), `generate_pools` tire le tour suivant sans `composition`, comme
-l'écran : tireurs pointés répartis sur le classement du tour précédent (rang d'entrée au tableau après un tableau
-arrêté), tailles et score maximum du tour lus dans la formule (`minPerPool` / `maxPerPool` priment) ;
+l'écran : tireurs pointés répartis sur le classement du tour précédent (ou le cumul des tours, réglage `cumulative` du tour ;
+rang d'entrée au tableau après un tableau arrêté), tailles et score maximum du tour lus dans la formule (`minPerPool` / `maxPerPool` priment) ;
 `build_bracket` prend le classement de tous les tours ; `assign_referees` suit le tour courant
 ([ADR-0042](adr/0042-moteur-formules-multi-tours.md)). Une fois le tableau arrêté clos, plus de tableau :
 `build_bracket` refuse (`no_direct_elimination`). Équipes, rapières (étape F4) et « tirer toutes les places » restent à
@@ -594,7 +594,7 @@ Aucun argument.
 
 ### `generate_pools` — Générer les poules
 
-*⚠️ écriture, destructif.* Poules du tour courant, lancées (phase Poules). Sans « composition » : tirage sur les tireurs pointés par la même fonction que l’écran (serpentin sur le classement, puis clubs et régions séparés, ou les critères de « separation »), poule n sur la piste n ; épreuve individuelle. Tour suivant (après « closePoolRound » ou « closeTableauStage ») : tireurs pointés répartis sur le classement du tour précédent, ou sur le rang d’entrée au tableau après un tableau arrêté, tailles et score maximum du tour lus dans la formule (« minPerPool » et « maxPerPool » priment), comme l’écran (docs/adr/0042). Avec « composition » : poules et ordre des matchs retenus par le DT à la préparation, tels quels (tous formats individuels, tours multiples compris). « replace: true » efface des poules déjà jouées ou un tableau : accord du DT indispensable.
+*⚠️ écriture, destructif.* Poules du tour courant, lancées (phase Poules). Sans « composition » : tirage sur les tireurs pointés par la même fonction que l’écran (serpentin sur le classement, puis clubs et régions séparés, ou les critères de « separation »), poule n sur la piste n ; épreuve individuelle. Tour suivant (après « closePoolRound » ou « closeTableauStage ») : tireurs pointés répartis sur le classement du tour précédent (ou le cumul des tours si le tour est réglé « cumulative »), ou sur le rang d’entrée au tableau après un tableau arrêté, tailles et score maximum du tour lus dans la formule (« minPerPool » et « maxPerPool » priment), comme l’écran (docs/adr/0042). Avec « composition » : poules et ordre des matchs retenus par le DT à la préparation, tels quels (tous formats individuels, tours multiples compris). « replace: true » efface des poules déjà jouées ou un tableau : accord du DT indispensable.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|

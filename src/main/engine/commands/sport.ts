@@ -29,7 +29,6 @@ import {
   buildMatchScores,
   buildPools,
   computeOverallRankingAllRoundsFor,
-  computeOverallRankingFor,
   validatePoolScore,
   type PoolSpecialStatus,
 } from '../../../shared/utils/poolOrchestration';
@@ -324,12 +323,9 @@ export function generatePools(
         fencers,
         seedRankingForNextRound({
           formula: comp.settings?.formula,
-          playedRounds: poolHistory.length,
+          history: poolHistory,
           stages: tableauStagesOf(session.stageHistory),
-          lastRoundRanking: computeOverallRankingFor(
-            poolHistory[poolHistory.length - 1],
-            isLaser(comp)
-          ),
+          isLaserSabre: isLaser(comp),
         })
       );
     }

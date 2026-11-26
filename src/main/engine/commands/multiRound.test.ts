@@ -23,6 +23,8 @@ import {
   type FormulaV2,
 } from '../../../shared/domain/formula/formulaV2';
 import { applyOperationsV2 } from '../../../shared/domain/formula/formulaV2Operations';
+import { cumulativeRanking } from '../../../shared/domain/pools/roundSeeding';
+import { computeOverallRankingFor } from '../../../shared/utils/poolOrchestration';
 import type { TableauMatch } from '../../../shared/domain/tableau/tableauTypes';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
@@ -112,13 +114,19 @@ const rankOf = (id: string) => entryRank(db.getFencer(id)!);
  * Joue tous les matchs de poule du tour courant : le mieux placé gagne (`weakWins` : le moins
  * bien placé), au score max du match ; score du perdant varié (classement sans égalité)
  */
-async function playPools(competitionId: string, weakWins = false, strict = true) {
+async function playPools(
+  competitionId: string,
+  weakWins = false,
+  strict = true,
+  /** Clé de force d'un tireur (rang d'entrée) : la plus petite gagne */
+  key: (rank: number) => number = rank => rank
+) {
   const pools = session(competitionId).pools as Pool[];
   for (const pool of pools) {
     for (const m of pool.matches) {
       const a = rankOf(m.fencerA!.id);
       const b = rankOf(m.fencerB!.id);
-      const aWins = a < b !== weakWins;
+      const aWins = key(a) < key(b) !== weakWins;
       const loser = (7 * (aWins ? a : b) + 3 * (aWins ? b : a)) % m.maxScore;
       await call('recordScore', {
         competitionId,
@@ -252,6 +260,74 @@ d('tour suivant tiré par le moteur (docs/adr/0042)', () => {
     // À la main, sur le tour courant
     await call('assignReferee', { competitionId: comp.id, poolNumber: 1, refereeId: null });
     expect((session(comp.id).pools as Pool[])[0].referees?.length ?? 0).toBe(0);
+  });
+});
+
+/** Trois tours : 8 puis 6 qualifiés ; poules de 3 ; le 3e tour réparti selon `seeding` */
+const threeRounds = (seeding: 'previous_round' | 'cumulative'): FormulaV2 => {
+  const f = applyOperationsV2(
+    fctx,
+    [
+      { op: 'insertPhase', brick: 'pool', at: 1 },
+      { op: 'insertPhase', brick: 'pool', at: 2 },
+    ],
+    newId
+  );
+  let i = 0;
+  return {
+    ...f,
+    phases: f.phases.map(p => {
+      if (p.kind !== 'pool') return p;
+      const k = i++;
+      return k === 0
+        ? { ...p, qualification: { mode: 'fixed_count', count: 8 } }
+        : k === 1
+          ? { ...p, sizeMin: 3, sizeMax: 4, qualification: { mode: 'fixed_count', count: 6 } }
+          : { ...p, sizeMin: 3, sizeMax: 3, seeding };
+    }),
+  };
+};
+
+d('répartition du 3e tour : cumul des tours (Q4, ADR-0036, ADR-0042)', () => {
+  /** Tour 1 à l'envers, tour 2 à l'endroit : le cumul diffère du tour 2 seul */
+  async function toRound3(seeding: 'previous_round' | 'cumulative') {
+    const comp = competition(threeRounds(seeding), 12);
+    await call('generatePools', { competitionId: comp.id, poolCount: 2 });
+    await playPools(comp.id, true);
+    await call('closePoolRound', { competitionId: comp.id });
+    await call('generatePools', { competitionId: comp.id, poolCount: 2 });
+    await playPools(comp.id, false, false, rank => (rank % 3) * 20 + rank);
+    const ranks = (session(comp.id).overallRanking as PoolRanking[])
+      .filter(r => r.fencer.status !== FencerStatus.ELIMINATED)
+      .map(r => r.rank);
+    expect(new Set(ranks).size).toBe(ranks.length);
+    await call('closePoolRound', { competitionId: comp.id });
+    const history = session(comp.id).poolHistory as Pool[][];
+    const order = db.getFencersByCompetition(comp.id).map(f => f.id);
+    const ids = (rows: PoolRanking[]) =>
+      rows
+        .filter(r => db.getFencer(r.fencer.id)!.status === FencerStatus.CHECKED_IN)
+        .sort((a, b) => a.rank - b.rank || order.indexOf(a.fencer.id) - order.indexOf(b.fencer.id))
+        .map(r => r.fencer.id);
+    const lastOnly = ids(computeOverallRankingFor(history[1], false));
+    const cumulative = ids(cumulativeRanking(history.slice(0, -1), history[1], false));
+    return { comp, lastOnly, cumulative };
+  }
+
+  it('3e tour « cumulative » : serpentin sur le classement cumulé, pas sur le tour 2 seul', async () => {
+    const { comp, lastOnly, cumulative } = await toRound3('cumulative');
+    expect(cumulative).toHaveLength(6);
+    expect(cumulative).not.toEqual(lastOnly);
+    expect(snake(cumulative).sort()).not.toEqual(snake(lastOnly).sort());
+    const res = await call('generatePools', { competitionId: comp.id });
+    expect(res).toMatchObject({ round: 3, fencerCount: 6, poolCount: 2 });
+    expect(poolIds(comp.id).sort()).toEqual(snake(cumulative).sort());
+  });
+
+  it('3e tour « previous_round » (défaut) : serpentin sur le tour 2 seul', async () => {
+    const { comp, lastOnly } = await toRound3('previous_round');
+    await call('generatePools', { competitionId: comp.id });
+    expect(poolIds(comp.id).sort()).toEqual(snake(lastOnly).sort());
   });
 });
 
