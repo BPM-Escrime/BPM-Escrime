@@ -363,3 +363,61 @@ describe('appareil de piste maître (#1829) : chrono du serveur et cartons verro
     expect([...app.cardsA, ...app.cardsB]).toEqual(['yellow']);
   });
 });
+
+describe('cartons avant le départ du chrono (#2300)', () => {
+  type Ref = {
+    currentMatch: { id: string } | null;
+    matchStatus: string;
+    cardAnnounceEnabled: boolean;
+    timerRunning: boolean;
+    scoreA: number;
+    scoreB: number;
+    cardsA: string[];
+    cardsB: string[];
+    addCard: (fencer: string, cardType: string) => void;
+    handleStartPauseClick: () => void;
+    stopTimer: () => void;
+  };
+  const notStarted = async (session: Record<string, unknown>) => {
+    const loaded = await loadReferee(session);
+    const app = (loaded.dom.window as unknown as { refereeApp: Ref }).refereeApp;
+    app.currentMatch = { id: 'm1' };
+    app.matchStatus = 'not_started';
+    app.cardAnnounceEnabled = false;
+    app.timerRunning = false;
+    app.scoreA = 0;
+    app.scoreB = 0;
+    return { app, ...loaded };
+  };
+  const startEmitted = (emittedData: unknown[]) =>
+    emittedData.some(d => (d as { action?: string } | undefined)?.action === 'start');
+
+  it('épée : carton rouge avant le chrono, touche adverse comptée, chrono arrêté', async () => {
+    const { app, emittedData, errors } = await notStarted({ weapon: 'E' });
+    app.addCard('A', 'red');
+    expect(app.cardsA).toEqual(['red']);
+    expect([app.scoreA, app.scoreB]).toEqual([0, 1]);
+    expect(app.matchStatus).toBe('in_progress');
+    expect(app.timerRunning).toBe(false);
+    expect(startEmitted(emittedData)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
+  it('« Démarrer » lance ensuite le chrono sans effacer la touche de pénalité', async () => {
+    const { app } = await notStarted({ weapon: 'F' });
+    app.addCard('B', 'red');
+    app.handleStartPauseClick();
+    expect(app.timerRunning).toBe(true);
+    expect([app.scoreA, app.scoreB]).toEqual([1, 0]);
+    app.stopTimer();
+  });
+
+  it('Sabre Laser : carton jaune avant le chrono, +3 adverse', async () => {
+    const { app, errors } = await notStarted({ weapon: 'L' });
+    app.addCard('B', 'yellow');
+    expect([app.scoreA, app.scoreB]).toEqual([3, 0]);
+    expect(app.matchStatus).toBe('in_progress');
+    expect(app.timerRunning).toBe(false);
+    expect(errors).toEqual([]);
+  });
+});
