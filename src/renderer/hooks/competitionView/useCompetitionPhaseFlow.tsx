@@ -18,8 +18,9 @@ import { buildMatchAuditOptions } from '../../components/competition/matchAuditO
 import CompetitionPoolCard from '../../components/competition/CompetitionPoolCard';
 import PoolRoundSelector from '../../components/competition/PoolRoundSelector';
 import {
-  computeEffectiveTableauRanking,
   computeMatchProgress,
+  rankingOfDrawnTableau,
+  tableauCut,
 } from '../../../shared/domain/ranking/tableauRanking';
 import { useTableauTies } from '../tableauTiesChoice';
 import type { CompetitionViewProps } from '../../components/competition/competitionViewTypes';
@@ -219,35 +220,39 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
   const tableauTies = useTableauTies(competition.id);
 
   // Classement effectif pour le tableau (filtré par vainqueurs de poule et/ou groupe actif)
-  const effectiveTableauRanking = useMemo(
-    () =>
-      computeEffectiveTableauRanking(overallRanking, pools, {
-        isRapieres,
-        rapieresTableauMode: rapieres.tableauMode,
-        // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
-        poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
-        customFormula: hasDirectElimination ? customFormula : undefined,
-        tableauQualification,
-        ties: tableauTies,
-        postPoolSplitCriteria,
-        activeSplitGroup,
-        splitOffCompetitionIds,
-      }),
-    [
-      tableauTies,
-      overallRanking,
-      pools,
+  // Tableau tiré : coupe figée par le tableau (tous les ex aequo, moins ceux qu'il n'a pas
+  // placés) ; avant : choix fait au passage au tableau, sinon la formule
+  const drawn = tableauMatches.length > 0;
+  const effectiveTableauRanking = useMemo(() => {
+    const cut = tableauCut(overallRanking, pools, {
       isRapieres,
-      rapieres.tableauMode,
-      poolWinnersOnly,
-      hasDirectElimination,
-      customFormula,
+      rapieresTableauMode: rapieres.tableauMode,
+      // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
+      poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
+      customFormula: hasDirectElimination ? customFormula : undefined,
       tableauQualification,
+      ties: drawn ? 'all' : tableauTies,
       postPoolSplitCriteria,
       activeSplitGroup,
       splitOffCompetitionIds,
-    ]
-  );
+    });
+    return drawn ? rankingOfDrawnTableau(cut, tableauMatches) : cut.ranking;
+  }, [
+    drawn,
+    tableauMatches,
+    tableauTies,
+    overallRanking,
+    pools,
+    isRapieres,
+    rapieres.tableauMode,
+    poolWinnersOnly,
+    hasDirectElimination,
+    customFormula,
+    tableauQualification,
+    postPoolSplitCriteria,
+    activeSplitGroup,
+    splitOffCompetitionIds,
+  ]);
 
   // Calcul progression matchs
   const matchProgress = useMemo(

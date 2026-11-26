@@ -20,6 +20,15 @@ const { confirmMock, chooseMock } = vi.hoisted(() => ({
 vi.mock('../components/ConfirmDialog', () => ({
   useConfirm: () => ({ confirm: confirmMock, choose: chooseMock }),
 }));
+const { planOverride } = vi.hoisted(() => ({ planOverride: { current: null as unknown } }));
+vi.mock('../../shared/domain/pools/roundSeeding', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../shared/domain/pools/roundSeeding')>();
+  return {
+    ...actual,
+    nextRoundPlan: (input: Parameters<typeof actual.nextRoundPlan>[0]) =>
+      planOverride.current ?? actual.nextRoundPlan(input),
+  };
+});
 vi.mock('./useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 const setup = (
@@ -241,5 +250,38 @@ describe('handleNextPoolRound par le moteur (docs/adr/0017)', () => {
     await s.nextRound();
     expect(call).toHaveBeenCalledTimes(1);
     expect(s.setCurrentPhase).not.toHaveBeenCalled();
+  });
+
+  it('moteur absent (repli local) : ex aequo listés et choisis, comme le moteur', async () => {
+    const row = (id: string, rank: number, entry: number) =>
+      ({
+        fencer: {
+          id,
+          lastName: id,
+          firstName: 'P',
+          ranking: entry,
+          status: FencerStatus.QUALIFIED,
+        },
+        rank,
+      }) as unknown as PoolRanking;
+    // 4 qualifiés ; c, d, e ex aequo à la 3e place : e (rang d'entrée 1) passe
+    planOverride.current = {
+      ranking: [row('a', 1, 5), row('b', 2, 6), row('c', 3, 7), row('d', 3, 8), row('e', 3, 1)],
+      qualifierCount: 4,
+      ties: undefined,
+      seeding: 'previous_round',
+    };
+    const call = vi.fn(async () => {
+      throw Object.assign(new Error('absent'), { code: 'unavailable' });
+    });
+    chooseMock.mockResolvedValueOnce('initial_ranking');
+    confirmMock.mockResolvedValueOnce(true);
+    const s = setup([], false, false, { call } as unknown as BpmClient);
+    await s.nextRound();
+    planOverride.current = null;
+    expect(chooseMock).toHaveBeenCalled();
+    // Qualifiés : a, b, puis e et c départagés au rang d'entrée (quota de 4 tenu)
+    const updates = (s.params.updateFencers as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(Object.keys(updates).sort()).toEqual(['a', 'b', 'c', 'e']);
   });
 });

@@ -110,3 +110,23 @@ export function tableauCut(
     tiedAtBar,
   };
 }
+
+/**
+ * Coupe figée par le tableau tiré (docs/adr/0040) : depuis le classement pris avec tous les
+ * ex aequo (« all », sur-ensemble de toute coupe), on retire les ex aequo à la barre absents du
+ * tableau. On retrouve la coupe retenue à la génération, quel que soit le choix fait alors.
+ * Sans ex aequo à la barre ou sans tableau tiré : classement inchangé.
+ */
+export function rankingOfDrawnTableau(
+  cut: { ranking: PoolRanking[]; tiedAtBar: TiedAtBar | null },
+  matches: readonly TableauMatch[]
+): PoolRanking[] {
+  if (!cut.tiedAtBar || matches.length === 0) return cut.ranking;
+  const placed = new Set<string>();
+  for (const m of matches) {
+    if (m.fencerA) placed.add(m.fencerA.id);
+    if (m.fencerB) placed.add(m.fencerB.id);
+  }
+  const left = new Set(cut.tiedAtBar.fencerIds.filter(id => !placed.has(id)));
+  return cut.ranking.filter(r => !left.has(r.fencer.id));
+}

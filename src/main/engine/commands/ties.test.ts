@@ -25,6 +25,7 @@ import { applyOperationsV2 } from '../../../shared/domain/formula/formulaV2Opera
 import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
+import { listMatches } from './sport';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -355,6 +356,28 @@ d('ex aequo à la barre (docs/adr/0040)', () => {
     await playCircles(comp.id, 2, circles(ids));
     const sim = await call('splitCompetition', { competitionId: comp.id, dryRun: true });
     expect(sim.branches[0].fencers.map((x: any) => x.id)).toEqual([...ids].reverse().slice(0, 4));
+  });
+
+  it('classement final du tableau : coupe figée par le tableau tiré, pas par la formule', async () => {
+    // Formule « tous les ex aequo » ; tableau tiré avec « initial_ranking » (4 sur 6)
+    const { comp, ids } = competition(formula(1));
+    await playCircles(comp.id, 1, circles(ids));
+    await call('generateTableau', { competitionId: comp.id, ties: 'initial_ranking' });
+    for (let guard = 0; guard < 10; guard++) {
+      const ready = listMatches(ctx, comp.id, { state: 'ready' }).filter(m => m.kind === 'bracket');
+      if (ready.length === 0) break;
+      for (const m of ready) {
+        await call('recordScore', {
+          competitionId: comp.id,
+          matchId: m.matchId,
+          scoreA: 15,
+          scoreB: 3,
+        });
+      }
+    }
+    const results = (db.getSessionState(comp.id) as any).finalResults as any[];
+    expect(results).toHaveLength(4);
+    expect(results.map(r => r.fencer.id).sort()).toEqual(ids.slice(0, 4).sort());
   });
 
   it('MCP : même champ « ties » sur les outils de coupe (ADR-0008)', () => {

@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { MatchStatus } from '../../types';
 import type { Pool, PoolRanking } from '../../types';
 import type { TableauMatch } from '../tableau/tableauTypes';
-import { computeEffectiveTableauRanking, computeMatchProgress, tableauCut } from './tableauRanking';
+import {
+  computeEffectiveTableauRanking,
+  computeMatchProgress,
+  rankingOfDrawnTableau,
+  tableauCut,
+} from './tableauRanking';
 
 const pool = (statuses: MatchStatus[]): Pool =>
   ({
@@ -128,5 +133,24 @@ describe('tableauCut : ex aequo à la barre du tableau (docs/adr/0040)', () => {
       }).map(r => r.fencer.id);
     expect(ids('initial_ranking')).toEqual(['a', 'd']);
     expect(ids()).toEqual(['a', 'b', 'c', 'd']);
+  });
+});
+
+describe('rankingOfDrawnTableau : coupe figée par le tableau tiré (docs/adr/0040)', () => {
+  const r = (id: string, rank: number) =>
+    ({ fencer: { id, status: 'Q' }, rank }) as unknown as PoolRanking;
+  const all = [r('a', 1), r('b', 2), r('c', 2), r('d', 2), r('x', 5)];
+  const tiedAtBar = { rank: 2, fencerIds: ['b', 'c', 'd'], places: 1 };
+  const match = (a: string, b: string) =>
+    ({ fencerA: { id: a }, fencerB: { id: b } }) as unknown as TableauMatch;
+
+  it('ex aequo absents du tableau retirés ; les autres tireurs gardés', () => {
+    const out = rankingOfDrawnTableau({ ranking: all, tiedAtBar }, [match('a', 'd')]);
+    expect(out.map(x => x.fencer.id)).toEqual(['a', 'd', 'x']);
+  });
+
+  it('sans ex aequo à la barre ou sans tableau : classement inchangé', () => {
+    expect(rankingOfDrawnTableau({ ranking: all, tiedAtBar: null }, [match('a', 'd')])).toBe(all);
+    expect(rankingOfDrawnTableau({ ranking: all, tiedAtBar }, [])).toBe(all);
   });
 });

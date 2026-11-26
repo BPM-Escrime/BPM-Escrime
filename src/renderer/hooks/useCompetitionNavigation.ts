@@ -414,11 +414,14 @@ export function useCompetitionNavigation({
       history: poolHistory ?? [],
       isLaserSabre: competition.weapon === Weapon.LASER,
     });
-    const { qualified, eliminated } = selectNextRoundFencers(
-      plan.ranking,
-      plan.qualifierCount,
-      plan.ties
-    );
+    let cut = selectNextRoundFencers(plan.ranking, plan.qualifierCount, plan.ties);
+    // Ex aequo à la barre (docs/adr/0040) : listés et choix pour cette coupe, comme le moteur
+    if (cut.tiedAtBar) {
+      const ties = await chooseTies(cut.tiedAtBar, plan.ties);
+      if (!ties) return;
+      cut = selectNextRoundFencers(plan.ranking, plan.qualifierCount, ties);
+    }
+    const { qualified, eliminated } = cut;
     if (qualified.length < 4) {
       showToast('Il faut au moins 4 qualifiés pour un nouveau tour de poules.', 'warning');
       return;

@@ -59,7 +59,7 @@ import {
   type TableauMatch,
 } from '../../../shared/domain/tableau/tableauTypes';
 import type { RapieresSession } from '../../../shared/domain/rapieres/rapieres.types';
-import { tableauCut } from '../../../shared/domain/ranking/tableauRanking';
+import { rankingOfDrawnTableau, tableauCut } from '../../../shared/domain/ranking/tableauRanking';
 import type { TiedAtBar } from '../../../shared/domain/ranking/advancement';
 import { assertTies } from './ties';
 import {
@@ -1098,7 +1098,11 @@ export function settleBracket(
 } {
   const playAll = !!comp.settings?.playAllPositions;
   const size = deriveFirstRound(matches);
-  const ranking = tableauRanking(comp, session, slot.group);
+  // Coupe figée par le tableau tiré (docs/adr/0040), quel que soit le choix des ex aequo
+  const ranking = rankingOfDrawnTableau(
+    tableauRankingCut(comp, session, slot.group, 'all'),
+    matches
+  );
   if (mainChanged) {
     propagateWinners(matches, size);
     if (playAll) placeBarrageWinners(matches, size);
