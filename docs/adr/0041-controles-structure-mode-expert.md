@@ -1,6 +1,6 @@
 # ADR-0041 — Contrôles de structure de la formule (S1 à S6) en direct, mode expert de l'éditeur
 
-- **Statut** : Proposée
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F2 ; questions Q17, S1 à S6), #1948 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (grammaire de la frise), [ADR-0032](0032-formule-interface-unique-apercu.md) (éditeur unique, aperçu), [ADR-0012](0012-formule-domaine.md) (validation)
 

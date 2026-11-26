@@ -1,6 +1,6 @@
 # ADR-0042 — Le moteur pilote les formules à plusieurs tours : tirage des tours suivants et tableau, ouverts au MCP
 
-- **Statut** : Proposée
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F3), #1880, #1948 ; amende [ADR-0037](0037-deroule-genere-par-la-formule.md) (Conséquences, MCP), s'appuie sur [ADR-0017](0017-projections-etat-epreuve.md) et [ADR-0036](0036-formule-v2-arbre-par-phase.md) (Q4 : répartition du tour)
 

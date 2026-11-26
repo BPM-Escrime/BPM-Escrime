@@ -1,6 +1,6 @@
 # ADR-0040 — Ex aequo à la barre de qualification : réglage du tour, proposé à l'exécution
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (nom du champ de `TableauGenerated` : `matches` ; tableau composé par l'écran, choix appliqué par `tableauCut` ; validé par le mainteneur) ; amendement **proposé** le 2026-11-26 (tirage au sort `'draw'` d'après FIE o.73.2.f ; barrage F1b reporté, FIE o.73.3), à valider par le mainteneur
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (nom du champ de `TableauGenerated` : `matches` ; tableau composé par l'écran, choix appliqué par `tableauCut` ; validé par le mainteneur) ; amendée le 2026-11-26 (tirage au sort `'draw'` d'après FIE o.73.2.f ; barrage F1b reporté, FIE o.73.3 ; validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F1 ; question Q8), #1948 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (`AdvancementRule`), [ADR-0039](0039-scission-competitions-filles.md) (scission par rang)
 
