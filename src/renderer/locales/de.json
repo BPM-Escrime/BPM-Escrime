@@ -1122,12 +1122,6 @@
     "match_order_standard": "Standardreihenfolge",
     "match_order_classic": "Klassische Reihenfolge",
     "match_order_hint": "Die klassische Reihenfolge gilt für Pools mit 10 bis 15 Teams; andere Pools behalten die Standardreihenfolge.",
-    "tableau_mode_title": "Welches Tableau-Format möchten Sie wählen?",
-    "tableau_mode_normal": "Normales Tableau",
-    "tableau_mode_third": "Tableau mit 3. Platz",
-    "tableau_mode_all": "Tableau mit allen Platzierungen",
-    "tableau_mode_semis": "Halbfinale",
-    "semis_unavailable": "Halbfinale mit dieser Anzahl Gruppen nicht möglich (1 bis 4).",
     "club": "Verein",
     "region": "Region",
     "print_wave_range": "Wellen zum Drucken wählen",
@@ -3387,7 +3381,8 @@
     "mode_percentage": "Top %",
     "mode_fixed_count": "Feste Anzahl",
     "mode_fixed_bracket": "Nächstes Tableau",
-    "mode_pool_winner": "Poolsieger"
+    "mode_pool_winner": "Poolsieger",
+    "mode_pool_heads": "Poolbeste, dann die Nächsten"
   },
   "print": {
     "title": "Drucken",

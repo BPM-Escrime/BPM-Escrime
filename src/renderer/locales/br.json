@@ -1122,12 +1122,6 @@
     "match_order_standard": "Urzh standard",
     "match_order_classic": "Urzh klasel",
     "match_order_hint": "An urzh klasel a dalvez evit ar poulennoù a 10 betek 15 skipailh ; ar poulennoù all a vir an urzh standard.",
-    "tableau_mode_title": "Peseurt doare taolenn a fell deoc'h ?",
-    "tableau_mode_normal": "Taolenn arre",
-    "tableau_mode_third": "Taolenn gant 3vet plas",
-    "tableau_mode_all": "Taolenn gant an holl blasoù tennet",
-    "tableau_mode_semis": "Hanterdiskoulmoù",
-    "semis_unavailable": "Hanterdiskoulmoù n'int ket posupl gant an niver-mañ a strolladoù (1 da 4).",
     "club": "Klub",
     "region": "Rannvro",
     "print_wave_range": "Dibab an toursoù da inprimiñ",
@@ -3387,7 +3381,8 @@
     "mode_percentage": "Top %",
     "mode_fixed_count": "Niver start",
     "mode_fixed_bracket": "Taolenn da heul",
-    "mode_pool_winner": "Gounezer ar poull"
+    "mode_pool_winner": "Gounezer ar poull",
+    "mode_pool_heads": "Kentañ ar poulloù, goude ar re all"
   },
   "print": {
     "title": "Moulañ",

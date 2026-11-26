@@ -117,7 +117,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     addFencer,
     bulkAddFencers,
     setRapieresTeam,
-    updateRapieres,
     remoteServerUrl,
     exportPoolsPDF,
     printPoolsPDF,
@@ -132,7 +131,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     hasDirectElimination,
     thirdPlaceMatch,
     playAllPositions,
-    setShowRapieresTableauDialog,
     setViewedPoolRound,
     rankingChanged,
     setRankingChanged,
@@ -351,8 +349,9 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     void ctx.toggleCheckIn(id);
   };
 
-  // Tableau écrit par le moteur ; rapières : mode de tableau joint (journal, #1441) ; tableaux
-  // séparés : tableau du groupe affiché (docs/adr/0024), jamais tous les tireurs ensemble
+  // Tableau écrit par le moteur ; rapières : le mode de tableau est dans la formule, plus joint à
+  // la commande (docs/adr/0043, F4b) ; tableaux séparés : tableau du groupe affiché
+  // (docs/adr/0024), jamais tous les tireurs ensemble
   const generateTableau = useCallback(
     (matches: TableauMatch[], thirdPlaceMatch: boolean): Promise<RecordScoreOutcome> =>
       splitCriteria && !activeSplitGroup
@@ -360,10 +359,9 @@ export function useCompetitionSessionSync(ctx: Ctx) {
         : generateTableauCommand(
             matches,
             thirdPlaceMatch,
-            isRapieres ? rapieres.tableauMode : undefined,
             splitCriteria ? (activeSplitGroup ?? undefined) : undefined
           ),
-    [generateTableauCommand, isRapieres, rapieres.tableauMode, splitCriteria, activeSplitGroup]
+    [generateTableauCommand, splitCriteria, activeSplitGroup]
   );
 
   // ─── Retrait et réintégration d'un tireur (docs/adr/0016) ─────────────────
@@ -520,7 +518,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     handleGoToRanking,
     handleSkipToRanking,
     handleGoToTableau,
-    handleRapieresTableauMode,
     handleThirdPlaceDecision,
     handleNextPoolRound,
   } = useCompetitionNavigation({
@@ -545,8 +542,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     thirdPlaceMatch,
     playAllPositions,
     isRapieres,
-    updateRapieres,
-    setShowRapieresTableauDialog,
     setPoolsLaunched,
     setViewedPoolRound,
     setRankingValidated,
@@ -629,7 +624,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     handleGoToRanking,
     handleSkipToRanking,
     handleGoToTableau,
-    handleRapieresTableauMode,
     handleThirdPlaceDecision,
     handleNextPoolRound,
     splitGroups,

@@ -17,14 +17,6 @@ import type {
 } from '../../shared/types';
 import { generateInitialRanking } from '../../shared/utils/poolCalculations';
 import { selectNextRoundFencers } from '../../shared/utils/poolRounds';
-import {
-  rapieresSemifinalists,
-  rapieresTableauSettings,
-} from '../../shared/domain/rapieres/rapieresCalculations';
-import type {
-  RapieresTableauMode,
-  RapieresSession,
-} from '../../shared/domain/rapieres/rapieres.types';
 import type { ConsolationBracket, TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import type { GroupTableau } from '../../shared/domain/ranking/splitGroups';
 import { useConfirm } from '../components/ConfirmDialog';
@@ -72,8 +64,6 @@ interface UseCompetitionNavigationParams {
   thirdPlaceMatch: boolean;
   playAllPositions: boolean;
   isRapieres: boolean;
-  updateRapieres: (patch: Partial<RapieresSession>) => void;
-  setShowRapieresTableauDialog: Setter<boolean>;
   setPoolsLaunched: Setter<boolean>;
   setViewedPoolRound: Setter<number | null>;
   setRankingValidated: Setter<boolean>;
@@ -111,8 +101,6 @@ export function useCompetitionNavigation({
   thirdPlaceMatch,
   playAllPositions,
   isRapieres,
-  updateRapieres,
-  setShowRapieresTableauDialog,
   setPoolsLaunched,
   setViewedPoolRound,
   setRankingValidated,
@@ -241,11 +229,8 @@ export function useCompetitionNavigation({
       showToast("Le classement a changé. Le tableau d'élimination va être régénéré.", 'warning');
     }
 
-    // Rapières : mode de tableau demandé à chaque passage au tableau (#1441)
-    if (isRapieres) {
-      setShowRapieresTableauDialog(true);
-      return;
-    }
+    // Rapières comme les autres épreuves : mode de tableau (tous, 3e place, toutes les places,
+    // demi-finales) décidé dans la formule, plus de fenêtre au passage (docs/adr/0043, F4b)
     const draw = () => {
       // Tirer toutes les places → 3ème place implicite, pas de question
       if (playAllPositions) {
@@ -315,18 +300,6 @@ export function useCompetitionNavigation({
       })),
     });
     return (picked as TiesChoice | null) ?? null;
-  };
-
-  /** Rapières : mode de tableau choisi dans la popup (#1441) */
-  const handleRapieresTableauMode = (mode: RapieresTableauMode) => {
-    if (mode === 'semis' && !rapieresSemifinalists(pools, overallRanking)) {
-      showToast(t('rapieres.semis_unavailable'), 'error');
-      return;
-    }
-    updateRapieres({ tableauMode: mode });
-    setShowRapieresTableauDialog(false);
-    const { thirdPlaceMatch, ...extra } = rapieresTableauSettings(mode); // toutes places (#1441)
-    handleThirdPlaceDecision(thirdPlaceMatch, extra);
   };
 
   const handleThirdPlaceDecision = (
@@ -470,7 +443,6 @@ export function useCompetitionNavigation({
     handleGoToRanking,
     handleSkipToRanking,
     handleGoToTableau,
-    handleRapieresTableauMode,
     handleThirdPlaceDecision,
     handleNextPoolRound,
   };

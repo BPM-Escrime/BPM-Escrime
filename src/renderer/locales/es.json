@@ -1122,12 +1122,6 @@
     "match_order_standard": "Orden estándar",
     "match_order_classic": "Orden clásico",
     "match_order_hint": "El orden clásico se aplica a las poules de 10 a 15 equipos; las demás poules mantienen el orden estándar.",
-    "tableau_mode_title": "¿Qué modo de cuadro quiere usar?",
-    "tableau_mode_normal": "Cuadro normal",
-    "tableau_mode_third": "Cuadro con 3.er puesto",
-    "tableau_mode_all": "Cuadro con todos los puestos disputados",
-    "tableau_mode_semis": "Semifinales",
-    "semis_unavailable": "Semifinales imposibles con este número de grupos (1 a 4).",
     "club": "Club",
     "region": "Región",
     "print_wave_range": "Elegir tandas a imprimir",
@@ -3387,7 +3381,8 @@
     "mode_percentage": "Top %",
     "mode_fixed_count": "Número fijo",
     "mode_fixed_bracket": "Cuadro siguiente",
-    "mode_pool_winner": "Ganador de poule"
+    "mode_pool_winner": "Ganador de poule",
+    "mode_pool_heads": "Primeros de poule, luego los siguientes"
   },
   "print": {
     "title": "Imprimir",

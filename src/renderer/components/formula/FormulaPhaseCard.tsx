@@ -339,6 +339,7 @@ const FormulaPhaseCard_: React.FC<Props> = ({
                   inputFencers={inputFencers}
                   readOnly={readOnly || advancementDisabled}
                   expert
+                  headsAvailable={false}
                 />
               </div>
             </>

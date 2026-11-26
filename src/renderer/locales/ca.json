@@ -1122,12 +1122,6 @@
     "match_order_standard": "Ordre estàndard",
     "match_order_classic": "Ordre clàssic",
     "match_order_hint": "L'ordre clàssic s'aplica a les poules de 10 a 15 equips; les altres poules mantenen l'ordre estàndard.",
-    "tableau_mode_title": "Quin mode de quadre voleu fer servir?",
-    "tableau_mode_normal": "Quadre normal",
-    "tableau_mode_third": "Quadre amb 3r lloc",
-    "tableau_mode_all": "Quadre amb tots els llocs disputats",
-    "tableau_mode_semis": "Semifinals",
-    "semis_unavailable": "Semifinals impossibles amb aquest nombre de grups (1 a 4).",
     "club": "Club",
     "region": "Regió",
     "print_wave_range": "Escollir tandes a imprimir",
@@ -3387,7 +3381,8 @@
     "mode_percentage": "Top %",
     "mode_fixed_count": "Nombre fix",
     "mode_fixed_bracket": "Quadre següent",
-    "mode_pool_winner": "Guanyador de poule"
+    "mode_pool_winner": "Guanyador de poule",
+    "mode_pool_heads": "Primers de poule, després els següents"
   },
   "print": {
     "title": "Imprimeix",

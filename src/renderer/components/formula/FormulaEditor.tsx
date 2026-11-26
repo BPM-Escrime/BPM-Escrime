@@ -11,6 +11,7 @@
 import React, { useState } from 'react';
 import { Plus, TriangleAlert, X } from 'lucide-react';
 import {
+  AdvancementMode,
   AdvancementRule,
   Category,
   CompetitionSpecialMode,
@@ -84,6 +85,8 @@ export interface FormulaEditorProps {
 }
 
 const SPECIAL_MODES: CompetitionSpecialMode[] = ['rapieres'];
+/** Qualification vers le tableau du mode spécial rapières : tous, ou demi-finales (docs/adr/0043) */
+const RAPIERES_QUALIFICATIONS: readonly AdvancementMode[] = ['all', 'pool_heads'];
 
 const newPhaseId = () => `phase_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
@@ -374,14 +377,20 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
           {/* Qualification : vers le tour suivant, ou vers le tableau pour toutes les armes
               (#2013 R1), ou vers la scission (ADR-0039) ; dernier tour sans suite : rien */}
           {(!isLast || isOther || tableau || split) && (
-            <div className={rapieres ? 'form-group form-group--disabled' : 'form-group'}>
+            <div className="form-group">
               <label className="form-label">{t('formulaPhase.advancement')}</label>
+              {/* Rapières : tous qualifiés ou demi-finales (têtes de poule 4) ; la fenêtre du
+                  passage au tableau est retirée, la formule décide (docs/adr/0043, F4b) */}
               <AdvancementRuleEditor
                 rule={pool.qualification}
                 onChange={(rule: AdvancementRule) => set({ qualification: rule })}
                 inputFencers={simCount}
-                readOnly={rapieres}
                 expert={expert}
+                headsAvailable={
+                  formula.phases[formula.phases.indexOf(pool) + 1]?.kind === 'tableau' &&
+                  (expert || !!rapieres || !!specialMode)
+                }
+                only={rapieres || specialMode ? RAPIERES_QUALIFICATIONS : undefined}
               />
             </div>
           )}

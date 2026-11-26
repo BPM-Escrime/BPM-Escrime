@@ -68,8 +68,6 @@ const setup = (
     thirdPlaceMatch,
     playAllPositions: false,
     isRapieres: false,
-    updateRapieres: vi.fn(),
-    setShowRapieresTableauDialog: vi.fn(),
     setPoolsLaunched: vi.fn(),
     setViewedPoolRound: vi.fn(),
     setRankingValidated: vi.fn(),
@@ -128,6 +126,54 @@ describe('handleGoToTableau (#1996)', () => {
       expect(s.setCurrentPhase).toHaveBeenCalledWith('tableau');
     }
   );
+});
+
+describe('passage au tableau des rapières : plus de fenêtre de mode (docs/adr/0043, F4b)', () => {
+  const t = (id: string) => ({ id, status: FencerStatus.QUALIFIED });
+  const poolOf = (number: number, ids: string[]) => ({
+    number,
+    fencers: ids.map(t),
+    matches: [],
+    ranking: ids.map((id, i) => ({ fencer: t(id), rank: i + 1 })),
+  });
+  const rows = (ids: string[], ranks: number[]) =>
+    ids.map((id, i) => ({ fencer: t(id), rank: ranks[i] })) as unknown as PoolRanking[];
+
+  it('tirage direct avec les réglages de la formule (3e place), sans rien demander', () => {
+    chooseMock.mockClear();
+    const s = setup([], false, true, undefined, { isRapieres: true });
+    s.go();
+    expect(chooseMock).not.toHaveBeenCalled();
+    expect(s.onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ settings: expect.objectContaining({ thirdPlaceMatch: true }) })
+    );
+    expect(s.setCurrentPhase).toHaveBeenCalledWith('tableau');
+  });
+
+  it('demi-finales (têtes de poule 4) : ex aequo à la barre proposés comme pour toute épreuve', async () => {
+    setTableauTies('c', undefined);
+    chooseMock.mockResolvedValueOnce('initial_ranking');
+    const formula = {
+      version: 2,
+      general: {},
+      phases: [
+        { kind: 'pool', id: 'p', qualification: { mode: 'pool_heads', count: 4 } },
+        { kind: 'tableau', id: 't' },
+      ],
+    };
+    // 3 poules : les 3 premiers, puis une place pour a2 et b2 ex aequo
+    const s = setup([], false, true, undefined, {
+      isRapieres: true,
+      competition: { id: 'c', settings: { formula } },
+      pools: [poolOf(1, ['a1', 'a2']), poolOf(2, ['b1', 'b2']), poolOf(3, ['c1', 'c2'])],
+      overallRanking: rows(['a1', 'b1', 'c1', 'a2', 'b2', 'c2'], [1, 2, 3, 4, 4, 6]),
+    });
+    s.go();
+    await vi.waitFor(() => expect(s.setCurrentPhase).toHaveBeenCalledWith('tableau'));
+    const asked = chooseMock.mock.calls[chooseMock.mock.calls.length - 1][0];
+    expect(asked.message).toContain('tiesAtBar.notice');
+    expect(getTableauTies('c')).toBe('initial_ranking');
+  });
 });
 
 describe('passage au tableau : ex aequo à la barre (ADR-0040)', () => {

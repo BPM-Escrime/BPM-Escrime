@@ -1122,12 +1122,6 @@
     "match_order_standard": "Standard order",
     "match_order_classic": "Classic order",
     "match_order_hint": "The classic order applies to pools of 10 to 15 teams; other pools keep the standard order.",
-    "tableau_mode_title": "Which bracket format do you want to run?",
-    "tableau_mode_normal": "Normal bracket",
-    "tableau_mode_third": "Bracket with 3rd place",
-    "tableau_mode_all": "Bracket with all places fenced",
-    "tableau_mode_semis": "Semi-finals",
-    "semis_unavailable": "Semi-finals impossible with this number of pools (1 to 4).",
     "club": "Club",
     "region": "Region",
     "print_wave_range": "Choose waves to print",
@@ -3387,7 +3381,8 @@
     "mode_percentage": "Top %",
     "mode_fixed_count": "Fixed number",
     "mode_fixed_bracket": "Next bracket",
-    "mode_pool_winner": "Pool winner"
+    "mode_pool_winner": "Pool winner",
+    "mode_pool_heads": "Pool heads, then next ranks"
   },
   "print": {
     "title": "Print",

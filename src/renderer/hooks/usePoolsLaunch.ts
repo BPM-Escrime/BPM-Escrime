@@ -9,10 +9,7 @@ import { useCallback } from 'react';
 import type { Pool } from '../../shared/types';
 import type { TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import { tableauComposition } from '../../shared/domain/tableau/tableauComposition';
-import type {
-  RapieresTableauMode,
-  RapieresTeamInfo,
-} from '../../shared/domain/rapieres/rapieres.types';
+import type { RapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
 import { useBpmClient } from '../api/BpmClientContext';
 import { useToast } from '../components/Toast';
 import { useTranslation } from './useTranslation';
@@ -95,7 +92,6 @@ export function useTableauGenerate(competitionId: string | undefined) {
     async (
       matches: TableauMatch[],
       thirdPlaceMatch: boolean,
-      rapieresTableauMode?: RapieresTableauMode,
       /** Tableaux séparés après les poules : groupe du tableau (docs/adr/0024) */
       group?: string
     ): Promise<RecordScoreOutcome> => {
@@ -106,7 +102,6 @@ export function useTableauGenerate(competitionId: string | undefined) {
           composition: tableauComposition(matches),
           thirdPlaceMatch,
           replace: true,
-          ...(rapieresTableauMode ? { rapieresTableauMode } : {}),
           ...(group ? { group } : {}),
         });
         return 'recorded';

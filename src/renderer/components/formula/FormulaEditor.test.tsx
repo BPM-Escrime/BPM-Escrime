@@ -426,3 +426,66 @@ describe('Création : formule repliée (aperçu)', () => {
     ]);
   });
 });
+
+describe('FormulaEditor : qualification « têtes de poule, puis suivants » (docs/adr/0043, F4b)', () => {
+  const select = (container: HTMLElement) =>
+    container.querySelector<HTMLSelectElement>('.advancement-mode-select')!;
+  const options = (container: HTMLElement) =>
+    Array.from(select(container).options).map(o => o.value);
+
+  /** Éditeur d'une épreuve ; `rapieres` : mode spécial rapières (arme « Autre ») */
+  const Editor: React.FC<{ weapon: Weapon; rapieres?: boolean }> = ({ weapon, rapieres }) => {
+    const [formula, setFormula] = useState<FormulaV2>(() =>
+      formulaOf({
+        weapon,
+        category: Category.SENIOR,
+        settings:
+          weapon === Weapon.CUSTOM
+            ? { customFormula: createDefaultCustomFormula() }
+            : (buildDefaultCompetitionSettings({
+                weapon,
+                category: Category.SENIOR,
+              }) as CompetitionSettings),
+      })
+    );
+    last = formula;
+    return (
+      <FormulaEditor
+        weapon={weapon}
+        category={Category.SENIOR}
+        formula={formula}
+        onChange={setFormula}
+        rapieres={rapieres}
+      />
+    );
+  };
+
+  it('mode expert : option proposée avant un tableau, 4 qualifiés par défaut', () => {
+    prefs.expert = true;
+    const { container } = render(<Editor weapon={Weapon.EPEE} />);
+    expect(options(container)).toContain('pool_heads');
+    fireEvent.change(select(container), { target: { value: 'pool_heads' } });
+    expect(phaseSettings(last!, { kind: 'pool', round: 0 }).qualification).toEqual({
+      mode: 'pool_heads',
+      count: 4,
+    });
+    expect(screen.getByTestId('advancement-count')).toHaveValue(4);
+    fireEvent.change(screen.getByTestId('advancement-count'), { target: { value: '8' } });
+    expect(phaseSettings(last!, { kind: 'pool', round: 0 }).qualification.count).toBe(8);
+  });
+
+  it('niveau simple : option absente (réglage expert)', () => {
+    prefs.expert = false;
+    const { container } = render(<Editor weapon={Weapon.EPEE} />);
+    expect(options(container)).not.toContain('pool_heads');
+    prefs.expert = true;
+  });
+
+  it('rapières : tous qualifiés ou têtes de poule, même en niveau simple (plus de fenêtre)', () => {
+    prefs.expert = false;
+    const { container } = render(<Editor weapon={Weapon.CUSTOM} rapieres />);
+    expect(options(container)).toEqual(['all', 'pool_heads']);
+    expect(select(container)).not.toBeDisabled();
+    prefs.expert = true;
+  });
+});
