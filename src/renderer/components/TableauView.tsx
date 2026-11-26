@@ -52,7 +52,6 @@ const TableauViewComponent: React.FC<TableauViewProps> = (props: TableauViewProp
     autoAssignArenas,
     handleAutoAssignToggle,
     handleBulkDeassign,
-    handleAutoFillScores,
     undo,
     readOnly,
     viewMode,
@@ -449,7 +448,6 @@ const TableauViewComponent: React.FC<TableauViewProps> = (props: TableauViewProp
         autoAssignArenas={autoAssignArenas}
         onAutoAssignToggle={handleAutoAssignToggle}
         onBulkDeassign={handleBulkDeassign}
-        onAutoFillScores={handleAutoFillScores}
         onUndo={undo.canUndo && !readOnly ? undo.undo : undefined}
         viewMode={viewMode}
         onViewModeToggle={() => setViewMode(viewMode === 'full' ? 'pending' : 'full')}

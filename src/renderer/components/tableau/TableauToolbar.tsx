@@ -25,7 +25,6 @@ interface TableauToolbarProps {
   autoAssignArenas: boolean;
   onAutoAssignToggle: (enabled: boolean) => void;
   onBulkDeassign: () => void;
-  onAutoFillScores: () => void;
   /** Annulation discrète du dernier placement (#1301) : absent = masquée */
   onUndo?: () => void;
   viewMode: 'full' | 'pending';
@@ -45,7 +44,6 @@ const TableauToolbarComponent: React.FC<TableauToolbarProps> = ({
   autoAssignArenas,
   onAutoAssignToggle,
   onBulkDeassign,
-  onAutoFillScores,
   onUndo,
   viewMode,
   onViewModeToggle,
@@ -177,12 +175,6 @@ const TableauToolbarComponent: React.FC<TableauToolbarProps> = ({
                 </>
               )}
 
-              <span className="tableau-fab-section-label">{t('tableauToolbar.actions')}</span>
-              <button className="tableau-fab-item" onClick={() => closeAndRun(onAutoFillScores)}>
-                {t('tableauToolbar.autofill')}
-              </button>
-
-              <div className="tableau-fab-divider" />
               <span className="tableau-fab-section-label">{t('tableauToolbar.export')}</span>
               <button className="tableau-fab-item" onClick={() => closeAndRun(onExportPdfClick)}>
                 {t('tableauToolbar.export_pdf')}
