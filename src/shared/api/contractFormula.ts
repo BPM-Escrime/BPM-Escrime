@@ -44,7 +44,7 @@ export const formulaOperations = {
       phases: z.array(
         z.object({ kind: z.string(), key: z.string(), round: z.number().optional() })
       ),
-      insertOptions: z.array(z.array(z.enum(['pool', 'quest', 'tableau']))),
+      insertOptions: z.array(z.array(z.enum(['pool', 'quest', 'tableau', 'split']))),
       formula: z
         .custom<FormulaV2>()
         .describe('Formule v2 (docs/adr/0036) : phases et réglages de chaque tour'),
@@ -84,7 +84,7 @@ export const formulaOperations = {
 
   updateCompetitionFormula: command({
     description:
-      'Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau, position « at » comme insertOptions), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode, count, percentage } ou qualifiers, seeding previous_round | cumulative, boutOrder, scoring ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring ; Tour Quest qualifiersCount), setGeneral (restTimeSeconds, ruleSet, postPoolSplitCriteria). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour ; refus : invalid_settings, draw_done.',
+      'Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau | split, position « at » comme insertOptions ; split : scission, toujours en dernier, après un tour de poules ou un tableau arrêté, docs/adr/0039), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode, count, percentage } ou qualifiers, seeding previous_round | cumulative, boutOrder, scoring ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring ; Tour Quest qualifiersCount ; scission criterion gender | category | rank | manual, branches [{ label, phases, gender, categories, take }]), setGeneral (restTimeSeconds, ruleSet, postPoolSplitCriteria). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour ; refus : invalid_settings, draw_done.',
     input: z.object({
       competitionId: CompetitionId,
       operations: z
@@ -92,7 +92,7 @@ export const formulaOperations = {
           z.discriminatedUnion('op', [
             z.strictObject({
               op: z.literal('insertPhase'),
-              brick: z.enum(['pool', 'quest', 'tableau']),
+              brick: z.enum(['pool', 'quest', 'tableau', 'split']),
               at: z.number().int().min(0).max(20),
             }),
             z.strictObject({ op: z.literal('removePhase'), phase: z.string().max(40) }),

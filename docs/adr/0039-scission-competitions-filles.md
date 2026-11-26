@@ -1,6 +1,6 @@
 # ADR-0039 — La scission est une phase de la formule : chaque branche devient une compétition fille, classée à part
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (état `splitHistory` de l'épreuve d'origine, `stayInCompetition` refusé jusqu'à E3, entrée en vigueur appliquée par E2a, validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape E ; questions Q6, Q7), #1948 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (`SplitPhase`), s'appuie sur [ADR-0024](0024-tableaux-separes-equipes-moteur.md) (`splitOffGroup`, `GroupSplitOff`, `SplitRankingImported`) et [ADR-0011](0011-migrations-schema-3-0.md) (migration)
 
@@ -79,6 +79,12 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
 - **Exception** : une branche réduite à un tableau peut rester dans l'épreuve d'origine
   (`stayInCompetition`). Elle se joue alors comme les tableaux séparés d'aujourd'hui
   (`groupTableaux`, ADR-0024). C'est le cas de la compétition couplée par sexe.
+- L'épreuve d'origine garde dans son état de session
+  `splitHistory: [{ label, competitionId, fencerIds }]` (JSON, sans migration), écrit par
+  `splitCompetition` dans sa transaction ; la projection du journal le rejoue depuis
+  `GroupSplitOff` (ADR-0017). *(Ajout du 2026-11-27.)*
+- Jusqu'à l'étape E3 (reprise de la compétition couplée), la grammaire refuse
+  `stayInCompetition` : E2 ne crée que des compétitions filles. *(Ajout du 2026-11-27.)*
 
 **Classement : par branche, toujours** (Q6)
 
@@ -113,9 +119,9 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
 - Le moteur des poules par branche n'est pas écrit : une branche avec des poules est une
   fille, qui se déroule avec le moteur actuel. Les branches restées dans l'épreuve se limitent
   à un tableau.
-- **Entrée en vigueur avec E2** : tant que la brique Scission n'est pas dans la grammaire,
-  ADR-0036 et ADR-0037 s'appliquent telles quelles. La PR E2 porte, avec le code qui les
-  prouve, les amendements validés par le mainteneur le 2026-11-26 :
+- **Entrée en vigueur avec E2** — _appliquée le 2026-11-27 (E2a : grammaire, `planSplit`,
+  `splitCompetition`)_ : les amendements validés par le mainteneur le 2026-11-26 sont portés
+  sur place dans ADR-0036 et ADR-0037, avec le code qui les prouve :
   - ADR-0036 : `SplitPhase.branches` prend la forme `SplitBranch[]` décrite ici ;
   - ADR-0037 (D2b) : un tableau arrêté est précédé d'au moins un tour de poules et suivi d'un
     tour de poules **ou d'une scission** ;

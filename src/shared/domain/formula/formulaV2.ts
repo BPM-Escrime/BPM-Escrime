@@ -16,6 +16,7 @@ import {
   CustomPoolRoundConfig,
   CustomScoringConfig,
   FormulaPhaseNode,
+  Gender,
   PostPoolSplitCriteria,
   QuestPhaseConfig,
   Weapon,
@@ -73,12 +74,31 @@ export interface TableauPhase {
   legacy?: LegacyTableauSettings;
 }
 
-/** Étape E : scission, chaque branche est une suite de phases */
+/** Critère de répartition d'une scission (ADR-0039) */
+export type SplitCriterion = 'gender' | 'category' | 'rank' | 'manual';
+
+/** Branche d'une scission : devient une compétition fille (ADR-0039) */
+export interface SplitBranch {
+  /** « Tableau A », « N1 », « Dames », « V1 »… : titre de la fille, libellé GREG */
+  label: string;
+  /** Formule de la branche : poules et / ou tableau (sans scission ni Tour Quest) */
+  phases: FormulaPhaseV2[];
+  /** Critère gender */
+  gender?: Gender;
+  /** Critère category : une ou plusieurs */
+  categories?: Category[];
+  /** Critère rank : fixed_count ou percentage ; absent = le reste */
+  take?: AdvancementRule;
+  /** Branche réduite à un tableau restée dans l'épreuve : refusée jusqu'à l'étape E3 */
+  stayInCompetition?: boolean;
+}
+
+/** Étape E : scission, toujours en dernière phase ; chaque branche est une suite de phases */
 export interface SplitPhase {
   kind: 'split';
   id: string;
-  criterion: 'gender' | 'category' | 'rank' | 'manual';
-  branches: { label: string; phases: FormulaPhaseV2[] }[];
+  criterion: SplitCriterion;
+  branches: SplitBranch[];
 }
 
 export type FormulaPhaseV2 = PoolRoundPhase | QuestPhase | TableauPhase | SplitPhase;
@@ -108,6 +128,9 @@ export interface FormulaSource {
 const pools = (f: FormulaV2) => f.phases.filter((p): p is PoolRoundPhase => p.kind === 'pool');
 const tableauOf = (f: FormulaV2) => f.phases.find((p): p is TableauPhase => p.kind === 'tableau');
 const questOf = (f: FormulaV2) => f.phases.find((p): p is QuestPhase => p.kind === 'quest');
+/** Scission de la formule (dernière phase, ADR-0039) ; undefined : aucune */
+export const splitOf = (f: FormulaV2): SplitPhase | undefined =>
+  f.phases.find((p): p is SplitPhase => p.kind === 'split');
 
 // ── Réglages plats → v2 (épée, fleuret, sabre, Sabre Laser) ───────────────
 

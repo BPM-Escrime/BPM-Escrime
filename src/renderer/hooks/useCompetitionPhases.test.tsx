@@ -26,16 +26,21 @@ const settings = buildDefaultCompetitionSettings({
 }) as CompetitionSettings;
 const ctx = { weapon: Weapon.EPEE, category: Category.SENIOR, settings };
 
-/** Onglets attendus du déroulé : une étape « poules » = préparation, poules, classement */
+/**
+ * Onglets attendus du déroulé : une étape « poules » = préparation, poules, classement ; la
+ * scission (ADR-0039) n'ajoute pas d'onglet (ses branches sont des compétitions filles)
+ */
 const expectedTabs = (f: FormulaV2): string[] => {
   const ids = formulaSteps(f).flatMap(s =>
-    s.kind === 'pools'
-      ? ['poolprep', 'pools', 'ranking']
-      : s.kind === 'tableau'
-        ? startsWithTableau(f)
-          ? ['ranking', 'tableau']
-          : ['tableau']
-        : [s.kind]
+    s.kind === 'split'
+      ? []
+      : s.kind === 'pools'
+        ? ['poolprep', 'pools', 'ranking']
+        : s.kind === 'tableau'
+          ? startsWithTableau(f)
+            ? ['ranking', 'tableau']
+            : ['tableau']
+          : [s.kind]
   );
   return [...new Set(ids)];
 };
@@ -92,6 +97,32 @@ describe('navigation dérivée de formulaSteps (ADR-0037)', () => {
       [
         { op: 'setPhase', phase: 'tableau', settings: { stopAt: 4 } },
         { op: 'insertPhase', brick: 'pool', at: 2 },
+      ],
+      () => 'x'
+    );
+    expect(screenTabs(f, 0)).toEqual(expectedTabs(f));
+    expect(screenTabs(f, 1)).toEqual(expectedTabs(f));
+  });
+
+  it('scission après les poules : pas d’onglet de plus (ADR-0039)', () => {
+    const f = applyOperationsV2(
+      ctx,
+      [
+        { op: 'removePhase', phase: 'tableau' },
+        { op: 'insertPhase', brick: 'split', at: 1 },
+      ],
+      () => 'x'
+    );
+    expect(screenTabs(f, 0)).toEqual(expectedTabs(f));
+    expect(expectedTabs(f)).not.toContain('split');
+  });
+
+  it('tableau arrêté suivi d’une scission : mêmes onglets avant et après la clôture', () => {
+    const f = applyOperationsV2(
+      ctx,
+      [
+        { op: 'setPhase', phase: 'tableau', settings: { stopAt: 8 } },
+        { op: 'insertPhase', brick: 'split', at: 2 },
       ],
       () => 'x'
     );

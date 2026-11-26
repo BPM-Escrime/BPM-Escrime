@@ -143,7 +143,8 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   };
 
   const plus = (at: number) => {
-    const options = insertOptionsV2(formula, weapon, at);
+    // Scission (ADR-0039) : brique du moteur, éditée à l'écran à l'étape E2b
+    const options = insertOptionsV2(formula, weapon, at).filter(b => b !== 'split');
     if (options.length === 0 || specialMode) return null;
     return (
       <span key={`plus-${at}`} className="formula-editor__plus">

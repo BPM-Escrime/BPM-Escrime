@@ -13,6 +13,7 @@ import {
   CompetitionSettings,
   CustomFormulaConfig,
   CustomScoringConfig,
+  Gender,
   QuestPhaseConfig,
   Weapon,
 } from '../../types';
@@ -28,6 +29,9 @@ import {
   type FormulaV2,
   type PoolRoundPhase,
   type QuestPhase,
+  type SplitBranch,
+  type SplitCriterion,
+  type SplitPhase,
   type TableauPhase,
 } from './formulaV2';
 import { validateFormulaSettings } from './validateFormulaSettings';
@@ -35,8 +39,9 @@ import { validateFormulaSettings } from './validateFormulaSettings';
 const isPool = (p: FormulaPhaseV2): p is PoolRoundPhase => p.kind === 'pool';
 const isQuest = (p: FormulaPhaseV2): p is QuestPhase => p.kind === 'quest';
 const isTableau = (p: FormulaPhaseV2): p is TableauPhase => p.kind === 'tableau';
+const isSplit = (p: FormulaPhaseV2): p is SplitPhase => p.kind === 'split';
 
-/** Phases de la frise (clés stables : pool-0, pool-1…, quest, tableau) */
+/** Phases de la frise (clés stables : pool-0, pool-1…, quest, tableau, split) */
 export function friezeOfV2(f: FormulaV2): FriezePhase[] {
   let round = 0;
   return f.phases.flatMap((p): FriezePhase[] =>
@@ -46,8 +51,24 @@ export function friezeOfV2(f: FormulaV2): FriezePhase[] {
         ? [{ kind: 'quest', key: 'quest' }]
         : isTableau(p)
           ? [{ kind: 'tableau', key: 'tableau' }]
-          : []
+          : [{ kind: 'split', key: 'split' }]
   );
+}
+
+/**
+ * Place d'une scission (ADR-0039) : dernière phase, unique, sans Tour Quest, après un tour de
+ * poules ou un tableau arrêté à N. null : conforme ou pas de scission.
+ */
+export function splitPlacementIssue(f: FormulaV2): string | null {
+  const at = f.phases.findIndex(isSplit);
+  if (at < 0) return null;
+  if (f.phases.filter(isSplit).length > 1) return 'une seule scission';
+  if (at !== f.phases.length - 1) return 'scission : toujours la dernière phase';
+  if (f.phases.some(isQuest)) return 'scission : sans Tour Quest';
+  const prev = f.phases[at - 1];
+  if (!prev || !(isPool(prev) || (isTableau(prev) && !!prev.stopAt)))
+    return 'scission : après un tour de poules ou un tableau arrêté à N tireurs';
+  return null;
 }
 
 /**
@@ -62,19 +83,42 @@ export function insertOptionsV2(f: FormulaV2, weapon: Weapon, at: number): Friez
   const tableau = tableauAt >= 0 ? (f.phases[tableauAt] as TableauPhase) : undefined;
   const preRounds = tableau ? f.phases.slice(0, tableauAt).filter(isPool).length : rounds;
   const total = friezeOfV2(f).length;
+  const split = f.phases.some(isSplit);
+  // Scission : toujours la dernière phase, plus rien ne s'insère après elle (ADR-0039)
+  const lastAt = split ? total - 1 : total;
   const out: FriezeBrick[] = [];
   // Tour Quest : au plus un tour de poules préliminaire
   const maxRounds = quest ? 1 : MAX_POOL_ROUNDS;
-  const afterStopped = !!tableau?.stopAt && !quest && at > tableauAt;
+  const afterStopped = !!tableau?.stopAt && !quest && at > tableauAt && at <= lastAt;
   if (rounds < maxRounds && (at <= preRounds || afterStopped)) out.push('pool');
-  if (weapon === Weapon.LASER && !quest && !tableau?.stopAt && at === preRounds && preRounds <= 1)
+  if (
+    weapon === Weapon.LASER &&
+    !quest &&
+    !split &&
+    !tableau?.stopAt &&
+    at === preRounds &&
+    preRounds <= 1
+  )
     out.push('quest');
-  if (!tableau && at === total) out.push('tableau');
+  if (!tableau && !split && at === total) out.push('tableau');
+  // Scission en fin de frise, après un tour de poules ou un tableau arrêté (ADR-0039)
+  const prev = f.phases[f.phases.length - 1];
+  if (
+    !split &&
+    !quest &&
+    at === total &&
+    !!prev &&
+    (isPool(prev) || (isTableau(prev) && !!prev.stopAt))
+  )
+    out.push('split');
   return out;
 }
 
 export function canRemoveV2(f: FormulaV2, phase: FriezePhase): boolean {
   if (friezeOfV2(f).length <= 1) return false;
+  if (phase.kind === 'split') return true;
+  // Une scission garde sa place : après un tour de poules ou un tableau arrêté (ADR-0039)
+  if (f.phases.some(isSplit) && splitPlacementIssue(removeV2(f, phase))) return false;
   if (phase.kind === 'tableau') return f.phases.some(isPool) || f.phases.some(isQuest);
   if (phase.kind === 'pool') {
     // Tableau arrêté (ADR-0037) : au moins un tour avant lui
@@ -112,7 +156,7 @@ function newPool(f: FormulaV2, at: number, id: string): PoolRoundPhase {
 }
 
 /** Tableau neuf : réglages du tableau enregistrés sur l'épreuve, sinon défauts de l'arme */
-function newTableau(ctx: FormulaV2Context, id: string): TableauPhase {
+export function newTableau(ctx: FormulaV2Context, id: string): TableauPhase {
   const s = ctx.settings ?? {};
   const flat = flatSettingsOf(
     formulaOf({ weapon: ctx.weapon, category: ctx.category }),
@@ -128,6 +172,41 @@ function newTableau(ctx: FormulaV2Context, id: string): TableauPhase {
   };
 }
 
+/** Modèle de branche d'une scission (ADR-0039) : phases par défaut de l'arme */
+export type BranchPreset = 'tableau' | 'pools_tableau' | 'pools';
+
+/** Phases d'une branche selon son modèle : tour de poules et tableau par défaut de l'arme */
+export function branchPhases(
+  preset: BranchPreset,
+  ctx: FormulaV2Context,
+  newId: () => string
+): FormulaPhaseV2[] {
+  const pool = (): PoolRoundPhase => {
+    const first = formulaOf({ weapon: ctx.weapon, category: ctx.category }).phases.find(isPool);
+    return newPool({ version: 2, phases: first ? [first] : [], general: {} }, 1, newId());
+  };
+  if (preset === 'tableau') return [newTableau(ctx, newId())];
+  if (preset === 'pools') return [pool()];
+  return [pool(), newTableau(ctx, newId())];
+}
+
+/** Scission neuve : par rang, « Tableau A » (16 premiers) et « Tableau B » (le reste) */
+function newSplit(ctx: FormulaV2Context, newId: () => string): SplitPhase {
+  return {
+    kind: 'split',
+    id: newId(),
+    criterion: 'rank',
+    branches: [
+      {
+        label: 'Tableau A',
+        phases: branchPhases('tableau', ctx, newId),
+        take: { mode: 'fixed_count', count: 16 },
+      },
+      { label: 'Tableau B', phases: branchPhases('tableau', ctx, newId) },
+    ],
+  };
+}
+
 export function insertV2(
   f: FormulaV2,
   ctx: FormulaV2Context,
@@ -136,7 +215,9 @@ export function insertV2(
   newId: () => string
 ): FormulaV2 {
   const phases = [...f.phases];
-  if (brick === 'tableau') {
+  if (brick === 'split') {
+    phases.push(newSplit(ctx, newId));
+  } else if (brick === 'tableau') {
     phases.push(newTableau(ctx, newId()));
   } else if (brick === 'quest') {
     const rounds = phases.filter(isPool).length;
@@ -158,11 +239,13 @@ export function removeV2(f: FormulaV2, phase: FriezePhase): FormulaV2 {
   if (phase.kind === 'tableau') return { ...f, phases: f.phases.filter(p => !isTableau(p)) };
   if (phase.kind === 'quest') return { ...f, phases: f.phases.filter(p => !isQuest(p)) };
   let round = -1;
-  const phases = f.phases.filter(p => !(isPool(p) && ++round === phase.round));
-  // Plus de tour après un tableau arrêté : le tableau va de nouveau jusqu'à la finale
+  const phases = f.phases.filter(p =>
+    phase.kind === 'split' ? !isSplit(p) : !(isPool(p) && ++round === phase.round)
+  );
+  // Plus de tour ni de scission après un tableau arrêté : il va de nouveau jusqu'à la finale
   const at = phases.findIndex(isTableau);
   const tableau = phases[at] as TableauPhase | undefined;
-  if (tableau?.stopAt && !phases.slice(at + 1).some(isPool)) {
+  if (tableau?.stopAt && !phases.slice(at + 1).some(p => isPool(p) || isSplit(p))) {
     const { stopAt: _stopAt, ...full } = tableau;
     phases[at] = full;
   }
@@ -310,6 +393,70 @@ function setQuest(p: QuestPhase, raw: Record<string, unknown>, where: string): Q
   return { ...p, config: { ...p.config, ...(s as Partial<QuestPhaseConfig>) } };
 }
 
+const SPLIT_FIELDS = ['criterion', 'branches'] as const;
+const SPLIT_CRITERIA: readonly SplitCriterion[] = ['gender', 'category', 'rank', 'manual'];
+const BRANCH_FIELDS = [
+  'label',
+  'phases',
+  'gender',
+  'categories',
+  'take',
+  'stayInCompetition',
+] as const;
+const GENDERS: readonly string[] = Object.values(Gender);
+const CATEGORIES: readonly string[] = Object.values(Category);
+
+/** Forme d'une branche reçue (écran, MCP) ; bornes et règles : formulaV2Issues */
+function parseBranch(raw: unknown, where: string): SplitBranch {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw))
+    throw new FormulaOperationError(`${where} : branche attendue { label, phases, … }`);
+  const b = raw as Record<string, unknown>;
+  checkFields(b, BRANCH_FIELDS, where);
+  if (typeof b.label !== 'string')
+    throw new FormulaOperationError(`${where} : « label » attend un texte`);
+  if (
+    !Array.isArray(b.phases) ||
+    !b.phases.every(
+      p =>
+        typeof p === 'object' &&
+        p !== null &&
+        typeof (p as { id?: unknown }).id === 'string' &&
+        ['pool', 'quest', 'tableau', 'split'].includes(String((p as { kind?: unknown }).kind))
+    )
+  )
+    throw new FormulaOperationError(`${where} : « phases » attend des phases { kind, id, … }`);
+  if (b.gender !== undefined && !GENDERS.includes(b.gender as string))
+    throw new FormulaOperationError(`${where} : « gender » attend ${GENDERS.join(', ')}`);
+  if (
+    b.categories !== undefined &&
+    (!Array.isArray(b.categories) || !b.categories.every(c => CATEGORIES.includes(c as string)))
+  )
+    throw new FormulaOperationError(`${where} : « categories » attend ${CATEGORIES.join(', ')}`);
+  if (b.take !== undefined && !isRule(b.take))
+    throw new FormulaOperationError(`${where} : « take » attend { mode, count | percentage }`);
+  if (b.stayInCompetition !== undefined && typeof b.stayInCompetition !== 'boolean')
+    throw new FormulaOperationError(`${where} : « stayInCompetition » attend un booléen`);
+  return { ...(b as unknown as SplitBranch), label: b.label.trim() };
+}
+
+function setSplit(p: SplitPhase, raw: Record<string, unknown>, where: string): SplitPhase {
+  checkFields(raw, SPLIT_FIELDS, where);
+  const next: SplitPhase = { ...p };
+  if (raw.criterion !== undefined) {
+    if (!SPLIT_CRITERIA.includes(raw.criterion as SplitCriterion))
+      throw new FormulaOperationError(
+        `${where} : « criterion » attend ${SPLIT_CRITERIA.join(', ')}`
+      );
+    next.criterion = raw.criterion as SplitCriterion;
+  }
+  if (raw.branches !== undefined) {
+    if (!Array.isArray(raw.branches))
+      throw new FormulaOperationError(`${where} : « branches » attend une liste`);
+    next.branches = raw.branches.map((b, i) => parseBranch(b, `${where}, branche ${i + 1}`));
+  }
+  return next;
+}
+
 export interface FormulaV2Context {
   weapon: Weapon;
   category: Category;
@@ -333,7 +480,9 @@ function indexOf(f: FormulaV2, phase: FriezePhase): number {
       ? isPool(p) && ++round === phase.round
       : phase.kind === 'quest'
         ? isQuest(p)
-        : isTableau(p)
+        : phase.kind === 'split'
+          ? isSplit(p)
+          : isTableau(p)
   );
 }
 
@@ -409,6 +558,7 @@ export function applyOperationsV2(
           );
       } else if (isTableau(current)) phases[index] = setTableau(current, o.settings, where);
       else if (isQuest(current)) phases[index] = setQuest(current, o.settings, where);
+      else if (isSplit(current)) phases[index] = setSplit(current, o.settings, where);
       f = { ...f, phases };
     } else {
       checkFields(o.settings, GENERAL_FIELDS, where);
@@ -449,16 +599,80 @@ export function formulaV2Issues(
     out.push(...issues.map(i => `tableau : ${i.field} (${i.message})`));
   }
   if (pools.length > MAX_POOL_ROUNDS) out.push(`${MAX_POOL_ROUNDS} tours de poules au plus`);
-  // Tableau arrêté (ADR-0037, D2) : des tours de poules le suivent, et rien d'autre
+  // Tableau arrêté (ADR-0037, D2) : des tours de poules ou une scission (ADR-0039) le suivent
   if (tableau) {
     const after = f.phases.slice(f.phases.indexOf(tableau) + 1);
-    if (tableau.stopAt && !after.some(isPool))
-      out.push(`tableau arrêté à ${tableau.stopAt} : ajouter un tour de poules après le tableau`);
+    if (tableau.stopAt && !after.some(p => isPool(p) || isSplit(p)))
+      out.push(
+        `tableau arrêté à ${tableau.stopAt} : ajouter un tour de poules ou une scission après le tableau`
+      );
     if (!tableau.stopAt && after.some(isPool))
       out.push('tours de poules après le tableau : arrêter le tableau à N tireurs');
     if (tableau.stopAt && !f.phases.slice(0, f.phases.indexOf(tableau)).some(isPool))
       out.push('tableau arrêté : un tour de poules avant le tableau');
     if (tableau.stopAt && f.phases.some(isQuest)) out.push('tableau arrêté : sans Tour Quest');
+  }
+  const placement = splitPlacementIssue(f);
+  if (placement) out.push(placement);
+  const split = f.phases.find(isSplit);
+  if (split) out.push(...splitIssues(split, scope));
+  return out;
+}
+
+/** Règles d'une scission (ADR-0039) : branches, critère, formule de chaque branche */
+export function splitIssues(
+  split: SplitPhase,
+  scope: { weapon: Weapon; isTeamEvent?: boolean }
+): string[] {
+  const out: string[] = [];
+  const { branches, criterion } = split;
+  if (branches.length < 2) out.push('scission : deux branches au moins');
+  const labels = branches.map(b => (b.label ?? '').trim());
+  if (labels.some(l => !l)) out.push('scission : chaque branche a un libellé');
+  if (new Set(labels.filter(Boolean)).size !== labels.filter(Boolean).length)
+    out.push('scission : libellés des branches distincts');
+  branches.forEach((b, i) => {
+    const name = `branche « ${labels[i] || i + 1} »`;
+    if (b.phases.length === 0) out.push(`${name} : au moins une phase`);
+    if (b.phases.some(p => isSplit(p) || isQuest(p)))
+      out.push(`${name} : ni scission ni Tour Quest dans une branche`);
+    else
+      out.push(
+        ...formulaV2Issues({ version: 2, phases: b.phases, general: {} }, scope).map(
+          m => `${name} : ${m}`
+        )
+      );
+    if (b.stayInCompetition) out.push(`${name} : rester dans l'épreuve, à partir de l'étape E3`);
+  });
+  if (criterion === 'rank') {
+    branches.forEach((b, i) => {
+      const last = i === branches.length - 1;
+      const name = `branche « ${labels[i] || i + 1} »`;
+      if (last && b.take) out.push(`${name} : la dernière branche prend le reste (sans « take »)`);
+      if (!last && !(b.take && ['fixed_count', 'percentage'].includes(b.take.mode)))
+        out.push(`${name} : nombre ou pourcentage de tireurs requis (« take »)`);
+      if (!last && b.take?.mode === 'fixed_count' && !(Number(b.take.count) >= 1))
+        out.push(`${name} : nombre de tireurs ≥ 1`);
+      if (
+        !last &&
+        b.take?.mode === 'percentage' &&
+        !(Number(b.take.percentage) > 0 && Number(b.take.percentage) < 100)
+      )
+        out.push(`${name} : pourcentage entre 1 et 99`);
+    });
+  }
+  if (criterion === 'gender') {
+    if (branches.some(b => !b.gender)) out.push('scission par sexe : un sexe par branche');
+    const genders = branches.map(b => b.gender).filter(Boolean);
+    if (new Set(genders).size !== genders.length)
+      out.push('scission par sexe : un sexe n’appartient qu’à une branche');
+  }
+  if (criterion === 'category') {
+    if (branches.some(b => !b.categories?.length))
+      out.push('scission par catégorie : au moins une catégorie par branche');
+    const all = branches.flatMap(b => b.categories ?? []);
+    if (new Set(all).size !== all.length)
+      out.push('scission par catégorie : une catégorie n’appartient qu’à une branche');
   }
   return out;
 }
@@ -528,10 +742,27 @@ function changed(from: object, to: object, keys: readonly string[]) {
  * Liste d'opérations (noms v2, réglage par tour) qui mène la formule `from` à `to` : structure
  * d'abord (tableau, Tour Quest, nombre de tours), puis réglages de chaque phase et généraux.
  */
-export function operationsBetweenV2(from: FormulaV2, to: FormulaV2): FormulaOperation[] {
+export function operationsBetweenV2(origin: FormulaV2, to: FormulaV2): FormulaOperation[] {
   const ops: FormulaOperation[] = [];
   const quest = (f: FormulaV2) => f.phases.find(isQuest);
   const tableau = (f: FormulaV2) => f.phases.find(isTableau);
+  // Scission (ADR-0039) : toujours en dernier. Retirée d'abord si elle disparaît ou si un
+  // tableau ou un Tour Quest doit s'insérer (rien ne s'insère après elle), remise à la fin.
+  const sFrom = origin.phases.find(isSplit);
+  const sTo = to.phases.find(isSplit);
+  const reinsert =
+    !!sFrom &&
+    (!sTo ||
+      (!tableau(origin) && !!tableau(to)) ||
+      (!quest(origin) && !!quest(to)) ||
+      // Tableau arrêté qui devient complet : la scission ne peut plus le suivre
+      (!!tableau(origin)?.stopAt && !tableau(to)?.stopAt));
+  let from = origin;
+  if (sFrom && reinsert) {
+    ops.push({ op: 'removePhase', phase: 'split' });
+    from = removeV2(origin, { kind: 'split', key: 'split' });
+  }
+  const splitKept = !!sFrom && !reinsert;
   // Tours avant / après le tableau (après : tableau arrêté, ADR-0037). Tableau retiré : tous
   // les tours de `from` comptent comme tours d'avant.
   const split = (f: FormulaV2, keepTableau: boolean) => {
@@ -561,9 +792,11 @@ export function operationsBetweenV2(from: FormulaV2, to: FormulaV2): FormulaOper
   // Réglages du tableau (dont l'arrêt à N) avant les tours d'après (grammaire, ADR-0037)
   const tTo = tableau(to);
   if (tTo) {
-    const diff = changed(tableau(from) ?? {}, tTo, TABLEAU_DIFF);
-    // Arrêt retiré par le retrait du dernier tour d'après (removeV2) : rien à régler
-    if (src.post.length > 0 && dst.post.length === 0 && diff.stopAt === null) delete diff.stopAt;
+    // Arrêt retiré par le retrait du dernier tour d'après sans scission qui suit (removeV2)
+    const tFrom = tableau(from);
+    const unstopped = src.post.length > 0 && dst.post.length === 0 && !splitKept;
+    const base = tFrom && unstopped ? { ...tFrom, stopAt: undefined } : tFrom;
+    const diff = changed(base ?? {}, tTo, TABLEAU_DIFF);
     if (Object.keys(diff).length) ops.push({ op: 'setPhase', phase: 'tableau', settings: diff });
   }
   const kept = Math.min(src.post.length, dst.post.length);
@@ -583,6 +816,14 @@ export function operationsBetweenV2(from: FormulaV2, to: FormulaV2): FormulaOper
   if (qTo) {
     const diff = changed(quest(from)?.config ?? {}, qTo.config, QUEST_FIELDS);
     if (Object.keys(diff).length) ops.push({ op: 'setPhase', phase: 'quest', settings: diff });
+  }
+  if (sTo) {
+    const settings =
+      sFrom && splitKept
+        ? changed(sFrom, sTo, SPLIT_FIELDS)
+        : { criterion: sTo.criterion, branches: sTo.branches };
+    if (!splitKept) ops.push({ op: 'insertPhase', brick: 'split', at: friezeOfV2(to).length - 1 });
+    if (Object.keys(settings).length) ops.push({ op: 'setPhase', phase: 'split', settings });
   }
   const general = changed(from.general, to.general, GENERAL_FIELDS);
   if (Object.keys(general).length) ops.push({ op: 'setGeneral', settings: general });
