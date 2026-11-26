@@ -6,7 +6,8 @@
  * Écritures dans la transaction de runCommand : tireurs, état de session, PoolRoundClosed.
  * Licensed under GPL-3.0
  */
-import { FencerStatus, type Fencer, type Pool } from '../../../shared/types';
+import { FencerStatus, type Fencer, type Pool, type TiesAtBar } from '../../../shared/types';
+import { assertTies } from './ties';
 import { selectNextRoundFencers } from '../../../shared/utils/poolRounds';
 import { computeOverallRankingAllRoundsFor } from '../../../shared/utils/poolOrchestration';
 import { areAllPoolsComplete } from '../../../shared/domain/pools/poolCompletion';
@@ -34,6 +35,8 @@ export interface ClosePoolRoundInput {
   competitionId: string;
   /** Nombre de qualifiés imposé (défaut : formule, puis réglage poolRoundQualifiers) */
   qualifierCount?: number;
+  /** Ex aequo à la barre pour cette coupe (docs/adr/0040), prime sur la formule */
+  ties?: TiesAtBar;
   dryRun?: boolean;
 }
 
@@ -63,7 +66,11 @@ export function closePoolRound(ctx: CommandContext, input: ClosePoolRoundInput) 
   });
   const ranking = plan.ranking;
   const qualifierCount = input.qualifierCount ?? plan.qualifierCount;
-  const { qualified, eliminated } = selectNextRoundFencers(ranking, qualifierCount);
+  const { qualified, eliminated, tiedAtBar } = selectNextRoundFencers(
+    ranking,
+    qualifierCount,
+    assertTies(input.ties) ?? plan.ties
+  );
   if (qualified.length < MIN_ROUND_QUALIFIERS) {
     throw new CommandError(
       'not_enough_qualifiers',
@@ -84,6 +91,7 @@ export function closePoolRound(ctx: CommandContext, input: ClosePoolRoundInput) 
     qualifierCount: qualifierCount ?? null,
     qualified: qualified.length,
     eliminated: toEliminate.length,
+    tiedAtBar,
   };
   if (input.dryRun) return report;
 

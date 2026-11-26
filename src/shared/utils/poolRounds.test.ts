@@ -107,3 +107,24 @@ describe('mergeRoundRankings', () => {
     expect(mergeRoundRankings([round1, round2]).map(r => r.rank)).toEqual([1, 2, 3, 3]);
   });
 });
+
+describe('selectNextRoundFencers : ex aequo à la barre (docs/adr/0040)', () => {
+  // f2, f3, f4 ex aequo à la 2e place ; rang d'entrée : f4 (2) avant f3 (5) avant f2 (8)
+  const fs = [fencer('f1', 1), fencer('f2', 8), fencer('f3', 5), fencer('f4', 2), fencer('f5', 3)];
+  const ranking = [1, 2, 2, 2, 5].map((rank, i) => entry(fs[i], rank));
+
+  it('défaut : tous les ex aequo retenus, signalés', () => {
+    const r = selectNextRoundFencers(ranking, 2);
+    expect(r.qualified.map(f => f.id)).toEqual(['f1', 'f2', 'f3', 'f4']);
+    expect(r.tiedAtBar).toEqual({ rank: 2, fencerIds: ['f2', 'f3', 'f4'], places: 1 });
+  });
+
+  it('« initial_ranking » : quota tenu, départagé au rang d’entrée, places renumérotées', () => {
+    const r = selectNextRoundFencers(ranking, 2, 'initial_ranking');
+    expect(r.qualified.map(f => [f.id, f.ranking])).toEqual([
+      ['f1', 1],
+      ['f4', 2],
+    ]);
+    expect(r.eliminated.map(f => f.id)).toEqual(['f2', 'f3', 'f5']);
+  });
+});

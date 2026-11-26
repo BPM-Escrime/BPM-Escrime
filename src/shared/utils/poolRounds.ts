@@ -4,8 +4,9 @@
  * Licensed under GPL-3.0
  */
 
-import { Fencer, FencerStatus, PoolRanking } from '../types';
+import { Fencer, FencerStatus, PoolRanking, type TiesAtBar } from '../types';
 import { WITHDRAWN_STATUSES } from '../domain/fencers/fencerStatus';
+import { cutAtBar, type TiedAtBar } from '../domain/ranking/advancement';
 
 /** Abandon, forfait, exclusion (#1979, lot 4 : définition unique) */
 const INACTIVE_STATUSES = WITHDRAWN_STATUSES;
@@ -25,24 +26,21 @@ export function getRoundQualifierCount(
 /**
  * Tireurs qualifiés pour le tour suivant, dans l'ordre du classement du tour terminé.
  * `ranking` du tireur = sa place au tour terminé (seed du nouveau tirage serpentin).
- * Abandons / forfaits / exclusions écartés. Égalités à la coupure : toutes retenues.
+ * Abandons / forfaits / exclusions écartés. Ex aequo à la barre : selon `ties` (docs/adr/0040,
+ * coupe du domaine `cutAtBar`), tous retenus par défaut.
  */
 export function selectNextRoundFencers(
   roundRanking: PoolRanking[],
-  qualifierCount?: number
-): { qualified: Fencer[]; eliminated: Fencer[] } {
+  qualifierCount?: number,
+  ties?: TiesAtBar
+): { qualified: Fencer[]; eliminated: Fencer[]; tiedAtBar: TiedAtBar | null } {
   const sorted = [...roundRanking].sort((a, b) => a.rank - b.rank);
   const active = sorted.filter(r => !INACTIVE_STATUSES.has(r.fencer.status));
-  let cut = active.length;
-  if (qualifierCount !== undefined && qualifierCount < active.length) {
-    const cutoffRank = active[qualifierCount - 1].rank;
-    cut = qualifierCount;
-    while (cut < active.length && active[cut].rank === cutoffRank) cut++;
-  }
-  const qualified = active.slice(0, cut).map((r, i) => ({ ...r.fencer, ranking: i + 1 }));
+  const cut = cutAtBar(active, qualifierCount, ties);
+  const qualified = cut.qualified.map((r, i) => ({ ...r.fencer, ranking: i + 1 }));
   const qualifiedIds = new Set(qualified.map(f => f.id));
   const eliminated = sorted.filter(r => !qualifiedIds.has(r.fencer.id)).map(r => r.fencer);
-  return { qualified, eliminated };
+  return { qualified, eliminated, tiedAtBar: cut.tiedAtBar };
 }
 
 /**

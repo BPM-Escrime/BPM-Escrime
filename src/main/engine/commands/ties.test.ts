@@ -1,0 +1,209 @@
+/**
+ * Ex aequo à la barre de qualification (docs/adr/0040, lot F1) : simulation (« tiedAtBar »),
+ * réglage de la formule, champ « ties » de la commande qui prime, « barrage » refusé ;
+ * closePoolRound et generateTableau. Coupe figée par les événements existants. Base SQLite
+ * réelle.
+ */
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { DatabaseManager } from '../../../database';
+import { hasNodeSqlite } from '../../../database/testing/nodeSqliteDatabase';
+import {
+  Category,
+  CompetitionSettings,
+  FencerStatus,
+  Gender,
+  Weapon,
+  type TiesAtBar,
+} from '../../../shared/types';
+import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
+import {
+  flatSettingsOf,
+  formulaOf,
+  type FormulaV2,
+} from '../../../shared/domain/formula/formulaV2';
+import { applyOperationsV2 } from '../../../shared/domain/formula/formulaV2Operations';
+import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
+import type { CommandContext } from './context';
+import { invoke } from '../api/engine';
+
+vi.mock('better-sqlite3-multiple-ciphers', async () => ({
+  default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
+}));
+
+const d = hasNodeSqlite ? describe : describe.skip;
+
+let db: DatabaseManager;
+let ctx: CommandContext;
+
+beforeEach(async () => {
+  db = new DatabaseManager(':memory:');
+  await db.open(':memory:');
+  ctx = { db, emitChange: () => {} };
+});
+afterEach(() => db.close());
+
+const call = (op: string, input: Record<string, unknown>) =>
+  invoke(ctx, op as never, input as never) as Promise<any>;
+const events = (id: string) => db.eventLog.getSince(id);
+
+const weapon = Weapon.EPEE;
+const base = buildDefaultCompetitionSettings({
+  weapon,
+  category: Category.SENIOR,
+}) as CompetitionSettings;
+const fctx = { weapon, category: Category.SENIOR, settings: base };
+let n = 0;
+const newId = () => `ph-${++n}`;
+
+/** Formule : `rounds` tours de poules (4 qualifiés au premier, `ties`), puis le tableau */
+function formula(rounds: 1 | 2, ties?: TiesAtBar): FormulaV2 {
+  const f =
+    rounds === 2
+      ? applyOperationsV2(fctx, [{ op: 'insertPhase', brick: 'pool', at: 1 }], newId)
+      : formulaOf(fctx);
+  let first = true;
+  return {
+    ...f,
+    phases: f.phases.map(p => {
+      if (p.kind !== 'pool' || !first) return p;
+      first = false;
+      return { ...p, qualification: { mode: 'fixed_count', count: 4, ...(ties ? { ties } : {}) } };
+    }),
+  };
+}
+
+/** Épreuve de 6 tireurs pointés, rang d'entrée 1 à 6 */
+function competition(f: FormulaV2) {
+  const comp = db.createCompetition({
+    title: 'Coupe',
+    date: new Date('2026-12-06'),
+    location: 'Gymnase',
+    weapon,
+    gender: Gender.MIXED,
+    category: Category.SENIOR,
+    settings: { ...base, ...flatSettingsOf(f, weapon), formula: f } as never,
+  });
+  for (let i = 0; i < 6; i++) {
+    db.addFencer(comp.id, {
+      lastName: `NOM${i + 1}`,
+      firstName: `P${i + 1}`,
+      gender: Gender.MALE,
+      club: `Club${i}`,
+      ranking: i + 1,
+      status: FencerStatus.CHECKED_IN,
+    });
+  }
+  const byRank = db.getFencersByCompetition(comp.id).sort((a, b) => a.ranking! - b.ranking!);
+  return { comp, ids: byRank.map(f => f.id) };
+}
+
+/**
+ * Deux poules de 3 en cercle (a bat b, b bat c, c bat a, toujours 5-0) : les 6 tireurs sont
+ * ex aequo à la 1re place (V/M, indice et touches égaux).
+ */
+async function playCircles(competitionId: string, round: number, groups: string[][]) {
+  const composition = groups.map((g, p) => ({
+    poolId: `${competitionId}-r${round}-p${p + 1}`,
+    number: p + 1,
+    fencerIds: g,
+    matches: [
+      [g[0], g[1]],
+      [g[1], g[2]],
+      [g[2], g[0]],
+    ].map(([a, b], m) => ({
+      matchId: `${competitionId}-r${round}-p${p + 1}-m${m}`,
+      fencerAId: a,
+      fencerBId: b,
+    })),
+  }));
+  await call('generatePools', { competitionId, composition });
+  for (const pool of composition) {
+    for (const m of pool.matches) {
+      await call('recordScore', { competitionId, matchId: m.matchId, scoreA: 5, scoreB: 0 });
+    }
+  }
+}
+// Poules mêlées : rang d'entrée sans lien avec la poule
+const circles = (ids: string[]) => [
+  [ids[5], ids[0], ids[3]],
+  [ids[1], ids[4], ids[2]],
+];
+
+d('ex aequo à la barre (docs/adr/0040)', () => {
+  it('tableau, réglage absent : tous les ex aequo passent ; la simulation les signale', async () => {
+    const { comp, ids } = competition(formula(1));
+    await playCircles(comp.id, 1, circles(ids));
+    const sim = await call('generateTableau', { competitionId: comp.id, dryRun: true });
+    expect(sim.qualified).toBe(6);
+    expect(sim.tiedAtBar).toMatchObject({ rank: 1, places: 4 });
+    expect([...sim.tiedAtBar.fencerIds].sort()).toEqual([...ids].sort());
+  });
+
+  it('tableau : « ties » de la commande prime ; départage au rang d’entrée, quota tenu', async () => {
+    const { comp, ids } = competition(formula(1));
+    await playCircles(comp.id, 1, circles(ids));
+    const out = await call('generateTableau', { competitionId: comp.id, ties: 'initial_ranking' });
+    expect(out.qualified).toBe(4);
+    // Coupe figée par TableauGenerated : les 4 premiers au rang d'entrée
+    const generated = events(comp.id).find(e => e.type === 'TableauGenerated');
+    const placed = new Set(
+      (generated!.payload as any).matches.flatMap((s: any) => [s.fencerAId, s.fencerBId])
+    );
+    expect(ids.slice(0, 4).every(id => placed.has(id))).toBe(true);
+    expect(ids.slice(4).some(id => placed.has(id))).toBe(false);
+  });
+
+  it('tableau : réglage de la formule « initial_ranking » appliqué sans champ', async () => {
+    const { comp } = competition(formula(1, 'initial_ranking'));
+    const { ids } = { ids: db.getFencersByCompetition(comp.id).map(f => f.id) };
+    await playCircles(comp.id, 1, circles(ids));
+    const sim = await call('generateTableau', { competitionId: comp.id, dryRun: true });
+    expect(sim.qualified).toBe(4);
+    expect(sim.tiedAtBar).toMatchObject({ places: 4 });
+    // « all » pour ce tableau seulement
+    const all = await call('generateTableau', {
+      competitionId: comp.id,
+      dryRun: true,
+      ties: 'all',
+    });
+    expect(all.qualified).toBe(6);
+  });
+
+  it('tour de poules : simulation, réglage de la formule, « ties » qui prime, PoolRoundClosed', async () => {
+    const { comp, ids } = competition(formula(2, 'initial_ranking'));
+    await playCircles(comp.id, 1, circles(ids));
+    const sim = await call('closePoolRound', { competitionId: comp.id, dryRun: true });
+    expect(sim).toMatchObject({ qualified: 4, eliminated: 2 });
+    expect(sim.tiedAtBar).toMatchObject({ rank: 1, places: 4 });
+    const all = await call('closePoolRound', { competitionId: comp.id, dryRun: true, ties: 'all' });
+    expect(all).toMatchObject({ qualified: 6, eliminated: 0 });
+    await call('closePoolRound', { competitionId: comp.id });
+    const closed = events(comp.id).find(e => e.type === 'PoolRoundClosed')!.payload as any;
+    expect(closed.qualifiedIds).toEqual(ids.slice(0, 4));
+    expect([...closed.eliminatedIds].sort()).toEqual(ids.slice(4).sort());
+  });
+
+  it('« barrage » refusé jusqu’au lot F1b (invalid_settings), rien d’écrit', async () => {
+    // Tableau : épreuve à un tour (le MCP refuse plusieurs tours sans placement, ADR-0037)
+    for (const [rounds, op] of [
+      [2, 'closePoolRound'],
+      [1, 'generateTableau'],
+    ] as const) {
+      const { comp, ids } = competition(formula(rounds));
+      await playCircles(comp.id, 1, circles(ids));
+      await expect(call(op, { competitionId: comp.id, ties: 'barrage' })).rejects.toMatchObject({
+        code: 'invalid_settings',
+      });
+      expect(events(comp.id).some(e => /PoolRoundClosed|TableauGenerated/.test(e.type))).toBe(
+        false
+      );
+    }
+  });
+
+  it('MCP : même champ « ties » sur les outils de coupe (ADR-0008)', () => {
+    for (const name of ['close_pool_round', 'build_bracket', 'split_competition']) {
+      const tool = CONTRACT_MCP_TOOLS.write.find(t => t.name === name)!;
+      expect(Object.keys((tool.inputSchema as any).properties)).toContain('ties');
+    }
+  });
+});

@@ -618,19 +618,20 @@ Aucun argument.
 
 ### `close_pool_round` — Clore le tour de poules
 
-*⚠️ écriture, destructif.* Clôt le tour de poules courant (toutes les poules terminées) : qualifiés selon le classement du tour (formule, puis réglage du nombre de qualifiés, ou « qualifierCount »), non-qualifiés éliminés, tour archivé ; le tour suivant se pointe puis se tire. « dryRun: true » donne le nombre de qualifiés et d’éliminés sans rien écrire. Refus sous 4 qualifiés.
+*⚠️ écriture, destructif.* Clôt le tour de poules courant (toutes les poules terminées) : qualifiés selon le classement du tour (formule, puis réglage du nombre de qualifiés, ou « qualifierCount »), non-qualifiés éliminés, tour archivé ; le tour suivant se pointe puis se tire. « dryRun: true » donne le nombre de qualifiés et d’éliminés, et les ex aequo à la barre au-delà du quota (« tiedAtBar »), sans rien écrire. « ties » choisit le sort de ces ex aequo pour cette coupe (docs/adr/0040). Refus sous 4 qualifiés.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `qualifierCount` | integer |  | Nombre de qualifiés imposé |
+| `ties` | `all`, `initial_ranking`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour ; barrage pas encore disponible (refus invalid_settings) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
 
 ### `build_bracket` — Construire le tableau
 
-*⚠️ écriture, destructif.* Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, un tour, tableau simple). Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »).
+*⚠️ écriture, destructif.* Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, un tour, tableau simple). Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »). Sans « composition » : « tiedAtBar » liste les ex aequo à la barre de qualification au-delà du quota, « ties » choisit leur sort pour ce tableau (docs/adr/0040).
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -640,6 +641,7 @@ Aucun argument.
 | `rapieresTableauMode` | `normal`, `third`, `all`, `semis` |  | Tournoi des rapières : mode de tableau choisi |
 | `group` | string |  | Tableaux séparés après les poules : groupe du tableau (« F », « M »), exigé pour ce format |
 | `replace` | boolean |  | Remplacer un tableau existant |
+| `ties` | `all`, `initial_ranking`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour ; barrage pas encore disponible (refus invalid_settings) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
@@ -860,12 +862,13 @@ Aucun argument.
 
 ### `split_competition` — Scinder l’épreuve en compétitions filles
 
-*écriture.* Scission de la formule (dernière phase, docs/adr/0039) : quand la phase qui la précède est close (tour de poules terminé, tableau arrêté clos), répartit son classement entre les branches (sexe ou catégorie du tireur ; rang : nombre ou pourcentage de l’effectif entrant, ex aequo à la borne gardés, la dernière branche prend le reste ; manuelle : « assignments »). Dans une seule transaction, chaque branche devient une compétition fille (titre « titre d’origine – libellé », formule de la branche, tireurs copiés avec leur rang dans la branche) ; l’épreuve d’origine garde les autres tireurs. « dryRun: true » rend la répartition, les tireurs sans valeur pour le critère et le classement d’entrée (« entrants »), sans refus. Toutes les branches partent en compétitions filles (« stayInCompetition » vaut false) ; scission par sexe dont toutes les branches restent dans l’épreuve (compétition couplée, tableaux séparés) : refus invalid_settings. Refus : invalid_settings (pas de scission en dernière phase), pools_not_complete, tableau_stage_not_complete, split_value_missing (tireur sans sexe, sans catégorie ou non affecté), split_group_not_found (épreuve déjà scindée), not_enough_fencers (branche vide).
+*écriture.* Scission de la formule (dernière phase, docs/adr/0039) : quand la phase qui la précède est close (tour de poules terminé, tableau arrêté clos), répartit son classement entre les branches (sexe ou catégorie du tireur ; rang : nombre ou pourcentage de l’effectif entrant, ex aequo à la borne selon « take.ties » de la branche ou « ties » (tous gardés par défaut, docs/adr/0040), la dernière branche prend le reste ; manuelle : « assignments »). Dans une seule transaction, chaque branche devient une compétition fille (titre « titre d’origine – libellé », formule de la branche, tireurs copiés avec leur rang dans la branche) ; l’épreuve d’origine garde les autres tireurs. « dryRun: true » rend la répartition, les tireurs sans valeur pour le critère, les ex aequo à une borne au-delà du nombre (« tiedAtBar ») et le classement d’entrée (« entrants »), sans refus. Toutes les branches partent en compétitions filles (« stayInCompetition » vaut false) ; scission par sexe dont toutes les branches restent dans l’épreuve (compétition couplée, tableaux séparés) : refus invalid_settings. Refus : invalid_settings (pas de scission en dernière phase), pools_not_complete, tableau_stage_not_complete, split_value_missing (tireur sans sexe, sans catégorie ou non affecté), split_group_not_found (épreuve déjà scindée), not_enough_fencers (branche vide).
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `assignments` | object[] |  | Scission manuelle : branche de chaque tireur (libellé) |
+| `ties` | `all`, `initial_ranking`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour ; barrage pas encore disponible (refus invalid_settings) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |

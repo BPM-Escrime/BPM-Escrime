@@ -14,6 +14,8 @@ import {
   CompetitionId,
   DryRun,
   ExpectedRevision,
+  TiesAtBarInput,
+  TiedAtBarSchema,
   Id,
   query,
   Revision,
@@ -427,7 +429,7 @@ export const contract = {
   closePoolRound: command({
     description:
       'Clôt le tour de poules courant (toutes les poules terminées) : qualifiés selon le classement du tour (formule, puis réglage du nombre de qualifiés, ou « qualifierCount »), non-qualifiés éliminés, tour archivé ; le tour suivant se pointe puis se tire. ' +
-      '« dryRun: true » donne le nombre de qualifiés et d’éliminés sans rien écrire. Refus sous 4 qualifiés.',
+      '« dryRun: true » donne le nombre de qualifiés et d’éliminés, et les ex aequo à la barre au-delà du quota (« tiedAtBar »), sans rien écrire. « ties » choisit le sort de ces ex aequo pour cette coupe (docs/adr/0040). Refus sous 4 qualifiés.',
     input: z.object({
       competitionId: CompetitionId,
       qualifierCount: z
@@ -437,6 +439,7 @@ export const contract = {
         .max(1000)
         .optional()
         .describe('Nombre de qualifiés imposé'),
+      ties: TiesAtBarInput,
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
       commandId: CommandId,
@@ -448,6 +451,7 @@ export const contract = {
       qualifierCount: z.number().int().nullable(),
       qualified: z.number().int(),
       eliminated: z.number().int(),
+      tiedAtBar: TiedAtBarSchema.nullable(),
       revision: Revision,
     }),
     permission: 'score:write',
@@ -458,7 +462,8 @@ export const contract = {
     description:
       'Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, un tour, tableau simple). ' +
       'Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. ' +
-      'Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »).',
+      'Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »). ' +
+      'Sans « composition » : « tiedAtBar » liste les ex aequo à la barre de qualification au-delà du quota, « ties » choisit leur sort pour ce tableau (docs/adr/0040).',
     input: z.object({
       competitionId: CompetitionId,
       thirdPlaceMatch: z.boolean().optional().describe('Match pour la 3e place'),
@@ -485,6 +490,7 @@ export const contract = {
         .describe('Tournoi des rapières : mode de tableau choisi'),
       group: SplitGroup,
       replace: z.boolean().optional().describe('Remplacer un tableau existant'),
+      ties: TiesAtBarInput,
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
       commandId: CommandId,
@@ -493,6 +499,7 @@ export const contract = {
       dryRun: z.boolean(),
       size: z.number().int(),
       qualified: z.number().int(),
+      tiedAtBar: TiedAtBarSchema.nullable(),
       thirdPlaceMatch: z.boolean(),
       firstRound: z.array(
         z.object({

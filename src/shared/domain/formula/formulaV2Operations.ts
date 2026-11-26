@@ -710,6 +710,13 @@ function setStayingTableaux(f: FormulaV2, settings: Record<string, unknown>, whe
   return { ...f, phases: f.phases.map(p => (p === split ? next : p)) };
 }
 
+/** Réglage des ex aequo à la barre (ADR-0040) : 'all', 'initial_ranking' ; 'barrage' en F1b */
+export function tiesIssue(ties: unknown): string | null {
+  if (ties === undefined || ties === 'all' || ties === 'initial_ranking') return null;
+  if (ties === 'barrage') return 'ex aequo à la barre : barrage pas encore disponible';
+  return 'ex aequo à la barre : all ou initial_ranking attendu';
+}
+
 /** Écarts de bornes de la formule (moteur, à chaque écriture, ADR-0012) */
 export function formulaV2Issues(
   f: FormulaV2,
@@ -741,6 +748,18 @@ export function formulaV2Issues(
     out.push(...issues.map(i => `tableau : ${i.field} (${i.message})`));
   }
   if (pools.length > MAX_POOL_ROUNDS) out.push(`${MAX_POOL_ROUNDS} tours de poules au plus`);
+  // Ex aequo à la barre (ADR-0040) : 'barrage' attend le lot F1b
+  const rules: [string, AdvancementRule | undefined][] = [
+    ...pools.map((p, r): [string, AdvancementRule] => [`tour ${r + 1}`, p.qualification]),
+    ...(f.phases.find(isSplit)?.branches ?? []).map((b): [string, AdvancementRule | undefined] => [
+      `branche ${b.label}`,
+      b.take,
+    ]),
+  ];
+  for (const [where, rule] of rules) {
+    const issue = tiesIssue(rule?.ties);
+    if (issue) out.push(`${where} : ${issue}`);
+  }
   // Tableau arrêté (ADR-0037, D2) : des tours de poules ou une scission (ADR-0039) le suivent
   if (tableau) {
     const after = f.phases.slice(f.phases.indexOf(tableau) + 1);

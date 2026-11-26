@@ -521,7 +521,12 @@ export interface AdvancementRule {
   mode: AdvancementMode;
   percentage?: number; // 0-100, utilisé si mode === 'percentage'
   count?: number; // utilisé si mode === 'fixed_count' ou 'fixed_bracket'
+  /** Ex aequo à la barre (docs/adr/0040) : absent = 'all' */
+  ties?: TiesAtBar;
 }
+
+/** Ex aequo à la barre de qualification (docs/adr/0040) ; 'barrage' : lot F1b */
+export type TiesAtBar = 'all' | 'initial_ranking' | 'barrage';
 
 export interface CustomTouchZone {
   id: string;

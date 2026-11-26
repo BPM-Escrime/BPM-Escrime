@@ -2,15 +2,15 @@
  * BPM - Escrime - Répartition d'une scission entre ses branches (#2013 étape E2, ADR-0039)
  * Entrée : classement de la phase qui précède la scission, dans l'ordre. Par sexe et par
  * catégorie : champ du tireur ; par rang : chaque branche prend dans l'ordre son nombre ou son
- * pourcentage de l'effectif entrant, ex aequo à la borne gardés comme la qualification
- * (applyTableauAdvancement), la dernière prend le reste ; manuelle : affectations de l'écran.
+ * pourcentage de l'effectif entrant, ex aequo à la borne coupés comme la qualification
+ * (`cutAtBar`, docs/adr/0040), la dernière prend le reste ; manuelle : affectations de l'écran.
  * Domaine pur.
  * Licensed under GPL-3.0
  */
 
 import { rankAfterStages, type TableauStageRecord } from '../tableau/tableauStage';
-import type { PoolRanking } from '../../types';
-import { getAdvancementCount } from '../ranking/advancement';
+import type { PoolRanking, TiesAtBar } from '../../types';
+import { cutAtBar, getAdvancementCount, type TiedAtBar } from '../ranking/advancement';
 import type { SplitBranch, SplitPhase } from './formulaV2';
 
 /** Affectation manuelle d'un tireur à une branche (libellé) */
@@ -29,6 +29,8 @@ export interface SplitPlan {
   branches: SplitPlanBranch[];
   /** Tireurs sans valeur pour le critère (sexe, catégorie, affectation) : aucune branche */
   missing: string[];
+  /** Par rang : ex aequo à une borne au-delà du nombre de la branche (docs/adr/0040) */
+  tiedAtBar: TiedAtBar[];
 }
 
 /** Scission faite, gardée dans l'état de session de l'épreuve d'origine (ADR-0039) */
@@ -67,20 +69,28 @@ function branchIndexOf(
   return split.branches.findIndex(match);
 }
 
-/** Répartition par rang : nombre ou pourcentage de l'effectif entrant, la dernière le reste */
-function byRank(ranking: PoolRanking[], branches: SplitBranch[]): PoolRanking[][] {
+/**
+ * Répartition par rang : nombre ou pourcentage de l'effectif entrant, la dernière le reste.
+ * Ex aequo à la borne : coupe du domaine (`cutAtBar`, docs/adr/0040) selon `take.ties` de la
+ * branche, ou `ties` de la commande qui prime.
+ */
+function byRank(
+  ranking: PoolRanking[],
+  branches: SplitBranch[],
+  ties: TiesAtBar | undefined
+): { rows: PoolRanking[][]; tiedAtBar: TiedAtBar[] } {
   const total = ranking.length;
-  let pos = 0;
-  return branches.map((b, i) => {
-    if (i === branches.length - 1) return ranking.slice(pos);
-    const count = getAdvancementCount(total, b.take) ?? total - pos;
-    let end = Math.min(pos + count, total);
-    // Ex aequo à la borne : gardés dans la branche, comme la qualification
-    while (end > pos && end < total && ranking[end].rank === ranking[end - 1].rank) end++;
-    const rows = ranking.slice(pos, end);
-    pos = end;
-    return rows;
+  let left = ranking;
+  const tiedAtBar: TiedAtBar[] = [];
+  const rows = branches.map((b, i) => {
+    if (i === branches.length - 1) return left;
+    const count = Math.min(getAdvancementCount(total, b.take) ?? left.length, left.length);
+    const cut = cutAtBar(left, count, ties ?? b.take?.ties);
+    if (cut.tiedAtBar) tiedAtBar.push(cut.tiedAtBar);
+    left = cut.eliminated;
+    return cut.qualified;
   });
+  return { rows, tiedAtBar };
 }
 
 /**
@@ -90,16 +100,16 @@ function byRank(ranking: PoolRanking[], branches: SplitBranch[]): PoolRanking[][
 export function planSplit(
   ranking: PoolRanking[],
   split: SplitPhase,
-  assignments: readonly SplitAssignment[] = []
+  assignments: readonly SplitAssignment[] = [],
+  ties?: TiesAtBar
 ): SplitPlan {
   const ordered = [...ranking].sort((a, b) => a.rank - b.rank);
   if (split.criterion === 'rank') {
+    const { rows, tiedAtBar } = byRank(ordered, split.branches, ties);
     return {
-      branches: byRank(ordered, split.branches).map((rows, i) => ({
-        label: split.branches[i].label,
-        rows: renumberRanks(rows),
-      })),
+      branches: rows.map((r, i) => ({ label: split.branches[i].label, rows: renumberRanks(r) })),
       missing: [],
+      tiedAtBar,
     };
   }
   const assigned = new Map(assignments.map(a => [a.fencerId, a.branch]));
@@ -113,6 +123,7 @@ export function planSplit(
   return {
     branches: split.branches.map((b, i) => ({ label: b.label, rows: renumberRanks(buckets[i]) })),
     missing,
+    tiedAtBar: [],
   };
 }
 

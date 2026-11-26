@@ -4,10 +4,11 @@
  * Licensed under GPL-3.0
  */
 import { MatchStatus } from '../../types';
-import type { AdvancementRule, Pool, PoolRanking } from '../../types';
+import type { AdvancementRule, Pool, PoolRanking, TiesAtBar } from '../../types';
 import { filterPoolWinners } from '../../utils/poolCalculations';
 import { countTableauBouts } from '../../utils/tableauBouts';
-import { applyTableauAdvancement, getTableauAdvancement } from '../../utils/customFormulaSettings';
+import { getTableauAdvancement, tableauAdvancementCut } from '../../utils/customFormulaSettings';
+import type { TiedAtBar } from './advancement';
 import type { getActiveFormula } from '../../utils/customFormulaSettings';
 import { rapieresTableauQualifiers, type RapieresTableauMode } from '../rapieres/tableauQualifiers';
 import type { TableauMatch } from '../tableau/tableauTypes';
@@ -47,6 +48,8 @@ export interface TableauRankingOptions {
   customFormula: ReturnType<typeof getActiveFormula>;
   /** Qualification du dernier tour vers le tableau, formule v2 (`tableauQualificationOf`) */
   tableauQualification?: AdvancementRule;
+  /** Ex aequo à la barre pour ce tableau, prime sur la formule (docs/adr/0040) */
+  ties?: TiesAtBar;
   postPoolSplitCriteria: string | undefined;
   activeSplitGroup: string | null;
   splitOffCompetitionIds: Partial<Record<string, string>> | undefined;
@@ -56,18 +59,32 @@ export interface TableauRankingOptions {
 export function computeEffectiveTableauRanking(
   overallRanking: PoolRanking[],
   pools: Pool[],
+  options: TableauRankingOptions
+): PoolRanking[] {
+  return tableauCut(overallRanking, pools, options).ranking;
+}
+
+/**
+ * Classement effectif pour le tableau, avec les ex aequo à la barre de qualification au-delà
+ * du quota (formule seulement ; docs/adr/0040).
+ */
+export function tableauCut(
+  overallRanking: PoolRanking[],
+  pools: Pool[],
   {
     isRapieres,
     rapieresTableauMode,
     poolWinnersOnly,
     customFormula,
     tableauQualification,
+    ties,
     postPoolSplitCriteria,
     activeSplitGroup,
     splitOffCompetitionIds,
   }: TableauRankingOptions
-): PoolRanking[] {
+): { ranking: PoolRanking[]; tiedAtBar: TiedAtBar | null } {
   let ranking = overallRanking;
+  let tiedAtBar: TiedAtBar | null = null;
   if (isRapieres && pools.length > 0) {
     // Rapières : toutes les équipes, ou les 4 demi-finalistes (#1441)
     ranking = rapieresTableauQualifiers(pools, ranking, rapieresTableauMode);
@@ -76,11 +93,20 @@ export function computeEffectiveTableauRanking(
   } else if (customFormula || tableauQualification) {
     // Qualifiés pour le tableau selon la formule (pourcentage, nombre, taille de tableau) :
     // arme « Autre » (v1), sinon formule v2 pour toutes les armes (#2013 R1)
-    ranking = applyTableauAdvancement(
+    const rule = customFormula ? getTableauAdvancement(customFormula) : tableauQualification;
+    ({ ranking, tiedAtBar } = tableauAdvancementCut(
       ranking,
-      customFormula ? getTableauAdvancement(customFormula) : tableauQualification
-    );
+      rule && ties ? { ...rule, ties } : rule
+    ));
   }
   // Tableaux séparés : groupe affiché, ou groupes extraits écartés (docs/adr/0024)
-  return filterSplitGroup(ranking, postPoolSplitCriteria, activeSplitGroup, splitOffCompetitionIds);
+  return {
+    ranking: filterSplitGroup(
+      ranking,
+      postPoolSplitCriteria,
+      activeSplitGroup,
+      splitOffCompetitionIds
+    ),
+    tiedAtBar,
+  };
 }

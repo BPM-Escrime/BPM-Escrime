@@ -22,6 +22,7 @@ import {
   type Fencer,
   type Pool,
   type PoolRanking,
+  type TiesAtBar,
 } from '../../../shared/types';
 import {
   applyScoreToPool,
@@ -58,7 +59,9 @@ import {
   type TableauMatch,
 } from '../../../shared/domain/tableau/tableauTypes';
 import type { RapieresSession } from '../../../shared/domain/rapieres/rapieres.types';
-import { computeEffectiveTableauRanking } from '../../../shared/domain/ranking/tableauRanking';
+import { tableauCut } from '../../../shared/domain/ranking/tableauRanking';
+import type { TiedAtBar } from '../../../shared/domain/ranking/advancement';
+import { assertTies } from './ties';
 import {
   allTableauMatches,
   filterSplitGroup,
@@ -812,13 +815,24 @@ function scoreAuditBase(ctx: CommandContext): { changedBy: string; reason?: stri
 export function tableauRanking(
   comp: Competition,
   session: Record<string, unknown>,
-  group: string | null = null
+  group: string | null = null,
+  ties?: TiesAtBar
 ): PoolRanking[] {
+  return tableauRankingCut(comp, session, group, ties).ranking;
+}
+
+/** Classement d'entrée du tableau et ex aequo à la barre au-delà du quota (docs/adr/0040) */
+export function tableauRankingCut(
+  comp: Competition,
+  session: Record<string, unknown>,
+  group: string | null = null,
+  ties?: TiesAtBar
+): { ranking: PoolRanking[]; tiedAtBar: TiedAtBar | null } {
   const overall = Array.isArray(session.overallRanking)
     ? (session.overallRanking as PoolRanking[])
     : [];
   const rapieres = session.rapieres as Partial<RapieresSession> | undefined;
-  const ranking = computeEffectiveTableauRanking(overall, sessionPools(session), {
+  const { ranking, tiedAtBar } = tableauCut(overall, sessionPools(session), {
     isRapieres: isRapieres(comp),
     rapieresTableauMode: isRapieres(comp) ? rapieres?.tableauMode : undefined,
     poolWinnersOnly: effectiveSettings(comp).poolWinnersOnly,
@@ -826,11 +840,15 @@ export function tableauRanking(
     tableauQualification: comp.settings?.formula
       ? tableauQualificationOf(comp.settings.formula)
       : undefined,
+    ties,
     postPoolSplitCriteria: undefined,
     activeSplitGroup: null,
     splitOffCompetitionIds: undefined,
   });
-  return group ? filterSplitGroup(ranking, splitCriteria(comp), group, undefined) : ranking;
+  return {
+    ranking: group ? filterSplitGroup(ranking, splitCriteria(comp), group, undefined) : ranking,
+    tiedAtBar,
+  };
 }
 
 export function persistTableau(
@@ -914,6 +932,8 @@ export function buildBracket(
     rapieresTableauMode?: 'normal' | 'third' | 'all' | 'semis';
     /** Tableaux séparés après les poules : groupe du tableau (docs/adr/0024) */
     group?: string;
+    /** Ex aequo à la barre pour ce tableau, prime sur la formule (docs/adr/0040) */
+    ties?: TiesAtBar;
   } = {}
 ) {
   const comp = getCompetitionOrThrow(ctx, competitionId);
@@ -963,6 +983,8 @@ export function buildBracket(
   let qualified: { length: number };
   let size: number;
   let matches: TableauMatch[];
+  let tiedAtBar: TiedAtBar | null = null;
+  const ties = assertTies(options.ties);
   if (options.composition) {
     const all = ctx.db.getFencersByCompetition(competitionId);
     const composed = composeTableau(options.composition, new Map(all.map(f => [f.id, f])));
@@ -982,7 +1004,9 @@ export function buildBracket(
     );
     qualified = { length: placed.size };
   } else {
-    ({ qualified, size, matches } = planTableau(tableauRanking(comp, session, group), {
+    const cut = tableauRankingCut(comp, session, group, ties);
+    tiedAtBar = cut.tiedAtBar;
+    ({ qualified, size, matches } = planTableau(cut.ranking, {
       playAllPositions: false,
       thirdPlaceMatch: thirdPlace,
     }));
@@ -995,6 +1019,7 @@ export function buildBracket(
     dryRun: !!options.dryRun,
     size,
     qualified: qualified.length,
+    tiedAtBar,
     thirdPlaceMatch: thirdPlace,
     firstRound: matches
       .filter(m => m.round === size)

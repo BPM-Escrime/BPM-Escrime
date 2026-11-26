@@ -325,7 +325,11 @@ export function useCompetitionNavigation({
       history: poolHistory ?? [],
       isLaserSabre: competition.weapon === Weapon.LASER,
     });
-    const { qualified, eliminated } = selectNextRoundFencers(plan.ranking, plan.qualifierCount);
+    const { qualified, eliminated } = selectNextRoundFencers(
+      plan.ranking,
+      plan.qualifierCount,
+      plan.ties
+    );
     if (qualified.length < 4) {
       showToast('Il faut au moins 4 qualifiés pour un nouveau tour de poules.', 'warning');
       return;

@@ -81,6 +81,32 @@ describe('planSplit par rang (ADR-0039)', () => {
     expect(plan.branches[0].rows.map(r => r.rank)).toEqual([1, 2, 3, 3]);
   });
 
+  it('ex aequo à la borne, « initial_ranking » (ADR-0040) : départagés au rang d’entrée', () => {
+    // f3 et f4 ex aequo à la 3e place ; rang d'entrée : f4 (1) avant f3 (9)
+    const r = ranking([1, 2, 3, 3, 5, 6], i => ({ ranking: [4, 5, 9, 1, 6, 7][i] }));
+    const branches = [
+      {
+        label: 'A',
+        phases: [],
+        take: { mode: 'fixed_count' as const, count: 3, ties: 'initial_ranking' as const },
+      },
+      { label: 'B', phases: [] },
+    ];
+    const plan = planSplit(r, split({ branches }));
+    expect(plan.branches.map(b => ids(b.rows))).toEqual([
+      ['f1', 'f2', 'f4'],
+      ['f3', 'f5', 'f6'],
+    ]);
+    expect(plan.tiedAtBar).toEqual([{ rank: 3, fencerIds: ['f3', 'f4'], places: 1 }]);
+    // « ties » de la commande prime sur la formule
+    expect(ids(planSplit(r, split({ branches }), [], 'all').branches[0].rows)).toEqual([
+      'f1',
+      'f2',
+      'f3',
+      'f4',
+    ]);
+  });
+
   it('pourcentage de l’effectif entrant (arrondi comme la qualification)', () => {
     const plan = planSplit(
       ranking([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
