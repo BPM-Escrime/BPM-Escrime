@@ -742,16 +742,19 @@ export interface FormulaScope {
 export function formulaV2Issues(
   f: FormulaV2,
   scope: FormulaScope,
-  progress?: FormulaProgress
+  progress?: FormulaProgress,
+  /** Formule enregistrée de l'épreuve : verrouille la qualification des phases commencées (S6) */
+  stored?: FormulaV2
 ): FormulaRemark[] {
-  return formulaIssues(f, scope, progress, false);
+  return formulaIssues(f, scope, progress, false, stored);
 }
 
 function formulaIssues(
   f: FormulaV2,
   scope: FormulaScope,
   progress: FormulaProgress | undefined,
-  inBranch: boolean
+  inBranch: boolean,
+  stored?: FormulaV2
 ): FormulaRemark[] {
   const out: FormulaRemark[] = [];
   out.push(...fightPhaseIssues(f.phases));
@@ -853,7 +856,7 @@ function formulaIssues(
         'scission : rester dans l’épreuve seulement après un tour de poules'
       )
     );
-  if (progress) out.push(...progressIssues(f, progress));
+  if (progress) out.push(...progressIssues(f, progress, stored));
   return out;
 }
 

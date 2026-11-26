@@ -2,7 +2,7 @@
  * Contrôles de structure S1 à S6, remarques situées, mode expert (docs/adr/0041, #2013 F2)
  */
 import { describe, expect, it } from 'vitest';
-import { Category, CompetitionSettings, Weapon } from '../../types';
+import { Category, CompetitionSettings, Weapon, type AdvancementRule } from '../../types';
 import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
 import { simulateFormula } from '../../utils/customRankingCalculator';
 import {
@@ -281,6 +281,58 @@ describe('S6 : phases commencées', () => {
   });
 });
 
+describe('S6 : la qualification qui mène à une phase commencée ne change plus (ADR-0041, amendement)', () => {
+  const withRule = (rule: AdvancementRule, ...rest: FormulaPhaseV2[]) =>
+    formula(pool({ id: 'p0', qualification: rule }), ...rest);
+  const stored = withRule({ mode: 'fixed_count', count: 8 }, tableau({ id: 't' }));
+  const edited = (rule: AdvancementRule) => withRule(rule, tableau({ id: 't' }));
+  const lock = (f: FormulaV2, progress: readonly ('pool' | 'tableau')[]) =>
+    formulaV2Issues(f, scope, progress, stored).filter(
+      r => r.code === 'started_qualification_changed'
+    );
+
+  it('tableau tiré : la règle du tour qui le précède est figée, sur sa carte', () => {
+    const r = lock(edited({ mode: 'fixed_count', count: 4 }), ['pool', 'tableau']);
+    expect(r.map(x => x.phase)).toEqual(['pool-0']);
+    expect(r[0].message).toContain('tableau');
+  });
+
+  it('toutes les règles : nombre, pourcentage, têtes de poule, ex aequo', () => {
+    const started: ('pool' | 'tableau')[] = ['pool', 'tableau'];
+    expect(lock(edited({ mode: 'percentage', percentage: 50 }), started)).toHaveLength(1);
+    expect(lock(edited({ mode: 'pool_heads', count: 4 }), started)).toHaveLength(1);
+    expect(lock(edited({ mode: 'fixed_count', count: 8, ties: 'draw' }), started)).toHaveLength(1);
+    expect(lock(edited({ mode: 'all' }), started)).toHaveLength(1);
+  });
+
+  it('règle identique (ex aequo « all » = absent) : aucune remarque', () => {
+    expect(lock(edited({ mode: 'fixed_count', count: 8 }), ['pool', 'tableau'])).toEqual([]);
+    expect(
+      lock(edited({ mode: 'fixed_count', count: 8, ties: 'all' }), ['pool', 'tableau'])
+    ).toEqual([]);
+  });
+
+  it('phase suivante pas commencée : la règle reste modifiable ; sans formule enregistrée, pas de contrôle', () => {
+    expect(lock(edited({ mode: 'fixed_count', count: 4 }), ['pool'])).toEqual([]);
+    expect(
+      formulaV2Issues(edited({ mode: 'fixed_count', count: 4 }), scope, ['pool', 'tableau'])
+    ).toEqual([]);
+  });
+
+  it('tour suivant lancé : la règle du tour précédent est figée, pas celle du dernier tour', () => {
+    const two = (q0: AdvancementRule, q1: AdvancementRule) =>
+      formula(
+        pool({ id: 'a', qualification: q0 }),
+        pool({ id: 'b', qualification: q1 }),
+        tableau({ id: 't' })
+      );
+    const was = two({ mode: 'fixed_count', count: 12 }, { mode: 'fixed_count', count: 8 });
+    const now = two({ mode: 'fixed_count', count: 10 }, { mode: 'fixed_count', count: 6 });
+    const r = formulaV2Issues(now, scope, ['pool', 'pool'], was);
+    expect(r.map(x => [x.code, x.phase])).toEqual([['started_qualification_changed', 'pool-0']]);
+  });
+});
+
 describe('formulaProgress : phases commencées d’après l’état de session', () => {
   const stopped = formula(pool(), tableau({ stopAt: 8 }), pool(), tableau());
   const full = formula(pool(), pool(), tableau());
@@ -440,11 +492,12 @@ describe('mode expert : briques et réglages', () => {
     expect(formulaNeedsExpert(f)).toBe(true);
     expect(formulaV2Issues(f, scope)).toEqual([]);
     // formulaV2Issues ne prend aucun paramètre de mode (scope, progress seulement)
-    expect(formulaV2Issues.length).toBeLessThanOrEqual(3);
+    expect(formulaV2Issues.length).toBeLessThanOrEqual(4);
   });
 
-  it('formule par défaut : simple', () => {
+  it('formule par défaut : simple ; épreuve du mode spécial rapières : experte (docs/adr/0043)', () => {
     expect(formulaNeedsExpert(base())).toBe(false);
+    expect(formulaNeedsExpert(base(), true)).toBe(true);
   });
 
   it('ordre des matchs en vagues : réglage avancé (docs/adr/0043)', () => {

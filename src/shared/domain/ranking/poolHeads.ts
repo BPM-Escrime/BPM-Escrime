@@ -31,10 +31,10 @@ export interface PoolHeadsCut {
  * écartés et rangs de poule renumérotés. Plus de poules que `count` : seuls les meilleurs
  * premiers de poule passent (la formule refuse ce cas, remarque S4 de docs/adr/0041).
  *
- * Ordre d'entrée au tableau : rang de poule par rang de poule, chacun dans l'ordre des poules
- * quand au moins deux rangs complets sont pris (deux poules : A1, B1, A2, B2, donc A1–B2 et
- * B1–A2 : croisement) ; sinon dans l'ordre du classement général (un seul rang complet,
- * dernier rang partiel : trois poules, les trois premiers et le meilleur deuxième).
+ * Ordre d'entrée au tableau (ADR-0043, F4b) : « quand au moins deux rangs de poule sont pris en
+ * entier, rang par rang, chacun dans l'ordre des poules (croisement garanti) ; sinon, tous les
+ * qualifiés dans l'ordre du classement général » (deux poules : A1, B1, A2, B2, donc A1–B2 et
+ * B1–A2 ; trois poules : les trois premiers et le meilleur deuxième).
  */
 export function poolHeadsCut(
   pools: readonly Pool[],

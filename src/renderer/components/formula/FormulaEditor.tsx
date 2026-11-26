@@ -80,6 +80,8 @@ export interface FormulaEditorProps {
   knownFencerCount?: number;
   /** Phases déjà commencées de l'épreuve (S6) ; absent : création, rien de commencé */
   progress?: FormulaProgress;
+  /** Formule enregistrée de l'épreuve : qualification des phases commencées verrouillée (S6) */
+  stored?: FormulaV2;
   /** Remarques déjà jugées par l'appelant (bouton Enregistrer) ; absent : jugées ici */
   remarks?: FormulaRemark[];
 }
@@ -107,6 +109,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   isTeamEvent,
   knownFencerCount,
   progress,
+  stored,
   remarks: judged,
 }) => {
   const { t } = useTranslation();
@@ -115,8 +118,10 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const { expert: preferred, setExpert } = useFormulaExpert();
   // Formule ouverte avec de l'expert : rallumé pour toute l'édition, même si la brique est
   // retirée ensuite ; une brique experte ajoutée garde aussi le mode
-  const [openedExpert] = useState(() => formulaNeedsExpert(formula));
-  const forced = openedExpert || formulaNeedsExpert(formula);
+  // Mode spécial rapières : formule experte (docs/adr/0043, F4b)
+  const special = !!rapieres || !!specialMode;
+  const [openedExpert] = useState(() => formulaNeedsExpert(formula, special));
+  const forced = openedExpert || formulaNeedsExpert(formula, special);
   const expert = preferred || forced;
   const isOther = weapon === Weapon.CUSTOM;
   const phases = friezeOfV2(formula);
@@ -130,7 +135,12 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   // Jugement en direct (ADR-0041) : mêmes fonctions que le moteur, remarques situées
   const remarks =
     judged ??
-    formulaV2Issues(formula, { weapon, isTeamEvent, fencerCount: knownFencerCount }, progress);
+    formulaV2Issues(
+      formula,
+      { weapon, isTeamEvent, fencerCount: knownFencerCount },
+      progress,
+      stored
+    );
   const remarksOf = (key: string) => remarks.filter(r => r.phase === key);
   // Formule entière (phase null) ou phase absente de la frise (retirée) : en tête
   const headRemarks = remarks.filter(r => r.phase === null || !phases.some(p => p.key === r.phase));
@@ -379,18 +389,17 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
           {(!isLast || isOther || tableau || split) && (
             <div className="form-group">
               <label className="form-label">{t('formulaPhase.advancement')}</label>
-              {/* Rapières : tous qualifiés ou demi-finales (têtes de poule 4) ; la fenêtre du
-                  passage au tableau est retirée, la formule décide (docs/adr/0043, F4b) */}
+              {/* Rapières : tous qualifiés ou demi-finales (têtes de poule 4), réglage expert ; la
+                  fenêtre du passage au tableau est retirée, la formule décide (docs/adr/0043, F4b) */}
               <AdvancementRuleEditor
                 rule={pool.qualification}
                 onChange={(rule: AdvancementRule) => set({ qualification: rule })}
                 inputFencers={simCount}
                 expert={expert}
                 headsAvailable={
-                  formula.phases[formula.phases.indexOf(pool) + 1]?.kind === 'tableau' &&
-                  (expert || !!rapieres || !!specialMode)
+                  expert && formula.phases[formula.phases.indexOf(pool) + 1]?.kind === 'tableau'
                 }
-                only={rapieres || specialMode ? RAPIERES_QUALIFICATIONS : undefined}
+                only={special ? RAPIERES_QUALIFICATIONS : undefined}
               />
             </div>
           )}

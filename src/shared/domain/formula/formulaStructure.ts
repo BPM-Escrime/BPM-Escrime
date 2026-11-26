@@ -191,14 +191,60 @@ export function branchEndIssues(phases: readonly FormulaPhaseV2[]): FormulaRemar
     : [];
 }
 
+/** Règle de qualification comparable : « ex aequo : all » vaut l'absence de réglage */
+const ruleKey = (rule: AdvancementRule): string =>
+  rule.mode === 'all'
+    ? 'all'
+    : JSON.stringify({
+        mode: rule.mode,
+        count: rule.count,
+        percentage: rule.percentage,
+        ties: rule.ties === 'all' ? undefined : rule.ties,
+      });
+
+/**
+ * S6, qualification verrouillée (docs/adr/0041, amendement du 2026-11-27) : la règle de
+ * qualification du tour qui précède une phase commencée (tour suivant lancé, tableau tiré,
+ * scission faite) est celle de la formule enregistrée `stored`. Toutes les règles : nombre,
+ * pourcentage, têtes de poule, ex aequo à la barre. Le classement final relit la formule : la
+ * coupe doit rester celle du tirage.
+ */
+function lockedQualificationIssues(
+  f: FormulaV2,
+  progress: FormulaProgress,
+  stored: FormulaV2
+): FormulaRemark[] {
+  const keys = phaseKeys(f.phases);
+  const out: FormulaRemark[] = [];
+  for (let i = 1; i < progress.length; i++) {
+    const was = stored.phases[i - 1];
+    const now = f.phases[i - 1];
+    if (was?.kind !== 'pool' || now?.kind !== 'pool') continue;
+    if (ruleKey(was.qualification) !== ruleKey(now.qualification))
+      out.push(
+        remark(
+          'started_qualification_changed',
+          keys[i - 1],
+          `qualification du tour : elle mène à une phase déjà commencée (${NAMES[progress[i]]}), elle ne change plus`
+        )
+      );
+  }
+  return out;
+}
+
 /**
  * S6 : une phase commencée ne se retire pas, ne change pas de nature, et rien ne s'insère avant
- * elle. Ses réglages restent soumis aux règles actuelles (Q15). Première incohérence seulement
- * (les suivantes en découlent).
+ * elle ; la règle de qualification qui mène à une phase commencée ne change plus (`stored` :
+ * formule enregistrée). Ses autres réglages restent soumis aux règles actuelles (Q15). Première
+ * incohérence de structure seulement (les suivantes en découlent).
  */
-export function progressIssues(f: FormulaV2, progress: FormulaProgress): FormulaRemark[] {
+export function progressIssues(
+  f: FormulaV2,
+  progress: FormulaProgress,
+  stored?: FormulaV2
+): FormulaRemark[] {
   const at = progress.findIndex((kind, i) => f.phases[i]?.kind !== kind);
-  if (at < 0) return [];
+  if (at < 0) return stored ? lockedQualificationIssues(f, progress, stored) : [];
   const kind = progress[at];
   const key = keyOfKinds(progress, at);
   const found = f.phases[at];

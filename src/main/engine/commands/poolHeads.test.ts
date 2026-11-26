@@ -209,3 +209,58 @@ d('têtes de poule : mode spécial rapières, demi-finales inchangées (docs/adr
     expect(rankingOf(comp.id)).toEqual([ids[0], ids[1], ids[2], ids[3]]);
   });
 });
+
+d('qualification verrouillée après le tirage (S6, docs/adr/0041, amendement du 2026-11-27)', () => {
+  const setPool = (competitionId: string, settings: Record<string, unknown>) =>
+    call('updateCompetitionFormula', {
+      competitionId,
+      operations: [{ op: 'setPhase', phase: 'pool-0', settings }],
+    });
+
+  it('tableau tiré : changer la qualification du tour est refusé (invalid_settings), le reste passe', async () => {
+    const { comp, ids } = competition({ formula: headsFormula(4) });
+    // Avant le tirage : la règle se modifie
+    await expect(
+      setPool(comp.id, { qualification: { mode: 'pool_heads', count: 4 } })
+    ).resolves.toBeDefined();
+    await playTwoPools(comp.id, ids);
+    await call('generateTableau', { competitionId: comp.id });
+    await expect(
+      setPool(comp.id, { qualification: { mode: 'pool_heads', count: 3 } })
+    ).rejects.toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('[pool-0]'),
+    });
+    await expect(
+      setPool(comp.id, { qualification: { mode: 'fixed_count', count: 4 } })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    // Règle inchangée et autre réglage : permis
+    await expect(
+      setPool(comp.id, { qualification: { mode: 'pool_heads', count: 4 }, maxScore: 5 })
+    ).resolves.toBeDefined();
+  });
+});
+
+d('clearTableau efface le mode de tableau hérité des rapières (docs/adr/0043, F4b)', () => {
+  it('la formule décide ensuite', async () => {
+    const { comp, ids } = competition({ special: true });
+    await playTwoPools(comp.id, ids);
+    writeSession(ctx, comp.id, { rapieres: { version: 2, teams: {}, tableauMode: 'semis' } });
+    const ranking = () =>
+      tableauRankingCut(getCompetitionOrThrow(ctx, comp.id), readSession(ctx, comp.id)).ranking;
+    expect(ranking()).toHaveLength(4);
+    const out = await call('clearTableau', { competitionId: comp.id });
+    expect(out.cleared).toBe(0);
+    const rapieres = (db.getSessionState(comp.id) as any).rapieres;
+    expect(rapieres.tableauMode).toBeUndefined();
+    expect(rapieres.teams).toEqual({});
+    expect(ranking()).toHaveLength(6);
+  });
+
+  it('simulation : rien n’est effacé', async () => {
+    const { comp } = competition({ special: true });
+    writeSession(ctx, comp.id, { rapieres: { version: 2, teams: {}, tableauMode: 'third' } });
+    await call('clearTableau', { competitionId: comp.id, dryRun: true });
+    expect((db.getSessionState(comp.id) as any).rapieres.tableauMode).toBe('third');
+  });
+});

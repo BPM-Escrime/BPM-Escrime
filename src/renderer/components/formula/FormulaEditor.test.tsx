@@ -481,9 +481,11 @@ describe('FormulaEditor : qualification « têtes de poule, puis suivants » (do
     prefs.expert = true;
   });
 
-  it('rapières : tous qualifiés ou têtes de poule, même en niveau simple (plus de fenêtre)', () => {
+  it('rapières : formule experte, mode expert rallumé ; tous qualifiés ou têtes de poule (ADR-0043)', () => {
     prefs.expert = false;
     const { container } = render(<Editor weapon={Weapon.CUSTOM} rapieres />);
+    expect(screen.getByTestId('formula-expert-toggle')).toBeChecked();
+    expect(screen.getByTestId('formula-expert-toggle')).toBeDisabled();
     expect(options(container)).toEqual(['all', 'pool_heads']);
     expect(select(container)).not.toBeDisabled();
     prefs.expert = true;

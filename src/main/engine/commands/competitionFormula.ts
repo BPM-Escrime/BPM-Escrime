@@ -130,10 +130,15 @@ export function writeFormula(
   dryRun?: boolean
 ) {
   const session = readSession(ctx, comp.id);
-  const progress = formulaProgress(
-    formulaOf({ weapon: comp.weapon, category: comp.category, settings: comp.settings }),
-    { ...session, questStarted: session.currentPhase === PHASE.quest }
-  );
+  const stored = formulaOf({
+    weapon: comp.weapon,
+    category: comp.category,
+    settings: comp.settings,
+  });
+  const progress = formulaProgress(stored, {
+    ...session,
+    questStarted: session.currentPhase === PHASE.quest,
+  });
   const issues = formulaV2Issues(
     formula,
     {
@@ -141,7 +146,8 @@ export function writeFormula(
       isTeamEvent: !!comp.isTeamEvent,
       fencerCount: ctx.db.getFencersByCompetition(comp.id).length,
     },
-    progress
+    progress,
+    stored
   );
   if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
   return updateCompetitionSettings(ctx, {
