@@ -773,6 +773,17 @@ button.pv-pill {
 .pool-prep-card-title {
   min-width: 0;
   flex: 1 1 auto;
+  flex-wrap: wrap;
+}
+/* Ordre des matchs (« Coéquipiers placés », « Ordre quatuor ») sous le titre (#2300) */
+.pool-prep-card-subtitle {
+  flex-basis: 100%;
+  min-width: 0;
+}
+.pool-prep-card-subtitle .pool-prep-badge-order {
+  display: inline-block;
+  max-width: 100%;
+  white-space: normal;
 }
 .pool-prep-card-meta {
   flex-shrink: 0;
