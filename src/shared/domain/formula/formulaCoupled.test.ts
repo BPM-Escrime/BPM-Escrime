@@ -151,7 +151,8 @@ describe('reprise de la compétition couplée (ADR-0039, E3)', () => {
       thirdPlace: true,
     });
     expect(summarizeFormulaV2(f).map(p => p.kind)).toEqual(['pools', 'tableau']);
-    expect(formulaSteps(f).map(s => s.kind)).toContain('split');
+    // Déroulé : les branches restées jouent un tableau dans l'épreuve (ADR-0037, onglets)
+    expect(formulaSteps(f).map(s => s.kind)).toEqual(['checkin', 'pools', 'tableau', 'results']);
   });
 
   it('flatSettingsOf : mêmes réglages plats qu’aujourd’hui, tableaux séparés gardés', () => {

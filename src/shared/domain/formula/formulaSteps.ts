@@ -6,7 +6,7 @@
  * Licensed under GPL-3.0
  */
 
-import type { FormulaV2, TableauPhase } from './formulaV2';
+import { isCoupledSplit, type FormulaV2, type TableauPhase } from './formulaV2';
 
 export type FormulaStep =
   | { kind: 'checkin' }
@@ -29,7 +29,9 @@ export function formulaSteps(f: FormulaV2): FormulaStep[] {
     } else if (p.kind === 'tableau') {
       steps.push({ kind: 'tableau', ...(p.stopAt ? { stopAt: p.stopAt } : {}) });
     } else if (p.kind === 'split') {
-      steps.push({ kind: 'split' });
+      // Compétition couplée : les branches restent et jouent un tableau dans l'épreuve
+      // (tableaux séparés, ADR-0024) ; sinon, compétitions filles, pas d'onglet
+      steps.push(isCoupledSplit(p) ? { kind: 'tableau' } : { kind: 'split' });
     }
   }
   steps.push({ kind: 'results' });

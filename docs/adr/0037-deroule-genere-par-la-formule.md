@@ -92,8 +92,8 @@ eliminatedIds }`.
 
 - D1 ne change pas le moteur : il branche la navigation sur la formule et réutilise
   `skipPools`. D2 ajoute une commande, un événement et une clé d'état de session.
-- Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) pour le tirage,
-  les scores et le tableau ; seule la scission (`split_competition`,
+- Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) pour le tirage
+  des poules et du tableau sans placement fourni par l'écran ; seule la scission (`split_competition`,
   [ADR-0039](0039-scission-competitions-filles.md)) lui est ouverte dès l'étape E, y compris
   après plusieurs tours ou un tableau arrêté. L'ouverture au MCP du reste des formules à
   plusieurs tours et du tableau arrêté relève de l'étape F. _(Amendé le 2026-11-26 : remplace
