@@ -5,6 +5,7 @@ import {
   Competition,
   CompetitionSettings,
   Fencer,
+  FencerMember,
   FencerStatus,
   ExclusionReason,
   Gender,
@@ -70,6 +71,20 @@ export function parseCompetitionRow(row: SqlRow): Competition {
   }
 }
 
+/** Entrée en équipes (docs/adr/0043) : membres (JSON), niveau, marqueur HANDI ; absents si NULL */
+function parseTeamEntry(row: SqlRow): Pick<Fencer, 'members' | 'level' | 'handicap'> {
+  const members = row.members
+    ? safeJsonParse<FencerMember[] | null>(row.members, null, `membres du tireur ${row.id}`)
+    : null;
+  return {
+    ...(Array.isArray(members) ? { members } : {}),
+    ...(typeof row.level === 'number' ? { level: row.level } : {}),
+    ...(row.handicap === null || row.handicap === undefined
+      ? {}
+      : { handicap: row.handicap === 1 }),
+  };
+}
+
 export function parseFencerRow(row: SqlRow): Fencer {
   let poolStats = undefined;
   if (row.pool_stats) {
@@ -106,6 +121,7 @@ export function parseFencerRow(row: SqlRow): Fencer {
     seedNumber: row.seed_number as number,
     finalRanking: row.final_ranking as number,
     poolStats,
+    ...parseTeamEntry(row),
     photo: (row.photo as string) || undefined,
     createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
     updatedAt: row.updated_at ? new Date(row.updated_at as string) : new Date(),

@@ -6,6 +6,19 @@ import type { SqlExecutor } from './sqlExecutor';
 import { parseFencerRow, type SqlRow } from './rowMappers';
 import { logger, LogCategory, toError } from '../../shared/services/logger';
 
+/** Membres d'une équipe → JSON ; absents ou vides : NULL (tireur individuel) */
+function serializeMembers(members: Fencer['members'] | null | undefined): string | null {
+  if (!members || members.length === 0) return null;
+  return JSON.stringify(
+    members.map(m => ({
+      lastName: sanitizeText(m.lastName),
+      firstName: sanitizeText(m.firstName),
+      ...(m.gender ? { gender: m.gender } : {}),
+      ...(m.birthDate ? { birthDate: m.birthDate } : {}),
+    }))
+  );
+}
+
 /** Tireurs : CRUD, photos, historique, statistiques, instantanés d'abandon (#1242) */
 export class FencerRepo {
   constructor(private readonly sql: SqlExecutor) {}
@@ -23,8 +36,8 @@ export class FencerRepo {
     const ref = fencer.ref || maxRef + 1;
     try {
       this.sql.run(
-        `INSERT INTO fencers (id, competition_id, ref, last_name, first_name, birth_date, gender, nationality, club, region, department, license, ranking, status, photo, handedness, category, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO fencers (id, competition_id, ref, last_name, first_name, birth_date, gender, nationality, club, region, department, license, ranking, status, photo, handedness, category, members, level, handicap, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           competitionId,
@@ -43,6 +56,9 @@ export class FencerRepo {
           fencer.photo || null,
           fencer.handedness === 'L' ? 'L' : 'R',
           fencer.category ?? null,
+          serializeMembers(fencer.members),
+          fencer.level ?? null,
+          fencer.handicap === undefined ? null : fencer.handicap ? 1 : 0,
           now,
           now,
         ]
@@ -190,6 +206,19 @@ export class FencerRepo {
     if ('birthDate' in updates) {
       setClauses.push('birth_date = ?');
       values.push(updates.birthDate ? new Date(updates.birthDate).toISOString() : null);
+    }
+    // Entrée en équipes (docs/adr/0043) : null efface ; membres en JSON, HANDI en 0 / 1
+    if ('members' in updates) {
+      setClauses.push('members = ?');
+      values.push(serializeMembers(updates.members));
+    }
+    if ('level' in updates) {
+      setClauses.push('level = ?');
+      values.push(updates.level ?? null);
+    }
+    if ('handicap' in updates) {
+      setClauses.push('handicap = ?');
+      values.push(updates.handicap == null ? null : updates.handicap ? 1 : 0);
     }
     if (updates.poolStats !== undefined) {
       setClauses.push('pool_stats = ?');

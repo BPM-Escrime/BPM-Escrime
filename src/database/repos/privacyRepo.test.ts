@@ -307,4 +307,103 @@ describe.skipIf(!DatabaseSync)('PrivacyRepo (#1882)', () => {
     expect(comps.getCompetition(c2.id)).not.toBeNull();
     expect(sql.queryAll('SELECT * FROM fencers WHERE competition_id = ?', [c2.id])).toHaveLength(1);
   });
+  describe('équipe : membres, niveau, HANDI (docs/adr/0043)', () => {
+    const members = [
+      { lastName: 'Durand', firstName: 'Éva', gender: 'F' as const, birthDate: '1990-04-02' },
+      { lastName: 'Petit', firstName: 'Noé', gender: 'M' as const },
+    ];
+    const team = () => {
+      const c = competition('Rapières', '2026-11-05');
+      const t = fencers.addFencer(c.id, {
+        lastName: 'Les Lames',
+        firstName: 'DURAND / PETIT',
+        members,
+        level: 2,
+        handicap: true,
+      });
+      sql.run(
+        `INSERT INTO session_state (competition_id, state_json, updated_at) VALUES (?, ?, ?)`,
+        [
+          c.id,
+          JSON.stringify({ rapieres: { version: 2, teams: { [t.id]: { fencers: members } } } }),
+          new Date().toISOString(),
+        ]
+      );
+      return { c, t };
+    };
+
+    it('les membres, le niveau et le marqueur HANDI sont lus et mis à jour', () => {
+      const { t } = team();
+      expect(fencers.getFencer(t.id)).toMatchObject({ members, level: 2, handicap: true });
+      fencers.updateFencer(t.id, { level: 1, handicap: false, members: [members[0]] });
+      expect(fencers.getFencer(t.id)).toMatchObject({
+        members: [members[0]],
+        level: 1,
+        handicap: false,
+      });
+      fencers.updateFencer(t.id, { members: null as never, level: null as never });
+      const cleared = fencers.getFencer(t.id)!;
+      expect(cleared.members).toBeUndefined();
+      expect(cleared.level).toBeUndefined();
+    });
+
+    it('un tireur individuel n’a ni membres, ni niveau, ni marqueur', () => {
+      const c = competition('Open', '2026-11-05');
+      const f = fencers.addFencer(c.id, { lastName: 'Solo', firstName: 'A' });
+      const row = sql.queryOne<Record<string, unknown>>('SELECT * FROM fencers WHERE id = ?', [
+        f.id,
+      ])!;
+      expect([row.members, row.level, row.handicap]).toEqual([null, null, null]);
+      expect(fencers.getFencer(f.id)).not.toHaveProperty('members');
+    });
+
+    it('l’export de la personne emporte les membres de l’équipe', () => {
+      const { t } = team();
+      const out = privacy.exportPerson({ fencerIds: [t.id] });
+      const fencerRow = out.competitions[0].fencer;
+      expect(JSON.parse(fencerRow.members as string)).toEqual(members);
+      expect(fencerRow).toMatchObject({ level: 2, handicap: 1 });
+    });
+
+    it('un membre nommé retrouve l’équipe qui le porte', () => {
+      const { t } = team();
+      const found = privacy.findPersons('durand');
+      expect(found).toHaveLength(1);
+      expect(found[0].fencers.map(f => f.fencerId)).toEqual([t.id]);
+      expect(privacy.findPersons('inconnu')).toEqual([]);
+    });
+
+    it('l’anonymisation efface les membres du tireur et de la session', () => {
+      const { c, t } = team();
+      privacy.anonymizePerson({ fencerIds: [t.id] }, 'Anonyme X');
+      const row = sql.queryOne<Record<string, unknown>>('SELECT * FROM fencers WHERE id = ?', [
+        t.id,
+      ])!;
+      expect(row.members).toBeNull();
+      expect(row).toMatchObject({ last_name: 'Anonyme X', level: 2, handicap: 1 });
+      const state = sql.queryOne<{ state_json: string }>(
+        'SELECT state_json FROM session_state WHERE competition_id = ?',
+        [c.id]
+      )!;
+      expect(state.state_json).not.toContain('Durand');
+      expect(privacy.findPersons('durand')).toEqual([]);
+    });
+
+    it('l’effacement emporte les membres du tireur et de la session', () => {
+      const { c, t } = team();
+      privacy.erasePerson({ fencerIds: [t.id] });
+      expect(sql.queryAll('SELECT * FROM fencers WHERE id = ?', [t.id])).toHaveLength(0);
+      const state = sql.queryOne<{ state_json: string }>(
+        'SELECT state_json FROM session_state WHERE competition_id = ?',
+        [c.id]
+      )!;
+      expect(state.state_json).not.toContain('Petit');
+    });
+
+    it('la suppression du tireur supprime ses membres', () => {
+      const { t } = team();
+      fencers.deleteFencer(t.id);
+      expect(sql.queryAll('SELECT members FROM fencers WHERE id = ?', [t.id])).toHaveLength(0);
+    });
+  });
 });

@@ -235,6 +235,15 @@ export interface BaseEntity {
 // black_card : exclusion (carton noir) ; dns : forfait à l'appel, aucun match de poule commencé (#1256)
 export type ExclusionReason = 'black_card' | 'dns';
 
+/** Membre d'une équipe (entrée en binômes, docs/adr/0043) : donnée personnelle du tireur-équipe */
+export interface FencerMember {
+  lastName: string;
+  firstName: string;
+  gender?: 'M' | 'F';
+  /** AAAA-MM-JJ : sert à la catégorie de l'équipe */
+  birthDate?: string;
+}
+
 export interface Fencer extends BaseEntity {
   ref: number; // Numéro de référence unique dans la compétition
   lastName: string; // Nom
@@ -255,6 +264,12 @@ export interface Fencer extends BaseEntity {
   seedNumber?: number; // Tête de série
   initialRanking?: number; // Classement initial
   finalRanking?: number; // Classement final
+  /** Entrée en équipes : les membres de l'équipe (nom du tireur = nom d'équipe, docs/adr/0043) */
+  members?: FencerMember[];
+  /** Entrée en équipes : niveau, 1 = le plus fort (indice dans les libellés de la formule) */
+  level?: number;
+  /** Marqueur « HANDI » de l'équipe, distinct de la catégorie (docs/adr/0043) */
+  handicap?: boolean;
 
   // Stats calculées dans les poules
   poolStats?: PoolStats;

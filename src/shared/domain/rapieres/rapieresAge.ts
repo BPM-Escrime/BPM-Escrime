@@ -8,6 +8,7 @@
  * Licensed under GPL-3.0
  */
 
+import { ageCategoryFromBirthYear } from '../fencers/ageCategory';
 import {
   RapieresAgeCategory,
   RapieresFencer,
@@ -25,21 +26,19 @@ export function rapieresBirthYear(fencer: Pick<RapieresFencer, 'birthDate'>): nu
  * Catégorie d'âge pour une année de naissance (éventuellement moyenne décimale) :
  * âge = année de début de saison (1er septembre) − année de naissance, arrondi au-dessus
  * si la moyenne d'équipe est décimale (39,5 → 40) (#1864).
- * M20 < 20 ans, Seniors 20-39, V1 40-49, V2 50-59, V3 60-69, V4 70+.
+ * M20 < 20 ans, Seniors 20-39, V1 40-49, V2 50-59, V3 60-69, V4 70+. Règle déplacée dans
+ * `fencers/ageCategory` et `fencers/teamEntry` (docs/adr/0043) ; vue d'affichage du mode spécial.
  */
 export function rapieresCategoryFromBirthYear(
   birthYear: number,
   /** Date de référence (saison) : fournie par l'appelant, domaine pur (docs/adr/0002) */
   refDate: Date
 ): RapieresAgeCategory {
-  const seasonStart = refDate.getMonth() >= 8 ? refDate.getFullYear() : refDate.getFullYear() - 1;
-  const age = Math.ceil(seasonStart - birthYear);
-  if (age < 20) return 'M20';
-  if (age < 40) return 'SENIOR';
-  if (age < 50) return 'V1';
-  if (age < 60) return 'V2';
-  if (age < 70) return 'V3';
-  return 'V4';
+  // Règle générique des catégories (docs/adr/0043, F4c) : l'âge moyen décimal est arrondi
+  // au-dessus, donc l'année moyenne au-dessous ; les catégories jeunes se regroupent en M20.
+  const category = ageCategoryFromBirthYear(Math.floor(birthYear), refDate);
+  if (category === 'SEN') return 'SENIOR';
+  return category.startsWith('U') ? 'M20' : (category as RapieresAgeCategory);
 }
 
 /**

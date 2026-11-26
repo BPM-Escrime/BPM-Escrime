@@ -380,6 +380,27 @@ describe('validateFencerData', () => {
     future.setFullYear(future.getFullYear() + 1);
     expect(() => validateFencerData({ ...valid, birthDate: future })).toThrow(ValidationError);
   });
+
+  it('équipe (docs/adr/0043) : membres, niveau, marqueur HANDI', () => {
+    const members = [
+      { lastName: 'Durand', firstName: 'Éva', gender: 'F', birthDate: '1990-04-02' },
+    ];
+    expect(() => validateFencerData({ ...valid, members, level: 2, handicap: true })).not.toThrow();
+    expect(() =>
+      validateFencerData({ ...valid, members: [{ lastName: '', firstName: 'a' }] })
+    ).toThrow(ValidationError);
+    expect(() =>
+      validateFencerData({
+        ...valid,
+        members: [{ lastName: 'A', firstName: 'a', birthDate: '1990' }],
+      })
+    ).toThrow(ValidationError);
+    expect(() =>
+      validateFencerData({ ...valid, members: [{ lastName: 'A', firstName: 'a', gender: 'X' }] })
+    ).toThrow(ValidationError);
+    expect(() => validateFencerData({ ...valid, level: 0 })).toThrow(ValidationError);
+    expect(() => validateFencerData({ ...valid, level: 1.5 })).toThrow(ValidationError);
+  });
 });
 
 // ─── validateMatchData ───────────────────────────────────────────────────────

@@ -118,6 +118,67 @@ d('inscription des tireurs (docs/adr/0018)', () => {
     ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 
+  it('équipe (docs/adr/0043) : membres, niveau, HANDI ; catégorie et sexe déduits des membres', async () => {
+    const members = [
+      { lastName: 'Durand', firstName: 'Éva', gender: 'F', birthDate: '1989-06-01' },
+      { lastName: 'Petit', firstName: 'Zoé', gender: 'F', birthDate: '1961-08-27' },
+    ];
+    // Saison de l'épreuve : 2026-2027 (6 décembre 2026) ; (1989 + 1961) / 2 = 1975 → 51 ans
+    const [t] = (
+      await call('registerFencers', {
+        fencers: [{ lastName: 'Les Lames', firstName: 'DURAND / PETIT', members, level: 2 }],
+      })
+    ).fencers;
+    expect(t).toMatchObject({ members, level: 2, handicap: null, category: 'V2', gender: 'F' });
+    expect(db.getFencer(t.id)).toMatchObject({ members, level: 2 });
+
+    // Mixte quand les sexes diffèrent ; catégorie saisie à la main conservée
+    const mixed = await call('updateFencerDetails', {
+      fencerId: t.id,
+      details: {
+        members: [{ ...members[0], gender: 'M' }, members[1]],
+        category: 'V4',
+        handicap: true,
+      },
+    });
+    expect(mixed.fencer).toMatchObject({ gender: 'X', category: 'V4', handicap: true });
+
+    // Membres effacés par null ; niveau et marqueur effacés aussi
+    const cleared = await call('updateFencerDetails', {
+      fencerId: t.id,
+      details: { members: null, level: null, handicap: null },
+    });
+    expect(cleared.fencer).toMatchObject({ members: null, level: null, handicap: null });
+    await expect(
+      call('updateFencerDetails', { fencerId: t.id, details: { level: 0 } })
+    ).rejects.toMatchObject({ code: 'invalid_input' });
+    await expect(
+      call('updateFencerDetails', {
+        fencerId: t.id,
+        details: { members: [{ lastName: 'A', firstName: 'b', birthDate: '1990' }] },
+      })
+    ).rejects.toMatchObject({ code: 'invalid_input' });
+  });
+
+  it('équipe sans date de naissance : catégorie et sexe inchangés', async () => {
+    const [t] = (
+      await call('registerFencers', {
+        fencers: [
+          {
+            lastName: 'Duo',
+            firstName: 'X',
+            members: [
+              { lastName: 'A', firstName: 'a' },
+              { lastName: 'B', firstName: 'b' },
+            ],
+          },
+        ],
+      })
+    ).fencers;
+    expect(t.category).toBeNull();
+    expect(t.gender).toBe('M');
+  });
+
   it('setFencerRankings et unregisterFencers : avant le tirage seulement', async () => {
     const created = (
       await call('registerFencers', {

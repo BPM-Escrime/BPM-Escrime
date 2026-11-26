@@ -255,6 +255,23 @@ export const validateFencerData = (data: Partial<Fencer>): void => {
   validateOptionalNumber(data.initialRanking, 'initialRanking', 1);
   validateOptionalNumber(data.finalRanking, 'finalRanking', 1);
 
+  // Entrée en équipes (docs/adr/0043) : membres, niveau (1 = le plus fort), marqueur HANDI
+  if (data.members !== undefined) {
+    validateArray(data.members, 'members', 10);
+    data.members.forEach((m, i) => {
+      validateRequiredString(m.lastName, `members[${i}].lastName`, 100);
+      validateOptionalString(m.firstName, `members[${i}].firstName`, 100);
+      validateOptionalEnum(m.gender, `members[${i}].gender`, ['M', 'F']);
+      if (m.birthDate !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(m.birthDate)) {
+        throw new ValidationError(`members[${i}].birthDate must be AAAA-MM-JJ`, 'members');
+      }
+    });
+  }
+  validateOptionalNumber(data.level, 'level', 1, 20);
+  if (data.level !== undefined && !Number.isInteger(data.level)) {
+    throw new ValidationError('level must be an integer', 'level');
+  }
+
   // Validate nationality format (ISO country code)
   if (data.nationality && !/^[A-Z]{2,3}$/.test(data.nationality)) {
     throw new ValidationError(
