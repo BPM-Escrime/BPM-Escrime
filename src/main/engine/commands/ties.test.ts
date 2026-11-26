@@ -267,6 +267,65 @@ d('ex aequo à la barre (docs/adr/0040)', () => {
     expect(events(comp.id).some(e => e.type === 'GroupSplitOff')).toBe(false);
   });
 
+  it('2e tour : rang d’entrée = place au tour précédent, pas le classement initial', async () => {
+    // Trois tours : le 1er qualifie tout le monde, le 2e en garde 4 (« initial_ranking »)
+    const f = applyOperationsV2(
+      fctx,
+      [
+        { op: 'insertPhase', brick: 'pool', at: 1 },
+        { op: 'insertPhase', brick: 'pool', at: 2 },
+      ],
+      newId
+    );
+    let round = 0;
+    const phases = f.phases.map(p =>
+      p.kind === 'pool' && round++ === 1
+        ? {
+            ...p,
+            qualification: {
+              mode: 'fixed_count' as const,
+              count: 4,
+              ties: 'initial_ranking' as const,
+            },
+          }
+        : p
+    );
+    const { comp, ids } = competition({ ...f, phases });
+    // Tour 1 : une poule de 6, ordre inverse du classement initial (ids[5] bat tout le monde)
+    const order = [...ids].reverse();
+    const composition = [
+      {
+        poolId: `${comp.id}-r1-p1`,
+        number: 1,
+        fencerIds: order,
+        matches: order.flatMap((a, i) =>
+          order.slice(i + 1).map((b, j) => ({
+            matchId: `${comp.id}-r1-m${i}-${j}`,
+            fencerAId: a,
+            fencerBId: b,
+          }))
+        ),
+      },
+    ];
+    await call('generatePools', { competitionId: comp.id, composition });
+    for (const m of composition[0].matches) {
+      await call('recordScore', {
+        competitionId: comp.id,
+        matchId: m.matchId,
+        scoreA: 5,
+        scoreB: 1,
+      });
+    }
+    await call('closePoolRound', { competitionId: comp.id });
+    // Tour 2 : tous ex aequo ; départage par la place au tour 1 (ids[5] … ids[2])
+    await playCircles(comp.id, 2, circles(ids));
+    const sim = await call('closePoolRound', { competitionId: comp.id, dryRun: true });
+    expect(sim).toMatchObject({ qualified: 4, eliminated: 2 });
+    await call('closePoolRound', { competitionId: comp.id });
+    const closed = events(comp.id).filter(e => e.type === 'PoolRoundClosed')[1].payload as any;
+    expect(closed.qualifiedIds).toEqual(order.slice(0, 4));
+  });
+
   it('MCP : même champ « ties » sur les outils de coupe (ADR-0008)', () => {
     for (const name of ['close_pool_round', 'build_bracket', 'split_competition']) {
       const tool = CONTRACT_MCP_TOOLS.write.find(t => t.name === name)!;
