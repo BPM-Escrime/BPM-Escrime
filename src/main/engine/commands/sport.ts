@@ -993,8 +993,8 @@ export function buildBracket(
     throw new CommandError('no_direct_elimination', 'Épreuve sans élimination directe');
   }
   // Un seul tableau dans la formule : une fois arrêté et clos, les tours de poules qui suivent
-  // terminent l'épreuve (ADR-0037, formulaSegment)
-  if (!options.composition && tableauStagesOf(session.stageHistory).length > 0) {
+  // terminent l'épreuve (ADR-0037, ADR-0042), avec ou sans placement de l'écran
+  if (tableauStagesOf(session.stageHistory).length > 0) {
     throw new CommandError(
       'no_direct_elimination',
       'Tableau arrêté déjà clos : les tours de poules qui suivent terminent l’épreuve'

@@ -249,6 +249,8 @@ describe('formulaProgress : phases commencées d’après l’état de session',
   it('poules du tour courant lancées, ou tours clos dans l’historique', () => {
     expect(formulaProgress(full, { pools: [{}] })).toEqual(['pool']);
     expect(formulaProgress(full, { poolsLaunched: true })).toEqual(['pool']);
+    // Tirage non lancé (état de session, moteur comme écran) : pas encore commencé
+    expect(formulaProgress(full, { pools: [{}], poolsLaunched: false })).toEqual([]);
     expect(formulaProgress(full, { poolHistory: [[{}]], pools: [{}] })).toEqual(['pool', 'pool']);
     expect(formulaProgress(full, { poolHistory: [[{}], [{}]] })).toEqual(['pool', 'pool']);
   });

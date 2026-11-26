@@ -28,6 +28,8 @@ import { computeOverallRankingFor } from '../../../shared/utils/poolOrchestratio
 import type { TableauMatch } from '../../../shared/domain/tableau/tableauTypes';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
+import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
+import { contract } from '../../../shared/api/contract';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -423,7 +425,30 @@ d('tableau arrêté puis tour de poules (docs/adr/0037, 0042)', () => {
     await expect(call('generateTableau', { competitionId: comp.id })).rejects.toMatchObject({
       code: 'no_direct_elimination',
     });
+    // Placement composé par l'écran : refusé aussi (un seul tableau, ADR-0042)
+    const placed = (session(comp.id).pools as Pool[]).flatMap(p => p.fencers.map(f => f.id));
+    await expect(
+      call('generateTableau', {
+        competitionId: comp.id,
+        composition: [
+          {
+            matchId: '2-0',
+            round: 2,
+            position: 0,
+            fencerAId: placed[0],
+            fencerBId: placed[1],
+            isBye: false,
+          },
+        ],
+      })
+    ).rejects.toMatchObject({ code: 'no_direct_elimination' });
     expect(events(comp.id).filter(e => e.type === 'TableauGenerated')).toHaveLength(1);
+  });
+
+  it('outil MCP close_tableau_stage : clôture du tableau arrêté ouverte à l’agent (ADR-0042)', () => {
+    const tool = CONTRACT_MCP_TOOLS.write.find(t => t.name === 'close_tableau_stage');
+    expect(tool).toBeDefined();
+    expect(contract.closeTableauStage.mcp?.name).toBe('close_tableau_stage');
   });
 });
 

@@ -77,8 +77,11 @@ const count = (v: unknown): number => (Array.isArray(v) ? v.length : 0);
  * faite. Une phase commencée entraîne celles qui la précèdent. Rend les natures dans l'ordre.
  */
 export function formulaProgress(stored: FormulaV2, facts: ProgressFacts): FormulaProgress {
-  let rounds =
-    count(facts.poolHistory) + (count(facts.pools) > 0 || facts.poolsLaunched === true ? 1 : 0);
+  // Tour courant commencé : poules lancées (`poolsLaunched`, état de session) ; un tirage non
+  // lancé ne compte pas. Sans l'information : poules présentes
+  const current =
+    typeof facts.poolsLaunched === 'boolean' ? facts.poolsLaunched : count(facts.pools) > 0;
+  let rounds = count(facts.poolHistory) + (current ? 1 : 0);
   const groups = Object.values(
     facts.groupTableaux && typeof facts.groupTableaux === 'object' ? facts.groupTableaux : {}
   ) as Array<{ tableauMatches?: unknown } | null>;

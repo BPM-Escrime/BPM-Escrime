@@ -10,8 +10,7 @@
 import type { Fencer, Pool, PoolRanking } from '../../types';
 import type { TableauMatch } from './tableauTypes';
 import { phaseSettings, type FormulaV2 } from '../formula/formulaV2';
-import { cumulativeRanking } from '../pools/roundSeeding';
-import { computeOverallRankingFor } from '../../utils/poolOrchestration';
+import { cumulativeRanking, roundRanking } from '../pools/roundSeeding';
 import { formulaSegment } from '../formula/formulaSteps';
 
 /** Matchs joués avant l'arrêt : tours où il reste plus de `stopAt` tireurs */
@@ -194,7 +193,7 @@ export function seedRankingForNextRound(input: {
 }): PoolRanking[] {
   const played = input.history.length;
   const last = input.history[played - 1] ?? [];
-  const lastRoundRanking = computeOverallRankingFor(last, input.isLaserSabre);
+  const lastRoundRanking = roundRanking(last, input.isLaserSabre);
   const stage = input.stages[input.stages.length - 1];
   const firstAfterStage =
     !!stage && !!input.formula && formulaSegment(input.formula, 0)?.poolRounds === played;

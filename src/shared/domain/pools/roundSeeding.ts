@@ -16,6 +16,11 @@ import { computeOverallRankingFor } from '../../utils/poolOrchestration';
 import { getRoundQualifierCount } from '../../utils/poolRounds';
 import { phaseSettings } from '../formula/formulaV2';
 
+/** Classement d'un tour de poules (domaine : point d'entrée unique pour les autres règles) */
+export function roundRanking(pools: Pool[], isLaserSabre: boolean): PoolRanking[] {
+  return computeOverallRankingFor(pools, isLaserSabre);
+}
+
 /**
  * Cumul des tours : victoires, matchs et touches additionnés sur tous les tours joués, pour les
  * tireurs du tour terminé. Rang : ratio V/M, puis indice, puis touches données (Sabre Laser :

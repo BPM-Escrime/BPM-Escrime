@@ -1,7 +1,7 @@
 /**
  * BPM - Escrime - Phases commencées vues par l'écran (S6, docs/adr/0041) : faits lus dans
- * l'état de l'épreuve, passés à formulaProgress (domaine). Un tirage de poules non lancé n'est
- * pas encore commencé.
+ * l'état de l'épreuve, passés tels quels à formulaProgress (domaine, même jugement que le
+ * moteur).
  * Licensed under GPL-3.0
  */
 import type { Pool } from '../../../shared/types';
@@ -23,7 +23,8 @@ export function screenFormulaProgress(input: {
   currentPhase: string;
 }): FormulaProgress {
   return formulaProgress(input.formula, {
-    pools: input.poolsLaunched ? input.pools : [],
+    pools: input.pools,
+    poolsLaunched: input.poolsLaunched,
     poolHistory: input.poolHistory,
     tableauMatches: input.tableauMatches,
     stageHistory: input.stageHistory,
