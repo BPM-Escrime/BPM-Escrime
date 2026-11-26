@@ -106,6 +106,7 @@ export const PHASE = {
   poolprep: 1,
   pools: 2,
   ranking: 3,
+  quest: 4,
   tableau: 5,
   results: 6,
 } as const;

@@ -21,6 +21,7 @@ import {
 import { FencerStatus } from '../types';
 import { calculateFencerPoolStats } from './poolCalculations';
 import { referenceDuration, type DurationSources } from '../domain/durations/matchDurations';
+import { POOL_ROUNDS_WARNING } from '../domain/formula/formulaDraft';
 
 // ============================================================================
 // Comparateur dynamique
@@ -298,6 +299,10 @@ function estimateMatchDuration(
   );
 }
 
+/** Seuils des avertissements de la simulation (ADR-0041) */
+const MIN_POOL_SIZE_WARNING = 4;
+const MIN_QUALIFIED_WARNING = 4;
+
 export function simulateFormula(
   fencerCount: number,
   formula: CustomFormulaConfig,
@@ -328,13 +333,20 @@ export function simulateFormula(
       );
       const phaseMinutes = matchCount * minutesPerMatch;
 
-      if (poolSizes.some(s => s < 3)) {
+      if (poolSizes.some(s => s < MIN_POOL_SIZE_WARNING)) {
         warnings.push(
-          `Tour ${i + 1} : poule de ${Math.min(...poolSizes)} tireurs (min recommandé : 3)`
+          `Tour ${i + 1} : poule de ${Math.min(...poolSizes)} tireurs (min recommandé : ${MIN_POOL_SIZE_WARNING})`
         );
       }
 
       const advancingCount = calcAdvancingCount(currentFencers, cfg.advancementRule, phases, i);
+      // Moins de 4 qualifiés vers une phase de combat (ADR-0041)
+      const next = formula.phases[i + 1];
+      if (next && next.type !== 'classification' && advancingCount < MIN_QUALIFIED_WARNING) {
+        warnings.push(
+          `Tour ${i + 1} : moins de ${MIN_QUALIFIED_WARNING} qualifiés (${advancingCount})`
+        );
+      }
 
       phases.push({
         phaseIndex: i,
@@ -388,6 +400,11 @@ export function simulateFormula(
       });
     }
   }
+
+  // Durée de l'épreuve (ADR-0041)
+  const rounds = phases.filter(p => p.type === 'pool_round').length;
+  if (rounds > POOL_ROUNDS_WARNING)
+    warnings.push(`${rounds} tours de poules : vérifiez la durée de l'épreuve`);
 
   return {
     phases,

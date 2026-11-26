@@ -7,7 +7,7 @@
  * Licensed under GPL-3.0
  */
 import { randomUUID } from 'crypto';
-import type { CompetitionSettings, Weapon } from '../../../shared/types';
+import type { Category, CompetitionSettings, Weapon } from '../../../shared/types';
 import {
   FormulaOperationError,
   formulaView,
@@ -23,6 +23,7 @@ import {
   formulaOf,
   type FormulaV2,
 } from '../../../shared/domain/formula/formulaV2';
+import { formulaProgress, remarksMessage } from '../../../shared/domain/formula/formulaRemarks';
 import {
   formulaDeviations,
   templateMatches,
@@ -32,6 +33,8 @@ import {
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { updateCompetitionSettings } from './competitionSetup';
+import { readSession } from './sessionView';
+import { PHASE } from './sport';
 import { allFormulaTemplates } from './formulaTemplates';
 
 const newPhaseId = () => `phase_${randomUUID()}`;
@@ -108,19 +111,39 @@ export function applyFormulaTemplate(
 }
 
 /**
- * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0036), après le contrôle des bornes
- * de chaque tour ; `extra` : autres réglages écrits avec elle (origine, mode spécial).
+ * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0036), après le jugement de la
+ * formule (bornes, S1 à S6 ; une remarque par ligne avec la clé de sa phase, ADR-0041) ; `extra` :
+ * autres réglages écrits avec elle (origine, mode spécial). Phases commencées (S6) : lues dans
+ * l'état de session, par rapport à la formule enregistrée.
  */
 export function writeFormula(
   ctx: CommandContext,
-  comp: { id: string; weapon: Weapon; isTeamEvent?: boolean },
+  comp: {
+    id: string;
+    weapon: Weapon;
+    category: Category;
+    isTeamEvent?: boolean;
+    settings?: CompetitionSettings;
+  },
   formula: FormulaV2,
   extra: Partial<CompetitionSettings>,
   dryRun?: boolean
 ) {
-  const issues = formulaV2Issues(formula, { weapon: comp.weapon, isTeamEvent: !!comp.isTeamEvent });
-  if (issues.length)
-    throw new CommandError('invalid_settings', `Formule refusée : ${issues.join(' ; ')}`);
+  const session = readSession(ctx, comp.id);
+  const progress = formulaProgress(
+    formulaOf({ weapon: comp.weapon, category: comp.category, settings: comp.settings }),
+    { ...session, questStarted: session.currentPhase === PHASE.quest }
+  );
+  const issues = formulaV2Issues(
+    formula,
+    {
+      weapon: comp.weapon,
+      isTeamEvent: !!comp.isTeamEvent,
+      fencerCount: ctx.db.getFencersByCompetition(comp.id).length,
+    },
+    progress
+  );
+  if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
   return updateCompetitionSettings(ctx, {
     competitionId: comp.id,
     settings: { ...extra, ...flatSettingsOf(formula, comp.weapon), formula },

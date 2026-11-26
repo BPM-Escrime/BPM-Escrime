@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseManager } from '../../../database';
 import { hasNodeSqlite } from '../../../database/testing/nodeSqliteDatabase';
-import { Category, Gender, Weapon } from '../../../shared/types';
+import { Category, FencerStatus, Gender, Weapon } from '../../../shared/types';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
 import { draftFromSettings } from '../../../shared/domain/formula/formulaDraft';
 import { contract } from '../../../shared/api/contract';
@@ -238,5 +238,73 @@ d('formule v2 écrite et lue par phase (docs/adr/0036)', () => {
     const created = db.getCompetition(r.competitionId)!;
     expect(created.settings?.formula?.phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
     expect(created.settings?.defaultPoolMaxScore).toBe(4);
+  });
+});
+
+d('contrôles de structure en direct (docs/adr/0041)', () => {
+  const reject = async (operations: unknown[]) => {
+    try {
+      await op('updateCompetitionFormula', { competitionId, operations });
+    } catch (e) {
+      return e as { code: string; message: string };
+    }
+    throw new Error('formule acceptée');
+  };
+
+  it('S3 : refus invalid_settings, une remarque par ligne avec la clé de la phase', async () => {
+    const e = await reject([
+      { op: 'insertPhase', brick: 'pool', at: 1 },
+      {
+        op: 'setPhase',
+        phase: 'pool-0',
+        settings: { qualification: { mode: 'fixed_count', count: 3 } },
+      },
+    ]);
+    expect(e.code).toBe('invalid_settings');
+    expect(e.message).toMatch(
+      /^Formule refusée :\n\[pool-0\] tour 1 : 3 qualifié\(s\) pour des poules/
+    );
+    expect(db.getCompetition(competitionId)?.settings?.formula).toBeUndefined();
+  });
+
+  it('S4 : l’effectif connu borne la somme des parts d’une scission par rang', async () => {
+    for (const i of [1, 2, 3])
+      db.addFencer(competitionId, {
+        lastName: `N${i}`,
+        firstName: `P${i}`,
+        gender: Gender.MALE,
+        category: Category.SENIOR,
+        club: 'Paris',
+        ranking: i,
+        status: FencerStatus.CHECKED_IN,
+      });
+    const e = await reject([
+      { op: 'removePhase', phase: 'tableau' },
+      { op: 'insertPhase', brick: 'split', at: 1 },
+    ]);
+    expect(e.message).toContain('[split] scission : les parts (16 tireurs)');
+  });
+
+  it('S6 : après un tour joué, la phase commencée ne se retire plus', async () => {
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [{ op: 'insertPhase', brick: 'pool', at: 1 }],
+    });
+    // Tour 1 clos (historique), tour 2 en cours
+    db.saveSessionState(competitionId, {
+      currentPhase: 2,
+      currentPoolRound: 2,
+      poolHistory: [[{ id: 'p1', matches: [] }]],
+      pools: [{ id: 'p2', matches: [] }],
+    });
+    const e = await reject([{ op: 'removePhase', phase: 'pool-1' }]);
+    expect(e.code).toBe('invalid_settings');
+    expect(e.message).toContain('[pool-1] phase déjà commencée (tour de poules)');
+    // Un tour ajouté après la dernière phase commencée reste permis
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [{ op: 'insertPhase', brick: 'pool', at: 2 }],
+    });
+    expect(db.getCompetition(competitionId)?.settings?.formula?.phases).toHaveLength(4);
   });
 });

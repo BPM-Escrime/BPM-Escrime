@@ -39,6 +39,14 @@ import {
   type TableauPhase,
 } from './formulaV2';
 import { validateFormulaSettings } from './validateFormulaSettings';
+import { remark, type FormulaProgress, type FormulaRemark } from './formulaRemarks';
+import {
+  branchEndIssues,
+  fightPhaseIssues,
+  poolQualificationIssues,
+  progressIssues,
+  splitTakeIssues,
+} from './formulaStructure';
 import { tiesIssue } from '../ranking/advancement';
 export { tiesIssue };
 
@@ -65,15 +73,22 @@ export function friezeOfV2(f: FormulaV2): FriezePhase[] {
  * Place d'une scission (ADR-0039) : dernière phase, unique, sans Tour Quest, après un tour de
  * poules ou un tableau arrêté à N. null : conforme ou pas de scission.
  */
-export function splitPlacementIssue(f: FormulaV2): string | null {
+export function splitPlacementIssue(f: FormulaV2): FormulaRemark | null {
   const at = f.phases.findIndex(isSplit);
   if (at < 0) return null;
-  if (f.phases.filter(isSplit).length > 1) return 'une seule scission';
-  if (at !== f.phases.length - 1) return 'scission : toujours la dernière phase';
-  if (f.phases.some(isQuest)) return 'scission : sans Tour Quest';
+  if (f.phases.filter(isSplit).length > 1)
+    return remark('split_unique', 'split', 'une seule scission');
+  if (at !== f.phases.length - 1)
+    return remark('split_not_last', 'split', 'scission : toujours la dernière phase');
+  if (f.phases.some(isQuest))
+    return remark('split_with_quest', 'split', 'scission : sans Tour Quest');
   const prev = f.phases[at - 1];
   if (!prev || !(isPool(prev) || (isTableau(prev) && !!prev.stopAt)))
-    return 'scission : après un tour de poules ou un tableau arrêté à N tireurs';
+    return remark(
+      'split_misplaced',
+      'split',
+      'scission : après un tour de poules ou un tableau arrêté à N tireurs'
+    );
   return null;
 }
 
@@ -712,12 +727,34 @@ function setStayingTableaux(f: FormulaV2, settings: Record<string, unknown>, whe
   return { ...f, phases: f.phases.map(p => (p === split ? next : p)) };
 }
 
-/** Écarts de bornes de la formule (moteur, à chaque écriture, ADR-0012) */
+/** Contexte du jugement : arme, type d'épreuve, effectif connu (S4, somme des parts d'une scission) */
+export interface FormulaScope {
+  weapon: Weapon;
+  isTeamEvent?: boolean;
+  fencerCount?: number;
+}
+
+/**
+ * Remarques bloquantes de la formule (moteur, à chaque écriture, ADR-0012 ; écran, à chaque
+ * changement, ADR-0041) : bornes des réglages, S1 à S5, et S6 avec `progress` (phases déjà
+ * commencées de l'épreuve, `formulaProgress`). Chacune dit la phase de la frise en cause.
+ */
 export function formulaV2Issues(
   f: FormulaV2,
-  scope: { weapon: Weapon; isTeamEvent?: boolean }
-): string[] {
-  const out: string[] = [];
+  scope: FormulaScope,
+  progress?: FormulaProgress
+): FormulaRemark[] {
+  return formulaIssues(f, scope, progress, false);
+}
+
+function formulaIssues(
+  f: FormulaV2,
+  scope: FormulaScope,
+  progress: FormulaProgress | undefined,
+  inBranch: boolean
+): FormulaRemark[] {
+  const out: FormulaRemark[] = [];
+  out.push(...fightPhaseIssues(f.phases));
   const pools = f.phases.filter(isPool);
   // Chaque tour jugé comme s'il était le premier (mêmes bornes que les réglages plats)
   pools.forEach((p, r) => {
@@ -731,7 +768,11 @@ export function formulaV2Issues(
       undefined,
       scope
     );
-    out.push(...issues.map(i => `tour ${r + 1} : ${i.field} (${i.message})`));
+    out.push(
+      ...issues.map(i =>
+        remark('pool_settings', `pool-${r}`, `tour ${r + 1} : ${i.field} (${i.message})`)
+      )
+    );
   });
   const tableau = f.phases.find(isTableau);
   if (tableau) {
@@ -740,34 +781,62 @@ export function formulaV2Issues(
       undefined,
       scope
     );
-    out.push(...issues.map(i => `tableau : ${i.field} (${i.message})`));
+    out.push(
+      ...issues.map(i =>
+        remark('tableau_settings', 'tableau', `tableau : ${i.field} (${i.message})`)
+      )
+    );
   }
-  if (pools.length > MAX_POOL_ROUNDS) out.push(`${MAX_POOL_ROUNDS} tours de poules au plus`);
+  if (pools.length > MAX_POOL_ROUNDS)
+    out.push(remark('too_many_pool_rounds', null, `${MAX_POOL_ROUNDS} tours de poules au plus`));
   // Ex aequo à la barre (ADR-0040) : 'barrage' attend le lot F1b
-  const rules: [string, AdvancementRule | undefined][] = [
-    ...pools.map((p, r): [string, AdvancementRule] => [`tour ${r + 1}`, p.qualification]),
-    ...(f.phases.find(isSplit)?.branches ?? []).map((b): [string, AdvancementRule | undefined] => [
-      `branche ${b.label}`,
-      b.take,
+  const rules: [string, string, AdvancementRule | undefined][] = [
+    ...pools.map((p, r): [string, string, AdvancementRule] => [
+      `tour ${r + 1}`,
+      `pool-${r}`,
+      p.qualification,
     ]),
+    ...(f.phases.find(isSplit)?.branches ?? []).map(
+      (b): [string, string, AdvancementRule | undefined] => [`branche ${b.label}`, 'split', b.take]
+    ),
   ];
-  for (const [where, rule] of rules) {
+  for (const [where, key, rule] of rules) {
     const issue = tiesIssue(rule?.ties);
-    if (issue) out.push(`${where} : ${issue}`);
+    if (issue) out.push(remark('ties_unsupported', key, `${where} : ${issue}`));
   }
-  // Tableau arrêté (ADR-0037, D2) : des tours de poules ou une scission (ADR-0039) le suivent
+  // Tableau arrêté (ADR-0037, D2) : des tours de poules ou une scission (ADR-0039) le suivent.
+  // Dans une branche, S5 dit la même chose (la branche finit par un tour ou un tableau complet).
   if (tableau) {
     const after = f.phases.slice(f.phases.indexOf(tableau) + 1);
-    if (tableau.stopAt && !after.some(p => isPool(p) || isSplit(p)))
+    if (tableau.stopAt && !inBranch && !after.some(p => isPool(p) || isSplit(p)))
       out.push(
-        `tableau arrêté à ${tableau.stopAt} : ajouter un tour de poules ou une scission après le tableau`
+        remark(
+          'stopped_tableau_unfollowed',
+          'tableau',
+          `tableau arrêté à ${tableau.stopAt} : ajouter un tour de poules ou une scission après le tableau`
+        )
       );
     if (!tableau.stopAt && after.some(isPool))
-      out.push('tours de poules après le tableau : arrêter le tableau à N tireurs');
+      out.push(
+        remark(
+          'pools_after_full_tableau',
+          'tableau',
+          'tours de poules après le tableau : arrêter le tableau à N tireurs'
+        )
+      );
     if (tableau.stopAt && !f.phases.slice(0, f.phases.indexOf(tableau)).some(isPool))
-      out.push('tableau arrêté : un tour de poules avant le tableau');
-    if (tableau.stopAt && f.phases.some(isQuest)) out.push('tableau arrêté : sans Tour Quest');
+      out.push(
+        remark(
+          'stopped_tableau_without_pool',
+          'tableau',
+          'tableau arrêté : un tour de poules avant le tableau'
+        )
+      );
+    if (tableau.stopAt && f.phases.some(isQuest))
+      out.push(remark('stopped_tableau_with_quest', 'tableau', 'tableau arrêté : sans Tour Quest'));
   }
+  if (inBranch) out.push(...branchEndIssues(f.phases));
+  out.push(...poolQualificationIssues(f));
   const placement = splitPlacementIssue(f);
   if (placement) out.push(placement);
   const split = f.phases.find(isSplit);
@@ -775,44 +844,57 @@ export function formulaV2Issues(
   // Branche restée : tableau séparé après les poules (ADR-0024), donc juste après un tour
   const prev = split ? f.phases[f.phases.indexOf(split) - 1] : undefined;
   if (split?.branches.some(b => b.stayInCompetition) && prev && !isPool(prev))
-    out.push('scission : rester dans l’épreuve seulement après un tour de poules');
+    out.push(
+      remark(
+        'split_stay_after_pool',
+        'split',
+        'scission : rester dans l’épreuve seulement après un tour de poules'
+      )
+    );
+  if (progress) out.push(...progressIssues(f, progress));
   return out;
 }
 
 /** Règles d'une scission (ADR-0039) : branches, critère, formule de chaque branche */
-export function splitIssues(
-  split: SplitPhase,
-  scope: { weapon: Weapon; isTeamEvent?: boolean }
-): string[] {
-  const out: string[] = [];
+export function splitIssues(split: SplitPhase, scope: FormulaScope): FormulaRemark[] {
+  const out: FormulaRemark[] = [];
+  const add = (code: string, message: string) => out.push(remark(code, 'split', message));
   const { branches, criterion } = split;
-  if (branches.length < 2) out.push('scission : deux branches au moins');
+  if (branches.length < 2) add('split_branches_min', 'scission : deux branches au moins');
   const labels = branches.map(b => (b.label ?? '').trim());
-  if (labels.some(l => !l)) out.push('scission : chaque branche a un libellé');
+  if (labels.some(l => !l)) add('split_label_missing', 'scission : chaque branche a un libellé');
   if (new Set(labels.filter(Boolean)).size !== labels.filter(Boolean).length)
-    out.push('scission : libellés des branches distincts');
+    add('split_label_duplicate', 'scission : libellés des branches distincts');
   branches.forEach((b, i) => {
     const name = `branche « ${labels[i] || i + 1} »`;
-    if (b.phases.length === 0) out.push(`${name} : au moins une phase`);
+    // S1 (au moins une phase de combat), bornes et S5 : la suite de phases de la branche est
+    // jugée comme une formule
     if (b.phases.some(p => isSplit(p) || isQuest(p)))
-      out.push(`${name} : ni scission ni Tour Quest dans une branche`);
+      add('split_branch_nested', `${name} : ni scission ni Tour Quest dans une branche`);
     else
       out.push(
-        ...formulaV2Issues({ version: 2, phases: b.phases, general: {} }, scope).map(
-          m => `${name} : ${m}`
+        ...formulaIssues({ version: 2, phases: b.phases, general: {} }, scope, undefined, true).map(
+          r => remark(r.code, 'split', `${name} : ${r.message}`)
         )
       );
     // Rester dans l'épreuve (ADR-0039, E3) : tableaux séparés par sexe (ADR-0024)
     if (b.stayInCompetition && criterion !== 'gender')
-      out.push(`${name} : rester dans l’épreuve, seulement pour une scission par sexe`);
+      add(
+        'split_stay_gender_only',
+        `${name} : rester dans l’épreuve, seulement pour une scission par sexe`
+      );
     if (b.stayInCompetition && !(b.phases.length === 1 && isTableau(b.phases[0])))
-      out.push(`${name} : rester dans l’épreuve, seulement une branche réduite à un tableau`);
+      add(
+        'split_stay_tableau_only',
+        `${name} : rester dans l’épreuve, seulement une branche réduite à un tableau`
+      );
   });
   // Rester dans l'épreuve : toutes les branches ou aucune (compétition couplée, ADR-0039,
   // amendement du 2026-11-26 : pas de mélange d'une branche restée et d'une fille)
   const staying = branches.filter(b => b.stayInCompetition);
   if (staying.length > 0 && staying.length < branches.length)
-    out.push(
+    add(
+      'split_stay_all_or_none',
       'rester dans l’épreuve : toutes les branches ou aucune (dès qu’une branche part en compétition fille, toutes partent)'
     );
   // Compétition couplée : deux branches, Hommes et Dames
@@ -823,7 +905,7 @@ export function splitIssues(
     criterion === 'gender' &&
     !(branches.length === 2 && genders.has(Gender.MALE) && genders.has(Gender.FEMALE))
   )
-    out.push('rester dans l’épreuve : deux branches, Hommes et Dames');
+    add('split_stay_men_women', 'rester dans l’épreuve : deux branches, Hommes et Dames');
   // Un seul tableau joué pour les branches restées (réglages communs, ADR-0024)
   const kept = staying
     .map(b => b.phases[0])
@@ -832,36 +914,46 @@ export function splitIssues(
       JSON.stringify([t.maxScore, t.timerSeconds, t.thirdPlace, t.allPlaces, t.scoring ?? null])
     );
   if (new Set(kept).size > 1)
-    out.push('rester dans l’épreuve : mêmes réglages de tableau pour les branches restées');
+    add(
+      'split_stay_same_tableau',
+      'rester dans l’épreuve : mêmes réglages de tableau pour les branches restées'
+    );
   if (criterion === 'rank') {
     branches.forEach((b, i) => {
       const last = i === branches.length - 1;
       const name = `branche « ${labels[i] || i + 1} »`;
-      if (last && b.take) out.push(`${name} : la dernière branche prend le reste (sans « take »)`);
+      if (last && b.take)
+        add('split_last_take', `${name} : la dernière branche prend le reste (sans « take »)`);
       if (!last && !(b.take && ['fixed_count', 'percentage'].includes(b.take.mode)))
-        out.push(`${name} : nombre ou pourcentage de tireurs requis (« take »)`);
+        add('split_take_required', `${name} : nombre ou pourcentage de tireurs requis (« take »)`);
       if (!last && b.take?.mode === 'fixed_count' && !(Number(b.take.count) >= 1))
-        out.push(`${name} : nombre de tireurs ≥ 1`);
+        add('split_take_count', `${name} : nombre de tireurs ≥ 1`);
       if (
         !last &&
         b.take?.mode === 'percentage' &&
         !(Number(b.take.percentage) > 0 && Number(b.take.percentage) < 100)
       )
-        out.push(`${name} : pourcentage entre 1 et 99`);
+        add('split_take_percentage', `${name} : pourcentage entre 1 et 99`);
     });
+    // S3, S4 : parts de la scission par rang (nombre fixé : première phase de la branche)
+    out.push(...splitTakeIssues(split, scope.fencerCount));
   }
   if (criterion === 'gender') {
-    if (branches.some(b => !b.gender)) out.push('scission par sexe : un sexe par branche');
+    if (branches.some(b => !b.gender))
+      add('split_gender_required', 'scission par sexe : un sexe par branche');
     const genders = branches.map(b => b.gender).filter(Boolean);
     if (new Set(genders).size !== genders.length)
-      out.push('scission par sexe : un sexe n’appartient qu’à une branche');
+      add('split_gender_duplicate', 'scission par sexe : un sexe n’appartient qu’à une branche');
   }
   if (criterion === 'category') {
     if (branches.some(b => !b.categories?.length))
-      out.push('scission par catégorie : au moins une catégorie par branche');
+      add('split_category_required', 'scission par catégorie : au moins une catégorie par branche');
     const all = branches.flatMap(b => b.categories ?? []);
     if (new Set(all).size !== all.length)
-      out.push('scission par catégorie : une catégorie n’appartient qu’à une branche');
+      add(
+        'split_category_duplicate',
+        'scission par catégorie : une catégorie n’appartient qu’à une branche'
+      );
   }
   return out;
 }
