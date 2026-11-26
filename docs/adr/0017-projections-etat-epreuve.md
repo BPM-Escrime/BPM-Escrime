@@ -12,11 +12,11 @@ appareils de piste, MCP), retrait et réintégration d'un tireur
 ([ADR-0016](0016-retrait-reintegration-tireur.md)). Mais l'état de l'épreuve vit toujours dans
 `session_state` : un bloc JSON par épreuve, avec trois auteurs.
 
-| Auteur | Écriture |
-|---|---|
-| Écran | Le bloc entier, 500 ms après chaque changement (`useCompetitionSession.ts`, `db:saveSessionState`, refus si la révision est périmée) |
-| Moteur | Fusion d'un morceau (`writeSession`, `engine/commands/sport.ts`), puis signal `session:changed` |
-| Écran, séparation des tableaux | Bloc initial de l'épreuve créée (`useSplitGroups.ts:141`) |
+| Auteur                         | Écriture                                                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Écran                          | Le bloc entier, 500 ms après chaque changement (`useCompetitionSession.ts`, `db:saveSessionState`, refus si la révision est périmée) |
+| Moteur                         | Fusion d'un morceau (`writeSession`, `engine/commands/sport.ts`), puis signal `session:changed`                                      |
+| Écran, séparation des tableaux | Bloc initial de l'épreuve créée (`useSplitGroups.ts:141`)                                                                            |
 
 Il a cinq lecteurs : l'écran (restauration et relecture), le moteur (`readSession`), les
 résultats publics (`remote/routes/resultsRoutes.ts`), l'affectation des arbitres côté tablettes
@@ -24,12 +24,12 @@ résultats publics (`remote/routes/resultsRoutes.ts`), l'affectation des arbitre
 
 Le bloc mélange quatre natures de données :
 
-| Champ | Nature |
-|---|---|
-| `pools`, `poolHistory`, `appelHistory`, `tableauMatches`, `currentPoolRound`, `rapieres` | Faits de l'épreuve |
-| `overallRanking`, `finalResults`, `consolationBrackets` | Dérivés : calculables à partir des faits |
-| `poolPrepParams`, `remoteArenaCount`, `remoteStripStart`, `skipPoolPhase` | Réglages de l'épreuve ou du poste |
-| `currentPhase`, `uiState` | État d'interface : onglet affiché, tour consulté |
+| Champ                                                                                    | Nature                                           |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `pools`, `poolHistory`, `appelHistory`, `tableauMatches`, `currentPoolRound`, `rapieres` | Faits de l'épreuve                               |
+| `overallRanking`, `finalResults`, `consolationBrackets`                                  | Dérivés : calculables à partir des faits         |
+| `poolPrepParams`, `remoteArenaCount`, `remoteStripStart`, `skipPoolPhase`                | Réglages de l'épreuve ou du poste                |
+| `currentPhase`, `uiState`                                                                | État d'interface : onglet affiché, tour consulté |
 
 Conséquences actuelles :
 
@@ -94,14 +94,14 @@ Conséquences actuelles :
 - **Paliers suivants** : un fait passe à la fois par sa commande et par son événement, dans la
   même PR ([ADR-0005](0005-journal-un-fait-un-chemin.md)).
 
-| Fait | Commande | Événement |
-|---|---|---|
-| Tirage des poules | `generatePools` (existe, sans événement) | `PoolsGenerated` : tour, poules, tireurs, pistes, ordre des matchs ; le tirage complet, pas la graine |
-| Composition d'une poule | `movePoolFencer`, `addPoolFencer` | `PoolFencerMoved`, `PoolFencerAdded` |
-| Clôture d'un tour | `closePoolRound` | `PoolRoundClosed` : qualifiés, éliminés (statut `ELIMINATED`) |
-| Génération du tableau | `generateTableau` (ex-`buildBracket`) | `TableauGenerated` : taille, placement complet, petite finale, « toutes les places » |
-| Correction après tirage (#1996) | `recordScore` avec motif de correction | `ScoreRecorded` avec `correction` |
-| Vagues des rapières | `launchRapieresWave` | `RapieresWaveLaunched` |
+| Fait                            | Commande                                 | Événement                                                                                                                                                                                                                                                                                                       |
+| ------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tirage des poules               | `generatePools` (existe, sans événement) | `PoolsGenerated` : tour, poules, tireurs, pistes, ordre des matchs ; le tirage complet, pas la graine                                                                                                                                                                                                           |
+| Composition d'une poule         | `movePoolFencer`, `addPoolFencer`        | `PoolFencerMoved`, `PoolFencerAdded`                                                                                                                                                                                                                                                                            |
+| Clôture d'un tour               | `closePoolRound`                         | `PoolRoundClosed` : qualifiés, éliminés (statut `ELIMINATED`)                                                                                                                                                                                                                                                   |
+| Génération du tableau           | `generateTableau` (ex-`buildBracket`)    | `TableauGenerated` : taille, placement complet, petite finale, « toutes les places »                                                                                                                                                                                                                            |
+| Correction après tirage (#1996) | `recordScore` avec motif de correction   | `ScoreRecorded` avec `correction`                                                                                                                                                                                                                                                                               |
+| Vagues d'un tour en vagues      | `launchPoolWave`, `endPoolWaves`         | `PoolWaveLaunched`, `PoolWavesEnded` ; les anciens `RapieresWaveLaunched` / `RapieresWavesEnded` restent lus au rejeu ([ADR-0043](0043-rapieres-briques-generiques.md)) _(amendé le 2026-11-27, validé par le mainteneur : remplace « Vagues des rapières \| `launchRapieresWave` \| `RapieresWaveLaunched` »)_ |
 
 - **Les dérivés ne sont pas journalisés.** Classements, classement final, tableaux de classement
   et poules terminées se recalculent. Leur calcul est déterministe : pas d'heure ni de hasard
@@ -129,12 +129,12 @@ Conséquences actuelles :
 
 ### Ordre
 
-| Étape | Contenu |
-|---|---|
-| 4a | `getCompetitionState`. L'écran relit la projection sur signal de journal. Il écrit encore le bloc pour les faits pas encore passés par une commande |
-| 4b | Un palier par PR : tirage, composition, clôture de tour, tableau, correction, rapières. Chacun avec sa commande, son événement et son test de rejeu. L'état d'interface sort du bloc |
-| 4c | L'écran n'écrit plus `session_state` : `saveSessionState` sort du préload, `useCompetitionSession` ne fait plus que lire. Le « risque restant » de #2055 disparaît |
-| 5 | `rebuildCompetitionState`, `projectCompetition`, test de rejeu complet. Le journal fait foi pour les faits rejouables |
+| Étape | Contenu                                                                                                                                                                              |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 4a    | `getCompetitionState`. L'écran relit la projection sur signal de journal. Il écrit encore le bloc pour les faits pas encore passés par une commande                                  |
+| 4b    | Un palier par PR : tirage, composition, clôture de tour, tableau, correction, rapières. Chacun avec sa commande, son événement et son test de rejeu. L'état d'interface sort du bloc |
+| 4c    | L'écran n'écrit plus `session_state` : `saveSessionState` sort du préload, `useCompetitionSession` ne fait plus que lire. Le « risque restant » de #2055 disparaît                   |
+| 5     | `rebuildCompetitionState`, `projectCompetition`, test de rejeu complet. Le journal fait foi pour les faits rejouables                                                                |
 
 ## Conséquences
 

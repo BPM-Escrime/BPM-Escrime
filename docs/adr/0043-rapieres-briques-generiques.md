@@ -1,6 +1,6 @@
 # ADR-0043 — Tournoi des rapières en briques génériques de la formule, fin du mode spécial
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (poules de 2 à 15 en vagues classiques, validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F4, décision D8), #1948, #1441, #1118 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (phases), [ADR-0040](0040-ex-aequo-a-la-barre.md) (qualification), [ADR-0039](0039-scission-competitions-filles.md) (catégorie du tireur), s'appuie sur [ADR-0007](0007-format-evenement.md), [ADR-0008](0008-nommage-contrat.md), [ADR-0011](0011-migrations-schema-3-0.md), [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -31,7 +31,10 @@
   tournoi toutes rondes par vagues (`scheduleWaves`) ; `'waves_classic'` : tables fixes des
   poules de 10 à 15 (`rapieresClassicOrder`), sinon `'waves'`. Fonctions déplacées dans
   `shared/domain/pools/waves.ts`, sans « rapières » dans leurs noms.
-- Un tour en vagues admet des poules de 2 à 10 tireurs (borne basse 2 pour ce seul ordre).
+- Un tour en vagues admet des poules de 2 à 10 tireurs, de 2 à 15 en vagues classiques (tables
+  fixes jusqu'à 15) ; la borne basse 2 ne vaut que pour ces ordres. _(Amendé le 2026-11-27 :
+  remplace « Un tour en vagues admet des poules de 2 à 10 tireurs (borne basse 2 pour ce seul
+  ordre). » ; les tables de 11 à 15 étaient inatteignables.)_
 - État de session générique `waves: { launched: number; ended: boolean }` du tour courant.
 - Commandes (ADR-0008) : `launchPoolWave`, `endPoolWaves` (outils `launch_pool_wave`,
   `end_pool_waves`) ; événements (ADR-0007) : `PoolWaveLaunched { wave, matchIds }`,
