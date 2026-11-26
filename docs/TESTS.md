@@ -106,9 +106,9 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 25 | 284 |
-| `src/main/` | 160 | 1411 |
+| `src/main/` | 161 | 1421 |
 | `src/renderer/services/` | 14 | 70 |
-| `src/renderer/hooks/` | 41 | 217 |
+| `src/renderer/hooks/` | 41 | 219 |
 | `src/renderer/components/` | 139 | 776 |
 | E2E Playwright (`e2e/`) | 21 | 56 |
 | `src/remote/` | 60 | 442 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 53 | 631 |
+| `src/shared/domain/` | 55 | 666 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **645** | **5099** |
+| **Total** | **648** | **5146** |
 
-Unitaires : 624 fichiers, 5043 tests. E2E : 21 fichiers, 56 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3607,6 +3607,22 @@ Unitaires : 624 fichiers, 5043 tests. E2E : 21 fichiers, 56 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/splitCompetition.test.ts</code> — 10 tests</summary>
+
+- outil MCP split\_competition, droit competition:write
+- qualification du tour appliquée : les non-qualifiés restent classés dans l’origine
+- par rang : une fille par branche, tireurs copiés, journaux, historique, rejeu
+- écart d’historique réparé par la reconstruction (projection du journal)
+- par sexe, branche « poules puis tableau » : appel, tireurs pointés, rang d’entrée
+- par catégorie : catégorie de la fille quand la branche n’en a qu’une
+- split\_value\_missing : tireur sans catégorie ; la simulation le liste sans refuser
+- refus : sans scission, poules non terminées, branche manuelle inconnue
+- échec au milieu : tout est annulé (ni fille, ni tireurs, ni marque, ni journal)
+- clôture sans nouveau tour, puis restants répartis par rang d’entrée au tableau
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/splitOff.test.ts</code> — 6 tests</summary>
 
 - crée l’épreuve séparée en une commande, journalise les deux faits, rejoue sans écart
@@ -5721,12 +5737,14 @@ Unitaires : 624 fichiers, 5043 tests. E2E : 21 fichiers, 56 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionPhases.test.tsx</code> — 3 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionPhases.test.tsx</code> — 5 tests</summary>
 
 - **navigation dérivée de formulaSteps (ADR-0037)**
   - formule standard
   - 0 tour de poules : appel, classement d’entrée, tableau
   - tableau arrêté : mêmes onglets avant et après la clôture (étape close consultable)
+  - scission après les poules : pas d’onglet de plus (ADR-0039)
+  - tableau arrêté suivi d’une scission : mêmes onglets avant et après la clôture
 
 </details>
 
@@ -9503,6 +9521,41 @@ Unitaires : 624 fichiers, 5043 tests. E2E : 21 fichiers, 56 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/formula/formulaSplit.test.ts</code> — 25 tests</summary>
+
+- **grammaire de la scission (ADR-0039)**
+  - « ＋ » : scission en fin de frise après un tour de poules ou un tableau arrêté
+  - scission par défaut : par rang, « Tableau A » (16) et « Tableau B » (le reste)
+  - toujours la dernière phase : rien ne s’insère après elle, une seule scission
+  - pas de Tour Quest avec une scission
+  - scission après un tableau jusqu’à la finale : refusée
+  - tableau arrêté suivi d’une scission : valide, compte comme arrêté (ADR-0037 amendée)
+  - retrait de la scission qui suit un tableau arrêté : le tableau redevient complet
+  - retrait d’une phase qui laisserait la scission mal placée : refusé
+- **règles de la scission (formulaV2Issues, ADR-0039)**
+  - deux branches au moins, chacune avec une phase, sans scission ni Tour Quest
+  - libellés non vides et distincts
+  - rang : « take » sur toutes les branches sauf la dernière, qui prend le reste
+  - sexe : un sexe par branche, distinct
+  - catégorie : catégories non vides et disjointes
+  - rester dans l’épreuve : refusé jusqu’à l’étape E3
+  - bornes des phases d’une branche jugées comme celles de l’épreuve
+- **opérations sur la scission (ADR-0039)**
+  - setPhase règle le critère et les branches ; forme contrôlée
+  - removePhase split
+  - modèle de branche : phases par défaut de l’arme
+  - aller-retour : ajout et retrait d’une scission après les poules
+  - aller-retour : tableau complet ↔ tableau arrêté suivi d’une scission
+  - aller-retour : tour d’après ↔ scission après le tableau arrêté
+  - modification de la scission gardée : setPhase seul ; tableau ajouté avant elle
+- **déroulé et lecteurs (ADR-0039)**
+  - formulaSteps : étape scission avant les résultats
+  - formulaSegment : tableau arrêté puis scission ; après clôture, pas de tableau
+  - réglages plats, résumé et simulation ignorent la scission
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/formula/formulaSteps.test.ts</code> — 5 tests</summary>
 
 - **déroulé dérivé de la formule (ADR-0037)**
@@ -9592,6 +9645,26 @@ Unitaires : 624 fichiers, 5043 tests. E2E : 21 fichiers, 56 tests (comptage stat
   - poule ou tableau sous 15 : lu 25 ; tableau 21 seul conservé
   - réglage valide, sans limite (0) ou absent : tel quel
   - épreuve par équipes et autres armes : tel quel
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/formula/splitPlan.test.ts</code> — 10 tests</summary>
+
+- **planSplit par rang (ADR-0039)**
+  - nombre : chaque branche prend son nombre, la dernière le reste ; rangs depuis 1
+  - ex aequo à la borne : gardés dans la branche, comme la qualification
+  - pourcentage de l’effectif entrant (arrondi comme la qualification)
+  - pourcentage avec ex aequo à la borne
+- **planSplit par sexe, catégorie, manuel (ADR-0039)**
+  - sexe : champ du tireur ; sans sexe (ou mixte) : manquant
+  - catégorie : une ou plusieurs par branche ; sans catégorie : manquant
+  - manuel : affectations de l’écran ; tireur non affecté : manquant
+- **classement de l’épreuve d’origine après la scission (Q6, Q5 amendée)**
+  - rangs renumérotés, égalités gardées
+  - les restants partis dans les filles ; éliminés du tableau, puis des poules
+- **classement final de l’épreuve d’origine (ADR-0039, Q5 d’ADR-0037)**
+  - sans les tireurs partis, puis éliminés du tableau arrêté avant ceux des poules
 
 </details>
 
