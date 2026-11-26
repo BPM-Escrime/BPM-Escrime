@@ -76,15 +76,17 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
   classement initial. On réutilise `GroupSplitOff` (épreuve d'origine, `group` = libellé de
   la branche) et `SplitRankingImported` (premier fait de la fille) : aucun nouvel événement.
   `splitOffCompetitionIds` de l'origine reçoit `{ libellé: id de la fille }`.
-- **Exception** : une branche réduite à un tableau peut rester dans l'épreuve d'origine
-  (`stayInCompetition`). Elle se joue alors comme les tableaux séparés d'aujourd'hui
-  (`groupTableaux`, ADR-0024). C'est le cas de la compétition couplée par sexe.
+- **Exception, à partir de l'étape E3** : une branche réduite à un tableau peut rester dans
+  l'épreuve d'origine (`stayInCompetition`). Elle se joue alors comme les tableaux séparés
+  d'aujourd'hui (`groupTableaux`, ADR-0024). C'est le cas de la compétition couplée par sexe.
+  Jusqu'à E3 (reprise de la compétition couplée), la grammaire refuse `stayInCompetition` :
+  E2 ne crée que des compétitions filles. _(Amendé le 2026-11-27 : remplace « **Exception** :
+  une branche réduite à un tableau peut rester dans l'épreuve d'origine
+  (`stayInCompetition`). »)_
 - L'épreuve d'origine garde dans son état de session
   `splitHistory: [{ label, competitionId, fencerIds }]` (JSON, sans migration), écrit par
   `splitCompetition` dans sa transaction ; la projection du journal le rejoue depuis
-  `GroupSplitOff` (ADR-0017). *(Ajout du 2026-11-27.)*
-- Jusqu'à l'étape E3 (reprise de la compétition couplée), la grammaire refuse
-  `stayInCompetition` : E2 ne crée que des compétitions filles. *(Ajout du 2026-11-27.)*
+  `GroupSplitOff` (ADR-0017). _(Ajout du 2026-11-27.)_
 
 **Classement : par branche, toujours** (Q6)
 
@@ -119,15 +121,15 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
 - Le moteur des poules par branche n'est pas écrit : une branche avec des poules est une
   fille, qui se déroule avec le moteur actuel. Les branches restées dans l'épreuve se limitent
   à un tableau.
-- **Entrée en vigueur avec E2** — _appliquée le 2026-11-27 (E2a : grammaire, `planSplit`,
-  `splitCompetition`)_ : les amendements validés par le mainteneur le 2026-11-26 sont portés
-  sur place dans ADR-0036 et ADR-0037, avec le code qui les prouve :
-  - ADR-0036 : `SplitPhase.branches` prend la forme `SplitBranch[]` décrite ici ;
-  - ADR-0037 (D2b) : un tableau arrêté est précédé d'au moins un tour de poules et suivi d'un
-    tour de poules **ou d'une scission** ;
-  - ADR-0037 (Q5) : quand une scission suit le tableau arrêté, les N restants sont classés
-    dans les compétitions filles ; l'épreuve d'origine classe les éliminés du tableau, puis
-    des poules.
+- **Amendements portés par E2** : ADR-0036 (`SplitPhase.branches` de la forme `SplitBranch[]`
+  décrite ici) et ADR-0037 (D2b : tableau arrêté suivi d'un tour de poules ou d'une
+  scission ; Q5 : restants classés dans les filles, l'épreuve d'origine classe les éliminés du
+  tableau, puis des poules), réécrits sur place dans ces ADR avec le code qui les prouve
+  (E2a : grammaire, `planSplit`, `splitCompetition`, `originFinalRanking` pour le classement
+  de l'origine). _(Amendé le 2026-11-27 : remplace « **Entrée en vigueur avec E2** : tant que
+  la brique Scission n'est pas dans la grammaire, ADR-0036 et ADR-0037 s'appliquent telles
+  quelles. La PR E2 porte, avec le code qui les prouve, les amendements validés par le
+  mainteneur le 2026-11-26 » et sa liste.)_
 - Découpage, chaque PR en draft, `/adr-check`, sans auto-merge :
   - **E1** : champ catégorie du tireur (migration 53, import, calcul, saisie, contrat).
   - **E2** : brique Scission (grammaire, éditeur), `planSplit`, `splitCompetition`, filles,

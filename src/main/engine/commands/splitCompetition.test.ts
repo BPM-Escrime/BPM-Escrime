@@ -5,6 +5,7 @@
  * projection ; après les poules et après un tableau arrêté clos ; refus, simulation, retour
  * arrière sur échec au milieu. Base SQLite réelle.
  */
+import { originFinalRanking, splitHistoryOf } from '../../../shared/domain/formula/splitPlan';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseManager } from '../../../database';
 import { hasNodeSqlite } from '../../../database/testing/nodeSqliteDatabase';
@@ -148,6 +149,30 @@ const poolRanking = (id: string) => session(id).overallRanking as PoolRanking[];
 d('splitCompetition après un tour de poules (docs/adr/0039)', () => {
   it('outil MCP split_competition, droit competition:write', () => {
     expect(CONTRACT_MCP_TOOLS.write.some(t => t.name === 'split_competition')).toBe(true);
+  });
+
+  it('qualification du tour appliquée : les non-qualifiés restent classés dans l’origine', async () => {
+    // 6 qualifiés sur 8 : 3 en Tableau A, 3 en Tableau B, 2 restent dans l'épreuve d'origine
+    const f = rankSplit(3);
+    const formula = {
+      ...f,
+      phases: f.phases.map(p =>
+        p.kind === 'pool' ? { ...p, qualification: { mode: 'fixed_count' as const, count: 6 } } : p
+      ),
+    };
+    const comp = competition(formula);
+    await playPools(comp.id);
+    const entry = poolRanking(comp.id);
+    const out = await call('splitCompetition', { competitionId: comp.id });
+    const gone = (session(comp.id).splitHistory as Array<{ fencerIds: string[] }>).flatMap(
+      h => h.fencerIds
+    );
+    expect(gone).toHaveLength(6);
+    expect(out.branches.map((b: { fencers: unknown[] }) => b.fencers.length)).toEqual([3, 3]);
+    // Classement de l'origine : les deux derniers seulement, numérotés depuis 1
+    const origin = originFinalRanking(entry, [], splitHistoryOf(session(comp.id).splitHistory));
+    expect(origin.ranking.map(r => r.fencer.id)).toEqual(entry.slice(6).map(r => r.fencer.id));
+    expect(origin.ranking[0].rank).toBe(1);
   });
 
   it('par rang : une fille par branche, tireurs copiés, journaux, historique, rejeu', async () => {

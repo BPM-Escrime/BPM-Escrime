@@ -5,7 +5,13 @@
 import { describe, expect, it } from 'vitest';
 import { Category, Fencer, FencerStatus, Gender, PoolRanking } from '../../types';
 import type { SplitPhase } from './formulaV2';
-import { planSplit, rankingWithoutSplit, renumberRanks, splitHistoryOf } from './splitPlan';
+import {
+  originFinalRanking,
+  planSplit,
+  rankingWithoutSplit,
+  renumberRanks,
+  splitHistoryOf,
+} from './splitPlan';
 import { rankAfterStages, type TableauStageRecord } from '../tableau/tableauStage';
 
 const fencer = (id: string, patch: Partial<Fencer> = {}): Fencer =>
@@ -215,5 +221,58 @@ describe('classement de l’épreuve d’origine après la scission (Q6, Q5 amen
     expect(origin.map(r => r.rank)).toEqual([1, 2, 3]);
     expect(rankingWithoutSplit(all, [])).toBe(all);
     expect(splitHistoryOf('x')).toEqual([]);
+  });
+});
+
+describe('classement final de l’épreuve d’origine (ADR-0039, Q5 d’ADR-0037)', () => {
+  it('sans les tireurs partis, puis éliminés du tableau arrêté avant ceux des poules', () => {
+    const f = (id: string) => ({ id, lastName: id, firstName: id }) as never;
+    const row = (id: string, rank: number) => ({ fencer: f(id), rank }) as unknown as PoolRanking;
+    const ranking = ['A', 'B', 'C', 'D', 'E'].map((id, i) => row(id, i + 1));
+    // A et B partis en fille ; D éliminé au tableau arrêté ; C et E éliminés des poules
+    const stage: TableauStageRecord = {
+      kind: 'tableau',
+      stopAt: 2,
+      matches: [
+        {
+          id: 'm1',
+          round: 4,
+          position: 1,
+          fencerA: f('A'),
+          fencerB: f('D'),
+          scoreA: 15,
+          scoreB: 3,
+          winner: f('A'),
+          isBye: false,
+          seedA: 1,
+          seedB: 4,
+        },
+        {
+          id: 'm2',
+          round: 4,
+          position: 2,
+          fencerA: f('B'),
+          fencerB: null,
+          scoreA: null,
+          scoreB: null,
+          winner: f('B'),
+          isBye: true,
+          seedA: 2,
+          seedB: null,
+        },
+      ],
+      eliminated: [{ fencerId: 'D', round: 4, seed: 4 }],
+    };
+    const out = originFinalRanking(
+      ranking,
+      [stage],
+      [{ label: 'Tableau A', competitionId: 'c-a', fencerIds: ['A', 'B'] }]
+    );
+    expect(out.ranking.map(r => [r.fencer.id, r.rank])).toEqual([
+      ['D', 1],
+      ['C', 2],
+      ['E', 3],
+    ]);
+    expect(out.eliminatedAt.get('D')).toBe('Tableau de 4');
   });
 });

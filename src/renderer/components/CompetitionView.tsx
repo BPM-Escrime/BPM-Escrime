@@ -3,12 +3,9 @@
  * Licensed under GPL-3.0
  */
 
-import {
-  entrySeeds,
-  rankAfterStages,
-  resultsTableauMatches,
-} from '../../shared/domain/tableau/tableauStage';
+import { entrySeeds, resultsTableauMatches } from '../../shared/domain/tableau/tableauStage';
 import { formulaSegment } from '../../shared/domain/formula/formulaSteps';
+import { originFinalRanking } from '../../shared/domain/formula/splitPlan';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
 import React, { Suspense, useState } from 'react';
@@ -329,8 +326,13 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
 
   // Tableau arrêté (docs/adr/0037) : restants, puis éliminés du tableau (Q5), puis les autres
   const stagedRanking = React.useMemo(
-    () => rankAfterStages(effectiveTableauRanking, competitionCore.stageHistory),
-    [effectiveTableauRanking, competitionCore.stageHistory]
+    () =>
+      originFinalRanking(
+        effectiveTableauRanking,
+        competitionCore.stageHistory,
+        competitionCore.splitHistory
+      ),
+    [effectiveTableauRanking, competitionCore.stageHistory, competitionCore.splitHistory]
   );
 
   return (

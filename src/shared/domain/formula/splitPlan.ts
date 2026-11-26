@@ -8,6 +8,7 @@
  * Licensed under GPL-3.0
  */
 
+import { rankAfterStages, type TableauStageRecord } from '../tableau/tableauStage';
 import type { PoolRanking } from '../../types';
 import { getAdvancementCount } from '../../utils/customFormulaSettings';
 import type { SplitBranch, SplitPhase } from './formulaV2';
@@ -140,4 +141,17 @@ export function rankingWithoutSplit(
   if (history.length === 0) return ranking;
   const gone = new Set(history.flatMap(h => h.fencerIds));
   return renumberRanks(ranking.filter(r => !gone.has(r.fencer.id)));
+}
+
+/**
+ * Classement final de l'épreuve d'origine (écran, CSV, XML, PDF) : sans les tireurs passés dans
+ * une branche (classés dans les filles, ADR-0039), puis éliminés du tableau arrêté avant les
+ * éliminés des poules (Q5 d'ADR-0037).
+ */
+export function originFinalRanking(
+  ranking: PoolRanking[],
+  stages: TableauStageRecord[],
+  history: readonly SplitHistoryEntry[]
+): { ranking: PoolRanking[]; eliminatedAt: Map<string, string> } {
+  return rankAfterStages(rankingWithoutSplit(ranking, history), stages);
 }
