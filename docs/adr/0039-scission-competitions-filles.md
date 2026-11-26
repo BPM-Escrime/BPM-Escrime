@@ -183,7 +183,11 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
   de l'origine). _(Amendé le 2026-11-26 : remplace « **Entrée en vigueur avec E2** : tant que
   la brique Scission n'est pas dans la grammaire, ADR-0036 et ADR-0037 s'appliquent telles
   quelles. La PR E2 porte, avec le code qui les prouve, les amendements validés par le
-  mainteneur le 2026-11-26 » et sa liste.)_
+  mainteneur le 2026-11-26 : – ADR-0036 : `SplitPhase.branches` prend la forme `SplitBranch[]`
+  décrite ici ; – ADR-0037 (D2b) : un tableau arrêté est précédé d'au moins un tour de poules et
+  suivi d'un tour de poules **ou d'une scission** ; – ADR-0037 (Q5) : quand une scission suit le
+  tableau arrêté, les N restants sont classés dans les compétitions filles ; l'épreuve d'origine
+  classe les éliminés du tableau, puis des poules. »)_
 - Découpage, chaque PR en draft, `/adr-check`, sans auto-merge :
   - **E1** : champ catégorie du tireur (migration 53, import, calcul, saisie, contrat).
   - **E2** : brique Scission (grammaire, éditeur), `planSplit`, `splitCompetition`, filles,
