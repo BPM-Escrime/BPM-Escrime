@@ -102,18 +102,18 @@ npx playwright test --project=chromium e2e/pools.spec.ts
 | Feature `rapieres` (`src/features/rapieres/`) | 8 | 58 |
 | Feature `teams` (`src/features/teams/`) | 7 | 59 |
 | `src/database/` | 20 | 262 |
-| `src/main/` | 113 | 921 |
+| `src/main/` | 113 | 945 |
 | `src/renderer/services/` | 11 | 57 |
 | `src/renderer/hooks/` | 35 | 172 |
-| `src/renderer/components/` | 121 | 648 |
+| `src/renderer/components/` | 121 | 649 |
 | E2E Playwright (`e2e/`) | 10 | 39 |
-| `src/remote/` | 60 | 414 |
+| `src/remote/` | 60 | 417 |
 | `src/renderer/contexts/` | 1 | 7 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
-| **Total** | **503** | **3892** |
+| **Total** | **503** | **3920** |
 
-Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 493 fichiers, 3881 tests. E2E : 10 fichiers, 39 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3386,10 +3386,11 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/cyrano/pisteHub.test.ts</code> — 54 tests</summary>
+<summary><code>src/main/cyrano/pisteHub.test.ts</code> — 55 tests</summary>
 
 - **PisteHub — mode appareil maître (#1720)**
   - DISP du match chargé : Id tronqués à 8 caractères, arme, n° de poule et de match
+  - sous-piste (#2300) : son match ni son effacement ne passent sur l’appareil de la piste
   - INFO actif : score et cartons de l’appareil appliqués à l’arène malgré la troncature des Id
   - inversion droite/gauche : A à gauche de l’appareil, résultats non intervertis
   - chrono : F → update\_timer (en marche), H → pause\_timer, diffusés avec source device
@@ -4223,13 +4224,16 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/arenaControl.selectMatch.test.ts</code> — 3 tests</summary>
+<summary><code>src/main/remote/arenaControl.selectMatch.test.ts</code> — 5 tests</summary>
 
 - **arena\_control select\_match (#1882)**
   - reprend fencerA / fencerB / referee de la session
 - **arena\_control select\_match, appareil maître (#1999)**
   - rouvrir le match en cours garde score et cartons, et recale la tablette
   - mode manuel ou appareil hors ligne : sélection habituelle
+- **arena\_control select\_match, sous-pistes (#2300)**
+  - match préchargé sur la piste : la piste passe au suivant, pas les autres pistes
+  - match ouvert ou lancé sur la piste : jamais remplacé
 
 </details>
 
@@ -4243,7 +4247,7 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/arenaSlots.test.ts</code> — 7 tests</summary>
+<summary><code>src/main/remote/arenaSlots.test.ts</code> — 15 tests</summary>
 
 - **sous-pistes des rapières (#1118)**
   - identifiants : piste de base et détection
@@ -4253,6 +4257,15 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
   - libération : seules les sous-pistes sans match en cours
   - matchs pris par les autres sous-pistes (terminés exclus)
   - match seulement préchargé (ni ouvert, ni chrono lancé) : pas pris
+- **sous-pistes hors vagues : poule partagée par plusieurs tablettes (#2300)**
+  - une seule tablette : la piste, comme avant
+  - deuxième tablette pendant un match : sous-piste, le match de la piste continue
+  - tablette absente : sa remplaçante reprend la piste et son match
+  - piste libérée : la tablette de la sous-piste y revient, sous-piste vide supprimée
+  - sous-piste au match ouvert : gardée, même piste libre et tablette déconnectée
+  - piste inconnue ou pleine
+  - arène occupée : match ouvert ou lancé, non terminé
+  - sous-pistes pour une piste de poule seulement (ni tableau, ni entraînement)
 
 </details>
 
@@ -4706,7 +4719,7 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remoteScoreServer.test.ts</code> — 66 tests</summary>
+<summary><code>src/main/remoteScoreServer.test.ts</code> — 70 tests</summary>
 
 - **RemoteScoreServer**
   - **démarrage du serveur**
@@ -4767,6 +4780,11 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
     - rapières : sous-piste authentifiée avec le jeton de la piste (#1118)
     - les réassignations suivantes se rajoutent par le haut
     - joué ensuite, puis la piste reprend sa propre poule
+    - **plusieurs tablettes sur une piste de poule, hors rapières (#2300)**
+      - une deuxième tablette arbitre un autre match sans couper celui de la piste
+      - match préchargé sur la piste pris par la sous-piste : la piste passe au suivant
+      - tablette de la piste partie : la suivante reprend la piste
+      - piste de tableau : pas de sous-piste
   - **arbitre des matchs de tableau assigné depuis l'appli (#977)**
     - arbitre transmis au match chargé sur la tablette
     - changement d'arbitre → match en cours mis à jour
@@ -4802,7 +4820,7 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
 <summary><code>src/main/repoLocation.test.ts</code> — 1 test</summary>
 
 - **emplacement du dépôt GitHub (#1940)**
-  - aucune référence à l'ancien dépôt dans le code et le plugin
+  - aucune référence aux anciens dépôts dans le code et le plugin
 
 </details>
 
@@ -4898,7 +4916,7 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/updateReleases.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/updateReleases.test.ts</code> — 13 tests</summary>
 
 - **parseReleaseBuild**
   - lit le build dans le nom, sinon le tag, sinon le corps
@@ -4906,6 +4924,18 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
   - canal dev : build le plus élevé, quel que soit l’ordre
   - canal stable : ignore les pré-releases
   - ignore les brouillons ; null si rien
+- **parseReleaseVersion**
+  - lit X.Y.Z dans le tag, sinon le nom
+  - lit le build des pré-releases de maintenance
+- **compareVersionPoints**
+  - X.Y.Z d’abord, build ensuite
+  - version inconnue : build seul
+- **branche de maintenance**
+  - canal dev : la 3.0.0-dev l’emporte sur un correctif 2.0.1 au build plus élevé
+  - canal stable : le correctif 2.0.1
+  - un 3.0.0-dev ne se voit pas proposer la 2.0.1
+  - un 2.0.0 stable se voit proposer la 2.0.1
+  - un testeur 3.0.0-dev.1995 ne redescend pas vers la 3.0.0 (Build #1990)
 
 </details>
 
@@ -5905,7 +5935,7 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/PoolPrepView.test.tsx</code> — 13 tests</summary>
+<summary><code>src/renderer/components/PoolPrepView.test.tsx</code> — 14 tests</summary>
 
 - **PoolPrepView (#1499)**
   - titres Min / Max séparés au-dessus des deux champs
@@ -5923,6 +5953,7 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
   - doublon inévitable (quota BellePoule) : pas d’alerte
 - **PoolPrepView — ordre officiel des matchs (#1964)**
   - trio du même club : n° 1, 2, 3 et table « trio de 7 »
+  - pastille d’ordre sur sa propre ligne, après le titre « Poule N » (#2300)
   - ordre libre : pas de placement, pastille « Ordre libre »
 
 </details>
@@ -7664,7 +7695,7 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeApp.test.ts</code> — 15 tests</summary>
+<summary><code>src/remote/js/refereeApp.test.ts</code> — 18 tests</summary>
 
 - **refereeApp.js dans referee.html**
   - referee.html ne contient plus de script inline
@@ -7686,6 +7717,10 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
   - maître en ligne : retrait d’un carton permis pour corriger
   - carton noir refusé par le serveur (409, appareil maître devenu en ligne) : le combat continue
   - appareil hors ligne : ajout de carton de nouveau permis
+- **cartons avant le départ du chrono (#2300)**
+  - épée : carton rouge avant le chrono, touche adverse comptée, chrono arrêté
+  - « Démarrer » lance ensuite le chrono sans effacer la touche de pénalité
+  - Sabre Laser : carton jaune avant le chrono, +3 adverse
 
 </details>
 
@@ -7855,7 +7890,7 @@ Unitaires : 493 fichiers, 3853 tests. E2E : 10 fichiers, 39 tests (comptage stat
   - pause sabre avec appareil maître : annonce seulement
   - un repos classique (sans pause sabre) garde son comportement
 - **câblage de la page**
-  - bouton, script, écouteurs et cache hors-ligne
+  - script, écouteurs et cache hors-ligne ; pas de bouton « Match précédent » en 2.0.x (#2300)
 
 </details>
 
