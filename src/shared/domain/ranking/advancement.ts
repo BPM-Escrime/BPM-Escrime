@@ -107,3 +107,10 @@ export function cutAtBar<T extends CutRow>(
     tiedAtBar,
   };
 }
+
+/** Réglage des ex aequo à la barre (ADR-0040) : 'all', 'initial_ranking' ; 'barrage' en F1b */
+export function tiesIssue(ties: unknown): string | null {
+  if (ties === undefined || ties === 'all' || ties === 'initial_ranking') return null;
+  if (ties === 'barrage') return 'ex aequo à la barre : barrage pas encore disponible';
+  return 'ex aequo à la barre : all ou initial_ranking attendu';
+}

@@ -17,11 +17,8 @@ import { useRemoteCheckinSync } from '../useRemoteCheckinSync';
 import { buildMatchAuditOptions } from '../../components/competition/matchAuditOptions';
 import CompetitionPoolCard from '../../components/competition/CompetitionPoolCard';
 import PoolRoundSelector from '../../components/competition/PoolRoundSelector';
-import {
-  computeMatchProgress,
-  tableauRankingOfScreen,
-} from '../../../shared/domain/ranking/tableauRanking';
-import { useTableauTies } from '../tableauTiesChoice';
+import { computeMatchProgress } from '../../../shared/domain/ranking/tableauRanking';
+import { useScreenTableauRanking } from './useScreenTableauRanking';
 import type { CompetitionViewProps } from '../../components/competition/competitionViewTypes';
 import { useCompetitionSessionSync } from './useCompetitionSessionSync';
 import { useCompetitionCore } from './useCompetitionCore';
@@ -215,45 +212,24 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     [storedFormula, hasDirectElimination]
   );
 
-  // Ex aequo à la barre du tableau (docs/adr/0040) : choix fait au passage au tableau
-  const tableauTies = useTableauTies(competition.id);
-
-  // Classement effectif pour le tableau (filtré par vainqueurs de poule et/ou groupe actif)
-  // Tableau tiré : coupe figée par le tableau (tous les ex aequo, moins ceux qu'il n'a pas
-  // placés) ; avant : choix fait au passage au tableau, sinon la formule
-  const effectiveTableauRanking = useMemo(() => {
-    return tableauRankingOfScreen(
-      overallRanking,
-      pools,
-      {
-        isRapieres,
-        rapieresTableauMode: rapieres.tableauMode,
-        // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
-        poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
-        customFormula: hasDirectElimination ? customFormula : undefined,
-        tableauQualification,
-        ties: tableauTies,
-        postPoolSplitCriteria,
-        activeSplitGroup,
-        splitOffCompetitionIds,
-      },
-      tableauMatches
-    );
-  }, [
-    tableauMatches,
-    tableauTies,
+  // Classement effectif pour le tableau (vainqueurs de poule, groupe actif, ex aequo à la barre)
+  const effectiveTableauRanking = useScreenTableauRanking({
+    competitionId: competition.id,
     overallRanking,
     pools,
-    isRapieres,
-    rapieres.tableauMode,
-    poolWinnersOnly,
-    hasDirectElimination,
-    customFormula,
-    tableauQualification,
-    postPoolSplitCriteria,
-    activeSplitGroup,
-    splitOffCompetitionIds,
-  ]);
+    tableauMatches,
+    options: {
+      isRapieres,
+      rapieresTableauMode: rapieres.tableauMode,
+      // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
+      poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
+      customFormula: hasDirectElimination ? customFormula : undefined,
+      tableauQualification,
+      postPoolSplitCriteria,
+      activeSplitGroup,
+      splitOffCompetitionIds,
+    },
+  });
 
   // Calcul progression matchs
   const matchProgress = useMemo(

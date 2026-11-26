@@ -39,6 +39,8 @@ import {
   type TableauPhase,
 } from './formulaV2';
 import { validateFormulaSettings } from './validateFormulaSettings';
+import { tiesIssue } from '../ranking/advancement';
+export { tiesIssue };
 
 const isPool = (p: FormulaPhaseV2): p is PoolRoundPhase => p.kind === 'pool';
 const isQuest = (p: FormulaPhaseV2): p is QuestPhase => p.kind === 'quest';
@@ -708,13 +710,6 @@ function setStayingTableaux(f: FormulaV2, settings: Record<string, unknown>, whe
     })),
   };
   return { ...f, phases: f.phases.map(p => (p === split ? next : p)) };
-}
-
-/** Réglage des ex aequo à la barre (ADR-0040) : 'all', 'initial_ranking' ; 'barrage' en F1b */
-export function tiesIssue(ties: unknown): string | null {
-  if (ties === undefined || ties === 'all' || ties === 'initial_ranking') return null;
-  if (ties === 'barrage') return 'ex aequo à la barre : barrage pas encore disponible';
-  return 'ex aequo à la barre : all ou initial_ranking attendu';
 }
 
 /** Écarts de bornes de la formule (moteur, à chaque écriture, ADR-0012) */

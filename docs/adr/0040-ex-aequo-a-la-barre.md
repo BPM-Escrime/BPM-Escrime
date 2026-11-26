@@ -47,11 +47,14 @@
   `splitCompetition`) rend `tiedAtBar` (identifiants, place, nombre de places restantes).
 - L'écran affiche les ex aequo avant de confirmer et propose de garder le réglage ou d'en
   choisir un autre pour cette coupe seulement : champ optionnel `ties` de la commande, qui
-  prime sur la formule. Le MCP passe le même champ (ADR-0008 : même commande).
-- Tableau : l'écran compose le tableau (ADR-0017) ; le choix fait au passage au tableau est
-  appliqué par la coupe du domaine (`tableauCut`, même fonction que le moteur), puis figé par
-  `TableauGenerated` ; le champ `ties` de `generateTableau` sert au MCP et au tableau construit
-  par le moteur. _(Ajout du 2026-11-26, validé par le mainteneur.)_
+  prime sur la formule. Pour le tableau, que l'écran compose (ADR-0017), le choix fait au
+  passage au tableau est appliqué par la coupe du domaine (`tableauCut`, même fonction que le
+  moteur), puis figé par `TableauGenerated` ; le champ `ties` de `generateTableau` sert au MCP
+  et au tableau construit par le moteur. Le MCP passe le même champ (ADR-0008 : même
+  commande). _(Amendé le 2026-11-26 : remplace « L'écran affiche les ex aequo avant de
+  confirmer et propose de garder le réglage ou d'en choisir un autre pour cette coupe
+  seulement : champ optionnel `ties` de la commande, qui prime sur la formule. Le MCP passe le
+  même champ (ADR-0008 : même commande). »)_
 - La coupe retenue est figée par les événements existants : `PoolRoundClosed`
   (`qualifiedIds`), `TableauGenerated` (`matches`), `GroupSplitOff` / `SplitRankingImported`.
   Aucun nouvel événement en F1. _(Amendé le 2026-11-26 : remplace « `TableauGenerated`
