@@ -111,7 +111,7 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/hooks/` | 41 | 217 |
 | `src/renderer/components/` | 139 | 776 |
 | E2E Playwright (`e2e/`) | 20 | 55 |
-| `src/remote/` | 60 | 439 |
+| `src/remote/` | 60 | 442 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 52 | 627 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **641** | **5070** |
+| **Total** | **641** | **5073** |
 
-Unitaires : 621 fichiers, 5015 tests. E2E : 20 fichiers, 55 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 621 fichiers, 5018 tests. E2E : 20 fichiers, 55 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8487,7 +8487,7 @@ Unitaires : 621 fichiers, 5015 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeApp.test.ts</code> — 23 tests</summary>
+<summary><code>src/remote/js/refereeApp.test.ts</code> — 26 tests</summary>
 
 - **refereeApp.js dans referee.html**
   - referee.html ne contient plus de script inline
@@ -8518,6 +8518,10 @@ Unitaires : 621 fichiers, 5015 tests. E2E : 20 fichiers, 55 tests (comptage stat
   - Laser : un carton qui porte les deux tireurs à 10 déclenche la mort subite challenger
   - Laser : un carton qui porte un tireur au-delà de 15 ouvre la fin de match
   - Laser : un carton sous la limite ne termine pas le match
+- **cartons avant le départ du chrono (#2300)**
+  - épée : carton rouge avant le chrono, touche adverse comptée, chrono arrêté
+  - « Démarrer » lance ensuite le chrono sans effacer la touche de pénalité
+  - Sabre Laser : carton jaune avant le chrono, +3 adverse
 
 </details>
 
