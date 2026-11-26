@@ -150,6 +150,8 @@ Premier écran affiché à l'ouverture.
 - **Score saisi au Sabre Laser** : le combat s'arrête à 15, mais touche finale en cible C,
   sortie et cartons peuvent porter le score au-delà. Score maximum de poule et de tableau :
   25 par défaut, réglable dans la formule (15 à 50).
+- **Carton avant le départ du chrono** (B/J/R, toutes armes) : le match s'ouvre chrono arrêté
+  et les touches de pénalité comptent ; **Démarrer** lance ensuite le chrono (#2300).
 - **Appui long** sur un bouton carton : retire le dernier carton du tireur et restitue
   les points accordés. Appui long sur **P** : retire le dernier carton de passivité.
 - **Vainqueur du P-noir** : meilleur score ; à égalité, le mieux classé au départ ; sinon
