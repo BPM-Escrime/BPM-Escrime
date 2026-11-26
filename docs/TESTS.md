@@ -109,8 +109,8 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 161 | 1421 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 41 | 219 |
-| `src/renderer/components/` | 139 | 776 |
-| E2E Playwright (`e2e/`) | 21 | 56 |
+| `src/renderer/components/` | 141 | 787 |
+| E2E Playwright (`e2e/`) | 22 | 57 |
 | `src/remote/` | 60 | 442 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 55 | 666 |
+| `src/shared/domain/` | 55 | 670 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **648** | **5146** |
+| **Total** | **651** | **5162** |
 
-Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -6633,6 +6633,17 @@ Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/ResultsView.split.test.tsx</code> — 4 tests</summary>
+
+- **Résultats de l’épreuve d’origine scindée (ADR-0039)**
+  - bloc « Branches » : libellé, nombre de tireurs, bouton « Ouvrir »
+  - « Ouvrir » ouvre la compétition fille
+  - classement : seuls les tireurs restés dans l’origine, ni champion ni podium
+  - épreuve non scindée : pas de bloc « Branches »
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/ResultsView.stage.test.tsx</code> — 4 tests</summary>
 
 - **Résultats après un tableau arrêté (ADR-0037)**
@@ -7255,6 +7266,16 @@ Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/competition/SplitLaunchDialog.test.tsx</code> — 3 tests</summary>
+
+- **SplitLaunchDialog (ADR-0039)**
+  - simulation, confirmation, puis commande
+  - tireurs sans valeur : liste, moyen de corriger, pas de confirmation
+  - refus du moteur à la simulation : message, fenêtre fermée
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/competition/competitionDerived.test.ts</code> — 4 tests</summary>
 
 - **rankingTableauNavAction (#2008)**
@@ -7336,7 +7357,7 @@ Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 16 tests</summary>
+<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 19 tests</summary>
 
 - **FormulaEditor (formule v2)**
   - frise : appel, poules, tableau, classement ; pas de « + Classement »
@@ -7345,6 +7366,9 @@ Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage stat
   - retirer le tableau rend le « ＋ » de fin de frise
   - dernier tour avant le tableau (épée) : qualification complète (#2013 R1)
   - tableau arrêté à N : un tour de poules s’ajoute après le tableau (ADR-0037)
+  - scission (ADR-0039) : ajoutée par le « ＋ » après les poules, panneau des branches
+  - scission : sexe, catégories, ajout et retrait de branche, problèmes affichés
+  - scission manuelle enregistrée : lecture seule, avec une mention
   - arme « Autre » : règles, barème, qualification complète
 - **Organisation ▸ Formule : réglages affichés après enregistrement**
   - formule v2 et réglages plats du 1er tour
@@ -7797,10 +7821,11 @@ Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/tableau/TableauStageBanner.test.tsx</code> — 1 test</summary>
+<summary><code>src/renderer/components/tableau/TableauStageBanner.test.tsx</code> — 2 tests</summary>
 
 - **TableauStageBanner**
   - bouton actif une fois les tours avant l’arrêt joués, puis clôture par le moteur
+  - scission après le tableau (ADR-0039) : message propre à la scission
 
 </details>
 
@@ -8019,6 +8044,13 @@ Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage stat
 <summary><code>e2e/electron/remote-scoring.spec.ts</code> — 1 test</summary>
 
 - tablette (piste 1) et appareil Cyrano (piste 2) : scores par le moteur, affichés à l’écran
+
+</details>
+
+<details>
+<summary><code>e2e/electron/split-competition.spec.ts</code> — 1 test</summary>
+
+- scission par rang : deux compétitions filles, branches aux résultats
 
 </details>
 
@@ -9521,7 +9553,7 @@ Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaSplit.test.ts</code> — 25 tests</summary>
+<summary><code>src/shared/domain/formula/formulaSplit.test.ts</code> — 29 tests</summary>
 
 - **grammaire de la scission (ADR-0039)**
   - « ＋ » : scission en fin de frise après un tour de poules ou un tableau arrêté
@@ -9552,6 +9584,11 @@ Unitaires : 627 fichiers, 5090 tests. E2E : 21 fichiers, 56 tests (comptage stat
   - formulaSteps : étape scission avant les résultats
   - formulaSegment : tableau arrêté puis scission ; après clôture, pas de tableau
   - réglages plats, résumé et simulation ignorent la scission
+- **édition de la scission à l’écran (ADR-0039, étape E2b)**
+  - modèle de branche lu depuis ses phases
+  - critère changé : champs de l’ancien critère retirés, ceux du nouveau posés
+  - branche ajoutée : « le reste » par rang, l’ancienne dernière reçoit une part
+  - branche retirée : deux au moins, la nouvelle dernière prend le reste
 
 </details>
 
