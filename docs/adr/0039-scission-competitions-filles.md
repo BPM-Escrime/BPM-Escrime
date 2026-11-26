@@ -1,6 +1,6 @@
 # ADR-0039 — La scission est une phase de la formule : chaque branche devient une compétition fille, classée à part
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (état `splitHistory` de l'épreuve d'origine, `stayInCompetition` et reprise de la compétition couplée à partir d'E3, entrée en vigueur appliquée par E2a, validé par le mainteneur) ; amendée le 2026-11-26 (étape E3 : `stayInCompetition` réservé au critère sexe, reprise de la compétition couplée, scission manuelle à l'écran, validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (état `splitHistory` de l'épreuve d'origine, `stayInCompetition` et reprise de la compétition couplée à partir d'E3, entrée en vigueur appliquée par E2a, validé par le mainteneur) ; amendée le 2026-11-26 (étape E3 : `stayInCompetition` réservé au critère sexe, reprise de la compétition couplée, mélange d'une branche restée et d'une fille — `postPoolSplitCriteria` écrit dès qu'une branche reste, sexe de la branche partie noté dans `splitOffCompetitionIds` —, scission manuelle à l'écran, validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape E ; questions Q6, Q7), #1948 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (`SplitPhase`), s'appuie sur [ADR-0024](0024-tableaux-separes-equipes-moteur.md) (`splitOffGroup`, `GroupSplitOff`, `SplitRankingImported`) et [ADR-0011](0011-migrations-schema-3-0.md) (migration)
 
