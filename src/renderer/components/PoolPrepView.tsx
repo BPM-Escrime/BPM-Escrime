@@ -400,14 +400,17 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
     const detail = plan.groups
       .map(g => t('matchOrder.group', { value: g.value, positions: g.positions.join(', ') }))
       .join(' · ');
+    // Ligne à part, sous « Poule N » : ne recouvre plus le titre (#2300, point 6)
     return (
-      <span
-        className="pool-prep-badge-unique pool-prep-badge-order"
-        title={detail || undefined}
-        data-testid="pool-bout-table"
-      >
-        {t(`matchOrder.table_${plan.table}`)}
-      </span>
+      <div className="pool-prep-card-subtitle">
+        <span
+          className="pool-prep-badge-unique pool-prep-badge-order"
+          title={detail || undefined}
+          data-testid="pool-bout-table"
+        >
+          {t(`matchOrder.table_${plan.table}`)}
+        </span>
+      </div>
     );
   };
 
@@ -927,7 +930,6 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
                     {pools.length === 1 && (
                       <span className="pool-prep-badge-unique">{t('pools.prep_unique')}</span>
                     )}
-                    {boutBadge(pool)}
                     {topClubConflict && (
                       <span
                         className="pool-prep-conflict-warning"
@@ -948,6 +950,7 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
                         {t('pools.prep_region_warn')}
                       </span>
                     )}
+                    {boutBadge(pool)}
                   </div>
                   <div className="u-row pool-prep-card-meta">
                     {avgRanking != null && (
