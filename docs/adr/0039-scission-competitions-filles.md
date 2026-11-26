@@ -1,6 +1,6 @@
 # ADR-0039 — La scission est une phase de la formule : chaque branche devient une compétition fille, classée à part
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (état `splitHistory` de l'épreuve d'origine, `stayInCompetition` et reprise de la compétition couplée à partir d'E3, entrée en vigueur appliquée par E2a, validé par le mainteneur) ; amendée le 2026-11-26 (étape E3 : `stayInCompetition` réservé au critère sexe, reprise de la compétition couplée, mélange d'une branche restée et d'une fille — `postPoolSplitCriteria` écrit dès qu'une branche reste, sexe de la branche partie noté dans `splitOffCompetitionIds` —, scission manuelle à l'écran, validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (état `splitHistory` de l'épreuve d'origine, `stayInCompetition` et reprise de la compétition couplée à partir d'E3, entrée en vigueur appliquée par E2a, validé par le mainteneur) ; amendée le 2026-11-26 (étape E3 : `stayInCompetition` réservé au critère sexe, reprise de la compétition couplée, scission manuelle à l'écran, validé par le mainteneur) ; amendée le 2026-11-26 (mélange retiré : rester dans l'épreuve seulement si toutes les branches restent, validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape E ; questions Q6, Q7), #1948 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (`SplitPhase`), s'appuie sur [ADR-0024](0024-tableaux-separes-equipes-moteur.md) (`splitOffGroup`, `GroupSplitOff`, `SplitRankingImported`) et [ADR-0011](0011-migrations-schema-3-0.md) (migration)
 
@@ -46,12 +46,13 @@ interface SplitBranch {
   gender?: Gender; // critère gender
   categories?: Category[]; // critère category : une ou plusieurs (V3 + V4)
   take?: AdvancementRule; // critère rank : fixed_count ou percentage ; absent = le reste
-  stayInCompetition?: boolean; // critère gender, `phases` = un tableau (voir plus bas)
+  stayInCompetition?: boolean; // critère gender, toutes les branches ou aucune, `phases` = un tableau
 }
 ```
 
-_(Amendé le 2026-11-26, étape E3 : le commentaire de `stayInCompetition` remplace « seulement si
-`phases` = un tableau (voir plus bas) ».)_
+_(Amendé le 2026-11-26 : le commentaire de `stayInCompetition` remplace « critère gender,
+`phases` = un tableau (voir plus bas) », qui remplaçait lui-même « seulement si `phases` = un
+tableau (voir plus bas) » (étape E3).)_
 
 - Contrôles de structure (bloquants) : chaque branche a au moins une phase (S5 de #2013) ; une
   branche ne contient pas de scission ; par rang, une seule branche « le reste », en dernier ;
@@ -78,21 +79,33 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
   libellé », copies des tireurs pointés avec leur rang dans la phase de scission comme
   classement initial. On réutilise `GroupSplitOff` (épreuve d'origine, `group` = libellé de
   la branche) et `SplitRankingImported` (premier fait de la fille) : aucun nouvel événement.
-  `splitOffCompetitionIds` de l'origine reçoit `{ libellé: id de la fille }` ; quand une autre
-  branche par sexe reste dans l'épreuve, il reçoit aussi `{ sexe: id de la fille }`, groupe
-  extrait des tableaux séparés comme avec `splitOffGroup` (ADR-0024). _(Amendé le 2026-11-26,
-  étape E3 : remplace « `splitOffCompetitionIds` de l'origine reçoit
-  `{ libellé: id de la fille }`. »)_
-- **Exception, critère sexe seulement** : dans une scission par sexe qui suit un tour de
-  poules, une branche réduite à un tableau peut rester dans l'épreuve d'origine
-  (`stayInCompetition`). Elle se joue alors comme les tableaux séparés (`groupTableaux`,
-  ADR-0024, moteur inchangé) ; les branches restées ont les mêmes réglages de tableau. Pour les
-  autres critères, chaque branche est une compétition fille : la grammaire refuse
-  `stayInCompetition` hors du critère sexe ou sur une branche qui n'est pas un tableau seul.
-  Toutes les branches restées (compétition couplée) : rien à créer, `splitCompetition` refuse
-  (`invalid_settings`) et l'écran ne la propose pas. Une branche restée, une autre partie :
-  `splitCompetition` crée la fille de la branche partie, la branche restée se joue en tableau
-  séparé. _(Amendé le 2026-11-26, étape E3 : remplace « **Exception, à partir de l'étape E3** :
+  `splitOffCompetitionIds` de l'origine reçoit `{ libellé: id de la fille }`. _(Amendé le
+  2026-11-26 : remplace « `splitOffCompetitionIds` de l'origine reçoit
+  `{ libellé: id de la fille }` ; quand une autre branche par sexe reste dans l'épreuve, il
+  reçoit aussi `{ sexe: id de la fille }`, groupe extrait des tableaux séparés comme avec
+  `splitOffGroup` (ADR-0024). », qui remplaçait lui-même « `splitOffCompetitionIds` de
+  l'origine reçoit `{ libellé: id de la fille }`. » (étape E3).)_
+- **Exception, critère sexe seulement : la compétition couplée.** Dans une scission par sexe
+  qui suit un tour de poules, deux branches (Hommes, Dames) réduites chacune à un tableau, avec
+  les mêmes réglages de tableau, peuvent rester ensemble dans l'épreuve d'origine
+  (`stayInCompetition`). Elles se jouent alors comme les tableaux séparés (`groupTableaux`,
+  ADR-0024, moteur inchangé). Rester dans l'épreuve vaut pour toutes les branches ou pour
+  aucune : dès qu'une branche part en compétition fille, toutes partent ; la grammaire refuse
+  une scission dont une partie seulement des branches reste. Pour les autres critères, chaque
+  branche est une compétition fille : la grammaire refuse `stayInCompetition` hors du critère
+  sexe ou sur une branche qui n'est pas un tableau seul. La compétition couplée n'a rien à
+  créer : `splitCompetition` la refuse (`invalid_settings`) et l'écran ne la propose pas ; à
+  l'écran, une seule case « Rester dans l'épreuve » vaut pour la scission entière. _(Amendé le
+  2026-11-26 : remplace « **Exception, critère sexe seulement** : dans une scission par sexe
+  qui suit un tour de poules, une branche réduite à un tableau peut rester dans l'épreuve
+  d'origine (`stayInCompetition`). Elle se joue alors comme les tableaux séparés
+  (`groupTableaux`, ADR-0024, moteur inchangé) ; les branches restées ont les mêmes réglages de
+  tableau. Pour les autres critères, chaque branche est une compétition fille : la grammaire
+  refuse `stayInCompetition` hors du critère sexe ou sur une branche qui n'est pas un tableau
+  seul. Toutes les branches restées (compétition couplée) : rien à créer, `splitCompetition`
+  refuse (`invalid_settings`) et l'écran ne la propose pas. Une branche restée, une autre
+  partie : `splitCompetition` crée la fille de la branche partie, la branche restée se joue en
+  tableau séparé. », qui remplaçait lui-même (étape E3) « **Exception, à partir de l'étape E3** :
   une branche réduite à un tableau peut rester dans l'épreuve d'origine (`stayInCompetition`).
   Elle se joue alors comme les tableaux séparés d'aujourd'hui (`groupTableaux`, ADR-0024). C'est
   le cas de la compétition couplée par sexe. Jusqu'à E3 (reprise de la compétition couplée), la
@@ -129,8 +142,11 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
   formule enregistrée avant E3 avec ce réglage) comme une scission par sexe « Hommes »,
   « Dames » dont les deux branches sont le tableau de l'épreuve, restées dans l'épreuve.
   `flatSettingsOf` écrit `postPoolSplitCriteria = 'gender'` (avec `hasDirectElimination` et les
-  réglages de ce tableau) pour une scission par sexe dont une branche au moins reste dans
-  l'épreuve, et pour elle seulement. Sans place pour la scission (Tour Quest, pas de tour de
+  réglages de ce tableau) pour une scission par sexe dont toutes les branches restent dans
+  l'épreuve, et pour elle seulement. _(Amendé le 2026-11-26 : remplace « `flatSettingsOf` écrit
+  `postPoolSplitCriteria = 'gender'` (avec `hasDirectElimination` et les réglages de ce
+  tableau) pour une scission par sexe dont une branche au moins reste dans l'épreuve, et pour
+  elle seulement. »)_ Sans place pour la scission (Tour Quest, pas de tour de
   poules juste avant le tableau), l'ancien réglage est gardé tel quel. Une épreuve existante se
   déroule à l'identique ; « Créer la compétition Femmes » (`splitOffGroup`) reste disponible.
   Contrat : `setGeneral` `postPoolSplitCriteria` pose ou retire cette scission ; `setPhase`
@@ -147,11 +163,15 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
   aucun nouvel événement, aucun nouveau format de journal.
 - Le moteur des poules par branche n'est pas écrit : une branche avec des poules est une
   fille, qui se déroule avec le moteur actuel. Les branches restées dans l'épreuve se limitent
-  à un tableau, dans une scission par sexe. _(Amendé le 2026-11-26, étape E3 : remplace « Les
-  branches restées dans l'épreuve se limitent à un tableau. »)_
+  à un tableau, dans une scission par sexe dont toutes les branches restent (compétition
+  couplée). _(Amendé le 2026-11-26 : remplace « Les branches restées dans l'épreuve se limitent
+  à un tableau, dans une scission par sexe. », qui remplaçait lui-même « Les branches restées
+  dans l'épreuve se limitent à un tableau. » (étape E3).)_
 - Contrat : la sortie de `splitCompetition` gagne `entrants` (classement d'entrée, dans
-  l'ordre : répartition manuelle à l'écran) et `stayInCompetition` par branche, sans changer
-  les champs existants. _(Ajout du 2026-11-26, étape E3.)_
+  l'ordre : répartition manuelle à l'écran) et `stayInCompetition` par branche, toujours
+  `false` (la compétition couplée est refusée, les autres scissions partent entières), sans
+  changer les champs existants. _(Ajout du 2026-11-26, étape E3 ; amendé le 2026-11-26 :
+  remplace « et `stayInCompetition` par branche, sans changer les champs existants. »)_
 - **Amendements portés par E2** : ADR-0036 (`SplitPhase.branches` de la forme `SplitBranch[]`
   décrite ici) et ADR-0037 (D2b : tableau arrêté suivi d'un tour de poules ou d'une
   scission ; Q5 : restants classés dans les filles, l'épreuve d'origine classe les éliminés du
@@ -166,10 +186,13 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
   - **E2** : brique Scission (grammaire, éditeur), `planSplit`, `splitCompetition`, filles,
     classement par branche (écran, exports).
   - **E3** (faite) : scission manuelle (répartition tireur par tireur dans la fenêtre de
-    lancement, sans nouvel écran), `stayInCompetition` pour le critère sexe et reprise de la
-    compétition couplée dans la formule. _(Amendé le 2026-11-26, étape E3 : remplace « **E3** :
-    scission manuelle (écran de répartition) et reprise de la compétition couplée dans la
-    formule. »)_
+    lancement, sans nouvel écran), `stayInCompetition` pour le critère sexe, toutes les
+    branches ou aucune, et reprise de la compétition couplée dans la formule. _(Amendé le
+    2026-11-26 : remplace « **E3** (faite) : scission manuelle (répartition tireur par tireur
+    dans la fenêtre de lancement, sans nouvel écran), `stayInCompetition` pour le critère sexe
+    et reprise de la compétition couplée dans la formule. », qui remplaçait lui-même
+    « **E3** : scission manuelle (écran de répartition) et reprise de la compétition couplée
+    dans la formule. » (étape E3).)_
 - Le classement d'une fille ne remonte pas dans l'épreuve d'origine : un DT qui veut un
   classement unique A puis B ne l'a pas (choix Q6, comme les logiciels étudiés).
 
