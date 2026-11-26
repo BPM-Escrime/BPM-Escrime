@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 160 | 1395 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 41 | 217 |
-| `src/renderer/components/` | 139 | 775 |
+| `src/renderer/components/` | 139 | 776 |
 | E2E Playwright (`e2e/`) | 20 | 55 |
 | `src/remote/` | 60 | 439 |
 | `src/renderer/api/` | 10 | 46 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 2 | 10 |
 | `src/shared/domain/` | 52 | 627 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **641** | **5069** |
+| **Total** | **641** | **5070** |
 
-Unitaires : 621 fichiers, 5014 tests. E2E : 20 fichiers, 55 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 621 fichiers, 5015 tests. E2E : 20 fichiers, 55 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -6489,7 +6489,7 @@ Unitaires : 621 fichiers, 5014 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/PoolPrepView.test.tsx</code> — 13 tests</summary>
+<summary><code>src/renderer/components/PoolPrepView.test.tsx</code> — 14 tests</summary>
 
 - **PoolPrepView (#1499)**
   - titres Min / Max séparés au-dessus des deux champs
@@ -6507,6 +6507,7 @@ Unitaires : 621 fichiers, 5014 tests. E2E : 20 fichiers, 55 tests (comptage stat
   - doublon inévitable (quota BPM - Escrime) : pas d’alerte
 - **PoolPrepView — ordre officiel des matchs (#1964)**
   - trio du même club : n° 1, 2, 3 et table « trio de 7 »
+  - pastille d’ordre sur sa propre ligne, après le titre « Poule N » (#2300)
   - ordre libre : pas de placement, pastille « Ordre libre »
 
 </details>
