@@ -4868,6 +4868,7 @@
     "missing_title": "{{n}} kleze-c'hoarier hep talvoud evit an dezverk: rannadur dibosupl",
     "missing_fix_gender": "Leuniit reizh ar c'hleze-c'hoarierien-se (Galv ▸ kemmañ), ha rannit en-dro.",
     "missing_fix_category": "Leuniit rummad ar c'hleze-c'hoarierien-se er Galv (gant an dorn pe « Jediñ ar rummadoù »), ha rannit en-dro.",
-    "done": "Amprouenn rannet: {{n}} kenstrivadeg merc'h krouet."
+    "done": "Amprouenn rannet: {{n}} kenstrivadeg merc'h krouet.",
+    "after_stage_note": "Taolenn paouezet da {{n}} c'hoarier serret : ar rannadur a lak an {{n}} c'hoarier a chom hervez o renk mont e-barzh an daolenn. Renkadur ar poulloù eo an hini dindan."
   }
 }

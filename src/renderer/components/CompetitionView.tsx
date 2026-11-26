@@ -636,6 +636,17 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
           />
         )}
 
+        {currentPhase === 'ranking' &&
+          closedStage &&
+          !!storedFormula &&
+          !!splitOf(storedFormula) &&
+          competitionCore.splitHistory.length === 0 && (
+            // Tableau arrêté clos, scission à venir : le tableau ci-dessous est celui des poules ;
+            // la scission répartit les restants du tableau par rang d'entrée (ADR-0037 Q5)
+            <div className="tableau-stage" role="note" data-testid="split-after-stage-note">
+              <p>{t('splitLaunch.after_stage_note', { n: closedStage.stopAt })}</p>
+            </div>
+          )}
         {currentPhase === 'ranking' && (
           <RankingPhase
             poolRoundSelector={poolRoundSelector}

@@ -31,8 +31,12 @@ import {
   loadExportState,
   loadExportTableauSignatures,
 } from './results/resultsExportData';
-import { SplitBranchesPanel } from './results/SplitBranchesPanel';
 import type { SplitHistoryEntry } from '../../shared/domain/formula/splitPlan';
+
+// Bloc « Branches » chargé à la demande (épreuve scindée seulement, budget du bundle)
+const SplitBranchesPanel = React.lazy(() =>
+  import('./results/SplitBranchesPanel').then(m => ({ default: m.SplitBranchesPanel }))
+);
 
 interface FinalResult {
   rank: number;
@@ -604,7 +608,9 @@ const ResultsView: React.FC<ResultsViewProps> = ({
         </div>
       )}
       {split && (
-        <SplitBranchesPanel branches={splitBranches!} onOpenCompetition={onOpenCompetition} />
+        <React.Suspense fallback={null}>
+          <SplitBranchesPanel branches={splitBranches!} onOpenCompetition={onOpenCompetition} />
+        </React.Suspense>
       )}
       {/* En-tête avec le champion */}
       {champion && (

@@ -52,9 +52,9 @@ const view = (onOpen = vi.fn()) => {
 };
 
 describe('Résultats de l’épreuve d’origine scindée (ADR-0039)', () => {
-  it('bloc « Branches » : libellé, nombre de tireurs, bouton « Ouvrir »', () => {
+  it('bloc « Branches » : libellé, nombre de tireurs, bouton « Ouvrir »', async () => {
     view();
-    const block = screen.getByTestId('split-branches');
+    const block = await screen.findByTestId('split-branches');
     expect(within(block).getByText('resultsView.branches_title')).toBeInTheDocument();
     const items = within(block).getAllByRole('listitem');
     expect(items.map(li => li.textContent)).toEqual([
@@ -63,9 +63,9 @@ describe('Résultats de l’épreuve d’origine scindée (ADR-0039)', () => {
     ]);
   });
 
-  it('« Ouvrir » ouvre la compétition fille', () => {
+  it('« Ouvrir » ouvre la compétition fille', async () => {
     const onOpen = view();
-    fireEvent.click(screen.getByTestId('split-branch-open-Tableau B'));
+    fireEvent.click(await screen.findByTestId('split-branch-open-Tableau B'));
     expect(onOpen).toHaveBeenCalledWith('fb');
   });
 

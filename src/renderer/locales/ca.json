@@ -4868,6 +4868,7 @@
     "missing_title": "{{n}} tirador(s) sense valor per al criteri: divisió impossible",
     "missing_fix_gender": "Completeu el sexe d'aquests tiradors (Crida ▸ editar tirador) i torneu a dividir.",
     "missing_fix_category": "Completeu la categoria d'aquests tiradors a la Crida (a mà o «Calcular les categories») i torneu a dividir.",
-    "done": "Prova dividida: {{n}} competicions filles creades."
+    "done": "Prova dividida: {{n}} competicions filles creades.",
+    "after_stage_note": "Quadre aturat a {{n}} tiradors tancat: la divisió reparteix els {{n}} restants segons el seu rang d'entrada al quadre. La classificació de sota és la de les poules."
   }
 }

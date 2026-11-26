@@ -84,6 +84,8 @@ import { bracketMatchView, fencerRef, readSession, summarizePool } from './sessi
 import { areAllPoolsComplete, isPoolComplete } from '../../../shared/domain/pools/poolCompletion';
 import { phaseSettings, tableauQualificationOf } from '../../../shared/domain/formula/formulaV2';
 import { stoppedTableauOf } from '../../../shared/domain/formula/formulaSteps';
+import { originFinalRanking, splitHistoryOf } from '../../../shared/domain/formula/splitPlan';
+import { tableauStagesOf } from '../../../shared/domain/tableau/tableauStage';
 import type { PoolSeparation } from '../../../shared/domain/pools/poolDraw';
 import {
   composePools,
@@ -1299,9 +1301,13 @@ export function resultsData(ctx: CommandContext, competitionId: string) {
   return {
     competition: { ...comp, fencers, referees: ctx.db.getRefereesByCompetition(competitionId) },
     pools: sessionPools(session),
-    overallRanking: Array.isArray(session.overallRanking)
-      ? (session.overallRanking as PoolRanking[])
-      : [],
+    // Classement final de l'origine (ADR-0039 ; Q5 d'ADR-0037) : sans les tireurs partis dans
+    // une branche, éliminés du tableau arrêté avant ceux des poules ; inchangé sinon
+    overallRanking: originFinalRanking(
+      Array.isArray(session.overallRanking) ? (session.overallRanking as PoolRanking[]) : [],
+      tableauStagesOf(session.stageHistory),
+      splitHistoryOf(session.splitHistory)
+    ).ranking,
     tableauMatches: slots.flatMap(s => s.matches),
     finalResults: slots.flatMap(
       s =>

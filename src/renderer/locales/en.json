@@ -4868,6 +4868,7 @@
     "missing_title": "{{n}} fencer(s) without a value for the criterion: split impossible",
     "missing_fix_gender": "Fill in these fencers' gender (Roll call ▸ edit fencer), then split again.",
     "missing_fix_category": "Fill in these fencers' category in the Roll call (entry or “Compute categories”), then split again.",
-    "done": "Event split: {{n}} child competitions created."
+    "done": "Event split: {{n}} child competitions created.",
+    "after_stage_note": "Bracket stopped at {{n}} fencers closed: the split distributes the {{n}} remaining fencers in the order of their entry rank in the bracket. The ranking below is the pool ranking."
   }
 }

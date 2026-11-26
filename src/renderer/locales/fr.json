@@ -4868,6 +4868,7 @@
     "missing_title": "{{n}} tireur(s) sans valeur pour le critère : scission impossible",
     "missing_fix_gender": "Complétez le sexe de ces tireurs (Appel ▸ modifier le tireur), puis relancez la scission.",
     "missing_fix_category": "Complétez la catégorie de ces tireurs à l'Appel (saisie ou « Calculer les catégories »), puis relancez la scission.",
-    "done": "Épreuve scindée : {{n}} compétitions filles créées."
+    "done": "Épreuve scindée : {{n}} compétitions filles créées.",
+    "after_stage_note": "Tableau arrêté à {{n}} tireurs clos : la scission répartit les {{n}} restants dans l'ordre de leur rang d'entrée au tableau. Le classement ci-dessous est celui des poules."
   }
 }

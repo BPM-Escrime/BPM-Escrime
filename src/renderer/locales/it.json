@@ -4868,6 +4868,7 @@
     "missing_title": "{{n}} schermidore/i senza valore per il criterio: suddivisione impossibile",
     "missing_fix_gender": "Completate il sesso di questi schermidori (Appello ▸ modifica schermidore), poi suddividete di nuovo.",
     "missing_fix_category": "Completate la categoria di questi schermidori all'Appello (a mano o «Calcola le categorie»), poi suddividete di nuovo.",
-    "done": "Gara suddivisa: {{n}} gare figlie create."
+    "done": "Gara suddivisa: {{n}} gare figlie create.",
+    "after_stage_note": "Tabellone fermato a {{n}} schermidori chiuso: la suddivisione ripartisce i {{n}} rimasti secondo il loro rango d'entrata nel tabellone. La classifica qui sotto è quella dei gironi."
   }
 }

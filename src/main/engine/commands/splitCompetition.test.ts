@@ -174,6 +174,10 @@ d('splitCompetition après un tour de poules (docs/adr/0039)', () => {
     const origin = originFinalRanking(entry, [], splitHistoryOf(session(comp.id).splitHistory));
     expect(origin.ranking.map(r => r.fencer.id)).toEqual(entry.slice(6).map(r => r.fencer.id));
     expect(origin.ranking[0].rank).toBe(1);
+    // Exports et publication du moteur (XML, GREG, FTP, MCP) : même classement de l'origine
+    const exported = resultsData(ctx, comp.id).overallRanking;
+    expect(exported.map(r => r.fencer.id)).toEqual(entry.slice(6).map(r => r.fencer.id));
+    expect(exported[0].rank).toBe(1);
   });
 
   it('par rang : une fille par branche, tireurs copiés, journaux, historique, rejeu', async () => {

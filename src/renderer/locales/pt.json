@@ -4868,6 +4868,7 @@
     "missing_title": "{{n}} atirador(es) sem valor para o critério: divisão impossível",
     "missing_fix_gender": "Complete o sexo destes atiradores (Chamada ▸ editar atirador) e divida de novo.",
     "missing_fix_category": "Complete a categoria destes atiradores na Chamada (à mão ou «Calcular as categorias») e divida de novo.",
-    "done": "Prova dividida: {{n}} competições filhas criadas."
+    "done": "Prova dividida: {{n}} competições filhas criadas.",
+    "after_stage_note": "Quadro parado em {{n}} atiradores fechado: a divisão reparte os {{n}} restantes pela ordem do seu lugar de entrada no quadro. A classificação abaixo é a das poules."
   }
 }

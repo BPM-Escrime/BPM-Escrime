@@ -4868,6 +4868,7 @@
     "missing_title": "{{n}} tirador(es) sin valor para el criterio: división imposible",
     "missing_fix_gender": "Complete el sexo de estos tiradores (Llamada ▸ editar tirador) y vuelva a dividir.",
     "missing_fix_category": "Complete la categoría de estos tiradores en la Llamada (a mano o «Calcular las categorías») y vuelva a dividir.",
-    "done": "Prueba dividida: {{n}} competiciones hijas creadas."
+    "done": "Prueba dividida: {{n}} competiciones hijas creadas.",
+    "after_stage_note": "Cuadro detenido en {{n}} tiradores cerrado: la división reparte a los {{n}} restantes según su puesto de entrada en el cuadro. La clasificación de abajo es la de las poules."
   }
 }

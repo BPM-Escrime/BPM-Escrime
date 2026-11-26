@@ -8,13 +8,15 @@ import { Funnel, QrCode, Trash2 } from 'lucide-react';
 import { SearchDialogButton } from './common/SearchDialogButton';
 import { Icon } from './common/Icon';
 // qrcode chargé à la demande (génération du QR uniquement à l'affichage)
-import EditFencerModal from './EditFencerModal';
 // pdfExport (jsPDF) chargé à la demande pour alléger le bundle initial
 import { Button } from './common/Button';
 import { MENU_ITEM, DROPDOWN_WRAP } from './fencerList.styles';
 import { COLUMNS, FencerListProps } from './fencerListShared';
 import { useFencerListState } from '../hooks/fencerList/useFencerListState';
 import { FencerListTable } from './fencerList/FencerListTable';
+
+// Fiche du tireur chargée à l'ouverture (modale rare, budget du bundle)
+const EditFencerModal = React.lazy(() => import('./EditFencerModal'));
 
 const FencerListComponent: React.FC<FencerListProps> = (props: FencerListProps) => {
   const fencerListState = useFencerListState({ ...props });
@@ -414,11 +416,13 @@ const FencerListComponent: React.FC<FencerListProps> = (props: FencerListProps) 
       <FencerListTable ctx={ctx} />
 
       {editingFencer && (
-        <EditFencerModal
-          fencer={editingFencer}
-          onSave={handleEditSave}
-          onClose={() => setEditingFencer(null)}
-        />
+        <React.Suspense fallback={null}>
+          <EditFencerModal
+            fencer={editingFencer}
+            onSave={handleEditSave}
+            onClose={() => setEditingFencer(null)}
+          />
+        </React.Suspense>
       )}
     </div>
   );

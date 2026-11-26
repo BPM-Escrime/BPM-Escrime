@@ -4868,6 +4868,7 @@
     "missing_title": "{{n}} Fechter ohne Wert für das Kriterium: Aufteilung nicht möglich",
     "missing_fix_gender": "Ergänzen Sie das Geschlecht dieser Fechter (Appell ▸ Fechter bearbeiten) und teilen Sie erneut auf.",
     "missing_fix_category": "Ergänzen Sie die Altersklasse dieser Fechter im Appell (Eingabe oder „Altersklassen berechnen“) und teilen Sie erneut auf.",
-    "done": "Wettbewerb aufgeteilt: {{n}} Unterwettbewerbe erstellt."
+    "done": "Wettbewerb aufgeteilt: {{n}} Unterwettbewerbe erstellt.",
+    "after_stage_note": "Tableau bei {{n}} Fechtern abgeschlossen: Die Aufteilung verteilt die {{n}} verbleibenden Fechter nach ihrem Einstiegsrang im Tableau. Die Rangliste unten ist die der Vorrunde."
   }
 }
