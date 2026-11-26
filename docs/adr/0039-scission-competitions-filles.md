@@ -1,6 +1,6 @@
 # ADR-0039 — La scission est une phase de la formule : chaque branche devient une compétition fille, classée à part
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (état `splitHistory` de l'épreuve d'origine, `stayInCompetition` et reprise de la compétition couplée à partir d'E3, entrée en vigueur appliquée par E2a, validé par le mainteneur) ; amendée le 2026-11-26 (étape E3 : `stayInCompetition` réservé au critère sexe, reprise de la compétition couplée, scission manuelle à l'écran, validé par le mainteneur) ; amendée le 2026-11-26 (mélange retiré : rester dans l'épreuve seulement si toutes les branches restent, validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (état `splitHistory` de l'épreuve d'origine, `stayInCompetition` et reprise de la compétition couplée à partir d'E3, entrée en vigueur appliquée par E2a, validé par le mainteneur) ; amendée le 2026-11-26 (étape E3 : `stayInCompetition` réservé au critère sexe, reprise de la compétition couplée, scission manuelle à l'écran, validé par le mainteneur) ; amendée le 2026-11-26 (mélange retiré : rester dans l'épreuve seulement si toutes les branches restent, validé par le mainteneur) ; amendée le 2026-11-26 (catégorie d'une fille à plusieurs catégories : la plus jeune, validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape E ; questions Q6, Q7), #1948 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (`SplitPhase`), s'appuie sur [ADR-0024](0024-tableaux-separes-equipes-moteur.md) (`splitOffGroup`, `GroupSplitOff`, `SplitRankingImported`) et [ADR-0011](0011-migrations-schema-3-0.md) (migration)
 
@@ -85,6 +85,11 @@ expectedRevision?, commandId? }`, droit `competition:write`, outil MCP `split_co
   reçoit aussi `{ sexe: id de la fille }`, groupe extrait des tableaux séparés comme avec
   `splitOffGroup` (ADR-0024). », qui remplaçait lui-même « `splitOffCompetitionIds` de
   l'origine reçoit `{ libellé: id de la fille }`. » (étape E3).)_
+- Catégorie de la fille : celle de la branche ; une branche à plusieurs catégories donne la plus
+  jeune (V3 + V4 → V3), le libellé de la branche portant le détail ; une branche sans catégorie
+  garde celle de l'épreuve d'origine. Pas de catégorie « Autre » : la catégorie d'épreuve sert à
+  l'export GREG / XML, aux touches et durées par défaut et aux contrôles d'âge. _(Ajout du
+  2026-11-26, validé par le mainteneur.)_
 - **Exception, critère sexe seulement : la compétition couplée.** Dans une scission par sexe
   qui suit un tour de poules, deux branches (Hommes, Dames) réduites chacune à un tableau, avec
   les mêmes réglages de tableau, peuvent rester ensemble dans l'épreuve d'origine

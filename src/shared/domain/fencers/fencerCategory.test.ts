@@ -4,6 +4,7 @@ import {
   categoryFromBirthDate,
   categoryShortLabel,
   computeMissingCategories,
+  splitDaughterCategory,
   normalizeFencerCategory,
 } from './fencerCategory';
 
@@ -51,5 +52,15 @@ describe('catégorie du tireur (docs/adr/0039)', () => {
     expect(categoryShortLabel(Category.SENIOR)).toBe('Sen');
     expect(categoryShortLabel(Category.V2)).toBe('V2');
     expect(categoryShortLabel(undefined)).toBe('');
+  });
+
+  it('catégorie de la fille de scission : la plus jeune de la branche, sinon l’origine', () => {
+    expect(splitDaughterCategory([Category.V4, Category.V3], Category.SENIOR)).toBe(Category.V3);
+    expect(splitDaughterCategory([Category.V1, Category.SENIOR], Category.V2)).toBe(
+      Category.SENIOR
+    );
+    expect(splitDaughterCategory([Category.U17], Category.U20)).toBe(Category.U17);
+    expect(splitDaughterCategory(undefined, Category.V2)).toBe(Category.V2);
+    expect(splitDaughterCategory([], Category.V2)).toBe(Category.V2);
   });
 });
