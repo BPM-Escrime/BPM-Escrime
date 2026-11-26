@@ -89,7 +89,10 @@ export interface SplitBranch {
   categories?: Category[];
   /** Critère rank : fixed_count ou percentage ; absent = le reste */
   take?: AdvancementRule;
-  /** Branche réduite à un tableau restée dans l'épreuve : refusée jusqu'à l'étape E3 */
+  /**
+   * Branche réduite à un tableau restée dans l'épreuve (étape E3) : critère sexe seulement ;
+   * elle se joue en tableau séparé (`groupTableaux`, ADR-0024)
+   */
   stayInCompetition?: boolean;
 }
 
@@ -112,7 +115,11 @@ export interface FormulaV2 {
     restTimeSeconds?: number;
     /** Arme « Autre » : règles des armes modernes ou du Sabre Laser */
     ruleSet?: 'modern' | 'laser';
-    /** Compétition couplée (tableaux séparés par sexe) : brique Scission à l'étape E */
+    /**
+     * Ancienne forme de la compétition couplée, relue comme une scission par sexe dont les
+     * branches restent dans l'épreuve (`coupledFormula`, ADR-0039 étape E3) ; gardée seulement
+     * quand cette scission n'a pas sa place (Tour Quest, pas de tour de poules avant le tableau)
+     */
     postPoolSplitCriteria?: PostPoolSplitCriteria;
   };
   name?: string;
@@ -126,11 +133,86 @@ export interface FormulaSource {
 }
 
 const pools = (f: FormulaV2) => f.phases.filter((p): p is PoolRoundPhase => p.kind === 'pool');
-const tableauOf = (f: FormulaV2) => f.phases.find((p): p is TableauPhase => p.kind === 'tableau');
 const questOf = (f: FormulaV2) => f.phases.find((p): p is QuestPhase => p.kind === 'quest');
 /** Scission de la formule (dernière phase, ADR-0039) ; undefined : aucune */
 export const splitOf = (f: FormulaV2): SplitPhase | undefined =>
   f.phases.find((p): p is SplitPhase => p.kind === 'split');
+
+// ── Branches restées dans l'épreuve (ADR-0039, étape E3) ──────────────────
+
+/** Branches d'une scission par sexe restées dans l'épreuve (tableaux séparés, ADR-0024) */
+export const stayingBranches = (split: SplitPhase | undefined): SplitBranch[] =>
+  split?.criterion === 'gender' ? split.branches.filter(b => !!b.stayInCompetition) : [];
+
+/** Branches qui deviennent des compétitions filles */
+export const departingBranches = (split: SplitPhase): SplitBranch[] =>
+  split.branches.filter(b => !stayingBranches(split).includes(b));
+
+/**
+ * Compétition couplée : scission par sexe dont toutes les branches restent dans l'épreuve.
+ * Rien à créer : le déroulé est celui des tableaux séparés (ADR-0024).
+ */
+export const isCoupledSplit = (split: SplitPhase | undefined): boolean =>
+  !!split && split.branches.length > 0 && stayingBranches(split).length === split.branches.length;
+
+/** Scission à lancer (`splitCompetition`) : au moins une branche devient une compétition fille */
+export function pendingSplitOf(f: FormulaV2): SplitPhase | undefined {
+  const split = splitOf(f);
+  return split && !isCoupledSplit(split) ? split : undefined;
+}
+
+/** Tableau joué dans l'épreuve : le tableau de la formule, sinon celui d'une branche restée */
+export function playedTableauOf(f: FormulaV2): TableauPhase | undefined {
+  const own = f.phases.find((p): p is TableauPhase => p.kind === 'tableau');
+  if (own) return own;
+  const phase = stayingBranches(splitOf(f))[0]?.phases[0];
+  return phase?.kind === 'tableau' ? phase : undefined;
+}
+
+/** Libellés des branches de la compétition couplée (titre d'une fille, libellé GREG) */
+const COUPLED_LABELS: Record<Gender.MALE | Gender.FEMALE, string> = {
+  [Gender.MALE]: 'Hommes',
+  [Gender.FEMALE]: 'Dames',
+};
+
+/** Scission par sexe de la compétition couplée : Hommes, Dames, chacun un tableau resté */
+export function coupledSplit(tableau: TableauPhase, id = 'split'): SplitPhase {
+  return {
+    kind: 'split',
+    id,
+    criterion: 'gender',
+    branches: [Gender.MALE, Gender.FEMALE].map(g => ({
+      label: COUPLED_LABELS[g as Gender.MALE | Gender.FEMALE],
+      gender: g,
+      phases: [{ ...tableau }],
+      stayInCompetition: true,
+    })),
+  };
+}
+
+/**
+ * Compétition couplée (`postPoolSplitCriteria = 'gender'`) relue dans la formule (ADR-0039,
+ * étape E3) : le tableau final, après un tour de poules, devient une scission par sexe dont les
+ * deux branches sont ce tableau, restées dans l'épreuve. Sans cette place (Tour Quest, tableau
+ * arrêté, pas de tour avant), l'ancienne forme est gardée.
+ */
+export function coupledFormula(f: FormulaV2): FormulaV2 {
+  if (f.general.postPoolSplitCriteria !== 'gender' || splitOf(f)) return f;
+  const last = f.phases[f.phases.length - 1];
+  const prev = f.phases[f.phases.length - 2];
+  if (last?.kind !== 'tableau' || last.stopAt || prev?.kind !== 'pool') return f;
+  if (f.phases.some(p => p.kind === 'quest')) return f;
+  const { postPoolSplitCriteria: _coupled, ...general } = f.general;
+  return { ...f, phases: [...f.phases.slice(0, -1), coupledSplit(last)], general };
+}
+
+/** Compétition couplée défaite : la scission redevient le tableau de ses branches */
+export function uncoupledFormula(f: FormulaV2): FormulaV2 {
+  const split = splitOf(f);
+  const tableau = playedTableauOf(f);
+  if (!isCoupledSplit(split) || !tableau) return f;
+  return { ...f, phases: f.phases.map(p => (p === split ? tableau : p)) };
+}
 
 // ── Réglages plats → v2 (épée, fleuret, sabre, Sabre Laser) ───────────────
 
@@ -182,14 +264,14 @@ function fromFlat(src: FormulaSource): FormulaV2 {
       allPlaces: d.playAllPositions,
     });
   }
-  return {
+  return coupledFormula({
     version: 2,
     phases,
     general: {
       restTimeSeconds: d.restTimeSeconds,
       ...(d.postPoolSplitCriteria ? { postPoolSplitCriteria: d.postPoolSplitCriteria } : {}),
     },
-  };
+  });
 }
 
 // ── customFormula v1 ↔ v2 (arme « Autre ») ────────────────────────────────
@@ -260,7 +342,14 @@ export function customFormulaOf(f: FormulaV2): CustomFormulaConfig {
   const dPool = defaults.phases[0].config as CustomPoolRoundConfig;
   let round = 0;
   const phases: FormulaPhaseNode[] = [];
-  for (const p of f.phases) {
+  // Branches restées dans l'épreuve : leur tableau se joue dans l'épreuve (ADR-0039, E3)
+  const kept = stayingBranches(splitOf(f))[0]?.phases[0];
+  const played = f.phases.map(p =>
+    p.kind === 'split' && kept?.kind === 'tableau' && !f.phases.some(x => x.kind === 'tableau')
+      ? kept
+      : p
+  );
+  for (const p of played) {
     if (p.kind === 'pool') {
       const legacy = p.legacy ?? {
         balanced: dPool.balanced,
@@ -321,7 +410,8 @@ export function customFormulaOf(f: FormulaV2): CustomFormulaConfig {
 /** Formule v2 de l'épreuve : enregistrée, sinon construite depuis ses réglages (sans écriture) */
 export function formulaOf(src: FormulaSource): FormulaV2 {
   const stored = src.settings?.formula;
-  if (stored && stored.version === 2) return stored;
+  // Formule enregistrée avant l'étape E3 avec l'ancienne compétition couplée : relue (ADR-0039)
+  if (stored && stored.version === 2) return coupledFormula(stored);
   if (src.weapon === Weapon.CUSTOM)
     return formulaFromCustom(src.settings?.customFormula ?? createDefaultCustomFormula());
   return fromFlat(src);
@@ -335,7 +425,7 @@ export function phaseSettings<R extends PhaseRef>(
   ref: R
 ): R extends { kind: 'pool' } ? PoolRoundPhase : TableauPhase | undefined {
   type Out = R extends { kind: 'pool' } ? PoolRoundPhase : TableauPhase | undefined;
-  if (ref.kind === 'tableau') return tableauOf(f) as Out;
+  if (ref.kind === 'tableau') return playedTableauOf(f) as Out;
   const list = pools(f);
   // Tour au-delà de la formule (épreuve en cours plus longue) : réglages du dernier tour
   const round = (ref as { round: number }).round;
@@ -348,7 +438,9 @@ export function phaseSettings<R extends PhaseRef>(
  * tous passent. Exécutée pour toutes les armes (#2013 R1, ADR-0036 : levée du bridage P2).
  */
 export function tableauQualificationOf(f: FormulaV2): AdvancementRule | undefined {
-  const at = f.phases.findIndex(p => p.kind === 'tableau');
+  const own = f.phases.findIndex(p => p.kind === 'tableau');
+  // Tableau d'une branche restée dans l'épreuve : à la place de la scission (ADR-0039, E3)
+  const at = own >= 0 ? own : playedTableauOf(f) ? f.phases.findIndex(p => p.kind === 'split') : -1;
   if (at <= 0) return undefined;
   const before = f.phases.slice(0, at).filter(p => p.kind !== 'split');
   const prev = before[before.length - 1];
@@ -364,17 +456,27 @@ export function tableauQualificationOf(f: FormulaV2): AdvancementRule | undefine
  * deriveSettingsFromFormula, plus `customFormula` v1 équivalente.
  */
 export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<CompetitionSettings> {
+  // Tableaux séparés par sexe (ADR-0024) : scission par sexe dont une branche au moins reste
+  // dans l'épreuve (ADR-0039, E3) ; ancienne forme gardée telle quelle
+  const postPoolSplitCriteria: PostPoolSplitCriteria | undefined =
+    stayingBranches(splitOf(f)).length > 0 ? 'gender' : f.general.postPoolSplitCriteria;
   if (weapon === Weapon.CUSTOM) {
     const customFormula = customFormulaOf(f);
-    return { customFormula, ...deriveSettingsFromFormula(customFormula) };
+    return {
+      customFormula,
+      ...deriveSettingsFromFormula(customFormula),
+      ...(postPoolSplitCriteria ? { postPoolSplitCriteria } : {}),
+    };
   }
   const list = pools(f);
   const first = list[0];
   const last = list[list.length - 1];
-  const tableau = tableauOf(f);
+  const tableau = playedTableauOf(f);
+  // Tableau d'une branche restée : à la place de la scission, en dernier
+  const tableauAt = tableau ? f.phases.indexOf(tableau) : -1;
   const beforeTableau = tableau
     ? f.phases
-        .slice(0, f.phases.indexOf(tableau))
+        .slice(0, tableauAt >= 0 ? tableauAt : f.phases.length)
         .filter((p): p is PoolRoundPhase => p.kind === 'pool')
         .pop()
     : undefined;
@@ -388,7 +490,7 @@ export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<Competitio
     // Vainqueurs de poule : tour qui précède le tableau (tableau arrêté suivi de tours, ADR-0037)
     poolWinnersOnly: (beforeTableau ?? last)?.qualification.mode === 'pool_winner',
     restTimeSeconds: f.general.restTimeSeconds ?? 60,
-    postPoolSplitCriteria: f.general.postPoolSplitCriteria,
+    postPoolSplitCriteria,
   };
   if (first) {
     out.defaultPoolMaxScore = first.maxScore;
