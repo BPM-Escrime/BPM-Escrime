@@ -53,7 +53,9 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Clé de déploiement en écriture : seule exception du ruleset de dev,
+          # qui exige le job e2e / e2e (GITHUB_TOKEN ne peut pas contourner un ruleset)
+          ssh-key: ${{ secrets.CI_PUSH_DEPLOY_KEY }}
 
       - name: Next build number
         id: version
@@ -92,7 +94,9 @@ jobs:
           git config --local user.name "GitHub Action"
           git add version.json docs/TESTS.md
           if [ "${{ steps.version.outputs.channel }}" = "dev" ]; then KIND=Dev; else KIND=RC; fi
-          git commit -m "🔖 $KIND Build #${{ steps.version.outputs.build }}"
+          # [skip ci] : un push par clé de déploiement relance les workflows,
+          # contrairement à GITHUB_TOKEN ; sans lui, chaque Dev Build en relancerait un
+          git commit -m "🔖 $KIND Build #${{ steps.version.outputs.build }}" -m "[skip ci]"
           for i in 1 2 3; do
             if git push origin "HEAD:$BRANCH"; then
               echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
