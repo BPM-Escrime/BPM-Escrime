@@ -130,3 +130,21 @@ export function rankingOfDrawnTableau(
   const left = new Set(cut.tiedAtBar.fencerIds.filter(id => !placed.has(id)));
   return cut.ranking.filter(r => !left.has(r.fencer.id));
 }
+
+/**
+ * Classement du tableau de l'écran (classement, PDF, résultats ; docs/adr/0040) : tableau tiré,
+ * coupe figée par le tableau (`rankingOfDrawnTableau`) ; avant, coupe avec le choix des ex
+ * aequo (`options.ties`), sinon la formule.
+ */
+export function tableauRankingOfScreen(
+  overallRanking: PoolRanking[],
+  pools: Pool[],
+  options: TableauRankingOptions,
+  drawnMatches: readonly TableauMatch[]
+): PoolRanking[] {
+  if (drawnMatches.length === 0) return tableauCut(overallRanking, pools, options).ranking;
+  return rankingOfDrawnTableau(
+    tableauCut(overallRanking, pools, { ...options, ties: 'all' }),
+    drawnMatches
+  );
+}

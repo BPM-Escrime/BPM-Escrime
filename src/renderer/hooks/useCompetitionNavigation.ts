@@ -35,8 +35,9 @@ import type { TiedAtBar } from '../../shared/domain/ranking/advancement';
 import {
   getActiveFormula,
   getTableauAdvancement,
-  tableauAdvancementCut,
+  resolveCompetitionSettings,
 } from '../../shared/utils/customFormulaSettings';
+import { tableauCut } from '../../shared/domain/ranking/tableauRanking';
 import { useToast } from '../components/Toast';
 import type { Phase } from './useCompetitionSession';
 import type { useFencerManagement } from './useFencerManagement';
@@ -279,8 +280,19 @@ export function useCompetitionNavigation({
 
   /** Ex aequo à la barre du tableau selon la formule (comme le moteur, tableauCut) */
   const tableauTiedAtBar = () => {
-    if (competition.settings?.poolWinnersOnly) return null;
-    return tableauAdvancementCut(overallRanking, tableauFormulaRule()).tiedAtBar;
+    const formula = competition.settings?.formula;
+    // Même coupe que le classement du tableau (useCompetitionPhaseFlow) et que le moteur
+    return tableauCut(overallRanking, pools, {
+      isRapieres,
+      rapieresTableauMode: undefined,
+      poolWinnersOnly: !!resolveCompetitionSettings(competition.weapon, competition.settings)
+        .poolWinnersOnly,
+      customFormula: getActiveFormula(competition.weapon, competition.settings),
+      tableauQualification: formula ? tableauQualificationOf(formula) : undefined,
+      postPoolSplitCriteria: undefined,
+      activeSplitGroup: null,
+      splitOffCompetitionIds: undefined,
+    }).tiedAtBar;
   };
 
   /** Ex aequo listés, choix pour cette coupe ; null : annulé */

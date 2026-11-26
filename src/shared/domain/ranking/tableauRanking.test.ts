@@ -7,6 +7,7 @@ import {
   computeMatchProgress,
   rankingOfDrawnTableau,
   tableauCut,
+  tableauRankingOfScreen,
 } from './tableauRanking';
 
 const pool = (statuses: MatchStatus[]): Pool =>
@@ -152,5 +153,29 @@ describe('rankingOfDrawnTableau : coupe figée par le tableau tiré (docs/adr/00
   it('sans ex aequo à la barre ou sans tableau : classement inchangé', () => {
     expect(rankingOfDrawnTableau({ ranking: all, tiedAtBar: null }, [match('a', 'd')])).toBe(all);
     expect(rankingOfDrawnTableau({ ranking: all, tiedAtBar }, [])).toBe(all);
+  });
+});
+
+describe('tableauRankingOfScreen : classement, PDF et résultats de l’écran (docs/adr/0040)', () => {
+  const r = (id: string, rank: number, entry: number) =>
+    ({ fencer: { id, ranking: entry, status: 'Q' }, rank }) as unknown as PoolRanking;
+  const overall = [r('a', 1, 4), r('b', 2, 3), r('c', 2, 1), r('d', 2, 2)];
+  const options = {
+    ...baseOptions,
+    tableauQualification: { mode: 'fixed_count' as const, count: 2 },
+  };
+  const ids = (x: PoolRanking[]) => x.map(y => y.fencer.id);
+
+  it('avant le tirage : choix de l’écran, sinon la formule', () => {
+    expect(ids(tableauRankingOfScreen(overall, [], options, []))).toEqual(['a', 'b', 'c', 'd']);
+    expect(
+      ids(tableauRankingOfScreen(overall, [], { ...options, ties: 'initial_ranking' }, []))
+    ).toEqual(['a', 'c']);
+  });
+
+  it('tableau tiré : coupe figée par le tableau, même si le choix est perdu (rechargement)', () => {
+    const drawn = [{ fencerA: { id: 'a' }, fencerB: { id: 'c' } }] as unknown as TableauMatch[];
+    // Choix oublié (formule « all ») : le tableau tiré garde a et c
+    expect(ids(tableauRankingOfScreen(overall, [], options, drawn))).toEqual(['a', 'c']);
   });
 });

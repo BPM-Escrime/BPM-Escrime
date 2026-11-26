@@ -19,8 +19,7 @@ import CompetitionPoolCard from '../../components/competition/CompetitionPoolCar
 import PoolRoundSelector from '../../components/competition/PoolRoundSelector';
 import {
   computeMatchProgress,
-  rankingOfDrawnTableau,
-  tableauCut,
+  tableauRankingOfScreen,
 } from '../../../shared/domain/ranking/tableauRanking';
 import { useTableauTies } from '../tableauTiesChoice';
 import type { CompetitionViewProps } from '../../components/competition/competitionViewTypes';
@@ -222,23 +221,25 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
   // Classement effectif pour le tableau (filtré par vainqueurs de poule et/ou groupe actif)
   // Tableau tiré : coupe figée par le tableau (tous les ex aequo, moins ceux qu'il n'a pas
   // placés) ; avant : choix fait au passage au tableau, sinon la formule
-  const drawn = tableauMatches.length > 0;
   const effectiveTableauRanking = useMemo(() => {
-    const cut = tableauCut(overallRanking, pools, {
-      isRapieres,
-      rapieresTableauMode: rapieres.tableauMode,
-      // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
-      poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
-      customFormula: hasDirectElimination ? customFormula : undefined,
-      tableauQualification,
-      ties: drawn ? 'all' : tableauTies,
-      postPoolSplitCriteria,
-      activeSplitGroup,
-      splitOffCompetitionIds,
-    });
-    return drawn ? rankingOfDrawnTableau(cut, tableauMatches) : cut.ranking;
+    return tableauRankingOfScreen(
+      overallRanking,
+      pools,
+      {
+        isRapieres,
+        rapieresTableauMode: rapieres.tableauMode,
+        // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
+        poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
+        customFormula: hasDirectElimination ? customFormula : undefined,
+        tableauQualification,
+        ties: tableauTies,
+        postPoolSplitCriteria,
+        activeSplitGroup,
+        splitOffCompetitionIds,
+      },
+      tableauMatches
+    );
   }, [
-    drawn,
     tableauMatches,
     tableauTies,
     overallRanking,
