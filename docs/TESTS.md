@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 83 | 888 |
+| `src/shared/utils/` | 83 | 889 |
 | `src/shared/services/` | 8 | 83 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -105,12 +105,12 @@ npm run e2e:debug                                 # mode debug
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 24 | 282 |
-| `src/main/` | 160 | 1410 |
+| `src/database/` | 25 | 284 |
+| `src/main/` | 160 | 1411 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 41 | 217 |
 | `src/renderer/components/` | 139 | 776 |
-| E2E Playwright (`e2e/`) | 20 | 55 |
+| E2E Playwright (`e2e/`) | 21 | 56 |
 | `src/remote/` | 60 | 442 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
@@ -118,12 +118,12 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/locales/` | 1 | 1 |
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
-| `src/shared/api/` | 2 | 10 |
-| `src/shared/domain/` | 52 | 627 |
+| `src/shared/api/` | 3 | 12 |
+| `src/shared/domain/` | 53 | 631 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **641** | **5088** |
+| **Total** | **645** | **5099** |
 
-Unitaires : 621 fichiers, 5033 tests. E2E : 20 fichiers, 55 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 624 fichiers, 5043 tests. E2E : 21 fichiers, 56 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -650,7 +650,7 @@ Unitaires : 621 fichiers, 5033 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/fileParser.test.ts</code> — 49 tests</summary>
+<summary><code>src/shared/utils/fileParser.test.ts</code> — 50 tests</summary>
 
 - **parseSimpleTXTFile**
   - fichier vide → success=false, erreur
@@ -683,6 +683,7 @@ Unitaires : 621 fichiers, 5033 tests. E2E : 20 fichiers, 55 tests (comptage stat
 - **parseXMLFile**
   - XML vide → success=false
   - XML sans balises Tireur → success=false
+  - catégorie du tireur lue si le fichier la porte (docs/adr/0039)
   - un tireur complet
   - tireur féminin détecté
   - plusieurs tireurs
@@ -2321,6 +2322,15 @@ Unitaires : 621 fichiers, 5033 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/database/migrations/fencerCategory.test.ts</code> — 2 tests</summary>
+
+- **migration 53 : catégorie du tireur**
+  - base 52 : tireur existant gardé, catégorie nulle, puis écrite
+  - rejouée sans erreur (colonne déjà présente)
+
+</details>
+
+<details>
 <summary><code>src/database/migrations/migrationsAdr.test.ts</code> — 2 tests</summary>
 
 - **migrations et ADR (ADR-0011)**
@@ -3368,10 +3378,11 @@ Unitaires : 621 fichiers, 5033 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/fencers.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/engine/commands/fencers.test.ts</code> — 5 tests</summary>
 
 - registerFencers : inscrit, statut pointé admis, doublons signalés
 - updateFencerDetails : identité seulement, champ effacé par null
+- catégorie du tireur (docs/adr/0039) : inscrite, modifiée, effacée, refusée hors codes
 - setFencerRankings et unregisterFencers : avant le tirage seulement
 - listFencers : ordre des dossards, dates ISO
 
@@ -7945,6 +7956,13 @@ Unitaires : 621 fichiers, 5033 tests. E2E : 20 fichiers, 55 tests (comptage stat
 </details>
 
 <details>
+<summary><code>e2e/electron/fencer-category.spec.ts</code> — 1 test</summary>
+
+- catégorie : importée, calculée, corrigée à la main
+
+</details>
+
+<details>
 <summary><code>e2e/electron/files.spec.ts</code> — 2 tests</summary>
 
 - archive de tireurs .bpf : export puis réimport dans une autre épreuve
@@ -9250,6 +9268,15 @@ Unitaires : 621 fichiers, 5033 tests. E2E : 20 fichiers, 55 tests (comptage stat
 
 </details>
 
+<details>
+<summary><code>src/shared/api/registration.test.ts</code> — 2 tests</summary>
+
+- **tireur saisi ou importé → commandes d’inscription : catégorie (docs/adr/0039)**
+  - catégorie reconnue transmise, vide ou inconnue effacée
+  - inscription : catégorie importée gardée
+
+</details>
+
 ### `src/shared/domain/`
 
 <details>
@@ -9407,6 +9434,17 @@ Unitaires : 621 fichiers, 5033 tests. E2E : 20 fichiers, 55 tests (comptage stat
   - historique : apport d’une épreuve remplacé, fusion pondérée, seuil de 30 matchs
   - réglage du DT posé puis retiré ; validation du paramètre enregistré
   - table de l’écran : clés par défaut, puis réglages et historique
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/fencers/fencerCategory.test.ts</code> — 4 tests</summary>
+
+- **catégorie du tireur (docs/adr/0039)**
+  - codes reconnus : U17, M17, Senior, V3 ; inconnus rejetés
+  - date de naissance et saison de l’épreuve (1er septembre → 31 août)
+  - « Calculer les catégories » : seulement les tireurs sans catégorie
+  - libellé court comme les feuilles FFE
 
 </details>
 
