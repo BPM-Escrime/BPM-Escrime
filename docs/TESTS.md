@@ -106,11 +106,11 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 25 | 284 |
-| `src/main/` | 161 | 1421 |
+| `src/main/` | 161 | 1428 |
 | `src/renderer/services/` | 14 | 70 |
-| `src/renderer/hooks/` | 41 | 219 |
-| `src/renderer/components/` | 141 | 787 |
-| E2E Playwright (`e2e/`) | 22 | 57 |
+| `src/renderer/hooks/` | 41 | 220 |
+| `src/renderer/components/` | 141 | 798 |
+| E2E Playwright (`e2e/`) | 23 | 58 |
 | `src/remote/` | 60 | 442 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 55 | 670 |
+| `src/shared/domain/` | 56 | 693 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **651** | **5162** |
+| **Total** | **653** | **5205** |
 
-Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 630 fichiers, 5147 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3607,7 +3607,7 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/splitCompetition.test.ts</code> — 10 tests</summary>
+<summary><code>src/main/engine/commands/splitCompetition.test.ts</code> — 16 tests</summary>
 
 - outil MCP split\_competition, droit competition:write
 - qualification du tour appliquée : les non-qualifiés restent classés dans l’origine
@@ -3619,6 +3619,12 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 - refus : sans scission, poules non terminées, branche manuelle inconnue
 - échec au milieu : tout est annulé (ni fille, ni tireurs, ni marque, ni journal)
 - clôture sans nouveau tour, puis restants répartis par rang d’entrée au tableau
+- manuelle : affectations de l’écran, classement d’entrée dans la simulation
+- compétition couplée (toutes les branches restent) : refus, tableaux séparés
+- ancienne compétition couplée (réglage seul, sans formule) : refus
+- une branche restée, l’autre partie : formule refusée (pas de mélange)
+- par sexe, toutes les branches partent : deux filles, aucun groupe extrait par sexe
+- qualifiés du deuxième tour dans l’ordre de son classement
 
 </details>
 
@@ -3741,12 +3747,13 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/tableauStage.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/engine/commands/tableauStage.test.ts</code> — 5 tests</summary>
 
 - demies jouées : finalistes au tour suivant par rang d’entrée, demi-finalistes éliminés
 - refus : demie non jouée, ou formule sans tableau arrêté
 - tours après l’arrêt : score refusé, écran comme tablettes (ADR-0037)
 - pilotage hors écran (MCP) toujours refusé : plusieurs tours de poules (ADR-0037)
+- publication du moteur (GREG / FTP) : restants, éliminés du tableau, puis des poules
 
 </details>
 
@@ -5737,7 +5744,7 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionPhases.test.tsx</code> — 5 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionPhases.test.tsx</code> — 6 tests</summary>
 
 - **navigation dérivée de formulaSteps (ADR-0037)**
   - formule standard
@@ -5745,6 +5752,7 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
   - tableau arrêté : mêmes onglets avant et après la clôture (étape close consultable)
   - scission après les poules : pas d’onglet de plus (ADR-0039)
   - tableau arrêté suivi d’une scission : mêmes onglets avant et après la clôture
+  - compétition couplée (branches restées) : onglet Tableau, comme les tableaux séparés
 
 </details>
 
@@ -6633,12 +6641,14 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ResultsView.split.test.tsx</code> — 4 tests</summary>
+<summary><code>src/renderer/components/ResultsView.split.test.tsx</code> — 6 tests</summary>
 
 - **Résultats de l’épreuve d’origine scindée (ADR-0039)**
   - bloc « Branches » : libellé, nombre de tireurs, bouton « Ouvrir »
   - « Ouvrir » ouvre la compétition fille
   - classement : seuls les tireurs restés dans l’origine, ni champion ni podium
+  - par sexe, Hommes et Dames partis : ni champion ni podium, seuls les éliminés classés
+  - tous les tireurs partis dans les filles : pas de tableau de classement vide
   - épreuve non scindée : pas de bloc « Branches »
 
 </details>
@@ -7266,23 +7276,31 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/competition/SplitLaunchDialog.test.tsx</code> — 3 tests</summary>
+<summary><code>src/renderer/components/competition/SplitLaunchDialog.test.tsx</code> — 4 tests</summary>
 
 - **SplitLaunchDialog (ADR-0039)**
   - simulation, confirmation, puis commande
   - tireurs sans valeur : liste, moyen de corriger, pas de confirmation
   - refus du moteur à la simulation : message, fenêtre fermée
+  - manuelle : une branche par tireur, tri, « Tout dans… », confirmation après affectation
 
 </details>
 
 <details>
-<summary><code>src/renderer/components/competition/competitionDerived.test.ts</code> — 4 tests</summary>
+<summary><code>src/renderer/components/competition/competitionDerived.test.ts</code> — 10 tests</summary>
 
 - **rankingTableauNavAction (#2008)**
   - libellé « Voir le tableau » quand le classement est figé
   - libellé « Passer au tableau » sinon
   - déclenche le passage au tableau
   - aucun bouton : %s _(each)_
+- **rankingNextRoundAction (docs/adr/0039)**
+  - compétition couplée (les deux branches restent) : pas de scission proposée
+  - scission vers des filles en attente : action « split-launch »
+  - par sexe, toutes les branches partent : la scission, pas de tableau dans l’épreuve
+  - déjà scindée (splitHistory non vide) : pas d’action
+  - poules non finies / pas le dernier tour : tour suivant, sinon rien
+  - sans formule, ou scission sans branche restée et tableau de la formule : pas d’action
 
 </details>
 
@@ -7357,7 +7375,7 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 19 tests</summary>
+<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 21 tests</summary>
 
 - **FormulaEditor (formule v2)**
   - frise : appel, poules, tableau, classement ; pas de « + Classement »
@@ -7368,7 +7386,9 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
   - tableau arrêté à N : un tour de poules s’ajoute après le tableau (ADR-0037)
   - scission (ADR-0039) : ajoutée par le « ＋ » après les poules, panneau des branches
   - scission : sexe, catégories, ajout et retrait de branche, problèmes affichés
-  - scission manuelle enregistrée : lecture seule, avec une mention
+  - scission manuelle (étape E3) : critère, libellés et modèles éditables
+  - scission par sexe : « Rester dans l’épreuve » pour toute la scission, jamais une branche
+  - compétition couplée : scission par sexe restée, tableau réglé pour les deux branches
   - arme « Autre » : règles, barème, qualification complète
 - **Organisation ▸ Formule : réglages affichés après enregistrement**
   - formule v2 et réglages plats du 1er tour
@@ -8051,6 +8071,13 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 <summary><code>e2e/electron/split-competition.spec.ts</code> — 1 test</summary>
 
 - scission par rang : deux compétitions filles, branches aux résultats
+
+</details>
+
+<details>
+<summary><code>e2e/electron/split-manual.spec.ts</code> — 1 test</summary>
+
+- scission manuelle : affectation tireur par tireur, deux compétitions filles
 
 </details>
 
@@ -9513,6 +9540,35 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/formula/formulaCoupled.test.ts</code> — 20 tests</summary>
+
+- **rester dans l’épreuve : grammaire (ADR-0039, E3)**
+  - scission par sexe, branches réduites à un tableau : acceptée
+  - branche avec des poules : refusée
+  - toutes restées : deux branches, Hommes et Dames, seulement
+  - critère autre que le sexe : refusé
+  - après un tableau arrêté : refusée (tableaux séparés après les poules)
+  - branches restées : un seul jeu de réglages du tableau
+  - critère changé : « rester dans l’épreuve » retiré hors du sexe
+- **reprise de la compétition couplée (ADR-0039, E3)**
+  - postPoolSplitCriteria = gender, sans formule enregistrée : scission Hommes / Dames restée
+  - flatSettingsOf : mêmes réglages plats qu’aujourd’hui, tableaux séparés gardés
+  - aller-retour : réglages plats → formule → réglages plats → formule
+  - qualification du tour qui précède la scission restée : celle du tableau
+  - formule enregistrée avant E3 (ancienne forme) : relue comme la scission
+  - sans place pour la scission (Tour Quest, pas de tableau) : ancienne forme gardée
+  - sans place pour la scission (pas de tour de poules juste avant le tableau) : ancienne forme gardée
+  - scission sans branche restée : pas de tableaux séparés
+  - une branche reste, l’autre part : refusée, pas de tableaux séparés écrits
+  - aller-retour de la compétition couplée : postPoolSplitCriteria écrit puis relu
+- **opérations sur la compétition couplée (contrat, ADR-0039 E3)**
+  - setGeneral postPoolSplitCriteria : scission restée posée, puis retirée
+  - setPhase tableau : réglé pour chaque branche restée
+  - opérations entre deux formules : couplée ↔ tableau unique
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/formula/formulaDraft.test.ts</code> — 7 tests</summary>
 
 - **formulaDraft**
@@ -9570,7 +9626,7 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
   - rang : « take » sur toutes les branches sauf la dernière, qui prend le reste
   - sexe : un sexe par branche, distinct
   - catégorie : catégories non vides et disjointes
-  - rester dans l’épreuve : refusé jusqu’à l’étape E3
+  - rester dans l’épreuve : refusé hors du critère sexe (étape E3)
   - bornes des phases d’une branche jugées comme celles de l’épreuve
 - **opérations sur la scission (ADR-0039)**
   - setPhase règle le critère et les branches ; forme contrôlée
@@ -9686,7 +9742,7 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/splitPlan.test.ts</code> — 10 tests</summary>
+<summary><code>src/shared/domain/formula/splitPlan.test.ts</code> — 12 tests</summary>
 
 - **planSplit par rang (ADR-0039)**
   - nombre : chaque branche prend son nombre, la dernière le reste ; rangs depuis 1
@@ -9702,6 +9758,9 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
   - les restants partis dans les filles ; éliminés du tableau, puis des poules
 - **classement final de l’épreuve d’origine (ADR-0039, Q5 d’ADR-0037)**
   - sans les tireurs partis, puis éliminés du tableau arrêté avant ceux des poules
+- **simulation de la scission (éditeur de formule)**
+  - par rang : nombre, pourcentage, puis le reste
+  - sexe, catégorie, manuelle : effectif inconnu avant l’épreuve
 
 </details>
 
@@ -10272,7 +10331,7 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/tableau/tableauStage.test.ts</code> — 10 tests</summary>
+<summary><code>src/shared/domain/tableau/tableauStage.test.ts</code> — 11 tests</summary>
 
 - **tableau arrêté à N (ADR-0037)**
   - seuls les tours où il reste plus de N tireurs se jouent
@@ -10289,6 +10348,8 @@ Unitaires : 629 fichiers, 5105 tests. E2E : 22 fichiers, 57 tests (comptage stat
 - **répartition du tour à tirer, écran (Q5, ADR-0037)**
   - premier tour après le tableau clos : restants par rang d’entrée
   - autres tours, ou sans étape close : classement du dernier tour
+- **classement final avant le tour suivant (restants renumérotés)**
+  - restants rangés depuis 1 même si le classement reçu est celui d’avant le tableau
 
 </details>
 
