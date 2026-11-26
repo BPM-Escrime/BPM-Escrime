@@ -10,6 +10,7 @@ import {
   planSplit,
   rankingWithoutSplit,
   renumberRanks,
+  simulateSplit,
   splitHistoryOf,
 } from './splitPlan';
 import { rankAfterStages, type TableauStageRecord } from '../tableau/tableauStage';
@@ -274,5 +275,41 @@ describe('classement final de l’épreuve d’origine (ADR-0039, Q5 d’ADR-003
       ['E', 3],
     ]);
     expect(out.eliminatedAt.get('D')).toBe('Tableau de 4');
+  });
+});
+
+describe('simulation de la scission (éditeur de formule)', () => {
+  const branch = (label: string, take?: SplitPhase['branches'][number]['take']) =>
+    ({ label, phases: [], ...(take ? { take } : {}) }) as SplitPhase['branches'][number];
+  it('par rang : nombre, pourcentage, puis le reste', () => {
+    const split = {
+      kind: 'split',
+      id: 's',
+      criterion: 'rank',
+      branches: [
+        branch('A', { mode: 'fixed_count', count: 8 }),
+        branch('B', { mode: 'percentage', percentage: 25 }),
+        branch('C'),
+      ],
+    } as SplitPhase;
+    expect(simulateSplit(split, 32)).toEqual([
+      { label: 'A', fencers: 8 },
+      { label: 'B', fencers: 8 },
+      { label: 'C', fencers: 16 },
+    ]);
+    // Effectif plus petit que la première branche : la suite est vide
+    expect(simulateSplit(split, 6).map(b => b.fencers)).toEqual([6, 0, 0]);
+  });
+  it('sexe, catégorie, manuelle : effectif inconnu avant l’épreuve', () => {
+    const split = {
+      kind: 'split',
+      id: 's',
+      criterion: 'category',
+      branches: [branch('V1-V2'), branch('V3-V4')],
+    } as SplitPhase;
+    expect(simulateSplit(split, 20)).toEqual([
+      { label: 'V1-V2', fencers: null },
+      { label: 'V3-V4', fencers: null },
+    ]);
   });
 });

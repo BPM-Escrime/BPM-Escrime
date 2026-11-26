@@ -22,6 +22,7 @@ import {
   coupledFormula,
   isCoupledSplit,
   playedTableauOf,
+  splitOf,
   uncoupledFormula,
   type FormulaV2,
   type PoolRoundPhase,
@@ -29,6 +30,7 @@ import {
   type SplitPhase,
   type TableauPhase,
 } from '../../../shared/domain/formula/formulaV2';
+import { simulateSplit } from '../../../shared/domain/formula/splitPlan';
 import {
   canRemoveV2,
   formulaViewV2,
@@ -627,6 +629,19 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
     );
   }
 
+  const simulation = simulateFormula(
+    simCount,
+    simulationFormulaOf(formula),
+    weapon,
+    durationSources
+  );
+  // Scission (ADR-0039) : effectif entrant = qualifiés du dernier tour de poules simulé
+  const pendingSplit = splitOf(formula);
+  const lastPool = [...simulation.phases].reverse().find(p => p.type === 'pool_round');
+  const simulatedSplit = pendingSplit
+    ? simulateSplit(pendingSplit, lastPool?.advancingFencers ?? simCount)
+    : undefined;
+
   return (
     <div className="formula-editor" data-testid="formula-editor">
       <nav className="formula-frieze" aria-label={t('properties.frieze_label')}>
@@ -683,13 +698,9 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
               />
             </label>
             <FormulaSimulationPreview
-              simulation={simulateFormula(
-                simCount,
-                simulationFormulaOf(formula),
-                weapon,
-                durationSources
-              )}
+              simulation={simulation}
               fencerCount={simCount}
+              split={simulatedSplit}
             />
           </aside>
         )}

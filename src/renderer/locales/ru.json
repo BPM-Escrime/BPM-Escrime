@@ -2911,7 +2911,10 @@
     "total_matches": "Всего боёв",
     "duration": "Ориентировочная длительность",
     "de": "Прямое выбывание",
-    "final_ranking": "Итоговый рейтинг"
+    "final_ranking": "Итоговый рейтинг",
+    "split": "Разделение",
+    "split_branch": "{{label}}: {{n}} спортсменов",
+    "split_branch_unknown": "{{label}}: зависит от заявленных спортсменов"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Быстрый ввод",

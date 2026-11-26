@@ -2911,7 +2911,10 @@
     "total_matches": "Totale incontri",
     "duration": "Durata stimata",
     "de": "Eliminazione diretta",
-    "final_ranking": "Classifica finale"
+    "final_ranking": "Classifica finale",
+    "split": "Suddivisione",
+    "split_branch": "{{label}}: {{n}} schermidori",
+    "split_branch_unknown": "{{label}}: secondo gli schermidori iscritti"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Inserimento rapido",

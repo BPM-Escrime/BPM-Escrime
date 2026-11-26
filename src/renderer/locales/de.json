@@ -2911,7 +2911,10 @@
     "total_matches": "Gefechte gesamt",
     "duration": "Geschätzte Dauer",
     "de": "Direktausscheidung",
-    "final_ranking": "Endrangliste"
+    "final_ranking": "Endrangliste",
+    "split": "Aufteilung",
+    "split_branch": "{{label}}: {{n}} Fechter",
+    "split_branch_unknown": "{{label}}: je nach angemeldeten Fechtern"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Schnelleingabe",

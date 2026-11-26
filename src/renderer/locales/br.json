@@ -2911,7 +2911,10 @@
     "total_matches": "Emgannoù en holl",
     "duration": "Padelezh priziet",
     "de": "Dilamadur war-eeun",
-    "final_ranking": "Renkadur diwezhañ"
+    "final_ranking": "Renkadur diwezhañ",
+    "split": "Rannadur",
+    "split_branch": "{{label}} : {{n}} c'hoarier",
+    "split_branch_unknown": "{{label}} : hervez ar c'hoarierien enskrivet"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Enankañ buan",

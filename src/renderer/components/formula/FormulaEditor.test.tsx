@@ -158,6 +158,10 @@ describe('FormulaEditor (formule v2)', () => {
     expect(split().branches[1].label).toBe('N2');
     expect(split().branches[1].phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
     expect(screen.queryByTestId('split-issues')).toBeNull();
+    // Simulation : la scission apparaît, effectif par branche (25 % puis le reste)
+    const sim = screen.getByTestId('sim-split');
+    expect(sim).toHaveTextContent('formulaSim.split');
+    expect(sim.querySelectorAll('.sim-phase-detail')).toHaveLength(2);
   });
 
   it('scission : sexe, catégories, ajout et retrait de branche, problèmes affichés', () => {

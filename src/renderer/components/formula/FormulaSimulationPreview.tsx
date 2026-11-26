@@ -7,12 +7,15 @@ import { FormulaSimulation } from '../../../shared/types';
 import { useTranslation } from '../../hooks/useTranslation';
 import { TriangleAlert } from 'lucide-react';
 import { Icon } from '../common/Icon';
+import type { SplitSimulationBranch } from '../../../shared/domain/formula/splitPlan';
 
 type TFn = ReturnType<typeof useTranslation>['t'];
 
 interface Props {
   simulation: FormulaSimulation;
   fencerCount: number;
+  /** Scission en fin de formule (ADR-0039) : effectif par branche, null si selon les tireurs */
+  split?: SplitSimulationBranch[];
 }
 
 function formatDuration(minutes: number): string {
@@ -28,8 +31,27 @@ function phaseLabel(t: TFn, type: string, index: number): string {
   return t('formulaSim.final_ranking');
 }
 
-const FormulaSimulationPreview_: React.FC<Props> = ({ simulation, fencerCount }) => {
+const FormulaSimulationPreview_: React.FC<Props> = ({ simulation, fencerCount, split }) => {
   const { t } = useTranslation();
+  // Scission : avant le classement final (dernière phase de la formule de l'épreuve)
+  const splitNode = split && split.length > 0 && (
+    <React.Fragment key="split">
+      <div className="sim-arrow">↓</div>
+      <div className="sim-node sim-node-split" data-testid="sim-split">
+        <div className="sim-phase-name">{t('formulaSim.split')}</div>
+        {split.map(b => (
+          <div key={b.label} className="sim-phase-detail">
+            {b.fencers === null
+              ? t('formulaSim.split_branch_unknown', { label: b.label })
+              : t('formulaSim.split_branch', { label: b.label, n: b.fencers })}
+          </div>
+        ))}
+      </div>
+    </React.Fragment>
+  );
+  const lastIsRanking =
+    simulation.phases.length > 0 &&
+    simulation.phases[simulation.phases.length - 1].type === 'classification';
   return (
     <div className="formula-simulation-preview">
       <h4 className="simulation-title">{t('formulaSim.title', { n: fencerCount })}</h4>
@@ -42,6 +64,7 @@ const FormulaSimulationPreview_: React.FC<Props> = ({ simulation, fencerCount })
 
         {simulation.phases.map((phase, i) => (
           <React.Fragment key={i}>
+            {lastIsRanking && i === simulation.phases.length - 1 && splitNode}
             <div className="sim-arrow">↓</div>
             <div className={`sim-node sim-node-${phase.type}`}>
               <div className="sim-phase-name">{phaseLabel(t, phase.type, i)}</div>
@@ -82,6 +105,7 @@ const FormulaSimulationPreview_: React.FC<Props> = ({ simulation, fencerCount })
             </div>
           </React.Fragment>
         ))}
+        {!lastIsRanking && splitNode}
       </div>
 
       <div className="simulation-totals">

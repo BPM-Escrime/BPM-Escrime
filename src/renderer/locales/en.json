@@ -2911,7 +2911,10 @@
     "total_matches": "Total bouts",
     "duration": "Estimated duration",
     "de": "Direct elimination",
-    "final_ranking": "Final ranking"
+    "final_ranking": "Final ranking",
+    "split": "Split",
+    "split_branch": "{{label}}: {{n}} fencers",
+    "split_branch_unknown": "{{label}}: depends on the registered fencers"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Quick entry",

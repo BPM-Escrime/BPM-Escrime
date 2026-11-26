@@ -107,6 +107,27 @@ describe('Résultats de l’épreuve d’origine scindée (ADR-0039)', () => {
     expect(rows[0]).toHaveTextContent('G');
   });
 
+  it('tous les tireurs partis dans les filles : pas de tableau de classement vide', async () => {
+    const everyone: SplitHistoryEntry[] = [
+      { label: 'Tableau A', competitionId: 'fa', fencerIds: ['A', 'B', 'C'] },
+      { label: 'Tableau B', competitionId: 'fb', fencerIds: ['D', 'E'] },
+    ];
+    render(
+      <ResultsView
+        competition={{ id: 'c', title: 'Coupe' } as Competition}
+        poolRanking={originFinalRanking(ranking, [], everyone).ranking}
+        finalResults={[]}
+        fencers={all}
+        isLaserSabre={false}
+        splitBranches={everyone}
+        onOpenCompetition={vi.fn()}
+      />
+    );
+    expect(await screen.findByTestId('split-branches')).toBeInTheDocument();
+    expect(screen.queryByText('resultsView.final_title')).toBeNull();
+    expect(screen.queryByRole('table')).toBeNull();
+  });
+
   it('épreuve non scindée : pas de bloc « Branches »', () => {
     render(
       <ResultsView

@@ -2911,7 +2911,10 @@
     "total_matches": "比賽總數",
     "duration": "預計時長",
     "de": "直接淘汰",
-    "final_ranking": "最終排名"
+    "final_ranking": "最終排名",
+    "split": "分組",
+    "split_branch": "{{label}}：{{n}} 名劍手",
+    "split_branch_unknown": "{{label}}：視乎已報名劍手"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - 快速輸入",

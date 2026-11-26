@@ -2911,7 +2911,10 @@
     "total_matches": "Total de combates",
     "duration": "Duração estimada",
     "de": "Eliminação direta",
-    "final_ranking": "Classificação final"
+    "final_ranking": "Classificação final",
+    "split": "Divisão",
+    "split_branch": "{{label}}: {{n}} atiradores",
+    "split_branch_unknown": "{{label}}: conforme os atiradores inscritos"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Introdução rápida",

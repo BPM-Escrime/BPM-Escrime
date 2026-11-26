@@ -2911,7 +2911,10 @@
     "total_matches": "Total de combats",
     "duration": "Durada estimada",
     "de": "Eliminació directa",
-    "final_ranking": "Classificació final"
+    "final_ranking": "Classificació final",
+    "split": "Divisió",
+    "split_branch": "{{label}}: {{n}} tiradors",
+    "split_branch_unknown": "{{label}}: segons els tiradors inscrits"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Entrada ràpida",

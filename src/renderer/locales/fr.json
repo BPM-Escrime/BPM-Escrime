@@ -2911,7 +2911,10 @@
     "total_matches": "Total matchs",
     "duration": "Durée estimée",
     "de": "Élimination directe",
-    "final_ranking": "Classement final"
+    "final_ranking": "Classement final",
+    "split": "Scission",
+    "split_branch": "{{label}} : {{n}} tireurs",
+    "split_branch_unknown": "{{label}} : selon les tireurs inscrits"
   },
   "tableauScore": {
     "quick_entry": "{{round}} - Saisie rapide",
