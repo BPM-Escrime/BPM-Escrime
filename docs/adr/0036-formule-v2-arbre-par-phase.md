@@ -1,6 +1,6 @@
 # ADR-0036 — Formule v2 : un arbre de phases pour toutes les armes, lu par phase par le moteur, sans migration de schéma
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : arbre, sans migration SQL, réglage de répartition du tour suivant, nouvelle clé `settings.formula`) ; amendée le 2026-11-26 (forme de `SplitPhase.branches` : `SplitBranch[]` d'[ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : arbre, sans migration SQL, réglage de répartition du tour suivant, nouvelle clé `settings.formula`) ; amendée le 2026-11-26 (forme de `SplitPhase.branches` : `SplitBranch[]` d'[ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur) ; amendée le 2026-11-26 (lecture d'une formule d'avant E3 avec la compétition couplée, validé par le mainteneur)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape C ; questions Q3, Q4, Q19), #1948 (ex-lot 0) ; complète [ADR-0012](0012-formule-domaine.md), [ADR-0032](0032-formule-interface-unique-apercu.md) et [ADR-0033](0033-modeles-de-formule.md), soumise à [ADR-0011](0011-migrations-schema-3-0.md)
 
@@ -75,9 +75,9 @@ interface SplitPhase {
 } // étape E
 ```
 
-*(Amendé le 2026-11-26 : `branches: SplitBranch[]` remplace
+_(Amendé le 2026-11-26 : `branches: SplitBranch[]` remplace
 « `branches: { label: string; phases: FormulaPhaseV2[] }[]` » ; `SplitBranch` est décrite par
-[ADR-0039](0039-scission-competitions-filles.md).)*
+[ADR-0039](0039-scission-competitions-filles.md).)_
 
 - **Arbre** : une suite de phases ; une scission porte ses branches, chacune suite de phases.
   Les exemptés et le tableau préliminaire de #1948 seront des réglages du tableau, pas des
@@ -94,9 +94,14 @@ interface SplitPhase {
   - Choix validé le 2026-11-25 à la place de « customFormula, version 2 » : garder une clé dont
     le contenu change de forme selon la version obligerait chaque lecteur à tester la version,
     et `customFormula` laisse croire à une formule réservée à l'arme « Autre ».
-- **Lecture** : `formulaOf(competition)` rend `settings.formula`, sinon la construit depuis les
-  réglages plats (épée… Sabre Laser) ou depuis `customFormula` v1 (arme « Autre »). Fonction
-  pure, testée sur des sauvegardes réelles : **une épreuve existante se déroule à l'identique**.
+- **Lecture** : `formulaOf(competition)` rend `settings.formula` (une formule enregistrée avant
+  l'étape E3 avec `postPoolSplitCriteria = 'gender'` est relue avec sa scission par sexe,
+  [ADR-0039](0039-scission-competitions-filles.md)), sinon la construit depuis les réglages
+  plats (épée… Sabre Laser) ou depuis `customFormula` v1 (arme « Autre »). Fonction pure,
+  testée sur des sauvegardes réelles : **une épreuve existante se déroule à l'identique**.
+  _(Amendé le 2026-11-26 : remplace « **Lecture** : `formulaOf(competition)` rend
+  `settings.formula`, sinon la construit depuis les réglages plats (épée… Sabre Laser) ou depuis
+  `customFormula` v1 (arme « Autre ») ».)_
 - **Écriture** : toute commande qui modifie la formule écrit `formula` **et** les réglages
   plats dérivés (`flatSettingsOf(formula)`, valeurs du premier tour et du tableau), tant que
   des lecteurs plats existent. Une version antérieure de l'application qui ouvre la base
