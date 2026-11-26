@@ -193,6 +193,70 @@ d('formule v2 écrite et lue par phase (docs/adr/0036)', () => {
     expect(f.formula.phases[1].maxScore).toBe(4);
   });
 
+  it('tour en vagues (docs/adr/0043) : ordre « waves », poules de 2 à 10, au-delà refusé', async () => {
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [
+        {
+          op: 'setPhase',
+          phase: 'pool-0',
+          settings: { boutOrder: 'waves', sizeMin: 2, sizeMax: 10 },
+        },
+      ],
+    });
+    const comp = db.getCompetition(competitionId)!;
+    expect(comp.settings?.formula?.phases[0]).toMatchObject({
+      boutOrder: 'waves',
+      sizeMin: 2,
+      sizeMax: 10,
+    });
+    expect(comp.settings).toMatchObject({ poolBoutOrder: 'waves', poolSizeMin: 2 });
+    await expect(
+      op('updateCompetitionFormula', {
+        competitionId,
+        operations: [{ op: 'setPhase', phase: 'pool-0', settings: { sizeMax: 11 } }],
+      })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    // Retour à l'ordre FIE : poules de 2 refusées de nouveau
+    await expect(
+      op('updateCompetitionFormula', {
+        competitionId,
+        operations: [{ op: 'setPhase', phase: 'pool-0', settings: { boutOrder: 'fie' } }],
+      })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+  });
+
+  it('arme « Autre » : tour en vagues de 2 à 10 aussi, ordre gardé dans les réglages plats', async () => {
+    const other = db.createCompetition({
+      title: 'Autre',
+      date: new Date('2026-12-06'),
+      weapon: Weapon.CUSTOM,
+      gender: Gender.MIXED,
+      category: Category.SENIOR,
+      settings: buildDefaultCompetitionSettings({
+        weapon: Weapon.CUSTOM,
+        category: Category.SENIOR,
+      }) as never,
+    });
+    await op('updateCompetitionFormula', {
+      competitionId: other.id,
+      operations: [
+        {
+          op: 'setPhase',
+          phase: 'pool-0',
+          settings: { boutOrder: 'waves_classic', sizeMin: 2, sizeMax: 10 },
+        },
+      ],
+    });
+    const { settings } = db.getCompetition(other.id)!;
+    expect(settings).toMatchObject({ poolBoutOrder: 'waves_classic' });
+    expect(settings?.formula?.phases[0]).toMatchObject({ sizeMin: 2, sizeMax: 10 });
+    expect(settings?.customFormula?.phases[0].config).toMatchObject({
+      minPoolSize: 2,
+      maxPoolSize: 10,
+    });
+  });
+
   it('bornes du tour 2 refusées', async () => {
     await expect(
       op('updateCompetitionFormula', {

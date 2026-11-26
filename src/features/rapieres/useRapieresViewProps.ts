@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { Fencer } from '../../shared/types';
 import { RAPIERES_LEVELS, RapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
 import { rapieresTeamCategory } from '../../shared/domain/rapieres/rapieresAge';
-import { waveMatchOrder } from '../../shared/domain/rapieres/rapieresCalculations';
+import { waveMatchOrder } from '../../shared/domain/pools/waves';
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 

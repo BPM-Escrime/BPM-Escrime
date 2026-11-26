@@ -27,6 +27,7 @@ import { addPoolFencer } from '../commands/poolComposition';
 import { closePoolRound } from '../commands/poolRound';
 import { closeTableauStage } from '../commands/tableauStage';
 import { endRapieresWaves, launchRapieresWave, setRapieresTeams } from '../commands/rapieres';
+import { endPoolWaves, launchPoolWave } from '../commands/poolWaves';
 import { getArenaPlan, saveArenaPlan } from '../commands/arenaPlan';
 import { clearScore } from '../commands/scoreClear';
 import { assignMatches } from '../commands/assignments';
@@ -122,6 +123,10 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     closePoolRound(ctx, input),
   generateTableau: (ctx, { competitionId, expectedRevision: _r, commandId: _c, ...options }) =>
     buildBracket(ctx, competitionId, options),
+  launchPoolWave: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    launchPoolWave(ctx, input),
+  endPoolWaves: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
+    endPoolWaves(ctx, input),
   launchRapieresWave: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     launchRapieresWave(ctx, input),
   setRapieresTeams: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>

@@ -23,6 +23,7 @@ import {
   type PoolBoutOrderMode,
   type PoolBoutPlan,
 } from '../../shared/utils/poolBoutOrder';
+import { isWavesOrder, POOL_WAVES_SIZE } from '../../shared/domain/pools/waves';
 import { useUndoStack } from '../hooks/useUndoStack';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from './Toast';
@@ -341,8 +342,11 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
     }
   };
 
+  // Tour en vagues : poules de 2 à 10 tireurs (docs/adr/0043) ; sinon 3 à 64
+  const sizeBounds = isWavesOrder(boutOrderMode) ? POOL_WAVES_SIZE : { min: 3, max: 64 };
+
   const handleMinFencersChange = (value: number) => {
-    if (value >= 3 && value <= maxFencersPerPool) {
+    if (value >= sizeBounds.min && value <= maxFencersPerPool) {
       saveToHistory();
       setMinFencersPerPool(value);
       onSettingsChange?.(value, maxFencersPerPool);
@@ -350,7 +354,7 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
   };
 
   const handleMaxFencersChange = (value: number) => {
-    if (value >= minFencersPerPool && value <= 64) {
+    if (value >= minFencersPerPool && value <= sizeBounds.max) {
       saveToHistory();
       setMaxFencersPerPool(value);
       onSettingsChange?.(minFencersPerPool, value);
@@ -396,7 +400,8 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
       mode: boutOrderMode,
       keepPositions: true,
     });
-    if (plan.table === 'standard' && plan.groups.length === 0) return null;
+    if (plan.table === 'waves' || (plan.table === 'standard' && plan.groups.length === 0))
+      return null;
     const detail = plan.groups
       .map(g => t('matchOrder.group', { value: g.value, positions: g.positions.join(', ') }))
       .join(' · ');
@@ -716,7 +721,7 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
                 type="number"
                 value={minFencersPerPool}
                 onChange={e => handleMinFencersChange(parseInt(e.target.value) || 5)}
-                min={3}
+                min={sizeBounds.min}
                 max={maxFencersPerPool}
                 className="is-e30a97"
               />
@@ -729,7 +734,7 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
                 value={maxFencersPerPool}
                 onChange={e => handleMaxFencersChange(parseInt(e.target.value) || 7)}
                 min={minFencersPerPool}
-                max={64}
+                max={sizeBounds.max}
                 className="is-e30a97"
               />
             </div>

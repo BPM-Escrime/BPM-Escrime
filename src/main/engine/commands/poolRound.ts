@@ -10,7 +10,8 @@ import { FencerStatus, type Fencer, type Pool, type TiesAtBar } from '../../../s
 import { assertTies } from './ties';
 import { selectNextRoundFencers } from '../../../shared/utils/poolRounds';
 import { computeOverallRankingAllRoundsFor } from '../../../shared/utils/poolOrchestration';
-import { areAllPoolsComplete } from '../../../shared/domain/pools/poolCompletion';
+import { isPoolRoundFinished, poolWavesOf } from '../../../shared/domain/pools/waves';
+import { isWavesRound } from '../../../shared/domain/formula/formulaV2';
 import { nextRoundPlan } from '../../../shared/domain/pools/roundSeeding';
 import { isTableauEligible } from '../../../shared/domain/fencers/fencerStatus';
 import { CommandError, type CommandContext } from './context';
@@ -48,13 +49,20 @@ export function closePoolRound(ctx: CommandContext, input: ClosePoolRoundInput) 
   if (allTableauMatches(session).length > 0) {
     throw new CommandError('bracket_exists', 'Tableau déjà tiré : plus de tour de poules');
   }
-  if (pools.length === 0 || !areAllPoolsComplete(pools)) {
+  const round = Math.max(1, Number(session.currentPoolRound ?? 1) || 1);
+  // Tour en vagues : vagues arrêtées = tour terminé (docs/adr/0043)
+  if (
+    !isPoolRoundFinished(
+      pools,
+      poolWavesOf(session as Parameters<typeof poolWavesOf>[0]),
+      isWavesRound(comp.settings, round)
+    )
+  ) {
     throw new CommandError(
       'pools_not_complete',
       'Toutes les poules du tour doivent être terminées'
     );
   }
-  const round = Math.max(1, Number(session.currentPoolRound ?? 1) || 1);
   // Classement du tour ou cumul des tours (Q4), qualifiés de la formule (ADR-0036)
   const plan = nextRoundPlan({
     weapon: comp.weapon,

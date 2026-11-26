@@ -65,8 +65,8 @@ const screenTabs = (f: FormulaV2, closedStages: number): string[] => {
       pools: [],
       poolHistory: [],
       areAllPoolsComplete: () => false,
-      isRapieres: false,
-      rapieresWavesEnded: false,
+      isWaves: false,
+      wavesEnded: false,
       currentPoolRound: 1,
       poolRounds: segment?.poolRounds ?? f.phases.filter(p => p.kind === 'pool').length,
       // Comme l'écran (réglages plats) : tableau de la formule, ou des branches restées

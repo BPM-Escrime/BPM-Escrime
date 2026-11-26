@@ -569,6 +569,14 @@ export interface FormulaPhaseNode {
 /** Modes spéciaux de l'arme « À la carte » (#1118) */
 export type CompetitionSpecialMode = 'rapieres';
 
+/**
+ * Ordre des matchs d'une poule : règlement FIE (défaut), rondes de Berger sans placement
+ * (« free », #1964), vagues (« waves » : toutes rondes, un tour en vagues) ou vagues
+ * classiques (« waves_classic » : tables fixes des poules de 10 à 15, sinon « waves »)
+ * (docs/adr/0043, F4a).
+ */
+export type PoolBoutOrder = 'fie' | 'free' | 'waves' | 'waves_classic';
+
 export interface CustomFormulaConfig {
   version: 1;
   phases: FormulaPhaseNode[];
@@ -795,7 +803,7 @@ export interface CompetitionSettings {
   federal?: FederalCompetitionInfo; // Données de l'extranet fédéral (#1938)
   schedule?: CompetitionSchedule; // Horaires appel / scratch / début (#1938)
   gregLevel?: 'L' | 'Z' | 'CN' | 'A' | 'F' | 'IE' | 'X'; // Niveau GREG (publication, #1328) ; absent = X (Autre)
-  poolBoutOrder?: 'fie' | 'free'; // Ordre des matchs de poule : FIE o.69/o.70 (défaut) ou libre, rondes de Berger (#1964)
+  poolBoutOrder?: PoolBoutOrder; // Ordre des matchs de poule : FIE o.69/o.70 (défaut), libre (rondes de Berger, #1964) ou vagues (docs/adr/0043)
   manualStrips?: number[]; // Pistes de la salle dont l'appareil est ignoré pour cette épreuve (docs/adr/0023)
   /** Notes et retours de l'organisation, tenus tout le long de l'épreuve (shared/domain/organizerNotes) */
   organizerNotes?: OrganizerNote[];

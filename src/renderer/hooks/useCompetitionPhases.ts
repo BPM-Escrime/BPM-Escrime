@@ -25,8 +25,9 @@ interface UseCompetitionPhasesParams {
   pools: Pool[];
   poolHistory: Pool[][];
   areAllPoolsComplete: () => boolean;
-  isRapieres: boolean;
-  rapieresWavesEnded: boolean;
+  /** Tour en vagues (formule, ou mode rapières) : vagues arrêtées avant leur terme (docs/adr/0043) */
+  isWaves: boolean;
+  wavesEnded: boolean;
   currentPoolRound: number;
   poolRounds: number;
   hasDirectElimination: boolean;
@@ -58,8 +59,8 @@ export function useCompetitionPhases({
   pools,
   poolHistory,
   areAllPoolsComplete,
-  isRapieres,
-  rapieresWavesEnded,
+  isWaves,
+  wavesEnded,
   currentPoolRound,
   poolRounds,
   hasDirectElimination,
@@ -103,8 +104,7 @@ export function useCompetitionPhases({
 
   // Phases dynamiques
   const canAdvanceFromPools =
-    skipPoolPhase ||
-    (pools.length > 0 && (areAllPoolsComplete() || (isRapieres && rapieresWavesEnded)));
+    skipPoolPhase || (pools.length > 0 && (areAllPoolsComplete() || (isWaves && wavesEnded)));
   const isLastPoolRound = currentPoolRound >= poolRounds;
   const isResultsLocked = hasDirectElimination && finalResults.length === 0;
   // En mode quest-sans-poules, le tableau se débloque par la complétion de la quête (rankingValidated)

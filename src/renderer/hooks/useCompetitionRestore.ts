@@ -49,6 +49,7 @@ interface UseCompetitionRestoreParams {
   /** Piste de départ du plan des pistes, lue par le contrat (docs/adr/0015) */
   remoteStripStart: number;
   setRapieresState: ReturnType<typeof useRapieresSessionState>['setRapieresState'];
+  setWavesState: ReturnType<typeof useRapieresSessionState>['setWavesState'];
   minFencersPerPool: number;
   maxFencersPerPool: number;
   setMinFencersPerPool: Setter<number>;
@@ -81,6 +82,7 @@ export function useCompetitionRestore({
   setRemoteArenaCount,
   remoteStripStart,
   setRapieresState,
+  setWavesState,
   minFencersPerPool,
   maxFencersPerPool,
   setMinFencersPerPool,
@@ -162,6 +164,7 @@ export function useCompetitionRestore({
         if (arenas != null) setRemoteArenaCount(arenas);
       }
       if (restoredState.rapieres) setRapieresState(restoredState.rapieres);
+      setWavesState(restoredState.waves);
       setStageHistory?.(restoredState.stageHistory ?? []);
       setSplitHistory?.(restoredState.splitHistory ?? []);
     }

@@ -33,6 +33,8 @@ interface PoolsPhaseProps {
   renderPoolCard: (pool: Pool, poolIndex: number) => React.ReactNode;
   // Rapières
   isRapieres: boolean;
+  /** Tour en vagues (ordre « waves » de la formule, ou mode rapières) : barre des vagues */
+  isWaves: boolean;
   launchedWave: number;
   wavesEnded: boolean;
   onLaunchWave: (wave: number) => void;
@@ -64,6 +66,7 @@ const PoolsPhase: React.FC<PoolsPhaseProps> = ({
   onBackToCheckin,
   renderPoolCard,
   isRapieres,
+  isWaves,
   launchedWave,
   wavesEnded,
   onLaunchWave,
@@ -115,7 +118,7 @@ const PoolsPhase: React.FC<PoolsPhaseProps> = ({
         />
       ) : (
         <>
-          {isRapieres && (
+          {isWaves && (
             <RapieresWaveBar
               pools={pools}
               launchedWave={launchedWave}

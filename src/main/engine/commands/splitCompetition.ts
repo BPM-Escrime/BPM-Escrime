@@ -49,7 +49,7 @@ import {
 } from '../../../shared/domain/ranking/splitGroups';
 import { computeEffectiveTableauRanking } from '../../../shared/domain/ranking/tableauRanking';
 import { rankingAfterStage, tableauStagesOf } from '../../../shared/domain/tableau/tableauStage';
-import { areAllPoolsComplete } from '../../../shared/domain/pools/poolCompletion';
+import { isPoolRoundFinished, isWavesOrder, poolWavesOf } from '../../../shared/domain/pools/waves';
 import { isTableauEligible } from '../../../shared/domain/fencers/fencerStatus';
 import { computeOverallRankingAllRoundsFor } from '../../../shared/utils/poolOrchestration';
 import { CommandError, type CommandContext } from './context';
@@ -123,8 +123,11 @@ function entryRanking(
     const pools = sessionPools(session);
     const rounds = formula.phases.filter(p => p.kind === 'pool').length;
     if (
-      pools.length === 0 ||
-      !areAllPoolsComplete(pools) ||
+      !isPoolRoundFinished(
+        pools,
+        poolWavesOf(session as Parameters<typeof poolWavesOf>[0]),
+        isWavesOrder(prev.boutOrder)
+      ) ||
       history.length + 1 < rounds ||
       drawn.length > 0
     ) {

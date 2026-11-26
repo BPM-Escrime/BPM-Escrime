@@ -22,10 +22,13 @@ import {
 } from './poolCalculations';
 import type { PoolBoutOrderMode } from './poolBoutOrder';
 import { drawPools, type PoolSeparation } from '../domain/pools/poolDraw';
+import { isWavesOrder } from '../domain/pools/waves';
 import { mergeRoundRankings } from './poolRounds';
 import { isTieAtScoreLimit } from '../domain/match/matchEndValidation';
 
 export const MIN_FENCERS_FOR_POOLS = 4;
+/** Tour en vagues : poules de 2 tireurs au moins, donc 2 tireurs pour tirer (docs/adr/0043) */
+export const MIN_FENCERS_FOR_WAVES_POOLS = 2;
 
 export interface BuildPoolsOptions {
   poolMaxScore: number;
@@ -50,10 +53,11 @@ export interface BuildPoolsOptions {
  * nombre de poules optimal. Défaut : serpentin, puis club et région dans le chapeau.
  */
 export function buildPools(fencers: Fencer[], options: BuildPoolsOptions): Pool[] {
-  if (fencers.length < MIN_FENCERS_FOR_POOLS) {
-    throw new Error(
-      `Il faut au moins ${MIN_FENCERS_FOR_POOLS} tireurs pointés pour créer les poules.`
-    );
+  const minFencers = isWavesOrder(options.boutOrder)
+    ? MIN_FENCERS_FOR_WAVES_POOLS
+    : MIN_FENCERS_FOR_POOLS;
+  if (fencers.length < minFencers) {
+    throw new Error(`Il faut au moins ${minFencers} tireurs pointés pour créer les poules.`);
   }
   const round = options.round ?? 1;
   const now = options.now ?? (() => new Date());

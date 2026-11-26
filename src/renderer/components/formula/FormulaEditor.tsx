@@ -15,6 +15,7 @@ import {
   Category,
   CompetitionSpecialMode,
   CustomScoringConfig,
+  PoolBoutOrder,
   Weapon,
 } from '../../../shared/types';
 import type { FriezeBrick, FriezePhase } from '../../../shared/domain/formula/formulaFrieze';
@@ -31,6 +32,7 @@ import {
   type TableauPhase,
 } from '../../../shared/domain/formula/formulaV2';
 import { simulateSplit } from '../../../shared/domain/formula/splitPlan';
+import { isWavesOrder, POOL_WAVES_SIZE } from '../../../shared/domain/pools/waves';
 import { bricksForLevel, formulaNeedsExpert } from '../../../shared/domain/formula/formulaExpert';
 import type { FormulaProgress, FormulaRemark } from '../../../shared/domain/formula/formulaRemarks';
 import {
@@ -55,6 +57,9 @@ import { AdvancementRuleEditor } from './AdvancementRuleEditor';
 import { ScoringZoneEditor } from './ScoringZoneEditor';
 import { FormulaSimulationPreview } from './FormulaSimulationPreview';
 import { SplitPhaseEditor } from './SplitPhaseEditor';
+
+/** Taille d'une poule hors tour en vagues */
+const POOL_SIZE = { min: 3, max: 64 } as const;
 
 export interface FormulaEditorProps {
   weapon: Weapon;
@@ -326,6 +331,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
     const isLast = p.round === pools.length - 1;
     const set = (patch: Partial<PoolRoundPhase>) => patchPhase<PoolRoundPhase>(p, patch);
     const id = `pool-${p.round}`;
+    const sizeBounds = isWavesOrder(pool.boutOrder) ? POOL_WAVES_SIZE : POOL_SIZE;
     return (
       <>
         <fieldset className="properties-group">
@@ -335,15 +341,19 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
               `${id}-min`,
               t('properties.pool_size_min'),
               pool.sizeMin,
-              v => set({ sizeMin: Math.max(3, v), sizeMax: Math.max(3, v, pool.sizeMax) }),
-              { min: 3, max: 64 }
+              v =>
+                set({
+                  sizeMin: Math.min(sizeBounds.max, Math.max(sizeBounds.min, v)),
+                  sizeMax: Math.min(sizeBounds.max, Math.max(sizeBounds.min, v, pool.sizeMax)),
+                }),
+              { min: sizeBounds.min, max: sizeBounds.max }
             )}
             {numberField(
               `${id}-max`,
               t('properties.pool_size_max'),
               pool.sizeMax,
-              v => set({ sizeMax: Math.min(64, Math.max(pool.sizeMin, v)) }),
-              { min: pool.sizeMin, max: 64 }
+              v => set({ sizeMax: Math.min(sizeBounds.max, Math.max(pool.sizeMin, v)) }),
+              { min: pool.sizeMin, max: sizeBounds.max }
             )}
             {numberField(
               `${id}-score`,
@@ -394,21 +404,31 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 <small className="u-hint">{t('formulaEditor.seeding_hint')}</small>
               </div>
             )}
-            {!isOther && (
-              <div className="form-group">
-                <label htmlFor={`${id}-order`}>{t('properties.bout_order')}</label>
-                <select
-                  id={`${id}-order`}
-                  className="form-input form-select"
-                  value={pool.boutOrder}
-                  onChange={e => set({ boutOrder: e.target.value as 'fie' | 'free' })}
-                >
-                  <option value="fie">{t('properties.bout_order_fie')}</option>
-                  <option value="free">{t('properties.bout_order_free')}</option>
-                </select>
-                <small className="u-hint">{t('properties.bout_order_hint')}</small>
-              </div>
-            )}
+            <div className="form-group">
+              <label htmlFor={`${id}-order`}>{t('properties.bout_order')}</label>
+              <select
+                id={`${id}-order`}
+                className="form-input form-select"
+                value={pool.boutOrder}
+                onChange={e => {
+                  const boutOrder = e.target.value as PoolBoutOrder;
+                  // Tour en vagues : poules de 2 à 10 tireurs (docs/adr/0043) ; sinon 3 à 64
+                  const bounds = isWavesOrder(boutOrder) ? POOL_WAVES_SIZE : POOL_SIZE;
+                  const fit = (n: number) => Math.min(bounds.max, Math.max(bounds.min, n));
+                  set({ boutOrder, sizeMin: fit(pool.sizeMin), sizeMax: fit(pool.sizeMax) });
+                }}
+              >
+                <option value="fie">{t('properties.bout_order_fie')}</option>
+                {/* Arme « Autre » : ordre libre non proposé (réglage plat non reporté) */}
+                {!isOther && <option value="free">{t('properties.bout_order_free')}</option>}
+                <option value="waves">{t('properties.bout_order_waves')}</option>
+                <option value="waves_classic">{t('properties.bout_order_waves_classic')}</option>
+              </select>
+              <small className="u-hint">{t('properties.bout_order_hint')}</small>
+              {isWavesOrder(pool.boutOrder) && (
+                <small className="u-hint">{t('properties.bout_order_waves_hint')}</small>
+              )}
+            </div>
             {isOther && (
               <div className="form-group">
                 <label className="form-label">{t('formulaPhase.scoring')}</label>

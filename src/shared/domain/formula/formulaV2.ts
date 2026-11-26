@@ -17,6 +17,7 @@ import {
   CustomScoringConfig,
   FormulaPhaseNode,
   Gender,
+  PoolBoutOrder,
   PostPoolSplitCriteria,
   QuestPhaseConfig,
   Weapon,
@@ -25,6 +26,7 @@ import { deriveSettingsFromFormula } from '../../utils/customFormulaSettings';
 import { createDefaultCustomFormula } from '../../utils/tournamentTemplates';
 import { draftFromSettings, effectivePoolRounds } from './formulaDraft';
 import { normalizeCustomFormula } from './formulaFrieze';
+import { isWavesOrder } from '../pools/waves';
 
 /** Réglages v1 non exécutés, gardés pour l'aller-retour avec `customFormula` (retirés à la 3.0) */
 export type LegacyPoolSettings = Pick<
@@ -50,7 +52,8 @@ export interface PoolRoundPhase {
   qualification: AdvancementRule;
   /** Répartition du tour (Q4) : classement du tour précédent (défaut) ou cumul des tours */
   seeding: 'previous_round' | 'cumulative';
-  boutOrder: 'fie' | 'free';
+  /** Ordre des matchs : FIE, libre, ou en vagues (réglage avancé, docs/adr/0043) */
+  boutOrder: PoolBoutOrder;
   legacy?: LegacyPoolSettings;
 }
 
@@ -442,11 +445,24 @@ export function phaseSettings<R extends PhaseRef>(
 export function poolBoutOrderOfRound(
   settings: Partial<CompetitionSettings> | undefined,
   round: number
-): 'fie' | 'free' | undefined {
+): PoolBoutOrder | undefined {
   const f = settings?.formula;
   if (f && pools(f).length > 0)
     return phaseSettings(f, { kind: 'pool', round: round - 1 }).boutOrder;
   return settings?.poolBoutOrder;
+}
+
+/**
+ * Le tour `round` (1 = 1er) est-il un tour en vagues ? Ordre « waves » ou « waves_classic » de
+ * la formule ; une épreuve du mode spécial rapières en est un aussi, jusqu'à F4e (docs/adr/0043).
+ */
+export function isWavesRound(
+  settings: Partial<CompetitionSettings> | undefined,
+  round: number
+): boolean {
+  return (
+    settings?.specialMode === 'rapieres' || isWavesOrder(poolBoutOrderOfRound(settings, round))
+  );
 }
 
 /**
@@ -480,9 +496,14 @@ export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<Competitio
     : f.general.postPoolSplitCriteria;
   if (weapon === Weapon.CUSTOM) {
     const customFormula = customFormulaOf(f);
+    const firstPool = pools(f)[0];
     return {
       customFormula,
       ...deriveSettingsFromFormula(customFormula),
+      // Tour en vagues au 1er tour : l'ordre suit les tailles de poule (2 à 10, docs/adr/0043)
+      ...(firstPool && isWavesOrder(firstPool.boutOrder)
+        ? { poolBoutOrder: firstPool.boutOrder }
+        : {}),
       ...(postPoolSplitCriteria ? { postPoolSplitCriteria } : {}),
     };
   }

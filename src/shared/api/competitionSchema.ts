@@ -137,7 +137,7 @@ export const CompetitionSettingsSchema = z.strictObject({
   federal: FederalSchema.optional(),
   schedule: ScheduleSchema.optional(),
   gregLevel: z.enum(['L', 'Z', 'CN', 'A', 'F', 'IE', 'X']).optional(),
-  poolBoutOrder: z.enum(['fie', 'free']).optional(),
+  poolBoutOrder: z.enum(['fie', 'free', 'waves', 'waves_classic']).optional(),
   /** Pistes dont l'appareil est ignoré pour cette épreuve (docs/adr/0023) */
   manualStrips: z.array(z.number().int().min(1).max(100)).max(100).optional(),
   organizerNotes: z.array(OrganizerNoteSchema).max(500).optional(),

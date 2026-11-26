@@ -58,7 +58,7 @@ Premier écran affiché à l'ouverture.
 - Tous matchs finis → message « ✅ Tous les matchs de cette arène sont terminés » +
   boutons **✍️ SIGNATURE** (feuille de poule `/arene{N}/poule`) et **📋 JOURNAL**.
 - Toucher une carte → sélection du match (`select_match`), passage à l'écran de match.
-- **Tournoi des rapières, pendant les vagues** : seuls les matchs de la vague active sont
+- **Tour en vagues (ordre des matchs « waves » ou « waves_classic » de la formule, tournoi des rapières compris, ADR-0043), pendant les vagues** : seuls les matchs de la vague active sont
   proposés, et plusieurs tablettes peuvent arbitrer en même temps des matchs différents de
   la même piste. Chaque tablette reçoit une **sous-piste** (`POST /api/arenas/arena{N}/slot`,
   clé `bp_screen_id`) : `arena{N}`, puis `arena{N}s2`, `arena{N}s3`… (10 au plus), affichée
@@ -70,7 +70,7 @@ Premier écran affiché à l'ouverture.
   n'affiche que la piste elle-même.
 - **Plusieurs tablettes sur une piste de poule, tous modes** (#2300) : une tablette qui
   ouvre `/arene{N}/arbitre` alors qu'une autre tablette connectée tient déjà la piste reçoit
-  une sous-piste, comme pendant les vagues des rapières : elle arbitre un autre match de la
+  une sous-piste, comme pendant les vagues d'un tour en vagues : elle arbitre un autre match de la
   poule sans couper celui de la piste. Un match ouvert ou lancé sur une arène n'est proposé
   ni rechargé sur les autres ; un match seulement préchargé sur la piste et ouvert sur une
   sous-piste fait passer la piste au match suivant. Une tablette absente (fermée, éteinte)

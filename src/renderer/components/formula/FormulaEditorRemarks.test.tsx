@@ -171,6 +171,40 @@ describe('mode expert de l’éditeur (ADR-0041, Q17)', () => {
     expect(document.getElementById('tableau-stop-at')).not.toBeNull();
   });
 
+  it('ordre des matchs en vagues : proposé en expert, poules de 2 à 10 (docs/adr/0043)', () => {
+    render(<Harness initial={withPools([{}])} />);
+    // Niveau simple : le sélecteur d'ordre est un réglage avancé
+    expect(document.getElementById('pool-0-order')).toBeNull();
+    fireEvent.click(screen.getByTestId('formula-expert-toggle'));
+    const order = document.getElementById('pool-0-order') as HTMLSelectElement;
+    expect([...order.options].map(o => o.value)).toEqual(['fie', 'free', 'waves', 'waves_classic']);
+    // Bornes habituelles : 3 à 64
+    expect(document.getElementById('pool-0-min')).toHaveAttribute('min', '3');
+    expect(document.getElementById('pool-0-max')).toHaveAttribute('max', '64');
+    fireEvent.change(order, { target: { value: 'waves' } });
+    expect((last!.phases[0] as PoolRoundPhase).boutOrder).toBe('waves');
+    // Tour en vagues : 2 à 10, tailles ramenées dans les bornes
+    expect(document.getElementById('pool-0-min')).toHaveAttribute('min', '2');
+    expect(document.getElementById('pool-0-max')).toHaveAttribute('max', '10');
+    fireEvent.change(document.getElementById('pool-0-min')!, { target: { value: '2' } });
+    expect((last!.phases[0] as PoolRoundPhase).sizeMin).toBe(2);
+    fireEvent.change(document.getElementById('pool-0-max')!, { target: { value: '30' } });
+    expect((last!.phases[0] as PoolRoundPhase).sizeMax).toBe(10);
+    // Retour à l'ordre FIE : tailles ramenées à 3 au moins, remarque levée
+    fireEvent.change(order, { target: { value: 'fie' } });
+    expect((last!.phases[0] as PoolRoundPhase).sizeMin).toBe(3);
+    expect(screen.queryByTestId('formula-remarks')).toBeNull();
+  });
+
+  it('formule en vagues : mode expert rallumé pour cette édition', () => {
+    render(
+      <Harness initial={withPools([{ boutOrder: 'waves_classic', sizeMin: 2, sizeMax: 10 }])} />
+    );
+    expect(screen.getByTestId('formula-expert-toggle')).toBeChecked();
+    expect(screen.getByTestId('formula-expert-toggle')).toBeDisabled();
+    expect(document.getElementById('pool-0-order')).toHaveValue('waves_classic');
+  });
+
   it('préférence allumée : expert d’emblée', () => {
     station.expert = true;
     render(<Harness initial={base()} />);

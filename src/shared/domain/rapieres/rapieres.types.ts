@@ -53,10 +53,13 @@ export interface RapieresSession {
   version: 2;
   /** Composition par id de tireur (équipe) */
   teams: Record<string, RapieresTeamInfo>;
-  /** Dernière vague lancée par le DT (0 = aucune) */
-  launchedWave: number;
-  /** Vagues arrêtées avant leur terme par le DT : passage au classement */
-  wavesEnded: boolean;
+  /**
+   * Ancienne clé des vagues (dernière vague lancée, 0 = aucune) : plus écrite depuis F4a, lue
+   * comme alias de la clé de session `waves` (docs/adr/0043, jusqu'à F4e)
+   */
+  launchedWave?: number;
+  /** Ancienne clé de l'arrêt des vagues : alias de `waves.ended`, comme `launchedWave` */
+  wavesEnded?: boolean;
   /** Mode de tableau choisi au passage au tableau (#1441) */
   tableauMode?: RapieresTableauMode;
 }
@@ -89,6 +92,4 @@ export const emptyRapieresTeamInfo = (): RapieresTeamInfo => ({
 export const createRapieresSession = (): RapieresSession => ({
   version: 2,
   teams: {},
-  launchedWave: 0,
-  wavesEnded: false,
 });

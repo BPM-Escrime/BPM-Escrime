@@ -32,16 +32,16 @@ import { emptyRapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.typ
 import {
   rapieresSemifinalists,
   mergeFinalRanking,
-  RAPIERES_MAX_POOL_SIZE,
-  applyClassicOrder,
 } from '../../shared/domain/rapieres/rapieresCalculations';
+import {
+  applyClassicOrder,
+  hasClassicOrder,
+  POOL_WAVES_SIZE,
+} from '../../shared/domain/pools/waves';
 import RapieresTeamModal from '../../features/rapieres/RapieresTeamModal';
 import RapieresTableauModeDialog from '../../features/rapieres/RapieresTableauModeDialog';
 import RapieresMatchOrderDialog from '../../features/rapieres/RapieresMatchOrderDialog';
-import {
-  hasClassicOrder,
-  type RapieresMatchOrder,
-} from '../../shared/domain/rapieres/rapieresClassicOrder';
+import type { RapieresMatchOrder } from '../../shared/domain/rapieres/rapieresClassicOrder';
 import RapieresImportModal from '../../features/rapieres/RapieresImportModal';
 import RapieresRankingPanel from '../../features/rapieres/RapieresRankingPanel';
 import { ScoreAuditLog } from './ScoreAuditLog';
@@ -173,7 +173,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     setRelaunchPending,
     poolPrepDraft,
     setPoolPrepDraft,
-    resetRapieresWaves,
+    resetPoolWaves,
     setPools,
     setSkipPoolPhase,
     handleSkipToRanking,
@@ -189,7 +189,9 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     tableauDrift,
     requestRebuild,
     rapieres,
-    updateRapieres,
+    isWaves,
+    waves,
+    updateWaves,
     confirm,
     setOverallRanking,
     computeOverallRanking,
@@ -274,7 +276,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     handleWithdrawFencer,
     launchPools,
     generateTableau,
-    rapieresWaves,
+    poolWaves,
     runCompetitionCommand,
     clearScore,
     assignMatches,
@@ -554,7 +556,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             initialPools={pools.length > 0 ? pools : undefined}
             maxScore={poolMaxScore}
             minFencersPerPool={isRapieres ? 2 : minFencersPerPool}
-            maxFencersPerPool={isRapieres ? RAPIERES_MAX_POOL_SIZE : maxFencersPerPool}
+            maxFencersPerPool={isRapieres ? POOL_WAVES_SIZE.max : maxFencersPerPool}
             boutOrderMode={poolBoutOrderOfRound(competition.settings, currentPoolRound)}
             {...(isRapieres ? rapieresViewProps.poolPrep : {})}
             expertMode={expertMode}
@@ -593,7 +595,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
                 return;
               }
               setPoolsLaunched(true);
-              resetRapieresWaves(confirmedPools);
+              resetPoolWaves(confirmedPools);
               setPools(confirmedPools);
               setSkipPoolPhase(false);
               setCurrentPhase('pools');
@@ -621,27 +623,28 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onBackToCheckin={() => setCurrentPhase('checkin')}
             renderPoolCard={renderPoolCard}
             isRapieres={isRapieres}
-            launchedWave={rapieres.launchedWave}
-            wavesEnded={rapieres.wavesEnded}
-            // Vagues par le moteur (docs/adr/0017) ; repli local hors moteur
+            isWaves={isWaves}
+            launchedWave={waves.launched}
+            wavesEnded={waves.ended}
+            // Vagues par le moteur (docs/adr/0017, 0043) ; repli local hors moteur
             onLaunchWave={async wave => {
-              if ((await rapieresWaves.launchWave(wave)) === 'local') {
-                updateRapieres({ launchedWave: wave });
+              if ((await poolWaves.launchWave(wave)) === 'local') {
+                updateWaves({ launched: wave });
               }
             }}
             onEndWaves={async () => {
               if (!(await confirm(t('rapieres.confirm_end_waves')))) return;
-              const outcome = await rapieresWaves.endWaves(true);
+              const outcome = await poolWaves.endWaves(true);
               if (outcome === 'refused') return;
               if (outcome === 'local') {
-                updateRapieres({ wavesEnded: true });
+                updateWaves({ ended: true });
                 setOverallRanking(computeOverallRanking(pools));
               }
               setCurrentPhase('ranking');
             }}
             onResumeWaves={async () => {
-              if ((await rapieresWaves.endWaves(false)) === 'local') {
-                updateRapieres({ wavesEnded: false });
+              if ((await poolWaves.endWaves(false)) === 'local') {
+                updateWaves({ ended: false });
               }
             }}
             onPrintWaveSheets={handlePrintWaveSheets}
@@ -713,7 +716,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             nextRoundAction={rankingNextRound}
             tableauActionInNav={rankingTableauAction != null}
             isRapieres={isRapieres}
-            launchedWave={rapieres.launchedWave}
+            launchedWave={waves.launched}
             rapieresTeams={rapieres.teams}
             rapieresStats={rapieresStats}
           />
@@ -806,7 +809,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
           <RapieresRankingPanel
             competitionTitle={competition.title}
             final={finalResults.length > 0}
-            wave={rapieres.launchedWave}
+            wave={waves.launched}
             ranked={mergeFinalRanking(finalResults, overallRanking)}
             fencers={fencers}
             teams={rapieres.teams}

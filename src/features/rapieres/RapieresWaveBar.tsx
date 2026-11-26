@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Tournoi des rapières : pilotage des vagues (phase Poules) (#1118)
+ * BPM - Escrime - Pilotage des vagues d'un tour en vagues (phase Poules) (#1118, docs/adr/0043)
  * Le DT lance chaque vague (toutes les poules en même temps) une fois la précédente saisie,
  * et peut arrêter les vagues avant leur terme pour passer au classement.
  * Licensed under GPL-3.0
@@ -8,11 +8,7 @@
 import React, { useState } from 'react';
 import type { Pool } from '../../shared/types';
 import { useTranslation } from '../../renderer/hooks/useTranslation';
-import {
-  canLaunchNextWave,
-  isWaveComplete,
-  waveCount,
-} from '../../shared/domain/rapieres/rapieresCalculations';
+import { canLaunchNextWave, isWaveComplete, waveCount } from '../../shared/domain/pools/waves';
 import RapieresWavePrintDialog from './RapieresWavePrintDialog';
 import { Button } from '../../renderer/components/common/Button';
 

@@ -11,7 +11,8 @@
  * eux viennent le plus tôt (application générale de o.70.1).
  */
 
-import type { Fencer } from '../types';
+import type { Fencer, PoolBoutOrder } from '../types';
+import { isWavesOrder, wavesBoutOrder } from '../domain/pools/waves';
 import {
   generatePoolMatchOrder,
   generateRoundRobinOrder,
@@ -19,8 +20,11 @@ import {
   type SeparationCriterionKey,
 } from './poolCalculations';
 
-/** Ordre des matchs : règlement (défaut) ou rondes de Berger sans placement (club, entraînement) */
-export type PoolBoutOrderMode = 'fie' | 'free';
+/**
+ * Ordre des matchs : règlement (défaut), rondes de Berger sans placement (club, entraînement)
+ * ou vagues (tour en vagues, docs/adr/0043)
+ */
+export type PoolBoutOrderMode = PoolBoutOrder;
 
 export type PoolBoutTable = 'standard' | 'trio6' | 'quartet6' | 'trio7' | 'roundRobin';
 
@@ -38,7 +42,8 @@ export interface PoolBoutPlan {
   positions: Fencer[];
   /** Paires de numéros (base 1), dans l'ordre des matchs */
   bouts: [number, number][];
-  table: PoolBoutTable;
+  /** Table retenue ; « waves » : ordre des vagues du tour en vagues (docs/adr/0043) */
+  table: PoolBoutTable | 'waves';
   groups: PoolBoutGroup[];
 }
 
@@ -204,6 +209,15 @@ export function planPoolBouts(
   options: PlanPoolBoutsOptions = {}
 ): PoolBoutPlan {
   const n = fencers.length;
+  // Tour en vagues : ordre des vagues, numéros tels quels, pas de placement des coéquipiers
+  if (options.mode && isWavesOrder(options.mode)) {
+    return {
+      positions: [...fencers],
+      bouts: wavesBoutOrder(options.mode, fencers),
+      table: 'waves',
+      groups: [],
+    };
+  }
   if (options.mode === 'free') {
     return {
       positions: [...fencers],

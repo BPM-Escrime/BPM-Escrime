@@ -49,6 +49,7 @@ function run(restored: Record<string, unknown>) {
       isRapieres: false,
       rapieresState: undefined,
       setRapieresState: noop,
+      setWavesState: noop,
       minFencersPerPool: 5,
       maxFencersPerPool: 7,
       setMinFencersPerPool: noop,
