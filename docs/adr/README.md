@@ -54,7 +54,7 @@ Origine : #1979 (lot 1), épique #1978. Format et processus : [ADR-0001](0001-pr
 | [0040](0040-ex-aequo-a-la-barre.md)                 | Ex aequo à la barre de qualification : réglage `ties` (`all`, `initial_ranking`, `draw`, `barrage`), une seule coupe dans le domaine, proposition à l'exécution                           | Acceptée (amendée)  |
 | [0041](0041-controles-structure-mode-expert.md)     | Contrôles de structure S1 à S6 dans le domaine, affichés en direct sur la phase ; mode expert de l'éditeur, préférence du poste                                                           | Acceptée            |
 | [0042](0042-moteur-formules-multi-tours.md)         | Le moteur tire les tours suivants et le tableau après plusieurs tours ; formules à plusieurs tours ouvertes au MCP                                                                        | Acceptée (amendée)  |
-| [0043](0043-rapieres-briques-generiques.md)         | Tournoi des rapières en briques génériques (vagues, têtes de poule, binômes, classements filtrés), fin du mode spécial ; migration 54                                                     | Proposée            |
+| [0043](0043-rapieres-briques-generiques.md)         | Tournoi des rapières en briques génériques (vagues, têtes de poule, binômes, classements filtrés), fin du mode spécial ; migration 54                                                     | Acceptée            |
 
 **Acceptée** : tranchée par le mainteneur le 2026-11-20 (revue de #2020, #2022 et #2023, commentaire sur #1979 ; arbitrages de la PR #2029).
 **Proposée** : acceptée au merge de la PR qui l'introduit, ou amendée en revue.

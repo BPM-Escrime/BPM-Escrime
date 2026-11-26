@@ -1,6 +1,6 @@
 # ADR-0043 — Tournoi des rapières en briques génériques de la formule, fin du mode spécial
 
-- **Statut** : Proposée
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F4, décision D8), #1948, #1441, #1118 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (phases), [ADR-0040](0040-ex-aequo-a-la-barre.md) (qualification), [ADR-0039](0039-scission-competitions-filles.md) (catégorie du tireur), s'appuie sur [ADR-0007](0007-format-evenement.md), [ADR-0008](0008-nommage-contrat.md), [ADR-0011](0011-migrations-schema-3-0.md), [ADR-0017](0017-projections-etat-epreuve.md)
 
