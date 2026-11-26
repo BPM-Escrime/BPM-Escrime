@@ -893,14 +893,21 @@ class RefereeAppBase {
     return true;
   }
 
+  // Carton avant le premier départ du chrono : le match s'ouvre chrono arrêté, les touches de
+  // pénalité comptent ; « Démarrer » lance ensuite le chrono, quelle que soit l'arme (#2300)
+  _openMatchBeforeTimer() {
+    this.matchStatus = 'in_progress';
+    this._fightReset();
+    this.updateMatchStatus();
+    this.updateControlButtons();
+    this.socket.emit('arena_control', { arenaId: this.arenaId, action: 'start' });
+  }
+
   addCard(fencer, cardType) {
     if (!this.currentMatch) return;
     if (this.cyranoCardLocked()) return;
-    if (this.matchStatus === 'not_started') {
-      this.showNotification(window.T('referee.start_first'));
-      return;
-    }
     if (this.matchStatus === 'finished') return;
+    if (this.matchStatus === 'not_started') this._openMatchBeforeTimer();
     // Olympique : pas de carton chrono en marche (#1826) ; Sabre Laser : le combat continue (#2254)
     if (this.timerRunning && this.isModernFencing) return;
 
