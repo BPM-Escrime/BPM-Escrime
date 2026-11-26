@@ -272,6 +272,21 @@ describe('PoolPrepView — ordre officiel des matchs (#1964)', () => {
     expect(screen.getByTestId('pool-bout-table')).toHaveAttribute('title', 'ClubA : n° 1, 2, 3');
   });
 
+  it('pastille d’ordre sur sa propre ligne, après le titre « Poule N » (#2300)', () => {
+    render(
+      <TranslationProvider>
+        <PoolPrepView fencers={seven} maxScore={5} onPoolsConfirm={vi.fn()} />
+      </TranslationProvider>
+    );
+    const badge = screen.getByTestId('pool-bout-table');
+    const line = badge.parentElement as HTMLElement;
+    expect(line).toHaveClass('pool-prep-card-subtitle');
+    const title = line.parentElement as HTMLElement;
+    expect(title).toHaveClass('pool-prep-card-title');
+    expect(title.lastElementChild).toBe(line);
+    expect(title.querySelector('h3')).toHaveTextContent('Poule 1');
+  });
+
   it('ordre libre : pas de placement, pastille « Ordre libre »', () => {
     render(
       <TranslationProvider>
