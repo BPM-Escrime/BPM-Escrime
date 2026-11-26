@@ -2513,7 +2513,11 @@
     "print": "Drucken",
     "copy": "Kopieren",
     "copied": "Ergebnisse in die Zwischenablage kopiert!",
-    "legend": "(MED) = Medizinisch • (F) = Forfait • (X) = Ausgeschlossen • DNF / DNS = in der Runde / vor dem ersten Gefecht ausgeschieden"
+    "legend": "(MED) = Medizinisch • (F) = Forfait • (X) = Ausgeschlossen • DNF / DNS = in der Runde / vor dem ersten Gefecht ausgeschieden",
+    "branches_title": "Zweige",
+    "branches_hint": "Fechter, die in einen Zweig gewechselt sind, werden in dessen Unterwettbewerb gewertet.",
+    "branch_fencers": "Fechter: {{n}}",
+    "open_branch": "Öffnen"
   },
   "ffeConnect": {
     "title": "Aus FFE Connect importieren",
@@ -4769,7 +4773,31 @@
     "stop_at": "Tableau anhalten",
     "stop_at_none": "Bis zum Finale",
     "stop_at_n": "Wenn {{n}} Fechter übrig sind",
-    "stop_at_hint": "Die verbleibenden Fechter gehen nach dem Tableau in eine Vorrunde."
+    "stop_at_hint": "Die verbleibenden Fechter gehen nach dem Tableau in eine Vorrunde.",
+    "brick_split": "Aufteilung",
+    "split_criterion": "Aufteilen nach",
+    "split_criterion_gender": "Geschlecht",
+    "split_criterion_category": "Altersklasse",
+    "split_criterion_rank": "Platzierung",
+    "split_criterion_manual": "Manuell",
+    "split_manual_readonly": "Manuelle Aufteilung: wird in einer künftigen Version am Bildschirm eingestellt. Hier nur lesbar.",
+    "split_branch": "Zweig {{n}}",
+    "split_label": "Bezeichnung",
+    "split_preset": "Vorlage des Zweigs",
+    "split_preset_tableau": "Direktausscheidung",
+    "split_preset_pools_tableau": "Gruppen, dann Direktausscheidung",
+    "split_preset_pools": "Gruppen",
+    "split_preset_custom": "Angepasst",
+    "split_preset_hint": "Jeder Zweig wird ein eigener Unterwettbewerb mit eigener Wertung. Feineinstellungen (Treffer, Runden, Tableau) erfolgen danach unter Organisation ▸ Formel des Unterwettbewerbs.",
+    "split_gender": "Geschlecht des Zweigs",
+    "split_gender_male": "Herren",
+    "split_gender_female": "Damen",
+    "split_categories": "Altersklassen des Zweigs",
+    "split_take": "Fechter des Zweigs",
+    "split_rest": "Die übrigen Fechter",
+    "split_add_branch": "Zweig hinzufügen",
+    "split_remove_branch": "Zweig {{label}} entfernen",
+    "split_issues": "Vor dem Speichern zu korrigieren"
   },
   "formulaTemplates": {
     "template": "Formelvorlage",
@@ -4826,6 +4854,21 @@
     "confirm": "{{qualified}} Fechter kommen in die nächste Phase, {{eliminated}} scheiden aus. Fortfahren?",
     "closed": "Tableau abgeschlossen: Melden Sie die {{n}} verbleibenden Fechter für die nächste Phase an.",
     "closed_title": "Tableau bei {{n}} Fechtern angehalten: abgeschlossen",
-    "closed_hint": "Nur Ansicht. Die verbleibenden Fechter haben das Turnier fortgesetzt; ihre Endplatzierung steht unter Ergebnisse."
+    "closed_hint": "Nur Ansicht. Die verbleibenden Fechter haben das Turnier fortgesetzt; ihre Endplatzierung steht unter Ergebnisse.",
+    "closed_split": "Tableau abgeschlossen: Teilen Sie den Wettbewerb in der Rangliste für die {{n}} verbleibenden Fechter auf."
+  },
+  "splitLaunch": {
+    "action": "Wettbewerb aufteilen",
+    "title": "Wettbewerb aufteilen",
+    "loading": "Aufteilung wird berechnet…",
+    "intro": "Jeder Zweig wird ein Unterwettbewerb mit eigener Wertung. Die Fechter werden mit ihrer Platzierung übernommen.",
+    "col_branch": "Zweig",
+    "col_fencers": "Fechter",
+    "confirm": "Aufteilen",
+    "missing_title": "{{n}} Fechter ohne Wert für das Kriterium: Aufteilung nicht möglich",
+    "missing_fix_gender": "Ergänzen Sie das Geschlecht dieser Fechter (Appell ▸ Fechter bearbeiten) und teilen Sie erneut auf.",
+    "missing_fix_category": "Ergänzen Sie die Altersklasse dieser Fechter im Appell (Eingabe oder „Altersklassen berechnen“) und teilen Sie erneut auf.",
+    "done": "Wettbewerb aufgeteilt: {{n}} Unterwettbewerbe erstellt.",
+    "after_stage_note": "Tableau bei {{n}} Fechtern abgeschlossen: Die Aufteilung verteilt die {{n}} verbleibenden Fechter nach ihrem Einstiegsrang im Tableau. Die Rangliste unten ist die der Vorrunde."
   }
 }

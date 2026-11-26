@@ -31,6 +31,12 @@ import {
   loadExportState,
   loadExportTableauSignatures,
 } from './results/resultsExportData';
+import type { SplitHistoryEntry } from '../../shared/domain/formula/splitPlan';
+
+// Bloc « Branches » chargé à la demande (épreuve scindée seulement, budget du bundle)
+const SplitBranchesPanel = React.lazy(() =>
+  import('./results/SplitBranchesPanel').then(m => ({ default: m.SplitBranchesPanel }))
+);
 
 interface FinalResult {
   rank: number;
@@ -55,6 +61,10 @@ interface ResultsViewProps {
   appelHistory?: Fencer[][];
   /** Colonnes visibles telles que configurées dans l'appel */
   appelVisibleColumns?: string[];
+  /** Épreuve scindée (docs/adr/0039) : branches parties en compétitions filles */
+  splitBranches?: readonly SplitHistoryEntry[];
+  /** Ouvre une compétition fille */
+  onOpenCompetition?: (competitionId: string) => void;
 }
 
 // ─── Static style constants ───────────────────────────────────────────────────
@@ -306,6 +316,8 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   appelFencers,
   appelHistory,
   appelVisibleColumns,
+  splitBranches,
+  onOpenCompetition,
 }) => {
   const { showToast } = useToast();
   const client = useBpmClient();
@@ -583,7 +595,9 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     }
   };
 
-  const champion = resultsToDisplay.find(r => r.rank === 1);
+  // Épreuve scindée (ADR-0039) : vainqueurs dans les filles, ni champion ni podium ici
+  const split = (splitBranches?.length ?? 0) > 0;
+  const champion = split ? undefined : resultsToDisplay.find(r => r.rank === 1);
 
   return (
     <div style={RV_STYLES.wrapper}>
@@ -592,6 +606,11 @@ const ResultsView: React.FC<ResultsViewProps> = ({
           <div style={RV_STYLES.overlaySpinner} />
           <div style={RV_STYLES.overlayText}>{t('resultsView.generating_pdf')}</div>
         </div>
+      )}
+      {split && (
+        <React.Suspense fallback={null}>
+          <SplitBranchesPanel branches={splitBranches!} onOpenCompetition={onOpenCompetition} />
+        </React.Suspense>
       )}
       {/* En-tête avec le champion */}
       {champion && (
@@ -608,40 +627,42 @@ const ResultsView: React.FC<ResultsViewProps> = ({
       )}
 
       {/* Podium visuel */}
-      <div style={RV_STYLES.podiumRow}>
-        {/* 2ème place */}
-        {resultsToDisplay[1] && (
-          <div style={RV_STYLES.podium2}>
-            <div style={RV_STYLES.podium2Medal}>
-              <Icon icon={Medal} className="medal-silver" />
+      {!split && (
+        <div style={RV_STYLES.podiumRow}>
+          {/* 2ème place */}
+          {resultsToDisplay[1] && (
+            <div style={RV_STYLES.podium2}>
+              <div style={RV_STYLES.podium2Medal}>
+                <Icon icon={Medal} className="medal-silver" />
+              </div>
+              <div style={RV_STYLES.podium2Name}>{resultsToDisplay[1].fencer.lastName}</div>
+              <div style={RV_STYLES.podium2Place}>{t('resultsView.second')}</div>
             </div>
-            <div style={RV_STYLES.podium2Name}>{resultsToDisplay[1].fencer.lastName}</div>
-            <div style={RV_STYLES.podium2Place}>{t('resultsView.second')}</div>
-          </div>
-        )}
+          )}
 
-        {/* 1ère place */}
-        {resultsToDisplay[0] && (
-          <div style={RV_STYLES.podium1}>
-            <div style={RV_STYLES.podium1Medal}>
-              <Icon icon={Medal} className="medal-gold" />
+          {/* 1ère place */}
+          {resultsToDisplay[0] && (
+            <div style={RV_STYLES.podium1}>
+              <div style={RV_STYLES.podium1Medal}>
+                <Icon icon={Medal} className="medal-gold" />
+              </div>
+              <div style={RV_STYLES.podium1Name}>{resultsToDisplay[0].fencer.lastName}</div>
+              <div style={RV_STYLES.podium1Place}>{t('resultsView.first')}</div>
             </div>
-            <div style={RV_STYLES.podium1Name}>{resultsToDisplay[0].fencer.lastName}</div>
-            <div style={RV_STYLES.podium1Place}>{t('resultsView.first')}</div>
-          </div>
-        )}
+          )}
 
-        {/* 3ème place */}
-        {resultsToDisplay[2] && (
-          <div style={RV_STYLES.podium3}>
-            <div style={RV_STYLES.podium3Medal}>
-              <Icon icon={Medal} className="medal-bronze" />
+          {/* 3ème place */}
+          {resultsToDisplay[2] && (
+            <div style={RV_STYLES.podium3}>
+              <div style={RV_STYLES.podium3Medal}>
+                <Icon icon={Medal} className="medal-bronze" />
+              </div>
+              <div style={RV_STYLES.podium3Name}>{resultsToDisplay[2].fencer.lastName}</div>
+              <div style={RV_STYLES.podium3Place}>{t('resultsView.third')}</div>
             </div>
-            <div style={RV_STYLES.podium3Name}>{resultsToDisplay[2].fencer.lastName}</div>
-            <div style={RV_STYLES.podium3Place}>{t('resultsView.third')}</div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Tableau complet des résultats */}
       <div style={RV_STYLES.tableWrapper}>

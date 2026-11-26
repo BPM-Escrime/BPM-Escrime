@@ -2513,7 +2513,11 @@
     "print": "Stampa",
     "copy": "Copia",
     "copied": "Risultati copiati negli appunti!",
-    "legend": "(MED) = Medico • (R) = Rinuncia • (X) = Escluso • DNF / DNS = uscito nei gironi / prima del suo primo incontro"
+    "legend": "(MED) = Medico • (R) = Rinuncia • (X) = Escluso • DNF / DNS = uscito nei gironi / prima del suo primo incontro",
+    "branches_title": "Rami",
+    "branches_hint": "Gli schermidori passati in un ramo sono classificati nella sua gara figlia.",
+    "branch_fencers": "Schermidori: {{n}}",
+    "open_branch": "Apri"
   },
   "ffeConnect": {
     "title": "Importa da FFE Connect",
@@ -4769,7 +4773,31 @@
     "stop_at": "Fermare il tabellone",
     "stop_at_none": "Fino alla finale",
     "stop_at_n": "Quando restano {{n}} schermidori",
-    "stop_at_hint": "Gli schermidori rimasti passano a un turno di gironi dopo il tabellone."
+    "stop_at_hint": "Gli schermidori rimasti passano a un turno di gironi dopo il tabellone.",
+    "brick_split": "Suddivisione",
+    "split_criterion": "Suddividi per",
+    "split_criterion_gender": "Sesso",
+    "split_criterion_category": "Categoria",
+    "split_criterion_rank": "Classifica",
+    "split_criterion_manual": "Manuale",
+    "split_manual_readonly": "Suddivisione manuale: si imposterà a schermo in una prossima versione. Qui in sola lettura.",
+    "split_branch": "Ramo {{n}}",
+    "split_label": "Nome",
+    "split_preset": "Modello del ramo",
+    "split_preset_tableau": "Tabellone",
+    "split_preset_pools_tableau": "Gironi poi tabellone",
+    "split_preset_pools": "Gironi",
+    "split_preset_custom": "Personalizzato",
+    "split_preset_hint": "Ogni ramo diventa una gara figlia, con classifica propria. Le impostazioni di dettaglio (stoccate, turni, tabellone) si fanno poi in Organizzazione ▸ Formula della gara figlia.",
+    "split_gender": "Sesso del ramo",
+    "split_gender_male": "Uomini",
+    "split_gender_female": "Donne",
+    "split_categories": "Categorie del ramo",
+    "split_take": "Schermidori del ramo",
+    "split_rest": "Il resto degli schermidori",
+    "split_add_branch": "Aggiungi un ramo",
+    "split_remove_branch": "Rimuovi il ramo {{label}}",
+    "split_issues": "Da correggere prima di salvare"
   },
   "formulaTemplates": {
     "template": "Modello di formula",
@@ -4826,6 +4854,21 @@
     "confirm": "{{qualified}} schermidori passano alla fase successiva, {{eliminated}} sono eliminati. Continuare?",
     "closed": "Tabellone chiuso: fate l'appello dei {{n}} schermidori rimasti per la fase successiva.",
     "closed_title": "Tabellone fermato a {{n}} schermidori: chiuso",
-    "closed_hint": "Sola consultazione. Gli schermidori rimasti hanno proseguito la gara; il loro piazzamento finale è nei Risultati."
+    "closed_hint": "Sola consultazione. Gli schermidori rimasti hanno proseguito la gara; il loro piazzamento finale è nei Risultati.",
+    "closed_split": "Tabellone chiuso: suddividete la gara dalla Classifica per i {{n}} schermidori rimasti."
+  },
+  "splitLaunch": {
+    "action": "Suddividi la gara",
+    "title": "Suddividi la gara",
+    "loading": "Calcolo della suddivisione…",
+    "intro": "Ogni ramo diventa una gara figlia, con classifica propria. Gli schermidori vi sono copiati con il loro posto.",
+    "col_branch": "Ramo",
+    "col_fencers": "Schermidori",
+    "confirm": "Suddividi",
+    "missing_title": "{{n}} schermidore/i senza valore per il criterio: suddivisione impossibile",
+    "missing_fix_gender": "Completate il sesso di questi schermidori (Appello ▸ modifica schermidore), poi suddividete di nuovo.",
+    "missing_fix_category": "Completate la categoria di questi schermidori all'Appello (a mano o «Calcola le categorie»), poi suddividete di nuovo.",
+    "done": "Gara suddivisa: {{n}} gare figlie create.",
+    "after_stage_note": "Tabellone fermato a {{n}} schermidori chiuso: la suddivisione ripartisce i {{n}} rimasti secondo il loro rango d'entrata nel tabellone. La classifica qui sotto è quella dei gironi."
   }
 }

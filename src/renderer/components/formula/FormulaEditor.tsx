@@ -2,7 +2,8 @@
  * BPM - Escrime - Interface unique de la formule (#2013 B1, C ; docs/adr/0032, 0034)
  * Nouvelle interface (réglage du poste `formulaPreview`) sur la formule v2, pour toutes les
  * armes : frise Appel → phases → Classement final, « ＋ » limité aux briques autorisées,
- * réglages **de chaque tour**, relevé de cohérence et simulation. Même composant à la création et
+ * réglages **de chaque tour**, scission en compétitions filles (ADR-0039), relevé de cohérence et
+ * simulation. Même composant à la création et
  * dans Organisation ▸ Formule. Règles : shared/domain/formula/formulaV2Operations.ts.
  * Licensed under GPL-3.0
  */
@@ -21,6 +22,7 @@ import type {
   FormulaV2,
   PoolRoundPhase,
   QuestPhase,
+  SplitPhase,
   TableauPhase,
 } from '../../../shared/domain/formula/formulaV2';
 import {
@@ -41,6 +43,7 @@ import { Button } from '../common/Button';
 import { AdvancementRuleEditor } from './AdvancementRuleEditor';
 import { ScoringZoneEditor } from './ScoringZoneEditor';
 import { FormulaSimulationPreview } from './FormulaSimulationPreview';
+import { SplitPhaseEditor } from './SplitPhaseEditor';
 
 export interface FormulaEditorProps {
   weapon: Weapon;
@@ -122,10 +125,20 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
         : t('properties.phase_pools')
       : p.kind === 'quest'
         ? t('properties.quest_round')
-        : t('properties.phase_tableau');
+        : p.kind === 'split'
+          ? t('formulaEditor.brick_split')
+          : t('properties.phase_tableau');
 
   const tableau = formula.phases.find((x): x is TableauPhase => x.kind === 'tableau');
+  const split = formula.phases.find((x): x is SplitPhase => x.kind === 'split');
   const summary = (p: FriezePhase): string => {
+    if (p.kind === 'split')
+      return split
+        ? split.branches
+            .map(b => b.label)
+            .filter(Boolean)
+            .join(' · ')
+        : '';
     if (p.kind === 'pool') {
       const pool = pools[p.round];
       return pool
@@ -143,8 +156,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   };
 
   const plus = (at: number) => {
-    // Scission (ADR-0039) : brique du moteur, éditée à l'écran à l'étape E2b
-    const options = insertOptionsV2(formula, weapon, at).filter(b => b !== 'split');
+    const options = insertOptionsV2(formula, weapon, at);
     if (options.length === 0 || specialMode) return null;
     return (
       <span key={`plus-${at}`} className="formula-editor__plus">
@@ -284,8 +296,8 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
           </div>
           <small className="u-hint">{t('properties.pool_size_hint')}</small>
           {/* Qualification : vers le tour suivant, ou vers le tableau pour toutes les armes
-              (#2013 R1) ; dernier tour sans tableau : rien à qualifier */}
-          {(!isLast || isOther || tableau) && (
+              (#2013 R1), ou vers la scission (ADR-0039) ; dernier tour sans suite : rien */}
+          {(!isLast || isOther || tableau || split) && (
             <div className={rapieres ? 'form-group form-group--disabled' : 'form-group'}>
               <label className="form-label">{t('formulaPhase.advancement')}</label>
               <AdvancementRuleEditor
@@ -354,10 +366,10 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
         ...formula,
         phases: formula.phases.map(x => (x === tableau ? (n ? { ...rest, stopAt: n } : rest) : x)),
       };
-      const hasAfter = next.phases.slice(at + 1).some(x => x.kind === 'pool');
+      // Tour de poules ou scission (ADR-0039) après le tableau arrêté
+      const hasAfter = next.phases.slice(at + 1).some(x => x.kind === 'pool' || x.kind === 'split');
       if (n && !hasAfter) next = insertV2(next, { weapon, category }, 'pool', at + 1, newPhaseId);
-      if (!n)
-        next = { ...next, phases: next.phases.filter((x, i) => i <= at || x.kind !== 'pool') };
+      if (!n) next = { ...next, phases: next.phases.slice(0, at + 1) };
       onChange(next);
     };
     return (
@@ -601,6 +613,20 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
               {current?.kind === 'pool' && renderPool(current)}
               {current?.kind === 'tableau' && renderTableau(current)}
               {current?.kind === 'quest' && renderQuest(current)}
+              {current?.kind === 'split' && split && (
+                <SplitPhaseEditor
+                  split={split}
+                  weapon={weapon}
+                  category={category}
+                  newId={newPhaseId}
+                  onChange={next =>
+                    onChange({
+                      ...formula,
+                      phases: formula.phases.map(x => (x === split ? next : x)),
+                    })
+                  }
+                />
+              )}
             </>
           )}
           {renderGeneral()}

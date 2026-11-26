@@ -13,8 +13,12 @@ import {
   type SplitPhase,
 } from './formulaV2';
 import {
+  addSplitBranch,
   applyOperationsV2,
   branchPhases,
+  branchPresetOf,
+  removeSplitBranch,
+  withSplitCriterion,
   canRemoveV2,
   formulaV2Issues,
   friezeOfV2,
@@ -416,5 +420,58 @@ describe('déroulé et lecteurs (ADR-0039)', () => {
       'direct_elimination',
     ]);
     expect(flatSettingsOf(afterStopped(), Weapon.CUSTOM)).toHaveProperty('customFormula');
+  });
+});
+
+describe('édition de la scission à l’écran (ADR-0039, étape E2b)', () => {
+  const split = () => splitOf(afterPools());
+
+  it('modèle de branche lu depuis ses phases', () => {
+    expect(branchPresetOf(branchPhases('tableau', ctx, id))).toBe('tableau');
+    expect(branchPresetOf(branchPhases('pools_tableau', ctx, id))).toBe('pools_tableau');
+    expect(branchPresetOf(branchPhases('pools', ctx, id))).toBe('pools');
+    const [pool, tableau] = branchPhases('pools_tableau', ctx, id);
+    expect(branchPresetOf([tableau, pool])).toBeNull();
+  });
+
+  it('critère changé : champs de l’ancien critère retirés, ceux du nouveau posés', () => {
+    const byGender = withSplitCriterion(split(), 'gender');
+    expect(byGender.branches.map(b => [b.gender, b.take, b.categories])).toEqual([
+      [Gender.MALE, undefined, undefined],
+      [Gender.FEMALE, undefined, undefined],
+    ]);
+    expect(formulaV2Issues(withSplit(afterPools(), byGender), scope)).toEqual([]);
+    const byCategory = withSplitCriterion(byGender, 'category');
+    expect(byCategory.branches.map(b => [b.gender, b.categories])).toEqual([
+      [undefined, []],
+      [undefined, []],
+    ]);
+    const byRank = withSplitCriterion(byCategory, 'rank');
+    expect(byRank.branches.map(b => b.take)).toEqual([
+      { mode: 'fixed_count', count: 16 },
+      undefined,
+    ]);
+    expect(formulaV2Issues(withSplit(afterPools(), byRank), scope)).toEqual([]);
+  });
+
+  it('branche ajoutée : « le reste » par rang, l’ancienne dernière reçoit une part', () => {
+    const three = addSplitBranch(split(), ctx, id);
+    expect(three.branches.map(b => b.label)).toEqual(['Tableau A', 'Tableau B', 'Tableau C']);
+    expect(three.branches.map(b => b.take?.mode)).toEqual([
+      'fixed_count',
+      'fixed_count',
+      undefined,
+    ]);
+    expect(formulaV2Issues(withSplit(afterPools(), three), scope)).toEqual([]);
+  });
+
+  it('branche retirée : deux au moins, la nouvelle dernière prend le reste', () => {
+    const three = addSplitBranch(split(), ctx, id);
+    const two = removeSplitBranch(three, 2);
+    expect(two.branches.map(b => [b.label, b.take?.mode])).toEqual([
+      ['Tableau A', 'fixed_count'],
+      ['Tableau B', undefined],
+    ]);
+    expect(removeSplitBranch(two, 0)).toBe(two);
   });
 });
