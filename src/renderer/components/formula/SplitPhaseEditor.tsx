@@ -1,7 +1,9 @@
 /**
  * BPM - Escrime - Réglages de la brique Scission dans l'éditeur de formule (#2013 étape E2b,
  * docs/adr/0039) : critère (sexe, catégorie, rang), branches (libellé, modèle, valeur du
- * critère), ajout et retrait. Répartition manuelle : lecture seule jusqu'à l'étape E3.
+ * critère), ajout et retrait. Étape E3 : répartition manuelle (libellé et modèle ; les tireurs
+ * sont affectés au lancement, SplitLaunchDialog) ; scission par sexe, branche « Tableau » restée
+ * dans l'épreuve (tableaux séparés, ADR-0024).
  * Règles : shared/domain/formula/formulaV2Operations.ts (withSplitCriterion, addSplitBranch…).
  * Licensed under GPL-3.0
  */
@@ -34,8 +36,8 @@ interface SplitPhaseEditorProps {
   newId: () => string;
 }
 
-/** Critères réglables à l'écran ; « manuelle » à l'étape E3 */
-const CRITERIA: SplitCriterion[] = ['gender', 'category', 'rank'];
+/** Critères réglables à l'écran (manuelle : étape E3) */
+const CRITERIA: SplitCriterion[] = ['gender', 'category', 'rank', 'manual'];
 const PRESETS: BranchPreset[] = ['tableau', 'pools_tableau', 'pools'];
 const CATEGORIES = Object.values(Category);
 const categoryKey = (c: Category) => `categories.${c === Category.SENIOR ? 'senior' : c}`;
@@ -49,7 +51,6 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
 }) => {
   const { t } = useTranslation();
   const ctx = { weapon, category };
-  const manual = split.criterion === 'manual';
   const issues = splitIssues(split, { weapon });
   const last = split.branches.length - 1;
 
@@ -152,29 +153,28 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
           id="split-criterion"
           className="form-input form-select"
           value={split.criterion}
-          disabled={manual}
           onChange={e => onChange(withSplitCriterion(split, e.target.value as SplitCriterion))}
         >
-          {(manual ? [...CRITERIA, 'manual' as const] : CRITERIA).map(c => (
+          {CRITERIA.map(c => (
             <option key={c} value={c}>
               {t(`formulaEditor.split_criterion_${c}`)}
             </option>
           ))}
         </select>
-        {manual && (
-          <small className="u-hint" data-testid="split-manual-readonly">
-            {t('formulaEditor.split_manual_readonly')}
+        {split.criterion === 'manual' && (
+          <small className="u-hint" data-testid="split-manual-hint">
+            {t('formulaEditor.split_manual_hint')}
           </small>
         )}
       </div>
-      <fieldset className="formula-split__branches" disabled={manual}>
+      <fieldset className="formula-split__branches">
         {split.branches.map((b, i) => {
           const preset = branchPresetOf(b.phases);
           return (
             <div key={i} className="formula-split__branch" data-testid={`split-branch-${i}`}>
               <div className="formula-split__branch-head">
                 <strong>{t('formulaEditor.split_branch', { n: i + 1 })}</strong>
-                {split.branches.length > 2 && !manual && (
+                {split.branches.length > 2 && (
                   <button
                     type="button"
                     className="formula-split__remove"
@@ -204,11 +204,14 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
                     id={`split-preset-${i}`}
                     className="form-input form-select"
                     value={preset ?? ''}
-                    onChange={e =>
+                    onChange={e => {
+                      const next = e.target.value as BranchPreset;
                       setBranch(i, {
-                        phases: branchPhases(e.target.value as BranchPreset, ctx, newId),
-                      })
-                    }
+                        phases: branchPhases(next, ctx, newId),
+                        // Rester dans l'épreuve : branche réduite à un tableau seulement
+                        ...(next !== 'tableau' ? { stayInCompetition: undefined } : {}),
+                      });
+                    }}
                   >
                     {!preset && (
                       <option value="" disabled>
@@ -225,21 +228,32 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
               </div>
               {split.criterion === 'rank' && takeField(b, i)}
               {split.criterion === 'gender' && genderField(b, i)}
+              {split.criterion === 'gender' && preset === 'tableau' && (
+                <label className="u-row cursor-pointer">
+                  <input
+                    type="checkbox"
+                    data-testid={`split-stay-${i}`}
+                    checked={!!b.stayInCompetition}
+                    onChange={e =>
+                      setBranch(i, { stayInCompetition: e.target.checked || undefined })
+                    }
+                  />
+                  <span>{t('formulaEditor.split_stay')}</span>
+                </label>
+              )}
               {split.criterion === 'category' && categoryField(b, i)}
             </div>
           );
         })}
       </fieldset>
-      {!manual && (
-        <Button
-          type="button"
-          variant="ghost"
-          data-testid="split-add-branch"
-          onClick={() => onChange(addSplitBranch(split, ctx, newId))}
-        >
-          <Plus size={14} aria-hidden="true" /> {t('formulaEditor.split_add_branch')}
-        </Button>
-      )}
+      <Button
+        type="button"
+        variant="ghost"
+        data-testid="split-add-branch"
+        onClick={() => onChange(addSplitBranch(split, ctx, newId))}
+      >
+        <Plus size={14} aria-hidden="true" /> {t('formulaEditor.split_add_branch')}
+      </Button>
       <small className="u-hint">{t('formulaEditor.split_preset_hint')}</small>
       {issues.length > 0 && (
         <div className="formula-coherence has-issues" data-testid="split-issues" role="status">

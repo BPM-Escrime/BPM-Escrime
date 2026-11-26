@@ -1031,6 +1031,15 @@ button.formula-frieze__step {
   padding: 0.5rem 0.75rem;
   background: var(--color-surface-2);
 }
+.split-launch__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.split-launch__tools .form-select {
+  width: auto;
+}
 .split-launch__missing ul {
   margin: 0.25rem 0;
   padding-left: 1.1rem;

@@ -4780,7 +4780,7 @@
     "split_criterion_category": "Categoría",
     "split_criterion_rank": "Clasificación",
     "split_criterion_manual": "Manual",
-    "split_manual_readonly": "División manual: se configurará en pantalla en una próxima versión. Solo lectura aquí.",
+    "split_manual_hint": "División manual: los tiradores se asignan a una rama al lanzar la división, según la clasificación de entrada.",
     "split_branch": "Rama {{n}}",
     "split_label": "Nombre",
     "split_preset": "Modelo de rama",
@@ -4792,6 +4792,7 @@
     "split_gender": "Sexo de la rama",
     "split_gender_male": "Hombres",
     "split_gender_female": "Mujeres",
+    "split_stay": "Permanecer en la prueba (cuadros separados)",
     "split_categories": "Categorías de la rama",
     "split_take": "Tiradores de la rama",
     "split_rest": "El resto de tiradores",
@@ -4869,6 +4870,17 @@
     "missing_fix_gender": "Complete el sexo de estos tiradores (Llamada ▸ editar tirador) y vuelva a dividir.",
     "missing_fix_category": "Complete la categoría de estos tiradores en la Llamada (a mano o «Calcular las categorías») y vuelva a dividir.",
     "done": "Prueba dividida: {{n}} competiciones hijas creadas.",
-    "after_stage_note": "Cuadro detenido en {{n}} tiradores cerrado: la división reparte a los {{n}} restantes según su puesto de entrada en el cuadro. La clasificación de abajo es la de las poules."
+    "after_stage_note": "Cuadro detenido en {{n}} tiradores cerrado: la división reparte a los {{n}} restantes según su puesto de entrada en el cuadro. La clasificación de abajo es la de las poules.",
+    "stays": "permanece en la prueba (cuadro separado)",
+    "sort": "Ordenar por",
+    "sort_rank": "Puesto",
+    "sort_gender": "Sexo",
+    "sort_club": "Club",
+    "sort_birthDate": "Fecha de nacimiento",
+    "all_in": "Todos en…",
+    "all_apply": "Asignar todos",
+    "col_rank": "Puesto",
+    "col_fencer": "Tirador",
+    "manual_missing": "{{n}} tirador(es) por asignar a una rama antes de dividir."
   }
 }

@@ -4780,7 +4780,7 @@
     "split_criterion_category": "Categoria",
     "split_criterion_rank": "Classifica",
     "split_criterion_manual": "Manuale",
-    "split_manual_readonly": "Suddivisione manuale: si imposterà a schermo in una prossima versione. Qui in sola lettura.",
+    "split_manual_hint": "Divisione manuale: gli schermidori sono assegnati a un ramo all'avvio della divisione, in base alla classifica d'ingresso.",
     "split_branch": "Ramo {{n}}",
     "split_label": "Nome",
     "split_preset": "Modello del ramo",
@@ -4792,6 +4792,7 @@
     "split_gender": "Sesso del ramo",
     "split_gender_male": "Uomini",
     "split_gender_female": "Donne",
+    "split_stay": "Restare nella gara (tabelloni separati)",
     "split_categories": "Categorie del ramo",
     "split_take": "Schermidori del ramo",
     "split_rest": "Il resto degli schermidori",
@@ -4869,6 +4870,17 @@
     "missing_fix_gender": "Completate il sesso di questi schermidori (Appello ▸ modifica schermidore), poi suddividete di nuovo.",
     "missing_fix_category": "Completate la categoria di questi schermidori all'Appello (a mano o «Calcola le categorie»), poi suddividete di nuovo.",
     "done": "Gara suddivisa: {{n}} gare figlie create.",
-    "after_stage_note": "Tabellone fermato a {{n}} schermidori chiuso: la suddivisione ripartisce i {{n}} rimasti secondo il loro rango d'entrata nel tabellone. La classifica qui sotto è quella dei gironi."
+    "after_stage_note": "Tabellone fermato a {{n}} schermidori chiuso: la suddivisione ripartisce i {{n}} rimasti secondo il loro rango d'entrata nel tabellone. La classifica qui sotto è quella dei gironi.",
+    "stays": "resta nella gara (tabellone separato)",
+    "sort": "Ordina per",
+    "sort_rank": "Posizione",
+    "sort_gender": "Sesso",
+    "sort_club": "Società",
+    "sort_birthDate": "Data di nascita",
+    "all_in": "Tutti in…",
+    "all_apply": "Assegna tutti",
+    "col_rank": "Posizione",
+    "col_fencer": "Schermidore",
+    "manual_missing": "{{n}} schermidore/i da assegnare a un ramo prima di dividere."
   }
 }

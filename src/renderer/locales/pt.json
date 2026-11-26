@@ -4780,7 +4780,7 @@
     "split_criterion_category": "Categoria",
     "split_criterion_rank": "Classificação",
     "split_criterion_manual": "Manual",
-    "split_manual_readonly": "Divisão manual: será configurada no ecrã numa próxima versão. Apenas leitura aqui.",
+    "split_manual_hint": "Divisão manual: os atiradores são atribuídos a um ramo ao lançar a divisão, a partir da classificação de entrada.",
     "split_branch": "Ramo {{n}}",
     "split_label": "Nome",
     "split_preset": "Modelo do ramo",
@@ -4792,6 +4792,7 @@
     "split_gender": "Sexo do ramo",
     "split_gender_male": "Homens",
     "split_gender_female": "Senhoras",
+    "split_stay": "Permanecer na prova (quadros separados)",
     "split_categories": "Categorias do ramo",
     "split_take": "Atiradores do ramo",
     "split_rest": "Os restantes atiradores",
@@ -4869,6 +4870,17 @@
     "missing_fix_gender": "Complete o sexo destes atiradores (Chamada ▸ editar atirador) e divida de novo.",
     "missing_fix_category": "Complete a categoria destes atiradores na Chamada (à mão ou «Calcular as categorias») e divida de novo.",
     "done": "Prova dividida: {{n}} competições filhas criadas.",
-    "after_stage_note": "Quadro parado em {{n}} atiradores fechado: a divisão reparte os {{n}} restantes pela ordem do seu lugar de entrada no quadro. A classificação abaixo é a das poules."
+    "after_stage_note": "Quadro parado em {{n}} atiradores fechado: a divisão reparte os {{n}} restantes pela ordem do seu lugar de entrada no quadro. A classificação abaixo é a das poules.",
+    "stays": "permanece na prova (quadro separado)",
+    "sort": "Ordenar por",
+    "sort_rank": "Posição",
+    "sort_gender": "Sexo",
+    "sort_club": "Clube",
+    "sort_birthDate": "Data de nascimento",
+    "all_in": "Todos em…",
+    "all_apply": "Atribuir todos",
+    "col_rank": "Posição",
+    "col_fencer": "Atirador",
+    "manual_missing": "{{n}} atirador(es) a atribuir a um ramo antes de dividir."
   }
 }

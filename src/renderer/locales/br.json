@@ -4780,7 +4780,7 @@
     "split_criterion_category": "Rummad",
     "split_criterion_rank": "Renk",
     "split_criterion_manual": "Gant an dorn",
-    "split_manual_readonly": "Rannadur gant an dorn: da reizhañ war ar skramm en ur stumm da zont. Lenn hepken amañ.",
+    "split_manual_hint": "Rannadur dre zorn : lakaet e vez an emsaverien en ur skourr pa vez lañset ar rannadur, diouzh ar renkadur kregiñ.",
     "split_branch": "Skourr {{n}}",
     "split_label": "Anv",
     "split_preset": "Patrom ar skourr",
@@ -4792,6 +4792,7 @@
     "split_gender": "Reizh ar skourr",
     "split_gender_male": "Paotred",
     "split_gender_female": "Merc'hed",
+    "split_stay": "Chom en abadenn (taolennoù disheñvel)",
     "split_categories": "Rummadoù ar skourr",
     "split_take": "Kleze-c'hoarierien ar skourr",
     "split_rest": "Ar re all",
@@ -4869,6 +4870,17 @@
     "missing_fix_gender": "Leuniit reizh ar c'hleze-c'hoarierien-se (Galv ▸ kemmañ), ha rannit en-dro.",
     "missing_fix_category": "Leuniit rummad ar c'hleze-c'hoarierien-se er Galv (gant an dorn pe « Jediñ ar rummadoù »), ha rannit en-dro.",
     "done": "Amprouenn rannet: {{n}} kenstrivadeg merc'h krouet.",
-    "after_stage_note": "Taolenn paouezet da {{n}} c'hoarier serret : ar rannadur a lak an {{n}} c'hoarier a chom hervez o renk mont e-barzh an daolenn. Renkadur ar poulloù eo an hini dindan."
+    "after_stage_note": "Taolenn paouezet da {{n}} c'hoarier serret : ar rannadur a lak an {{n}} c'hoarier a chom hervez o renk mont e-barzh an daolenn. Renkadur ar poulloù eo an hini dindan.",
+    "stays": "a chom en abadenn (taolenn disheñvel)",
+    "sort": "Renkañ dre",
+    "sort_rank": "Renk",
+    "sort_gender": "Reizh",
+    "sort_club": "Klub",
+    "sort_birthDate": "Deiziad ganedigezh",
+    "all_in": "Pep tra e…",
+    "all_apply": "Lakaat an holl",
+    "col_rank": "Renk",
+    "col_fencer": "Emsaver",
+    "manual_missing": "{{n}} emsaver da lakaat en ur skourr a-raok rannañ."
   }
 }

@@ -4780,7 +4780,7 @@
     "split_criterion_category": "組別",
     "split_criterion_rank": "排名",
     "split_criterion_manual": "手動",
-    "split_manual_readonly": "手動分組：將於日後版本在畫面上設定。此處唯讀。",
+    "split_manual_hint": "手動分組：啟動分組時，按入場排名將劍手分配到各分支。",
     "split_branch": "分支 {{n}}",
     "split_label": "名稱",
     "split_preset": "分支範本",
@@ -4792,6 +4792,7 @@
     "split_gender": "分支性別",
     "split_gender_male": "男子",
     "split_gender_female": "女子",
+    "split_stay": "留在本賽事（分開的淘汰表）",
     "split_categories": "分支組別",
     "split_take": "分支劍手",
     "split_rest": "其餘劍手",
@@ -4869,6 +4870,17 @@
     "missing_fix_gender": "請補上這些劍手的性別（點名 ▸ 編輯劍手），然後再次分拆。",
     "missing_fix_category": "請在點名補上這些劍手的組別（手動或「計算組別」），然後再次分拆。",
     "done": "比賽已分拆：已建立 {{n}} 個子比賽。",
-    "after_stage_note": "在 {{n}} 名劍手時停止的淘汰賽表已結束：分組按餘下 {{n}} 名劍手進入淘汰賽表時的排名分配。下方為小組賽排名。"
+    "after_stage_note": "在 {{n}} 名劍手時停止的淘汰賽表已結束：分組按餘下 {{n}} 名劍手進入淘汰賽表時的排名分配。下方為小組賽排名。",
+    "stays": "留在本賽事（分開的淘汰表）",
+    "sort": "排序方式",
+    "sort_rank": "名次",
+    "sort_gender": "性別",
+    "sort_club": "會籍",
+    "sort_birthDate": "出生日期",
+    "all_in": "全部分到…",
+    "all_apply": "全部分配",
+    "col_rank": "名次",
+    "col_fencer": "劍手",
+    "manual_missing": "分組前尚有 {{n}} 名劍手未分配分支。"
   }
 }

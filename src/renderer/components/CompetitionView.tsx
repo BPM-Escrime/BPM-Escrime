@@ -6,7 +6,7 @@
 import { entrySeeds, resultsTableauMatches } from '../../shared/domain/tableau/tableauStage';
 import { formulaSegment } from '../../shared/domain/formula/formulaSteps';
 import { originFinalRanking } from '../../shared/domain/formula/splitPlan';
-import { splitOf } from '../../shared/domain/formula/formulaV2';
+import { pendingSplitOf, stayingBranches } from '../../shared/domain/formula/formulaV2';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
 import React, { Suspense, useState } from 'react';
@@ -286,18 +286,21 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
   );
 
   // Scission en attente (docs/adr/0039) : phase qui la précède close (dernier tour de poules,
-  // ou tableau arrêté clos), branches pas encore parties en compétitions filles
+  // ou tableau arrêté clos), branches pas encore parties en compétitions filles. Compétition
+  // couplée (branches toutes restées, E3) : rien à lancer, tableaux séparés (ADR-0024)
   const pendingSplit =
     competition.settings?.formula && competitionCore.splitHistory.length === 0
-      ? splitOf(competition.settings.formula)
+      ? pendingSplitOf(competition.settings.formula)
       : undefined;
+  // Une branche reste en tableau séparé, l'autre part : la scission d'abord, puis le tableau
+  const splitKeepsTableau = !!pendingSplit && stayingBranches(pendingSplit).length > 0;
   const rankingNextRound =
     !isLastPoolRound && pools.length > 0 && canAdvanceFromPools
       ? {
           label: t('pools.next_round_n', { n: currentPoolRound + 1 }),
           onClick: handleNextPoolRound,
         }
-      : pendingSplit && isLastPoolRound && !hasDirectElimination
+      : pendingSplit && isLastPoolRound && (!hasDirectElimination || splitKeepsTableau)
         ? {
             label: t('splitLaunch.action'),
             onClick: () => setShowSplitLaunch(true),
@@ -373,10 +376,13 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onDone={result => {
               setShowSplitLaunch(false);
               competitionCore.showToast(
-                t('splitLaunch.done', { n: result.branches.length }),
+                t('splitLaunch.done', {
+                  n: result.branches.filter(b => !!b.competitionId).length,
+                }),
                 'success'
               );
-              setCurrentPhase('results');
+              // Branche restée (tableau séparé) : son tableau se tire ensuite, depuis le classement
+              if (!result.branches.some(b => b.stayInCompetition)) setCurrentPhase('results');
             }}
           />
         </Suspense>
@@ -639,7 +645,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         {currentPhase === 'ranking' &&
           closedStage &&
           !!storedFormula &&
-          !!splitOf(storedFormula) &&
+          !!pendingSplitOf(storedFormula) &&
           competitionCore.splitHistory.length === 0 && (
             // Tableau arrêté clos, scission à venir : le tableau ci-dessous est celui des poules ;
             // la scission répartit les restants du tableau par rang d'entrée (ADR-0037 Q5)
@@ -758,7 +764,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onClearScore={clearScore}
             onAssign={assignMatches}
             stopAt={closedStage ? closedStage.stopAt : competitionCore.tableauStopAt}
-            stageThenSplit={!!storedFormula && !!splitOf(storedFormula)}
+            stageThenSplit={!!storedFormula && !!pendingSplitOf(storedFormula)}
             closedStage={!!closedStage}
           />
         )}
