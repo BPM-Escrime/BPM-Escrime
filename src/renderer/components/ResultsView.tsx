@@ -595,9 +595,12 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     }
   };
 
-  // Épreuve scindée (ADR-0039) : vainqueurs dans les filles, ni champion ni podium ici
+  // Épreuve scindée (ADR-0039) : bloc « Branches ». Toutes les branches parties (pas de
+  // résultats finals) : vainqueurs dans les filles, ni champion ni podium ici. Mélange : la
+  // branche restée a son tableau, son vainqueur est celui de l'origine
   const split = (splitBranches?.length ?? 0) > 0;
-  const champion = split ? undefined : resultsToDisplay.find(r => r.rank === 1);
+  const noWinnerHere = split && finalResults.length === 0;
+  const champion = noWinnerHere ? undefined : resultsToDisplay.find(r => r.rank === 1);
 
   return (
     <div style={RV_STYLES.wrapper}>
@@ -627,7 +630,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
       )}
 
       {/* Podium visuel */}
-      {!split && (
+      {!noWinnerHere && (
         <div style={RV_STYLES.podiumRow}>
           {/* 2ème place */}
           {resultsToDisplay[1] && (
