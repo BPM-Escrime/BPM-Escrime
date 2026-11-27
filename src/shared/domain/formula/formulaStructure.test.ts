@@ -249,6 +249,8 @@ describe('formulaProgress : phases commencées d’après l’état de session',
   it('poules du tour courant lancées, ou tours clos dans l’historique', () => {
     expect(formulaProgress(full, { pools: [{}] })).toEqual(['pool']);
     expect(formulaProgress(full, { poolsLaunched: true })).toEqual(['pool']);
+    // Tirage non lancé (état de session, moteur comme écran) : pas encore commencé
+    expect(formulaProgress(full, { pools: [{}], poolsLaunched: false })).toEqual([]);
     expect(formulaProgress(full, { poolHistory: [[{}]], pools: [{}] })).toEqual(['pool', 'pool']);
     expect(formulaProgress(full, { poolHistory: [[{}], [{}]] })).toEqual(['pool', 'pool']);
   });
@@ -345,6 +347,15 @@ describe('avertissements de la simulation (ADR-0041)', () => {
 });
 
 describe('mode expert : briques et réglages', () => {
+  it('une formule reste valide quel que soit le mode : le jugement ignore le mode expert', () => {
+    // Formule experte valide (tableau arrêté suivi d'un tour) : aucune remarque, sans mode
+    const f = formula(pool(), tableau({ stopAt: 8 }), pool({ sizeMin: 4, sizeMax: 4 }));
+    expect(formulaNeedsExpert(f)).toBe(true);
+    expect(formulaV2Issues(f, scope)).toEqual([]);
+    // formulaV2Issues ne prend aucun paramètre de mode (scope, progress seulement)
+    expect(formulaV2Issues.length).toBeLessThanOrEqual(3);
+  });
+
   it('formule par défaut : simple', () => {
     expect(formulaNeedsExpert(base())).toBe(false);
   });

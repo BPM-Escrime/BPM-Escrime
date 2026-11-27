@@ -7,9 +7,10 @@
  * Licensed under GPL-3.0
  */
 
-import type { Fencer, PoolRanking } from '../../types';
+import type { Fencer, Pool, PoolRanking } from '../../types';
 import type { TableauMatch } from './tableauTypes';
-import type { FormulaV2 } from '../formula/formulaV2';
+import { phaseSettings, type FormulaV2 } from '../formula/formulaV2';
+import { cumulativeRanking, roundRanking } from '../pools/roundSeeding';
 import { formulaSegment } from '../formula/formulaSteps';
 
 /** Matchs joués avant l'arrêt : tours où il reste plus de `stopAt` tireurs */
@@ -177,23 +178,31 @@ export const resultsTableauMatches = (
 ): TableauMatch[] => (current.length === 0 && closed ? closed.matches : current);
 
 /**
- * Classement qui répartit le tour de poules à tirer (écran, comme le moteur) : celui du dernier
- * tour joué ; premier tour après un tableau arrêté clos : restants par rang d'entrée au tableau
- * (Q5, ADR-0037).
+ * Classement qui répartit le tour de poules à tirer (écran et moteur, une seule fonction,
+ * ADR-0042) : premier tour après un tableau arrêté clos : restants par rang d'entrée au
+ * tableau (Q5, ADR-0037) ; sinon, réglage de répartition du tour à tirer (Q4, ADR-0036) : cumul
+ * de tous les tours joués (`cumulative`, comme closePoolRound) ou classement du dernier tour
+ * (défaut). `history` : tours joués (archivés), le dernier en dernier.
  */
 export function seedRankingForNextRound(input: {
   formula: FormulaV2 | undefined;
   /** Tours joués (archivés) */
-  playedRounds: number;
+  history: Pool[][];
   stages: TableauStageRecord[];
-  lastRoundRanking: PoolRanking[];
+  isLaserSabre: boolean;
 }): PoolRanking[] {
+  const played = input.history.length;
+  const last = input.history[played - 1] ?? [];
+  const lastRoundRanking = roundRanking(last, input.isLaserSabre);
   const stage = input.stages[input.stages.length - 1];
   const firstAfterStage =
-    !!stage &&
-    !!input.formula &&
-    formulaSegment(input.formula, 0)?.poolRounds === input.playedRounds;
-  return firstAfterStage
-    ? rankingAfterStage(input.lastRoundRanking, stage)
-    : input.lastRoundRanking;
+    !!stage && !!input.formula && formulaSegment(input.formula, 0)?.poolRounds === played;
+  if (firstAfterStage) return rankingAfterStage(lastRoundRanking, stage);
+  // Réglage du tour à tirer (index = nombre de tours joués), comme nextRoundPlan
+  const next = input.formula?.phases.some(p => p.kind === 'pool')
+    ? phaseSettings(input.formula, { kind: 'pool', round: played })
+    : undefined;
+  return next?.seeding === 'cumulative'
+    ? cumulativeRanking(input.history.slice(0, -1), last, input.isLaserSabre)
+    : lastRoundRanking;
 }

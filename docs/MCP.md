@@ -115,8 +115,14 @@ session porte une révision : une sauvegarde de l'écran faite sur un état pér
 | `build_bracket`   | `competitionId`, `thirdPlaceMatch?`, `composition?`, `replace?`, `dryRun?`                                        | Tableau depuis le classement après poules, ou placement donné (`composition`) ; `TableauGenerated` au journal. ⚠️ `replace` efface un tableau joué                                                                                        |
 | `export_results`  | `competitionId`, `format` (`xml` / `fff` / `csv` / `html` / `pdf`), `path`, `overwrite?`                          | Fichier de résultats dans un dossier accessible à l'agent                                                                                                                                                                                 |
 
-Formats pilotables : épreuve individuelle, un tour de poules, tableau simple avec ou sans petite
-finale. Équipes, rapières, tours de poules multiples et « tirer toutes les places » restent à
+Formats pilotables : épreuve individuelle, tous les tours de poules d'une formule, tableau simple avec ou sans petite
+finale, tableau arrêté à N tireurs ([ADR-0037](adr/0037-deroule-genere-par-la-formule.md)). Après
+`close_pool_round` (ou `close_tableau_stage`), `generate_pools` tire le tour suivant sans `composition`, comme
+l'écran : tireurs pointés répartis sur le classement du tour précédent (ou le cumul des tours, réglage `cumulative` du tour ;
+rang d'entrée au tableau après un tableau arrêté), tailles et score maximum du tour lus dans la formule (`minPerPool` / `maxPerPool` priment) ;
+`build_bracket` prend le classement de tous les tours ; `assign_referees` suit le tour courant
+([ADR-0042](adr/0042-moteur-formules-multi-tours.md)). Une fois le tableau arrêté clos, plus de tableau :
+`build_bracket` refuse (`no_direct_elimination`). Équipes, rapières (étape F4) et « tirer toutes les places » restent à
 l'écran (erreur `unsupported_format`) pour `generate_pools` et `build_bracket` sans `composition`, et pour `assign_referees`.
 `record_score` accepte aussi les tours multiples (tour courant ; tour terminé figé : `round_closed`),
 les rapières et « toutes les places » (barrages, tableaux de classement listés par `list_matches`
@@ -186,7 +192,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (75)
+## Référence des outils (76)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -358,7 +364,7 @@ Aucun argument.
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 
-### En écriture, sur autorisation (54)
+### En écriture, sur autorisation (55)
 
 ### `create_competition` — Créer une épreuve
 
@@ -588,7 +594,7 @@ Aucun argument.
 
 ### `generate_pools` — Générer les poules
 
-*⚠️ écriture, destructif.* Poules du tour courant, lancées (phase Poules). Sans « composition » : tirage sur les tireurs pointés par la même fonction que l’écran (serpentin sur le classement, puis clubs et régions séparés, ou les critères de « separation »), poule n sur la piste n ; épreuve individuelle, un tour de poules. Avec « composition » : poules et ordre des matchs retenus par le DT à la préparation, tels quels (tous formats individuels, tours multiples compris). « replace: true » efface des poules déjà jouées ou un tableau : accord du DT indispensable.
+*⚠️ écriture, destructif.* Poules du tour courant, lancées (phase Poules). Sans « composition » : tirage sur les tireurs pointés par la même fonction que l’écran (serpentin sur le classement, puis clubs et régions séparés, ou les critères de « separation »), poule n sur la piste n ; épreuve individuelle. Tour suivant (après « closePoolRound » ou « closeTableauStage ») : tireurs pointés répartis sur le classement du tour précédent (ou le cumul des tours si le tour est réglé « cumulative »), ou sur le rang d’entrée au tableau après un tableau arrêté, tailles et score maximum du tour lus dans la formule (« minPerPool » et « maxPerPool » priment), comme l’écran (docs/adr/0042). Avec « composition » : poules et ordre des matchs retenus par le DT à la préparation, tels quels (tous formats individuels, tours multiples compris). « replace: true » efface des poules déjà jouées ou un tableau : accord du DT indispensable.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -618,7 +624,7 @@ Aucun argument.
 
 ### `build_bracket` — Construire le tableau
 
-*⚠️ écriture, destructif.* Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, un tour, tableau simple). Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »). Sans « composition » : « tiedAtBar » liste les ex aequo à la barre de qualification au-delà du quota, « ties » choisit leur sort pour ce tableau (docs/adr/0040).
+*⚠️ écriture, destructif.* Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, tableau simple) : après plusieurs tours de poules, classement de tous les tours (docs/adr/0042) ; refus « no_direct_elimination » une fois le tableau arrêté clos, les tours de poules qui suivent terminent l’épreuve (docs/adr/0037). Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »). Sans « composition » : « tiedAtBar » liste les ex aequo à la barre de qualification au-delà du quota, « ties » choisit leur sort pour ce tableau (docs/adr/0040).
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -830,6 +836,17 @@ Aucun argument.
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `operations` | valeur[] | oui |  |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `close_tableau_stage` — Clore le tableau arrêté
+
+*⚠️ écriture, destructif.* Clôt un tableau arrêté à N tireurs (formule enregistrée, docs/adr/0037) : quand tous les matchs avant l’arrêt sont joués, les N restants passent à la phase suivante (classement = rang d’entrée), les éliminés sortent (classés par tour atteint puis rang d’entrée). Refus : invalid_settings (formule sans tableau arrêté suivi d’une phase), tableau_stage_not_complete.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |

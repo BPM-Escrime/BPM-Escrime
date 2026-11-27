@@ -140,5 +140,6 @@ export const formulaOperations = {
       revision: Revision,
     }),
     permission: 'score:write',
+    mcp: { name: 'close_tableau_stage', title: 'Clore le tableau arrêté', destructive: true },
   }),
 };

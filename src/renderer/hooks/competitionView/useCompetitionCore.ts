@@ -279,11 +279,11 @@ export function useCompetitionCore(ctx: Ctx) {
     if (currentPoolRound <= 1 || poolHistory.length === 0) return null;
     return seedRankingForNextRound({
       formula: storedFormulaForSeed,
-      playedRounds: poolHistory.length,
+      history: poolHistory,
       stages: stageHistory,
-      lastRoundRanking: computeOverallRanking(poolHistory[poolHistory.length - 1]),
+      isLaserSabre,
     });
-  }, [currentPoolRound, poolHistory, computeOverallRanking, storedFormulaForSeed, stageHistory]);
+  }, [currentPoolRound, poolHistory, isLaserSabre, storedFormulaForSeed, stageHistory]);
   const getSeededCheckedInFencers = useCallback(() => {
     const checkedIn = getCheckedInFencers();
     return previousRoundRanking

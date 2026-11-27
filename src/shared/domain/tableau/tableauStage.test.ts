@@ -1,8 +1,16 @@
-import { describe, expect, it } from 'vitest';
-import { Category, CompetitionSettings, Weapon } from '../../types';
-import type { Fencer, PoolRanking } from '../../types';
+import { describe, expect, it, vi } from 'vitest';
+import { Category, CompetitionSettings, FencerStatus, Weapon } from '../../types';
+import type { Fencer, Pool, PoolRanking } from '../../types';
+
+/** Classement de chaque tour fourni par le test (pool.id → classement du tour) */
+const rankings = new Map<string, PoolRanking[]>();
+vi.mock('../../utils/poolOrchestration', () => ({
+  computeOverallRankingFor: (pools: Pool[]) => rankings.get(pools[0]?.id ?? '') ?? [],
+}));
+
 import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
 import { applyOperationsV2 } from '../formula/formulaV2Operations';
+import type { FormulaV2 } from '../formula/formulaV2';
 import type { TableauMatch } from './tableauTypes';
 import {
   closeStage,
@@ -182,25 +190,80 @@ describe('répartition du tour à tirer, écran (Q5, ADR-0037)', () => {
     matches: [...quarters, ...semis, final],
     eliminated: out.eliminated.map(e => ({ fencerId: e.fencer.id, round: e.round, seed: e.seed })),
   };
-  const last = ['E', 'B', 'A', 'C'].map((id, i) => ({ fencer: f(id), rank: i + 1 }) as PoolRanking);
+  const rows = ['E', 'B', 'A', 'C'].map((id, i) => ({ fencer: f(id), rank: i + 1 }) as PoolRanking);
+  const round = (id: string, ranking: PoolRanking[]): Pool[] => {
+    rankings.set(id, ranking);
+    return [{ id } as Pool];
+  };
+  const last = round('after-stage', rows);
+  const seed = (history: Pool[][], stages: TableauStageRecord[], fm = formula) =>
+    seedRankingForNextRound({ formula: fm, history, stages, isLaserSabre: false });
 
   it('premier tour après le tableau clos : restants par rang d’entrée', () => {
-    const r = seedRankingForNextRound({
-      formula,
-      playedRounds: 1,
-      stages: [stage],
-      lastRoundRanking: last,
-    });
-    expect(r.map(x => x.fencer.id)).toEqual(['B', 'E']);
+    expect(seed([last], [stage]).map(x => x.fencer.id)).toEqual(['B', 'E']);
   });
 
   it('autres tours, ou sans étape close : classement du dernier tour', () => {
-    expect(
-      seedRankingForNextRound({ formula, playedRounds: 2, stages: [stage], lastRoundRanking: last })
-    ).toBe(last);
-    expect(
-      seedRankingForNextRound({ formula, playedRounds: 1, stages: [], lastRoundRanking: last })
-    ).toBe(last);
+    expect(seed([last, last], [stage])).toEqual(rows);
+    expect(seed([last], [])).toEqual(rows);
+  });
+});
+
+describe('répartition du tour à tirer : cumul des tours (Q4, ADR-0036)', () => {
+  const row = (id: string, rank: number, v: number, m: number, td: number, tr: number) =>
+    ({
+      fencer: { id, lastName: id, firstName: id, status: FencerStatus.CHECKED_IN },
+      rank,
+      victories: v,
+      defeats: m - v,
+      matchesPlayed: m,
+      touchesScored: td,
+      touchesReceived: tr,
+      index: td - tr,
+      ratio: v / m,
+    }) as PoolRanking;
+  // Tour 1 : A domine ; tour 2 : B gagne tout, A perd tout
+  const r1: Pool[] = [{ id: 'c1' } as Pool];
+  const r2: Pool[] = [{ id: 'c2' } as Pool];
+  rankings.set('c1', [
+    row('A', 1, 4, 4, 20, 5),
+    row('B', 2, 2, 4, 14, 12),
+    row('C', 3, 0, 4, 5, 20),
+  ]);
+  rankings.set('c2', [row('B', 1, 2, 2, 10, 4), row('C', 2, 1, 2, 7, 8), row('A', 3, 0, 2, 4, 10)]);
+
+  const settings = buildDefaultCompetitionSettings({
+    weapon: Weapon.EPEE,
+    category: Category.SENIOR,
+  }) as CompetitionSettings;
+  /** Trois tours de poules ; le 3e est réparti selon `seeding` */
+  const threeRounds = (seeding: 'previous_round' | 'cumulative') =>
+    applyOperationsV2(
+      { weapon: Weapon.EPEE, category: Category.SENIOR, settings },
+      [
+        { op: 'insertPhase', brick: 'pool', at: 1 },
+        { op: 'insertPhase', brick: 'pool', at: 2 },
+        { op: 'setPhase', phase: 'pool-2', settings: { seeding } },
+      ],
+      () => 'x'
+    );
+  const seed = (formula: FormulaV2 | undefined, history: Pool[][]) =>
+    seedRankingForNextRound({ formula, history, stages: [], isLaserSabre: false }).map(
+      x => x.fencer.id
+    );
+
+  it('tour à tirer « cumulative » : classement cumulé de tous les tours joués', () => {
+    expect(seed(threeRounds('cumulative'), [r1, r2])).toEqual(['A', 'B', 'C']);
+  });
+
+  it('« previous_round » (défaut), ou sans formule : classement du dernier tour seul', () => {
+    expect(seed(threeRounds('previous_round'), [r1, r2])).toEqual(['B', 'C', 'A']);
+    expect(seed(undefined, [r1, r2])).toEqual(['B', 'C', 'A']);
+  });
+
+  it('le réglage lu est celui du tour à tirer, pas celui du tour terminé', () => {
+    // 3e tour « cumulative » : le tirage du 2e tour (un seul tour joué) n'est pas concerné
+    expect(seed(threeRounds('cumulative'), [r2])).toEqual(['B', 'C', 'A']);
   });
 });
 

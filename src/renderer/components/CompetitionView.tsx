@@ -6,8 +6,12 @@
 import { entrySeeds, resultsTableauMatches } from '../../shared/domain/tableau/tableauStage';
 import { formulaSegment } from '../../shared/domain/formula/formulaSteps';
 import { originFinalRanking } from '../../shared/domain/formula/splitPlan';
-import { formulaOf, pendingSplitOf } from '../../shared/domain/formula/formulaV2';
-import { formulaProgress } from '../../shared/domain/formula/formulaRemarks';
+import {
+  formulaOf,
+  pendingSplitOf,
+  poolBoutOrderOfRound,
+} from '../../shared/domain/formula/formulaV2';
+import { screenFormulaProgress } from './formula/screenFormulaProgress';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
 import React, { Suspense, useState } from 'react';
@@ -403,14 +407,15 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
           <CompetitionFormulaModal
             competition={competition}
             // Phases commencées (S6, docs/adr/0041) : lues dans l'état de l'épreuve
-            progress={formulaProgress(storedFormula ?? formulaOf(competition), {
-              // Tirage non lancé : pas encore commencé
-              pools: poolsLaunched ? pools : [],
+            progress={screenFormulaProgress({
+              formula: storedFormula ?? formulaOf(competition),
+              poolsLaunched,
+              pools,
               poolHistory,
               tableauMatches,
               stageHistory,
               splitHistory: competitionCore.splitHistory,
-              questStarted: currentPhase === 'quest',
+              currentPhase,
             })}
             // Écrit par applyFormulaTemplate / updateCompetitionFormula (docs/adr/0033)
             onApplied={settings => onUpdate({ ...competition, settings })}
@@ -550,7 +555,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             maxScore={poolMaxScore}
             minFencersPerPool={isRapieres ? 2 : minFencersPerPool}
             maxFencersPerPool={isRapieres ? RAPIERES_MAX_POOL_SIZE : maxFencersPerPool}
-            boutOrderMode={competition.settings?.poolBoutOrder}
+            boutOrderMode={poolBoutOrderOfRound(competition.settings, currentPoolRound)}
             {...(isRapieres ? rapieresViewProps.poolPrep : {})}
             expertMode={expertMode}
             arenaCount={remoteArenaCount}

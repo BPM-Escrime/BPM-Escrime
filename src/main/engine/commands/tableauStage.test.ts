@@ -140,13 +140,14 @@ d('closeTableauStage (docs/adr/0037)', () => {
     ).rejects.toMatchObject({ code: 'tableau_round_after_stop' });
   });
 
-  it('pilotage hors écran (MCP) toujours refusé : plusieurs tours de poules (ADR-0037)', async () => {
+  it('pilotage hors écran (MCP) : plusieurs tours de poules plus refusés (ADR-0042)', async () => {
     // Réglages plats écrits avec la formule (writeFormula) : 2 tours de poules
     db.updateCompetition(competitionId, {
       settings: { ...base, ...flatSettingsOf(stopped(), Weapon.EPEE), formula: stopped() } as never,
     });
+    // Plus de refus de format : le moteur contrôle les poules (parcours complet : multiRound.test.ts)
     await expect(op('generateTableau', {})).rejects.toMatchObject({
-      code: 'unsupported_format',
+      code: 'pools_not_complete',
     });
   });
 
