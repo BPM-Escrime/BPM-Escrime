@@ -463,6 +463,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 <option value="serpentine">{t('formulaEditor.distribution_serpentine')}</option>
                 <option value="byLevel">{t('formulaEditor.distribution_by_level')}</option>
               </select>
+              <small className="u-hint">{t('formulaEditor.distribution_hint')}</small>
             </div>
             {isOther && (
               <div className="form-group">

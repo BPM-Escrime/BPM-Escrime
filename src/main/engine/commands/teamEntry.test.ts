@@ -43,7 +43,7 @@ const call = (name: string, input: Record<string, unknown> = {}) =>
   invoke(ctx, name as never, { competitionId, ...input } as never) as Promise<any>;
 const settings = () => db.getCompetition(competitionId)!.settings;
 
-/** Douze équipes pointées, niveaux 1 (fort) à 3, clubs distincts */
+/** Douze équipes pointées, niveaux 1 (faible) à 3 (fort), clubs distincts */
 function seedTeams() {
   const ids: string[] = [];
   for (let i = 0; i < 12; i++) {
@@ -64,7 +64,7 @@ function seedTeams() {
 d('entrée en équipes : réglage de la formule (docs/adr/0043)', () => {
   it('individuelle par défaut ; équipes de 2 avec libellés ; retour à l’individuelle', async () => {
     expect(entryOf(settings().formula)).toEqual({ kind: 'individual' });
-    const levels = ['Expert', 'Intermédiaire', 'Débutant'];
+    const levels = ['beginner', 'intermediate', 'expert'];
     await call('updateCompetitionFormula', {
       operations: [{ op: 'setGeneral', settings: { entry: { kind: 'team', size: 2, levels } } }],
     });
@@ -122,9 +122,9 @@ d('tirage par niveau (moteur, docs/adr/0043)', () => {
     });
     await call('generatePools', { poolCount: 3 });
     expect(levelsByPool().map((l: number[]) => [...l].sort())).toEqual([
-      [3, 3, 3, 3],
-      [2, 2, 2, 2],
       [1, 1, 1, 1],
+      [2, 2, 2, 2],
+      [3, 3, 3, 3],
     ]);
   });
 

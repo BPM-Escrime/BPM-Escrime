@@ -45,15 +45,15 @@ const fencer = (over: Partial<Fencer> = {}): Fencer => ({
 });
 
 describe('niveaux des rapières comme niveaux de la formule', () => {
-  it('1 = expert, 2 = intermédiaire, 3 = débutant, et retour', () => {
+  it('1 = débutant, 2 = intermédiaire, 3 = expert (le plus grand est le plus fort), et retour', () => {
     expect(
-      ['expert', 'intermediate', 'beginner'].map(l => rapieresLevelNumber(l as never))
+      ['beginner', 'intermediate', 'expert'].map(l => rapieresLevelNumber(l as never))
     ).toEqual([1, 2, 3]);
     expect([1, 2, 3, 4].map(rapieresLevelOfNumber)).toEqual([
-      'expert',
+      'beginner',
       'intermediate',
-      'beginner',
-      'beginner',
+      'expert',
+      'expert',
     ]);
   });
 });
@@ -120,7 +120,7 @@ describe('rapieresInfoOf : champs du tireur de préférence, sinon la session', 
   it('le tireur porte la composition : elle prime sur la session', () => {
     const session = info({ level: 'beginner', club: 'Lyon' });
     const f = fencer({
-      level: 1,
+      level: 3,
       members: [{ lastName: 'X', firstName: 'x' }],
       club: 'Nantes',
       handicap: true,
@@ -151,7 +151,7 @@ describe('rapieresInfoOf : champs du tireur de préférence, sinon la session', 
     const sessionOnly = info({ level: 'expert' });
     const teams = rapieresTeamsOf(
       [
-        fencer({ id: 'a', level: 3, members: [{ lastName: 'Q', firstName: 'q' }] }),
+        fencer({ id: 'a', level: 1, members: [{ lastName: 'Q', firstName: 'q' }] }),
         fencer({ id: 'b' }),
       ],
       { b: sessionOnly, c: sessionOnly }

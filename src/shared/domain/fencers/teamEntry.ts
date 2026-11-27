@@ -2,14 +2,14 @@
  * BPM - Escrime - Entrée en équipes (binômes) : règles du tireur-équipe (docs/adr/0043, F4c).
  * Catégorie = moyenne des années de naissance des membres, arrondie au-dessus (39,5 ans → 40),
  * saison au 1er septembre ; sexe = celui des membres s'il est commun, sinon mixte ; niveau :
- * 1 = le plus fort. Domaine pur : date de saison injectée.
+ * indice (dès 1) dans `levels`, du plus faible au plus fort. Domaine pur : date de saison injectée.
  * Licensed under GPL-3.0
  */
 import { Gender, type Category, type Fencer, type FencerMember } from '../../types';
 import { ageCategoryFromBirthYear } from './ageCategory';
 
-/** Libellés de niveau par défaut, du plus fort au plus faible (stockés tels quels dans la formule) */
-export const DEFAULT_TEAM_LEVELS: readonly string[] = ['Expert', 'Intermédiaire', 'Débutant'];
+/** Niveaux par défaut, du plus faible au plus fort : codes de la liste des rapières, affichés traduits */
+export const DEFAULT_TEAM_LEVELS: readonly string[] = ['beginner', 'intermediate', 'expert'];
 
 export const TEAM_SIZE = 2;
 
@@ -49,12 +49,17 @@ export function teamMembersLabel(members: ReadonlyArray<Pick<FencerMember, 'last
     .join(' / ');
 }
 
-/** Libellé d'un niveau (1 = le plus fort), vide si inconnu */
-export function levelLabel(level: number | undefined | null, levels: readonly string[]): string {
-  return level && Number.isInteger(level) ? (levels[level - 1] ?? '') : '';
+/** Libellé d'un niveau, vide si inconnu ; `translate` : traduction des codes par défaut, libellé saisi tel quel */
+export function levelLabel(
+  level: number | undefined | null,
+  levels: readonly string[],
+  translate?: (code: string) => string
+): string {
+  const label = level && Number.isInteger(level) ? (levels[level - 1] ?? '') : '';
+  return translate && DEFAULT_TEAM_LEVELS.includes(label) ? translate(label) : label;
 }
 
 /** Rang de regroupement du tirage « par niveau » : du plus faible au plus fort, sans niveau en dernier */
 export function levelRankOf(fencer: Pick<Fencer, 'level'>): number {
-  return fencer.level ? -fencer.level : 0;
+  return fencer.level || Number.MAX_SAFE_INTEGER;
 }

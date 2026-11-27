@@ -17,6 +17,7 @@ import { useConfirm } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { useDebounce } from '../useDebounce';
 import { SortableCol, COLUMNS, FencerListProps } from '../../components/fencerListShared';
+import { DEFAULT_TEAM_LEVELS } from '../../../shared/domain/fencers/teamEntry';
 import { ageCategoryRank } from '../../../shared/utils/clubAge';
 import { usePlatform } from '../../platform/PlatformContext';
 import { DATA_FILE_FILTERS, openDataFile, saveDataFile, useFilesApi } from '../../api/filesApi';
@@ -232,7 +233,7 @@ export function useFencerListState(ctx: Ctx) {
           case 'category':
             return dir * (ageCategoryRank(a.category) - ageCategoryRank(b.category));
           case 'level':
-            // 1 = le plus fort ; sans niveau en dernier
+            // Du plus faible au plus fort ; sans niveau en dernier
             return dir * ((a.level ?? 99) - (b.level ?? 99));
           case 'club':
             return dir * (a.club || '').localeCompare(b.club || '');
@@ -455,7 +456,7 @@ export function useFencerListState(ctx: Ctx) {
       undefined,
       undefined,
       undefined,
-      teamLevels
+      teamLevels?.map(l => (DEFAULT_TEAM_LEVELS.includes(l) ? t(`rapieres.level_${l}`) : l))
     );
   };
 

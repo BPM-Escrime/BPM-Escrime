@@ -1501,7 +1501,8 @@
     "club_plan_exercise": "Ejercicio",
     "club_plan_empty": "Ningún ejercicio previsto",
     "club_plan_notes": "Notas",
-    "col_level": "Nivel"
+    "col_level": "Nivel",
+    "handicap": "Adaptado"
   },
   "rsm": {
     "strip_plan": "Plano de pistas",
@@ -4809,10 +4810,12 @@
     "entry": "Inscripción de los participantes",
     "entry_individual": "Individual",
     "entry_team": "Equipos de 2 (parejas)",
-    "entry_levels": "Niveles, del más fuerte al más débil (separados por comas)",
+    "entry_levels": "Niveles, del más débil al más fuerte",
     "distribution": "Reparto en las poules",
     "distribution_serpentine": "Serpentina según la clasificación",
-    "distribution_by_level": "Por nivel"
+    "distribution_by_level": "Por nivel",
+    "entry_levels_hint": "Etiquetas separadas por comas, de la más débil a la más fuerte; la última es el nivel más fuerte.",
+    "distribution_hint": "Por nivel: los equipos del mismo nivel se agrupan, del más débil al más fuerte, poule tras poule."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",
@@ -4911,6 +4914,9 @@
     "member_n": "Miembro {{n}}",
     "unknown": "No indicado",
     "auto_hint": "Categoría y sexo deducidos de los miembros si se dejan vacíos.",
-    "members_required": "Indique el nombre del equipo y al menos un miembro."
+    "members_required": "Indique el nombre del equipo y al menos un miembro.",
+    "handicap": "Adaptado",
+    "level_unknown": "Sin especificar",
+    "handicap_hint": "Equipo de deporte adaptado: marca independiente de la categoría."
   }
 }

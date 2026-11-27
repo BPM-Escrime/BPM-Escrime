@@ -1501,7 +1501,8 @@
     "club_plan_exercise": "Exercise",
     "club_plan_empty": "No exercise planned",
     "club_plan_notes": "Notes",
-    "col_level": "Level"
+    "col_level": "Level",
+    "handicap": "Para"
   },
   "rsm": {
     "strip_plan": "Strip map",
@@ -4809,10 +4810,12 @@
     "entry": "Entry of participants",
     "entry_individual": "Individual",
     "entry_team": "Teams of 2 (pairs)",
-    "entry_levels": "Levels, strongest to weakest (comma-separated)",
+    "entry_levels": "Levels, weakest to strongest",
     "distribution": "Distribution into pools",
     "distribution_serpentine": "Serpentine on the ranking",
-    "distribution_by_level": "By level"
+    "distribution_by_level": "By level",
+    "entry_levels_hint": "Labels separated by commas, weakest to strongest; the last is the strongest level.",
+    "distribution_hint": "By level: teams of the same level are grouped together, from weakest to strongest, pool after pool."
   },
   "formulaTemplates": {
     "template": "Formula template",
@@ -4911,6 +4914,9 @@
     "member_n": "Member {{n}}",
     "unknown": "Not set",
     "auto_hint": "Category and sex are derived from the members if left empty.",
-    "members_required": "Enter the team name and at least one member."
+    "members_required": "Enter the team name and at least one member.",
+    "handicap": "Para",
+    "level_unknown": "Not specified",
+    "handicap_hint": "Para team: a marker separate from the category."
   }
 }

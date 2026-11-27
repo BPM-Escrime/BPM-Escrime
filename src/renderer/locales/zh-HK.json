@@ -1501,7 +1501,8 @@
     "club_plan_exercise": "練習",
     "club_plan_empty": "未有計劃練習",
     "club_plan_notes": "備註",
-    "col_level": "級別"
+    "col_level": "級別",
+    "handicap": "殘障"
   },
   "rsm": {
     "strip_plan": "劍道圖",
@@ -4809,10 +4810,12 @@
     "entry": "參賽者報名方式",
     "entry_individual": "個人",
     "entry_team": "兩人隊伍（雙人組）",
-    "entry_levels": "級別，由最強至最弱（以逗號分隔）",
+    "entry_levels": "級別，由最弱至最強",
     "distribution": "分組方式",
     "distribution_serpentine": "依排名蛇形分組",
-    "distribution_by_level": "按級別"
+    "distribution_by_level": "按級別",
+    "entry_levels_hint": "以逗號分隔，由最弱至最強；最後一個為最強級別。",
+    "distribution_hint": "按級別：同級別隊伍集中編組，由最弱至最強，逐組分配。"
   },
   "formulaTemplates": {
     "template": "賽制範本",
@@ -4911,6 +4914,9 @@
     "member_n": "成員 {{n}}",
     "unknown": "未填寫",
     "auto_hint": "未填寫時，組別與性別由成員推算。",
-    "members_required": "請填寫隊伍名稱及至少一名成員。"
+    "members_required": "請填寫隊伍名稱及至少一名成員。",
+    "handicap": "殘障",
+    "level_unknown": "未指定",
+    "handicap_hint": "殘疾人士隊伍：與組別分開的標記。"
   }
 }

@@ -1501,7 +1501,8 @@
     "club_plan_exercise": "Esercizio",
     "club_plan_empty": "Nessun esercizio previsto",
     "club_plan_notes": "Note",
-    "col_level": "Livello"
+    "col_level": "Livello",
+    "handicap": "Para"
   },
   "rsm": {
     "strip_plan": "Piano delle pedane",
@@ -4809,10 +4810,12 @@
     "entry": "Iscrizione dei partecipanti",
     "entry_individual": "Individuale",
     "entry_team": "Squadre di 2 (coppie)",
-    "entry_levels": "Livelli, dal più forte al più debole (separati da virgole)",
+    "entry_levels": "Livelli, dal più debole al più forte",
     "distribution": "Ripartizione nei gironi",
     "distribution_serpentine": "Serpentina sulla classifica",
-    "distribution_by_level": "Per livello"
+    "distribution_by_level": "Per livello",
+    "entry_levels_hint": "Etichette separate da virgole, dalla più debole alla più forte; l’ultima è il livello più forte.",
+    "distribution_hint": "Per livello: le squadre dello stesso livello sono raggruppate, dalla più debole alla più forte, girone dopo girone."
   },
   "formulaTemplates": {
     "template": "Modello di formula",
@@ -4911,6 +4914,9 @@
     "member_n": "Membro {{n}}",
     "unknown": "Non indicato",
     "auto_hint": "Categoria e sesso dedotti dai membri se lasciati vuoti.",
-    "members_required": "Indicare il nome della squadra e almeno un membro."
+    "members_required": "Indicare il nome della squadra e almeno un membro.",
+    "handicap": "Para",
+    "level_unknown": "Non specificato",
+    "handicap_hint": "Squadra paralimpica: contrassegno distinto dalla categoria."
   }
 }

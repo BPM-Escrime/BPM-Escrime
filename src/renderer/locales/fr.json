@@ -1501,7 +1501,8 @@
     "club_plan_exercise": "Exercice",
     "club_plan_empty": "Aucun exercice prévu",
     "club_plan_notes": "Notes",
-    "col_level": "Niveau"
+    "col_level": "Niveau",
+    "handicap": "HANDI"
   },
   "rsm": {
     "strip_plan": "Plan des pistes",
@@ -4809,10 +4810,12 @@
     "entry": "Entrée des participants",
     "entry_individual": "Individuelle",
     "entry_team": "Équipes de 2 (binômes)",
-    "entry_levels": "Niveaux, du plus fort au plus faible (séparés par des virgules)",
+    "entry_levels": "Niveaux, du plus faible au plus fort",
     "distribution": "Répartition dans les poules",
     "distribution_serpentine": "Serpentin sur le classement",
-    "distribution_by_level": "Par niveau"
+    "distribution_by_level": "Par niveau",
+    "entry_levels_hint": "Libellés séparés par des virgules, du plus faible au plus fort ; le dernier est le niveau le plus fort.",
+    "distribution_hint": "Par niveau : les équipes de même niveau sont regroupées, du plus faible au plus fort, poule après poule."
   },
   "formulaTemplates": {
     "template": "Modèle de formule",
@@ -4911,6 +4914,9 @@
     "member_n": "Membre {{n}}",
     "unknown": "Non renseigné",
     "auto_hint": "Catégorie et sexe déduits des membres s'ils ne sont pas renseignés.",
-    "members_required": "Renseignez le nom de l'équipe et au moins un membre."
+    "members_required": "Renseignez le nom de l'équipe et au moins un membre.",
+    "handicap": "HANDI",
+    "level_unknown": "Non précisé",
+    "handicap_hint": "Équipe handisport : marqueur distinct de la catégorie."
   }
 }

@@ -1401,7 +1401,7 @@ export const ALL_MIGRATIONS: Migration[] = [
     up(db) {
       // Colonnes sans valeur par défaut : NULL = tireur individuel, niveau et HANDI inconnus
       //  - members : JSON [{ lastName, firstName, gender?, birthDate? }]
-      //  - level : 1 = le plus fort, indice dans les libellés de la formule
+      //  - level : indice (dès 1) dans les libellés de la formule, le plus grand est le plus fort
       //  - handicap : 0 ou 1 (marqueur « HANDI », distinct de la catégorie)
       for (const col of ['members TEXT', 'level INTEGER', 'handicap INTEGER']) {
         try {

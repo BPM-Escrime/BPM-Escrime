@@ -526,7 +526,7 @@ describe('FormulaEditor : entrée en équipes et répartition par niveau (docs/a
     expect(last!.general.entry).toEqual({
       kind: 'team',
       size: 2,
-      levels: ['Expert', 'Intermédiaire', 'Débutant'],
+      levels: ['beginner', 'intermediate', 'expert'],
     });
     expect(formulaNeedsExpert(last!)).toBe(true);
   });

@@ -1501,7 +1501,8 @@
     "club_plan_exercise": "Poelladenn",
     "club_plan_empty": "Poelladenn ebet rakwelet",
     "club_plan_notes": "Notennoù",
-    "col_level": "Live"
+    "col_level": "Live",
+    "handicap": "Handi"
   },
   "rsm": {
     "strip_plan": "Plan ar pistennoù",
@@ -4809,10 +4810,12 @@
     "entry": "Enskrivadur ar perzhiadeien",
     "entry_individual": "Hiniennel",
     "entry_team": "Skipailhoù a 2 (daouigoù)",
-    "entry_levels": "Liveoù, eus ar c’hreñvañ d’ar gwanañ (dispartiet gant virgulennoù)",
+    "entry_levels": "Liveoù, eus ar gwanañ d’ar c’hreñvañ",
     "distribution": "Dispartiadur er poull",
     "distribution_serpentine": "Gwenanenn diwar renk",
-    "distribution_by_level": "Dre live"
+    "distribution_by_level": "Dre live",
+    "entry_levels_hint": "Anvioù dispartiet gant virgulennoù, eus ar gwanañ d’ar c’hreñvañ ; an hini diwezhañ eo al live kreñvañ.",
+    "distribution_hint": "Dre live : strollet eo ar skipailhoù eus an hevelep live, eus an hini gwanañ d’an hini kreñvañ, poull goude poull."
   },
   "formulaTemplates": {
     "template": "Patrom furmulenn",
@@ -4911,6 +4914,9 @@
     "member_n": "Ezel {{n}}",
     "unknown": "N'eo ket resisaet",
     "auto_hint": "Rummad ha reizh a zeu eus an izili ma n'int ket resisaet.",
-    "members_required": "Skrivit anv ar skipailh hag un ezel da nebeutañ."
+    "members_required": "Skrivit anv ar skipailh hag un ezel da nebeutañ.",
+    "handicap": "Handi",
+    "level_unknown": "N'eo ket spisaet",
+    "handicap_hint": "Skipailh handisport : merk disheñvel diouzh ar rummad."
   }
 }

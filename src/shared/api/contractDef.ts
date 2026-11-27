@@ -162,7 +162,9 @@ export const FencerTeamEntryShape = {
     .max(20)
     .nullable()
     .optional()
-    .describe('Niveau de l’équipe : 1 = le plus fort (indice dans les libellés de la formule)'),
+    .describe(
+      'Niveau de l’équipe : indice (dès 1) dans les niveaux de la formule, du plus faible au plus fort'
+    ),
   handicap: z.boolean().nullable().optional().describe('Marqueur « HANDI » de l’équipe'),
 };
 

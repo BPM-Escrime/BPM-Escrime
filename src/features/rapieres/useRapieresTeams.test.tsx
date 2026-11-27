@@ -59,7 +59,7 @@ describe('useRapieresTeams : import des équipes (#1211)', () => {
       pending!.teams[0].info.fencers.map(f => f.lastName).filter(Boolean)
     );
     expect(first.level).toBe(
-      { expert: 1, intermediate: 2, beginner: 3 }[pending!.teams[0].info.level]
+      { beginner: 1, intermediate: 2, expert: 3 }[pending!.teams[0].info.level]
     );
     expect(first.handicap).toBe(false);
   });

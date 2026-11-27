@@ -12,13 +12,13 @@ import type {
   RapieresTeamInfo,
 } from './rapieres.types';
 
-/** Niveaux des rapières comme niveaux de la formule : 1 = le plus fort */
-const LEVEL_NUMBER: Record<RapieresLevel, number> = { expert: 1, intermediate: 2, beginner: 3 };
+/** Niveaux des rapières = liste par défaut de la formule (du plus faible au plus fort) */
+const LEVEL_NUMBER: Record<RapieresLevel, number> = { beginner: 1, intermediate: 2, expert: 3 };
 
 export const rapieresLevelNumber = (level: RapieresLevel): number => LEVEL_NUMBER[level];
 
 export const rapieresLevelOfNumber = (level: number): RapieresLevel =>
-  level <= 1 ? 'expert' : level === 2 ? 'intermediate' : 'beginner';
+  level <= 1 ? 'beginner' : level === 2 ? 'intermediate' : 'expert';
 
 /** Catégorie saisie (M20, SENIOR, V1…) → catégorie du tireur ; HANDI n'est plus une catégorie */
 const LEGACY_CATEGORY: Partial<Record<RapieresAgeCategory, Category>> = {

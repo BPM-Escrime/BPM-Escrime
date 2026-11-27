@@ -232,13 +232,15 @@ export function FencerListTable({ ctx }: { ctx: FencerListCtx }) {
                           return (
                             <td key="category" className="text-sm text-muted">
                               {categoryShortLabel(fencer.category) || '-'}
-                              {fencer.handicap && ' · HANDI'}
+                              {fencer.handicap && ` · ${t('teamEntry.handicap')}`}
                             </td>
                           );
                         case 'level':
                           return (
                             <td key="level" className="text-sm text-muted">
-                              {levelLabel(fencer.level, ctx.teamLevels ?? []) || '-'}
+                              {levelLabel(fencer.level, ctx.teamLevels ?? [], c =>
+                                t(`rapieres.level_${c}`)
+                              ) || '-'}
                             </td>
                           );
                         case 'club':

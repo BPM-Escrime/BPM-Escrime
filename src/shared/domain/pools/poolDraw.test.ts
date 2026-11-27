@@ -119,9 +119,9 @@ describe('répartition par niveau (docs/adr/0043, F4c)', () => {
     ).toHaveLength(1);
   });
 
-  it('rang : du plus faible (niveau le plus grand) au plus fort, sans niveau en dernier', () => {
+  it('rang : du plus faible (niveau 1) au plus fort, sans niveau en dernier', () => {
     const order = [...teams].sort((a, b) => levelRankOf(a) - levelRankOf(b)).map(f => f.level ?? 0);
-    expect(order).toEqual([3, 3, 3, 2, 2, 2, 1, 1, 1, 0]);
+    expect(order).toEqual([1, 1, 1, 2, 2, 2, 3, 3, 3, 0]);
   });
 
   it('équipes de même niveau regroupées, poule après poule, tailles équilibrées', () => {
@@ -134,10 +134,10 @@ describe('répartition par niveau (docs/adr/0043, F4c)', () => {
       random: seeded(),
     });
     expect(pools.map(p => p.fencers.length)).toEqual([5, 5]);
-    // Poule 1 : les plus faibles d'abord (niveaux 3 puis 2) ; poule 2 : le reste, sans niveau en dernier
+    // Poule 1 : les plus faibles d'abord (niveaux 1 puis 2) ; poule 2 : le reste, sans niveau en dernier
     expect(levelsOf(pools).map(l => [...l].sort())).toEqual([
-      [2, 2, 3, 3, 3],
-      [0, 1, 1, 1, 2],
+      [1, 1, 1, 2, 2],
+      [0, 2, 3, 3, 3],
     ]);
   });
 
@@ -162,6 +162,29 @@ describe('répartition par niveau (docs/adr/0043, F4c)', () => {
       random: seeded(),
     });
     expect(engine).toEqual(screen);
+  });
+
+  it('rapières : la répartition par le rang du mode spécial et par le niveau du tireur est la même', () => {
+    // Niveaux des rapières (beginner < intermediate < expert) = niveaux 1 à 3 du tireur
+    const legacy = ['beginner', 'intermediate', 'expert'];
+    const rapieres = Array.from({ length: 17 }, (_, i) => ({
+      ...fencer(i + 1, ['A', 'B', 'C', 'D'][i % 4]),
+      level: ((i * 7) % 3) + 1,
+    })) as Fencer[];
+    const draw = (rank: (f: Fencer) => number) => {
+      n = 0;
+      return drawPools(rapieres, {
+        poolCount: 3,
+        poolMaxScore: 5,
+        separation: separationOfDistribution('byLevel'),
+        levelRankOf: rank,
+        newId: ids,
+        now: fixed,
+        random: seeded(),
+      });
+    };
+    const bySession = draw(f => legacy.indexOf(legacy[(f.level ?? 1) - 1]));
+    expect(draw(levelRankOf)).toEqual(bySession);
   });
 
   it('serpentin : distribution absente ou « serpentine » = tirage par défaut', () => {

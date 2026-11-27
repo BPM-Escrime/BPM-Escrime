@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { useTranslation } from '../contexts/TranslationContext';
+import { levelLabel } from '../../shared/domain/fencers/teamEntry';
 import type { TeamEntryDraft } from './teamEntryDraft';
 
 interface TeamEntryFieldsProps {
@@ -94,10 +95,10 @@ const TeamEntryFields: React.FC<TeamEntryFieldsProps> = ({ idPrefix, draft, onCh
             value={draft.level}
             onChange={e => onChange({ ...draft, level: e.target.value })}
           >
-            <option value="">{t('teamEntry.unknown')}</option>
+            <option value="">{t('teamEntry.level_unknown')}</option>
             {levels.map((label, i) => (
               <option key={i} value={String(i + 1)}>
-                {label}
+                {levelLabel(i + 1, levels, c => t(`rapieres.level_${c}`))}
               </option>
             ))}
           </select>
@@ -109,8 +110,9 @@ const TeamEntryFields: React.FC<TeamEntryFieldsProps> = ({ idPrefix, draft, onCh
               checked={draft.handicap}
               onChange={e => onChange({ ...draft, handicap: e.target.checked })}
             />{' '}
-            {'HANDI'}
+            {t('teamEntry.handicap')}
           </label>
+          <small className="u-hint">{t('teamEntry.handicap_hint')}</small>
         </div>
       </div>
       <small className="u-hint">{t('teamEntry.auto_hint')}</small>

@@ -266,7 +266,7 @@ export interface Fencer extends BaseEntity {
   finalRanking?: number; // Classement final
   /** Entrée en équipes : les membres de l'équipe (nom du tireur = nom d'équipe, docs/adr/0043) */
   members?: FencerMember[];
-  /** Entrée en équipes : niveau, 1 = le plus fort (indice dans les libellés de la formule) */
+  /** Entrée en équipes : niveau : indice (dès 1) dans les libellés de la formule, du plus faible au plus fort */
   level?: number;
   /** Marqueur « HANDI » de l'équipe, distinct de la catégorie (docs/adr/0043) */
   handicap?: boolean;

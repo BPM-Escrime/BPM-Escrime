@@ -1,6 +1,7 @@
 /**
  * BPM - Escrime - Éditeur de formule : entrée individuelle ou en équipes de 2 (binômes), libellés
- * des niveaux (docs/adr/0043, F4c). Libellés par défaut enregistrés tels quels, en français.
+ * des niveaux, du plus faible au plus fort (docs/adr/0043, F4c). Niveaux par défaut enregistrés en codes
+ * (beginner…), affichés traduits ; un libellé saisi est enregistré tel quel.
  * Licensed under GPL-3.0
  */
 import React, { useState } from 'react';
@@ -22,8 +23,17 @@ const parseLevels = (text: string): string[] =>
 
 const FormulaEntryFields: React.FC<FormulaEntryFieldsProps> = ({ id, entry, onChange }) => {
   const { t } = useTranslation();
+  const shown = (levels: readonly string[]) =>
+    levels.map(l => (DEFAULT_TEAM_LEVELS.includes(l) ? t(`rapieres.level_${l}`) : l));
+  // Liste saisie → niveaux enregistrés : les libellés par défaut traduits redeviennent des codes
+  const stored = (text: string): string[] => {
+    const list = parseLevels(text);
+    return list.join('|') === shown(DEFAULT_TEAM_LEVELS).join('|')
+      ? [...DEFAULT_TEAM_LEVELS]
+      : list;
+  };
   const [levelsText, setLevelsText] = useState(() =>
-    (entry.kind === 'team' ? entry.levels : DEFAULT_TEAM_LEVELS).join(', ')
+    shown(entry.kind === 'team' ? entry.levels : DEFAULT_TEAM_LEVELS).join(', ')
   );
   return (
     <div className="form-group" data-testid={`${id}-entry`}>
@@ -37,7 +47,7 @@ const FormulaEntryFields: React.FC<FormulaEntryFieldsProps> = ({ id, entry, onCh
         onChange={e =>
           onChange(
             e.target.value === 'team'
-              ? { kind: 'team', size: TEAM_SIZE, levels: parseLevels(levelsText) }
+              ? { kind: 'team', size: TEAM_SIZE, levels: stored(levelsText) }
               : { kind: 'individual' }
           )
         }
@@ -57,9 +67,10 @@ const FormulaEntryFields: React.FC<FormulaEntryFieldsProps> = ({ id, entry, onCh
             value={levelsText}
             onChange={e => {
               setLevelsText(e.target.value);
-              onChange({ kind: 'team', size: TEAM_SIZE, levels: parseLevels(e.target.value) });
+              onChange({ kind: 'team', size: TEAM_SIZE, levels: stored(e.target.value) });
             }}
           />
+          <small className="u-hint">{t('formulaEditor.entry_levels_hint')}</small>
         </>
       )}
     </div>

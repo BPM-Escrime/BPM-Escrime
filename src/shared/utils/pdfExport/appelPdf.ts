@@ -51,7 +51,10 @@ function getFencerCellValue(fencer: Fencer, col: string, levels: readonly string
     case 'birthDate':
       return fencer.birthDate ? String(new Date(fencer.birthDate).getFullYear()) : '-';
     case 'category':
-      return (categoryShortLabel(fencer.category) || '-') + (fencer.handicap ? ' · HANDI' : '');
+      return (
+        (categoryShortLabel(fencer.category) || '-') +
+        (fencer.handicap ? ` · ${pdfT('handicap', 'HANDI')}` : '')
+      );
     case 'level':
       return levelLabel(fencer.level, levels) || '-';
     case 'club':

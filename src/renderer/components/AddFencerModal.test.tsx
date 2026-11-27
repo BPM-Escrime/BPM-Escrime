@@ -115,7 +115,7 @@ describe('AddFencerModal', () => {
 });
 
 describe('AddFencerModal : entrée en équipes (docs/adr/0043, F4c)', () => {
-  const LEVELS = ['Expert', 'Intermédiaire', 'Débutant'];
+  const LEVELS = ['beginner', 'intermediate', 'expert'];
 
   const setupTeam = async () => {
     const onAdd = vi.fn();
@@ -146,7 +146,7 @@ describe('AddFencerModal : entrée en équipes (docs/adr/0043, F4c)', () => {
     });
     fireEvent.change(document.getElementById('add-fencer-m1-sex')!, { target: { value: 'F' } });
     fireEvent.change(document.getElementById('add-fencer-level')!, { target: { value: '2' } });
-    fireEvent.click(screen.getByLabelText('HANDI'));
+    fireEvent.click(screen.getByLabelText(/teamEntry\.handicap/));
     fireEvent.submit(container.querySelector('form')!);
     expect(onAdd).toHaveBeenCalledTimes(1);
     const added = onAdd.mock.calls[0][0];

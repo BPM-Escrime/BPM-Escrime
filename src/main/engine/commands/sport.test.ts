@@ -997,7 +997,7 @@ d('setRapieresTeams (docs/adr/0017)', () => {
     // Session conservée (alias de compatibilité) ET champs du tireur
     expect((db.getSessionState(comp.id) as any).rapieres.teams[team.id]).toEqual(info);
     expect(db.getFencer(team.id)).toMatchObject({
-      level: 3,
+      level: 1,
       handicap: true,
       gender: 'F',
       category: 'SEN',

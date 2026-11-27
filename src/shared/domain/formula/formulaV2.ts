@@ -41,7 +41,7 @@ export type LegacyTableauSettings = Pick<
 /** Répartition d'un tour de poules : serpentin (défaut) ou par niveau (équipes, docs/adr/0043) */
 export type PoolDistribution = 'serpentine' | 'byLevel';
 
-/** Entrée (ADR-0043) : individuelle ou en binômes ; `levels` : du plus fort (niveau 1) au plus faible */
+/** Entrée (ADR-0043) : individuelle ou en binômes ; `levels` : du plus faible (niveau 1) au plus fort */
 export type FormulaEntry = { kind: 'individual' } | { kind: 'team'; size: 2; levels: string[] };
 
 export interface PoolRoundPhase {

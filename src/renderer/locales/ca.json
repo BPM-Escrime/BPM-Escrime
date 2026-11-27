@@ -1501,7 +1501,8 @@
     "club_plan_exercise": "Exercici",
     "club_plan_empty": "Cap exercici previst",
     "club_plan_notes": "Notes",
-    "col_level": "Nivell"
+    "col_level": "Nivell",
+    "handicap": "Handi"
   },
   "rsm": {
     "strip_plan": "Pla de pistes",
@@ -4809,10 +4810,12 @@
     "entry": "Inscripció dels participants",
     "entry_individual": "Individual",
     "entry_team": "Equips de 2 (parelles)",
-    "entry_levels": "Nivells, del més fort al més feble (separats per comes)",
+    "entry_levels": "Nivells, del més feble al més fort",
     "distribution": "Repartiment a les poules",
     "distribution_serpentine": "Serpentí segons la classificació",
-    "distribution_by_level": "Per nivell"
+    "distribution_by_level": "Per nivell",
+    "entry_levels_hint": "Etiquetes separades per comes, de la més feble a la més forta; l’última és el nivell més fort.",
+    "distribution_hint": "Per nivell: els equips del mateix nivell s’agrupen, del més feble al més fort, poule rere poule."
   },
   "formulaTemplates": {
     "template": "Model de fórmula",
@@ -4911,6 +4914,9 @@
     "member_n": "Membre {{n}}",
     "unknown": "No informat",
     "auto_hint": "Categoria i sexe deduïts dels membres si no s'informen.",
-    "members_required": "Indiqueu el nom de l'equip i almenys un membre."
+    "members_required": "Indiqueu el nom de l'equip i almenys un membre.",
+    "handicap": "Handi",
+    "level_unknown": "No especificat",
+    "handicap_hint": "Equip d'handiesport: marcador independent de la categoria."
   }
 }

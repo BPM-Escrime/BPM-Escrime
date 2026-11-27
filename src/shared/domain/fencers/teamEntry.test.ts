@@ -72,18 +72,24 @@ describe('sexe d’équipe', () => {
 });
 
 describe('niveau et libellés', () => {
-  it('libellés par défaut du plus fort au plus faible, niveau 1 = le plus fort', () => {
-    expect(DEFAULT_TEAM_LEVELS).toEqual(['Expert', 'Intermédiaire', 'Débutant']);
-    expect(levelLabel(1, DEFAULT_TEAM_LEVELS)).toBe('Expert');
-    expect(levelLabel(3, DEFAULT_TEAM_LEVELS)).toBe('Débutant');
+  it('niveaux par défaut du plus faible au plus fort (liste des rapières), le plus grand est le plus fort', () => {
+    expect(DEFAULT_TEAM_LEVELS).toEqual(['beginner', 'intermediate', 'expert']);
+    expect(levelLabel(1, DEFAULT_TEAM_LEVELS)).toBe('beginner');
+    expect(levelLabel(3, DEFAULT_TEAM_LEVELS)).toBe('expert');
     expect(levelLabel(4, DEFAULT_TEAM_LEVELS)).toBe('');
     expect(levelLabel(undefined, DEFAULT_TEAM_LEVELS)).toBe('');
+  });
+
+  it('codes par défaut traduits, libellé saisi tel quel', () => {
+    const t = (c: string) => `T:${c}`;
+    expect(levelLabel(3, DEFAULT_TEAM_LEVELS, t)).toBe('T:expert');
+    expect(levelLabel(2, ['Loisir', 'Compétition'], t)).toBe('Compétition');
   });
 
   it('rang de regroupement : du plus faible au plus fort, sans niveau en dernier', () => {
     const ranks = [{ level: 1 }, { level: 3 }, {}, { level: 2 }].map(levelRankOf);
     const order = [...ranks.keys()].sort((a, b) => ranks[a] - ranks[b]);
-    expect(order).toEqual([1, 3, 0, 2]);
+    expect(order).toEqual([0, 3, 1, 2]);
   });
 
   it('noms des membres en majuscules, séparés par « / »', () => {

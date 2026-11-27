@@ -1501,7 +1501,8 @@
     "club_plan_exercise": "Übung",
     "club_plan_empty": "Keine Übung geplant",
     "club_plan_notes": "Notizen",
-    "col_level": "Niveau"
+    "col_level": "Niveau",
+    "handicap": "Para"
   },
   "rsm": {
     "strip_plan": "Bahnplan",
@@ -4809,10 +4810,12 @@
     "entry": "Anmeldung der Teilnehmer",
     "entry_individual": "Einzeln",
     "entry_team": "Teams zu zweit (Paare)",
-    "entry_levels": "Niveaus, vom stärksten zum schwächsten (durch Kommas getrennt)",
+    "entry_levels": "Niveaus, vom schwächsten zum stärksten",
     "distribution": "Verteilung auf die Gruppen",
     "distribution_serpentine": "Schlangenverteilung nach Rangliste",
-    "distribution_by_level": "Nach Niveau"
+    "distribution_by_level": "Nach Niveau",
+    "entry_levels_hint": "Bezeichnungen durch Kommas getrennt, vom schwächsten zum stärksten; die letzte ist das stärkste Niveau.",
+    "distribution_hint": "Nach Niveau: Teams desselben Niveaus werden zusammengefasst, vom schwächsten zum stärksten, Gruppe für Gruppe."
   },
   "formulaTemplates": {
     "template": "Formelvorlage",
@@ -4911,6 +4914,9 @@
     "member_n": "Mitglied {{n}}",
     "unknown": "Nicht angegeben",
     "auto_hint": "Kategorie und Geschlecht werden aus den Mitgliedern abgeleitet, wenn leer.",
-    "members_required": "Teamnamen und mindestens ein Mitglied angeben."
+    "members_required": "Teamnamen und mindestens ein Mitglied angeben.",
+    "handicap": "Para",
+    "level_unknown": "Nicht festgelegt",
+    "handicap_hint": "Para-Team: eigene Markierung, unabhängig von der Kategorie."
   }
 }

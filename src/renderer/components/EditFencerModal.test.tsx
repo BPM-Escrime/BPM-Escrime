@@ -82,7 +82,7 @@ describe('EditFencerModal : entrée en équipes (docs/adr/0043, F4c)', () => {
       { lastName: 'PETIT', firstName: 'Noé', gender: 'M', birthDate: '1961-08-27' },
     ],
   };
-  const LEVELS = ['Expert', 'Intermédiaire', 'Débutant'];
+  const LEVELS = ['beginner', 'intermediate', 'expert'];
 
   const setupTeam = async () => {
     const onSave = vi.fn();
@@ -104,7 +104,7 @@ describe('EditFencerModal : entrée en équipes (docs/adr/0043, F4c)', () => {
   it('niveau et marqueur modifiés ; catégorie saisie gardée tant que les naissances ne changent pas', async () => {
     const { onSave, container } = await setupTeam();
     fireEvent.change(document.getElementById('edit-fencer-level')!, { target: { value: '1' } });
-    fireEvent.click(screen.getByLabelText('HANDI'));
+    fireEvent.click(screen.getByLabelText(/teamEntry\.handicap/));
     fireEvent.submit(container.querySelector('form')!);
     const updates = onSave.mock.calls[0][1];
     expect(updates).toMatchObject({
