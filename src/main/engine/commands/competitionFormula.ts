@@ -239,6 +239,26 @@ export function assertFormulaV2(
 }
 
 /**
+ * Formule d'équipe retouchée par des réglages plats (ADR-0036 amendée, ADR-0044) : formule qui
+ * en résulte jugée par `formulaV2Issues` (contrôles d'équipe compris). Seules les remarques
+ * nouvelles refusent : une épreuve 2.0 hors bornes reste modifiable. S6 : `assertProgressLock`.
+ */
+export function assertFormulaNotWorse(
+  ctx: CommandContext,
+  competitionId: string,
+  next: NextCompetition,
+  before: FormulaV2,
+  after: FormulaV2
+): void {
+  const scope = formulaScope(ctx, competitionId, next);
+  const key = (r: { code: string; phase: string | null; message: string }) =>
+    `${r.code}|${r.phase}|${r.message}`;
+  const known = new Set(formulaV2Issues(before, scope).map(key));
+  const issues = formulaV2Issues(after, scope).filter(r => !known.has(key(r)));
+  if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
+}
+
+/**
  * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0036) ; `extra` : autres réglages
  * écrits avec elle (origine, mode spécial). Jugée par `updateCompetitionSettings`
  * (`assertFormulaV2`), qui l'enregistre.

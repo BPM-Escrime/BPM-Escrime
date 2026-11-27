@@ -693,7 +693,8 @@ export const contract = {
     description:
       'Arme, sexe, catégorie, format par équipes et réglages (fusion de premier niveau ; clé inconnue ou valeur invalide refusées à l’entrée). ' +
       'Arme, format par équipes, mode spécial et formule à la carte figés (« draw_done ») après le tirage. ' +
-      '`settings.formula` jugée comme par updateCompetitionFormula (bornes, S1 à S6, contrôles d’équipe ; « invalid_settings »). Tablettes prévenues.',
+      '`settings.formula` jugée comme par updateCompetitionFormula (bornes, S1 à S6, contrôles d’équipe ; « invalid_settings »). ' +
+      'Épreuve par équipes en relais FIE à formule d’équipe : réglage plat reporté dans la formule et jugé ; réglage de structure qui la retirerait refusé (« invalid_settings », passer par updateCompetitionFormula). Tablettes prévenues.',
     input: z.object({
       competitionId: CompetitionId,
       weapon: WeaponEnum.optional(),

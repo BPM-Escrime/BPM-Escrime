@@ -876,6 +876,78 @@ d(
   }
 );
 
+d(
+  'Réglages plats d’une épreuve par équipes à formule d’équipe (ADR-0036 amendée, ADR-0044)',
+  () => {
+    it('réglage de structure (poolRounds, hasDirectElimination) : refusé, la formule d’équipe reste', async () => {
+      const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+      const before = db.getCompetition(comp.id)!.settings!;
+      for (const settings of [{ poolRounds: 2 }, { hasDirectElimination: false }])
+        await reject('updateCompetitionSettings', {
+          competitionId: comp.id,
+          settings,
+        }).toMatchObject({
+          code: 'invalid_settings',
+          message: expect.stringContaining('updateCompetitionFormula'),
+        });
+      expect(db.getCompetition(comp.id)!.settings).toEqual(before);
+    });
+
+    it('réglage reporté : formule gardée avec sa règle de rencontre, jugée par les contrôles d’équipe', async () => {
+      const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+      await call('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { thirdPlaceMatch: true },
+      });
+      const kept = db.getCompetition(comp.id)!.settings!.formula!;
+      expect(kept.general.teamMatch).toEqual(RULE);
+      expect(kept.phases[1]).toMatchObject({ kind: 'tableau', thirdPlace: true });
+      // Règle de rencontre : 4 titulaires en ordre FIE (o.99.3 : 3 seulement)
+      await reject('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { minTeamSize: 4 },
+      }).toMatchObject({
+        code: 'invalid_settings',
+        message: expect.stringContaining('3 titulaires seulement'),
+      });
+      // S3 sur l'effectif d'équipes
+      await teamsRegistered(comp.id, ['A', 'B', 'C', 'D']);
+      await reject('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { poolSizeMin: 5, poolSizeMax: 6 },
+      }).toMatchObject({
+        code: 'invalid_settings',
+        message: expect.stringContaining('4 équipe(s) pour des poules de 5'),
+      });
+      expect(db.getCompetition(comp.id)!.settings!.formula).toEqual(kept);
+    });
+
+    it('remarque déjà présente dans la formule enregistrée : un autre réglage plat reste écrit', async () => {
+      const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+      await teamsRegistered(comp.id, ['A', 'B']);
+      // 2 équipes pour des poules de 3 au moins : formule enregistrée déjà hors effectif
+      await call('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { defaultTableMaxScore: 40 },
+      });
+      expect(db.getCompetition(comp.id)!.settings!.formula!.phases[1]).toMatchObject({
+        maxScore: 40,
+      });
+    });
+
+    it('formule sans règle de rencontre (épreuve existante) : réglage de structure écrit, formule relue', async () => {
+      const legacy = teamFormula();
+      delete (legacy.general as { teamMatch?: unknown }).teamMatch;
+      const comp = competition(Weapon.EPEE, { formula: legacy });
+      await call('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { poolRounds: 2 },
+      });
+      expect(db.getCompetition(comp.id)!.settings!.formula).toBeUndefined();
+    });
+  }
+);
+
 d('Cible d’une rencontre = relayStep × starters² (docs/adr/0044)', () => {
   it('formule d’équipe palier 4, 3 titulaires : cible 36 ; score_above_max au-delà', async () => {
     const comp = competition(Weapon.EPEE, {

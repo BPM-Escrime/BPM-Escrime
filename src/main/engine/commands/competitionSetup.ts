@@ -20,6 +20,7 @@ import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
 import {
+  assertFormulaNotWorse,
   assertFormulaV2,
   assertFormulaWritable,
   assertProgressLock,
@@ -361,6 +362,28 @@ export function updateCompetitionSettings(
   // début, jugés sur la formule qui en résulte ; formule écrite : déjà jugée (assertFormulaV2)
   if (!writtenFormula && ('formula' in patch || flatKeys.length)) {
     assertProgressLock(ctx, comp, (update.settings ?? comp.settings) as CompetitionSettings);
+  }
+  // Épreuve par équipes en relais FIE à formule d'équipe (`general.teamMatch`, ADR-0044 : elle
+  // fait foi pour le déroulé) : un réglage plat la retouche sans la perdre ; un réglage de
+  // structure qui la retirerait (ADR-0036 amendée) ferait retomber l'épreuve en poule unique,
+  // sans contrôle d'équipe : refusé, la formule se modifie par updateCompetitionFormula
+  const storedTeamFormula = comp.settings?.formula?.general.teamMatch
+    ? comp.settings.formula
+    : undefined;
+  if (
+    storedTeamFormula &&
+    isFieRelayTeamEvent(next) &&
+    !('formula' in patch) &&
+    !weaponChanged &&
+    flatKeys.length
+  ) {
+    const result = (update.settings ?? comp.settings)?.formula;
+    if (!result?.general.teamMatch)
+      throw new CommandError(
+        'invalid_settings',
+        `Épreuve par équipes : ${flatKeys.join(', ')} retirerait la formule d’équipe (règle de rencontre, phases) ; modifier la formule (updateCompetitionFormula)`
+      );
+    assertFormulaNotWorse(ctx, comp.id, next, storedTeamFormula, result);
   }
   const changed = [
     ...Object.keys(update).filter(k => k !== 'settings'),
