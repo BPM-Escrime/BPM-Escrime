@@ -59,6 +59,35 @@ export function levelLabel(
   return translate && DEFAULT_TEAM_LEVELS.includes(label) ? translate(label) : label;
 }
 
+/**
+ * Niveau lu d'un texte (import, #2013 F4c) : rang « 1 » à « n », libellé de `levels` ou, pour un
+ * code par défaut, son libellé traduit ; sans tenir compte des majuscules ni des accents.
+ * Inconnu ou vide : undefined.
+ */
+export function levelFromText(
+  text: string,
+  levels: readonly string[],
+  translate?: (code: string) => string
+): number | undefined {
+  const norm = (v: string) =>
+    v
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  const v = norm(text);
+  if (!v) return undefined;
+  if (/^\d+$/.test(v)) {
+    const n = Number(v);
+    return n >= 1 && n <= levels.length ? n : undefined;
+  }
+  const i = levels.findIndex(
+    l =>
+      norm(l) === v || (!!translate && DEFAULT_TEAM_LEVELS.includes(l) && norm(translate(l)) === v)
+  );
+  return i >= 0 ? i + 1 : undefined;
+}
+
 /** Rang de regroupement du tirage « par niveau » : du plus faible au plus fort, sans niveau en dernier */
 export function levelRankOf(fencer: Pick<Fencer, 'level'>): number {
   return fencer.level || Number.MAX_SAFE_INTEGER;

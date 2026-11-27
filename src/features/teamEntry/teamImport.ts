@@ -3,7 +3,8 @@
  * Export d'inscriptions (CSV « ; » ou XLSX converti en CSV par le processus principal),
  * une ligne par équipe : colonnes D/E (nom/prénom tireur 1), Q (naissance tireur 1),
  * T/U (nom/prénom tireur 2), V (naissance tireur 2), Y (nom d'équipe),
- * R / W (sexe tireur 1 / 2, « homme/femme »).
+ * R / W (sexe tireur 1 / 2, « homme/femme »), Z (niveau, facultatif : libellé ou rang des niveaux
+ * de la formule, `entry.levels`).
  * Licensed under GPL-3.0
  */
 
@@ -14,14 +15,17 @@ import {
   RapieresTeamInfo,
 } from '../../shared/domain/rapieres/rapieres.types';
 import { rapieresCategoryFromBirthYear } from '../../shared/domain/rapieres/rapieresAge';
+import { DEFAULT_TEAM_LEVELS, levelFromText } from '../../shared/domain/fencers/teamEntry';
 
-/** Équipe lue du fichier : nom d'équipe et composition (niveau, deux tireurs, club, région) */
+/** Équipe lue du fichier : nom d'équipe, composition (deux tireurs, club, région) et niveau */
 export interface TeamImportDraft {
   name: string;
   info: RapieresTeamInfo;
+  /** Rang du niveau dans `entry.levels` (dès 1, du plus faible au plus fort) ; 1 par défaut */
+  level: number;
 }
 
-/** Colonnes (index base 0) : D=3, E=4, Q=16, R=17, S=18 (club), T=19, U=20, V=21, W=22, X=23 (club 2nd), Y=24 */
+/** Colonnes (index base 0) : D=3, E=4, Q=16, R=17, S=18 (club), T=19, U=20, V=21, W=22, X=23 (club 2nd), Y=24, Z=25 (niveau) */
 const COL = {
   last1: 3,
   first1: 4,
@@ -34,11 +38,13 @@ const COL = {
   gender2: 22,
   club2: 23,
   team: 24,
+  level: 25,
 };
 
 /**
- * En-tête de l'export d'inscriptions (25 colonnes, index base 0 = colonnes A à Y).
- * Le parseur lit par position : toutes les colonnes doivent être présentes, même vides.
+ * En-tête de l'export d'inscriptions (colonnes A à Y), suivi de la colonne Z « niveau ».
+ * Le parseur lit par position : les colonnes A à Y doivent être présentes, même vides ; Z est
+ * facultative (sans elle, chaque équipe prend le premier niveau).
  */
 export const TEAM_IMPORT_HEADER: readonly string[] = [
   'Référence commande',
@@ -66,6 +72,7 @@ export const TEAM_IMPORT_HEADER: readonly string[] = [
   'homme/femme 2nd tireur',
   'nom du club (2nd tireur)',
   "nom de l'équipe",
+  'niveau',
 ];
 
 /** Ligne d'exemple (fictive) : à supprimer ou décocher avant l'import */
@@ -87,10 +94,12 @@ const RAPIERES_EXAMPLE: Record<number, string> = {
  * Modèle CSV « ; » (UTF-8 avec BOM, CRLF) reconnu par l'import des équipes :
  * même disposition que l'export d'inscriptions, une ligne d'exemple.
  */
-export function buildTeamImportTemplate(): string {
+export function buildTeamImportTemplate(levelExample = ''): string {
   const cell = (value: string): string =>
     /[;"\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
-  const example = TEAM_IMPORT_HEADER.map((_, i) => RAPIERES_EXAMPLE[i] ?? '');
+  const example = TEAM_IMPORT_HEADER.map((_, i) =>
+    i === COL.level ? levelExample : (RAPIERES_EXAMPLE[i] ?? '')
+  );
   return `\uFEFF${[TEAM_IMPORT_HEADER, example]
     .map(row => row.map(cell).join(';'))
     .join('\r\n')}\r\n`;
@@ -188,8 +197,16 @@ export function categoryFromBirthDate(
   return rapieresCategoryFromBirthYear(birth.getFullYear(), refDate);
 }
 
-/** Équipes lues dans le contenu du fichier ; niveau par défaut « débutant » */
-export function parseTeamImport(content: string, refDate?: Date): TeamImportResult {
+/**
+ * Équipes lues dans le contenu du fichier. Niveau (colonne Z) lu dans `levels` (`entry.levels`,
+ * libellé ou rang, `translate` pour les codes par défaut) ; absent ou inconnu : premier niveau.
+ */
+export function parseTeamImport(
+  content: string,
+  refDate?: Date,
+  levels: readonly string[] = DEFAULT_TEAM_LEVELS,
+  translate?: (code: string) => string
+): TeamImportResult {
   const rows = parseDelimited(content);
   const teams: TeamImportDraft[] = [];
   const skipped: number[] = [];
@@ -231,6 +248,7 @@ export function parseTeamImport(content: string, refDate?: Date): TeamImportResu
     teams.push({
       name,
       info: { level: 'beginner', fencers: [f1, f2], ...(club ? { club } : {}) },
+      level: levelFromText(cell(r, COL.level), levels, translate) ?? 1,
     });
   });
   return { teams, skipped };

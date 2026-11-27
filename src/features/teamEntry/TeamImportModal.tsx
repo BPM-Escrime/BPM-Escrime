@@ -16,6 +16,7 @@ import {
 } from '../../renderer/components/importModal.styles';
 import { RapieresFencer } from '../../shared/domain/rapieres/rapieres.types';
 import type { TeamImportDraft } from './teamImport';
+import { DEFAULT_TEAM_LEVELS, levelLabel } from '../../shared/domain/fencers/teamEntry';
 import { Button } from '../../renderer/components/common/Button';
 
 interface TeamImportModalProps {
@@ -25,6 +26,8 @@ interface TeamImportModalProps {
   skipped: number[];
   onImport: (teams: TeamImportDraft[]) => void | Promise<void>;
   onClose: () => void;
+  /** Libellés des niveaux de la formule (`entry.levels`) */
+  levels?: readonly string[];
 }
 
 const TeamImportModal: React.FC<TeamImportModalProps> = ({
@@ -33,6 +36,7 @@ const TeamImportModal: React.FC<TeamImportModalProps> = ({
   skipped,
   onImport,
   onClose,
+  levels = DEFAULT_TEAM_LEVELS,
 }) => {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<Set<number>>(() => new Set(teams.map((_, i) => i)));
@@ -134,7 +138,9 @@ const TeamImportModal: React.FC<TeamImportModalProps> = ({
                   <td style={TD}>{team.name}</td>
                   <td style={TD}>{fencerCell(team.info.fencers[0])}</td>
                   <td style={TD}>{fencerCell(team.info.fencers[1])}</td>
-                  <td style={TD_CENTER}>{t(`teamEntry.level_${team.info.level}`)}</td>
+                  <td style={TD_CENTER}>
+                    {levelLabel(team.level, levels, code => t(`teamEntry.level_${code}`))}
+                  </td>
                 </tr>
               );
             })}

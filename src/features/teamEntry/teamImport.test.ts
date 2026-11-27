@@ -103,6 +103,7 @@ describe('teamImport (#1211)', () => {
             { lastName: 'Martin', firstName: 'Paul', category: 'M20', birthDate: '2008-06-14' },
           ],
         },
+        level: 1,
       },
       {
         name: 'Brie; Seine',
@@ -113,6 +114,7 @@ describe('teamImport (#1211)', () => {
             { lastName: 'Roux', firstName: 'Max', category: 'V3', birthDate: '1961-08-27' },
           ],
         },
+        level: 1,
       },
     ]);
   });
@@ -132,11 +134,12 @@ describe('teamImport : club de l’équipe (#1441)', () => {
 });
 
 describe("buildTeamImportTemplate (modèle d'import des équipes)", () => {
-  it("commence par un BOM et reprend les 25 colonnes de l'export d'inscriptions", () => {
+  it("commence par un BOM, reprend les 25 colonnes de l'export d'inscriptions, puis « niveau »", () => {
     const template = buildTeamImportTemplate();
     expect(template.charCodeAt(0)).toBe(0xfeff);
     const [header] = parseDelimited(template);
-    expect(header).toHaveLength(25);
+    expect(header).toHaveLength(26);
+    expect(header[25]).toBe('niveau');
     expect(header).toEqual([...TEAM_IMPORT_HEADER]);
   });
 
@@ -162,5 +165,39 @@ describe("buildTeamImportTemplate (modèle d'import des équipes)", () => {
   it("un modèle sans ligne d'exemple ne produit aucune équipe", () => {
     const headerOnly = buildTeamImportTemplate().split('\r\n')[0];
     expect(parseTeamImport(headerOnly, REF).teams).toEqual([]);
+  });
+});
+
+describe('niveau des équipes (colonne Z, niveaux de la formule, ADR-0043)', () => {
+  const LEVELS = ['Loisir', 'Compétition', 'Élite'];
+  const lvl = (level: string) =>
+    row({ 3: 'A', 4: 'a', 19: 'B', 20: 'b', 24: `T-${level}` }) + `;${level}`;
+
+  it('libellé des niveaux de la formule, sans majuscules ni accents, ou rang', () => {
+    const csv = [HEADER, lvl('elite'), lvl('COMPÉTITION'), lvl('3'), lvl('Loisir')].join('\r\n');
+    const { teams } = parseTeamImport(csv, REF, LEVELS);
+    expect(teams.map(t => t.level)).toEqual([3, 2, 3, 1]);
+  });
+
+  it('absent, inconnu ou rang hors liste : premier niveau', () => {
+    const csv = [
+      HEADER,
+      row({ 3: 'A', 4: 'a', 19: 'B', 20: 'b', 24: 'Sans' }),
+      lvl('Pro'),
+      lvl('4'),
+    ].join('\r\n');
+    expect(parseTeamImport(csv, REF, LEVELS).teams.map(t => t.level)).toEqual([1, 1, 1]);
+  });
+
+  it('niveaux par défaut : code ou libellé traduit', () => {
+    const tr = (code: string) =>
+      ({ beginner: 'Débutant', intermediate: 'Intermédiaire', expert: 'Expert' })[code] ?? code;
+    const csv = [HEADER, lvl('intermediaire'), lvl('expert'), lvl('Débutant')].join('\r\n');
+    expect(parseTeamImport(csv, REF, undefined, tr).teams.map(t => t.level)).toEqual([2, 3, 1]);
+  });
+
+  it('le modèle porte le premier niveau en exemple, relu par l’import', () => {
+    const { teams } = parseTeamImport(buildTeamImportTemplate('Compétition'), REF, LEVELS);
+    expect(teams[0].level).toBe(2);
   });
 });

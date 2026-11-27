@@ -452,6 +452,8 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   // ─── Entrée en équipes : import des équipes (binômes tireurs, #1118, docs/adr/0043) ─────
   const teamImport = useTeamImport({
     competitionDate: competition.date,
+    // Niveaux de la formule (colonne « niveau » de l'import, ADR-0043)
+    levels: ctx.entry.kind === 'team' ? ctx.entry.levels : undefined,
     bulkAddFencers,
     notify: ctx.showToast,
   });

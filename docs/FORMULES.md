@@ -158,7 +158,7 @@ Mode expert, réglage général de la formule : **Entrée des participants**.
 - La **catégorie de l'équipe** est la moyenne des années de naissance des membres, arrondie au-dessus, la saison commençant au 1ᵉʳ septembre. Vous pouvez la corriger. Le sexe de l'équipe est celui des membres s'il est commun, sinon mixte.
 - Le marqueur **HANDI** (équipe handisport) est distinct de la catégorie.
 - Avec la répartition **par niveau**, les équipes de même niveau sont regroupées dans les poules, du plus faible au plus fort.
-- L'import CSV / XLSX à colonnes fixes lit les membres et le niveau.
+- L'import CSV / XLSX à colonnes fixes lit les membres et, dans la colonne Z « niveau » (facultative), le niveau : un libellé des niveaux de la formule (majuscules et accents ignorés) ou son rang (1 = le plus faible). Sans cette colonne, ou avec un niveau inconnu, l'équipe prend le premier niveau. Le modèle à télécharger porte cette colonne.
 - Les exports de liste aux formats fédéraux (XML FIE, FFE) et CSV ne portent pas les membres.
 
 ### Classements filtrés
