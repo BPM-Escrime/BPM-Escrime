@@ -38,6 +38,7 @@ import { progressIssues } from '../../../shared/domain/formula/formulaStructure'
 import { readSession } from './sessionView';
 import { PHASE } from './sport';
 import { allFormulaTemplates } from './formulaTemplates';
+import { teamFormulaProgress } from '../../../shared/domain/teams/teamFormulaProgress';
 import { isArenaTeamEvent, withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
 import { teamFormatOf } from '../../../shared/domain/teams/relay';
 
@@ -130,16 +131,33 @@ export function applyFormulaTemplate(
   return writeFormula(ctx, comp, formula, patch, input.dryRun);
 }
 
-/** Formule enregistrée et avancement de l'épreuve (S6, docs/adr/0041) */
+/**
+ * Formule enregistrée et avancement de l'épreuve (S6, docs/adr/0041) : état de session, ou,
+ * pour une épreuve par équipes, ses rencontres (poules tirées, tableau tiré : ADR-0044), par
+ * la même fonction du domaine que l'écran
+ */
 function storedProgress(
   ctx: CommandContext,
-  comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings },
+  comp: {
+    id: string;
+    weapon: Weapon;
+    category: Category;
+    isTeamEvent?: boolean;
+    settings?: CompetitionSettings;
+  },
   stored: FormulaV2 = formulaOf({
     weapon: comp.weapon,
     category: comp.category,
     settings: comp.settings,
   })
 ) {
+  if (comp.isTeamEvent) {
+    const progress = teamFormulaProgress(stored, {
+      poolMatches: ctx.db.teams.getTeamMatchesByCompetition(comp.id),
+      tableauMatches: ctx.db.teams.getTeamTableauMatches(comp.id, comp.id),
+    });
+    return { stored, progress };
+  }
   const session = readSession(ctx, comp.id);
   const progress = formulaProgress(stored, {
     ...session,
@@ -155,7 +173,13 @@ function storedProgress(
  */
 export function assertProgressLock(
   ctx: CommandContext,
-  comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings },
+  comp: {
+    id: string;
+    weapon: Weapon;
+    category: Category;
+    isTeamEvent?: boolean;
+    settings?: CompetitionSettings;
+  },
   next: CompetitionSettings
 ): void {
   const { stored, progress } = storedProgress(ctx, comp);

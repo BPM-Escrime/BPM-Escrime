@@ -35,6 +35,10 @@ import { FormulaEditor } from './FormulaEditor';
 import { FormulaTemplatePicker } from './FormulaTemplatePicker';
 import { isArenaTeamEvent, withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
 import { teamFormatOf } from '../../../shared/domain/teams/relay';
+import {
+  teamFormulaProgress,
+  type TeamProgressMatches,
+} from '../../../shared/domain/teams/teamFormulaProgress';
 
 /** Réglages de l'épreuve après modification de la formule (affichage immédiat, fonction pure) */
 export function formulaSettingsUpdate(
@@ -75,15 +79,24 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
     withTeamMatch(formulaOf(competition), competition)
   );
   const [saving, setSaving] = useState(false);
-  // Équipes inscrites (S3, S4 sur l'effectif d'équipes, ADR-0044) : bloc « teams » du moteur
+  // Équipes inscrites (S3, S4 sur l'effectif d'équipes, ADR-0044) et rencontres d'équipe
+  // (phases commencées, S6) : bloc « teams » du moteur
   const [teamCount, setTeamCount] = useState<number | undefined>(undefined);
+  const [teamMatches, setTeamMatches] = useState<TeamProgressMatches | undefined>(undefined);
   useEffect(() => {
     if (!competition.isTeamEvent) return;
     let alive = true;
     void (async () => {
       try {
         const out = await client.query('getCompetitionState', { competitionId: competition.id });
-        if (alive) setTeamCount(out?.state?.teams?.teams.length || undefined);
+        const block = out?.state?.teams;
+        if (!alive) return;
+        setTeamCount(block?.teams.length || undefined);
+        if (block)
+          setTeamMatches({
+            poolMatches: block.poolMatches ?? [],
+            tableauMatches: block.tableauMatches ?? [],
+          });
       } catch {
         // Effectif inconnu : S3, S4 jugés par le moteur à l'écriture
       }
@@ -104,6 +117,10 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
   const knownFencerCount = competition.fencerCount || undefined;
   // Formule enregistrée : la qualification des phases commencées ne change plus (S6)
   const [stored] = useState<FormulaV2>(() => formulaOf(competition));
+  // Épreuve par équipes : phases commencées lues dans ses rencontres, même fonction que le
+  // moteur (teamFormulaProgress, ADR-0041 S6, ADR-0044)
+  const started =
+    competition.isTeamEvent && teamMatches ? teamFormulaProgress(stored, teamMatches) : progress;
   const remarks = formulaV2Issues(
     formula,
     {
@@ -113,7 +130,7 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
       teamFormat,
       teamCount,
     },
-    progress,
+    started,
     stored
   );
 
@@ -227,7 +244,7 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
         teamCount={teamCount}
         readOnly={readOnly}
         knownFencerCount={knownFencerCount}
-        progress={progress}
+        progress={started}
         stored={stored}
         remarks={remarks}
       />

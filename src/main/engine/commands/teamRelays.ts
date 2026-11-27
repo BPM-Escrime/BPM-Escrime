@@ -95,7 +95,9 @@ const phaseOfMatch = (m: MatchRow): PhaseRef =>
 /**
  * Règle de rencontre du tableau (docs/adr/0044) : titulaires, ordre des relais et palier de la
  * phase, petite finale de la formule d'équipe ; épreuve sans formule d'équipe : réglages
- * d'épreuve, sans petite finale (inchangé)
+ * d'épreuve, sans petite finale (inchangé). Petite finale d'un tableau tiré : celle du tirage,
+ * la formule ne pouvant plus la changer (verrou S6, docs/adr/0041 : storedProgress lit les
+ * rencontres d'équipe, teamFormulaProgress).
  */
 export function tableauSetup(comp: Competition): {
   teamSize: number;

@@ -984,3 +984,76 @@ d('PDF du classement des équipes = classement du moteur (docs/adr/0044)', () =>
     expect(html).not.toContain('provisoire');
   });
 });
+
+d('Formule d’une épreuve par équipes commencée : verrou S6 (docs/adr/0041, ADR-0044)', () => {
+  it('tableau d’équipes tiré : petite finale figée au tirage (updateCompetitionFormula refusé)', async () => {
+    const comp = competition(Weapon.FOIL, { formula: teamFormula({ pool: null }) });
+    await teamsRegistered(comp.id, [
+      { name: 'A', ranking: 1 },
+      { name: 'B', ranking: 2 },
+      { name: 'C', ranking: 3 },
+      { name: 'D', ranking: 4 },
+    ]);
+    // Avant le tirage : modifiable (essai à blanc)
+    await call('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [{ op: 'setPhase', phase: 'tableau', settings: { thirdPlace: true } }],
+      dryRun: true,
+    });
+    await call('generateTeamTableau', { competitionId: comp.id });
+    await reject('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [{ op: 'setPhase', phase: 'tableau', settings: { thirdPlace: true } }],
+    }).toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('tableau déjà tiré'),
+    });
+    // Le tableau tiré sans petite finale le reste : pas de rencontre t1-1 après les demies
+    const [s1, s2] = tableauOf(comp.id);
+    await playMatch(comp.id, s1.id);
+    await playMatch(comp.id, s2.id);
+    expect(tableauOf(comp.id).map(m => [m.round, m.position])).not.toContainEqual([1, 1]);
+    // Autres réglages du tableau : soumis aux règles actuelles (Q15)
+    await call('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [{ op: 'setPhase', phase: 'tableau', settings: { timerSeconds: 240 } }],
+      dryRun: true,
+    });
+  });
+
+  it('poules d’équipes tirées : le tour de poules ne se retire plus', async () => {
+    const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+    await teamsRegistered(comp.id, ['A', 'B', 'C']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    await reject('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [{ op: 'removePhase', phase: 'pool-0' }],
+    }).toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('phase déjà commencée'),
+    });
+  });
+
+  it('poules jouées et tableau tiré : la qualification du tour ne change plus', async () => {
+    const comp = competition(Weapon.EPEE, {
+      formula: teamFormula({ pool: { qualification: { mode: 'fixed_count', count: 2 } } }),
+    });
+    await teamsRegistered(comp.id, ['A', 'B', 'C', 'D']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    for (const m of db.getTeamMatchesByCompetition(comp.id)) await playMatch(comp.id, m.id);
+    await call('generateTeamTableau', { competitionId: comp.id });
+    await reject('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [
+        {
+          op: 'setPhase',
+          phase: 'pool-0',
+          settings: { qualification: { mode: 'fixed_count', count: 3 } },
+        },
+      ],
+    }).toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('elle ne change plus'),
+    });
+  });
+});

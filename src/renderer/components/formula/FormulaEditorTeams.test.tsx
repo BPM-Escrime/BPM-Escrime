@@ -211,3 +211,52 @@ describe('Organisation ▸ Formule d’une épreuve par équipes (docs/adr/0044)
     expect(screen.getByTestId('formula-modal-save')).toBeDisabled();
   });
 });
+
+describe('Organisation ▸ Formule d’une épreuve par équipes commencée (S6, ADR-0041, ADR-0044)', () => {
+  const competition = (): Competition =>
+    ({
+      id: 'c1',
+      title: 'Coupe par équipes',
+      weapon: Weapon.EPEE,
+      category: Category.SENIOR,
+      gender: Gender.MALE,
+      fencerCount: 0,
+      isTeamEvent: true,
+      settings: { ...settings, minTeamSize: 3, formula: teamFormula() },
+    }) as unknown as Competition;
+  const teams = Array.from({ length: 6 }, (_, i) => ({ id: `t${i}` }));
+  const state = (poolMatches: unknown[], tableauMatches: unknown[]) => ({
+    state: { teams: { teams, poolMatches, tableauMatches } },
+  });
+  const open = async (poolMatches: unknown[], tableauMatches: unknown[]) => {
+    client.query.mockResolvedValueOnce(state(poolMatches, tableauMatches) as never);
+    render(
+      <CompetitionFormulaModal competition={competition()} onApplied={vi.fn()} onClose={vi.fn()} />
+    );
+    await waitFor(() => expect(client.query).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByTestId('formula-modal-save')).not.toBeDisabled());
+  };
+
+  it('tableau d’équipes tiré : la petite finale ne change plus, remarque sur la carte du tableau', async () => {
+    await open([{ status: 'finished' }], [{ id: 'm' }]);
+    fireEvent.click(screen.getByTestId('formula-step-tableau'));
+    fireEvent.click(screen.getByLabelText('competition.third_place_match_label'));
+    expect(screen.getByTestId('formula-modal-save')).toBeDisabled();
+    expect(screen.getByTestId('formula-remark-tableau')).toBeInTheDocument();
+    expect(screen.getByTestId('phase-remarks')).toHaveTextContent('tableau déjà tiré');
+  });
+
+  it('poules d’équipes tirées : le tour ne se retire plus', async () => {
+    await open([{ status: 'not_started' }], []);
+    fireEvent.click(screen.getByTestId('formula-remove-pool-0'));
+    expect(screen.getByTestId('formula-modal-save')).toBeDisabled();
+    expect(screen.getByTestId('formula-remarks')).toHaveTextContent('phase déjà commencée');
+  });
+
+  it('rien de tiré : la petite finale reste modifiable', async () => {
+    await open([], []);
+    fireEvent.click(screen.getByTestId('formula-step-tableau'));
+    fireEvent.click(screen.getByLabelText('competition.third_place_match_label'));
+    expect(screen.getByTestId('formula-modal-save')).not.toBeDisabled();
+  });
+});
