@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 66 | 867 |
+| `src/shared/domain/` | 66 | 868 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **685** | **5580** |
+| **Total** | **685** | **5581** |
 
-Unitaires : 662 fichiers, 5522 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 662 fichiers, 5523 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -10051,7 +10051,7 @@ Unitaires : 662 fichiers, 5522 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaStructure.test.ts</code> — 62 tests</summary>
+<summary><code>src/shared/domain/formula/formulaStructure.test.ts</code> — 63 tests</summary>
 
 - **remarques situées (ADR-0041)**
   - formule par défaut : aucune remarque
@@ -10096,6 +10096,7 @@ Unitaires : 662 fichiers, 5522 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - **S6 : la qualification qui sort d’un tour de poules clos ne change plus (ADR-0041, amendement)**
   - tour clos, phase suivante pas commencée : verrouillé dès la clôture, sur sa carte
   - tour non clos (lancé, en cours) : la règle reste modifiable
+  - avancement copié (déstructuration, JSON) : le tour clos reste verrouillé (#2353)
   - tour clos, règle identique : aucune remarque
   - seul le tour clos est verrouillé, pas le tour en cours
   - tableau arrêté clos : non concerné (ses réglages restent admis)
