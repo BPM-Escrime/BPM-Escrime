@@ -27,6 +27,7 @@ import {
   withFlatSettings,
 } from '../../../shared/domain/formula/formulaV2';
 import { withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
+import { teamFormatOf } from '../../../shared/domain/teams/relay';
 import {
   validateFormulaSettings,
   type FormulaIssue,
@@ -159,14 +160,18 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
     ...fromTemplate,
     ...patch,
   } as CompetitionSettings;
-  // Modèle choisi : formule v2 enregistrée dès la création (ADR-0036)
-  const settings: CompetitionSettings =
-    input.templateId && !merged.formula
-      ? {
-          ...merged,
-          formula: formulaOf({ weapon: input.weapon, category: input.category, settings: merged }),
-        }
-      : merged;
+  // Modèle choisi : formule v2 enregistrée dès la création (ADR-0036). Épreuve par équipes en
+  // relais FIE : formule d'équipe dès la création, avec sa règle de rencontre (docs/adr/0044)
+  const team = { weapon: input.weapon, isTeamEvent: !!input.isTeamEvent, settings: merged };
+  const teamFormula = !!input.isTeamEvent && teamFormatOf(merged) === 'fie-relay';
+  const formula =
+    merged.formula ??
+    (input.templateId || teamFormula
+      ? formulaOf({ weapon: input.weapon, category: input.category, settings: merged })
+      : undefined);
+  const settings: CompetitionSettings = formula
+    ? { ...merged, formula: withTeamMatch(formula, team) }
+    : merged;
   assertFormula(
     validateFormulaSettings(settings, undefined, {
       weapon: input.weapon,

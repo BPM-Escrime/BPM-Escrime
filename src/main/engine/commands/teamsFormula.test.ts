@@ -625,3 +625,40 @@ d('Formule d’une épreuve par équipes écrite par le moteur (docs/adr/0044, G
     expect(db.getCompetition(arena.id)!.settings!.formula?.general.teamMatch).toBeUndefined();
   });
 });
+
+d('Formule d’équipe posée à la création (docs/adr/0044, amendement « Formule d’équipe »)', () => {
+  const create = (settings: Record<string, unknown> = {}, weapon = 'E') =>
+    call('createCompetition', {
+      title: 'Coupe par équipes',
+      date: '2026-12-06',
+      weapon,
+      gender: 'M',
+      category: 'SEN',
+      isTeamEvent: true,
+      settings: { minTeamSize: 3, ...settings },
+    });
+
+  it('relais FIE : formule enregistrée avec general.teamMatch, tirée par la formule', async () => {
+    const { competitionId } = await create({ teamReserveCount: 2 });
+    const settings = db.getCompetition(competitionId)!.settings!;
+    expect(settings.formula?.general.teamMatch).toEqual({ ...RULE, reserves: 2 });
+    expect(settings.formula?.phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
+    await teamsRegistered(competitionId, ['A', 'B', 'C']);
+    expect((await call('generateTeamPools', { competitionId })).pools).toHaveLength(1);
+  });
+
+  it('arène Sabre Laser, épreuve individuelle : pas de règle de rencontre posée', async () => {
+    const arena = await create({ teamFormat: 'laser-arena' }, 'L');
+    expect(
+      db.getCompetition(arena.competitionId)!.settings!.formula?.general.teamMatch
+    ).toBeUndefined();
+    const solo = await call('createCompetition', {
+      title: 'Individuel',
+      date: '2026-12-06',
+      weapon: 'E',
+      gender: 'M',
+      category: 'SEN',
+    });
+    expect(db.getCompetition(solo.competitionId)!.settings!.formula).toBeUndefined();
+  });
+});
