@@ -146,6 +146,17 @@ export function publicFinalResults(
   ];
 }
 
+/**
+ * Classement final du kiosque (`/api/bracket`) : celui de la page publique, tableau principal
+ * seulement (les tours affichés par le kiosque sont ceux du tableau principal).
+ */
+export function kioskFinalResults(
+  state: SessionStateView | null,
+  fencers: readonly FencerView[] = []
+) {
+  return publicFinalResults(state, fencers).filter(r => !r.group && r.fencer);
+}
+
 /** Résultats, tableau, historique d'entraînement et journal des matchs. */
 export function registerResultsRoutes(ctx: RouteContext): void {
   // API : données de résultats d'une compétition (classements de poules)
@@ -565,24 +576,13 @@ export function registerResultsRoutes(ctx: RouteContext): void {
       const currentRound =
         rounds.find(r => r.matches.some(m => m.status !== 'finished' && !m.isBye))?.round ?? null;
 
-      // Classement final calculé par l'application (places distinctes, départage
-      // par classement de poules / places jouées) : source de vérité du kiosk (#1013)
-      const finalResults = (
-        Array.isArray(sessionState?.finalResults) ? sessionState.finalResults : []
-      )
-        .filter(
-          (r): r is RankingRowView & { fencer: { id?: string }; rank: number } =>
-            !!r?.fencer && typeof r.rank === 'number'
-        )
-        .map(r => ({
-          rank: r.rank,
-          fencer: {
-            id: r.fencer.id,
-            lastName: r.fencer.lastName,
-            firstName: r.fencer.firstName,
-            club: r.fencer.club ?? '',
-          },
-        }));
+      // Classement final : même règle que la page publique et l'écran (`finalRanking`,
+      // docs/adr/0043 amendée, F4d) : le tableau, puis les non-qualifiés ; un exclu au bas
+      // sans rang (#1013)
+      const finalResults = kioskFinalResults(
+        sessionState,
+        ctx.db.getFencersByCompetition(ctx.session.competitionId)
+      );
 
       res.json({ tableSize, currentRound, rounds, finalResults });
     } catch (error) {

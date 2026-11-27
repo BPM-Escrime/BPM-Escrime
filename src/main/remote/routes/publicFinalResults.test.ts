@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { FencerStatus } from '../../../shared/types';
-import { publicFinalResults } from './resultsRoutes';
+import { kioskFinalResults, publicFinalResults } from './resultsRoutes';
 
 const fe = (id: string, extra: Record<string, unknown> = {}) => ({
   id,
@@ -75,5 +75,26 @@ describe('publicFinalResults', () => {
       },
     } as never);
     expect(out(list)).toEqual(['Ff2:1', 'Ff1:2', 'Ff3:3', 'Mm1:1', 'Mm2:2']);
+  });
+});
+
+describe('kioskFinalResults (/api/bracket)', () => {
+  const overall = [row('a', 1), row('b', 2), row('c', 3), row('d', 4)];
+
+  it('même classement que la page publique : non-qualifiés compris, exclu au bas sans rang', () => {
+    const state = { overallRanking: overall, finalResults: [row('a', 1), row('b', 2)] };
+    const fencers = [fe('a'), fe('b', { status: FencerStatus.EXCLUDED }), fe('c'), fe('d')];
+    const list = kioskFinalResults(state as never, fencers as never);
+    expect(out(list)).toEqual(out(publicFinalResults(state as never, fencers as never)));
+    expect(out(list)).toEqual(['a:1', 'c:2', 'd:3', 'b:null']);
+  });
+
+  it('tableau principal seulement : les classements des groupes restent hors du kiosque', () => {
+    const state = {
+      overallRanking: overall,
+      finalResults: [row('a', 1), row('b', 2)],
+      groupTableaux: { F: { finalResults: [row('c', 1), row('d', 2)] } },
+    };
+    expect(kioskFinalResults(state as never).every(r => !('group' in r))).toBe(true);
   });
 });

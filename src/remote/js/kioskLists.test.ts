@@ -34,6 +34,29 @@ describe('kioskLists.js computeFinalRanking', () => {
     expect(r.ranked.map((x: { rank: number }) => x.rank)).toEqual([1, 2]);
   });
 
+  it('exclu (rang null, docs/adr/0043 amendée) : en bas, affiché « - »', () => {
+    const r = K.computeFinalRanking(
+      {
+        finalResults: [
+          { rank: null, fencer: { id: 'x', lastName: 'X' } },
+          { rank: 2, fencer: { id: 'b', lastName: 'B' } },
+          { rank: 1, fencer: { id: 'a', lastName: 'A' } },
+        ],
+        rounds: [],
+      },
+      noSort
+    );
+    expect(r.ranked.map((x: { fencer: { id: string } }) => x.fencer.id)).toEqual(['a', 'b', 'x']);
+    (globalThis as { bpRank?: (n: number) => string }).bpRank = n => `${n}e`;
+    const html = K.finalTableHtml(
+      r.ranked,
+      (k: string) => k,
+      (v: string) => String(v)
+    );
+    expect(html).toContain('<span class="rank-medal">-</span>');
+    expect(html).not.toContain('0e');
+  });
+
   it('non terminé : pas de tableau ou finale sans vainqueur', () => {
     expect(K.computeFinalRanking(null, noSort).ranked).toBeNull();
     expect(K.computeFinalRanking({ rounds: [] }, noSort).ranked).toBeNull();
