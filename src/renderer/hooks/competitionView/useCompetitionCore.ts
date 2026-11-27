@@ -38,6 +38,7 @@ import {
 } from '../../../shared/utils/customFormulaSettings';
 import { allowsVictoryTieBreak } from '../../../shared/utils/tieBreak';
 import { useRapieresSessionState } from '../../../features/rapieres/useRapieresSessionState';
+import { rapieresTeamsOf } from '../../../shared/domain/rapieres/rapieresEntry';
 import { useColumnVisibility } from '../useColumnVisibility';
 import { useModalFlags } from '../useModalFlags';
 import { usePoolsViewSettings } from '../usePoolsViewSettings';
@@ -159,7 +160,7 @@ export function useCompetitionCore(ctx: Ctx) {
     setRapieresState,
     rapieresTeamModal,
     setRapieresTeamModal,
-    rapieres,
+    rapieres: rapieresSession,
     setRapieresTeam,
     waves,
     setWavesState,
@@ -212,6 +213,12 @@ export function useCompetitionCore(ctx: Ctx) {
     computeCategories,
     getCheckedInFencers,
   } = useFencerManagement({ competition, onUpdate });
+  // Compositions des équipes : champs du tireur (membres, niveau, HANDI) de préférence, sinon
+  // `rapieres.teams` de la session (alias de compatibilité jusqu'à F4e, docs/adr/0043)
+  const rapieres = useMemo(
+    () => ({ ...rapieresSession, teams: rapieresTeamsOf(fencers, rapieresSession.teams) }),
+    [rapieresSession, fencers]
+  );
 
   const {
     importData,

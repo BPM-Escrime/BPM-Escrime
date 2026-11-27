@@ -24,6 +24,7 @@ import {
   type OperationKind,
   FencerSchema,
   FencerCategoryField,
+  FencerTeamEntryShape,
   SplitGroup,
 } from './contractDef';
 import { reportOperations } from './contractReports';
@@ -161,6 +162,7 @@ const FencerDetailsShape = {
   license: z.string().trim().max(40).nullable().optional(),
   handedness: z.enum(['R', 'L']).optional(),
   photo: z.string().max(2_000_000).nullable().optional().describe('Image en base64'),
+  ...FencerTeamEntryShape,
 };
 
 /** Arbitre exposé par le contrat (listReferees, commandes d'inscription, docs/adr/0018) */

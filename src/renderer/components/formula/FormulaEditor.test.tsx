@@ -39,6 +39,7 @@ import {
   type FormulaV2,
   type SplitPhase,
 } from '../../../shared/domain/formula/formulaV2';
+import { formulaNeedsExpert } from '../../../shared/domain/formula/formulaExpert';
 import { createDefaultCustomFormula } from '../../../shared/utils/tournamentTemplates';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
 
@@ -488,6 +489,84 @@ describe('FormulaEditor : qualification « têtes de poule, puis suivants » (do
     expect(screen.getByTestId('formula-expert-toggle')).toBeDisabled();
     expect(options(container)).toEqual(['all', 'pool_heads']);
     expect(select(container)).not.toBeDisabled();
+    prefs.expert = true;
+  });
+});
+
+describe('FormulaEditor : entrée en équipes et répartition par niveau (docs/adr/0043, F4c)', () => {
+  const Editor: React.FC = () => {
+    const [formula, setFormula] = useState<FormulaV2>(() =>
+      formulaOf({
+        weapon: Weapon.EPEE,
+        category: Category.SENIOR,
+        settings: buildDefaultCompetitionSettings({
+          weapon: Weapon.EPEE,
+          category: Category.SENIOR,
+        }) as CompetitionSettings,
+      })
+    );
+    last = formula;
+    return (
+      <FormulaEditor
+        weapon={Weapon.EPEE}
+        category={Category.SENIOR}
+        formula={formula}
+        onChange={setFormula}
+      />
+    );
+  };
+
+  it('entrée individuelle par défaut ; équipes de 2 avec les libellés par défaut', () => {
+    prefs.expert = true;
+    render(<Editor />);
+    const kind = screen.getByLabelText('formulaEditor.entry');
+    expect(kind).toHaveValue('individual');
+    expect(last!.general.entry).toBeUndefined();
+    fireEvent.change(kind, { target: { value: 'team' } });
+    expect(last!.general.entry).toEqual({
+      kind: 'team',
+      size: 2,
+      levels: ['beginner', 'intermediate', 'expert'],
+    });
+    expect(formulaNeedsExpert(last!)).toBe(true);
+  });
+
+  it('libellés des niveaux modifiables ; retour à l’individuelle retire le réglage', () => {
+    prefs.expert = true;
+    render(<Editor />);
+    fireEvent.change(screen.getByLabelText('formulaEditor.entry'), { target: { value: 'team' } });
+    fireEvent.change(screen.getByLabelText('formulaEditor.entry_levels'), {
+      target: { value: 'Loisir, Compétition' },
+    });
+    expect(last!.general.entry).toEqual({
+      kind: 'team',
+      size: 2,
+      levels: ['Loisir', 'Compétition'],
+    });
+    fireEvent.change(screen.getByLabelText('formulaEditor.entry'), {
+      target: { value: 'individual' },
+    });
+    expect(last!.general.entry).toBeUndefined();
+    expect('entry' in last!.general).toBe(false);
+  });
+
+  it('répartition : serpentin par défaut, par niveau réglable (réglage expert)', () => {
+    prefs.expert = true;
+    const { container } = render(<Editor />);
+    const distribution = container.querySelector<HTMLSelectElement>('select[id$="-distribution"]')!;
+    expect(distribution).toHaveValue('serpentine');
+    fireEvent.change(distribution, { target: { value: 'byLevel' } });
+    expect(phaseSettings(last!, { kind: 'pool', round: 0 }).distribution).toBe('byLevel');
+    expect(formulaNeedsExpert(last!)).toBe(true);
+    fireEvent.change(distribution, { target: { value: 'serpentine' } });
+    expect(phaseSettings(last!, { kind: 'pool', round: 0 }).distribution).toBeUndefined();
+  });
+
+  it('niveau simple : ni entrée en équipes ni répartition', () => {
+    prefs.expert = false;
+    const { container } = render(<Editor />);
+    expect(screen.queryByLabelText('formulaEditor.entry')).toBeNull();
+    expect(container.querySelector('select[id$="-distribution"]')).toBeNull();
     prefs.expert = true;
   });
 });

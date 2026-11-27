@@ -113,3 +113,62 @@ describe('AddFencerModal', () => {
     expect(onAdd.mock.calls[0][0].nationality).toBe('GER');
   });
 });
+
+describe('AddFencerModal : entrée en équipes (docs/adr/0043, F4c)', () => {
+  const LEVELS = ['beginner', 'intermediate', 'expert'];
+
+  const setupTeam = async () => {
+    const onAdd = vi.fn();
+    const onClose = vi.fn();
+    const { container } = render(
+      <AddFencerModal onAdd={onAdd} onClose={onClose} teamLevels={LEVELS} />
+    );
+    await screen.findByTestId('team-entry-fields');
+    return { onAdd, onClose, container };
+  };
+
+  it('saisie des membres, du niveau et du marqueur HANDI ; pas de prénom propre', async () => {
+    const { onAdd, container } = await setupTeam();
+    expect(screen.queryByPlaceholderText('addFencer.first_name_ph')).toBeNull();
+    fireEvent.change(container.querySelector('input[required]')!, {
+      target: { value: 'Les Lames' },
+    });
+    fireEvent.change(document.getElementById('add-fencer-m0-last')!, {
+      target: { value: 'durand' },
+    });
+    fireEvent.change(document.getElementById('add-fencer-m0-first')!, { target: { value: 'Éva' } });
+    fireEvent.change(document.getElementById('add-fencer-m0-sex')!, { target: { value: 'F' } });
+    fireEvent.change(document.getElementById('add-fencer-m0-birth')!, {
+      target: { value: '1989-06-01' },
+    });
+    fireEvent.change(document.getElementById('add-fencer-m1-last')!, {
+      target: { value: 'Petit' },
+    });
+    fireEvent.change(document.getElementById('add-fencer-m1-sex')!, { target: { value: 'F' } });
+    fireEvent.change(document.getElementById('add-fencer-level')!, { target: { value: '2' } });
+    fireEvent.click(screen.getByLabelText(/teamEntry\.handicap/));
+    fireEvent.submit(container.querySelector('form')!);
+    expect(onAdd).toHaveBeenCalledTimes(1);
+    const added = onAdd.mock.calls[0][0];
+    expect(added).toMatchObject({
+      lastName: 'LES LAMES',
+      firstName: 'DURAND / PETIT',
+      level: 2,
+      handicap: true,
+      gender: 'F',
+      members: [
+        { lastName: 'DURAND', firstName: 'Éva', gender: 'F', birthDate: '1989-06-01' },
+        { lastName: 'PETIT', firstName: '', gender: 'F' },
+      ],
+    });
+    // La catégorie est déduite par le moteur (moyenne des années de naissance)
+    expect('category' in added).toBe(false);
+  });
+
+  it('refuse une équipe sans membre nommé', async () => {
+    const { onAdd, container } = await setupTeam();
+    fireEvent.change(container.querySelector('input[required]')!, { target: { value: 'Duo' } });
+    fireEvent.submit(container.querySelector('form')!);
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+});

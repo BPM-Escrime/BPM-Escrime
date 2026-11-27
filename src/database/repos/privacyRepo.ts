@@ -79,6 +79,20 @@ export function scrubIdentityInJson(
   return { value: changed ? out : value, changed };
 }
 
+/** Noms [nom, prénom] des membres d'une équipe (JSON de fencers.members) ; vide si illisible */
+function memberNames(json: string): Array<[string, string]> {
+  try {
+    const list: unknown = JSON.parse(json);
+    if (!Array.isArray(list)) return [];
+    return list.map(m => [
+      String((m as { lastName?: unknown }).lastName ?? ''),
+      String((m as { firstName?: unknown }).firstName ?? ''),
+    ]);
+  } catch {
+    return [];
+  }
+}
+
 interface FencerIdentityRow {
   id: string;
   competition_id: string;
@@ -87,6 +101,7 @@ interface FencerIdentityRow {
   birth_date: string | null;
   license: string | null;
   club: string | null;
+  members: string | null;
   title: string | null;
   date: string | null;
 }
@@ -169,12 +184,14 @@ export class PrivacyRepo {
 
     const fencers = this.sql.queryAll<FencerIdentityRow>(
       `SELECT f.id, f.competition_id, f.last_name, f.first_name, f.birth_date, f.license, f.club,
-              c.title, c.date
+              f.members, c.title, c.date
        FROM fencers f LEFT JOIN competitions c ON c.id = f.competition_id
        ORDER BY c.date DESC`
     );
     for (const f of fencers) {
-      if (!matches(f.last_name, f.first_name, f.license)) continue;
+      // Équipe (docs/adr/0043) : le tireur porte les noms de ses membres, trouvés comme lui
+      const named = (f.members ? memberNames(f.members) : []).some(m => matches(m[0], m[1], null));
+      if (!named && !matches(f.last_name, f.first_name, f.license)) continue;
       const key = identityKey({
         license: f.license,
         lastName: f.last_name,
@@ -390,6 +407,37 @@ export class PrivacyRepo {
     rewrite('fencer_abandons', 'id', ['match_snapshots']);
   }
 
+  /**
+   * Composition des équipes du mode spécial (clé de session `rapieres.teams`, alias de
+   * compatibilité, docs/adr/0043) : noms des membres, retirés avec le tireur-équipe.
+   */
+  private dropRapieresTeams(fencerIds: string[], competitionIds: string[]): void {
+    if (fencerIds.length === 0 || competitionIds.length === 0 || !this.hasTable('session_state')) {
+      return;
+    }
+    const rows = this.sql.queryAll<SqlRow>(
+      `SELECT competition_id AS k, state_json FROM session_state
+       WHERE competition_id IN (${this.placeholders(competitionIds.length)})`,
+      competitionIds
+    );
+    for (const row of rows) {
+      if (typeof row.state_json !== 'string' || !row.state_json.includes('"teams"')) continue;
+      let state: { rapieres?: { teams?: Record<string, unknown> } };
+      try {
+        state = JSON.parse(row.state_json);
+      } catch {
+        continue;
+      }
+      const teams = state.rapieres?.teams;
+      if (!teams || !fencerIds.some(id => id in teams)) continue;
+      for (const id of fencerIds) delete teams[id];
+      this.sql.run('UPDATE session_state SET state_json = ? WHERE competition_id = ?', [
+        JSON.stringify(state),
+        row.k,
+      ]);
+    }
+  }
+
   /** Anonymise des tireurs : `replacements` = id → pseudonyme */
   private anonymizeFencers(replacements: Map<string, string>): number {
     if (replacements.size === 0) return 0;
@@ -404,7 +452,7 @@ export class PrivacyRepo {
     for (const [id, pseudonym] of replacements) {
       this.sql.run(
         `UPDATE fencers SET last_name = ?, first_name = '', birth_date = NULL, license = NULL,
-                photo = NULL, updated_at = ? WHERE id = ?`,
+                photo = NULL, members = NULL, updated_at = ? WHERE id = ?`,
         [pseudonym, now, id]
       );
       if (this.hasTable('season_results')) {
@@ -422,6 +470,7 @@ export class PrivacyRepo {
       }
     }
     this.scrubSnapshots(replacements, competitionIds);
+    this.dropRapieresTeams(ids, competitionIds);
     return ids.length;
   }
 
@@ -471,6 +520,7 @@ export class PrivacyRepo {
       .map(r => r.competition_id);
     // Instantanés JSON : impossible de retirer l'objet sans casser l'état → libellé neutre
     this.scrubSnapshots(new Map(ids.map(id => [id, ERASED_LABEL])), competitionIds);
+    this.dropRapieresTeams(ids, competitionIds);
 
     const matchIds = this.sql
       .queryAll<{ id: string }>(

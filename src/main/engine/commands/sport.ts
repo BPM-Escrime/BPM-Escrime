@@ -91,6 +91,7 @@ import {
   phaseSettings,
   isWavesRound,
   poolBoutOrderOfRound,
+  poolDistributionOfRound,
   tableauQualificationOf,
 } from '../../../shared/domain/formula/formulaV2';
 import { stoppedTableauOf } from '../../../shared/domain/formula/formulaSteps';
@@ -357,6 +358,8 @@ export function generatePools(
         maxPerPool: max,
         // Ordre des matchs du tour tiré (formule), comme l'écran (ADR-0042)
         boutOrder: poolBoutOrderOfRound(comp.settings, round),
+        // Répartition du tour (formule) : par niveau pour l'entrée en équipes (docs/adr/0043)
+        distribution: poolDistributionOfRound(comp.settings, round),
         separation: options.separation,
         newId: uuidv4,
       });

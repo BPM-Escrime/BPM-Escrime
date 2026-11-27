@@ -5,7 +5,7 @@
  * Licensed under GPL-3.0
  */
 import type { Input } from './contract';
-import type { Fencer } from '../types';
+import type { Fencer, FencerMember } from '../types';
 import { normalizeFencerCategory } from '../domain/fencers/fencerCategory';
 
 type RegisterFencer = Input<'registerFencers'>['fencers'][number];
@@ -26,6 +26,9 @@ export const FENCER_DETAIL_KEYS = [
   'license',
   'handedness',
   'photo',
+  'members',
+  'level',
+  'handicap',
 ] as const;
 
 const isoDay = (v: unknown): string | null => {
@@ -39,6 +42,16 @@ const text = (v: unknown): string | null => {
   return s ? s : null;
 };
 
+/** Membre d'une équipe → entrée du contrat (champs vides omis) */
+function memberInput(m: FencerMember): FencerMember {
+  return {
+    lastName: m.lastName.trim(),
+    firstName: m.firstName.trim(),
+    ...(m.gender ? { gender: m.gender } : {}),
+    ...(m.birthDate ? { birthDate: m.birthDate.slice(0, 10) } : {}),
+  };
+}
+
 /** Identité d'un tireur → entrée de updateFencerDetails (seuls les champs présents) */
 export function detailsInput(updates: Partial<Fencer>): FencerDetails {
   const out: Record<string, unknown> = {};
@@ -48,6 +61,12 @@ export function detailsInput(updates: Partial<Fencer>): FencerDetails {
     if (key === 'birthDate') out.birthDate = isoDay(v);
     else if (key === 'lastName' || key === 'firstName') out[key] = String(v ?? '').trim();
     else if (key === 'category') out.category = normalizeFencerCategory(v) ?? null;
+    else if (key === 'members') {
+      const list = Array.isArray(v) ? (v as FencerMember[]) : [];
+      out.members = list.length > 0 ? list.map(memberInput) : null;
+    } else if (key === 'level') {
+      out.level = Number.isInteger(v) && (v as number) >= 1 ? v : null;
+    } else if (key === 'handicap') out.handicap = v == null ? null : !!v;
     else if (key === 'gender' || key === 'handedness') {
       if (v) out[key] = v;
     } else if (key === 'nationality') {

@@ -34,6 +34,7 @@ import {
 } from '../../../shared/domain/formula/formulaV2';
 import { simulateSplit } from '../../../shared/domain/formula/splitPlan';
 import { isWavesOrder, wavesSizeBounds } from '../../../shared/domain/pools/waves';
+import FormulaEntryFields from './FormulaEntryFields';
 import { bricksForLevel, formulaNeedsExpert } from '../../../shared/domain/formula/formulaExpert';
 import type { FormulaProgress, FormulaRemark } from '../../../shared/domain/formula/formulaRemarks';
 import {
@@ -447,6 +448,23 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 <small className="u-hint">{t('properties.bout_order_waves_hint')}</small>
               )}
             </div>
+            {/* Répartition par niveau : équipes de même niveau regroupées (docs/adr/0043) */}
+            <div className="form-group">
+              <label htmlFor={`${id}-distribution`}>{t('formulaEditor.distribution')}</label>
+              <select
+                id={`${id}-distribution`}
+                className="form-input form-select"
+                value={pool.distribution ?? 'serpentine'}
+                onChange={e =>
+                  // Serpentin : réglage retiré (défaut)
+                  set({ distribution: e.target.value === 'byLevel' ? 'byLevel' : undefined })
+                }
+              >
+                <option value="serpentine">{t('formulaEditor.distribution_serpentine')}</option>
+                <option value="byLevel">{t('formulaEditor.distribution_by_level')}</option>
+              </select>
+              <small className="u-hint">{t('formulaEditor.distribution_hint')}</small>
+            </div>
             {isOther && (
               <div className="form-group">
                 <label className="form-label">{t('formulaPhase.scoring')}</label>
@@ -587,10 +605,26 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
     // Compétition couplée = scission par sexe : brique expert
     const showCoupled =
       expert && !isOther && pools.length > 0 && ((ownTableau && !split) || coupled);
-    if (!isOther && !showRest && !showCoupled) return null;
+    // Entrée en équipes (binômes) : réglage expert, toutes armes (docs/adr/0043)
+    const showEntry = expert && !specialMode;
+    if (!isOther && !showRest && !showCoupled && !showEntry) return null;
     return (
       <details className="properties-expert formula-editor__general">
         <summary>{t('properties.formula_general')}</summary>
+        {showEntry && (
+          <FormulaEntryFields
+            id="formula-editor"
+            entry={formula.general.entry ?? { kind: 'individual' }}
+            onChange={entry => {
+              // Individuelle : réglage retiré (défaut), comme le serveur
+              const { entry: _entry, ...general } = formula.general;
+              onChange({
+                ...formula,
+                general: entry.kind === 'team' ? { ...general, entry } : general,
+              });
+            }}
+          />
+        )}
         {isOther && onSpecialModeChange && (
           <div className="form-group">
             <label className="form-label" htmlFor="formula-special-mode">

@@ -34,6 +34,9 @@ export function fencerFromDTO(d: FencerDTO): Fencer {
     initialRanking: opt(d.initialRanking),
     finalRanking: opt(d.finalRanking),
     photo: opt(d.photo),
+    members: opt(d.members),
+    level: opt(d.level),
+    handicap: opt(d.handicap),
     // Dates de création non exposées par le contrat : sans usage à l'écran
     createdAt: new Date(0),
     updatedAt: new Date(0),

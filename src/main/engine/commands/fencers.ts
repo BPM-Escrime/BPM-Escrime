@@ -5,7 +5,14 @@
  * précède le tirage, où le journal commence (docs/adr/0017).
  * Licensed under GPL-3.0
  */
-import { FencerStatus, Gender, type Category, type Fencer } from '../../../shared/types';
+import {
+  FencerStatus,
+  Gender,
+  type Category,
+  type Fencer,
+  type FencerMember,
+} from '../../../shared/types';
+import { teamCategory, teamGender } from '../../../shared/domain/fencers/teamEntry';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { readSession } from './sessionView';
@@ -28,6 +35,10 @@ export interface FencerDetailsInput {
   license?: string | null;
   handedness?: 'R' | 'L';
   photo?: string | null;
+  /** Entrée en équipes (docs/adr/0043) : membres, niveau (1 = le plus fort), marqueur HANDI ; null : effacé */
+  members?: FencerMember[] | null;
+  level?: number | null;
+  handicap?: boolean | null;
 }
 
 export interface RegisterFencerInput extends FencerDetailsInput {
@@ -55,6 +66,9 @@ export function fencerDTO(f: Fencer) {
     license: f.license ?? null,
     ranking: f.ranking ?? null,
     handedness: f.handedness ?? null,
+    members: f.members ?? null,
+    level: f.level ?? null,
+    handicap: f.handicap ?? null,
     status: f.status,
     exclusionReason: f.exclusionReason ?? null,
     seedNumber: f.seedNumber ?? null,
@@ -74,8 +88,13 @@ export function drawDone(ctx: CommandContext, competitionId: string): boolean {
   );
 }
 
-/** Champs d'identité → patch de la base (undefined : inchangé, null : effacé) */
-function detailsPatch(d: FencerDetailsInput): Partial<Fencer> {
+/**
+ * Champs d'identité → patch de la base (undefined : inchangé, null : effacé). Avec des membres
+ * (équipe, docs/adr/0043), la catégorie (moyenne des années de naissance, saison de l'épreuve)
+ * et le sexe de l'équipe sont déduits quand l'appelant ne les donne pas ; restent modifiables
+ * à la main.
+ */
+function detailsPatch(d: FencerDetailsInput, seasonDate: Date): Partial<Fencer> {
   const patch: Record<string, unknown> = {};
   const set = (k: keyof FencerDetailsInput, v: unknown) => {
     if (d[k] !== undefined) patch[k] = v;
@@ -92,8 +111,23 @@ function detailsPatch(d: FencerDetailsInput): Partial<Fencer> {
   set('license', d.license ?? undefined);
   set('handedness', d.handedness);
   set('photo', d.photo ?? undefined);
+  if (d.members !== undefined) {
+    patch.members = d.members && d.members.length > 0 ? d.members : null;
+    if (d.members && d.members.length > 0) {
+      const category = d.category === undefined ? teamCategory(d.members, seasonDate) : undefined;
+      if (category) patch.category = category;
+      const gender = d.gender === undefined ? teamGender(d.members) : undefined;
+      if (gender) patch.gender = gender;
+    }
+  }
+  if (d.level !== undefined) patch.level = d.level;
+  if (d.handicap !== undefined) patch.handicap = d.handicap;
   return patch as Partial<Fencer>;
 }
+
+/** Date de référence de la saison : celle de l'épreuve (domaine pur, date injectée) */
+const seasonDateOf = (comp: { date?: Date | string }): Date =>
+  comp.date ? new Date(comp.date) : new Date();
 
 const norm = (s: string | undefined | null) =>
   (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toUpperCase();
@@ -127,7 +161,7 @@ export function registerFencers(
         ctx.db.addFencer(comp.id, {
           gender: Gender.MALE,
           nationality: 'FRA',
-          ...detailsPatch(f),
+          ...detailsPatch(f, seasonDateOf(comp)),
           ranking: f.ranking ?? undefined,
           status: f.status === 'P' ? FencerStatus.CHECKED_IN : FencerStatus.NOT_CHECKED_IN,
         })
@@ -152,7 +186,7 @@ export function updateFencerDetails(
 ) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
   const f = fencerOf(ctx, comp.id, input.fencerId);
-  const patch = detailsPatch(input.details);
+  const patch = detailsPatch(input.details, seasonDateOf(comp));
   if (patch.lastName === '' || patch.firstName === '') {
     throw new CommandError('invalid_name', 'Nom et prénom ne peuvent pas être vides');
   }

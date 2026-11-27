@@ -10,6 +10,7 @@ export type SortableCol =
   | 'firstName'
   | 'birthDate'
   | 'category'
+  | 'level'
   | 'club'
   | 'nationality'
   | 'region'
@@ -24,6 +25,7 @@ export const COLUMNS = [
   { id: 'firstName' as SortableCol, labelKey: 'fencerList.col_first_name' },
   { id: 'birthDate' as SortableCol, labelKey: 'fencerList.col_birth', width: '70px' },
   { id: 'category' as SortableCol, labelKey: 'fencerList.col_category', width: '70px' },
+  { id: 'level' as SortableCol, labelKey: 'fencerList.col_level', width: '110px' },
   { id: 'club' as SortableCol, labelKey: 'fencerList.col_club' },
   { id: 'nationality' as SortableCol, labelKey: 'fencerList.col_nationality', width: '110px' },
   { id: 'region' as SortableCol, labelKey: 'fencerList.col_region', width: '110px' },
@@ -67,6 +69,8 @@ export interface FencerListProps {
   hiddenColumns?: SortableCol[];
   /** Valeurs de cellule remplacées (tri + affichage) : rapières → niveau, catégorie d'équipe (#1441) */
   cellValues?: Partial<Record<SortableCol, (fencer: Fencer) => string>>;
+  /** Entrée en équipes (ADR-0043) : libellés des niveaux ; absent : individuelle */
+  teamLevels?: readonly string[];
   /** Édition gérée par le parent (fenêtre spécifique) au lieu de la fenêtre tireur */
   onEditRequest?: (fencer: Fencer) => void;
 }

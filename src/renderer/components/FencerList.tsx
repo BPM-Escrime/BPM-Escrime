@@ -147,7 +147,7 @@ const FencerListComponent: React.FC<FencerListProps> = (props: FencerListProps) 
               </Button>
               {colMenuOpen && (
                 <div className="is-a36aa5">
-                  {COLUMNS.map(col => (
+                  {COLUMNS.filter(col => col.id !== 'level' || props.teamLevels).map(col => (
                     <label key={col.id} className="is-80fd54">
                       <input
                         type="checkbox"
@@ -419,6 +419,7 @@ const FencerListComponent: React.FC<FencerListProps> = (props: FencerListProps) 
         <React.Suspense fallback={null}>
           <EditFencerModal
             fencer={editingFencer}
+            teamLevels={props.teamLevels}
             onSave={handleEditSave}
             onClose={() => setEditingFencer(null)}
           />

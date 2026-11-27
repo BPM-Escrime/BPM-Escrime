@@ -1500,7 +1500,9 @@
     "club_plan_time": "Time",
     "club_plan_exercise": "Exercise",
     "club_plan_empty": "No exercise planned",
-    "club_plan_notes": "Notes"
+    "club_plan_notes": "Notes",
+    "col_level": "Level",
+    "handicap": "Para"
   },
   "rsm": {
     "strip_plan": "Strip map",
@@ -1887,7 +1889,8 @@
     "col_category": "Cat.",
     "compute_categories": "Compute categories",
     "compute_categories_title": "Age category of fencers who have none, from the date of birth and the season of the competition",
-    "compute_categories_done": "{{count}} categories computed; {{missing}} fencers without a date of birth"
+    "compute_categories_done": "{{count}} categories computed; {{missing}} fencers without a date of birth",
+    "col_level": "Level"
   },
   "questPhase": {
     "running_title": "Quest round in progress",
@@ -4803,7 +4806,16 @@
     "expert_mode": "Expert mode",
     "expert_hint": "Split, Quest round, stopped bracket and advanced settings (ties at the cut, cumulative rounds, bout order, zone scoring). Preference of this workstation.",
     "expert_forced": "This formula contains an expert block or setting: expert mode stays on for this edit.",
-    "remark_on_phase": "Remark on this phase"
+    "remark_on_phase": "Remark on this phase",
+    "entry": "Entry of participants",
+    "entry_individual": "Individual",
+    "entry_team": "Teams of 2 (pairs)",
+    "entry_levels": "Levels, weakest to strongest",
+    "distribution": "Distribution into pools",
+    "distribution_serpentine": "Serpentine on the ranking",
+    "distribution_by_level": "By level",
+    "entry_levels_hint": "Labels separated by commas, weakest to strongest; the last is the strongest level.",
+    "distribution_hint": "By level: teams of the same level are grouped together, from weakest to strongest, pool after pool."
   },
   "formulaTemplates": {
     "template": "Formula template",
@@ -4896,5 +4908,15 @@
     "notice": "{{n}} fencers tied in place {{rank}} for {{places}} spot(s): {{names}}",
     "choose": "What should happen to these tied fencers for this cut?",
     "formula": "{{label}} (formula)"
+  },
+  "teamEntry": {
+    "team_name": "Team name",
+    "member_n": "Member {{n}}",
+    "unknown": "Not set",
+    "auto_hint": "Category and sex are derived from the members if left empty.",
+    "members_required": "Enter the team name and at least one member.",
+    "handicap": "Para",
+    "level_unknown": "Not specified",
+    "handicap_hint": "Para team: a marker separate from the category."
   }
 }

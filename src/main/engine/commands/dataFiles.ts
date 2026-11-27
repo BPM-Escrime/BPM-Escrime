@@ -14,7 +14,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { z } from 'zod';
 import type { fileOperations } from '../../../shared/api/contractFiles';
-import { Gender, type Fencer } from '../../../shared/types';
+import { Gender, type Fencer, type FencerMember } from '../../../shared/types';
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
 import {
   decryptBpmBuffer,
@@ -114,6 +114,26 @@ function archiveFencer(raw: Record<string, unknown>): Partial<Fencer> {
   if (typeof raw.ranking === 'number' && Number.isInteger(raw.ranking) && raw.ranking > 0) {
     out.ranking = raw.ranking;
   }
+  // Équipe (binôme, docs/adr/0043) : les membres, le niveau et le marqueur HANDI suivent le tireur
+  if (Array.isArray(raw.members)) {
+    const members = raw.members
+      .filter((m): m is Record<string, unknown> => typeof m === 'object' && m !== null)
+      .slice(0, 10)
+      .map((m): FencerMember => ({
+        lastName: typeof m.lastName === 'string' ? m.lastName.slice(0, 200) : '',
+        firstName: typeof m.firstName === 'string' ? m.firstName.slice(0, 200) : '',
+        ...(m.gender === 'M' || m.gender === 'F' ? { gender: m.gender } : {}),
+        ...(typeof m.birthDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(m.birthDate)
+          ? { birthDate: m.birthDate }
+          : {}),
+      }))
+      .filter(m => m.lastName || m.firstName);
+    if (members.length > 0) out.members = members;
+  }
+  if (typeof raw.level === 'number' && Number.isInteger(raw.level) && raw.level >= 1) {
+    out.level = Math.min(raw.level, 20);
+  }
+  if (typeof raw.handicap === 'boolean') out.handicap = raw.handicap;
   return out;
 }
 

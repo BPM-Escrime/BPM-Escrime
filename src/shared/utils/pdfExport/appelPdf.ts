@@ -5,6 +5,7 @@
  */
 
 import { categoryShortLabel } from '../../domain/fencers/fencerCategory';
+import { levelLabel } from '../../domain/fencers/teamEntry';
 import { Fencer } from '../../types';
 import type { PdfTemplate } from '../../types/pdfTemplate.types';
 import { savePDF, buildCssOverrides, assembleBody, BASE_CSS, pdfLang, pdfT } from './core';
@@ -19,6 +20,7 @@ const APPEL_COL_HEADERS = (): Record<string, string> => ({
   lastName: pdfT('col_last_name', 'Nom'),
   firstName: pdfT('col_first_name', 'Prénom'),
   birthDate: pdfT('col_born', 'Né(e)'),
+  level: pdfT('col_level', 'Niveau'),
   club: pdfT('col_club', 'Club'),
   nationality: pdfT('col_nation', 'Nation'),
   region: pdfT('col_region', 'Région'),
@@ -38,7 +40,7 @@ const APPEL_STATUS_LABELS = (): Record<string, string> => ({
   F: pdfT('status_forfait', 'Forfait'),
 });
 
-function getFencerCellValue(fencer: Fencer, col: string): string {
+function getFencerCellValue(fencer: Fencer, col: string, levels: readonly string[]): string {
   switch (col) {
     case 'ref':
       return String(fencer.ref);
@@ -49,7 +51,12 @@ function getFencerCellValue(fencer: Fencer, col: string): string {
     case 'birthDate':
       return fencer.birthDate ? String(new Date(fencer.birthDate).getFullYear()) : '-';
     case 'category':
-      return categoryShortLabel(fencer.category) || '-';
+      return (
+        (categoryShortLabel(fencer.category) || '-') +
+        (fencer.handicap ? ` · ${pdfT('handicap', 'HANDI')}` : '')
+      );
+    case 'level':
+      return levelLabel(fencer.level, levels) || '-';
     case 'club':
       return fencer.club || '-';
     case 'nationality':
@@ -77,7 +84,9 @@ export function generateAppelHTML(
   title: string,
   competitionName?: string,
   logoBase64?: string,
-  template?: PdfTemplate
+  template?: PdfTemplate,
+  /** Entrée en équipes : libellés des niveaux de la formule (docs/adr/0043) */
+  levels: readonly string[] = []
 ): string {
   const now = new Date().toLocaleDateString(getActiveLocale(), {
     day: '2-digit',
@@ -93,7 +102,7 @@ export function generateAppelHTML(
   const rows = fencers
     .map(fencer => {
       const cells = visibleColumns
-        .map(col => `<td>${getFencerCellValue(fencer, col)}</td>`)
+        .map(col => `<td>${getFencerCellValue(fencer, col, levels)}</td>`)
         .join('');
       return `<tr>${cells}</tr>`;
     })
@@ -169,7 +178,8 @@ export async function exportAppelToPDF(
   title: string = pdfT('appel_title', "Liste d'appel"),
   competitionName?: string,
   logoBase64?: string,
-  template?: PdfTemplate
+  template?: PdfTemplate,
+  levels: readonly string[] = []
 ): Promise<void> {
   if (fencers.length === 0)
     throw new Error(pdfT('appel_empty', "Aucun tireur dans la liste d'appel"));
@@ -179,7 +189,8 @@ export async function exportAppelToPDF(
     title,
     competitionName,
     logoBase64,
-    template
+    template,
+    levels
   );
   await savePDF(html, 'appel.pdf');
 }

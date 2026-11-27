@@ -31,6 +31,7 @@ import {
   uncoupledFormula,
   type FormulaPhaseV2,
   type FormulaV2,
+  type PoolDistribution,
   type PoolRoundPhase,
   type QuestPhase,
   type SplitBranch,
@@ -394,6 +395,7 @@ const POOL_FIELDS = [
   'qualification',
   'seeding',
   'boutOrder',
+  'distribution',
 ] as const;
 const TABLEAU_FIELDS = [
   'label',
@@ -414,7 +416,7 @@ const QUEST_FIELDS = [
   'numberOfArenas',
   'opponentConstraint',
 ] as const;
-const GENERAL_FIELDS = ['restTimeSeconds', 'ruleSet', 'postPoolSplitCriteria'] as const;
+const GENERAL_FIELDS = ['restTimeSeconds', 'ruleSet', 'postPoolSplitCriteria', 'entry'] as const;
 
 /**
  * Anciens noms (ADR-0033). Ceux de l'épée… Sabre Laser (poolMaxScore…) gardent leur sens : un
@@ -453,6 +455,8 @@ function checkFields(settings: Record<string, unknown>, allowed: readonly string
 const isRule = (v: unknown): v is AdvancementRule =>
   typeof v === 'object' && v !== null && typeof (v as { mode?: unknown }).mode === 'string';
 
+const POOL_DISTRIBUTIONS: readonly PoolDistribution[] = ['serpentine', 'byLevel'];
+
 function setPool(
   p: PoolRoundPhase,
   raw: Record<string, unknown>,
@@ -464,6 +468,17 @@ function setPool(
   let next = { ...p, ...(rest as Partial<PoolRoundPhase>) };
   if (rest.qualification !== undefined && !isRule(rest.qualification))
     throw new FormulaOperationError(`${where} : « qualification » attend { mode, … }`);
+  if ('distribution' in rest) {
+    // null : retour au serpentin (défaut, clé absente)
+    if (rest.distribution == null) {
+      const { distribution: _d, ...withoutDistribution } = next;
+      next = withoutDistribution;
+    } else if (!POOL_DISTRIBUTIONS.includes(rest.distribution as PoolDistribution)) {
+      throw new FormulaOperationError(
+        `${where} : « distribution » attend ${POOL_DISTRIBUTIONS.join(' | ')}`
+      );
+    }
+  }
   if (qualifiers !== undefined) {
     if (isLastRound)
       throw new FormulaOperationError(
@@ -688,10 +703,22 @@ export function applyOperationsV2(
       f = { ...f, phases };
     } else {
       checkFields(o.settings, GENERAL_FIELDS, where);
-      const { postPoolSplitCriteria: coupled, ...rest } = o.settings as Partial<
-        FormulaV2['general']
-      >;
+      const {
+        postPoolSplitCriteria: coupled,
+        entry,
+        ...rest
+      } = o.settings as Partial<FormulaV2['general']>;
       f = { ...f, general: { ...f.general, ...rest } };
+      if ('entry' in o.settings) {
+        // null ou individuelle : clé absente (défaut) ; équipes : libellés contrôlés
+        const { entry: _old, ...general } = f.general;
+        const issue = entry ? entryIssue(entry) : null;
+        if (issue) throw new FormulaOperationError(`${where} : « entry » ${issue}`);
+        f = {
+          ...f,
+          general: entry && entry.kind === 'team' ? { ...general, entry } : general,
+        };
+      }
       // Compétition couplée : scission par sexe dont les branches restent (ADR-0039, E3)
       if ('postPoolSplitCriteria' in o.settings) {
         if (coupled && coupled !== 'gender')
@@ -726,6 +753,28 @@ function setStayingTableaux(f: FormulaV2, settings: Record<string, unknown>, whe
   return { ...f, phases: f.phases.map(p => (p === split ? next : p)) };
 }
 
+/** Libellés de niveau : de 1 à 10, texte non vide de 40 caractères au plus, deux à deux distincts */
+const MAX_LEVELS = 10;
+const MAX_LEVEL_LABEL = 40;
+
+/** Entrée de la formule invalide (message sans préfixe), null si valide (docs/adr/0043) */
+export function entryIssue(entry: unknown): string | null {
+  const e = entry as { kind?: unknown; size?: unknown; levels?: unknown } | null;
+  if (!e || typeof e !== 'object') return 'attend { kind: individual | team, size, levels }';
+  if (e.kind === 'individual') return null;
+  if (e.kind !== 'team') return 'attend kind individual ou team';
+  if (e.size !== 2) return 'équipe : des binômes (size 2) seulement';
+  const levels = e.levels;
+  if (!Array.isArray(levels) || levels.length < 1 || levels.length > MAX_LEVELS)
+    return `équipe : de 1 à ${MAX_LEVELS} libellés de niveau (levels)`;
+  const labels = levels.map(l => (typeof l === 'string' ? l.trim() : ''));
+  if (labels.some(l => !l || l.length > MAX_LEVEL_LABEL))
+    return `équipe : chaque niveau a un libellé de 1 à ${MAX_LEVEL_LABEL} caractères`;
+  if (new Set(labels.map(l => l.toLowerCase())).size !== labels.length)
+    return 'équipe : libellés de niveau distincts';
+  return null;
+}
+
 /** Contexte du jugement : arme, type d'épreuve, effectif connu (S4, somme des parts d'une scission) */
 export interface FormulaScope {
   weapon: Weapon;
@@ -757,7 +806,13 @@ function formulaIssues(
 ): FormulaRemark[] {
   const out: FormulaRemark[] = [];
   out.push(...fightPhaseIssues(f.phases));
+  const entry = f.general.entry && !inBranch ? entryIssue(f.general.entry) : null;
+  if (entry) out.push(remark('invalid_entry', null, `entrée : ${entry}`));
   const pools = f.phases.filter(isPool);
+  pools.forEach((p, r) => {
+    if (p.distribution !== undefined && !POOL_DISTRIBUTIONS.includes(p.distribution))
+      out.push(remark('invalid_distribution', `pool-${r}`, `tour ${r + 1} : répartition inconnue`));
+  });
   // Chaque tour jugé comme s'il était le premier (mêmes bornes que les réglages plats)
   pools.forEach((p, r) => {
     const issues = validateFormulaSettings(
@@ -1003,6 +1058,7 @@ const POOL_DIFF = [
   'qualification',
   'seeding',
   'boutOrder',
+  'distribution',
 ] as const;
 const TABLEAU_DIFF = [
   'label',

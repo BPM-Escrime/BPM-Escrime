@@ -17,6 +17,7 @@ import { useConfirm } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { useDebounce } from '../useDebounce';
 import { SortableCol, COLUMNS, FencerListProps } from '../../components/fencerListShared';
+import { DEFAULT_TEAM_LEVELS } from '../../../shared/domain/fencers/teamEntry';
 import { ageCategoryRank } from '../../../shared/utils/clubAge';
 import { usePlatform } from '../../platform/PlatformContext';
 import { DATA_FILE_FILTERS, openDataFile, saveDataFile, useFilesApi } from '../../api/filesApi';
@@ -52,6 +53,7 @@ export function useFencerListState(ctx: Ctx) {
     hiddenColumns,
     cellValues,
     onEditRequest,
+    teamLevels,
   } = ctx;
 
   const { t } = useTranslation();
@@ -113,6 +115,11 @@ export function useFencerListState(ctx: Ctx) {
         if (!parsed.includes('category')) {
           const at = parsed.indexOf('birthDate');
           parsed.splice(at >= 0 ? at + 1 : parsed.length, 0, 'category');
+        }
+        // Niveau (entrée en équipes, docs/adr/0043) : après la catégorie
+        if (!parsed.includes('level')) {
+          const at = parsed.indexOf('category');
+          parsed.splice(at >= 0 ? at + 1 : parsed.length, 0, 'level');
         }
         // Latéralité (#1504) : avant le classement
         if (!parsed.includes('handedness')) {
@@ -225,6 +232,9 @@ export function useFencerListState(ctx: Ctx) {
             );
           case 'category':
             return dir * (ageCategoryRank(a.category) - ageCategoryRank(b.category));
+          case 'level':
+            // Du plus faible au plus fort ; sans niveau en dernier
+            return dir * ((a.level ?? 99) - (b.level ?? 99));
           case 'club':
             return dir * (a.club || '').localeCompare(b.club || '');
           case 'nationality':
@@ -425,9 +435,10 @@ export function useFencerListState(ctx: Ctx) {
     () =>
       colOrder
         .map(id => COLUMNS.find(c => c.id === id)!)
-        .filter(c => c && !hiddenCols.has(c.id))
+        // Colonne « Niveau » : entrée en équipes seulement (docs/adr/0043)
+        .filter(c => c && !hiddenCols.has(c.id) && (c.id !== 'level' || !!teamLevels))
         .map(c => ({ ...c, label: columnLabels?.[c.id] ?? t(c.labelKey) })),
-    [colOrder, hiddenCols, columnLabels, t]
+    [colOrder, hiddenCols, columnLabels, teamLevels, t]
   );
   const colSpanTotal = visibleCols.length + 1;
 
@@ -440,7 +451,12 @@ export function useFencerListState(ctx: Ctx) {
     const { exportAppelToPDF } = await import('../../../shared/utils/pdfExport');
     await exportAppelToPDF(
       filteredFencers,
-      visibleCols.map(c => c.id)
+      visibleCols.map(c => c.id),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      teamLevels?.map(l => (DEFAULT_TEAM_LEVELS.includes(l) ? t(`rapieres.level_${l}`) : l))
     );
   };
 

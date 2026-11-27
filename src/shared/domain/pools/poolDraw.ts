@@ -12,6 +12,7 @@ import {
   type SeparationCriterionKey,
 } from '../../utils/poolCalculations';
 import { planPoolBouts, type PoolBoutOrderMode } from '../../utils/poolBoutOrder';
+import { levelRankOf as fencerLevelRank } from '../fencers/teamEntry';
 
 /** Critère de séparation, dans l'ordre de priorité ; « byRanking » = position du serpentin */
 export type PoolSeparationKey = SeparationCriterionKey | 'byLevel' | 'byRanking';
@@ -30,6 +31,17 @@ export const DEFAULT_POOL_SEPARATION: readonly PoolSeparation[] = [
   { key: 'byRegion', enabled: true },
   { key: 'byNation', enabled: false },
 ];
+
+export type PoolDistributionMode = 'serpentine' | 'byLevel';
+
+/** Critères du tirage pour la répartition de la formule (écran et moteur) : « par niveau » active « Niveau » */
+export function separationOfDistribution(
+  distribution: PoolDistributionMode | undefined,
+  base: readonly PoolSeparation[] = DEFAULT_POOL_SEPARATION
+): PoolSeparation[] {
+  const rest = base.filter(c => c.key !== 'byLevel');
+  return distribution === 'byLevel' ? [...rest, { key: 'byLevel', enabled: true }] : [...base];
+}
 
 const SEPARATION_KEYS: ReadonlySet<string> = new Set(['byClub', 'byRegion', 'byNation']);
 const isSeparationKey = (k: PoolSeparationKey): k is SeparationCriterionKey =>
@@ -58,7 +70,7 @@ export interface DrawPoolsOptions {
   poolMaxScore: number;
   /** Critères ordonnés ; défaut DEFAULT_POOL_SEPARATION */
   separation?: readonly PoolSeparation[];
-  /** Rang de niveau (rapières) : avec « byLevel » actif, niveaux regroupés par poule */
+  /** Rang de niveau (« byLevel » actif) ; défaut : niveau du tireur, du plus faible au plus fort */
   levelRankOf?: (fencer: Fencer) => number;
   /** Répartition imposée (mode spécial) */
   customDistribution?: (fencers: Fencer[], poolCount: number) => Fencer[][];
@@ -83,9 +95,10 @@ export function distributePools(
   >
 ): Fencer[][] {
   const separation = options.separation ?? DEFAULT_POOL_SEPARATION;
-  const { poolCount, levelRankOf } = options;
+  const { poolCount } = options;
+  const levelRankOf = options.levelRankOf ?? fencerLevelRank;
   if (options.customDistribution) return options.customDistribution(fencers, poolCount);
-  if (levelRankOf && separation.some(c => c.key === 'byLevel' && c.enabled)) {
+  if (separation.some(c => c.key === 'byLevel' && c.enabled)) {
     return distributeFencersGroupedByLevel(
       fencers,
       poolCount,

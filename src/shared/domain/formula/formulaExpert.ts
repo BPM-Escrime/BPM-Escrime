@@ -3,7 +3,8 @@
  * Niveau simple : tours de poules, tableau complet, réglages courants. Mode expert, en plus :
  * scission, Tour Quest, tableau arrêté, ex aequo à la barre, qualification « têtes de poule »
  * (`pool_heads`, docs/adr/0043), répartition par cumul des tours,
- * ordre des matchs libre ou en vagues, barème à zones. Une formule reste valide quel que soit le mode : il ne
+ * ordre des matchs libre ou en vagues, répartition par niveau, entrée en équipes (binômes,
+ * docs/adr/0043), barème à zones. Une formule reste valide quel que soit le mode : il ne
  * règle que ce que l'éditeur propose. Domaine pur.
  * Licensed under GPL-3.0
  */
@@ -34,6 +35,7 @@ function phaseNeedsExpert(p: FormulaPhaseV2): boolean {
     p.qualification.mode === 'pool_heads' ||
     p.seeding === 'cumulative' ||
     p.boutOrder === 'free' ||
+    p.distribution === 'byLevel' ||
     isWavesOrder(p.boutOrder) ||
     zonesScoring(p)
   );
@@ -46,5 +48,11 @@ function phaseNeedsExpert(p: FormulaPhaseV2): boolean {
  */
 export function formulaNeedsExpert(f: FormulaV2, specialMode = false): boolean {
   // Mode spécial rapières : formule experte (qualification « têtes de poule », docs/adr/0043)
-  return specialMode || f.phases.some(phaseNeedsExpert) || !!f.general.postPoolSplitCriteria;
+  return (
+    specialMode ||
+    f.phases.some(phaseNeedsExpert) ||
+    !!f.general.postPoolSplitCriteria ||
+    // Entrée en équipes (binômes, docs/adr/0043)
+    f.general.entry?.kind === 'team'
+  );
 }

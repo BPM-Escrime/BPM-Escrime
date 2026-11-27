@@ -976,4 +976,37 @@ d('setRapieresTeams (docs/adr/0017)', () => {
       invoke(ctx, 'setRapieresTeams', { competitionId: comp.id, teams: [{ fencerId: 'x', info }] })
     ).rejects.toMatchObject({ code: 'fencer_not_found' });
   });
+
+  it('alias (docs/adr/0043, F4c) : écrit aussi membres, niveau, HANDI, catégorie et sexe sur le tireur', async () => {
+    const comp = await setup(2);
+    db.updateCompetition(comp.id, {
+      settings: { ...comp.settings, specialMode: 'rapieres' },
+    } as never);
+    const [team] = db.getFencersByCompetition(comp.id);
+    const info = {
+      level: 'beginner' as const,
+      fencers: [
+        { firstName: 'Ann', lastName: 'DUPONT', category: 'HANDI' as const, gender: 'F' as const },
+        { firstName: 'Bob', lastName: 'MARTIN', category: 'SENIOR' as const, gender: 'F' as const },
+      ],
+    };
+    await invoke(ctx, 'setRapieresTeams', {
+      competitionId: comp.id,
+      teams: [{ fencerId: team.id, info }],
+    });
+    // Session conservée (alias de compatibilité) ET champs du tireur
+    expect((db.getSessionState(comp.id) as any).rapieres.teams[team.id]).toEqual(info);
+    expect(db.getFencer(team.id)).toMatchObject({
+      level: 1,
+      handicap: true,
+      gender: 'F',
+      category: 'SEN',
+      members: [
+        { firstName: 'Ann', lastName: 'DUPONT', gender: 'F' },
+        { firstName: 'Bob', lastName: 'MARTIN', gender: 'F' },
+      ],
+    });
+    // Journal : identifiants seulement (ADR-0007), jamais les noms des membres
+    expect(JSON.stringify(db.eventLog.getSince(comp.id))).not.toContain('DUPONT');
+  });
 });

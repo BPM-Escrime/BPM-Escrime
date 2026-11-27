@@ -130,6 +130,44 @@ export const FencerCategoryField = z
   .optional()
   .describe('Catégorie d’âge (U9 … U20, SEN, V1 … V4 ; null : effacée, docs/adr/0039)');
 
+/** Membre d'une équipe (entrée en binômes, docs/adr/0043) */
+export const FencerMemberSchema = z.object({
+  lastName: z.string().trim().max(200),
+  firstName: z.string().trim().max(200),
+  gender: z.enum(['M', 'F']).optional(),
+  birthDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .describe('AAAA-MM-JJ'),
+});
+
+/** Membre lu (sortie) : indulgent sur la date, qui peut venir d'un import ancien */
+const FencerMemberOutSchema = FencerMemberSchema.extend({ birthDate: z.string().optional() });
+
+/** Entrée en équipes (docs/adr/0043) : champs optionnels des commandes d'inscription */
+export const FencerTeamEntryShape = {
+  members: z
+    .array(FencerMemberSchema)
+    .max(10)
+    .nullable()
+    .optional()
+    .describe(
+      'Équipe (binôme) : membres de l’équipe, le tireur porte le nom d’équipe ; null : effacés. Catégorie (moyenne des années de naissance) et sexe de l’équipe déduits quand ils ne sont pas donnés (docs/adr/0043)'
+    ),
+  level: z
+    .number()
+    .int()
+    .min(1)
+    .max(20)
+    .nullable()
+    .optional()
+    .describe(
+      'Niveau de l’équipe : indice (dès 1) dans les niveaux de la formule, du plus faible au plus fort'
+    ),
+  handicap: z.boolean().nullable().optional().describe('Marqueur « HANDI » de l’équipe'),
+};
+
 export const FencerSchema = z.object({
   id: z.string(),
   ref: z.number(),
@@ -150,5 +188,8 @@ export const FencerSchema = z.object({
   seedNumber: z.number().nullable(),
   initialRanking: z.number().nullable(),
   finalRanking: z.number().nullable(),
+  members: z.array(FencerMemberOutSchema).nullable(),
+  level: z.number().nullable(),
+  handicap: z.boolean().nullable(),
   photo: z.string().nullable(),
 });

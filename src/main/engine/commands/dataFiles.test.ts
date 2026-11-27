@@ -163,6 +163,39 @@ d('archive de tireurs .bpf', () => {
     expect(after.status).toBe(imported[0].status);
   });
 
+  it('équipe (docs/adr/0043) : membres, niveau et marqueur HANDI suivent le tireur', async () => {
+    const members = [
+      { lastName: 'DURAND', firstName: 'Éva', gender: 'F', birthDate: '1989-06-01' },
+      { lastName: 'PETIT', firstName: 'Noé' },
+    ];
+    db.updateFencer(addFencer('Les Lames', { license: 'EQ1' } as never).id, {
+      members,
+      level: 2,
+      handicap: true,
+    } as never);
+    const file = await run('getFencersArchive', { competitionId });
+    const target = db.createCompetition({ title: 'Équipes' } as never).id;
+    await run('importFencersArchive', { competitionId: target, content: file.content });
+    expect(db.getFencersByCompetition(target)[0]).toMatchObject({
+      members,
+      level: 2,
+      handicap: true,
+    });
+    // Archive forgée : membres illisibles ou hors bornes ignorés
+    const zip = new JSZip();
+    zip.file(
+      'fencers.json',
+      JSON.stringify([
+        { lastName: 'Forge', firstName: 'x', members: [3, { lastName: 5 }], level: 'fort' },
+      ])
+    );
+    const forged = (await zip.generateAsync({ type: 'nodebuffer' })).toString('base64');
+    await run('importFencersArchive', { competitionId: target, content: forged });
+    const forgedFencer = db.getFencersByCompetition(target).find(f => f.lastName === 'Forge')!;
+    expect(forgedFencer.members).toBeUndefined();
+    expect(forgedFencer.level).toBeUndefined();
+  });
+
   it('archive invalide : invalid_file ; épreuve inconnue : competition_not_found', async () => {
     const notZip = Buffer.from('nope').toString('base64');
     expect(

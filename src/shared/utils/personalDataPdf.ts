@@ -37,6 +37,9 @@ const IDENTITY_FIELDS = [
   'handedness',
   'laterality',
   'category',
+  'members',
+  'level',
+  'handicap',
   'notes',
 ];
 

@@ -100,4 +100,24 @@ describe('FencerList', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'fencerList.undo' }));
     expect(onSetFencerStatus).toHaveBeenLastCalledWith('1', FencerStatus.CHECKED_IN);
   });
+
+  it('entrée en équipes (docs/adr/0043) : colonne Niveau et marqueur HANDI', () => {
+    const team = { ...fencer('1', 'Les Lames'), level: 2, handicap: true } as Fencer;
+    const { unmount } = render(
+      <FencerList
+        fencers={[team]}
+        onCheckIn={vi.fn()}
+        onAddFencer={vi.fn()}
+        teamLevels={['beginner', 'intermediate', 'expert']}
+      />
+    );
+    expect(screen.getByText('fencerList.col_level')).toBeInTheDocument();
+    expect(screen.getByText('rapieres.level_intermediate')).toBeInTheDocument();
+    expect(screen.getByText(/teamEntry\.handicap/)).toBeInTheDocument();
+    unmount();
+    // Entrée individuelle : ni colonne, ni niveau
+    render(<FencerList fencers={[team]} onCheckIn={vi.fn()} onAddFencer={vi.fn()} />);
+    expect(screen.queryByText('fencerList.col_level')).toBeNull();
+    expect(screen.queryByText('rapieres.level_intermediate')).toBeNull();
+  });
 });

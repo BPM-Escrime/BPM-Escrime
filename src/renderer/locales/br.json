@@ -1500,7 +1500,9 @@
     "club_plan_time": "Eur",
     "club_plan_exercise": "Poelladenn",
     "club_plan_empty": "Poelladenn ebet rakwelet",
-    "club_plan_notes": "Notennoù"
+    "club_plan_notes": "Notennoù",
+    "col_level": "Live",
+    "handicap": "Handi"
   },
   "rsm": {
     "strip_plan": "Plan ar pistennoù",
@@ -1887,7 +1889,8 @@
     "col_category": "Rumm.",
     "compute_categories": "Jediñ ar rummadoù",
     "compute_categories_title": "Rummad oad ar c'hoarierien n'o deus hini ebet, diouzh an deiziad ganedigezh ha koulz ar genstrivadeg",
-    "compute_categories_done": "{{count}} rummad jedet ; {{missing}} c'hoarier hep deiziad ganedigezh"
+    "compute_categories_done": "{{count}} rummad jedet ; {{missing}} c'hoarier hep deiziad ganedigezh",
+    "col_level": "Live"
   },
   "questPhase": {
     "running_title": "Tro Quest o vont en-dro",
@@ -4803,7 +4806,16 @@
     "expert_mode": "Mod arbennigour",
     "expert_hint": "Rannadur, tro Quest, taolenn paouezet ha kefluniadurioù araokaet (par-ha-par e bord ar vevenn, tro-ioù kumulet, urzh ar stourmoù, jedadur dre gevennoù). Dibab ar c'hoskor-mañ.",
     "expert_forced": "Ur vrik pe ur c'hefluniadur arbennigour zo er furmskrid-mañ : mod arbennigour a chom enaouet evit ar cheñchamant-mañ.",
-    "remark_on_phase": "Evezhiadenn war ar bazenn-mañ"
+    "remark_on_phase": "Evezhiadenn war ar bazenn-mañ",
+    "entry": "Enskrivadur ar perzhiadeien",
+    "entry_individual": "Hiniennel",
+    "entry_team": "Skipailhoù a 2 (daouigoù)",
+    "entry_levels": "Liveoù, eus ar gwanañ d’ar c’hreñvañ",
+    "distribution": "Dispartiadur er poull",
+    "distribution_serpentine": "Gwenanenn diwar renk",
+    "distribution_by_level": "Dre live",
+    "entry_levels_hint": "Anvioù dispartiet gant virgulennoù, eus ar gwanañ d’ar c’hreñvañ ; an hini diwezhañ eo al live kreñvañ.",
+    "distribution_hint": "Dre live : strollet eo ar skipailhoù eus an hevelep live, eus an hini gwanañ d’an hini kreñvañ, poull goude poull."
   },
   "formulaTemplates": {
     "template": "Patrom furmulenn",
@@ -4896,5 +4908,15 @@
     "notice": "{{n}} c'hlezeier par-ha-par d'al lec'h {{rank}} evit {{places}} lec'h : {{names}}",
     "choose": "Petra ober gant ar re bar-ha-par evit an droc'h-mañ ?",
     "formula": "{{label}} (formulenn)"
+  },
+  "teamEntry": {
+    "team_name": "Anv ar skipailh",
+    "member_n": "Ezel {{n}}",
+    "unknown": "N'eo ket resisaet",
+    "auto_hint": "Rummad ha reizh a zeu eus an izili ma n'int ket resisaet.",
+    "members_required": "Skrivit anv ar skipailh hag un ezel da nebeutañ.",
+    "handicap": "Handi",
+    "level_unknown": "N'eo ket spisaet",
+    "handicap_hint": "Skipailh handisport : merk disheñvel diouzh ar rummad."
   }
 }

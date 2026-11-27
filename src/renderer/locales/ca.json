@@ -1500,7 +1500,9 @@
     "club_plan_time": "Horari",
     "club_plan_exercise": "Exercici",
     "club_plan_empty": "Cap exercici previst",
-    "club_plan_notes": "Notes"
+    "club_plan_notes": "Notes",
+    "col_level": "Nivell",
+    "handicap": "Handi"
   },
   "rsm": {
     "strip_plan": "Pla de pistes",
@@ -1887,7 +1889,8 @@
     "col_category": "Cat.",
     "compute_categories": "Calcular les categories",
     "compute_categories_title": "Categoria d'edat dels tiradors que no en tenen, segons la data de naixement i la temporada de la competició",
-    "compute_categories_done": "{{count}} categories calculades; {{missing}} tiradors sense data de naixement"
+    "compute_categories_done": "{{count}} categories calculades; {{missing}} tiradors sense data de naixement",
+    "col_level": "Nivell"
   },
   "questPhase": {
     "running_title": "Ronda Quest en curs",
@@ -4803,7 +4806,16 @@
     "expert_mode": "Mode expert",
     "expert_hint": "Escissió, Ronda Quest, quadre aturat i ajustos avançats (empats a la barra, rondes acumulades, ordre dels assalts, barem per zones). Preferència d'aquest equip.",
     "expert_forced": "Aquesta fórmula conté un bloc o un ajust expert: el mode expert continua actiu per a aquesta edició.",
-    "remark_on_phase": "Observació sobre aquesta fase"
+    "remark_on_phase": "Observació sobre aquesta fase",
+    "entry": "Inscripció dels participants",
+    "entry_individual": "Individual",
+    "entry_team": "Equips de 2 (parelles)",
+    "entry_levels": "Nivells, del més feble al més fort",
+    "distribution": "Repartiment a les poules",
+    "distribution_serpentine": "Serpentí segons la classificació",
+    "distribution_by_level": "Per nivell",
+    "entry_levels_hint": "Etiquetes separades per comes, de la més feble a la més forta; l’última és el nivell més fort.",
+    "distribution_hint": "Per nivell: els equips del mateix nivell s’agrupen, del més feble al més fort, poule rere poule."
   },
   "formulaTemplates": {
     "template": "Model de fórmula",
@@ -4896,5 +4908,15 @@
     "notice": "{{n}} tiradors empatats a la {{rank}}a posició per a {{places}} plaça(es): {{names}}",
     "choose": "Què cal fer amb aquests empats en aquest tall?",
     "formula": "{{label}} (fórmula)"
+  },
+  "teamEntry": {
+    "team_name": "Nom de l'equip",
+    "member_n": "Membre {{n}}",
+    "unknown": "No informat",
+    "auto_hint": "Categoria i sexe deduïts dels membres si no s'informen.",
+    "members_required": "Indiqueu el nom de l'equip i almenys un membre.",
+    "handicap": "Handi",
+    "level_unknown": "No especificat",
+    "handicap_hint": "Equip d'handiesport: marcador independent de la categoria."
   }
 }

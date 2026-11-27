@@ -21,7 +21,12 @@ import {
   calculatePoolRankingQuest,
 } from './poolCalculations';
 import type { PoolBoutOrderMode } from './poolBoutOrder';
-import { drawPools, type PoolSeparation } from '../domain/pools/poolDraw';
+import {
+  drawPools,
+  separationOfDistribution,
+  type PoolDistributionMode,
+  type PoolSeparation,
+} from '../domain/pools/poolDraw';
 import { isWavesOrder } from '../domain/pools/waves';
 import { mergeRoundRankings } from './poolRounds';
 import { isTieAtScoreLimit } from '../domain/match/matchEndValidation';
@@ -42,6 +47,8 @@ export interface BuildPoolsOptions {
   boutOrder?: PoolBoutOrderMode;
   /** Critères de séparation ordonnés ; défaut : classement, puis club et région */
   separation?: readonly PoolSeparation[];
+  /** Répartition de la formule (ADR-0043) */
+  distribution?: PoolDistributionMode;
   newId: () => string;
   now?: () => Date;
   /** Tirage des positions dans la poule ; défaut Math.random */
@@ -68,7 +75,7 @@ export function buildPools(fencers: Fencer[], options: BuildPoolsOptions): Pool[
   return drawPools(fencers, {
     poolCount,
     poolMaxScore: options.poolMaxScore,
-    separation: options.separation,
+    separation: separationOfDistribution(options.distribution, options.separation),
     boutOrder: options.boutOrder,
     round,
     newId: options.newId,

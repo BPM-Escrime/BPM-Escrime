@@ -8,6 +8,7 @@ import {
   createRapieresSession,
   type RapieresSession,
 } from '../../../shared/domain/rapieres/rapieres.types';
+import { rapieresTeamEntry } from '../../../shared/domain/rapieres/rapieresEntry';
 import type { Competition } from '../../../shared/types';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
@@ -51,9 +52,12 @@ export function endRapieresWaves(
 }
 
 /**
- * Composition des équipes (binômes) : l'équipe est un tireur de l'épreuve, sa composition vit
- * dans l'état (clé rapieres.teams). Données personnelles (noms des deux tireurs) : l'événement
- * ne porte que les identifiants (RGPD), la composition n'est pas rejouable depuis le journal.
+ * Composition des équipes (binômes) : l'équipe est un tireur de l'épreuve. Alias jusqu'à F4e
+ * (docs/adr/0043) : la composition est écrite sur le tireur (membres, niveau, HANDI, catégorie
+ * et sexe d'équipe, comme les commandes d'inscription) et, tant que le mode spécial existe,
+ * dans l'état (clé rapieres.teams, lue en repli). Données personnelles (noms des deux tireurs) :
+ * l'événement ne porte que les identifiants (RGPD), la composition n'est pas rejouable depuis le
+ * journal.
  */
 export function setRapieresTeams(
   ctx: CommandContext,
@@ -76,7 +80,13 @@ export function setRapieresTeams(
     const session = readSession(ctx, comp.id);
     const state = rapieresState(session);
     const teams = { ...state.teams };
-    for (const t of input.teams) teams[t.fencerId] = t.info;
+    for (const t of input.teams) {
+      teams[t.fencerId] = t.info;
+      ctx.db.updateFencer(
+        t.fencerId,
+        rapieresTeamEntry(t.info, comp.date ? new Date(comp.date) : new Date())
+      );
+    }
     writeSession(ctx, comp.id, { rapieres: { ...state, teams } });
     recordEvents(ctx, comp.id, [
       {
@@ -86,5 +96,6 @@ export function setRapieresTeams(
     ]);
   });
   emitSession(ctx, comp.id);
+  ctx.emitChange?.({ scope: 'fencers', competitionIds: [comp.id] });
   return report;
 }

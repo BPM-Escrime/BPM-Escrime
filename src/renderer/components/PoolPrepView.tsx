@@ -31,7 +31,7 @@ import { stripNumbers } from '../../shared/utils/stripRange';
 import { Button } from './common/Button';
 import { SkipForward, TriangleAlert, UserRound } from 'lucide-react';
 import { Icon } from './common/Icon';
-import { drawPools } from '../../shared/domain/pools/poolDraw';
+import { drawPools, type PoolDistributionMode } from '../../shared/domain/pools/poolDraw';
 
 const HINT_DISMISSED_KEY = 'bp_poolprep_hint_dismissed';
 const NAMES_SWAPPED_KEY = 'bp_poolprep_names_swapped';
@@ -87,6 +87,8 @@ interface PoolPrepViewProps {
   customDistribution?: (fencers: Fencer[], poolCount: number) => Fencer[][];
   /** Rang de niveau (0 = plus faible) : ajoute le critère « Niveau » qui regroupe les mêmes niveaux (#1441) */
   levelRankOf?: (fencer: Fencer) => number;
+  /** Répartition du tour (formule, ADR-0043) : « par niveau » active le critère « Niveau » */
+  distribution?: PoolDistributionMode;
   /** Critères proposés (défaut : club, région, nation [+ niveau]) — rapières : club + niveau */
   separationKeys?: Array<SeparationCriterionKey | 'byLevel' | 'byRanking'>;
   /** Affichage d'une ligne (rapières : nom d'équipe + bulle niveau) */
@@ -140,6 +142,7 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
   onLaunchActionChange,
   customDistribution,
   levelRankOf,
+  distribution,
   separationKeys,
   fencerDisplay,
   customMatchOrder,
@@ -174,7 +177,9 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
       { key: 'byClub' as const, label: 'Club', enabled: !customDistribution },
       { key: 'byRegion' as const, label: 'Région', enabled: !customDistribution },
       { key: 'byNation' as const, label: 'Nation', enabled: false },
-      ...(levelRankOf ? [{ key: 'byLevel' as const, label: 'Niveau', enabled: false }] : []),
+      ...(levelRankOf
+        ? [{ key: 'byLevel' as const, label: 'Niveau', enabled: distribution === 'byLevel' }]
+        : []),
     ].filter(c => !separationKeys || separationKeys.includes(c.key));
     if (!initialDraft) return defaults;
     // Ordre et activation repris du brouillon (#1649)

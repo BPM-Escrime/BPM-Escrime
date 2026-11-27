@@ -1394,4 +1394,22 @@ export const ALL_MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 54,
+    description:
+      'Entrée en équipes (binômes) : fencers.members, fencers.level, fencers.handicap (docs/adr/0043)',
+    up(db) {
+      // Colonnes sans valeur par défaut : NULL = tireur individuel, niveau et HANDI inconnus
+      //  - members : JSON [{ lastName, firstName, gender?, birthDate? }]
+      //  - level : indice (dès 1) dans les libellés de la formule, le plus grand est le plus fort
+      //  - handicap : 0 ou 1 (marqueur « HANDI », distinct de la catégorie)
+      for (const col of ['members TEXT', 'level INTEGER', 'handicap INTEGER']) {
+        try {
+          db.run(`ALTER TABLE fencers ADD COLUMN ${col}`);
+        } catch {
+          /* colonne déjà présente */
+        }
+      }
+    },
+  },
 ];
