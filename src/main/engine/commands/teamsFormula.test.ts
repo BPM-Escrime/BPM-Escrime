@@ -662,3 +662,59 @@ d('Formule d’équipe posée à la création (docs/adr/0044, amendement « Form
     expect(db.getCompetition(solo.competitionId)!.settings!.formula).toBeUndefined();
   });
 });
+
+d('Remplaçant choisi (substituteTeamFencer, inFencerId ; docs/adr/0044 amendée)', () => {
+  it('choix du 2e remplaçant ; non-remplaçant refusé ; un seul remplaçant par rencontre ; rejeu', async () => {
+    const comp = competition(Weapon.EPEE, { formula: teamFormula({ rule: { reserves: 2 } }) });
+    const [a, b] = await teamsRegistered(comp.id, ['A', 'B'], 3, 2);
+    await call('generateTeamPools', { competitionId: comp.id });
+    const id = `${comp.id}-p1-1`;
+    const m = match(id);
+    const side = m.teamAId === a ? 'fencerAId' : 'fencerBId';
+    const roster = db.getTeamsByCompetition(comp.id).find(t => t.id === a)!.fencers;
+    const [r1, r2] = roster.filter(f => f.isReserve).map(f => f.fencerId);
+    const out = m.bouts[0][side];
+    const other = db.getTeamsByCompetition(comp.id).find(t => t.id === b)!.fencers[3].fencerId;
+    const sub = (inFencerId?: string) =>
+      call('substituteTeamFencer', {
+        competitionId: comp.id,
+        matchId: id,
+        teamId: a,
+        outFencerId: out,
+        ...(inFencerId ? { inFencerId } : {}),
+      });
+    // Remplaçant de l'autre équipe, ou titulaire : refusés
+    await expect(sub(other)).rejects.toMatchObject({ code: 'invalid_composition' });
+    await expect(sub(roster[0].fencerId)).rejects.toMatchObject({ code: 'invalid_composition' });
+    const done = await sub(r2);
+    expect(done.inFencerId).toBe(r2);
+    expect(
+      match(id)
+        .bouts.filter(r => r[side] === r2)
+        .map(r => r.id)
+    ).toEqual(done.relayIds);
+    // Déjà entré (un seul remplaçant par équipe et par rencontre)
+    await expect(sub(r1)).rejects.toMatchObject({ code: 'reserve_used' });
+    expect(divergences(comp.id)).toEqual([]);
+  });
+
+  it('sans inFencerId : le premier remplaçant (comme avant)', async () => {
+    const comp = competition(Weapon.EPEE, { formula: teamFormula({ rule: { reserves: 2 } }) });
+    const [a] = await teamsRegistered(comp.id, ['A', 'B'], 3, 2);
+    await call('generateTeamPools', { competitionId: comp.id });
+    const id = `${comp.id}-p1-1`;
+    const m = match(id);
+    const side = m.teamAId === a ? 'fencerAId' : 'fencerBId';
+    const r1 = db
+      .getTeamsByCompetition(comp.id)
+      .find(t => t.id === a)!
+      .fencers.filter(f => f.isReserve)[0].fencerId;
+    const done = await call('substituteTeamFencer', {
+      competitionId: comp.id,
+      matchId: id,
+      teamId: a,
+      outFencerId: m.bouts[0][side],
+    });
+    expect(done.inFencerId).toBe(r1);
+  });
+});

@@ -383,13 +383,17 @@ export const teamRelayOperations = {
   substituteTeamFencer: command({
     description:
       'Épreuve par équipes : le remplaçant de l’équipe prend la place du tireur sortant dans les relais non terminés de la rencontre (o.99.5, o.99.6). Un seul remplaçant par équipe et par rencontre. ' +
-      'Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). ' +
+      'Remplaçant choisi par « inFencerId » (facultatif ; absent : le premier remplaçant ; remplaçants admis par la règle de rencontre de la phase, docs/adr/0044). ' +
+      'Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), « inFencerId » qui n’est pas un remplaçant de l’équipe (invalid_composition), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). ' +
       'Journal : TeamFencerSubstituted.',
     input: z.object({
       competitionId: CompetitionId,
       matchId: MatchId,
       teamId: Id.describe('Équipe du tireur sortant'),
       outFencerId: Id.describe('Tireur sortant'),
+      inFencerId: Id.optional().describe(
+        'Remplaçant qui entre (défaut : le premier remplaçant de l’équipe, docs/adr/0044)'
+      ),
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
       commandId: CommandId,

@@ -612,6 +612,8 @@ export function substituteTeamFencer(
     matchId: string;
     teamId: string;
     outFencerId: string;
+    /** Remplaçant choisi (docs/adr/0044) ; absent : le premier remplaçant */
+    inFencerId?: string;
     dryRun?: boolean;
   },
   now: Date = new Date()
@@ -628,6 +630,14 @@ export function substituteTeamFencer(
   const pool = team ? reserves(team).slice(0, allowed) : [];
   const key = side === 'A' ? 'fencerAId' : 'fencerBId';
   const reserveUsed = pool.some(id => m.bouts.some(b => b[key] === id));
+  // Remplaçant choisi : un remplaçant de l'équipe admis par la règle de la phase
+  if (input.inFencerId !== undefined && !reserveUsed && !pool.includes(input.inFencerId)) {
+    throw new CommandError(
+      'invalid_composition',
+      `Pas un remplaçant de l’équipe pour cette rencontre : ${input.inFencerId}`
+    );
+  }
+  const chosen = input.inFencerId ?? pool[0] ?? null;
   const plan = planSubstitution(
     m.bouts.map(b => ({
       relayId: b.id,
@@ -638,14 +648,14 @@ export function substituteTeamFencer(
     })),
     side,
     input.outFencerId,
-    pool[0] ?? null,
+    chosen,
     reserveUsed
   );
   if (!plan.ok) {
     const [code, message] = SUBSTITUTION_REFUSAL[plan.reason];
     throw new CommandError(code, message);
   }
-  const inFencerId = pool[0];
+  const inFencerId = chosen!;
   const out = {
     matchId: m.id,
     teamId: input.teamId,

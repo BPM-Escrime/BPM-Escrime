@@ -976,7 +976,7 @@ Aucun argument.
 
 ### `substitute_team_fencer` — Faire entrer le remplaçant
 
-*écriture.* Épreuve par équipes : le remplaçant de l’équipe prend la place du tireur sortant dans les relais non terminés de la rencontre (o.99.5, o.99.6). Un seul remplaçant par équipe et par rencontre. Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). Journal : TeamFencerSubstituted.
+*écriture.* Épreuve par équipes : le remplaçant de l’équipe prend la place du tireur sortant dans les relais non terminés de la rencontre (o.99.5, o.99.6). Un seul remplaçant par équipe et par rencontre. Remplaçant choisi par « inFencerId » (facultatif ; absent : le premier remplaçant ; remplaçants admis par la règle de rencontre de la phase, docs/adr/0044). Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), « inFencerId » qui n’est pas un remplaçant de l’équipe (invalid_composition), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). Journal : TeamFencerSubstituted.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -984,6 +984,7 @@ Aucun argument.
 | `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
 | `teamId` | string | oui | Équipe du tireur sortant |
 | `outFencerId` | string | oui | Tireur sortant |
+| `inFencerId` | string |  | Remplaçant qui entre (défaut : le premier remplaçant de l’équipe, docs/adr/0044) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
