@@ -187,8 +187,12 @@ d('Poste : réglages', () => {
       formulaExpert: true,
     });
     expect(await op('getResolvedSetting', { key: 'formulaExpert' })).toBe(true);
-    // Réglage d'épreuve `expertMode` (pistes, arbitres) : distinct
     expect((await refusal(op('updateStationSettings', { formulaExpert: 'oui' }))).code).toBe(
+      'invalid_input'
+    );
+    // Réglage d'épreuve `expertMode` (pistes, arbitres) : distinct, pas une préférence du poste
+    expect(await op('getStationSettings')).not.toHaveProperty('expertMode');
+    expect((await refusal(op('updateStationSettings', { expertMode: true }))).code).toBe(
       'invalid_input'
     );
   });
