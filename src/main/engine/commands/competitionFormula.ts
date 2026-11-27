@@ -140,7 +140,7 @@ export function assertProgressLock(
   next: CompetitionSettings
 ): void {
   const { stored, progress } = storedProgress(ctx, comp);
-  if (progress.length === 0) return;
+  if (progress.phases.length === 0) return;
   const issues = progressIssues(
     formulaOf({ weapon: comp.weapon, category: comp.category, settings: next }),
     progress,

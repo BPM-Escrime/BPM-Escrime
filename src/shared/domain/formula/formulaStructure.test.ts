@@ -25,7 +25,7 @@ import { bricksForLevel, formulaNeedsExpert } from './formulaExpert';
 import {
   formulaProgress,
   remarksMessage,
-  withClosedRounds,
+  startedProgress,
   type FormulaProgress,
 } from './formulaRemarks';
 
@@ -68,6 +68,9 @@ const rank = (take: number, ...phases: FormulaPhaseV2[]): SplitPhase => ({
     { label: 'B', phases: [tableau()] },
   ],
 });
+
+/** Natures des phases commencées (l'avancement sans ses tours clos) */
+const phasesOf = (...args: Parameters<typeof formulaProgress>) => formulaProgress(...args).phases;
 
 describe('remarques situées (ADR-0041)', () => {
   it('formule par défaut : aucune remarque', () => {
@@ -260,30 +263,30 @@ describe('S6 : phases commencées', () => {
   const f = formula(pool(), pool(), tableau());
 
   it('rien de commencé, ou structure respectée : aucune remarque', () => {
-    expect(formulaV2Issues(f, scope, [])).toEqual([]);
-    expect(formulaV2Issues(f, scope, ['pool', 'pool'])).toEqual([]);
-    expect(formulaV2Issues(f, scope, ['pool', 'pool', 'tableau'])).toEqual([]);
+    expect(formulaV2Issues(f, scope, startedProgress([]))).toEqual([]);
+    expect(formulaV2Issues(f, scope, startedProgress(['pool', 'pool']))).toEqual([]);
+    expect(formulaV2Issues(f, scope, startedProgress(['pool', 'pool', 'tableau']))).toEqual([]);
   });
 
   it('une phase commencée ne se retire pas', () => {
-    const r = formulaV2Issues(formula(pool(), tableau()), scope, ['pool', 'pool']);
+    const r = formulaV2Issues(formula(pool(), tableau()), scope, startedProgress(['pool', 'pool']));
     expect(r.map(x => [x.code, x.phase])).toEqual([['started_phase_moved', 'pool-1']]);
-    const gone = formulaV2Issues(formula(pool()), scope, ['pool', 'pool']);
+    const gone = formulaV2Issues(formula(pool()), scope, startedProgress(['pool', 'pool']));
     expect(gone.map(x => [x.code, x.phase])).toEqual([['started_phase_removed', 'pool-1']]);
     expect(codes(formula(pool()), scope)).toEqual([]);
   });
 
   it('ne change pas de nature, rien ne s’insère avant elle', () => {
     // Tableau inséré avant un tour commencé
-    const r = formulaV2Issues(formula(tableau(), pool()), scope, ['pool']);
+    const r = formulaV2Issues(formula(tableau(), pool()), scope, startedProgress(['pool']));
     expect(r.map(x => x.code)).toContain('started_phase_moved');
     expect(r.find(x => x.code === 'started_phase_moved')?.phase).toBe('pool-0');
   });
 
   it('un tour inséré après la dernière phase commencée est permis', () => {
-    expect(formulaV2Issues(formula(pool(), pool(), pool(), tableau()), scope, ['pool'])).toEqual(
-      []
-    );
+    expect(
+      formulaV2Issues(formula(pool(), pool(), pool(), tableau()), scope, startedProgress(['pool']))
+    ).toEqual([]);
   });
 });
 
@@ -293,7 +296,7 @@ describe('S6 : la qualification qui mène à une phase commencée ne change plus
   const stored = withRule({ mode: 'fixed_count', count: 8 }, tableau({ id: 't' }));
   const edited = (rule: AdvancementRule) => withRule(rule, tableau({ id: 't' }));
   const lock = (f: FormulaV2, progress: readonly ('pool' | 'tableau')[]) =>
-    formulaV2Issues(f, scope, progress, stored).filter(
+    formulaV2Issues(f, scope, startedProgress(progress), stored).filter(
       r => r.code === 'started_qualification_changed'
     );
 
@@ -321,7 +324,11 @@ describe('S6 : la qualification qui mène à une phase commencée ne change plus
   it('phase suivante pas commencée : la règle reste modifiable ; sans formule enregistrée, pas de contrôle', () => {
     expect(lock(edited({ mode: 'fixed_count', count: 4 }), ['pool'])).toEqual([]);
     expect(
-      formulaV2Issues(edited({ mode: 'fixed_count', count: 4 }), scope, ['pool', 'tableau'])
+      formulaV2Issues(
+        edited({ mode: 'fixed_count', count: 4 }),
+        scope,
+        startedProgress(['pool', 'tableau'])
+      )
     ).toEqual([]);
   });
 
@@ -334,7 +341,7 @@ describe('S6 : la qualification qui mène à une phase commencée ne change plus
       );
     const was = two({ mode: 'fixed_count', count: 12 }, { mode: 'fixed_count', count: 8 });
     const now = two({ mode: 'fixed_count', count: 10 }, { mode: 'fixed_count', count: 6 });
-    const r = formulaV2Issues(now, scope, ['pool', 'pool'], was);
+    const r = formulaV2Issues(now, scope, startedProgress(['pool', 'pool']), was);
     expect(r.map(x => [x.code, x.phase])).toEqual([['started_qualification_changed', 'pool-0']]);
   });
 });
@@ -353,18 +360,31 @@ describe('S6 : la qualification qui sort d’un tour de poules clos ne change pl
   const four = { mode: 'fixed_count', count: 4 } as const;
 
   it('tour clos, phase suivante pas commencée : verrouillé dès la clôture, sur sa carte', () => {
-    const r = lock(edited(four), withClosedRounds(['pool'], 1));
+    const r = lock(edited(four), startedProgress(['pool'], 1));
     expect(r.map(x => x.phase)).toEqual(['pool-0']);
     expect(r[0].message).toContain('clos');
   });
 
   it('tour non clos (lancé, en cours) : la règle reste modifiable', () => {
-    expect(lock(edited(four), withClosedRounds(['pool'], 0))).toEqual([]);
-    expect(lock(edited(four), ['pool'])).toEqual([]);
+    expect(lock(edited(four), startedProgress(['pool'], 0))).toEqual([]);
+    expect(lock(edited(four), startedProgress(['pool']))).toEqual([]);
+  });
+
+  it('avancement copié (déstructuration, JSON) : le tour clos reste verrouillé (#2353)', () => {
+    const progress = startedProgress(['pool'], 1);
+    const copies: FormulaProgress[] = [
+      { ...progress },
+      { ...progress, phases: [...progress.phases] },
+      JSON.parse(JSON.stringify(progress)),
+      structuredClone(progress),
+    ];
+    for (const copy of copies) {
+      expect(lock(edited(four), copy).map(x => x.phase)).toEqual(['pool-0']);
+    }
   });
 
   it('tour clos, règle identique : aucune remarque', () => {
-    expect(lock(edited({ mode: 'fixed_count', count: 8 }), withClosedRounds(['pool'], 1))).toEqual(
+    expect(lock(edited({ mode: 'fixed_count', count: 8 }), startedProgress(['pool'], 1))).toEqual(
       []
     );
   });
@@ -382,23 +402,23 @@ describe('S6 : la qualification qui sort d’un tour de poules clos ne change pl
         .map(r => r.phase);
     const was = two({ mode: 'fixed_count', count: 12 }, { mode: 'fixed_count', count: 8 });
     const now = two({ mode: 'fixed_count', count: 12 }, four);
-    expect(lock2(now, withClosedRounds(['pool', 'pool'], 1), was)).toEqual([]);
+    expect(lock2(now, startedProgress(['pool', 'pool'], 1), was)).toEqual([]);
     const later = two(four, { mode: 'fixed_count', count: 8 });
-    expect(lock2(later, withClosedRounds(['pool', 'pool'], 1), was)).toEqual(['pool-0']);
+    expect(lock2(later, startedProgress(['pool', 'pool'], 1), was)).toEqual(['pool-0']);
   });
 
   it('tableau arrêté clos : non concerné (ses réglages restent admis)', () => {
     const was = formula(pool(), tableau({ id: 't', stopAt: 8 }), pool());
     const now = formula(pool(), tableau({ id: 't', stopAt: 4 }), pool());
     expect(
-      formulaV2Issues(now, scope, withClosedRounds(['pool', 'tableau'], 1), was).map(x => x.code)
+      formulaV2Issues(now, scope, startedProgress(['pool', 'tableau'], 1), was).map(x => x.code)
     ).toEqual([]);
   });
 
   it('formulaProgress : porte les tours clos de l’historique, hors énumération', () => {
     const full = formula(pool(), pool(), tableau());
     const p = formulaProgress(full, { poolHistory: [[{}]], poolsLaunched: false });
-    expect(p).toEqual(['pool']);
+    expect(p.phases).toEqual(['pool']);
     expect(p.closedRounds).toBe(1);
     expect(formulaProgress(full, { pools: [{}], poolsLaunched: true }).closedRounds).toBe(0);
     expect(formulaProgress(full, {}).closedRounds).toBe(0);
@@ -410,28 +430,30 @@ describe('formulaProgress : phases commencées d’après l’état de session',
   const full = formula(pool(), pool(), tableau());
 
   it('rien : aucune phase', () => {
-    expect(formulaProgress(full, {})).toEqual([]);
-    expect(formulaProgress(full, { pools: [], poolsLaunched: false })).toEqual([]);
+    expect(phasesOf(full, {})).toEqual([]);
+    expect(phasesOf(full, { pools: [], poolsLaunched: false })).toEqual([]);
   });
 
   it('poules du tour courant lancées, ou tours clos dans l’historique', () => {
-    expect(formulaProgress(full, { pools: [{}] })).toEqual(['pool']);
-    expect(formulaProgress(full, { poolsLaunched: true })).toEqual(['pool']);
+    expect(phasesOf(full, { pools: [{}] })).toEqual(['pool']);
+    expect(phasesOf(full, { poolsLaunched: true })).toEqual(['pool']);
     // Tirage non lancé (état de session, moteur comme écran) : pas encore commencé
-    expect(formulaProgress(full, { pools: [{}], poolsLaunched: false })).toEqual([]);
-    expect(formulaProgress(full, { poolHistory: [[{}]], pools: [{}] })).toEqual(['pool', 'pool']);
-    expect(formulaProgress(full, { poolHistory: [[{}], [{}]] })).toEqual(['pool', 'pool']);
+    expect(phasesOf(full, { pools: [{}], poolsLaunched: false })).toEqual([]);
+    expect(phasesOf(full, { poolHistory: [[{}]], pools: [{}] })).toEqual(['pool', 'pool']);
+    expect(phasesOf(full, { poolHistory: [[{}], [{}]] })).toEqual(['pool', 'pool']);
   });
 
   it('tableau tiré : les tours qui le précèdent sont commencés', () => {
-    expect(
-      formulaProgress(full, { pools: [{}], poolHistory: [[{}]], tableauMatches: [{}] })
-    ).toEqual(['pool', 'pool', 'tableau']);
+    expect(phasesOf(full, { pools: [{}], poolHistory: [[{}]], tableauMatches: [{}] })).toEqual([
+      'pool',
+      'pool',
+      'tableau',
+    ]);
   });
 
   it('tableau tiré dans un groupe (tableaux séparés)', () => {
     expect(
-      formulaProgress(full, {
+      phasesOf(full, {
         poolHistory: [[{}], [{}]],
         groupTableaux: { M: { tableauMatches: [{}] } },
       })
@@ -439,21 +461,24 @@ describe('formulaProgress : phases commencées d’après l’état de session',
   });
 
   it('étape close : tableau arrêté commencé, tour d’après en cours', () => {
-    expect(formulaProgress(stopped, { stageHistory: [{}], poolHistory: [[{}]] })).toEqual([
+    expect(phasesOf(stopped, { stageHistory: [{}], poolHistory: [[{}]] })).toEqual([
       'pool',
       'tableau',
     ]);
-    expect(
-      formulaProgress(stopped, { stageHistory: [{}], poolHistory: [[{}]], pools: [{}] })
-    ).toEqual(['pool', 'tableau', 'pool']);
+    expect(phasesOf(stopped, { stageHistory: [{}], poolHistory: [[{}]], pools: [{}] })).toEqual([
+      'pool',
+      'tableau',
+      'pool',
+    ]);
   });
 
   it('scission faite', () => {
     const withSplit = formula(pool(), rank(8));
-    expect(formulaProgress(withSplit, { poolHistory: [[{}]] })).toEqual(['pool']);
-    expect(
-      formulaProgress(withSplit, { poolHistory: [[{}]], splitHistory: [{ label: 'A' }] })
-    ).toEqual(['pool', 'split']);
+    expect(phasesOf(withSplit, { poolHistory: [[{}]] })).toEqual(['pool']);
+    expect(phasesOf(withSplit, { poolHistory: [[{}]], splitHistory: [{ label: 'A' }] })).toEqual([
+      'pool',
+      'split',
+    ]);
   });
 
   it('Tour Quest ouvert', () => {
@@ -462,9 +487,9 @@ describe('formulaProgress : phases commencées d’après l’état de session',
       { kind: 'quest', id: id(), config: { enabled: true } } as FormulaPhaseV2,
       tableau()
     );
-    expect(formulaProgress(quest, { pools: [{}] })).toEqual(['pool']);
-    expect(formulaProgress(quest, { pools: [{}], questStarted: true })).toEqual(['pool', 'quest']);
-    expect(formulaProgress(quest, { poolHistory: [[{}]], tableauMatches: [{}] })).toEqual([
+    expect(phasesOf(quest, { pools: [{}] })).toEqual(['pool']);
+    expect(phasesOf(quest, { pools: [{}], questStarted: true })).toEqual(['pool', 'quest']);
+    expect(phasesOf(quest, { poolHistory: [[{}]], tableauMatches: [{}] })).toEqual([
       'pool',
       'quest',
       'tableau',

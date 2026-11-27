@@ -18,6 +18,8 @@ const formula = {
   ],
 } as unknown as FormulaV2;
 const pool = {} as Pool;
+const phasesOf = (input: Parameters<typeof screenFormulaProgress>[0]) =>
+  screenFormulaProgress(input).phases;
 const base = {
   formula,
   poolsLaunched: false,
@@ -31,21 +33,19 @@ const base = {
 
 describe('screenFormulaProgress (S6, ADR-0041)', () => {
   it('poules tirées mais non lancées : rien de commencé', () => {
-    expect(screenFormulaProgress({ ...base, pools: [pool] })).toEqual([]);
+    expect(phasesOf({ ...base, pools: [pool] })).toEqual([]);
   });
 
   it('tour 1 lancé, puis tour 1 joué et tour 2 lancé', () => {
-    expect(screenFormulaProgress({ ...base, poolsLaunched: true, pools: [pool] })).toEqual([
-      'pool',
-    ]);
+    expect(phasesOf({ ...base, poolsLaunched: true, pools: [pool] })).toEqual(['pool']);
     expect(
-      screenFormulaProgress({ ...base, poolsLaunched: true, pools: [pool], poolHistory: [[pool]] })
+      phasesOf({ ...base, poolsLaunched: true, pools: [pool], poolHistory: [[pool]] })
     ).toEqual(['pool', 'pool']);
   });
 
   it('tableau tiré après deux tours', () => {
     expect(
-      screenFormulaProgress({
+      phasesOf({
         ...base,
         poolHistory: [[pool], [pool]],
         tableauMatches: [{ id: '8-0' } as TableauMatch],

@@ -217,10 +217,10 @@ function lockedQualificationIssues(
   stored: FormulaV2
 ): FormulaRemark[] {
   const keys = phaseKeys(f.phases);
-  const closed = progress.closedRounds ?? 0;
+  const { phases: started, closedRounds: closed } = progress;
   const out: FormulaRemark[] = [];
   let round = 0;
-  for (let i = 0; i < progress.length; i++) {
+  for (let i = 0; i < started.length; i++) {
     const was = stored.phases[i];
     const now = f.phases[i];
     if (was?.kind !== 'pool') continue;
@@ -228,8 +228,8 @@ function lockedQualificationIssues(
     if (now?.kind !== 'pool' || ruleKey(was.qualification) === ruleKey(now.qualification)) continue;
     // Phase suivante commencée, ou à défaut tour clos (closePoolRound)
     const reason =
-      i + 1 < progress.length
-        ? `elle mène à une phase déjà commencée (${NAMES[progress[i + 1]]})`
+      i + 1 < started.length
+        ? `elle mène à une phase déjà commencée (${NAMES[started[i + 1]]})`
         : ordinal < closed
           ? 'le tour est clos, ses éliminés sont fixés'
           : null;
@@ -256,7 +256,7 @@ function lockedTableauModeIssues(
 ): FormulaRemark[] {
   const keys = phaseKeys(f.phases);
   const out: FormulaRemark[] = [];
-  for (let i = 0; i < progress.length; i++) {
+  for (let i = 0; i < progress.phases.length; i++) {
     const was = stored.phases[i];
     const now = f.phases[i];
     if (was?.kind !== 'tableau' || now?.kind !== 'tableau') continue;
@@ -284,7 +284,7 @@ export function progressIssues(
   progress: FormulaProgress,
   stored?: FormulaV2
 ): FormulaRemark[] {
-  const at = progress.findIndex((kind, i) => f.phases[i]?.kind !== kind);
+  const at = progress.phases.findIndex((kind, i) => f.phases[i]?.kind !== kind);
   if (at < 0)
     return stored
       ? [
@@ -292,8 +292,8 @@ export function progressIssues(
           ...lockedTableauModeIssues(f, progress, stored),
         ]
       : [];
-  const kind = progress[at];
-  const key = keyOfKinds(progress, at);
+  const kind = progress.phases[at];
+  const key = keyOfKinds(progress.phases, at);
   const found = f.phases[at];
   const name = `phase déjà commencée (${NAMES[kind]})`;
   return [
