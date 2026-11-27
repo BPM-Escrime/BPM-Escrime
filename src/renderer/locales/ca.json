@@ -4815,7 +4815,9 @@
     "distribution_serpentine": "Serpentí segons la classificació",
     "distribution_by_level": "Per nivell",
     "entry_levels_hint": "Etiquetes separades per comes, de la més feble a la més forta; l’última és el nivell més fort.",
-    "distribution_hint": "Per nivell: els equips del mateix nivell s’agrupen, del més feble al més fort, poule rere poule."
+    "distribution_hint": "Per nivell: els equips del mateix nivell s’agrupen, del més feble al més fort, poule rere poule.",
+    "ranking_filters": "Filtres de la classificació final",
+    "ranking_filters_hint": "Criteris per filtrar la classificació final (pantalla, PDF, CSV): una classificació filtrada es renumera des de 1. Només és una vista: la classificació publicada continua sent la completa."
   },
   "formulaTemplates": {
     "template": "Model de fórmula",
@@ -4918,5 +4920,16 @@
     "handicap": "Handi",
     "level_unknown": "No especificat",
     "handicap_hint": "Equip d'handiesport: marcador independent de la categoria."
+  },
+  "rankingFilters": {
+    "title": "Filtres de la classificació",
+    "category": "Categoria",
+    "gender": "Sexe",
+    "level": "Nivell",
+    "handicap": "Handi",
+    "all_categories": "Totes les categories",
+    "all_genders": "Tots els sexes",
+    "all_levels": "Tots els nivells",
+    "handicap_only": "Només handi"
   }
 }

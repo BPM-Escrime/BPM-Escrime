@@ -75,6 +75,13 @@ describe('applyBlackCardRanking', () => {
     expect(ids(applyBlackCardRanking(once))).toEqual(ids(once));
   });
 
+  it('prédicat : tout exclu au bas sans rang (classement final générique, ADR-0043, F4d)', () => {
+    const l = [mk('a', 1), mk('b', 2, false, FencerStatus.EXCLUDED), mk('c', 3)];
+    expect(
+      ids(applyBlackCardRanking(l, new Map(), f => f.status === FencerStatus.EXCLUDED))
+    ).toEqual(['a:1', 'c:2', 'b:null']);
+  });
+
   it('exclu simple (sans carton noir) : rang conservé', () => {
     const l = [
       mk('a', 1),

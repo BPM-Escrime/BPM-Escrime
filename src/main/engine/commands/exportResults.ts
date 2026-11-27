@@ -85,7 +85,7 @@ export async function exportResults(
       content = resultsXml(data);
       break;
     case 'fff':
-      content = encodeFFFWin1252(exportResultsToFFF(competition, data.finalResults));
+      content = encodeFFFWin1252(exportResultsToFFF(competition, data.finalRanking));
       break;
     case 'csv':
       content = exportRankingCSV(data.overallRanking);
@@ -93,7 +93,7 @@ export async function exportResults(
     case 'html':
     case 'pdf': {
       const html = generateResultsHTML(
-        data.finalResults,
+        data.finalRanking,
         competition.title,
         options.logo ?? undefined
       );

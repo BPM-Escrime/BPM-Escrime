@@ -49,6 +49,7 @@ import {
   splitTakeIssues,
 } from './formulaStructure';
 import { tiesIssue } from '../ranking/advancement';
+import { normalizeRankingFilterKeys, rankingFilterKeysIssue } from '../ranking/rankingFilters';
 export { tiesIssue };
 
 const isPool = (p: FormulaPhaseV2): p is PoolRoundPhase => p.kind === 'pool';
@@ -416,7 +417,13 @@ const QUEST_FIELDS = [
   'numberOfArenas',
   'opponentConstraint',
 ] as const;
-const GENERAL_FIELDS = ['restTimeSeconds', 'ruleSet', 'postPoolSplitCriteria', 'entry'] as const;
+const GENERAL_FIELDS = [
+  'restTimeSeconds',
+  'ruleSet',
+  'postPoolSplitCriteria',
+  'entry',
+  'rankingFilters',
+] as const;
 
 /**
  * Anciens noms (ADR-0033). Ceux de l'épée… Sabre Laser (poolMaxScore…) gardent leur sens : un
@@ -706,6 +713,7 @@ export function applyOperationsV2(
       const {
         postPoolSplitCriteria: coupled,
         entry,
+        rankingFilters,
         ...rest
       } = o.settings as Partial<FormulaV2['general']>;
       f = { ...f, general: { ...f.general, ...rest } };
@@ -717,6 +725,18 @@ export function applyOperationsV2(
         f = {
           ...f,
           general: entry && entry.kind === 'team' ? { ...general, entry } : general,
+        };
+      }
+      if ('rankingFilters' in o.settings) {
+        // null ou liste vide : clé absente (aucun filtre) ; sinon critères connus et distincts
+        const { rankingFilters: _oldFilters, ...general } = f.general;
+        const issue = rankingFilters == null ? null : rankingFilterKeysIssue(rankingFilters);
+        if (issue) throw new FormulaOperationError(`${where} : « rankingFilters » ${issue}`);
+        f = {
+          ...f,
+          general: rankingFilters?.length
+            ? { ...general, rankingFilters: normalizeRankingFilterKeys(rankingFilters) }
+            : general,
         };
       }
       // Compétition couplée : scission par sexe dont les branches restent (ADR-0039, E3)
@@ -808,6 +828,10 @@ function formulaIssues(
   out.push(...fightPhaseIssues(f.phases));
   const entry = f.general.entry && !inBranch ? entryIssue(f.general.entry) : null;
   if (entry) out.push(remark('invalid_entry', null, `entrée : ${entry}`));
+  const filters =
+    f.general.rankingFilters && !inBranch ? rankingFilterKeysIssue(f.general.rankingFilters) : null;
+  if (filters)
+    out.push(remark('invalid_ranking_filters', null, `filtres du classement : ${filters}`));
   const pools = f.phases.filter(isPool);
   pools.forEach((p, r) => {
     if (p.distribution !== undefined && !POOL_DISTRIBUTIONS.includes(p.distribution))

@@ -7,7 +7,11 @@ import { DatabaseManager } from '../../../database';
 import { hasNodeSqlite } from '../../../database/testing/nodeSqliteDatabase';
 import { Category, FencerStatus, Gender, Weapon } from '../../../shared/types';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
-import { entryOf, poolDistributionOfRound } from '../../../shared/domain/formula/formulaV2';
+import {
+  entryOf,
+  poolDistributionOfRound,
+  rankingFiltersOf,
+} from '../../../shared/domain/formula/formulaV2';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
 
@@ -106,6 +110,42 @@ d('entrée en équipes : réglage de la formule (docs/adr/0043)', () => {
       operations: [{ op: 'setPhase', phase: 'pool-0', settings: { distribution: null } }],
     });
     expect(poolDistributionOfRound(settings(), 1)).toBe('serpentine');
+  });
+});
+
+d('filtres du classement final : réglage de la formule (docs/adr/0043, F4d)', () => {
+  it('aucun par défaut ; critères réglables, vides ou null : retirés', async () => {
+    expect(rankingFiltersOf(settings().formula)).toEqual([]);
+    await call('updateCompetitionFormula', {
+      operations: [
+        { op: 'setGeneral', settings: { rankingFilters: ['handicap', 'category', 'level'] } },
+      ],
+    });
+    expect(rankingFiltersOf(settings().formula)).toEqual(['category', 'level', 'handicap']);
+    await call('updateCompetitionFormula', {
+      operations: [{ op: 'setGeneral', settings: { rankingFilters: [] } }],
+    });
+    expect(settings().formula?.general.rankingFilters).toBeUndefined();
+    await call('updateCompetitionFormula', {
+      operations: [{ op: 'setGeneral', settings: { rankingFilters: ['gender'] } }],
+    });
+    await call('updateCompetitionFormula', {
+      operations: [{ op: 'setGeneral', settings: { rankingFilters: null } }],
+    });
+    expect(settings().formula?.general.rankingFilters).toBeUndefined();
+  });
+
+  it.each([
+    [['club'], 'rankingFilters'],
+    [['level', 'level'], 'distincts'],
+    ['category', 'liste'],
+  ])('critères %j refusés', async (rankingFilters, message) => {
+    await expect(
+      call('updateCompetitionFormula', {
+        operations: [{ op: 'setGeneral', settings: { rankingFilters } }],
+      })
+    ).rejects.toThrow(message);
+    expect(settings().formula?.general.rankingFilters).toBeUndefined();
   });
 });
 

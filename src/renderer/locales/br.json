@@ -4815,7 +4815,9 @@
     "distribution_serpentine": "Gwenanenn diwar renk",
     "distribution_by_level": "Dre live",
     "entry_levels_hint": "Anvioù dispartiet gant virgulennoù, eus ar gwanañ d’ar c’hreñvañ ; an hini diwezhañ eo al live kreñvañ.",
-    "distribution_hint": "Dre live : strollet eo ar skipailhoù eus an hevelep live, eus an hini gwanañ d’an hini kreñvañ, poull goude poull."
+    "distribution_hint": "Dre live : strollet eo ar skipailhoù eus an hevelep live, eus an hini gwanañ d’an hini kreñvañ, poull goude poull.",
+    "ranking_filters": "Siloù ar renkadur diwezhañ",
+    "ranking_filters_hint": "Dibarzhioù evit silañ ar renkadur diwezhañ (skramm, PDF, CSV) : ur renkadur silet a vez niverennet adalek 1. Diskwel hepken : ar renkadur embannet a chom ar renkadur klok."
   },
   "formulaTemplates": {
     "template": "Patrom furmulenn",
@@ -4918,5 +4920,16 @@
     "handicap": "Handi",
     "level_unknown": "N'eo ket spisaet",
     "handicap_hint": "Skipailh handisport : merk disheñvel diouzh ar rummad."
+  },
+  "rankingFilters": {
+    "title": "Siloù ar renkadur",
+    "category": "Rummad",
+    "gender": "Reizh",
+    "level": "Live",
+    "handicap": "Handi",
+    "all_categories": "An holl rummadoù",
+    "all_genders": "An holl ryzhoù",
+    "all_levels": "An holl niveloù",
+    "handicap_only": "Handi hepken"
   }
 }

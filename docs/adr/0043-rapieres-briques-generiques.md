@@ -1,6 +1,6 @@
 # ADR-0043 — Tournoi des rapières en briques génériques de la formule, fin du mode spécial
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (poules de 2 à 15 en vagues classiques ; ordre d'entrée des têtes de poule ; niveaux de la liste des rapières, du plus faible au plus fort ; exports des membres ; validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (poules de 2 à 15 en vagues classiques ; ordre d'entrée des têtes de poule ; niveaux de la liste des rapières, du plus faible au plus fort ; exports des membres ; classement final générique (non-qualifiés, exclus et carton noir sans rang) et périmètre des filtres ; validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F4, décision D8), #1948, #1441, #1118 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (phases), [ADR-0040](0040-ex-aequo-a-la-barre.md) (qualification), [ADR-0039](0039-scission-competitions-filles.md) (catégorie du tireur), s'appuie sur [ADR-0007](0007-format-evenement.md), [ADR-0008](0008-nommage-contrat.md), [ADR-0011](0011-migrations-schema-3-0.md), [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -95,13 +95,21 @@ birthDate? }]`), `fencers.level` (`INTEGER NULL`, indice dans `levels` à partir
 **F4d — Classements dérivés filtrés**
 
 - Réglage général `rankingFilters: Array<'category' | 'gender' | 'level' | 'handicap'>` :
-  l'écran, les PDF et l'export du classement final proposent ces filtres ; un classement
+  l'écran, le PDF du classement, l'impression et l'export CSV du classement final proposent ces
+  filtres (le livre PDF signé et les exports fédéraux restent complets) ; un classement
   filtré renumérote depuis 1, égalités gardées (`filterRanking`, déplacé dans le domaine
   générique). C'est un affichage : pas de compétition fille (contrairement à ADR-0039), pas
   de publication GREG / FTP distincte.
-- Le classement final « tableau, puis non-qualifiés dans l'ordre des poules, exclus en
+- Classement final générique, pour toutes les épreuves (écran, PDF, exports, comme le moteur) :
+  le tableau, puis les non-qualifiés dans l'ordre des poules ; un tireur exclu (y compris après
+  son entrée au tableau) est inscrit au bas sans classement, comme un carton noir (rang « - »),
+  et les autres sont renumérotés (FIE o.74). Le classement des rapières (`mergeFinalRanking`)
+  s'y aligne avant le retrait, vérifié par un test de parité. _(Amendé le 2026-11-27 : remplace
+  « Le classement final « tableau, puis non-qualifiés dans l'ordre des poules, exclus en
   dernier » (`mergeFinalRanking`) est celui des formules à un tour suivies d'un tableau qualifié
-  par `pool_heads` ; il est vérifié identique au classement générique avant le retrait.
+  par `pool_heads` ; il est vérifié identique au classement générique avant le retrait. » ; trois
+  écarts tranchés par le mainteneur : non-qualifiés listés, exclu sans rang, carton noir sans
+  rang.)_
 
 **F4e — Fin du mode spécial**
 

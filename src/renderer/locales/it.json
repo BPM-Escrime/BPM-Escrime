@@ -4815,7 +4815,9 @@
     "distribution_serpentine": "Serpentina sulla classifica",
     "distribution_by_level": "Per livello",
     "entry_levels_hint": "Etichette separate da virgole, dalla più debole alla più forte; l’ultima è il livello più forte.",
-    "distribution_hint": "Per livello: le squadre dello stesso livello sono raggruppate, dalla più debole alla più forte, girone dopo girone."
+    "distribution_hint": "Per livello: le squadre dello stesso livello sono raggruppate, dalla più debole alla più forte, girone dopo girone.",
+    "ranking_filters": "Filtri della classifica finale",
+    "ranking_filters_hint": "Criteri per filtrare la classifica finale (schermo, PDF, CSV): una classifica filtrata viene rinumerata da 1. Solo visualizzazione: la classifica pubblicata resta quella completa."
   },
   "formulaTemplates": {
     "template": "Modello di formula",
@@ -4918,5 +4920,16 @@
     "handicap": "Para",
     "level_unknown": "Non specificato",
     "handicap_hint": "Squadra paralimpica: contrassegno distinto dalla categoria."
+  },
+  "rankingFilters": {
+    "title": "Filtri della classifica",
+    "category": "Categoria",
+    "gender": "Sesso",
+    "level": "Livello",
+    "handicap": "Para",
+    "all_categories": "Tutte le categorie",
+    "all_genders": "Tutti i sessi",
+    "all_levels": "Tutti i livelli",
+    "handicap_only": "Solo Para"
   }
 }

@@ -1,0 +1,12 @@
+/* Barre des filtres du classement final (docs/adr/0043, F4d) */
+.ranking-filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.ranking-filter-bar .form-select {
+  width: auto;
+}

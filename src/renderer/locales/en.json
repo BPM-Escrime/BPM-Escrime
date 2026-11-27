@@ -4815,7 +4815,9 @@
     "distribution_serpentine": "Serpentine on the ranking",
     "distribution_by_level": "By level",
     "entry_levels_hint": "Labels separated by commas, weakest to strongest; the last is the strongest level.",
-    "distribution_hint": "By level: teams of the same level are grouped together, from weakest to strongest, pool after pool."
+    "distribution_hint": "By level: teams of the same level are grouped together, from weakest to strongest, pool after pool.",
+    "ranking_filters": "Final ranking filters",
+    "ranking_filters_hint": "Criteria offered to filter the final ranking (screen, PDF, CSV): a filtered ranking is renumbered from 1. Display only: the published ranking remains the full ranking."
   },
   "formulaTemplates": {
     "template": "Formula template",
@@ -4918,5 +4920,16 @@
     "handicap": "Para",
     "level_unknown": "Not specified",
     "handicap_hint": "Para team: a marker separate from the category."
+  },
+  "rankingFilters": {
+    "title": "Ranking filters",
+    "category": "Category",
+    "gender": "Gender",
+    "level": "Level",
+    "handicap": "Para",
+    "all_categories": "All age categories",
+    "all_genders": "All genders",
+    "all_levels": "All levels",
+    "handicap_only": "Para only"
   }
 }

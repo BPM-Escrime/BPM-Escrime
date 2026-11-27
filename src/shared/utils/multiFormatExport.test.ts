@@ -397,15 +397,50 @@ describe('exportResultsXMLFFE', () => {
       expect(rankOf(xml, 'Deux')).toBe('');
     });
 
-    it('exclusion simple : rang conservé', () => {
+    it('poules seules : les ex aequo du classement des poules sont gardés (ADR-0043, F4d)', () => {
+      const g = ['Un', 'Deux', 'Trois', 'Quatre'].map((n, i) =>
+        makeFencer(`g${i}`, i + 1, { lastName: n })
+      );
+      const tied = [
+        makeRanking(g[0], { rank: 1 }),
+        makeRanking(g[1], { rank: 2 }),
+        makeRanking(g[2], { rank: 2 }),
+        makeRanking(g[3], { rank: 4 }),
+      ];
+      const xml = exportResultsXMLFFE(makeCompetition(), tied, []);
+      expect(['Un', 'Deux', 'Trois', 'Quatre'].map(n => rankOf(xml, n))).toEqual([
+        '1',
+        '2',
+        '2',
+        '4',
+      ]);
+      // Tableau joué, éliminés des poules à égalité : rang du classement des poules gardé
+      const withTableau = exportResultsXMLFFE(makeCompetition(), tied, [{ rank: 1, fencer: g[0] }]);
+      expect(['Un', 'Deux', 'Trois', 'Quatre'].map(n => rankOf(withTableau, n))).toEqual([
+        '1',
+        '2',
+        '2',
+        '4',
+      ]);
+      // Un exclu : sans rang, les suivants remontent ; les ex aequo derrière un exclu sont
+      // départagés par le rang de poules, règle du carton noir (#1418) étendue à tout exclu
+      const out = { ...g[0], status: FencerStatus.EXCLUDED };
+      const excluded = exportResultsXMLFFE(makeCompetition(), tied, [], undefined, undefined, [
+        out,
+      ]);
+      expect(rankOf(excluded, 'Un')).toBe('');
+      expect(['Deux', 'Trois', 'Quatre'].map(n => rankOf(excluded, n))).toEqual(['1', '2', '3']);
+    });
+
+    it('exclusion simple : sans rang, les suivants remontent (FIE o.74, ADR-0043 amendée, F4d)', () => {
       const out = { ...f2, status: FencerStatus.EXCLUDED };
       const xml = exportResultsXMLFFE(makeCompetition(), ranking, finals, undefined, undefined, [
         f1,
         out,
         f3,
       ]);
-      expect(rankOf(xml, 'Deux')).toBe('2');
-      expect(rankOf(xml, 'Trois')).toBe('3');
+      expect(rankOf(xml, 'Deux')).toBe('');
+      expect(rankOf(xml, 'Trois')).toBe('2');
     });
   });
 });

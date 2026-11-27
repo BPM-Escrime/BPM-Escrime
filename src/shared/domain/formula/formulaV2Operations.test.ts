@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { Category, CompetitionSettings, Weapon } from '../../types';
 import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
 import { createDefaultCustomFormula } from '../../utils/tournamentTemplates';
-import { flatSettingsOf, formulaOf, phaseSettings } from './formulaV2';
+import { flatSettingsOf, formulaOf, phaseSettings, rankingFiltersOf } from './formulaV2';
+import { formulaNeedsExpert } from './formulaExpert';
 import {
   applyOperationsV2,
   canRemoveV2,
@@ -310,6 +311,54 @@ describe('tableau arrêté à N (ADR-0037, D2)', () => {
     };
     expect(formulaV2Issues(bad2, { weapon: Weapon.EPEE })).toEqual([
       'tour 1 : répartition inconnue',
+    ]);
+  });
+
+  it('filtres du classement final : aller et retour, ordre canonique, vide = retiré (docs/adr/0043, F4d)', () => {
+    const base = formulaOf(epee());
+    const f = applyOperationsV2(
+      epee(),
+      [{ op: 'setGeneral', settings: { rankingFilters: ['handicap', 'category'] } }],
+      id
+    );
+    expect(f.general.rankingFilters).toEqual(['category', 'handicap']);
+    expect(formulaNeedsExpert(f)).toBe(true);
+    expect(formulaNeedsExpert(base)).toBe(false);
+    const there = operationsBetweenV2(base, f);
+    expect(there).toEqual([
+      { op: 'setGeneral', settings: { rankingFilters: ['category', 'handicap'] } },
+    ]);
+    // Retour : réglage retiré (null), liste vide aussi
+    const back = operationsBetweenV2(f, base);
+    expect(back).toEqual([{ op: 'setGeneral', settings: { rankingFilters: null } }]);
+    const withFilters = { ...epee(), settings: { ...epee().settings, formula: f } };
+    for (const empty of [null, []]) {
+      const again = applyOperationsV2(
+        withFilters,
+        [{ op: 'setGeneral', settings: { rankingFilters: empty } }],
+        id
+      );
+      expect('rankingFilters' in again.general).toBe(false);
+    }
+    expect(rankingFiltersOf(f)).toEqual(['category', 'handicap']);
+    expect(rankingFiltersOf(base)).toEqual([]);
+  });
+
+  it('filtres du classement final invalides : refus de l’opération et remarque bloquante', () => {
+    expect(() =>
+      applyOperationsV2(epee(), [{ op: 'setGeneral', settings: { rankingFilters: ['club'] } }], id)
+    ).toThrow(/rankingFilters/);
+    expect(() =>
+      applyOperationsV2(
+        epee(),
+        [{ op: 'setGeneral', settings: { rankingFilters: ['level', 'level'] } }],
+        id
+      )
+    ).toThrow(/distincts/);
+    const f = formulaOf(epee());
+    const bad = { ...f, general: { ...f.general, rankingFilters: ['x'] as never } };
+    expect(formulaV2Issues(bad, { weapon: Weapon.EPEE })).toEqual([
+      'filtres du classement : critère inconnu (category | gender | level | handicap)',
     ]);
   });
 

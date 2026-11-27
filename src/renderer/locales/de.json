@@ -4815,7 +4815,9 @@
     "distribution_serpentine": "Schlangenverteilung nach Rangliste",
     "distribution_by_level": "Nach Niveau",
     "entry_levels_hint": "Bezeichnungen durch Kommas getrennt, vom schwächsten zum stärksten; die letzte ist das stärkste Niveau.",
-    "distribution_hint": "Nach Niveau: Teams desselben Niveaus werden zusammengefasst, vom schwächsten zum stärksten, Gruppe für Gruppe."
+    "distribution_hint": "Nach Niveau: Teams desselben Niveaus werden zusammengefasst, vom schwächsten zum stärksten, Gruppe für Gruppe.",
+    "ranking_filters": "Filter der Endrangliste",
+    "ranking_filters_hint": "Kriterien zum Filtern der Endrangliste (Bildschirm, PDF, CSV): Eine gefilterte Rangliste wird ab 1 neu nummeriert. Nur Anzeige: Die veröffentlichte Rangliste bleibt die vollständige Rangliste."
   },
   "formulaTemplates": {
     "template": "Formelvorlage",
@@ -4918,5 +4920,16 @@
     "handicap": "Para",
     "level_unknown": "Nicht festgelegt",
     "handicap_hint": "Para-Team: eigene Markierung, unabhängig von der Kategorie."
+  },
+  "rankingFilters": {
+    "title": "Ranglistenfilter",
+    "category": "Kategorie",
+    "gender": "Geschlecht",
+    "level": "Niveau",
+    "handicap": "Para",
+    "all_categories": "Alle Altersklassen",
+    "all_genders": "Alle Geschlechter",
+    "all_levels": "Alle Stufen",
+    "handicap_only": "Nur Para"
   }
 }

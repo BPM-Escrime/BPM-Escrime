@@ -31,17 +31,22 @@ export const isBlackCarded = (f: Pick<Fencer, 'status' | 'exclusionReason'>): bo
  */
 export function applyBlackCardRanking<T extends RankedResult>(
   results: readonly T[],
-  seedRank: ReadonlyMap<string, number> = new Map()
+  seedRank: ReadonlyMap<string, number> = new Map(),
+  /**
+   * Tireurs inscrits au bas sans classement : carton noir par défaut ; le classement final
+   * générique y met tout exclu (docs/adr/0043, F4d ; FIE o.74)
+   */
+  isUnranked: (fencer: RankedFencer) => boolean = isBlackCarded
 ): T[] {
-  if (!results.some(r => isBlackCarded(r.fencer))) return [...results];
+  if (!results.some(r => isUnranked(r.fencer))) return [...results];
 
   const seed = (r: T) => seedRank.get(r.fencer.id) ?? Number.MAX_SAFE_INTEGER;
   const byRank = (a: T, b: T) =>
     (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER) || seed(a) - seed(b);
 
   const sorted = [...results].sort(byRank);
-  const carded = sorted.filter(r => isBlackCarded(r.fencer));
-  const ranked = sorted.filter(r => !isBlackCarded(r.fencer));
+  const carded = sorted.filter(r => isUnranked(r.fencer));
+  const ranked = sorted.filter(r => !isUnranked(r.fencer));
 
   // Nombre de tireurs au carton noir classés avant chaque tireur : 0 => rang conservé
   const out: T[] = ranked.map((r, i) => {

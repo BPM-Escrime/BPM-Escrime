@@ -4815,7 +4815,9 @@
     "distribution_serpentine": "Serpentina según la clasificación",
     "distribution_by_level": "Por nivel",
     "entry_levels_hint": "Etiquetas separadas por comas, de la más débil a la más fuerte; la última es el nivel más fuerte.",
-    "distribution_hint": "Por nivel: los equipos del mismo nivel se agrupan, del más débil al más fuerte, poule tras poule."
+    "distribution_hint": "Por nivel: los equipos del mismo nivel se agrupan, del más débil al más fuerte, poule tras poule.",
+    "ranking_filters": "Filtros de la clasificación final",
+    "ranking_filters_hint": "Criterios para filtrar la clasificación final (pantalla, PDF, CSV): una clasificación filtrada se renumera desde 1. Solo es una vista: la clasificación publicada sigue siendo la completa."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",
@@ -4918,5 +4920,16 @@
     "handicap": "Adaptado",
     "level_unknown": "Sin especificar",
     "handicap_hint": "Equipo de deporte adaptado: marca independiente de la categoría."
+  },
+  "rankingFilters": {
+    "title": "Filtros de la clasificación",
+    "category": "Categoría",
+    "gender": "Sexo",
+    "level": "Nivel",
+    "handicap": "Adaptado",
+    "all_categories": "Todas las categorías",
+    "all_genders": "Todos los sexos",
+    "all_levels": "Todos los niveles",
+    "handicap_only": "Solo adaptado"
   }
 }

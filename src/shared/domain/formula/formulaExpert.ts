@@ -4,7 +4,7 @@
  * scission, Tour Quest, tableau arrêté, ex aequo à la barre, qualification « têtes de poule »
  * (`pool_heads`, docs/adr/0043), répartition par cumul des tours,
  * ordre des matchs libre ou en vagues, répartition par niveau, entrée en équipes (binômes,
- * docs/adr/0043), barème à zones. Une formule reste valide quel que soit le mode : il ne
+ * docs/adr/0043), filtres du classement final, barème à zones. Une formule reste valide quel que soit le mode : il ne
  * règle que ce que l'éditeur propose. Domaine pur.
  * Licensed under GPL-3.0
  */
@@ -53,6 +53,8 @@ export function formulaNeedsExpert(f: FormulaV2, specialMode = false): boolean {
     f.phases.some(phaseNeedsExpert) ||
     !!f.general.postPoolSplitCriteria ||
     // Entrée en équipes (binômes, docs/adr/0043)
-    f.general.entry?.kind === 'team'
+    f.general.entry?.kind === 'team' ||
+    // Filtres du classement final (docs/adr/0043, F4d)
+    !!f.general.rankingFilters?.length
   );
 }

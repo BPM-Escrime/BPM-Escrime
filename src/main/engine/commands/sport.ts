@@ -96,6 +96,7 @@ import {
 } from '../../../shared/domain/formula/formulaV2';
 import { stoppedTableauOf } from '../../../shared/domain/formula/formulaSteps';
 import { originFinalRanking, splitHistoryOf } from '../../../shared/domain/formula/splitPlan';
+import { finalRanking } from '../../../shared/domain/ranking/finalRanking';
 import {
   seedRankingForNextRound,
   tableauStagesOf,
@@ -1392,21 +1393,35 @@ export function resultsData(ctx: CommandContext, competitionId: string) {
   const slots = [...tableauSlots(comp, session)].sort((a, b) =>
     (a.group ?? '').localeCompare(b.group ?? '')
   );
+  // Classement final de l'origine (ADR-0039 ; Q5 d'ADR-0037) : sans les tireurs partis dans
+  // une branche, éliminés du tableau arrêté avant ceux des poules ; inchangé sinon
+  const origin = originFinalRanking(
+    Array.isArray(session.overallRanking) ? (session.overallRanking as PoolRanking[]) : [],
+    tableauStagesOf(session.stageHistory),
+    splitHistoryOf(session.splitHistory)
+  );
+  const finalResults = slots.flatMap(
+    s => s.finalResults as unknown as Array<{ rank: number; fencer: Fencer; eliminatedAt: string }>
+  );
+  const live = new Map(fencers.map(f => [f.id, f]));
   return {
     competition: { ...comp, fencers, referees: ctx.db.getRefereesByCompetition(competitionId) },
     pools: sessionPools(session),
-    // Classement final de l'origine (ADR-0039 ; Q5 d'ADR-0037) : sans les tireurs partis dans
-    // une branche, éliminés du tableau arrêté avant ceux des poules ; inchangé sinon
-    overallRanking: originFinalRanking(
-      Array.isArray(session.overallRanking) ? (session.overallRanking as PoolRanking[]) : [],
-      tableauStagesOf(session.stageHistory),
-      splitHistoryOf(session.splitHistory)
-    ).ranking,
+    overallRanking: origin.ranking,
     tableauMatches: slots.flatMap(s => s.matches),
-    finalResults: slots.flatMap(
-      s =>
-        s.finalResults as unknown as Array<{ rank: number; fencer: Fencer; eliminatedAt: string }>
-    ),
+    finalResults,
+    // Classement final complet, règle unique avec l'écran (docs/adr/0043, F4d) : le tableau, puis
+    // les non-qualifiés dans l'ordre des poules ; un exclu au bas sans rang, les autres renumérotés
+    finalRanking: finalRanking({
+      finalResults,
+      poolRanking: origin.ranking,
+      stageEliminatedAt: origin.eliminatedAt,
+      // Statut courant du tireur (exclusion après le calcul du classement)
+      refresh: f => {
+        const l = live.get(f.id);
+        return l ? { ...f, status: l.status, exclusionReason: l.exclusionReason } : f;
+      },
+    }),
     fencers,
     referees: ctx.db.getRefereesByCompetition(competitionId),
   };

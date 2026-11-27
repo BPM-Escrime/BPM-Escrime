@@ -570,3 +570,59 @@ describe('FormulaEditor : entrée en équipes et répartition par niveau (docs/a
     prefs.expert = true;
   });
 });
+
+describe('FormulaEditor : filtres du classement final (docs/adr/0043, F4d)', () => {
+  const Editor: React.FC = () => {
+    const [formula, setFormula] = useState<FormulaV2>(() =>
+      formulaOf({
+        weapon: Weapon.EPEE,
+        category: Category.SENIOR,
+        settings: buildDefaultCompetitionSettings({
+          weapon: Weapon.EPEE,
+          category: Category.SENIOR,
+        }) as CompetitionSettings,
+      })
+    );
+    last = formula;
+    return (
+      <FormulaEditor
+        weapon={Weapon.EPEE}
+        category={Category.SENIOR}
+        formula={formula}
+        onChange={setFormula}
+      />
+    );
+  };
+
+  it('aucun filtre par défaut ; critères cochés dans l’ordre canonique (réglage expert)', () => {
+    prefs.expert = true;
+    render(<Editor />);
+    const box = (key: string) => screen.getByLabelText(`rankingFilters.${key}`);
+    expect(last!.general.rankingFilters).toBeUndefined();
+    expect(formulaNeedsExpert(last!)).toBe(false);
+    fireEvent.click(box('handicap'));
+    fireEvent.click(box('category'));
+    expect(last!.general.rankingFilters).toEqual(['category', 'handicap']);
+    expect(formulaNeedsExpert(last!)).toBe(true);
+    expect(box('category')).toBeChecked();
+    expect(box('gender')).not.toBeChecked();
+  });
+
+  it('tout décocher retire le réglage', () => {
+    prefs.expert = true;
+    render(<Editor />);
+    fireEvent.click(screen.getByLabelText('rankingFilters.level'));
+    expect(last!.general.rankingFilters).toEqual(['level']);
+    fireEvent.click(screen.getByLabelText('rankingFilters.level'));
+    expect(last!.general.rankingFilters).toBeUndefined();
+    expect('rankingFilters' in last!.general).toBe(false);
+  });
+
+  it('niveau simple : pas de filtres du classement', () => {
+    prefs.expert = false;
+    render(<Editor />);
+    expect(screen.queryByLabelText('rankingFilters.category')).toBeNull();
+    expect(screen.queryByTestId('formula-editor-ranking-filters')).toBeNull();
+    prefs.expert = true;
+  });
+});

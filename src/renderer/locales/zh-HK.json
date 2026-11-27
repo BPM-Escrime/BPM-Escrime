@@ -4815,7 +4815,9 @@
     "distribution_serpentine": "依排名蛇形分組",
     "distribution_by_level": "按級別",
     "entry_levels_hint": "以逗號分隔，由最弱至最強；最後一個為最強級別。",
-    "distribution_hint": "按級別：同級別隊伍集中編組，由最弱至最強，逐組分配。"
+    "distribution_hint": "按級別：同級別隊伍集中編組，由最弱至最強，逐組分配。",
+    "ranking_filters": "最終排名篩選",
+    "ranking_filters_hint": "供篩選最終排名（畫面、PDF、CSV）的條件：篩選後的排名由 1 重新編號。僅為顯示：公布的排名仍為完整排名。"
   },
   "formulaTemplates": {
     "template": "賽制範本",
@@ -4918,5 +4920,16 @@
     "handicap": "殘障",
     "level_unknown": "未指定",
     "handicap_hint": "殘疾人士隊伍：與組別分開的標記。"
+  },
+  "rankingFilters": {
+    "title": "排名篩選",
+    "category": "組別",
+    "gender": "性別",
+    "level": "水平",
+    "handicap": "殘障",
+    "all_categories": "所有年齡組別",
+    "all_genders": "所有性別",
+    "all_levels": "所有級別",
+    "handicap_only": "僅限殘障"
   }
 }
