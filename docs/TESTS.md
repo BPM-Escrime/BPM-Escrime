@@ -109,7 +109,7 @@ npm run e2e:debug                                 # mode debug
 | `src/main/` | 170 | 1498 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 44 | 237 |
-| `src/renderer/components/` | 146 | 855 |
+| `src/renderer/components/` | 149 | 869 |
 | E2E Playwright (`e2e/`) | 23 | 58 |
 | `src/remote/` | 60 | 443 |
 | `src/renderer/api/` | 10 | 46 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 3 | 12 |
 | `src/shared/domain/` | 66 | 851 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **682** | **5526** |
+| **Total** | **685** | **5540** |
 
-Unitaires : 659 fichiers, 5468 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -7020,6 +7020,15 @@ Unitaires : 659 fichiers, 5468 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/WikiModalHelp.test.tsx</code> — 2 tests</summary>
+
+- **WikiModal : ouverture sur une section**
+  - affiche l'article demandé et amène l'ancre en vue
+  - sans cible : démarrage rapide, aucun défilement
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/XiaomiRemotePanel.test.tsx</code> — 3 tests</summary>
 
 - **XiaomiRemotePanel**
@@ -7609,7 +7618,7 @@ Unitaires : 659 fichiers, 5468 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 31 tests</summary>
+<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 34 tests</summary>
 
 - **FormulaEditor (formule v2)**
   - frise : appel, poules, tableau, classement ; pas de « + Classement »
@@ -7648,6 +7657,10 @@ Unitaires : 659 fichiers, 5468 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - aucun filtre par défaut ; critères cochés dans l’ordre canonique (réglage expert)
   - tout décocher retire le réglage
   - niveau simple : pas de filtres du classement
+- **FormulaEditor : aide intégrée (#2013 F5)**
+  - un « ? » par phase affichée, vers la section de sa brique
+  - tableau arrêté : la section du tableau arrêté
+  - mode expert : lien vers sa section ; sans fournisseur du wiki, aucun lien
 
 </details>
 
@@ -7677,6 +7690,30 @@ Unitaires : 659 fichiers, 5468 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - tableau tiré : changer la qualification du tour grise Enregistrer (S6, ADR-0041)
 - **avertissements dans l’aperçu (ADR-0041)**
   - poules de moins de 4 tireurs, moins de 4 qualifiés, plus de 3 tours
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/formula/FormulaHelpLink.test.tsx</code> — 2 tests</summary>
+
+- **FormulaHelpLink**
+  - ouvre l'article du guide sur l'ancre de la brique
+  - rien sans fournisseur du wiki
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/formula/formulaHelp.test.ts</code> — 7 tests</summary>
+
+- **helpTopicOfPhase : ancre par type de brique**
+  - tour de poules → pools, tableau → tableau
+  - Tour Quest → quest, scission → split
+  - tableau arrêté à N → stopped-tableau
+  - tour en vagues → waves (le tour voisin reste pools)
+- **sujets du guide**
+  - l'article du wiki existe
+  - chaque ancre est un titre h2 de l’article en %s _(each)_
+  - chaque sujet a son libellé traduit
 
 </details>
 
