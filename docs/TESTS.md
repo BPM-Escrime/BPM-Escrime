@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 83 | 893 |
+| `src/shared/utils/` | 83 | 896 |
 | `src/shared/services/` | 8 | 83 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -103,15 +103,15 @@ npm run e2e:debug                                 # mode debug
 | Feature `matchAuditLog` (`src/features/matchAuditLog/`) | 1 | 9 |
 | Feature `pdfTemplates` (`src/features/pdfTemplates/`) | 1 | 6 |
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
-| Feature `teamEntry` (`src/features/teamEntry/`) | 5 | 20 |
+| Feature `teamEntry` (`src/features/teamEntry/`) | 5 | 24 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 26 | 295 |
-| `src/main/` | 170 | 1498 |
+| `src/database/` | 26 | 297 |
+| `src/main/` | 170 | 1508 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 44 | 237 |
-| `src/renderer/components/` | 149 | 869 |
+| `src/renderer/components/` | 149 | 873 |
 | E2E Playwright (`e2e/`) | 23 | 58 |
-| `src/remote/` | 60 | 443 |
+| `src/remote/` | 60 | 444 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 66 | 851 |
+| `src/shared/domain/` | 66 | 867 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **685** | **5540** |
+| **Total** | **685** | **5580** |
 
-Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 662 fichiers, 5522 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -583,7 +583,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/fencerExport.test.ts</code> — 19 tests</summary>
+<summary><code>src/shared/utils/fencerExport.test.ts</code> — 20 tests</summary>
 
 - **exportFencersToFFF**
   - commence par l’en-tête FFF;WIN;COMPETITION puis la ligne de compétition
@@ -610,6 +610,8 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - **encodeFFFWin1252**
   - encode les accents en cp1252 (é = 0xE9, € = 0x80)
   - remplace les caractères hors cp1252 par ?
+- **tireur-binôme : listes et résultats FFF sans membres (docs/adr/0043, F4c)**
+  - liste FFF, liste TXT et résultats FFF : le nom d’équipe seul
 
 </details>
 
@@ -959,7 +961,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/multiFormatExport.test.ts</code> — 58 tests</summary>
+<summary><code>src/shared/utils/multiFormatExport.test.ts</code> — 60 tests</summary>
 
 - **exportRankingCSV**
   - includes header row
@@ -1028,6 +1030,9 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - exporte le score cible réel du tableau (maxScore), 15 par défaut
   - un exempt produit deux \<Tireur\>, le second vide
   - ajoute Date et Heure au match à partir de startTime
+- **tireur-binôme : exports fédéraux et CSV sans membres (docs/adr/0043, F4c)**
+  - XML FFE : le binôme est exporté sous son nom, sans ses membres
+  - CSV du classement et CSV des statistiques : sans membres
 
 </details>
 
@@ -2162,7 +2167,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/features/teamEntry/teamImport.test.ts</code> — 10 tests</summary>
+<summary><code>src/features/teamEntry/teamImport.test.ts</code> — 14 tests</summary>
 
 - **teamImport (#1211)**
   - parseDelimited gère BOM, guillemets et CRLF
@@ -2174,9 +2179,14 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - **teamImport : club de l’équipe (#1441)**
   - club des deux tireurs (colonnes S et X) : distincts joints par « / », identiques une seule fois
 - **buildTeamImportTemplate (modèle d'import des équipes)**
-  - commence par un BOM et reprend les 25 colonnes de l'export d'inscriptions
+  - commence par un BOM, reprend les 25 colonnes de l'export d'inscriptions, puis « niveau »
   - est relu par l'import : une équipe d'exemple, colonnes correctement placées
   - un modèle sans ligne d'exemple ne produit aucune équipe
+- **niveau des équipes (colonne Z, niveaux de la formule, ADR-0043)**
+  - libellé des niveaux de la formule, sans majuscules ni accents, ou rang
+  - absent, inconnu ou rang hors liste : premier niveau
+  - niveaux par défaut : code ou libellé traduit
+  - le modèle porte le premier niveau en exemple, relu par l’import
 
 </details>
 
@@ -2221,12 +2231,15 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 ### `src/database/`
 
 <details>
-<summary><code>src/database/bpmSnapshot.test.ts</code> — 3 tests</summary>
+<summary><code>src/database/bpmSnapshot.test.ts</code> — 5 tests</summary>
 
 - **.bpm snapshot (DatabaseManager réel)**
   - restitue à l’identique le contenu de chaque table de la compétition
   - n’embarque aucune donnée d’une autre compétition
   - ré-import remplace l’état existant : aucun match obsolète ne subsiste
+  - **entrée en équipes (ADR-0043, F4c) : membres, niveau, handicap**
+    - .bpm en clair : members, level et handicap identiques après réimport
+    - .bpm chiffré : members, level et handicap identiques après déchiffrement et réimport
 
 </details>
 
@@ -3318,7 +3331,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 19 tests</summary>
+<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 24 tests</summary>
 
 - liste : fournis puis personnels, standard du contexte
 - enregistrer une copie, la retrouver, la supprimer ; un modèle fourni est refusé
@@ -3333,11 +3346,16 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - updateCompetitionFormula écrit formula et les réglages plats du 1er tour
 - tour en vagues (docs/adr/0043) : ordre « waves », poules de 2 à 10, au-delà refusé
 - arme « Autre » : tour en vagues de 2 à 10 aussi, ordre gardé dans les réglages plats
+- tieBreakByVictory : posé et retiré par le contrat, lu par la formule (docs/adr/0043, F4e)
+- tieBreakByVictory non booléen : refus invalid\_settings, rien d’écrit
 - bornes du tour 2 refusées
-- réglages plats écrits sans formula : formule retirée, reconstruite à la lecture
+- réglages plats écrits sans formula : reportés dans la formule (ADR-0036 amendée), ou formule retirée pour la structure
 - modèle appliqué ou choisi à la création : formula enregistrée
 - S3 : refus invalid\_settings, une remarque par ligne avec la clé de la phase
 - S4 : l’effectif connu borne la somme des parts d’une scission par rang
+- S6 : tour clos (closePoolRound), la qualification qui en sort est verrouillée dès la clôture
+- S6 : updateCompetitionSettings ne contourne pas le verrou du tour clos
+- ADR-0043 F4b : petite finale et « toutes les places » modifiables jusqu’au tirage du tableau
 - S6 : après un tour joué, la phase commencée ne se retire plus
 
 </details>
@@ -3561,12 +3579,14 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/rapieresBricks.test.ts</code> — 4 tests</summary>
+<summary><code>src/main/engine/commands/rapieresBricks.test.ts</code> — 6 tests</summary>
 
 - modèle bpm/C/rapieres : tirage sans composition par niveau, vagues, tableau
+- modèle bpm/C/rapieres en « toutes les places » (#2013, F4g) : vagues → tableau → classement complet, tout par le moteur
 - mode spécial plus écrit : création et modification refusées
 - épreuve enregistrée en mode spécial : pilotée par le moteur, niveau lu dans la session
 - formule modifiée avant le tirage : le mode spécial est effacé, les briques gardées
+- ordre classique réglé dans la formule, ancienne épreuve comprise (waves\_classic, F4e)
 
 </details>
 
@@ -3756,7 +3776,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/sport.test.ts</code> — 32 tests</summary>
+<summary><code>src/main/engine/commands/sport.test.ts</code> — 33 tests</summary>
 
 - poules → arbitres → scores → tableau → classement final → exports
 - régénérer des poules jouées exige replace
@@ -3780,6 +3800,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - tireur en retard : un match contre chacun, poule rouverte, PoolFencerAdded
 - qualifiés et éliminés, tour archivé avec son appel, tour 2 tiré par composition
 - « toutes les places » : placement tel quel, TableauGenerated, jouable jusqu’au bout
+- « toutes les places » sans placement (#2013, F4g) : tableau de l’écran, classement complet
 - placement invalide ou tableaux séparés sans groupe : refus
 - sans correction : refusée ; avec motif : tableau gardé, journal des scores et du journal
 - tableau à refaire : retiré avec la correction ; statut spécial refusé
@@ -5009,7 +5030,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/remote/routes/publicFinalResults.test.ts</code> — 5 tests</summary>
+<summary><code>src/main/remote/routes/publicFinalResults.test.ts</code> — 7 tests</summary>
 
 - **publicFinalResults**
   - aucun résultat de tableau : pas de classement final
@@ -5017,6 +5038,9 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - exclu, même après son entrée au tableau : au bas sans rang, les autres renumérotés
   - liste courante : le statut du tireur est rafraîchi
   - tableaux des groupes : chaque groupe avec ses non-qualifiés
+- **kioskFinalResults (/api/bracket)**
+  - même classement que la page publique : non-qualifiés compris, exclu au bas sans rang
+  - tableau principal seulement : les classements des groupes restent hors du kiosque
 
 </details>
 
@@ -6847,7 +6871,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ResultsView.filters.test.tsx</code> — 9 tests</summary>
+<summary><code>src/renderer/components/ResultsView.filters.test.tsx</code> — 10 tests</summary>
 
 - **Résultats : filtres du classement final**
   - aucun filtre réglé : rien n’est proposé, classement complet inchangé
@@ -6858,6 +6882,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - CSV : classement filtré
   - PDF du classement et impression : classement filtré, critères dans le titre
   - XML fédéral et FFF : classement complet, jamais filtré
+  - livre PDF signé : classement complet, jamais filtré (docs/adr/0043, F4d)
   - champion et podium : toujours ceux du classement complet
 
 </details>
@@ -7665,7 +7690,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/formula/FormulaEditorRemarks.test.tsx</code> — 19 tests</summary>
+<summary><code>src/renderer/components/formula/FormulaEditorRemarks.test.tsx</code> — 21 tests</summary>
 
 - **remarques en direct sur la carte de la phase (ADR-0041)**
   - formule valide : aucune remarque
@@ -7688,6 +7713,8 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - remarque bloquante : Enregistrer grisé, remarque sur la phase
   - phase commencée : sa suppression grise Enregistrer (S6)
   - tableau tiré : changer la qualification du tour grise Enregistrer (S6, ADR-0041)
+  - tour clos, tableau pas tiré : changer la qualification grise Enregistrer
+  - tour lancé, non clos : la qualification reste modifiable
 - **avertissements dans l’aperçu (ADR-0041)**
   - poules de moins de 4 tireurs, moins de 4 qualifiés, plus de 3 tours
 
@@ -7718,12 +7745,13 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/formula/screenFormulaProgress.test.ts</code> — 3 tests</summary>
+<summary><code>src/renderer/components/formula/screenFormulaProgress.test.ts</code> — 4 tests</summary>
 
 - **screenFormulaProgress (S6, ADR-0041)**
   - poules tirées mais non lancées : rien de commencé
   - tour 1 lancé, puis tour 1 joué et tour 2 lancé
   - tableau tiré après deux tours
+  - tour clos : le nombre de tours clos suit l’historique, tour en cours exclu
 
 </details>
 
@@ -8854,10 +8882,11 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/kioskLists.test.ts</code> — 10 tests</summary>
+<summary><code>src/remote/js/kioskLists.test.ts</code> — 11 tests</summary>
 
 - **kioskLists.js computeFinalRanking**
   - finalResults de l’application prioritaires, triés par place
+  - exclu (rang null, docs/adr/0043 amendée) : en bas, affiché « - »
   - non terminé : pas de tableau ou finale sans vainqueur
   - finale + petite finale + perdants des tours précédents
   - sans petite finale : perdants de demi-finale classés 3e et 4e par tête de série
@@ -9864,7 +9893,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/fencers/teamEntry.test.ts</code> — 12 tests</summary>
+<summary><code>src/shared/domain/fencers/teamEntry.test.ts</code> — 13 tests</summary>
 
 - **catégorie d’équipe**
   - lit l’année de naissance depuis AAAA-MM-JJ
@@ -9879,6 +9908,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - **niveau et libellés**
   - niveaux par défaut du plus faible au plus fort (liste des rapières), le plus grand est le plus fort
   - codes par défaut traduits, libellé saisi tel quel
+  - niveau lu d’un texte : rang, libellé saisi ou code traduit, sans casse ni accents
   - rang de regroupement : du plus faible au plus fort, sans niveau en dernier
   - noms des membres en majuscules, séparés par « / »
 
@@ -10021,7 +10051,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaStructure.test.ts</code> — 56 tests</summary>
+<summary><code>src/shared/domain/formula/formulaStructure.test.ts</code> — 62 tests</summary>
 
 - **remarques situées (ADR-0041)**
   - formule par défaut : aucune remarque
@@ -10063,6 +10093,13 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - règle identique (ex aequo « all » = absent) : aucune remarque
   - phase suivante pas commencée : la règle reste modifiable ; sans formule enregistrée, pas de contrôle
   - tour suivant lancé : la règle du tour précédent est figée, pas celle du dernier tour
+- **S6 : la qualification qui sort d’un tour de poules clos ne change plus (ADR-0041, amendement)**
+  - tour clos, phase suivante pas commencée : verrouillé dès la clôture, sur sa carte
+  - tour non clos (lancé, en cours) : la règle reste modifiable
+  - tour clos, règle identique : aucune remarque
+  - seul le tour clos est verrouillé, pas le tour en cours
+  - tableau arrêté clos : non concerné (ses réglages restent admis)
+  - formulaProgress : porte les tours clos de l’historique, hors énumération
 - **formulaProgress : phases commencées d’après l’état de session**
   - rien : aucune phase
   - poules du tour courant lancées, ou tours clos dans l’historique
@@ -10133,7 +10170,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaV2.test.ts</code> — 10 tests</summary>
+<summary><code>src/shared/domain/formula/formulaV2.test.ts</code> — 17 tests</summary>
 
 - **formule v2 construite à la lecture (épée… Sabre Laser)**
   - %s : mêmes réglages qu’aujourd’hui _(each)_
@@ -10141,6 +10178,7 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - formule enregistrée prioritaire sur les réglages plats
 - **arme « Autre » : customFormula v1 ↔ v2**
   - %s : aller-retour sans perte, mêmes réglages dérivés _(each)_
+  - « toutes les places » de la brique tableau projeté sur les réglages plats (#2013, F4g)
   - lecture par phase : touches du tour 2 distinctes du tour 1
 - **qualification vers le tableau (#2013 R1)**
   - règle du tour juste avant le tableau
@@ -10149,11 +10187,19 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - épreuve sans formule v2 : réglages plats, aucune qualification en % (comportement historique)
 - **ordre des matchs du tour tiré (ADR-0042 : réglages du tour)**
   - réglage du tour dans la formule, sinon le réglage plat
+- **départage par vainqueur désigné : tieBreakByVictoryOf (docs/adr/0043, F4e)**
+  - armes olympiques et Sabre Laser : toujours, quelle que soit la formule
+  - arme « Autre » : par défaut non, oui si la formule le demande (valeur lue)
+  - ancienne épreuve rapières (specialMode, sans formule) : lue comme la formule des rapières
+- **withFlatSettings : réglages plats reportés dans la formule (ADR-0036 amendée)**
+  - scores, durées, tailles des poules (tous les tours), tableau et repos ; le reste gardé
+  - structure ou phase absente : null (formule retirée, relue à plat)
+  - compétition couplée : tableau des branches restées mis à jour
 
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaV2Operations.test.ts</code> — 20 tests</summary>
+<summary><code>src/shared/domain/formula/formulaV2Operations.test.ts</code> — 22 tests</summary>
 
 - **frise sur la formule v2 (ADR-0036)**
   - mêmes briques autorisées que la frise de l’écran
@@ -10175,6 +10221,8 @@ Unitaires : 662 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - entrée en équipes et répartition par niveau : aller et retour (docs/adr/0043)
   - entrée ou répartition invalide : remarque bloquante sur la formule
   - filtres du classement final : aller et retour, ordre canonique, vide = retiré (docs/adr/0043, F4d)
+  - tieBreakByVictory : posé, retiré par null ou false, aller et retour (docs/adr/0043, F4e)
+  - tieBreakByVictory : une valeur qui n’est pas un booléen est refusée
   - filtres du classement final invalides : refus de l’opération et remarque bloquante
   - réglages plats : vainqueurs de poule lus au tour qui précède le tableau
 
