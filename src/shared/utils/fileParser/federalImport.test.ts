@@ -88,6 +88,14 @@ describe('parseXMLFile (#1938)', () => {
       { name: 'CLUB X 1', club: 'CLUB X', members: ['L:1'] },
     ]);
   });
+
+  it('lit le rang d’entrée de l’équipe (Classement) quand le fichier le porte (docs/adr/0044)', () => {
+    const xml = `<BaseCompetitionParEquipes Type="E"><Tireurs><Tireur Nom="A" Prenom="B" Licence="1" Equipe="7"/><Tireur Nom="C" Prenom="D" Licence="2" Equipe="8"/></Tireurs><Equipes><Equipe ID="7" Nom="CLUB X 1" Club="CLUB X" Classement="3"/><Equipe ID="8" Nom="CLUB Y 1" Classement=""/></Equipes></BaseCompetitionParEquipes>`;
+    expect(parseXMLFile(xml).teams).toEqual([
+      { name: 'CLUB X 1', club: 'CLUB X', ranking: 3, members: ['L:1'] },
+      { name: 'CLUB Y 1', members: ['L:2'] },
+    ]);
+  });
 });
 
 describe('parseCompetitionHeader', () => {

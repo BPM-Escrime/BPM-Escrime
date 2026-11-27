@@ -13,6 +13,8 @@ export type ImportedReferee = Pick<Referee, 'firstName' | 'lastName' | 'gender' 
 export interface ImportedTeam {
   name: string;
   club?: string;
+  /** Rang d'entrée de l'équipe (attribut Classement de <Equipe>, docs/adr/0044) */
+  ranking?: number;
   /** Clés des tireurs membres (voir fencerKey) */
   members: string[];
 }

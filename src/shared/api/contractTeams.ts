@@ -26,6 +26,12 @@ const ExpectedRevision = z
   );
 const Revision = z.number().int().optional();
 const Name = z.string().trim().min(1).max(200);
+const TeamRanking = z
+  .number()
+  .int()
+  .min(1)
+  .max(100000)
+  .describe('Rang d’entrée de l’équipe (1 = la meilleure, docs/adr/0044)');
 
 // ─── Bloc « teams » de getCompetitionState ──────────────────────────────────
 
@@ -85,6 +91,8 @@ export const TeamsStateSchema = z.object({
       id: z.string(),
       name: z.string(),
       club: z.string(),
+      /** Rang d'entrée saisi ou importé (docs/adr/0044) ; null : rang calculé (teamEntryRanking) */
+      ranking: z.number().int().nullable(),
       fencers: z.array(TeamFencerSchema),
     })
   ),
@@ -111,25 +119,50 @@ export const TeamsStateSchema = z.object({
 });
 export type TeamsStateDTO = z.infer<typeof TeamsStateSchema>;
 
-const TeamSchema = z.object({ id: z.string(), name: z.string(), club: z.string() });
+const TeamSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  club: z.string(),
+  ranking: z.number().int().nullable(),
+});
 
 // ─── Opérations ─────────────────────────────────────────────────────────────
 
 export const teamSetupOperations = {
   registerTeam: command({
     description:
-      'Épreuve par équipes : inscrit une équipe (nom, club ; club = nom par défaut). Inscription (docs/adr/0018), sans journal. ' +
+      'Épreuve par équipes : inscrit une équipe (nom, club ; club = nom par défaut ; rang d’entrée facultatif, docs/adr/0044). Inscription (docs/adr/0018), sans journal. ' +
       'Refus : épreuve individuelle (unsupported_format).',
     input: z.object({
       competitionId: CompetitionId,
       name: Name.describe('Nom de l’équipe'),
       club: Name.optional().describe('Club (défaut : le nom)'),
+      ranking: TeamRanking.optional(),
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
       commandId: CommandId,
     }),
     output: z.object({ dryRun: z.boolean(), team: TeamSchema.nullable(), revision: Revision }),
     permission: 'fencers:write',
+  }),
+
+  updateTeam: command({
+    description:
+      'Épreuve par équipes : modifie le nom, le club ou le rang d’entrée d’une équipe (ranking null : rang retiré, rang calculé sur les classements des titulaires puis le nom, docs/adr/0044). Sans journal (docs/adr/0018). ' +
+      'Refus : épreuve individuelle (unsupported_format), équipe inconnue (team_not_found), après le tirage (draw_done).',
+    input: z.object({
+      competitionId: CompetitionId,
+      teamId: Id.describe('Identifiant de l’équipe'),
+      name: Name.optional().describe('Nouveau nom'),
+      club: Name.optional().describe('Nouveau club'),
+      ranking: TeamRanking.nullable().optional(),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), team: TeamSchema.nullable(), revision: Revision }),
+    permission: 'fencers:write',
+    mcp: { name: 'update_team', title: 'Modifier une équipe' },
   }),
 
   unregisterTeam: command({

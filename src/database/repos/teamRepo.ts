@@ -35,22 +35,51 @@ export class TeamRepo {
 
   // ─── Équipes (compétitions par équipes) ─────────────────────────────────────
 
-  public createTeam(competitionId: string, name: string, club: string): { id: string } {
+  public createTeam(
+    competitionId: string,
+    name: string,
+    club: string,
+    /** Rang d'entrée (1 = le meilleur, docs/adr/0044) ; null : non classée */
+    ranking: number | null = null
+  ): { id: string } {
     if (!this.sql.db) throw new Error('Database not open');
     const { v4: gen } = require('uuid');
     const id = gen();
     const now = new Date().toISOString();
     this.sql.run(
-      `INSERT INTO teams (id, competition_id, name, club, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, competitionId, name, club, now, now]
+      `INSERT INTO teams (id, competition_id, name, club, ranking, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, competitionId, name, club, ranking, now, now]
     );
     return { id };
+  }
+
+  /** Nom, club, rang d'entrée d'une équipe (docs/adr/0044) ; champs absents gardés */
+  public updateTeam(
+    teamId: string,
+    patch: { name?: string; club?: string; ranking?: number | null }
+  ): void {
+    if (!this.sql.db) throw new Error('Database not open');
+    const sets: string[] = [];
+    const values: unknown[] = [];
+    for (const key of ['name', 'club', 'ranking'] as const) {
+      if (patch[key] === undefined) continue;
+      sets.push(`${key} = ?`);
+      values.push(patch[key]);
+    }
+    if (sets.length === 0) return;
+    this.sql.run(`UPDATE teams SET ${sets.join(', ')}, updated_at = ? WHERE id = ?`, [
+      ...values,
+      new Date().toISOString(),
+      teamId,
+    ]);
   }
 
   public getTeamsByCompetition(competitionId: string): Array<{
     id: string;
     name: string;
     club: string;
+    /** Rang d'entrée saisi (docs/adr/0044) ; null : non classée */
+    ranking: number | null;
     fencers: Array<{
       fencerId: string;
       fencerLastName: string;
@@ -75,6 +104,7 @@ export class TeamRepo {
         id: t.id as string,
         name: t.name as string,
         club: t.club as string,
+        ranking: t.ranking === null || t.ranking === undefined ? null : Number(t.ranking),
         fencers: fencers.map(f => ({
           fencerId: f.fencer_id as string,
           fencerLastName: f.last_name as string,

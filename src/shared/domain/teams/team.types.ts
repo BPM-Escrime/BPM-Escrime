@@ -121,6 +121,8 @@ export interface TeamRow {
   id: string;
   name: string;
   club: string;
+  /** Rang d'entrée saisi ou importé (1 = le meilleur, docs/adr/0044) ; null ou absent : non classée */
+  ranking?: number | null;
   fencers: TeamFencerRow[];
 }
 

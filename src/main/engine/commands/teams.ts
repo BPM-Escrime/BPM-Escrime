@@ -22,6 +22,9 @@ import {
   teamSizeOf,
 } from '../../../shared/domain/teams/relay';
 import { calculateTeamPoolRanking } from '../../../shared/domain/teams/teamCalculations';
+import { teamEntryRanking } from '../../../shared/domain/teams/teamEntryRanking';
+import { teamFormulaOf, teamMatchRuleOf } from '../../../shared/domain/teams/teamMatchRule';
+import type { PhaseRef, TeamMatchRule } from '../../../shared/domain/formula/formulaV2';
 import { calculateLaserArenaPoolRanking } from '../../../shared/domain/teams/laserArenaCalculations';
 import {
   withoutWithdrawnTeams,
@@ -89,15 +92,87 @@ export const changed = (ctx: CommandContext, competitionId: string) =>
 
 export function registerTeam(
   ctx: CommandContext,
-  input: { competitionId: string; name: string; club?: string; dryRun?: boolean }
+  input: {
+    competitionId: string;
+    name: string;
+    club?: string;
+    ranking?: number;
+    dryRun?: boolean;
+  }
 ) {
   teamCompetitionOrThrow(ctx, input.competitionId);
   const name = input.name.trim();
   const club = input.club?.trim() || name;
+  const ranking = input.ranking ?? null;
   if (input.dryRun) return { dryRun: true, team: null };
-  const { id } = ctx.db.teams.createTeam(input.competitionId, name, club);
+  const { id } = ctx.db.teams.createTeam(input.competitionId, name, club, ranking);
   changed(ctx, input.competitionId);
-  return { dryRun: false, team: { id, name, club } };
+  return { dryRun: false, team: { id, name, club, ranking } };
+}
+
+/**
+ * Nom, club et rang d'entrée d'une équipe (docs/adr/0044) : sans journal (docs/adr/0018),
+ * refusée après le tirage. `ranking: null` : rang retiré (rang calculé, teamEntryRanking).
+ */
+export function updateTeam(
+  ctx: CommandContext,
+  input: {
+    competitionId: string;
+    teamId: string;
+    name?: string;
+    club?: string;
+    ranking?: number | null;
+    dryRun?: boolean;
+  }
+) {
+  teamCompetitionOrThrow(ctx, input.competitionId);
+  teamOrThrow(ctx, input.competitionId, input.teamId);
+  assertBeforeDraw(ctx, input.competitionId);
+  const patch = {
+    ...(input.name !== undefined ? { name: input.name.trim() } : {}),
+    ...(input.club !== undefined ? { club: input.club.trim() } : {}),
+    ...(input.ranking !== undefined ? { ranking: input.ranking } : {}),
+  };
+  if (!input.dryRun && Object.keys(patch).length) {
+    ctx.db.teams.updateTeam(input.teamId, patch);
+    changed(ctx, input.competitionId);
+  }
+  const team = input.dryRun
+    ? null
+    : ctx.db.teams.getTeamsByCompetition(input.competitionId).find(t => t.id === input.teamId);
+  return {
+    dryRun: !!input.dryRun,
+    team: team ? { id: team.id, name: team.name, club: team.club, ranking: team.ranking } : null,
+  };
+}
+
+/**
+ * Règle de rencontre de la phase `ref` (undefined : règle générale) : formule d'équipe, sinon
+ * réglages d'épreuve (docs/adr/0044)
+ */
+export function teamRuleOf(comp: Competition, ref?: PhaseRef): TeamMatchRule {
+  return teamMatchRuleOf(teamFormulaOf(comp), ref, comp.settings, comp.weapon);
+}
+
+/** Classement d'un tireur de l'épreuve (rang d'entrée individuel) */
+export function fencerRankingOf(ctx: CommandContext, competitionId: string) {
+  const byId = new Map(
+    ctx.db.getFencersByCompetition(competitionId).map(f => [f.id, f.ranking ?? null])
+  );
+  return (fencerId: string) => byId.get(fencerId) ?? null;
+}
+
+/**
+ * Équipes de l'épreuve dans l'ordre d'entrée effectif (docs/adr/0044) : rang saisi, somme des
+ * classements des `starters` titulaires, puis le nom
+ */
+export function entryRankedTeams<T extends TeamRow>(
+  ctx: CommandContext,
+  comp: Competition,
+  teams: readonly T[],
+  starters: number
+): T[] {
+  return teamEntryRanking(teams, starters, fencerRankingOf(ctx, comp.id));
 }
 
 export function unregisterTeam(
@@ -352,7 +427,11 @@ export function teamsState(ctx: CommandContext, comp: Competition): TeamsStateDT
   return {
     format,
     teamSize: teamSizeOf(comp.settings),
-    teams: teams.map(t => ({ ...t, fencers: t.fencers.map(f => ({ ...f })) })),
+    teams: teams.map(t => ({
+      ...t,
+      ranking: t.ranking ?? null,
+      fencers: t.fencers.map(f => ({ ...f })),
+    })),
     poolMatches: pools.map(m => matchDTO(m, true, cards)),
     tableauMatches: tableau.map(m => matchDTO(m, false, cards)),
     poolRanking: ranking.map((r, i) => ({
@@ -411,6 +490,7 @@ export function teamStateView(ctx: CommandContext, comp: Competition): TeamState
 export const teamHandlers: { [N in keyof Ops]: TeamsHandler<N> } = {
   registerTeam: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     registerTeam(ctx, input),
+  updateTeam: (ctx, { expectedRevision: _r, commandId: _c, ...input }) => updateTeam(ctx, input),
   unregisterTeam: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     unregisterTeam(ctx, input),
   assignTeamFencer: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>

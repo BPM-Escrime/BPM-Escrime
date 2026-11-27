@@ -55,14 +55,23 @@ function parseReferees(content: string): ImportedReferee[] {
  * Equipe des tireurs, nom dans Nom si présent). L'extranet FFE laisse la section vide et
  * met directement le nom d'équipe dans l'attribut Equipe.
  */
-function parseTeamSection(content: string): Map<string, { name: string; club?: string }> {
-  const teams = new Map<string, { name: string; club?: string }>();
+type TeamSection = Map<string, { name: string; club?: string; ranking?: number }>;
+
+function parseTeamSection(content: string): TeamSection {
+  const teams: TeamSection = new Map();
   const section = content.match(/<Equipes(?=[\s>])[\s\S]*?<\/Equipes>/);
   if (!section) return teams;
   for (const match of section[0].matchAll(/<Equipe(?=[\s/>])[^>]*>/g)) {
     const get = attrReader(match[0]);
     const id = get('ID');
-    if (id) teams.set(id, { name: get('Nom') || id, club: get('Club') || undefined });
+    // Classement : rang d'entrée de l'équipe quand le fichier le porte (docs/adr/0044)
+    const ranking = Number.parseInt(get('Classement') ?? '', 10);
+    if (id)
+      teams.set(id, {
+        name: get('Nom') || id,
+        club: get('Club') || undefined,
+        ...(ranking > 0 ? { ranking } : {}),
+      });
   }
   return teams;
 }
@@ -70,7 +79,7 @@ function parseTeamSection(content: string): Map<string, { name: string; club?: s
 /** Équipes reconstituées depuis l'attribut Equipe des tireurs, dans l'ordre du fichier */
 function collectTeams(
   members: Array<{ ref: string; key: string; club?: string }>,
-  section: Map<string, { name: string; club?: string }>
+  section: TeamSection
 ): ImportedTeam[] {
   const byName = new Map<string, ImportedTeam>();
   for (const { ref, key, club } of members) {
@@ -78,7 +87,12 @@ function collectTeams(
     const name = known?.name ?? ref;
     let team = byName.get(name);
     if (!team) {
-      team = { name, club: known?.club ?? club, members: [] };
+      team = {
+        name,
+        club: known?.club ?? club,
+        ...(known?.ranking ? { ranking: known.ranking } : {}),
+        members: [],
+      };
       byName.set(name, team);
     }
     team.members.push(key);

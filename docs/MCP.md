@@ -195,7 +195,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (75)
+## Référence des outils (76)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -367,7 +367,7 @@ Aucun argument.
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 
-### En écriture, sur autorisation (54)
+### En écriture, sur autorisation (55)
 
 ### `create_competition` — Créer une épreuve
 
@@ -904,6 +904,21 @@ Aucun argument.
 | `available` | boolean | oui | false : piste indisponible ; true : remise en service |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve (revision_conflict sinon) ; refusée avec « eventDayId » (une révision par épreuve) |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `update_team` — Modifier une équipe
+
+*écriture.* Épreuve par équipes : modifie le nom, le club ou le rang d’entrée d’une équipe (ranking null : rang retiré, rang calculé sur les classements des titulaires puis le nom, docs/adr/0044). Sans journal (docs/adr/0018). Refus : épreuve individuelle (unsupported_format), équipe inconnue (team_not_found), après le tirage (draw_done).
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `teamId` | string | oui | Identifiant de l’équipe |
+| `name` | string |  | Nouveau nom |
+| `club` | string |  | Nouveau club |
+| `ranking` | integer / null |  |  |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
 
 ### `generate_team_pools` — Tirer les poules d’équipes
