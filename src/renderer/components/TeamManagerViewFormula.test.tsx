@@ -48,6 +48,22 @@ const pdf = vi.hoisted(() => ({
   exportTeamBookToPDF: vi.fn(async () => {}),
 }));
 vi.mock('../../shared/utils/pdfExport/teamPdf', () => pdf);
+// Exports fédéraux (#1949) : résultats transmis espionnés
+const federal = vi.hoisted(() => ({ fff: vi.fn(), xml: vi.fn() }));
+vi.mock('../../shared/utils/fencerExport', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../shared/utils/fencerExport')>();
+  return {
+    ...actual,
+    exportTeamResultsToFFF: federal.fff.mockImplementation(actual.exportTeamResultsToFFF),
+  };
+});
+vi.mock('../../shared/utils/multiFormatExport', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../shared/utils/multiFormatExport')>();
+  return {
+    ...actual,
+    exportTeamResultsXMLFFE: federal.xml.mockImplementation(actual.exportTeamResultsXMLFFE),
+  };
+});
 
 import { TeamManagerView, type TeamViewMode } from './TeamManagerView';
 import { ConfirmProvider } from './ConfirmDialog';
@@ -143,6 +159,7 @@ beforeEach(() => {
   data.finalRanking = { rows: [], provisional: true };
   data.tableauSeeds = ['ta', 'tb'];
   Object.values(pdf).forEach(f => f.mockClear());
+  Object.values(federal).forEach(f => f.mockClear());
 });
 
 describe('TeamManagerView — rang d’entrée (docs/adr/0044)', () => {
@@ -347,6 +364,42 @@ describe('TeamManagerView — PDF du classement lu dans l’état (teams.finalRa
       [3, 'tc'],
     ]);
     expect(ranking.provisional).toBe(false);
+  });
+});
+
+describe('TeamManagerView — export fédéral lu dans l’état (teams.finalRanking, docs/adr/0044)', () => {
+  it('FFF et XML FFE : classement final du moteur, équipe coupée comprise, sans poule', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:x');
+    URL.revokeObjectURL = vi.fn();
+    data.teams = [team('ta', 'Alpha'), team('tb', 'Bravo'), team('tc', 'Charlie')];
+    data.tableauSeeds = ['ta', 'tb'];
+    data.tableauMatches = [
+      { ...tableauMatch('f', 1, 0, 'ta', 'tb'), status: 'finished', winnerId: 'tb' },
+    ];
+    // Ordre du moteur, différent de l'ordre des équipes et du tableau
+    data.finalRanking = {
+      rows: [
+        { teamId: 'tb', rank: 1 },
+        { teamId: 'ta', rank: 2 },
+        { teamId: 'tc', rank: 3 },
+      ],
+      provisional: false,
+    };
+    show('ranking', { formula: tableauOnly });
+    const expected = [
+      [1, 'Bravo'],
+      [2, 'Alpha'],
+      [3, 'Charlie'],
+    ];
+    type Results = Array<{ rank: number; name: string }>;
+    fireEvent.click(screen.getByRole('button', { name: frT('results.export_fff') }));
+    await waitFor(() => expect(federal.fff).toHaveBeenCalled());
+    const [, fffResults] = federal.fff.mock.calls[0] as [unknown, Results];
+    expect(fffResults.map(r => [r.rank, r.name])).toEqual(expected);
+    fireEvent.click(screen.getByRole('button', { name: frT('results.export_xml_ffe') }));
+    await waitFor(() => expect(federal.xml).toHaveBeenCalled());
+    const [, xmlResults] = federal.xml.mock.calls[0] as [unknown, Results];
+    expect(xmlResults.map(r => [r.rank, r.name])).toEqual(expected);
   });
 });
 
