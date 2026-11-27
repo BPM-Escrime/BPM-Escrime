@@ -81,6 +81,33 @@ describe('applyFederalImport', () => {
     expect(createTeam).not.toHaveBeenCalled();
   });
 
+  it('rang d’entrée de l’équipe lu dans le fichier : transmis à registerTeam (docs/adr/0044)', async () => {
+    const call = vi.fn(async (name: string, input: Record<string, unknown>) => {
+      if (name === 'registerFencers') return { fencers: [] };
+      if (name === 'registerTeam') return { team: { id: `t-${String(input.name)}` } };
+      return { referees: [] };
+    });
+    const client = { call, query: vi.fn(), subscribe: vi.fn() } as unknown as BpmClient;
+    await applyFederalImport(
+      client,
+      'c1',
+      {
+        fencers: [],
+        teams: [
+          { name: 'Club A', club: 'CE A', ranking: 3, members: [] },
+          { name: 'Club B', members: [] },
+        ],
+        referees: [],
+      } as never,
+      1
+    );
+    const teams = call.mock.calls.filter(c => c[0] === 'registerTeam').map(c => c[1]);
+    expect(teams).toEqual([
+      { competitionId: 'c1', name: 'Club A', club: 'CE A', ranking: 3 },
+      { competitionId: 'c1', name: 'Club B' },
+    ]);
+  });
+
   it('bloc refusé : un par un, l’entrée invalide seule écartée', async () => {
     const call = vi.fn(async (name: string, input: Record<string, unknown>) => {
       const list = input.fencers as Array<{ lastName: string; firstName: string }>;
