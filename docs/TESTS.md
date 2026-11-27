@@ -106,9 +106,9 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 25 | 284 |
-| `src/main/` | 162 | 1440 |
+| `src/main/` | 162 | 1442 |
 | `src/renderer/services/` | 14 | 70 |
-| `src/renderer/hooks/` | 42 | 227 |
+| `src/renderer/hooks/` | 42 | 228 |
 | `src/renderer/components/` | 142 | 803 |
 | E2E Playwright (`e2e/`) | 23 | 58 |
 | `src/remote/` | 60 | 443 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 58 | 713 |
+| `src/shared/domain/` | 58 | 715 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **658** | **5252** |
+| **Total** | **658** | **5257** |
 
-Unitaires : 635 fichiers, 5194 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 635 fichiers, 5199 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3810,7 +3810,7 @@ Unitaires : 635 fichiers, 5194 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/ties.test.ts</code> — 11 tests</summary>
+<summary><code>src/main/engine/commands/ties.test.ts</code> — 13 tests</summary>
 
 - tableau, réglage absent : tous les ex aequo passent ; la simulation les signale
 - tableau : « ties » de la commande prime ; départage au rang d’entrée, quota tenu
@@ -3822,6 +3822,8 @@ Unitaires : 635 fichiers, 5194 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - 2e tour : rang d’entrée = place au tour précédent, pas le classement initial
 - scission après deux tours : rang d’entrée = place au tour précédent
 - classement final du tableau : coupe figée par le tableau tiré, pas par la formule
+- « draw » (F1c) : tirage au sort par le moteur au moment de la coupe, figé par l’événement
+- « draw » : tableau et scission tirés au sort par le moteur, quota tenu
 - MCP : même champ « ties » sur les outils de coupe (ADR-0008)
 
 </details>
@@ -5613,10 +5615,11 @@ Unitaires : 635 fichiers, 5194 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/competitionView/useScreenTableauRanking.test.ts</code> — 1 test</summary>
+<summary><code>src/renderer/hooks/competitionView/useScreenTableauRanking.test.ts</code> — 2 tests</summary>
 
 - **useScreenTableauRanking (ADR-0040)**
   - choix au passage au tableau appliqué, puis coupe figée par le tableau tiré
+  - « draw » : tirage fait une fois au choix, le même à chaque calcul
 
 </details>
 
@@ -10088,7 +10091,7 @@ Unitaires : 635 fichiers, 5194 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/ranking/advancement.test.ts</code> — 7 tests</summary>
+<summary><code>src/shared/domain/ranking/advancement.test.ts</code> — 9 tests</summary>
 
 - **cutAtBar : ex aequo à la barre (docs/adr/0040)**
   - sans ex aequo à la barre : quota tenu, rien à signaler
@@ -10098,6 +10101,8 @@ Unitaires : 635 fichiers, 5194 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - rang d’entrée fourni par l’appelant (4e paramètre \`entryRank\`)
   - quota absent ou ≥ effectif : tout le monde passe
   - nombre de qualifiés : règle inchangée
+  - « draw » (FIE o.73.2.f) : tirage au sort des ex aequo, hasard injecté, quota tenu
+  - « draw » sans hasard (affichage avant la coupe) : tous les ex aequo restent
 
 </details>
 
