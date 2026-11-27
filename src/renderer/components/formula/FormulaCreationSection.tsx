@@ -39,9 +39,9 @@ interface Props extends FormulaEditorProps {
 
 export const FormulaCreationSection: React.FC<Props> = ({ picker, ...props }) => {
   const { t } = useTranslation();
-  const { formula, specialMode } = props;
+  const { formula } = props;
   const parts = summarizeFormulaV2(formula);
-  const summary = specialMode ? t(`rapieres.mode_${specialMode}`) : formatFormulaSummary(parts, t);
+  const summary = formatFormulaSummary(parts, t);
 
   return (
     <div className="form-group formula-collapsed" data-testid="formula-collapsed">

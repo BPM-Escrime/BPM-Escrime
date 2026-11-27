@@ -98,7 +98,7 @@ const TeamEntryFields: React.FC<TeamEntryFieldsProps> = ({ idPrefix, draft, onCh
             <option value="">{t('teamEntry.level_unknown')}</option>
             {levels.map((label, i) => (
               <option key={i} value={String(i + 1)}>
-                {levelLabel(i + 1, levels, c => t(`rapieres.level_${c}`))}
+                {levelLabel(i + 1, levels, c => t(`teamEntry.level_${c}`))}
               </option>
             ))}
           </select>

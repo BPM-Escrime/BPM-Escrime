@@ -797,7 +797,7 @@ const PoolPrepView: React.FC<PoolPrepViewProps> = ({
                     <span className="is-d68a6d">{idx + 1}.</span>
                     {t(
                       criterion.key === 'byLevel'
-                        ? 'rapieres.level'
+                        ? 'teamEntry.level'
                         : criterion.key === 'byRanking'
                           ? 'pools.prep_sep_ranking'
                           : CRITERION_LABEL[criterion.key]

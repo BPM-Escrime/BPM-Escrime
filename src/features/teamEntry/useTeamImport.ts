@@ -1,6 +1,8 @@
 /**
- * BPM - Escrime - Tournoi des rapières : équipes enregistrées comme tireurs (#1118)
- * Création / mise à jour d'une équipe et import d'un export d'inscriptions (#1211).
+ * BPM - Escrime - Entrée en équipes : import d'un export d'inscriptions (#1211, #1118)
+ * Une équipe (binôme) est un tireur de l'épreuve : l'import écrit ses membres, son niveau, son
+ * HANDI, sa catégorie et son sexe avec l'inscription (docs/adr/0043). L'ajout et la modification
+ * d'une équipe passent par la fiche du tireur (F4c).
  * Licensed under GPL-3.0
  */
 
@@ -8,47 +10,36 @@ import { useState } from 'react';
 import { Fencer, FencerStatus, Gender } from '../../shared/types';
 import { useTranslation } from '../../renderer/hooks/useTranslation';
 import { usePlatform } from '../../renderer/platform/PlatformContext';
-import { RapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
-import type { RapieresNotify } from './rapieresNotify';
-import { teamMembersLabel } from '../../shared/domain/rapieres/rapieresCalculations';
+import type { TeamNotify } from './teamNotify';
+import { teamMembersLabel } from '../../shared/domain/fencers/teamEntry';
 import { rapieresTeamEntry } from '../../shared/domain/rapieres/rapieresEntry';
-import { buildRapieresImportTemplate, parseRapieresTeams } from './rapieresImport';
-import { RapieresTeamDraft } from './RapieresTeamModal';
+import { buildTeamImportTemplate, parseTeamImport } from './teamImport';
+import type { TeamImportDraft } from './teamImport';
 
 type NewFencer = Omit<Fencer, 'id' | 'createdAt' | 'updatedAt'>;
 
-interface UseRapieresTeamsOptions {
+interface UseTeamImportOptions {
   competitionDate?: Date | string;
-  addFencer: (fencer: NewFencer) => Promise<Fencer | null | undefined>;
   /** Ajout groupé : addFencer en boucle n'en garde qu'un (closure sur la liste périmée) */
   bulkAddFencers: (fencers: NewFencer[]) => Promise<Fencer[]>;
-  updateFencer: (id: string, updates: Partial<Fencer>) => Promise<void>;
-  setRapieresTeam: (id: string, info: RapieresTeamInfo) => void;
   /** Notification de l'écran (toast) */
-  notify: RapieresNotify;
+  notify: TeamNotify;
 }
 
-export function useRapieresTeams({
-  competitionDate,
-  addFencer,
-  bulkAddFencers,
-  updateFencer,
-  setRapieresTeam,
-  notify,
-}: UseRapieresTeamsOptions) {
+export function useTeamImport({ competitionDate, bulkAddFencers, notify }: UseTeamImportOptions) {
   const { t } = useTranslation();
   const platform = usePlatform();
   // Fichier lu, en attente de sélection des équipes (fenêtre d'import)
-  const [rapieresImport, setRapieresImport] = useState<{
+  const [pendingImport, setPendingImport] = useState<{
     filename: string;
-    teams: RapieresTeamDraft[];
+    teams: TeamImportDraft[];
     skipped: number[];
   } | null>(null);
 
   // Nom = nom d'équipe, prénom = noms des deux tireurs, club / région = séparations des poules
   // (#1441) ; membres, niveau, HANDI, catégorie et sexe d'équipe portés par le tireur (F4c,
   // docs/adr/0043) : l'import (CSV / XLSX) les écrit avec l'inscription
-  const rapieresFencerFields = (team: RapieresTeamDraft) => ({
+  const teamFencerFields = (team: TeamImportDraft) => ({
     lastName: team.name,
     firstName: teamMembersLabel(team.info.fencers),
     club: team.info.club ?? '',
@@ -56,28 +47,18 @@ export function useRapieresTeams({
     ...rapieresTeamEntry(team.info, competitionDate ? new Date(competitionDate) : new Date()),
   });
 
-  const newTeamFencer = (team: RapieresTeamDraft) =>
+  const newTeamFencer = (team: TeamImportDraft) =>
     ({
       gender: Gender.MIXED,
-      ...rapieresFencerFields(team),
+      ...teamFencerFields(team),
       nationality: 'FRA',
       status: FencerStatus.NOT_CHECKED_IN,
     }) as NewFencer;
 
-  const handleSaveRapieresTeam = async (team: RapieresTeamDraft, fencer?: Fencer) => {
-    if (fencer) {
-      await updateFencer(fencer.id, rapieresFencerFields(team));
-      setRapieresTeam(fencer.id, team.info);
-      return;
-    }
-    const added = await addFencer(newTeamFencer(team));
-    if (added) setRapieresTeam(added.id, team.info);
-  };
-
   // Import d'un export d'inscriptions (CSV / XLSX), une équipe par ligne (#1211)
-  const handleImportRapieresTeams = async () => {
+  const handleImportTeams = async () => {
     const result = await platform.openFile({
-      title: t('rapieres.import_teams'),
+      title: t('teamEntry.import_teams'),
       filters: [
         { name: 'CSV / Excel', extensions: ['csv', 'xlsx'] },
         { name: '*', extensions: ['*'] },
@@ -85,55 +66,53 @@ export function useRapieresTeams({
     });
     if (!result) return;
     const refDate = competitionDate ? new Date(competitionDate) : new Date();
-    const { teams, skipped } = parseRapieresTeams(result.content || '', refDate);
+    const { teams, skipped } = parseTeamImport(result.content || '', refDate);
     if (teams.length === 0) {
-      notify(t('rapieres.import_empty'), 'error');
+      notify(t('teamEntry.import_empty'), 'error');
       return;
     }
     const filename = result.name;
-    setRapieresImport({ filename, teams, skipped });
+    setPendingImport({ filename, teams, skipped });
   };
 
   // Modèle CSV attendu par l'import (mêmes colonnes que l'export d'inscriptions)
-  const handleDownloadRapieresTemplate = async () => {
+  const handleDownloadTemplate = async () => {
     await platform.saveFile({
-      title: t('rapieres.download_template'),
+      title: t('teamEntry.download_template'),
       suggestedName: 'modele-import-equipes.csv',
       filters: [
         { name: 'CSV', extensions: ['csv'] },
         { name: t('fencerList.all_files'), extensions: ['*'] },
       ],
-      content: buildRapieresImportTemplate(),
+      content: buildTeamImportTemplate(),
       mimeType: 'text/csv;charset=utf-8',
     });
   };
 
   // Équipes cochées dans la fenêtre d'import : ajout groupé
-  const confirmRapieresImport = async (teams: RapieresTeamDraft[]) => {
+  const confirmImport = async (teams: TeamImportDraft[]) => {
     if (teams.length === 0) return;
     const added = await bulkAddFencers(teams.map(newTeamFencer));
-    added.forEach((fencer, i) => setRapieresTeam(fencer.id, teams[i].info));
-    notify(t('rapieres.import_done', { n: String(added.length) }), 'success');
+    notify(t('teamEntry.import_done', { n: String(added.length) }), 'success');
   };
 
   return {
-    rapieresFencerFields,
-    handleSaveRapieresTeam,
-    handleImportRapieresTeams,
-    handleDownloadRapieresTemplate,
+    teamFencerFields,
+    handleImportTeams,
+    handleDownloadTemplate,
     /** Boutons d'import et de modèle de la liste des appels (props de FencerList) */
     importButtons: {
-      customImport: { label: t('rapieres.import_teams'), onClick: handleImportRapieresTeams },
+      customImport: { label: t('teamEntry.import_teams'), onClick: handleImportTeams },
       customImportTemplate: {
-        label: t('rapieres.download_template'),
-        onClick: handleDownloadRapieresTemplate,
+        label: t('teamEntry.download_template'),
+        onClick: handleDownloadTemplate,
       },
     },
     /** Props de la fenêtre de sélection (null = fermée) */
-    rapieresImportModal: rapieresImport && {
-      ...rapieresImport,
-      onImport: confirmRapieresImport,
-      onClose: () => setRapieresImport(null),
+    teamImportModal: pendingImport && {
+      ...pendingImport,
+      onImport: confirmImport,
+      onClose: () => setPendingImport(null),
     },
   };
 }

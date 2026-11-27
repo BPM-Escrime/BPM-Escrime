@@ -65,8 +65,8 @@ interface PoolRankingViewProps {
   onSplitOff?: (group: string) => void;
   /** Tour de poules intermédiaire, ou scission (docs/adr/0039) : remplace le passage au tableau (#1051) */
   nextRoundAction?: { label: string; onClick: () => void; testId?: string };
-  /** Tournoi des rapières : « Nom » / « Prénom » deviennent « Équipe » / « Tireurs » (#1279) */
-  rapieres?: boolean;
+  /** Entrée en équipes : « Nom » / « Prénom » deviennent « Équipe » / « Tireurs » (#1279) */
+  teamEntry?: boolean;
   /** Tableau tiré : classement figé, ni recalcul ni modification manuelle (#1996) */
   rankingFrozen?: boolean;
   /** Bouton « tableau » affiché dans la barre du haut : retiré du bas de page (#2008) */
@@ -90,7 +90,7 @@ const PoolRankingView: React.FC<PoolRankingViewProps> = ({
   splitOffGroups,
   onSplitOff,
   nextRoundAction,
-  rapieres = false,
+  teamEntry = false,
   tableauActionInNav = false,
 }) => {
   const { t } = useTranslation();
@@ -239,8 +239,8 @@ const PoolRankingView: React.FC<PoolRankingViewProps> = ({
   const rankingPdfArgs = () => {
     const logo = localStorage.getItem('bellepoule-logo') ?? undefined;
     const cols = getVisibleColumns('ranking').filter(col => col !== 'quest' || isLaserSabre);
-    const nameLabels = rapieres
-      ? { lastName: t('rapieres.team'), firstName: t('rapieres.fencers') }
+    const nameLabels = teamEntry
+      ? { lastName: t('teamEntry.team'), firstName: t('teamEntry.fencers') }
       : undefined;
     return [
       overallRanking,
@@ -498,10 +498,10 @@ const PoolRankingView: React.FC<PoolRankingViewProps> = ({
                       onChange={() => toggleColumn('ranking', col.id)}
                       className="cursor-pointer"
                     />
-                    {rapieres && col.id === 'lastName'
-                      ? t('rapieres.team')
-                      : rapieres && col.id === 'firstName'
-                        ? t('rapieres.fencers')
+                    {teamEntry && col.id === 'lastName'
+                      ? t('teamEntry.team')
+                      : teamEntry && col.id === 'firstName'
+                        ? t('teamEntry.fencers')
                         : t(`poolColumns.col_${col.id}`)}
                   </label>
                 ))}
@@ -543,10 +543,10 @@ const PoolRankingView: React.FC<PoolRankingViewProps> = ({
             <tr>
               {isVisible('rank') && <th style={W50}>{t('ranking.rank')}</th>}
               {isVisible('lastName') && (
-                <th>{rapieres ? t('rapieres.team') : t('ranking.name')}</th>
+                <th>{teamEntry ? t('teamEntry.team') : t('ranking.name')}</th>
               )}
               {isVisible('firstName') && (
-                <th>{rapieres ? t('rapieres.fencers') : t('ranking.first_name')}</th>
+                <th>{teamEntry ? t('teamEntry.fencers') : t('ranking.first_name')}</th>
               )}
               {isVisible('club') && <th>{t('ranking.club')}</th>}
               {isVisible('victories') && <th style={W40}>{t('ranking.victories')}</th>}

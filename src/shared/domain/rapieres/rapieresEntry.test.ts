@@ -1,15 +1,14 @@
 /**
  * Tests : pont rapières ↔ entrée en équipes (docs/adr/0043, F4c) : composition écrite sur le
- * tireur, lue de préférence sur lui, sinon dans `rapieres.teams` (compatibilité)
+ * tireur, lue de préférence sur lui, sinon dans l'ancienne clé `rapieres.teams` (compatibilité, F4e)
  */
 import { describe, it, expect } from 'vitest';
 import { Category, Gender, FencerStatus, type Fencer } from '../../types';
 import {
-  rapieresInfoOf,
   rapieresLevelNumber,
   rapieresLevelOfNumber,
   rapieresTeamEntry,
-  rapieresTeamsOf,
+  withLegacyTeams,
 } from './rapieresEntry';
 import type { RapieresTeamInfo } from './rapieres.types';
 
@@ -116,48 +115,38 @@ describe('rapieresTeamEntry : composition → champs du tireur', () => {
   });
 });
 
-describe('rapieresInfoOf : champs du tireur de préférence, sinon la session', () => {
+describe('withLegacyTeams : champs du tireur de préférence, sinon l’ancienne clé de session', () => {
   it('le tireur porte la composition : elle prime sur la session', () => {
     const session = info({ level: 'beginner', club: 'Lyon' });
     const f = fencer({
+      id: 'a',
       level: 3,
       members: [{ lastName: 'X', firstName: 'x' }],
       club: 'Nantes',
       handicap: true,
     });
-    const r = rapieresInfoOf(f, session)!;
-    expect(r.level).toBe('expert');
-    expect(r.club).toBe('Nantes');
-    expect(r.fencers[0]).toMatchObject({ lastName: 'X', category: 'HANDI' });
-    expect(r.fencers[1].lastName).toBe('');
+    expect(withLegacyTeams([f], { a: session }, REF)[0]).toBe(f);
   });
 
-  it('tireur sans composition : la session (alias de compatibilité) ; sans rien : undefined', () => {
+  it('tireur sans composition : la session (alias de compatibilité) ; sans rien : inchangé', () => {
     const session = info();
-    expect(rapieresInfoOf(fencer(), session)).toBe(session);
-    expect(rapieresInfoOf(fencer(), undefined)).toBeUndefined();
+    const [read] = withLegacyTeams([fencer({ id: 'a', club: '' })], { a: session }, REF);
+    expect(read.level).toBe(2);
+    expect(read.members?.map(m => m.lastName)).toEqual(['DUPONT', 'MARTIN']);
+    expect(read.category).toBe(Category.V2);
+    expect(read.gender).toBe(Gender.MIXED);
+    expect(read.club).toBe('Paris');
+    const alone = fencer({ id: 'b' });
+    expect(withLegacyTeams([alone], { a: session }, REF)[0]).toBe(alone);
+    expect(withLegacyTeams([alone], undefined, REF)[0]).toBe(alone);
   });
 
-  it('écriture puis lecture : composition conservée', () => {
-    const original = info();
-    const e = rapieresTeamEntry(original, REF);
-    const back = rapieresInfoOf(fencer({ ...e, club: original.club }), original)!;
-    expect(back.level).toBe(original.level);
-    expect(back.fencers.map(f => f.lastName)).toEqual(['DUPONT', 'MARTIN']);
-    expect(back.fencers.map(f => f.category)).toEqual(['SENIOR', 'V2']);
-  });
-
-  it('rapieresTeamsOf fusionne : tireurs d’abord, session pour les autres', () => {
-    const sessionOnly = info({ level: 'expert' });
-    const teams = rapieresTeamsOf(
-      [
-        fencer({ id: 'a', level: 1, members: [{ lastName: 'Q', firstName: 'q' }] }),
-        fencer({ id: 'b' }),
-      ],
-      { b: sessionOnly, c: sessionOnly }
-    );
-    expect(teams.a.level).toBe('beginner');
-    expect(teams.b).toBe(sessionOnly);
-    expect(teams.c).toBe(sessionOnly);
+  it('la catégorie et le club du tireur priment ; aucune écriture (copie)', () => {
+    const f = fencer({ id: 'a', category: Category.U20, club: 'Nantes' });
+    const [read] = withLegacyTeams([f], { a: info() }, REF);
+    expect(read.category).toBe(Category.U20);
+    expect(read.club).toBe('Nantes');
+    expect(read).not.toBe(f);
+    expect(f.level).toBeUndefined();
   });
 });

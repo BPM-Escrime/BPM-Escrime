@@ -64,6 +64,23 @@ const FORMULA_FLAT_KEYS: ReadonlySet<string> = new Set([
 /** Réglages figés une fois les poules tirées (ou le tableau généré) : ils changent les règles */
 const FROZEN_SETTINGS: ReadonlySet<string> = new Set(['specialMode', 'customFormula']);
 
+/**
+ * Le mode spécial (`specialMode`) n'est plus écrit (docs/adr/0043, F4e) : le Tournoi des rapières
+ * est le modèle de formule « bpm/C/rapieres ». Une épreuve enregistrée avec lui garde sa valeur
+ * (réécriture identique tolérée), une nouvelle valeur est refusée.
+ */
+function assertNoSpecialMode(
+  patch: Partial<CompetitionSettings>,
+  existing: Partial<CompetitionSettings> | undefined
+): void {
+  if (patch.specialMode !== undefined && patch.specialMode !== existing?.specialMode) {
+    throw new CommandError(
+      'invalid_settings',
+      'Le mode spécial « rapières » n’existe plus : appliquer le modèle de formule « Tournoi des rapières » (bpm/C/rapieres)'
+    );
+  }
+}
+
 /** Épreuve exposée par le contrat (getCompetition, listCompetitions) : dates en ISO 8601 */
 export function competitionDTO(c: Competition) {
   const iso = (d: unknown) => new Date((d as Date | string | undefined) ?? 0).toISOString();
@@ -108,6 +125,7 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
   const date = new Date(input.date);
   if (Number.isNaN(date.getTime())) throw new CommandError('invalid_date', 'Date invalide');
   const patch = input.settings ?? {};
+  assertNoSpecialMode(patch, undefined);
   // Arme sans défaut de création (undefined) : réglages de repli, la base exige les touches
   const defaults =
     buildDefaultCompetitionSettings({
@@ -213,6 +231,7 @@ export function updateCompetitionSettings(
 ) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
   const patch = input.settings ?? {};
+  assertNoSpecialMode(patch, comp.settings);
   const frozen = [
     ...(input.weapon !== undefined && input.weapon !== comp.weapon ? ['weapon'] : []),
     ...(input.isTeamEvent !== undefined && input.isTeamEvent !== !!comp.isTeamEvent

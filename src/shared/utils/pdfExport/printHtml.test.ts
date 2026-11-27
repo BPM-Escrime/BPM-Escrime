@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { printHTML } from './core';
 import { printRankingHTML } from './rankingPdf';
 import { printResultsHTML } from './resultsPdf';
-import { printRapieresRanking } from '../../../features/rapieres/rapieresPdf';
+import { printTeamRanking } from '../../../features/teamEntry/teamRankingPdf';
 import type { Fencer, PoolRanking } from '../../types';
 
 const fencer = { id: 'a', lastName: 'Alpha', firstName: 'X', club: 'C' } as unknown as Fencer;
@@ -45,7 +45,7 @@ describe('impression via la boîte intégrée (#1214)', () => {
   });
 
   it('rapières : imprime le tableau de classement', async () => {
-    await printRapieresRanking({ title: 'T', subtitle: 'S', headers: ['Rg'], rows: [[1]] });
+    await printTeamRanking({ title: 'T', subtitle: 'S', headers: ['Rg'], rows: [[1]] });
     expect(printHtml.mock.calls[0][0]).toContain('Rg');
   });
 });

@@ -9,7 +9,6 @@ import { useCallback } from 'react';
 import type { Pool } from '../../shared/types';
 import type { TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import { tableauComposition } from '../../shared/domain/tableau/tableauComposition';
-import type { RapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
 import { useBpmClient } from '../api/BpmClientContext';
 import { useToast } from '../components/Toast';
 import { useTranslation } from './useTranslation';
@@ -242,9 +241,6 @@ export interface CompetitionCommandInputs {
   };
   skipPools: { fencerIds?: string[] };
   clearTableau: Record<string, never>;
-  setRapieresTeams: {
-    teams: Array<{ fencerId: string; info: RapieresTeamInfo }>;
-  };
 }
 
 export function useCompetitionCommand(competitionId: string | undefined) {

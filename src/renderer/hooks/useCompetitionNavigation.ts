@@ -3,6 +3,7 @@
  * tour suivant, 3e place) (extrait de CompetitionView, #1599)
  * Licensed under GPL-3.0
  */
+import { legacyRapieresRead } from '../../shared/domain/formula/rapieresFormula';
 import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { FencerStatus, Weapon } from '../../shared/types';
@@ -63,7 +64,6 @@ interface UseCompetitionNavigationParams {
   hasDirectElimination: boolean;
   thirdPlaceMatch: boolean;
   playAllPositions: boolean;
-  isRapieres: boolean;
   setPoolsLaunched: Setter<boolean>;
   setViewedPoolRound: Setter<number | null>;
   setRankingValidated: Setter<boolean>;
@@ -81,7 +81,7 @@ interface UseCompetitionNavigationParams {
   showSplitGroup: (group: string | null) => void;
 }
 
-/** Transitions entre phases : classement, tableau (3e place, rapières), tour de poules suivant. */
+/** Transitions entre phases : classement, tableau (3e place), tour de poules suivant. */
 export function useCompetitionNavigation({
   competition,
   onUpdate,
@@ -100,7 +100,6 @@ export function useCompetitionNavigation({
   currentAppelFencers,
   thirdPlaceMatch,
   playAllPositions,
-  isRapieres,
   setPoolsLaunched,
   setViewedPoolRound,
   setRankingValidated,
@@ -268,8 +267,8 @@ export function useCompetitionNavigation({
     const formula = competition.settings?.formula;
     // Même coupe que le classement du tableau (useCompetitionPhaseFlow) et que le moteur
     return tableauCut(overallRanking, pools, {
-      isRapieres,
-      rapieresTableauMode: undefined,
+      // Épreuve enregistrée en mode spécial : lue comme avant (docs/adr/0043, F4e)
+      legacyRapieres: legacyRapieresRead(competition.settings, undefined),
       poolWinnersOnly: !!resolveCompetitionSettings(competition.weapon, competition.settings)
         .poolWinnersOnly,
       customFormula: getActiveFormula(competition.weapon, competition.settings),

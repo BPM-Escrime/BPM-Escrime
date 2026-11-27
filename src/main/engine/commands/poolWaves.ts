@@ -3,8 +3,8 @@
  * launchPoolWave : vague lancée par le DT (0 = aucune) ; endPoolWaves : vagues arrêtées avant leur
  * terme (passage au classement), ou reprises. État dans la clé de session `waves` du tour
  * courant, journal PoolWaveLaunched / PoolWavesEnded. Un tour est « en vagues » quand son ordre
- * des matchs est « waves » ou « waves_classic » (formule), ou pour une épreuve du mode spécial
- * rapières (jusqu'à F4e).
+ * des matchs est « waves » ou « waves_classic », dans la formule (une épreuve enregistrée en mode
+ * spécial rapières est lue comme un tour en vagues, ADR-0043, F4e).
  * Licensed under GPL-3.0
  */
 import { isWavesRound } from '../../../shared/domain/formula/formulaV2';

@@ -4,13 +4,7 @@
  * Licensed under GPL-3.0
  */
 
-import {
-  Category,
-  CompetitionSettings,
-  CompetitionSpecialMode,
-  CustomFormulaConfig,
-  Weapon,
-} from '../types';
+import { Category, CompetitionSettings, CustomFormulaConfig, Weapon } from '../types';
 import { deriveSettingsFromFormula } from './customFormulaSettings';
 import { getDefaultMaxScores, isOlympicWeapon } from './defaultMaxScores';
 
@@ -26,8 +20,6 @@ export interface DefaultCompetitionSettingsInput {
   teamFormat?: 'fie-relay' | 'laser-arena';
   /** Arme CUSTOM uniquement */
   customFormula?: CustomFormulaConfig;
-  /** Arme CUSTOM uniquement : tournoi des rapières */
-  specialMode?: CompetitionSpecialMode;
 }
 
 const BASE = {
@@ -46,7 +38,7 @@ const BASE = {
 export function buildDefaultCompetitionSettings(
   input: DefaultCompetitionSettingsInput
 ): CompetitionSettings | undefined {
-  const { weapon, category, isTeamEvent = false, customFormula, specialMode } = input;
+  const { weapon, category, isTeamEvent = false, customFormula } = input;
   const teamSettings = {
     minTeamSize: input.teamSize ?? 3,
     teamReserveCount: input.teamReserveCount ?? 1,
@@ -68,7 +60,6 @@ export function buildDefaultCompetitionSettings(
       ...teamSettings,
       // Réglages issus de la formule personnalisée (#1125)
       ...(customFormula ? deriveSettingsFromFormula(customFormula) : {}),
-      ...(specialMode ? { specialMode } : {}),
     };
   }
 

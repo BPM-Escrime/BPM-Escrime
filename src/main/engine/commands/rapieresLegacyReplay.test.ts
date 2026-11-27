@@ -33,17 +33,13 @@ import { getCompetitionOrThrow } from './competitions';
 import { EVENT, recordEvents } from './eventLog';
 import { readSession } from './sessionView';
 import { tableauRanking, writeSession } from './sport';
-import { isWavesRound } from '../../../shared/domain/formula/formulaV2';
+import { isWavesRound, tieBreakByVictoryOf } from '../../../shared/domain/formula/formulaV2';
 import {
   resolveCompetitionSettings,
   usesModernRules,
 } from '../../../shared/utils/customFormulaSettings';
-import { allowsVictoryTieBreak } from '../../../shared/utils/tieBreak';
-import { rapieresTeamsOf } from '../../../shared/domain/rapieres/rapieresEntry';
-import {
-  rapieresTeamCategory,
-  rapieresTeamGender,
-} from '../../../shared/domain/rapieres/rapieresAge';
+import { withLegacyTeams } from '../../../shared/domain/rapieres/rapieresEntry';
+import { DEFAULT_TEAM_LEVELS } from '../../../shared/domain/fencers/teamEntry';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -62,7 +58,7 @@ beforeEach(async () => {
 });
 afterEach(() => db.close());
 
-// ── Adaptateur : lecture des faits avec les fonctions du moment (mode spécial, puis briques) ────
+// ── Adaptateur : lecture des faits par les briques de la formule (F4e) ────────────────────────
 const adapter = {
   effectiveFacts(comp: import('../../../shared/types').Competition) {
     const eff = resolveCompetitionSettings(comp.weapon, comp.settings) as CompetitionSettings;
@@ -75,23 +71,27 @@ const adapter = {
       tableMaxScore: eff.defaultTableMaxScore,
       modernRules: usesModernRules(comp.weapon, comp.settings),
       wavesRound: isWavesRound(comp.settings, 1),
-      victoryTieBreak: allowsVictoryTieBreak(comp.weapon, true),
+      victoryTieBreak: tieBreakByVictoryOf(comp.weapon, comp.settings),
     };
   },
   teamFacts(fencers: Fencer[], session: Record<string, unknown>) {
     const r = session.rapieres as { version?: number; teams?: Record<string, never> } | undefined;
-    const teams = rapieresTeamsOf(fencers, r?.version === 2 ? (r.teams ?? {}) : {});
     const ref = new Date('2026-12-06');
+    const teams = withLegacyTeams(fencers, r?.version === 2 ? r.teams : undefined, ref);
+    // Représentation du mode spécial : catégorie M20 / SENIOR / V1…, sexe M / F / MIXED, niveau en code
+    const category = (c?: string) =>
+      c === 'SEN' || c === 'SENIOR' ? 'SENIOR' : c?.startsWith('U') ? 'M20' : (c ?? null);
+    const gender = (g?: string) => (g === Gender.MIXED ? 'MIXED' : (g ?? null));
     return Object.fromEntries(
-      fencers
-        .filter(f => teams[f.id])
+      teams
+        .filter(f => f.level !== undefined)
         .map(f => [
           f.lastName,
           {
-            level: teams[f.id].level,
-            category: rapieresTeamCategory(teams[f.id], ref),
-            gender: rapieresTeamGender(teams[f.id]) ?? null,
-            club: teams[f.id].club ?? null,
+            level: DEFAULT_TEAM_LEVELS[(f.level ?? 1) - 1],
+            category: category(f.category),
+            gender: gender(f.gender),
+            club: f.club || null,
           },
         ])
     );

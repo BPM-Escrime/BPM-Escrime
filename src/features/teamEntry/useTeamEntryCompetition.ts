@@ -1,7 +1,6 @@
 /**
- * BPM - Escrime - Tournoi des rapières : statistiques d'équipe et migration v1 (extrait de
- * CompetitionView, #1599). Les vagues sont celles de tout tour en vagues (usePoolWavesView,
- * docs/adr/0043).
+ * BPM - Escrime - Entrée en équipes : statistiques d'équipe et migration de l'ancien état v1
+ * du Tournoi des rapières (extrait de CompetitionView, #1599, docs/adr/0043).
  * Licensed under GPL-3.0
  */
 import { useEffect, useMemo, useRef } from 'react';
@@ -11,40 +10,40 @@ import { logger, LogCategory } from '@shared/services/logger';
 import type { useFencerManagement } from '../../renderer/hooks/useFencerManagement';
 import { createRapieresSession } from '../../shared/domain/rapieres/rapieres.types';
 import type { RapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
-import type { RapieresTeamStats } from './RapieresRankingPanel';
-import type { useRapieresSessionState } from './useRapieresSessionState';
-import type { useRapieresTeams } from './useRapieresTeams';
+import type { TeamRankingStats } from './TeamRankingPanel';
+import type { useWavesSessionState } from '../poolWaves/useWavesSessionState';
+import type { useTeamImport } from './useTeamImport';
 
-type SessionState = ReturnType<typeof useRapieresSessionState>;
+type SessionState = ReturnType<typeof useWavesSessionState>;
 
-interface UseRapieresCompetitionParams {
-  isRapieres: boolean;
+interface UseTeamEntryCompetitionParams {
+  /** Épreuve en équipes (binômes) : la migration de l'ancien état ne la concerne que si elle existe */
+  isTeamEntry: boolean;
   isLoaded: boolean;
   fencers: Fencer[];
   overallRanking: PoolRanking[];
   rapieresState: SessionState['rapieresState'];
   setRapieresState: SessionState['setRapieresState'];
   bulkAddFencers: ReturnType<typeof useFencerManagement>['bulkAddFencers'];
-  rapieresFencerFields: ReturnType<typeof useRapieresTeams>['rapieresFencerFields'];
+  teamFencerFields: ReturnType<typeof useTeamImport>['teamFencerFields'];
 }
 
-/** Statistiques d'équipe et migration v1 du tournoi des rapières. */
-export function useRapieresCompetition({
-  isRapieres,
+/** Statistiques d'équipe et migration de l'ancien état v1 (vue dédiée du Tournoi des rapières). */
+export function useTeamEntryCompetition({
+  isTeamEntry,
   isLoaded,
   fencers,
   overallRanking,
   rapieresState,
   setRapieresState,
   bulkAddFencers,
-  rapieresFencerFields,
-}: UseRapieresCompetitionParams) {
+  teamFencerFields,
+}: UseTeamEntryCompetitionParams) {
   // Migration de la première version (vue dédiée) : équipes recréées comme tireurs
-  const rapieresMigrating = useRef(false);
+  const migrating = useRef(false);
   useEffect(() => {
-    if (!isRapieres || !isLoaded || rapieresState?.version !== 1 || rapieresMigrating.current)
-      return;
-    rapieresMigrating.current = true;
+    if (!isTeamEntry || !isLoaded || rapieresState?.version !== 1 || migrating.current) return;
+    migrating.current = true;
     const legacy = rapieresState;
     const LEGACY_STATUS: Record<string, FencerStatus> = {
       checked_in: FencerStatus.CHECKED_IN,
@@ -59,7 +58,7 @@ export function useRapieresCompetition({
           legacy.teams.map(
             tm =>
               ({
-                ...rapieresFencerFields({
+                ...teamFencerFields({
                   name: tm.name,
                   info: { level: tm.level, fencers: tm.fencers },
                 }),
@@ -75,15 +74,19 @@ export function useRapieresCompetition({
       }
       setRapieresState({ ...createRapieresSession(), teams });
     })().catch(error => {
-      rapieresMigrating.current = false;
-      logger.error(LogCategory.UI, 'Rapières : migration impossible', error as Error);
+      migrating.current = false;
+      logger.error(
+        LogCategory.UI,
+        'Équipes : migration de l’ancien état impossible',
+        error as Error
+      );
     });
-  }, [isRapieres, isLoaded, rapieresState, fencers.length]);
+  }, [isTeamEntry, isLoaded, rapieresState, fencers.length]);
 
-  // Statistiques de poule par équipe (classements rapières)
-  const rapieresStats = useMemo(
+  // Statistiques de poule par équipe (classements d'équipes)
+  const teamStats = useMemo(
     () =>
-      new Map<string, RapieresTeamStats>(
+      new Map<string, TeamRankingStats>(
         overallRanking.map(r => [
           r.fencer.id,
           {
@@ -97,5 +100,5 @@ export function useRapieresCompetition({
     [overallRanking]
   );
 
-  return { rapieresStats };
+  return { teamStats };
 }

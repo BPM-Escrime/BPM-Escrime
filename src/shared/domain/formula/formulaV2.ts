@@ -23,11 +23,14 @@ import {
   Weapon,
 } from '../../types';
 import { deriveSettingsFromFormula } from '../../utils/customFormulaSettings';
+import { allowsVictoryTieBreak } from '../../utils/tieBreak';
 import { createDefaultCustomFormula } from '../../utils/tournamentTemplates';
 import { draftFromSettings, effectivePoolRounds } from './formulaDraft';
 import { normalizeCustomFormula } from './formulaFrieze';
 import { isWavesOrder } from '../pools/waves';
 import { normalizeRankingFilterKeys, type RankingFilterKey } from '../ranking/rankingFilters';
+import type { RapieresTableauMode } from '../rapieres/tableauQualifiers';
+import { isLegacyRapieres, legacyRapieresFormula } from './rapieresFormula';
 
 /** Réglages v1 non exécutés, gardés pour l'aller-retour avec `customFormula` (retirés à la 3.0) */
 export type LegacyPoolSettings = Pick<
@@ -141,6 +144,12 @@ export interface FormulaV2 {
      * l'écran, aux PDF et au CSV ; absents : aucun filtre. Un affichage, pas une compétition fille.
      */
     rankingFilters?: RankingFilterKey[];
+    /**
+     * Égalité en fin de temps tranchée par un vainqueur désigné (tirage au sort avant la minute
+     * supplémentaire, ou V manuel ; docs/adr/0043, F4e). Épée, fleuret, sabre et Sabre Laser
+     * l'ont toujours ; ce réglage l'ouvre à l'arme « Autre ». Absent : selon l'arme.
+     */
+    tieBreakByVictory?: boolean;
   };
   name?: string;
   notes?: string;
@@ -150,6 +159,11 @@ export interface FormulaSource {
   weapon: Weapon;
   category: Category;
   settings?: Partial<CompetitionSettings>;
+  /**
+   * Mode de tableau hérité d'une épreuve du mode spécial rapières (`rapieres.tableauMode` de
+   * l'état de session) : lu avec elle, sans réécriture (docs/adr/0043, F4e)
+   */
+  legacyTableauMode?: RapieresTableauMode;
 }
 
 const pools = (f: FormulaV2) => f.phases.filter((p): p is PoolRoundPhase => p.kind === 'pool');
@@ -431,6 +445,9 @@ export function customFormulaOf(f: FormulaV2): CustomFormulaConfig {
 
 /** Formule v2 de l'épreuve : enregistrée, sinon construite depuis ses réglages (sans écriture) */
 export function formulaOf(src: FormulaSource): FormulaV2 {
+  // Épreuve enregistrée en mode spécial rapières : lue comme la formule des rapières (ADR-0043)
+  if (isLegacyRapieres(src.weapon, src.settings))
+    return legacyRapieresFormula(src.settings, src.legacyTableauMode);
   const stored = src.settings?.formula;
   // Formule enregistrée avant l'étape E3 avec l'ancienne compétition couplée : relue (ADR-0039)
   if (stored && stored.version === 2) return coupledFormula(stored);
@@ -462,23 +479,42 @@ export function poolBoutOrderOfRound(
   settings: Partial<CompetitionSettings> | undefined,
   round: number
 ): PoolBoutOrder | undefined {
-  const f = settings?.formula;
+  const f = readableFormulaOf(settings);
   if (f && pools(f).length > 0)
     return phaseSettings(f, { kind: 'pool', round: round - 1 }).boutOrder;
   return settings?.poolBoutOrder;
 }
 
 /**
- * Le tour `round` (1 = 1er) est-il un tour en vagues ? Ordre « waves » ou « waves_classic » de
- * la formule ; une épreuve du mode spécial rapières en est un aussi, jusqu'à F4e (docs/adr/0043).
+ * Formule enregistrée de l'épreuve, ou celle que lit une épreuve du mode spécial rapières
+ * (lecture de compatibilité, docs/adr/0043, F4e) ; undefined : réglages plats seulement.
  */
+export function readableFormulaOf(
+  settings: Partial<CompetitionSettings> | undefined,
+  legacyTableauMode?: RapieresTableauMode
+): FormulaV2 | undefined {
+  return isLegacyRapieres(undefined, settings)
+    ? legacyRapieresFormula(settings, legacyTableauMode)
+    : settings?.formula;
+}
+
+/** Le tour `round` (1 = 1er) est-il un tour en vagues ? Ordre « waves » ou « waves_classic » de la formule. */
 export function isWavesRound(
   settings: Partial<CompetitionSettings> | undefined,
   round: number
 ): boolean {
-  return (
-    settings?.specialMode === 'rapieres' || isWavesOrder(poolBoutOrderOfRound(settings, round))
-  );
+  return isWavesOrder(poolBoutOrderOfRound(settings, round));
+}
+
+/**
+ * Égalité tranchée par un vainqueur désigné (#1442) : épée, fleuret, sabre et Sabre Laser
+ * toujours ; arme « Autre » quand la formule le demande (`general.tieBreakByVictory`, ADR-0043).
+ */
+export function tieBreakByVictoryOf(
+  weapon: Weapon | string | undefined,
+  settings: Partial<CompetitionSettings> | undefined
+): boolean {
+  return allowsVictoryTieBreak(weapon, readableFormulaOf(settings)?.general.tieBreakByVictory);
 }
 
 /** Filtres du classement final de l'épreuve : ceux de la formule, aucun par défaut (docs/adr/0043, F4d) */
@@ -496,7 +532,7 @@ export function poolDistributionOfRound(
   settings: Partial<CompetitionSettings> | undefined,
   round: number
 ): PoolDistribution {
-  const f = settings?.formula;
+  const f = readableFormulaOf(settings);
   if (!f || pools(f).length === 0) return 'serpentine';
   return phaseSettings(f, { kind: 'pool', round: round - 1 }).distribution ?? 'serpentine';
 }

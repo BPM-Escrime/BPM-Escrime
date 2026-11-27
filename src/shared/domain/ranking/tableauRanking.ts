@@ -43,8 +43,12 @@ export function computeMatchProgress(
 }
 
 export interface TableauRankingOptions {
-  isRapieres: boolean;
-  rapieresTableauMode: RapieresTableauMode | undefined;
+  /**
+   * Épreuve enregistrée en mode spécial rapières, lue comme avant (lecture de compatibilité,
+   * docs/adr/0043, F4e : `legacyRapieresRead`) : mode de tableau hérité (`rapieres.tableauMode`).
+   * Absent : épreuve ordinaire, la qualification est celle de la formule.
+   */
+  legacyRapieres?: { mode: RapieresTableauMode | undefined };
   poolWinnersOnly: boolean;
   customFormula: ReturnType<typeof getActiveFormula>;
   /** Qualification du dernier tour vers le tableau, formule v2 (`tableauQualificationOf`) */
@@ -75,8 +79,7 @@ export function tableauCut(
   overallRanking: PoolRanking[],
   pools: Pool[],
   {
-    isRapieres,
-    rapieresTableauMode,
+    legacyRapieres,
     poolWinnersOnly,
     customFormula,
     tableauQualification,
@@ -92,17 +95,17 @@ export function tableauCut(
   // Règle de qualification vers le tableau : formule « Autre » (v1), sinon formule v2
   const rule = customFormula ? getTableauAdvancement(customFormula) : tableauQualification;
   const withTies = rule && ties ? { ...rule, ties } : rule;
-  if (isRapieres && pools.length > 0) {
-    // Rapières : « têtes de poule » de la formule (demi-finales, docs/adr/0043, F4b) ; sinon
-    // mode de tableau hérité (`rapieres.tableauMode`, valeur par défaut) : toutes les équipes
-    // ou les 4 demi-finalistes (#1441)
+  if (legacyRapieres && pools.length > 0) {
+    // Épreuve du mode spécial : « têtes de poule » de la formule (demi-finales, docs/adr/0043,
+    // F4b) ; sinon mode de tableau hérité (`rapieres.tableauMode`, valeur par défaut) : toutes
+    // les équipes ou les 4 demi-finalistes (#1441)
     if (withTies?.mode === 'pool_heads') {
       ({ ranking, tiedAtBar } = poolHeadsCut(pools, ranking, withTies.count, {
         ties: withTies.ties,
         random,
       }));
     } else {
-      ranking = rapieresTableauQualifiers(pools, ranking, rapieresTableauMode);
+      ranking = rapieresTableauQualifiers(pools, ranking, legacyRapieres.mode);
     }
   } else if (poolWinnersOnly && pools.length > 0) {
     ranking = filterPoolWinners(pools, ranking);

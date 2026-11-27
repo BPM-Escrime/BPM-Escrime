@@ -5,7 +5,7 @@
 import React, { Suspense } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Pool, Weapon } from '../../../shared/types';
-import RapieresWaveBar from '../../../features/rapieres/RapieresWaveBar';
+import PoolWaveBar from '../../../features/poolWaves/PoolWaveBar';
 import { useTranslation } from '../../hooks/useTranslation';
 import EmptyState from '../common/EmptyState';
 import { PoolViewSkeleton } from '../Skeleton';
@@ -31,9 +31,9 @@ interface PoolsPhaseProps {
   isLaserSabre: boolean;
   onBackToCheckin: () => void;
   renderPoolCard: (pool: Pool, poolIndex: number) => React.ReactNode;
-  // Rapières
-  isRapieres: boolean;
-  /** Tour en vagues (ordre « waves » de la formule, ou mode rapières) : barre des vagues */
+  /** Entrée en équipes : colonne « Cat. » des poules (#1864) */
+  isTeamEntry: boolean;
+  /** Tour en vagues (ordre « waves » de la formule) : barre des vagues */
   isWaves: boolean;
   launchedWave: number;
   wavesEnded: boolean;
@@ -65,7 +65,7 @@ const PoolsPhase: React.FC<PoolsPhaseProps> = ({
   isLaserSabre,
   onBackToCheckin,
   renderPoolCard,
-  isRapieres,
+  isTeamEntry,
   isWaves,
   launchedWave,
   wavesEnded,
@@ -119,7 +119,7 @@ const PoolsPhase: React.FC<PoolsPhaseProps> = ({
       ) : (
         <>
           {isWaves && (
-            <RapieresWaveBar
+            <PoolWaveBar
               pools={pools}
               launchedWave={launchedWave}
               wavesEnded={wavesEnded}
@@ -132,7 +132,7 @@ const PoolsPhase: React.FC<PoolsPhaseProps> = ({
           )}
           <PoolsToolbar
             isLaserSabre={isLaserSabre}
-            isRapieres={isRapieres}
+            isTeamEntry={isTeamEntry}
             poolCardSize={poolCardSize}
             onPoolCardSizeChange={onPoolCardSizeChange}
             poolsViewMode={poolsViewMode}

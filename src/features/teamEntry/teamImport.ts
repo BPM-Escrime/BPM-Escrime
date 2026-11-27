@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Tournoi des rapières : import des équipes (#1211)
+ * BPM - Escrime - Entrée en équipes : import des équipes (#1211, docs/adr/0043)
  * Export d'inscriptions (CSV « ; » ou XLSX converti en CSV par le processus principal),
  * une ligne par équipe : colonnes D/E (nom/prénom tireur 1), Q (naissance tireur 1),
  * T/U (nom/prénom tireur 2), V (naissance tireur 2), Y (nom d'équipe),
@@ -11,9 +11,15 @@ import {
   RapieresAgeCategory,
   RapieresFencer,
   RapieresGender,
+  RapieresTeamInfo,
 } from '../../shared/domain/rapieres/rapieres.types';
 import { rapieresCategoryFromBirthYear } from '../../shared/domain/rapieres/rapieresAge';
-import { RapieresTeamDraft } from './RapieresTeamModal';
+
+/** Équipe lue du fichier : nom d'équipe et composition (niveau, deux tireurs, club, région) */
+export interface TeamImportDraft {
+  name: string;
+  info: RapieresTeamInfo;
+}
 
 /** Colonnes (index base 0) : D=3, E=4, Q=16, R=17, S=18 (club), T=19, U=20, V=21, W=22, X=23 (club 2nd), Y=24 */
 const COL = {
@@ -34,7 +40,7 @@ const COL = {
  * En-tête de l'export d'inscriptions (25 colonnes, index base 0 = colonnes A à Y).
  * Le parseur lit par position : toutes les colonnes doivent être présentes, même vides.
  */
-export const RAPIERES_IMPORT_HEADER: readonly string[] = [
+export const TEAM_IMPORT_HEADER: readonly string[] = [
   'Référence commande',
   'Date de la commande',
   'Statut de la commande',
@@ -81,17 +87,17 @@ const RAPIERES_EXAMPLE: Record<number, string> = {
  * Modèle CSV « ; » (UTF-8 avec BOM, CRLF) reconnu par l'import des équipes :
  * même disposition que l'export d'inscriptions, une ligne d'exemple.
  */
-export function buildRapieresImportTemplate(): string {
+export function buildTeamImportTemplate(): string {
   const cell = (value: string): string =>
     /[;"\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
-  const example = RAPIERES_IMPORT_HEADER.map((_, i) => RAPIERES_EXAMPLE[i] ?? '');
-  return `\uFEFF${[RAPIERES_IMPORT_HEADER, example]
+  const example = TEAM_IMPORT_HEADER.map((_, i) => RAPIERES_EXAMPLE[i] ?? '');
+  return `\uFEFF${[TEAM_IMPORT_HEADER, example]
     .map(row => row.map(cell).join(';'))
     .join('\r\n')}\r\n`;
 }
 
 /** Sexe : « homme/femme », « H/F », « M/F », « masculin/féminin »… ; inconnu → non renseigné */
-export function parseRapieresGender(value: string): RapieresGender | undefined {
+export function parseImportGender(value: string): RapieresGender | undefined {
   const v = value
     .trim()
     .toLowerCase()
@@ -103,8 +109,8 @@ export function parseRapieresGender(value: string): RapieresGender | undefined {
   return undefined;
 }
 
-export interface RapieresImportResult {
-  teams: RapieresTeamDraft[];
+export interface TeamImportResult {
+  teams: TeamImportDraft[];
   /** Lignes ignorées (numéro de ligne du fichier, base 1) */
   skipped: number[];
 }
@@ -174,7 +180,7 @@ export function formatIsoDate(d: Date): string {
  * Catégorie d'âge d'après une date de naissance (voir rapieresCategoryFromBirthYear).
  * Sans date valide : Seniors.
  */
-export function rapieresCategoryFromBirthDate(
+export function categoryFromBirthDate(
   birth: Date | null,
   refDate: Date = new Date()
 ): RapieresAgeCategory {
@@ -183,9 +189,9 @@ export function rapieresCategoryFromBirthDate(
 }
 
 /** Équipes lues dans le contenu du fichier ; niveau par défaut « débutant » */
-export function parseRapieresTeams(content: string, refDate?: Date): RapieresImportResult {
+export function parseTeamImport(content: string, refDate?: Date): TeamImportResult {
   const rows = parseDelimited(content);
-  const teams: RapieresTeamDraft[] = [];
+  const teams: TeamImportDraft[] = [];
   const skipped: number[] = [];
   const cell = (r: string[], i: number) => (r[i] ?? '').trim();
   rows.forEach((r, idx) => {
@@ -198,12 +204,12 @@ export function parseRapieresTeams(content: string, refDate?: Date): RapieresImp
       birth: number,
       genderCol: number
     ): RapieresFencer => {
-      const gender = parseRapieresGender(cell(r, genderCol));
+      const gender = parseImportGender(cell(r, genderCol));
       const birthDate = parseBirthDate(cell(r, birth));
       return {
         lastName: cell(r, last),
         firstName: cell(r, first),
-        category: rapieresCategoryFromBirthDate(birthDate, refDate),
+        category: categoryFromBirthDate(birthDate, refDate),
         ...(gender ? { gender } : {}),
         ...(birthDate && !isNaN(birthDate.getTime())
           ? { birthDate: formatIsoDate(birthDate) }

@@ -1,7 +1,6 @@
 /**
  * BPM - Escrime - Tour en vagues (docs/adr/0043, lot F4a) : lancer une vague, arrêter ou
- * reprendre les vagues. Remplacent launchRapieresWave / endRapieresWaves, gardées comme alias
- * (contract.ts) jusqu'à F4e.
+ * reprendre les vagues. Remplacent launchRapieresWave / endRapieresWaves (alias retirés à F4e).
  * Licensed under GPL-3.0
  */
 import { z } from 'zod';

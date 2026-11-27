@@ -6,6 +6,7 @@
  * événement du journal (réglages, docs/adr/0018).
  * Licensed under GPL-3.0
  */
+import { drawDone } from './fencers';
 import { randomUUID } from 'crypto';
 import type { Category, CompetitionSettings, Weapon } from '../../../shared/types';
 import {
@@ -82,7 +83,6 @@ export function getCompetitionFormula(ctx: CommandContext, input: { competitionI
     weapon: comp.weapon,
     category: comp.category,
     isTeamEvent: !!comp.isTeamEvent,
-    specialMode: comp.settings?.specialMode ?? null,
     ...view,
     origin: comp.settings?.formulaOrigin ?? null,
     originName: template?.name ?? null,
@@ -150,9 +150,14 @@ export function writeFormula(
     stored
   );
   if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
+  // Épreuve enregistrée en mode spécial rapières : la formule écrite fait désormais foi, le mode
+  // n'est plus lu (docs/adr/0043, F4e) ; après le tirage, la clé reste (figée), la formule gardant
+  // ses briques par la lecture de compatibilité
+  const clearSpecial =
+    comp.settings?.specialMode && !drawDone(ctx, comp.id) ? { specialMode: undefined } : {};
   return updateCompetitionSettings(ctx, {
     competitionId: comp.id,
-    settings: { ...extra, ...flatSettingsOf(formula, comp.weapon), formula },
+    settings: { ...extra, ...flatSettingsOf(formula, comp.weapon), formula, ...clearSpecial },
     dryRun,
   });
 }

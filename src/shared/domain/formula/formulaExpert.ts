@@ -42,14 +42,11 @@ function phaseNeedsExpert(p: FormulaPhaseV2): boolean {
 }
 
 /**
- * La formule contient-elle une brique ou un réglage expert, ou est-ce une épreuve du mode spécial
- * rapières (`specialMode`) ? Alors l'éditeur rallume le mode
+ * La formule contient-elle une brique ou un réglage expert ? Alors l'éditeur rallume le mode
  * expert pour cette édition, sans changer la préférence du poste.
  */
-export function formulaNeedsExpert(f: FormulaV2, specialMode = false): boolean {
-  // Mode spécial rapières : formule experte (qualification « têtes de poule », docs/adr/0043)
+export function formulaNeedsExpert(f: FormulaV2): boolean {
   return (
-    specialMode ||
     f.phases.some(phaseNeedsExpert) ||
     !!f.general.postPoolSplitCriteria ||
     // Entrée en équipes (binômes, docs/adr/0043)

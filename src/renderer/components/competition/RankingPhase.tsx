@@ -4,11 +4,10 @@
  */
 import React from 'react';
 import type { Fencer, Pool, PoolRanking, Weapon } from '../../../shared/types';
-import RapieresRankingPanel from '../../../features/rapieres/RapieresRankingPanel';
-import type { RapieresTeamStats } from '../../../features/rapieres/RapieresRankingPanel';
-import type { RapieresTeamInfo } from '../../../shared/domain/rapieres/rapieres.types';
+import TeamRankingPanel from '../../../features/teamEntry/TeamRankingPanel';
+import type { TeamRankingStats } from '../../../features/teamEntry/TeamRankingPanel';
 import type { RankingFilterKey } from '../../../shared/domain/ranking/rankingFilters';
-import { rapieresPoolNumbers } from '../../../shared/domain/rapieres/rapieresCalculations';
+import { poolNumbersOf } from '../../../shared/domain/pools/poolNumbers';
 import PoolRankingView from '../PoolRankingView';
 
 type RankingViewProps = React.ComponentProps<typeof PoolRankingView>;
@@ -21,7 +20,6 @@ interface RankingPhaseProps {
   computeOverallRanking: (pools: Pool[]) => PoolRanking[];
   pools: Pool[];
   overallRanking: PoolRanking[];
-  fencers: Fencer[];
   weapon: Weapon;
   competitionTitle: string;
   hasDirectElimination: boolean;
@@ -39,13 +37,16 @@ interface RankingPhaseProps {
   tableauActionInNav?: boolean;
   /** Tableau tiré : classement figé (#1996) */
   rankingFrozen?: boolean;
-  // Rapières
-  isRapieres: boolean;
+  /** Entrée en équipes (binômes) : classement des équipes avec filtres (docs/adr/0043) */
+  isTeamEntry: boolean;
   launchedWave: number;
-  rapieresTeams: Record<string, RapieresTeamInfo>;
-  rapieresStats: Map<string, RapieresTeamStats>;
-  /** Filtres du classement de la formule (docs/adr/0043, F4d) ; vide : ceux des rapières */
-  rankingFilters?: RankingFilterKey[];
+  /** Équipes : tireurs de l'épreuve, membres, niveau, HANDI portés par le tireur */
+  teamFencers: Fencer[];
+  teamStats: Map<string, TeamRankingStats>;
+  /** Libellés des niveaux de la formule (`entry.levels`) */
+  teamLevels?: readonly string[];
+  /** Filtres du classement de la formule (docs/adr/0043, F4d) */
+  rankingFilters: RankingFilterKey[];
 }
 
 const RankingPhase: React.FC<RankingPhaseProps> = ({
@@ -55,7 +56,6 @@ const RankingPhase: React.FC<RankingPhaseProps> = ({
   computeOverallRanking,
   pools,
   overallRanking,
-  fencers,
   weapon,
   competitionTitle,
   hasDirectElimination,
@@ -71,10 +71,11 @@ const RankingPhase: React.FC<RankingPhaseProps> = ({
   nextRoundAction,
   tableauActionInNav,
   rankingFrozen,
-  isRapieres,
+  isTeamEntry,
   launchedWave,
-  rapieresTeams,
-  rapieresStats,
+  teamFencers,
+  teamStats,
+  teamLevels,
   rankingFilters,
 }) => (
   <>
@@ -86,7 +87,7 @@ const RankingPhase: React.FC<RankingPhaseProps> = ({
         ranking={computeOverallRanking(viewedRoundPools)}
         weapon={weapon}
         hasDirectElimination={hasDirectElimination}
-        rapieres={isRapieres}
+        teamEntry={isTeamEntry}
       />
     )}
     {!viewedRoundPools && (
@@ -96,7 +97,7 @@ const RankingPhase: React.FC<RankingPhaseProps> = ({
         weapon={weapon}
         hasDirectElimination={hasDirectElimination}
         isInitialRanking={skipPoolPhase}
-        rapieres={isRapieres}
+        teamEntry={isTeamEntry}
         onGoToTableau={onGoToTableau}
         onGoToResults={onGoToResults}
         onPoolsChange={onPoolsChange}
@@ -110,16 +111,16 @@ const RankingPhase: React.FC<RankingPhaseProps> = ({
         rankingFrozen={rankingFrozen}
       />
     )}
-    {isRapieres && !viewedRoundPools && (
-      <RapieresRankingPanel
+    {isTeamEntry && !viewedRoundPools && (
+      <TeamRankingPanel
         competitionTitle={competitionTitle}
         wave={launchedWave}
         ranked={overallRanking.map(r => ({ teamId: r.fencer.id, rank: r.rank }))}
-        fencers={fencers}
-        teams={rapieresTeams}
-        stats={rapieresStats}
-        poolOf={rapieresPoolNumbers(pools)}
+        fencers={teamFencers}
+        stats={teamStats}
+        poolOf={poolNumbersOf(pools)}
         filterKeys={rankingFilters}
+        levels={teamLevels}
       />
     )}
   </>

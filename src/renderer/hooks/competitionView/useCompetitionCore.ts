@@ -11,7 +11,12 @@ import {
   CV_DATA_INIT,
 } from '../../components/competition/competitionViewState';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { isWavesRound, phaseSettings } from '../../../shared/domain/formula/formulaV2';
+import {
+  entryOf,
+  isWavesRound,
+  phaseSettings,
+  readableFormulaOf,
+} from '../../../shared/domain/formula/formulaV2';
 import type { SplitHistoryEntry } from '../../../shared/domain/formula/splitPlan';
 import { formulaSegment } from '../../../shared/domain/formula/formulaSteps';
 import {
@@ -33,12 +38,11 @@ import { usePoolsWindowSize } from '../usePoolsWindowSize';
 import { seedFencersFromRanking } from '../../../shared/utils/poolRounds';
 import {
   getActiveFormula,
-  isRapieresMode,
   resolveCompetitionSettings,
 } from '../../../shared/utils/customFormulaSettings';
 import { allowsVictoryTieBreak } from '../../../shared/utils/tieBreak';
-import { useRapieresSessionState } from '../../../features/rapieres/useRapieresSessionState';
-import { rapieresTeamsOf } from '../../../shared/domain/rapieres/rapieresEntry';
+import { useWavesSessionState } from '../../../features/poolWaves/useWavesSessionState';
+import { withLegacyTeams } from '../../../shared/domain/rapieres/rapieresEntry';
 import { useColumnVisibility } from '../useColumnVisibility';
 import { useModalFlags } from '../useModalFlags';
 import { usePoolsViewSettings } from '../usePoolsViewSettings';
@@ -94,10 +98,6 @@ export function useCompetitionCore(ctx: Ctx) {
     ? Math.max(1, competition.settings?.maxRefereesPerMatch ?? 1)
     : 1;
   const poolWinnersOnly = effectiveSettings?.poolWinnersOnly ?? false;
-  // Tournoi des rapières (#1118) : équipes = tireurs, poules en vagues
-  const isRapieres = isRapieresMode(competition.weapon, competition.settings);
-  /** Égalité tranchée par un vainqueur désigné (#1442) */
-  const tieBreakByVictory = allowsVictoryTieBreak(competition.weapon, isRapieres);
   const postPoolSplitCriteria = competition.settings?.postPoolSplitCriteria;
   // Groupes déjà extraits dans une compétition séparée (genre → id compétition)
   const splitOffCompetitionIds = competition.settings?.splitOffCompetitionIds;
@@ -154,18 +154,25 @@ export function useCompetitionCore(ctx: Ctx) {
     setAppelVisibleColumns(cols);
   }, []);
 
-  // Tournoi des rapières : état de session et fenêtre d'équipe (#1241)
-  const {
-    rapieresState,
-    setRapieresState,
-    rapieresTeamModal,
-    setRapieresTeamModal,
-    rapieres: rapieresSession,
-    setRapieresTeam,
-    waves,
-    setWavesState,
-    updateWaves,
-  } = useRapieresSessionState();
+  // Vagues du tour courant et ancienne clé de session des rapières, lue en alias (#1241, ADR-0043)
+  const { rapieresState, setRapieresState, legacyTeams, waves, setWavesState, updateWaves } =
+    useWavesSessionState();
+  // Formule lue : enregistrée, ou celle d'une épreuve enregistrée en mode spécial rapières, dont le
+  // mode de tableau hérité est dans l'état de session (docs/adr/0043, F4e)
+  const legacyTableauMode = rapieresState?.version === 2 ? rapieresState.tableauMode : undefined;
+  const readableFormula = useMemo(
+    () => readableFormulaOf(competition.settings, legacyTableauMode),
+    [competition.settings, legacyTableauMode]
+  );
+  // Entrée en équipes (binômes, docs/adr/0043) : les briques de la formule, plus un mode spécial
+  const entry = entryOf(readableFormula);
+  const isTeamEntry = entry.kind === 'team';
+  /** Égalité tranchée par un vainqueur désigné (#1442) : arme, ou réglage de la formule */
+  const tieBreakByVictory = allowsVictoryTieBreak(
+    competition.weapon,
+    readableFormula?.general.tieBreakByVictory
+  );
+  const firstPool = readableFormula?.phases.find(p => p.kind === 'pool');
   // Préparation des poules et classement (#1241)
   const {
     minFencersPerPool,
@@ -181,8 +188,14 @@ export function useCompetitionCore(ctx: Ctx) {
   } = useStateGroup({
     ...CV_PLANNING_INIT,
     // Taille de poule cible portée par la formule (#2013) ; l'écran de préparation garde la main
-    minFencersPerPool: competition.settings?.poolSizeMin ?? CV_PLANNING_INIT.minFencersPerPool,
-    maxFencersPerPool: competition.settings?.poolSizeMax ?? CV_PLANNING_INIT.maxFencersPerPool,
+    minFencersPerPool:
+      (firstPool?.kind === 'pool' ? firstPool.sizeMin : undefined) ??
+      competition.settings?.poolSizeMin ??
+      CV_PLANNING_INIT.minFencersPerPool,
+    maxFencersPerPool:
+      (firstPool?.kind === 'pool' ? firstPool.sizeMax : undefined) ??
+      competition.settings?.poolSizeMax ??
+      CV_PLANNING_INIT.maxFencersPerPool,
   });
 
   // Compétition couplée (#1241)
@@ -213,11 +226,13 @@ export function useCompetitionCore(ctx: Ctx) {
     computeCategories,
     getCheckedInFencers,
   } = useFencerManagement({ competition, onUpdate });
-  // Compositions des équipes : champs du tireur (membres, niveau, HANDI) de préférence, sinon
-  // `rapieres.teams` de la session (alias de compatibilité jusqu'à F4e, docs/adr/0043)
-  const rapieres = useMemo(
-    () => ({ ...rapieresSession, teams: rapieresTeamsOf(fencers, rapieresSession.teams) }),
-    [rapieresSession, fencers]
+  // Équipes : champs du tireur (membres, niveau, HANDI), complétés pour une épreuve enregistrée en
+  // mode spécial par l'ancienne clé de session `rapieres.teams` (alias, docs/adr/0043, F4e)
+  const competitionDate = competition.date;
+  const withTeams = useCallback(
+    <T extends Fencer>(list: readonly T[]): T[] =>
+      withLegacyTeams(list, legacyTeams, competitionDate ? new Date(competitionDate) : new Date()),
+    [legacyTeams, competitionDate]
   );
 
   const {
@@ -252,7 +267,7 @@ export function useCompetitionCore(ctx: Ctx) {
     syncFencersToPool,
   } = usePoolManagement({ isLaserSabre, poolMaxScoreFor, showToast });
   const poolMaxScore = poolMaxScoreFor(currentPoolRound);
-  // Tour en vagues (ordre « waves » de la formule, ou mode spécial rapières, docs/adr/0043)
+  // Tour en vagues (ordre « waves » de la formule, docs/adr/0043)
   const isWaves = isWavesRound(competition.settings, currentPoolRound);
 
   // Formule modifiée, ou tour suivant : la taille de poule cible du tour remplace la valeur de
@@ -370,7 +385,10 @@ export function useCompetitionCore(ctx: Ctx) {
     maxRefereesPerPool,
     maxRefereesPerMatch,
     poolWinnersOnly,
-    isRapieres,
+    isTeamEntry,
+    entry,
+    legacyTableauMode,
+    readableFormula,
     tieBreakByVictory,
     postPoolSplitCriteria,
     splitOffCompetitionIds,
@@ -405,10 +423,7 @@ export function useCompetitionCore(ctx: Ctx) {
     handleAppelStateChange,
     rapieresState,
     setRapieresState,
-    rapieresTeamModal,
-    setRapieresTeamModal,
-    rapieres,
-    setRapieresTeam,
+    withTeams,
     isWaves,
     waves,
     setWavesState,

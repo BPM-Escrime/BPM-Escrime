@@ -4,6 +4,7 @@
  * repliée, Organisation ▸ Formule.
  */
 
+import { rapieresFormula } from '../../../shared/domain/formula/rapieresFormula';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
 import React, { useState } from 'react';
@@ -380,7 +381,7 @@ describe('Création : formule repliée (aperçu)', () => {
     expect(settings.formulaOrigin).toEqual({ templateId: 'bpm/E/SEN/ind/two_rounds' });
   });
 
-  it('arme « Autre » : le modèle Tournoi des rapières active le mode spécial', () => {
+  it('arme « Autre » : le modèle Tournoi des rapières est une formule en briques, sans mode spécial', () => {
     const { onCreate, submit } = setup();
     fireEvent.change(document.getElementById('new-competition-weapon')!, {
       target: { value: Weapon.CUSTOM },
@@ -390,8 +391,19 @@ describe('Création : formule repliée (aperçu)', () => {
     });
     submit();
     const settings = onCreate.mock.calls[0][0].settings;
-    expect(settings.specialMode).toBe('rapieres');
+    expect(settings.specialMode).toBeUndefined();
     expect(settings.formulaOrigin).toEqual({ templateId: 'bpm/C/rapieres' });
+    // Briques (docs/adr/0043, F4e) : tour en vagues par niveau, binômes, filtres, départage
+    expect(settings.formula.phases[0]).toMatchObject({
+      boutOrder: 'waves',
+      distribution: 'byLevel',
+    });
+    expect(settings.formula.general).toMatchObject({
+      entry: { kind: 'team', size: 2 },
+      rankingFilters: ['category', 'gender', 'level', 'handicap'],
+      tieBreakByVictory: true,
+    });
+    expect(settings.poolBoutOrder).toBe('waves');
   });
 
   it('personnalisée : le tour ajouté est enregistré', () => {
@@ -434,20 +446,22 @@ describe('FormulaEditor : qualification « têtes de poule, puis suivants » (do
   const options = (container: HTMLElement) =>
     Array.from(select(container).options).map(o => o.value);
 
-  /** Éditeur d'une épreuve ; `rapieres` : mode spécial rapières (arme « Autre ») */
+  /** Éditeur d'une épreuve ; `rapieres` : formule des rapières (arme « Autre », briques) */
   const Editor: React.FC<{ weapon: Weapon; rapieres?: boolean }> = ({ weapon, rapieres }) => {
     const [formula, setFormula] = useState<FormulaV2>(() =>
-      formulaOf({
-        weapon,
-        category: Category.SENIOR,
-        settings:
-          weapon === Weapon.CUSTOM
-            ? { customFormula: createDefaultCustomFormula() }
-            : (buildDefaultCompetitionSettings({
-                weapon,
-                category: Category.SENIOR,
-              }) as CompetitionSettings),
-      })
+      rapieres
+        ? rapieresFormula()
+        : formulaOf({
+            weapon,
+            category: Category.SENIOR,
+            settings:
+              weapon === Weapon.CUSTOM
+                ? { customFormula: createDefaultCustomFormula() }
+                : (buildDefaultCompetitionSettings({
+                    weapon,
+                    category: Category.SENIOR,
+                  }) as CompetitionSettings),
+          })
     );
     last = formula;
     return (
@@ -456,7 +470,6 @@ describe('FormulaEditor : qualification « têtes de poule, puis suivants » (do
         category={Category.SENIOR}
         formula={formula}
         onChange={setFormula}
-        rapieres={rapieres}
       />
     );
   };
@@ -482,13 +495,17 @@ describe('FormulaEditor : qualification « têtes de poule, puis suivants » (do
     prefs.expert = true;
   });
 
-  it('rapières : formule experte, mode expert rallumé ; tous qualifiés ou têtes de poule (ADR-0043)', () => {
+  it('formule des rapières : briques expertes, mode expert rallumé ; tous qualifiés ou têtes de poule (ADR-0043)', () => {
     prefs.expert = false;
     const { container } = render(<Editor weapon={Weapon.CUSTOM} rapieres />);
     expect(screen.getByTestId('formula-expert-toggle')).toBeChecked();
     expect(screen.getByTestId('formula-expert-toggle')).toBeDisabled();
-    expect(options(container)).toEqual(['all', 'pool_heads']);
+    expect(options(container)).toEqual(expect.arrayContaining(['all', 'pool_heads']));
     expect(select(container)).not.toBeDisabled();
+    // Départage par la victoire : réglage général de l'arme « Autre »
+    expect(screen.getByTestId('formula-editor-tie-break')).toBeChecked();
+    fireEvent.click(screen.getByTestId('formula-editor-tie-break'));
+    expect(last!.general.tieBreakByVictory).toBeUndefined();
     prefs.expert = true;
   });
 });

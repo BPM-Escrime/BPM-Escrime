@@ -229,14 +229,6 @@ const CompetitionStateSchema = z.object({
 });
 export type CompetitionStateDTO = z.infer<typeof CompetitionStateSchema>;
 
-const RapieresFencerSchema = z.object({
-  firstName: z.string().max(200),
-  lastName: z.string().max(200),
-  category: z.enum(['M20', 'SENIOR', 'V1', 'V2', 'V3', 'V4', 'HANDI']),
-  gender: z.enum(['M', 'F']).optional(),
-  birthDate: z.string().max(10).optional(),
-});
-
 const FencerRefSchema = z.object({
   id: z.string(),
   lastName: z.string(),
@@ -458,12 +450,6 @@ export const contract = {
         .max(2048)
         .optional()
         .describe('Placement calculé par l’écran : pas de planification'),
-      rapieresTableauMode: z
-        .enum(['normal', 'third', 'all', 'semis'])
-        .optional()
-        .describe(
-          'Tournoi des rapières : mode de tableau, ancien réglage (alias ; la formule porte maintenant le mode : qualification pool_heads, thirdPlace, allPlaces, docs/adr/0043)'
-        ),
       group: SplitGroup,
       replace: z.boolean().optional().describe('Remplacer un tableau existant'),
       ties: TiesAtBarInput,
@@ -497,73 +483,6 @@ export const contract = {
     permission: 'score:write',
     // Nom de l'outil publié en 2.0 conservé (docs/adr/0008)
     mcp: { name: 'build_bracket', title: 'Construire le tableau', destructive: true },
-  }),
-
-  launchRapieresWave: command({
-    description:
-      'Alias de launchPoolWave pour le tournoi des rapières (retiré à l’étape F4e, docs/adr/0043) : lance la vague « wave » (ses matchs deviennent ceux à tirer ; 0 = aucune vague lancée).',
-    input: z.object({
-      competitionId: CompetitionId,
-      wave: z.number().int().min(0).max(200).describe('Vague à lancer (0 : aucune)'),
-      dryRun: DryRun,
-      expectedRevision: ExpectedRevision,
-      commandId: CommandId,
-    }),
-    output: z.object({
-      dryRun: z.boolean(),
-      wave: z.number().int(),
-      matchIds: z.array(z.string()),
-      revision: Revision,
-    }),
-    permission: 'score:write',
-    mcp: { name: 'launch_rapieres_wave', title: 'Lancer une vague (rapières)' },
-  }),
-
-  setRapieresTeams: command({
-    description:
-      'Tournoi des rapières : composition des équipes (binômes ; l’équipe est un tireur de l’épreuve) : niveau, deux tireurs, club, région.',
-    input: z.object({
-      competitionId: CompetitionId,
-      teams: z
-        .array(
-          z.object({
-            fencerId: Id.describe('Tireur de l’épreuve portant l’équipe'),
-            info: z.object({
-              level: z.enum(['beginner', 'intermediate', 'expert']),
-              fencers: z.tuple([RapieresFencerSchema, RapieresFencerSchema]),
-              club: z.string().max(200).optional(),
-              region: z.string().max(200).optional(),
-            }),
-          })
-        )
-        .min(1)
-        .max(1000),
-      dryRun: DryRun,
-      expectedRevision: ExpectedRevision,
-      commandId: CommandId,
-    }),
-    output: z.object({ dryRun: z.boolean(), teams: z.number().int(), revision: Revision }),
-    permission: 'fencers:write',
-    mcp: {
-      name: 'set_rapieres_teams',
-      title: 'Composition des équipes (rapières)',
-      idempotent: true,
-    },
-  }),
-
-  endRapieresWaves: command({
-    description:
-      'Alias de endPoolWaves pour le tournoi des rapières (retiré à l’étape F4e, docs/adr/0043) : arrête les vagues avant leur terme (« ended: true », passage au classement sur les matchs joués) ou les reprend (« ended: false »).',
-    input: z.object({
-      competitionId: CompetitionId,
-      ended: z.boolean().describe('true : vagues arrêtées ; false : reprises'),
-      dryRun: DryRun,
-      expectedRevision: ExpectedRevision,
-      commandId: CommandId,
-    }),
-    output: z.object({ dryRun: z.boolean(), ended: z.boolean(), revision: Revision }),
-    permission: 'score:write',
-    mcp: { name: 'end_rapieres_waves', title: 'Arrêter ou reprendre les vagues (rapières)' },
   }),
 
   clearScore: command({

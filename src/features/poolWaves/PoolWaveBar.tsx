@@ -9,10 +9,10 @@ import React, { useState } from 'react';
 import type { Pool } from '../../shared/types';
 import { useTranslation } from '../../renderer/hooks/useTranslation';
 import { canLaunchNextWave, isWaveComplete, waveCount } from '../../shared/domain/pools/waves';
-import RapieresWavePrintDialog from './RapieresWavePrintDialog';
+import PoolWavePrintDialog from './PoolWavePrintDialog';
 import { Button } from '../../renderer/components/common/Button';
 
-interface RapieresWaveBarProps {
+interface PoolWaveBarProps {
   pools: Pool[];
   launchedWave: number;
   wavesEnded: boolean;
@@ -25,7 +25,7 @@ interface RapieresWaveBarProps {
   onPrintWaveRange?: (from: number, to: number) => void;
 }
 
-const RapieresWaveBar: React.FC<RapieresWaveBarProps> = ({
+const PoolWaveBar: React.FC<PoolWaveBarProps> = ({
   pools,
   launchedWave,
   wavesEnded,
@@ -43,17 +43,17 @@ const RapieresWaveBar: React.FC<RapieresWaveBarProps> = ({
   const allDone = launchedWave >= total && isWaveComplete(pools, launchedWave);
 
   return (
-    <div className="card rapieres-wave-bar-1" role="region" aria-label={t('rapieres.waves')}>
+    <div className="card pool-wave-bar-1" role="region" aria-label={t('poolWaves.waves')}>
       <strong>
         {launchedWave === 0
-          ? t('rapieres.no_wave')
-          : t('rapieres.waves_progress', { current: String(launchedWave), total: String(total) })}
+          ? t('poolWaves.no_wave')
+          : t('poolWaves.waves_progress', { current: String(launchedWave), total: String(total) })}
       </strong>
       {wavesEnded ? (
         <>
-          <span className="text-muted">{t('rapieres.waves_ended')}</span>
+          <span className="text-muted">{t('poolWaves.waves_ended')}</span>
           <Button type="button" size="sm" onClick={onResumeWaves}>
-            {t('rapieres.resume_waves')}
+            {t('poolWaves.resume_waves')}
           </Button>
         </>
       ) : (
@@ -65,16 +65,16 @@ const RapieresWaveBar: React.FC<RapieresWaveBarProps> = ({
               disabled={!canLaunch}
               onClick={() => onLaunchWave(next)}
             >
-              {t('rapieres.launch_wave', { n: String(next) })}
+              {t('poolWaves.launch_wave', { n: String(next) })}
             </Button>
           )}
           {launchedWave > 0 && launchedWave < total && !canLaunch && (
-            <span className="text-muted">{t('rapieres.wave_incomplete')}</span>
+            <span className="text-muted">{t('poolWaves.wave_incomplete')}</span>
           )}
-          {allDone && <span className="text-muted">{t('rapieres.all_waves_done')}</span>}
+          {allDone && <span className="text-muted">{t('poolWaves.all_waves_done')}</span>}
           {launchedWave > 0 && onPrintWaveSheets && (
             <Button type="button" onClick={onPrintWaveSheets}>
-              {t('rapieres.print_wave_sheets')}
+              {t('poolWaves.print_wave_sheets')}
             </Button>
           )}
           {onPrintWaveRange && total > 0 && (
@@ -83,18 +83,18 @@ const RapieresWaveBar: React.FC<RapieresWaveBarProps> = ({
 
               onClick={() => setShowRangeDialog(true)}
             >
-              {t('rapieres.print_wave_range')}
+              {t('poolWaves.print_wave_range')}
             </Button>
           )}
           {launchedWave > 0 && !allDone && (
             <Button type="button" variant="warning" onClick={onEndWaves}>
-              {t('rapieres.end_waves')}
+              {t('poolWaves.end_waves')}
             </Button>
           )}
         </>
       )}
       {showRangeDialog && onPrintWaveRange && (
-        <RapieresWavePrintDialog
+        <PoolWavePrintDialog
           total={total}
           defaultFrom={launchedWave + 1}
           onClose={() => setShowRangeDialog(false)}
@@ -105,13 +105,13 @@ const RapieresWaveBar: React.FC<RapieresWaveBarProps> = ({
         />
       )}
       {launchedWave > 0 && !wavesEnded && !allDone && (
-        <span className="rapieres-wave-bar-2">
-          <span aria-hidden="true" className="rapieres-wave-bar-3" />
-          <span className="text-muted">{t('rapieres.wave_legend')}</span>
+        <span className="pool-wave-bar-2">
+          <span aria-hidden="true" className="pool-wave-bar-3" />
+          <span className="text-muted">{t('poolWaves.wave_legend')}</span>
         </span>
       )}
     </div>
   );
 };
 
-export default RapieresWaveBar;
+export default PoolWaveBar;

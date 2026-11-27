@@ -15,6 +15,7 @@ import {
   Weapon,
 } from '../types';
 import { WITHDRAWN_STATUSES } from '../domain/fencers/fencerStatus';
+import { isLegacyRapieres } from '../domain/formula/rapieresFormula';
 
 const poolRoundConfigs = (formula: CustomFormulaConfig): CustomPoolRoundConfig[] =>
   formula.phases.filter(p => p.type === 'pool_round').map(p => p.config as CustomPoolRoundConfig);
@@ -25,21 +26,17 @@ const deConfig = (formula: CustomFormulaConfig): CustomDEConfig | undefined =>
 const positive = (n: unknown): number | undefined =>
   typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : undefined;
 
-/** Tournoi des rapières : mode spécial de l'arme « À la carte » (#1118) */
-export function isRapieresMode(
-  weapon: Weapon | string | undefined,
-  settings: Partial<CompetitionSettings> | undefined
-): boolean {
-  return weapon === Weapon.CUSTOM && settings?.specialMode === 'rapieres';
-}
-
-/** Formule personnalisée active (arme CUSTOM uniquement, hors mode spécial) */
+/**
+ * Formule personnalisée active (arme CUSTOM uniquement). Une épreuve enregistrée en mode spécial
+ * rapières (lecture de compatibilité, docs/adr/0043, F4e) ne l'a jamais exécutée : lue par la
+ * formule des rapières (`formulaOf`).
+ */
 export function getActiveFormula(
   weapon: Weapon | string | undefined,
   settings: Partial<CompetitionSettings> | undefined
 ): CustomFormulaConfig | undefined {
   return weapon === Weapon.CUSTOM &&
-    !settings?.specialMode &&
+    !isLegacyRapieres(weapon, settings) &&
     settings?.customFormula?.phases?.length
     ? settings.customFormula
     : undefined;
@@ -83,9 +80,8 @@ export function usesModernRules(
   settings: Partial<CompetitionSettings> | undefined
 ): boolean {
   if (weapon === Weapon.EPEE || weapon === Weapon.FOIL || weapon === Weapon.SABRE) return true;
-  // Rapières : règles choisies dans la formule, armes modernes par défaut (#1118)
-  if (isRapieresMode(weapon ?? undefined, settings))
-    return settings?.customFormula?.ruleSet !== 'laser';
+  // Épreuve du mode spécial rapières, lue comme la formule des rapières : règles modernes par défaut
+  if (isLegacyRapieres(weapon, settings)) return settings?.customFormula?.ruleSet !== 'laser';
   return getActiveFormula(weapon ?? undefined, settings)?.ruleSet === 'modern';
 }
 
@@ -122,9 +118,9 @@ export function resolveCompetitionSettings<T extends Partial<CompetitionSettings
 ): T {
   const formula = getActiveFormula(weapon, settings);
   const base = (settings ?? {}) as T;
-  // Rapières : un tour de poules en vagues, tableau des qualifiés ; match pour la 3e place choisi
-  // par la popup de mode de tableau (thirdPlaceMatch conservé, #1441)
-  if (isRapieresMode(weapon, settings))
+  // Épreuve du mode spécial rapières, lue comme la formule des rapières : un tour de poules en
+  // vagues, tableau des qualifiés (réglages plats conservés, docs/adr/0043, F4e)
+  if (isLegacyRapieres(weapon, settings))
     return {
       ...base,
       poolRounds: 1,

@@ -4,10 +4,9 @@ import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Fencer, FencerStatus, Gender, Match, MatchStatus, Pool } from '../../shared/types';
-import RapieresTeamModal from './RapieresTeamModal';
-import RapieresWaveBar from './RapieresWaveBar';
-import RapieresImportModal from './RapieresImportModal';
-import { waveMatchOrder } from '../../shared/domain/rapieres/rapieresCalculations';
+import PoolWaveBar from '../poolWaves/PoolWaveBar';
+import TeamImportModal from './TeamImportModal';
+import { waveMatchOrder } from '../../shared/domain/pools/waves';
 import { RapieresFencer } from '../../shared/domain/rapieres/rapieres.types';
 
 vi.mock('../../renderer/hooks/useTranslation', () => ({
@@ -60,34 +59,7 @@ const pool = (): Pool => {
   } as Pool;
 };
 
-describe('Tournoi des rapières : composants (#1118)', () => {
-  it('fenêtre équipe : nom, niveau, deux tireurs avec catégorie', async () => {
-    const onSave = vi.fn();
-    render(<RapieresTeamModal onSave={onSave} onClose={vi.fn()} />);
-    fireEvent.click(screen.getByText('rapieres.save_team'));
-    expect(await screen.findByRole('alert')).toHaveTextContent('rapieres.team_incomplete');
-    fireEvent.change(screen.getByLabelText(/rapieres.team_name/), { target: { value: 'Alpha' } });
-    fireEvent.change(screen.getByLabelText('rapieres.level'), { target: { value: 'expert' } });
-    const lasts = screen.getAllByLabelText(/rapieres.last_name/);
-    fireEvent.change(lasts[0], { target: { value: 'Dupont' } });
-    fireEvent.change(lasts[1], { target: { value: 'Martin' } });
-    fireEvent.change(screen.getAllByLabelText('rapieres.category')[1], {
-      target: { value: 'V2' },
-    });
-    fireEvent.click(screen.getByText('rapieres.save_team'));
-    await vi.waitFor(() => expect(onSave).toHaveBeenCalled());
-    expect(onSave.mock.calls[0][0]).toEqual({
-      name: 'Alpha',
-      info: {
-        level: 'expert',
-        fencers: [
-          { firstName: '', lastName: 'Dupont', category: 'SENIOR' },
-          { firstName: '', lastName: 'Martin', category: 'V2' },
-        ],
-      },
-    });
-  });
-
+describe('Tour en vagues et entrée en équipes : composants (#1118, ADR-0043)', () => {
   it('barre des vagues : lancement, vague incomplète, fin anticipée', () => {
     const onLaunchWave = vi.fn();
     const onEndWaves = vi.fn();
@@ -98,13 +70,13 @@ describe('Tournoi des rapières : composants (#1118)', () => {
       onEndWaves,
       onResumeWaves: vi.fn(),
     };
-    const { rerender } = render(<RapieresWaveBar {...props} launchedWave={0} />);
-    fireEvent.click(screen.getByText('rapieres.launch_wave:1'));
+    const { rerender } = render(<PoolWaveBar {...props} launchedWave={0} />);
+    fireEvent.click(screen.getByText('poolWaves.launch_wave:1'));
     expect(onLaunchWave).toHaveBeenCalledWith(1);
-    rerender(<RapieresWaveBar {...props} launchedWave={1} />);
-    expect(screen.getByText('rapieres.launch_wave:2')).toBeDisabled();
-    expect(screen.getByText('rapieres.wave_incomplete')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('rapieres.end_waves'));
+    rerender(<PoolWaveBar {...props} launchedWave={1} />);
+    expect(screen.getByText('poolWaves.launch_wave:2')).toBeDisabled();
+    expect(screen.getByText('poolWaves.wave_incomplete')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('poolWaves.end_waves'));
     expect(onEndWaves).toHaveBeenCalled();
   });
 
@@ -128,7 +100,7 @@ describe('Tournoi des rapières : composants (#1118)', () => {
     const onImport = vi.fn();
     const onClose = vi.fn();
     render(
-      <RapieresImportModal
+      <TeamImportModal
         filename="export.csv"
         teams={teams}
         skipped={[4]}
@@ -136,10 +108,10 @@ describe('Tournoi des rapières : composants (#1118)', () => {
         onClose={onClose}
       />
     );
-    expect(screen.getByText('rapieres.import_found:3')).toBeInTheDocument();
-    expect(screen.getByText('rapieres.import_skipped:4')).toBeInTheDocument();
+    expect(screen.getByText('teamEntry.import_found:3')).toBeInTheDocument();
+    expect(screen.getByText('teamEntry.import_skipped:4')).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('Beta'));
-    fireEvent.click(screen.getByText('rapieres.import_n:2'));
+    fireEvent.click(screen.getByText('teamEntry.import_n:2'));
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(onImport).toHaveBeenCalledWith([teams[0], teams[2]]);
   });

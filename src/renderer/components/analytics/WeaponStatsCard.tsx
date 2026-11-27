@@ -10,7 +10,7 @@ import React, { useMemo } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Competition, Fencer, FencerCompetitionStats, Match, Weapon } from '../../../shared/types';
 import { weaponKpis, type KpiTableauMatch } from '../../../shared/domain/analytics/competitionKpis';
-import { isRapieresMode } from '../../../shared/utils/customFormulaSettings';
+import { tieBreakByVictoryOf } from '../../../shared/domain/formula/formulaV2';
 
 const OLYMPIC: string[] = [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE];
 
@@ -42,9 +42,11 @@ export const WeaponStatsCard: React.FC<{
   legacy: LegacyWeaponStats;
 }> = ({ competition, poolMatches, tableauMatches, fencers, fencerStats, legacy }) => {
   const { t } = useTranslation();
+  // Armes à minute prioritaire, ou formule « Autre » qui la demande (ex tournoi des rapières)
   const olympic =
     OLYMPIC.includes(competition.weapon) ||
-    isRapieresMode(competition.weapon, competition.settings);
+    (competition.weapon === Weapon.CUSTOM &&
+      tieBreakByVictoryOf(competition.weapon, competition.settings));
   const weapon = competition.weapon;
   const tableMaxScore = competition.settings?.defaultTableMaxScore;
   const kpis = useMemo(

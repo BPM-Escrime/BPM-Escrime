@@ -1,6 +1,7 @@
 /**
  * Contrôles de structure S1 à S6, remarques situées, mode expert (docs/adr/0041, #2013 F2)
  */
+import { rapieresFormula } from './rapieresFormula';
 import { describe, expect, it } from 'vitest';
 import { Category, CompetitionSettings, Weapon, type AdvancementRule } from '../../types';
 import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
@@ -495,9 +496,9 @@ describe('mode expert : briques et réglages', () => {
     expect(formulaV2Issues.length).toBeLessThanOrEqual(4);
   });
 
-  it('formule par défaut : simple ; épreuve du mode spécial rapières : experte (docs/adr/0043)', () => {
+  it('formule par défaut : simple ; formule des rapières (vagues, binômes) : experte (docs/adr/0043)', () => {
     expect(formulaNeedsExpert(base())).toBe(false);
-    expect(formulaNeedsExpert(base(), true)).toBe(true);
+    expect(formulaNeedsExpert(rapieresFormula())).toBe(true);
   });
 
   it('ordre des matchs en vagues : réglage avancé (docs/adr/0043)', () => {

@@ -112,12 +112,12 @@ describe('FencerList', () => {
       />
     );
     expect(screen.getByText('fencerList.col_level')).toBeInTheDocument();
-    expect(screen.getByText('rapieres.level_intermediate')).toBeInTheDocument();
+    expect(screen.getByText('teamEntry.level_intermediate')).toBeInTheDocument();
     expect(screen.getByText(/teamEntry\.handicap/)).toBeInTheDocument();
     unmount();
     // Entrée individuelle : ni colonne, ni niveau
     render(<FencerList fencers={[team]} onCheckIn={vi.fn()} onAddFencer={vi.fn()} />);
     expect(screen.queryByText('fencerList.col_level')).toBeNull();
-    expect(screen.queryByText('rapieres.level_intermediate')).toBeNull();
+    expect(screen.queryByText('teamEntry.level_intermediate')).toBeNull();
   });
 });

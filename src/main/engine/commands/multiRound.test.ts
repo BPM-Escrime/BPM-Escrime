@@ -452,23 +452,23 @@ d('tableau arrêté puis tour de poules (docs/adr/0037, 0042)', () => {
   });
 });
 
-d('formats toujours refusés (docs/adr/0042)', () => {
-  it.each([
-    ['équipes', { isTeamEvent: true }],
-    ['rapières', { settings: { ...base, specialMode: 'rapieres' } }],
-  ])('%s : tirage sans composition, tableau et arbitres refusés', async (_name, patch) => {
-    const comp = competition(formulaOf(fctx), 8);
-    db.updateCompetition(comp.id, patch as never);
-    for (const [op, input] of [
-      ['generatePools', {}],
-      ['generateTableau', {}],
-      ['assignReferees', {}],
-      ['assignReferee', { poolNumber: 1, refereeId: null }],
-    ] as const) {
-      await expect(call(op, { competitionId: comp.id, ...input })).rejects.toMatchObject({
-        code: 'unsupported_format',
-      });
+d('formats toujours refusés (docs/adr/0042, amendé à F4e : épreuves par équipes seulement)', () => {
+  it.each([['équipes', { isTeamEvent: true }]])(
+    '%s : tirage sans composition, tableau et arbitres refusés',
+    async (_name, patch) => {
+      const comp = competition(formulaOf(fctx), 8);
+      db.updateCompetition(comp.id, patch as never);
+      for (const [op, input] of [
+        ['generatePools', {}],
+        ['generateTableau', {}],
+        ['assignReferees', {}],
+        ['assignReferee', { poolNumber: 1, refereeId: null }],
+      ] as const) {
+        await expect(call(op, { competitionId: comp.id, ...input })).rejects.toMatchObject({
+          code: 'unsupported_format',
+        });
+      }
+      expect(events(comp.id)).toHaveLength(0);
     }
-    expect(events(comp.id)).toHaveLength(0);
-  });
+  );
 });

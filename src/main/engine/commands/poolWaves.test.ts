@@ -1,6 +1,6 @@
 /**
- * Tour en vagues (docs/adr/0043, lot F4a) : launchPoolWave, endPoolWaves sur une épreuve qui
- * n'est PAS du mode spécial rapières, alias des anciennes commandes, rejeu d'un journal qui
+ * Tour en vagues (docs/adr/0043, lot F4a) : launchPoolWave, endPoolWaves sur une épreuve
+ * ordinaire (anciennes commandes retirées à F4e), rejeu d'un journal qui
  * mêle anciens (Rapieres*) et nouveaux (PoolWave*) événements. Base SQLite réelle.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -212,25 +212,7 @@ d('tour en vagues hors mode rapières (docs/adr/0043, F4a)', () => {
   });
 });
 
-d('alias des anciennes commandes et journaux d’avant F4a (docs/adr/0043)', () => {
-  it('launchRapieresWave / endRapieresWaves délèguent aux nouvelles (état waves, événements PoolWave*)', async () => {
-    const comp = setup(6, { poolBoutOrder: 'waves', poolSizeMin: 2, poolSizeMax: 10 });
-    await call('generatePools', { competitionId: comp.id, poolCount: 1 });
-    // Mode spécial rapières : seule épreuve admise par les alias (garde-fou d'avant F4a)
-    db.updateCompetition(comp.id, {
-      settings: { ...comp.settings, specialMode: 'rapieres' },
-    } as never);
-    await call('launchRapieresWave', { competitionId: comp.id, wave: 1 });
-    await call('endRapieresWaves', { competitionId: comp.id, ended: true });
-    expect(session(comp.id).waves).toEqual({ launched: 1, ended: true });
-    expect(types(comp.id).slice(-2)).toEqual(['PoolWaveLaunched', 'PoolWavesEnded']);
-    expect(replay(comp.id)).toEqual([]);
-    const plain = setup(6);
-    await expect(
-      call('launchRapieresWave', { competitionId: plain.id, wave: 1 })
-    ).rejects.toMatchObject({ code: 'unsupported_format' });
-  });
-
+d('anciens journaux et ancienne clé de session d’avant F4a (docs/adr/0043, lus après F4e)', () => {
   it('ancienne clé rapieres.launchedWave lue comme alias de waves ; journal mêlant anciens et nouveaux événements, sans écart', async () => {
     const comp = setup(6, { poolBoutOrder: 'waves', poolSizeMin: 2, poolSizeMax: 10 });
     await call('generatePools', { competitionId: comp.id, poolCount: 1 });

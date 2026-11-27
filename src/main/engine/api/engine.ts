@@ -26,7 +26,6 @@ import { reinstateFencer, withdrawFencer } from '../commands/withdrawal';
 import { addPoolFencer } from '../commands/poolComposition';
 import { closePoolRound } from '../commands/poolRound';
 import { closeTableauStage } from '../commands/tableauStage';
-import { endRapieresWaves, launchRapieresWave, setRapieresTeams } from '../commands/rapieres';
 import { endPoolWaves, launchPoolWave } from '../commands/poolWaves';
 import { getArenaPlan, saveArenaPlan } from '../commands/arenaPlan';
 import { clearScore } from '../commands/scoreClear';
@@ -127,12 +126,6 @@ export const handlers: { [N in OperationName]: Handler<N> } = {
     launchPoolWave(ctx, input),
   endPoolWaves: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     endPoolWaves(ctx, input),
-  launchRapieresWave: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
-    launchRapieresWave(ctx, input),
-  setRapieresTeams: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
-    setRapieresTeams(ctx, input),
-  endRapieresWaves: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
-    endRapieresWaves(ctx, input),
   clearScore: (ctx, { expectedRevision: _r, commandId: _c, ...input }) => clearScore(ctx, input),
   assignMatches: (ctx, { expectedRevision: _r, commandId: _c, ...input }) =>
     assignMatches(ctx, input),
