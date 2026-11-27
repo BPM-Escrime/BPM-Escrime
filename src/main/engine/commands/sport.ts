@@ -1011,12 +1011,6 @@ export function buildBracket(
   if (options.composition) assertScoreSupported(comp);
   else assertSupported(comp);
   const group = assertTableauGroup(comp, session, options.group);
-  if (!options.composition && comp.settings?.playAllPositions) {
-    throw new CommandError(
-      'unsupported_format',
-      '« Tirer toutes les places » : à piloter à l’écran'
-    );
-  }
   const eff = effectiveSettings(comp);
   if (!eff.hasDirectElimination) {
     throw new CommandError('no_direct_elimination', 'Épreuve sans élimination directe');
@@ -1053,7 +1047,9 @@ export function buildBracket(
   }
   // Statuts à jour (abandon, exclusion après les poules)
   // Statuts du classement (comme l'écran) : un décompte différent ferait régénérer le tableau
-  const thirdPlace = options.thirdPlaceMatch ?? eff.thirdPlaceMatch;
+  // « Tirer toutes les places » : petite finale imposée, comme à l'écran (#2013, F4g)
+  const playAll = !!comp.settings?.playAllPositions;
+  const thirdPlace = playAll || (options.thirdPlaceMatch ?? eff.thirdPlaceMatch);
   // Génération unique écran / moteur (#1979, lot 4) ; ou placement de l'écran, contrôlé
   let qualified: { length: number };
   let size: number;
@@ -1081,8 +1077,9 @@ export function buildBracket(
   } else {
     const cut = tableauRankingCut(comp, session, group, ties);
     tiedAtBar = cut.tiedAtBar;
+    // Même planification que l'écran, « toutes les places » comprise (barrages, #2013, F4g)
     ({ qualified, size, matches } = planTableau(cut.ranking, {
-      playAllPositions: false,
+      playAllPositions: playAll,
       thirdPlaceMatch: thirdPlace,
     }));
     if (group) matches = prefixTableau(matches, group);
@@ -1129,7 +1126,7 @@ export function buildBracket(
           ...(group ? { group } : {}),
           size,
           thirdPlaceMatch: thirdPlace,
-          playAllPositions: !!comp.settings?.playAllPositions,
+          playAllPositions: playAll,
           matches: tableauComposition(matches).map(m => ({
             ...m,
             seedA: m.seedA ?? null,

@@ -11,7 +11,7 @@ import { FencerStatus, Gender } from '../../../shared/types';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
 import { readSession } from './sessionView';
-import { writeSession } from './sport';
+import { listMatches, writeSession } from './sport';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -95,6 +95,56 @@ d('Tournoi des rapières en briques : piloté par le moteur', () => {
     // Vagues arrêtées : le tableau se tire sur les matchs joués, tous qualifiés
     const bracket = await call('generateTableau', { competitionId: id });
     expect(bracket.qualified).toBe(teams.length);
+  });
+
+  it('modèle bpm/C/rapieres en « toutes les places » (#2013, F4g) : vagues → tableau → classement complet, tout par le moteur', async () => {
+    const created = await call('createCompetition', {
+      title: 'Rapières toutes places',
+      date: '2026-12-13',
+      weapon: 'C',
+      gender: 'X',
+      category: 'SEN',
+      templateId: 'bpm/C/rapieres',
+    });
+    const id = created.competitionId as string;
+    await call('updateCompetitionFormula', {
+      competitionId: id,
+      operations: [{ op: 'setPhase', phase: 'tableau', settings: { allPlaces: true } }],
+    });
+    expect(db.getCompetition(id)!.settings?.playAllPositions).toBe(true);
+    const teams = addTeams(id);
+    await call('generatePools', { competitionId: id, poolCount: 2 });
+    /** Joue les matchs prêts du genre donné : A gagne (5-1 en poule, 15-n au tableau) */
+    const play = async (kind: 'pool' | 'bracket') => {
+      for (let guard = 0; guard < 100; guard++) {
+        const ready = listMatches(ctx, id, { state: 'ready' }).filter(m => m.kind === kind);
+        if (ready.length === 0) return;
+        for (const [i, m] of ready.entries()) {
+          await call('recordScore', {
+            competitionId: id,
+            matchId: m.matchId,
+            scoreA: kind === 'pool' ? 5 : 15,
+            scoreB: kind === 'pool' ? 1 : i % 10,
+          });
+        }
+      }
+    };
+    await call('launchPoolWave', { competitionId: id, wave: 1 });
+    await play('pool');
+    await call('endPoolWaves', { competitionId: id, ended: true });
+    const bracket = await call('generateTableau', { competitionId: id });
+    expect(bracket).toMatchObject({ size: 8, qualified: teams.length, thirdPlaceMatch: true });
+    const events = db.eventLog.getSince(id);
+    expect(events[events.length - 1]).toMatchObject({
+      type: 'TableauGenerated',
+      payload: { playAllPositions: true, thirdPlaceMatch: true },
+    });
+    await play('bracket');
+    const after = readSession(ctx, id) as any;
+    expect(after.consolationBrackets.length).toBeGreaterThan(0);
+    const ranks = after.finalResults.map((r: { rank: number }) => r.rank);
+    expect(ranks).toHaveLength(teams.length);
+    expect(new Set(ranks).size).toBe(teams.length);
   });
 
   it('mode spécial plus écrit : création et modification refusées', async () => {

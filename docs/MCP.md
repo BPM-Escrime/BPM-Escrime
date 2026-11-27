@@ -122,8 +122,9 @@ l'écran : tireurs pointés répartis sur le classement du tour précédent (ou 
 rang d'entrée au tableau après un tableau arrêté), tailles et score maximum du tour lus dans la formule (`minPerPool` / `maxPerPool` priment) ;
 `build_bracket` prend le classement de tous les tours ; `assign_referees` suit le tour courant
 ([ADR-0042](adr/0042-moteur-formules-multi-tours.md)). Une fois le tableau arrêté clos, plus de tableau :
-`build_bracket` refuse (`no_direct_elimination`). Les épreuves par équipes (relais) et « tirer toutes les places » restent à
-l'écran (erreur `unsupported_format`) pour `generate_pools` et `build_bracket` sans `composition`, et pour `assign_referees` ;
+`build_bracket` refuse (`no_direct_elimination`). « Tirer toutes les places » se tire sans `composition`, comme l'écran
+(barrages, petite finale imposée, tableaux de classement créés au fil de `record_score`). Les épreuves par équipes (relais)
+restent à l'écran (erreur `unsupported_format`) pour `generate_pools` et `build_bracket` sans `composition`, et pour `assign_referees` ;
 le Tournoi des rapières, formule en briques (tour en vagues par niveau, binômes, [ADR-0043](adr/0043-rapieres-briques-generiques.md)),
 est piloté comme toute formule, vagues comprises (`launch_pool_wave`, `end_pool_waves`).
 `record_score` accepte aussi les tours multiples (tour courant ; tour terminé figé : `round_closed`),
@@ -626,7 +627,7 @@ Aucun argument.
 
 ### `build_bracket` — Construire le tableau
 
-*⚠️ écriture, destructif.* Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, tableau simple) : après plusieurs tours de poules, classement de tous les tours (docs/adr/0042) ; refus « no_direct_elimination » une fois le tableau arrêté clos, les tours de poules qui suivent terminent l’épreuve (docs/adr/0037). Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »). Sans « composition » : « tiedAtBar » liste les ex aequo à la barre de qualification au-delà du quota, « ties » choisit leur sort pour ce tableau (docs/adr/0040).
+*⚠️ écriture, destructif.* Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, tableau simple), ou « tirer toutes les places » (barrages, petite finale imposée, tableaux de classement créés au fil des scores, même planification que l’écran) : après plusieurs tours de poules, classement de tous les tours (docs/adr/0042) ; refus « no_direct_elimination » une fois le tableau arrêté clos, les tours de poules qui suivent terminent l’épreuve (docs/adr/0037). Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »). Sans « composition » : « tiedAtBar » liste les ex aequo à la barre de qualification au-delà du quota, « ties » choisit leur sort pour ce tableau (docs/adr/0040).
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
