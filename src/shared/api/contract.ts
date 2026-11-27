@@ -14,6 +14,8 @@ import {
   CompetitionId,
   DryRun,
   ExpectedRevision,
+  TiesAtBarInput,
+  TiedAtBarSchema,
   Id,
   query,
   Revision,
@@ -34,6 +36,7 @@ import { devicesOperations } from './contractDevices';
 import { fileOperations } from './contractFiles';
 import { simulationOperations } from './contractSimulation';
 import { SplitHistorySchema, splitOperations } from './contractSplit';
+import { poolRoundOperations } from './contractPoolRound';
 import { teamOperations, TeamsStateSchema } from './contractTeams';
 import { stripOperations } from './contractStrips';
 import { JournalEventSchema } from './events';
@@ -424,41 +427,12 @@ export const contract = {
     mcp: { name: 'add_pool_fencer', title: 'Ajouter un tireur à une poule' },
   }),
 
-  closePoolRound: command({
-    description:
-      'Clôt le tour de poules courant (toutes les poules terminées) : qualifiés selon le classement du tour (formule, puis réglage du nombre de qualifiés, ou « qualifierCount »), non-qualifiés éliminés, tour archivé ; le tour suivant se pointe puis se tire. ' +
-      '« dryRun: true » donne le nombre de qualifiés et d’éliminés sans rien écrire. Refus sous 4 qualifiés.',
-    input: z.object({
-      competitionId: CompetitionId,
-      qualifierCount: z
-        .number()
-        .int()
-        .min(1)
-        .max(1000)
-        .optional()
-        .describe('Nombre de qualifiés imposé'),
-      dryRun: DryRun,
-      expectedRevision: ExpectedRevision,
-      commandId: CommandId,
-    }),
-    output: z.object({
-      dryRun: z.boolean(),
-      round: z.number().int(),
-      nextRound: z.number().int(),
-      qualifierCount: z.number().int().nullable(),
-      qualified: z.number().int(),
-      eliminated: z.number().int(),
-      revision: Revision,
-    }),
-    permission: 'score:write',
-    mcp: { name: 'close_pool_round', title: 'Clore le tour de poules', destructive: true },
-  }),
-
   generateTableau: command({
     description:
       'Tableau d’élimination directe. Sans « composition » : construit depuis le classement après poules (tireurs éliminés, abandons, forfaits et exclus écartés), avec ou sans petite finale (épreuve individuelle, un tour, tableau simple). ' +
       'Avec « composition » : placement calculé par l’écran (barrages, exemptions, rangs de sortie de poules), tel quel. « replace: true » efface un tableau déjà joué : accord du DT indispensable. ' +
-      'Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »).',
+      'Tableaux séparés après les poules : un tableau par groupe (« group » exigé), identifiants de match préfixés par le groupe (« F:32-0 »). ' +
+      'Sans « composition » : « tiedAtBar » liste les ex aequo à la barre de qualification au-delà du quota, « ties » choisit leur sort pour ce tableau (docs/adr/0040).',
     input: z.object({
       competitionId: CompetitionId,
       thirdPlaceMatch: z.boolean().optional().describe('Match pour la 3e place'),
@@ -485,6 +459,7 @@ export const contract = {
         .describe('Tournoi des rapières : mode de tableau choisi'),
       group: SplitGroup,
       replace: z.boolean().optional().describe('Remplacer un tableau existant'),
+      ties: TiesAtBarInput,
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
       commandId: CommandId,
@@ -493,6 +468,7 @@ export const contract = {
       dryRun: z.boolean(),
       size: z.number().int(),
       qualified: z.number().int(),
+      tiedAtBar: TiedAtBarSchema.nullable(),
       thirdPlaceMatch: z.boolean(),
       firstRound: z.array(
         z.object({
@@ -1478,6 +1454,7 @@ export const contract = {
   ...fileOperations,
   // Événements simulés du remplissage automatique : données d'essai, sans journal
   ...simulationOperations,
+  ...poolRoundOperations, // Clôture d'un tour de poules, ex aequo à la barre (docs/adr/0040)
   ...splitOperations, // Tableaux séparés : groupe extrait en épreuve séparée (docs/adr/0024)
   ...stripOperations, // Plan des pistes : départ, pistes indisponibles (docs/adr/0015)
   ...teamOperations, // Épreuves par équipes : inscription, poules, relais, tableau (docs/adr/0024)

@@ -69,6 +69,28 @@ describe('validateFormulaSettings', () => {
     ]);
   });
 
+  it('formule à la carte : ex aequo à la barre (ADR-0040), « barrage » refusé jusqu’à F1b', () => {
+    const v1 = (ties: string) =>
+      fields({
+        ...base(),
+        customFormula: {
+          version: 1,
+          phases: [
+            {
+              id: 'p1',
+              type: 'pool_round',
+              config: { advancementRule: { mode: 'fixed_count', count: 8, ties } },
+            },
+            { id: 'p2', type: 'direct_elimination', config: {} },
+          ],
+        } as never,
+      });
+    expect(v1('initial_ranking')).toEqual([]);
+    expect(v1('all')).toEqual([]);
+    expect(v1('barrage')).toEqual(['customFormula.phases[0].config.advancementRule.ties']);
+    expect(v1('tirage')).toEqual(['customFormula.phases[0].config.advancementRule.ties']);
+  });
+
   it('formule à la carte : version, phases, règles de passage, taille de tableau', () => {
     const issues = fields({
       ...base(),

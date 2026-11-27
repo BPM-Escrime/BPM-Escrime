@@ -39,6 +39,8 @@ import {
   type TableauPhase,
 } from './formulaV2';
 import { validateFormulaSettings } from './validateFormulaSettings';
+import { tiesIssue } from '../ranking/advancement';
+export { tiesIssue };
 
 const isPool = (p: FormulaPhaseV2): p is PoolRoundPhase => p.kind === 'pool';
 const isQuest = (p: FormulaPhaseV2): p is QuestPhase => p.kind === 'quest';
@@ -740,6 +742,18 @@ export function formulaV2Issues(
     out.push(...issues.map(i => `tableau : ${i.field} (${i.message})`));
   }
   if (pools.length > MAX_POOL_ROUNDS) out.push(`${MAX_POOL_ROUNDS} tours de poules au plus`);
+  // Ex aequo à la barre (ADR-0040) : 'barrage' attend le lot F1b
+  const rules: [string, AdvancementRule | undefined][] = [
+    ...pools.map((p, r): [string, AdvancementRule] => [`tour ${r + 1}`, p.qualification]),
+    ...(f.phases.find(isSplit)?.branches ?? []).map((b): [string, AdvancementRule | undefined] => [
+      `branche ${b.label}`,
+      b.take,
+    ]),
+  ];
+  for (const [where, rule] of rules) {
+    const issue = tiesIssue(rule?.ties);
+    if (issue) out.push(`${where} : ${issue}`);
+  }
   // Tableau arrêté (ADR-0037, D2) : des tours de poules ou une scission (ADR-0039) le suivent
   if (tableau) {
     const after = f.phases.slice(f.phases.indexOf(tableau) + 1);

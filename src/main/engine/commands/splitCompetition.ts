@@ -22,6 +22,7 @@ import {
   type CompetitionSettings,
   type Fencer,
   type PoolRanking,
+  type TiesAtBar,
 } from '../../../shared/types';
 import {
   coupledFormula,
@@ -53,6 +54,7 @@ import { splitDaughterCategory } from '../../../shared/domain/fencers/fencerCate
 import { computeOverallRankingAllRoundsFor } from '../../../shared/utils/poolOrchestration';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
+import { assertTies } from './ties';
 import { EVENT, recordEvents } from './eventLog';
 import { readSession } from './sessionView';
 import {
@@ -67,6 +69,8 @@ import {
 export interface SplitCompetitionInput {
   competitionId: string;
   assignments?: SplitAssignment[];
+  /** Ex aequo à une borne pour cette scission (docs/adr/0040), prime sur la formule */
+  ties?: TiesAtBar;
   dryRun?: boolean;
 }
 
@@ -232,7 +236,7 @@ export function splitCompetition(
   }
   const ranking = entryRanking(ctx, source, formula, session);
   checkAssignments(split, ranking, input.assignments);
-  const plan = planSplit(ranking, split, input.assignments);
+  const plan = planSplit(ranking, split, input.assignments, assertTies(input.ties));
   const byId = new Map(ranking.map(r => [r.fencer.id, r.fencer]));
   const missing = plan.missing.map(id => fencerRef(byId.get(id)!));
   const report = (ids: Array<string | null>) => ({
@@ -245,6 +249,7 @@ export function splitCompetition(
       stayInCompetition: false,
     })),
     missing,
+    tiedAtBar: plan.tiedAtBar,
     // Classement d'entrée, dans l'ordre (répartition manuelle à l'écran, étape E3)
     entrants: [...ranking]
       .sort((a, b) => a.rank - b.rank)

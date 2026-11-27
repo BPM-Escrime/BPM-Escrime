@@ -4884,5 +4884,14 @@
     "col_rank": "Rang",
     "col_fencer": "Tireur",
     "manual_missing": "{{n}} tireur(s) à affecter à une branche avant de scinder."
+  },
+  "tiesAtBar": {
+    "label": "Ex aequo à la barre",
+    "all": "Tous qualifiés",
+    "initial_ranking": "Départagés au classement d'entrée",
+    "keep": "Selon la formule",
+    "notice": "{{n}} tireurs ex aequo à la {{rank}}e place pour {{places}} place(s) : {{names}}",
+    "choose": "Que faire de ces ex aequo pour cette coupe ?",
+    "formula": "{{label}} (formule)"
   }
 }

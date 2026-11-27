@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { MatchStatus } from '../../types';
 import type { Pool, PoolRanking } from '../../types';
 import type { TableauMatch } from '../tableau/tableauTypes';
-import { computeEffectiveTableauRanking, computeMatchProgress } from './tableauRanking';
+import {
+  computeEffectiveTableauRanking,
+  computeMatchProgress,
+  rankingOfDrawnTableau,
+  tableauCut,
+  tableauRankingOfScreen,
+} from './tableauRanking';
 
 const pool = (statuses: MatchStatus[]): Pool =>
   ({
@@ -98,5 +104,78 @@ describe('computeEffectiveTableauRanking', () => {
       tableauQualification: { mode: 'percentage', percentage: 60 },
     });
     expect(result.map(r => r.fencer.id)).toEqual(['f0', 'f1', 'f2', 'f3']);
+  });
+});
+
+describe('tableauCut : ex aequo à la barre du tableau (docs/adr/0040)', () => {
+  // Après deux tours : rang d'entrée = place au tour précédent (fencer.ranking)
+  const tied = (id: string, entry: number): PoolRanking =>
+    ({ fencer: { id, ranking: entry, status: 'Q' }, rank: 2 }) as unknown as PoolRanking;
+  const ranking = [
+    { fencer: { id: 'a', ranking: 3, status: 'Q' }, rank: 1 } as unknown as PoolRanking,
+    tied('b', 4),
+    tied('c', 2),
+    tied('d', 1),
+  ];
+  const rule = { mode: 'fixed_count' as const, count: 2 };
+
+  it('réglage de la formule par défaut : tous les ex aequo ; simulation des ex aequo', () => {
+    const cut = tableauCut(ranking, [], { ...baseOptions, tableauQualification: rule });
+    expect(cut.ranking.map(r => r.fencer.id)).toEqual(['a', 'b', 'c', 'd']);
+    expect(cut.tiedAtBar).toEqual({ rank: 2, fencerIds: ['b', 'c', 'd'], places: 1 });
+  });
+
+  it('« ties » de l’écran ou de la commande : prime sur la formule', () => {
+    const ids = (ties?: 'all' | 'initial_ranking') =>
+      computeEffectiveTableauRanking(ranking, [], {
+        ...baseOptions,
+        tableauQualification: { ...rule, ties: 'all' },
+        ties,
+      }).map(r => r.fencer.id);
+    expect(ids('initial_ranking')).toEqual(['a', 'd']);
+    expect(ids()).toEqual(['a', 'b', 'c', 'd']);
+  });
+});
+
+describe('rankingOfDrawnTableau : coupe figée par le tableau tiré (docs/adr/0040)', () => {
+  const r = (id: string, rank: number) =>
+    ({ fencer: { id, status: 'Q' }, rank }) as unknown as PoolRanking;
+  const all = [r('a', 1), r('b', 2), r('c', 2), r('d', 2), r('x', 5)];
+  const tiedAtBar = { rank: 2, fencerIds: ['b', 'c', 'd'], places: 1 };
+  const match = (a: string, b: string) =>
+    ({ fencerA: { id: a }, fencerB: { id: b } }) as unknown as TableauMatch;
+
+  it('ex aequo absents du tableau retirés ; les autres tireurs gardés', () => {
+    const out = rankingOfDrawnTableau({ ranking: all, tiedAtBar }, [match('a', 'd')]);
+    expect(out.map(x => x.fencer.id)).toEqual(['a', 'd', 'x']);
+  });
+
+  it('sans ex aequo à la barre ou sans tableau : classement inchangé', () => {
+    expect(rankingOfDrawnTableau({ ranking: all, tiedAtBar: null }, [match('a', 'd')])).toBe(all);
+    expect(rankingOfDrawnTableau({ ranking: all, tiedAtBar }, [])).toBe(all);
+  });
+});
+
+describe('tableauRankingOfScreen : classement, PDF et résultats de l’écran (docs/adr/0040)', () => {
+  const r = (id: string, rank: number, entry: number) =>
+    ({ fencer: { id, ranking: entry, status: 'Q' }, rank }) as unknown as PoolRanking;
+  const overall = [r('a', 1, 4), r('b', 2, 3), r('c', 2, 1), r('d', 2, 2)];
+  const options = {
+    ...baseOptions,
+    tableauQualification: { mode: 'fixed_count' as const, count: 2 },
+  };
+  const ids = (x: PoolRanking[]) => x.map(y => y.fencer.id);
+
+  it('avant le tirage : choix de l’écran, sinon la formule', () => {
+    expect(ids(tableauRankingOfScreen(overall, [], options, []))).toEqual(['a', 'b', 'c', 'd']);
+    expect(
+      ids(tableauRankingOfScreen(overall, [], { ...options, ties: 'initial_ranking' }, []))
+    ).toEqual(['a', 'c']);
+  });
+
+  it('tableau tiré : coupe figée par le tableau, même si le choix est perdu (rechargement)', () => {
+    const drawn = [{ fencerA: { id: 'a' }, fencerB: { id: 'c' } }] as unknown as TableauMatch[];
+    // Choix oublié (formule « all ») : le tableau tiré garde a et c
+    expect(ids(tableauRankingOfScreen(overall, [], options, drawn))).toEqual(['a', 'c']);
   });
 });

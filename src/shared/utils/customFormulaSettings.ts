@@ -153,26 +153,33 @@ export function getTableauAdvancement(
 
 // Nombre de qualifiés : règle du domaine (docs/adr/0002), réexportée
 export { getAdvancementCount } from '../domain/ranking/advancement';
-import { getAdvancementCount } from '../domain/ranking/advancement';
+import { cutAtBar, getAdvancementCount, type TiedAtBar } from '../domain/ranking/advancement';
 
 /** Abandon, forfait, exclusion (#1979, lot 4 : définition unique) */
 const INACTIVE = WITHDRAWN_STATUSES;
 
 /**
  * Classement réduit aux qualifiés pour le tableau (percentage / fixed_count / fixed_bracket).
- * Égalités à la coupure : toutes retenues. Classement inchangé si la règle prend tout le monde.
+ * Ex aequo à la barre : selon `rule.ties` (docs/adr/0040, coupe du domaine `cutAtBar`), tous
+ * retenus par défaut. Classement inchangé si la règle prend tout le monde.
  */
 export function applyTableauAdvancement(
   ranking: PoolRanking[],
   rule: AdvancementRule | undefined
 ): PoolRanking[] {
+  return tableauAdvancementCut(ranking, rule).ranking;
+}
+
+/** Comme `applyTableauAdvancement`, avec les ex aequo à la barre au-delà du quota */
+export function tableauAdvancementCut(
+  ranking: PoolRanking[],
+  rule: AdvancementRule | undefined
+): { ranking: PoolRanking[]; tiedAtBar: TiedAtBar | null } {
   const active = [...ranking]
     .filter(r => !INACTIVE.has(r.fencer.status))
     .sort((a, b) => a.rank - b.rank);
   const count = getAdvancementCount(active.length, rule);
-  if (count === undefined || count >= active.length) return ranking;
-  const cutoffRank = active[count - 1].rank;
-  let cut = count;
-  while (cut < active.length && active[cut].rank === cutoffRank) cut++;
-  return active.slice(0, cut);
+  if (count === undefined || count >= active.length) return { ranking, tiedAtBar: null };
+  const cut = cutAtBar(active, count, rule?.ties);
+  return { ranking: cut.qualified, tiedAtBar: cut.tiedAtBar };
 }

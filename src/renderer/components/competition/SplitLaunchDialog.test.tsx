@@ -34,6 +34,7 @@ const plan = (missing = 0) => ({
     { label: 'Tableau B', competitionId: null, fencers: fencers(3, 'b'), stayInCompetition: false },
   ],
   missing: fencers(missing, 'm').map(({ rank: _r, ...f }) => f),
+  tiedAtBar: [] as Array<{ rank: number; fencerIds: string[]; places: number }>,
   entrants: [],
 });
 
@@ -93,6 +94,7 @@ const manualSim = (input: { assignments?: { fencerId: string; branch: string }[]
       lastName,
       firstName,
     })),
+    tiedAtBar: [],
     entrants: ENTRANTS,
   });
 };
@@ -204,5 +206,38 @@ describe('SplitLaunchDialog (ADR-0039)', () => {
         { fencerId: 'e3', branch: 'N1' },
       ],
     });
+  });
+
+  it('ex aequo à la borne (ADR-0040) : listés, choix pour cette scission, commande avec « ties »', async () => {
+    const tied = {
+      ...plan(),
+      entrants: ENTRANTS,
+      tiedAtBar: [{ rank: 2, fencerIds: ['e2', 'e3'], places: 1 }],
+    };
+    call.mockResolvedValue(tied);
+    const onDone = vi.fn();
+    render(
+      <SplitLaunchDialog competitionId="c" criterion="rank" onClose={vi.fn()} onDone={onDone} />
+    );
+    const box = await screen.findByTestId('split-launch-ties');
+    expect(box).toHaveTextContent('BRAVO B, CHARLIE C');
+    fireEvent.change(screen.getByTestId('split-launch-ties-select'), {
+      target: { value: 'initial_ranking' },
+    });
+    await waitFor(() =>
+      expect(call).toHaveBeenLastCalledWith('splitCompetition', {
+        competitionId: 'c',
+        dryRun: true,
+        ties: 'initial_ranking',
+      })
+    );
+    fireEvent.click(screen.getByTestId('split-launch-confirm'));
+    await waitFor(() =>
+      expect(call).toHaveBeenLastCalledWith('splitCompetition', {
+        competitionId: 'c',
+        ties: 'initial_ranking',
+      })
+    );
+    expect(onDone).toHaveBeenCalled();
   });
 });

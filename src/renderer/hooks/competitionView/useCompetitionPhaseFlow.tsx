@@ -17,10 +17,8 @@ import { useRemoteCheckinSync } from '../useRemoteCheckinSync';
 import { buildMatchAuditOptions } from '../../components/competition/matchAuditOptions';
 import CompetitionPoolCard from '../../components/competition/CompetitionPoolCard';
 import PoolRoundSelector from '../../components/competition/PoolRoundSelector';
-import {
-  computeEffectiveTableauRanking,
-  computeMatchProgress,
-} from '../../../shared/domain/ranking/tableauRanking';
+import { computeMatchProgress } from '../../../shared/domain/ranking/tableauRanking';
+import { useScreenTableauRanking } from './useScreenTableauRanking';
 import type { CompetitionViewProps } from '../../components/competition/competitionViewTypes';
 import { useCompetitionSessionSync } from './useCompetitionSessionSync';
 import { useCompetitionCore } from './useCompetitionCore';
@@ -214,34 +212,24 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     [storedFormula, hasDirectElimination]
   );
 
-  // Classement effectif pour le tableau (filtré par vainqueurs de poule et/ou groupe actif)
-  const effectiveTableauRanking = useMemo(
-    () =>
-      computeEffectiveTableauRanking(overallRanking, pools, {
-        isRapieres,
-        rapieresTableauMode: rapieres.tableauMode,
-        // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
-        poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
-        customFormula: hasDirectElimination ? customFormula : undefined,
-        tableauQualification,
-        postPoolSplitCriteria,
-        activeSplitGroup,
-        splitOffCompetitionIds,
-      }),
-    [
-      overallRanking,
-      pools,
+  // Classement effectif pour le tableau (vainqueurs de poule, groupe actif, ex aequo à la barre)
+  const effectiveTableauRanking = useScreenTableauRanking({
+    competitionId: competition.id,
+    overallRanking,
+    pools,
+    tableauMatches,
+    options: {
       isRapieres,
-      rapieres.tableauMode,
-      poolWinnersOnly,
-      hasDirectElimination,
-      customFormula,
+      rapieresTableauMode: rapieres.tableauMode,
+      // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
+      poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
+      customFormula: hasDirectElimination ? customFormula : undefined,
       tableauQualification,
       postPoolSplitCriteria,
       activeSplitGroup,
       splitOffCompetitionIds,
-    ]
-  );
+    },
+  });
 
   // Calcul progression matchs
   const matchProgress = useMemo(

@@ -7,10 +7,16 @@ import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { FencerStatus, Weapon } from '../../shared/types';
 import { nextRoundPlan } from '../../shared/domain/pools/roundSeeding';
-import type { Competition, Fencer, Pool, PoolRanking, QuestPhaseConfig } from '../../shared/types';
+import type {
+  Competition,
+  Fencer,
+  Pool,
+  PoolRanking,
+  QuestPhaseConfig,
+  TiesAtBar,
+} from '../../shared/types';
 import { generateInitialRanking } from '../../shared/utils/poolCalculations';
 import { selectNextRoundFencers } from '../../shared/utils/poolRounds';
-import type { getActiveFormula } from '../../shared/utils/customFormulaSettings';
 import {
   rapieresSemifinalists,
   rapieresTableauSettings,
@@ -22,6 +28,16 @@ import type {
 import type { ConsolationBracket, TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import type { GroupTableau } from '../../shared/domain/ranking/splitGroups';
 import { useConfirm } from '../components/ConfirmDialog';
+import { TIES_CHOICES, tiesNotice, type TiesChoice } from '../components/ties/TiesAtBar';
+import { setTableauTies } from './tableauTiesChoice';
+import { tableauQualificationOf } from '../../shared/domain/formula/formulaV2';
+import type { TiedAtBar } from '../../shared/domain/ranking/advancement';
+import {
+  getActiveFormula,
+  getTableauAdvancement,
+  resolveCompetitionSettings,
+} from '../../shared/utils/customFormulaSettings';
+import { tableauCut } from '../../shared/domain/ranking/tableauRanking';
 import { useToast } from '../components/Toast';
 import type { Phase } from './useCompetitionSession';
 import type { useFencerManagement } from './useFencerManagement';
@@ -113,7 +129,7 @@ export function useCompetitionNavigation({
 }: UseCompetitionNavigationParams) {
   const client = useBpmClient();
   const { showToast } = useToast();
-  const { confirm } = useConfirm();
+  const { confirm, choose } = useConfirm();
   const { t } = useTranslation();
 
   const handleQuestConfigUpdate = useCallback(
@@ -230,13 +246,75 @@ export function useCompetitionNavigation({
       setShowRapieresTableauDialog(true);
       return;
     }
-    // Tirer toutes les places → 3ème place implicite, pas de question
-    if (playAllPositions) {
-      handleThirdPlaceDecision(true, undefined, group);
+    const draw = () => {
+      // Tirer toutes les places → 3ème place implicite, pas de question
+      if (playAllPositions) {
+        handleThirdPlaceDecision(true, undefined, group);
+        return;
+      }
+      // 3ème place décidée dans la formule (#1125, #2013) : plus de question au lancement
+      handleThirdPlaceDecision(thirdPlaceMatch, undefined, group);
+    };
+    // Ex aequo à la barre de qualification (docs/adr/0040) : listés et choix pour ce tableau,
+    // avant sa génération ; le tableau est tiré avec le classement retenu
+    const tied = tableauTiedAtBar();
+    if (!tied) {
+      setTableauTies(competition.id, undefined);
+      draw();
       return;
     }
-    // 3ème place décidée dans la formule (#1125, #2013) : plus de question au lancement
-    handleThirdPlaceDecision(thirdPlaceMatch, undefined, group);
+    void chooseTies(tied, tableauFormulaRule()?.ties).then(ties => {
+      if (!ties) return;
+      setTableauTies(competition.id, ties);
+      draw();
+    });
+  };
+
+  /** Règle de qualification vers le tableau : formule « Autre » (v1), sinon formule v2 */
+  const tableauFormulaRule = () => {
+    const custom = getActiveFormula(competition.weapon, competition.settings);
+    if (custom) return getTableauAdvancement(custom);
+    const formula = competition.settings?.formula;
+    return formula ? tableauQualificationOf(formula) : undefined;
+  };
+
+  /** Ex aequo à la barre du tableau selon la formule (comme le moteur, tableauCut) */
+  const tableauTiedAtBar = () => {
+    const formula = competition.settings?.formula;
+    // Même coupe que le classement du tableau (useCompetitionPhaseFlow) et que le moteur
+    return tableauCut(overallRanking, pools, {
+      isRapieres,
+      rapieresTableauMode: undefined,
+      poolWinnersOnly: !!resolveCompetitionSettings(competition.weapon, competition.settings)
+        .poolWinnersOnly,
+      customFormula: getActiveFormula(competition.weapon, competition.settings),
+      tableauQualification: formula ? tableauQualificationOf(formula) : undefined,
+      postPoolSplitCriteria: undefined,
+      activeSplitGroup: null,
+      splitOffCompetitionIds: undefined,
+    }).tiedAtBar;
+  };
+
+  /** Ex aequo listés, choix pour cette coupe ; null : annulé */
+  const chooseTies = async (
+    tied: TiedAtBar,
+    formulaTies: TiesAtBar | undefined
+  ): Promise<TiesChoice | null> => {
+    const nameOf = (id: string) => {
+      const f = fencers.find(x => x.id === id);
+      return f ? `${f.lastName} ${f.firstName}` : id;
+    };
+    const picked = await choose({
+      message: `${tiesNotice(t, tied, nameOf)}\n${t('tiesAtBar.choose')}`,
+      choices: TIES_CHOICES.map(c => ({
+        value: c,
+        label:
+          c === (formulaTies ?? 'all')
+            ? t('tiesAtBar.formula', { label: t(`tiesAtBar.${c}`) })
+            : t(`tiesAtBar.${c}`),
+      })),
+    });
+    return (picked as TiesChoice | null) ?? null;
   };
 
   /** Rapières : mode de tableau choisi dans la popup (#1441) */
@@ -286,10 +364,30 @@ export function useCompetitionNavigation({
    */
   const closeRoundByCommand = async (): Promise<'recorded' | 'local' | 'refused'> => {
     try {
-      const sim = await client.call('closePoolRound', {
+      let sim = await client.call('closePoolRound', {
         competitionId: competition.id,
         dryRun: true,
       });
+      // Ex aequo à la barre au-delà du quota (docs/adr/0040) : choix pour cette coupe
+      let ties: TiesChoice | undefined;
+      if (sim.tiedAtBar) {
+        const formulaTies = nextRoundPlan({
+          weapon: competition.weapon,
+          settings: competition.settings,
+          round: currentPoolRound,
+          pools,
+          history: poolHistory ?? [],
+          isLaserSabre: competition.weapon === Weapon.LASER,
+        }).ties;
+        const picked = await chooseTies(sim.tiedAtBar, formulaTies);
+        if (!picked) return 'refused';
+        ties = picked as TiesChoice;
+        sim = await client.call('closePoolRound', {
+          competitionId: competition.id,
+          dryRun: true,
+          ties,
+        });
+      }
       const ok = await confirm(
         t('pools.next_round_confirm', {
           n: sim.nextRound,
@@ -298,7 +396,10 @@ export function useCompetitionNavigation({
         })
       );
       if (!ok) return 'refused';
-      await client.call('closePoolRound', { competitionId: competition.id });
+      await client.call('closePoolRound', {
+        competitionId: competition.id,
+        ...(ties ? { ties } : {}),
+      });
       afterRoundClosed(sim.nextRound);
       return 'recorded';
     } catch (e) {
@@ -325,7 +426,14 @@ export function useCompetitionNavigation({
       history: poolHistory ?? [],
       isLaserSabre: competition.weapon === Weapon.LASER,
     });
-    const { qualified, eliminated } = selectNextRoundFencers(plan.ranking, plan.qualifierCount);
+    let cut = selectNextRoundFencers(plan.ranking, plan.qualifierCount, plan.ties);
+    // Ex aequo à la barre (docs/adr/0040) : listés et choix pour cette coupe, comme le moteur
+    if (cut.tiedAtBar) {
+      const ties = await chooseTies(cut.tiedAtBar, plan.ties);
+      if (!ties) return;
+      cut = selectNextRoundFencers(plan.ranking, plan.qualifierCount, ties);
+    }
+    const { qualified, eliminated } = cut;
     if (qualified.length < 4) {
       showToast('Il faut au moins 4 qualifiés pour un nouveau tour de poules.', 'warning');
       return;

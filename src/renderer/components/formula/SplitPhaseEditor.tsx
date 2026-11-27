@@ -26,6 +26,7 @@ import {
   withSplitCriterion,
   type BranchPreset,
 } from '../../../shared/domain/formula/formulaV2Operations';
+import { TiesAtBarSelect } from '../ties/TiesAtBar';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Button } from '../common/Button';
 
@@ -94,10 +95,13 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
           value={take.mode}
           onChange={e =>
             setBranch(i, {
-              take:
-                e.target.value === 'percentage'
-                  ? { mode: 'percentage', percentage: 50 }
-                  : { mode: 'fixed_count', count: 16 },
+              take: {
+                ...(e.target.value === 'percentage'
+                  ? { mode: 'percentage' as const, percentage: 50 }
+                  : { mode: 'fixed_count' as const, count: 16 }),
+                // Ex aequo à la borne (ADR-0040) : gardé d'un mode à l'autre
+                ...(take.ties ? { ties: take.ties } : {}),
+              },
             })
           }
         >
@@ -118,6 +122,11 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
           }}
         />
         <span>{pct ? '%' : t('formulaSim.fencers')}</span>
+        <TiesAtBarSelect
+          value={take.ties}
+          testId={`split-take-ties-${i}`}
+          onChange={ties => setBranch(i, { take: { ...take, ties } })}
+        />
       </div>
     );
   };

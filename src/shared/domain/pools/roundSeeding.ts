@@ -6,7 +6,7 @@
  * Licensed under GPL-3.0
  */
 
-import type { CompetitionSettings, Pool, PoolRanking, Weapon } from '../../types';
+import type { CompetitionSettings, Pool, PoolRanking, TiesAtBar, Weapon } from '../../types';
 import {
   getActiveFormula,
   getAdvancementCount,
@@ -81,6 +81,8 @@ export interface NextRoundPlan {
   ranking: PoolRanking[];
   /** Nombre de qualifiés (undefined : tous) */
   qualifierCount: number | undefined;
+  /** Ex aequo à la barre (formule v2, docs/adr/0040) ; absent : tous retenus */
+  ties?: TiesAtBar;
   seeding: 'previous_round' | 'cumulative';
 }
 
@@ -110,6 +112,7 @@ export function nextRoundPlan(input: {
     return {
       ranking,
       qualifierCount: getAdvancementCount(ranking.length, phase.qualification),
+      ties: phase.qualification.ties,
       seeding,
     };
   }
@@ -119,6 +122,7 @@ export function nextRoundPlan(input: {
     qualifierCount: custom
       ? getAdvancementCount(ranking.length, getPoolRoundAdvancement(custom, input.round - 1))
       : getRoundQualifierCount(input.settings?.poolRoundQualifiers, input.round + 1),
+    ties: custom ? getPoolRoundAdvancement(custom, input.round - 1)?.ties : undefined,
     seeding,
   };
 }

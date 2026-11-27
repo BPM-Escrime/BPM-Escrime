@@ -1,6 +1,6 @@
 # ADR-0040 — Ex aequo à la barre de qualification : réglage du tour, proposé à l'exécution
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (nom du champ de `TableauGenerated` : `matches` ; tableau composé par l'écran, choix appliqué par `tableauCut` ; validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F1 ; question Q8), #1948 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (`AdvancementRule`), [ADR-0039](0039-scission-competitions-filles.md) (scission par rang)
 
@@ -47,10 +47,18 @@
   `splitCompetition`) rend `tiedAtBar` (identifiants, place, nombre de places restantes).
 - L'écran affiche les ex aequo avant de confirmer et propose de garder le réglage ou d'en
   choisir un autre pour cette coupe seulement : champ optionnel `ties` de la commande, qui
-  prime sur la formule. Le MCP passe le même champ (ADR-0008 : même commande).
+  prime sur la formule. Pour le tableau, que l'écran compose (ADR-0017), le choix fait au
+  passage au tableau est appliqué par la coupe du domaine (`tableauCut`, même fonction que le
+  moteur), puis figé par `TableauGenerated` ; le champ `ties` de `generateTableau` sert au MCP
+  et au tableau construit par le moteur. Le MCP passe le même champ (ADR-0008 : même
+  commande). _(Amendé le 2026-11-26 : remplace « L'écran affiche les ex aequo avant de
+  confirmer et propose de garder le réglage ou d'en choisir un autre pour cette coupe
+  seulement : champ optionnel `ties` de la commande, qui prime sur la formule. Le MCP passe le
+  même champ (ADR-0008 : même commande). »)_
 - La coupe retenue est figée par les événements existants : `PoolRoundClosed`
-  (`qualifiedIds`), `TableauGenerated` (`slots`), `GroupSplitOff` / `SplitRankingImported`.
-  Aucun nouvel événement en F1.
+  (`qualifiedIds`), `TableauGenerated` (`matches`), `GroupSplitOff` / `SplitRankingImported`.
+  Aucun nouvel événement en F1. _(Amendé le 2026-11-26 : remplace « `TableauGenerated`
+  (`slots`) » ; nom du champ de l'événement.)_
 
 ## Conséquences
 

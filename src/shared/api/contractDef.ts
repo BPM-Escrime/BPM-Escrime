@@ -89,6 +89,19 @@ export const SplitGroup = z
     'Tableaux séparés après les poules : groupe du tableau (« F », « M »), exigé pour ce format'
   );
 export const DryRun = z.boolean().optional().describe('Décrit le résultat sans rien écrire');
+/** Ex aequo à la barre pour cette coupe seulement (docs/adr/0040) ; prime sur la formule */
+export const TiesAtBarInput = z
+  .enum(['all', 'initial_ranking', 'barrage'])
+  .optional()
+  .describe(
+    'Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour ; barrage pas encore disponible (refus invalid_settings)'
+  );
+/** Ex aequo à la barre au-delà du quota, rendus par la simulation (docs/adr/0040) */
+export const TiedAtBarSchema = z.object({
+  rank: z.number().int(),
+  fencerIds: z.array(z.string()),
+  places: z.number().int(),
+});
 export const ExpectedRevision = z
   .number()
   .int()

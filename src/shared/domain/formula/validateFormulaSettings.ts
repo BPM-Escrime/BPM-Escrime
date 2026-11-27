@@ -8,6 +8,7 @@
 import type { CompetitionSettings, CustomFormulaConfig, FormulaPhaseNode } from '../../types';
 import { MAX_POOL_ROUNDS } from './formulaDraft';
 import { FormulaScope, MAX_SCORE_LIMITS, maxScoreLimits } from './laserMaxScores';
+import { tiesIssue } from '../ranking/advancement';
 
 export { maxScoreLimits };
 export type { FormulaScope };
@@ -76,6 +77,9 @@ function checkPhase(out: FormulaIssue[], node: FormulaPhaseNode, i: number) {
       } else if (rule.mode === 'fixed_count' || rule.mode === 'fixed_bracket') {
         range(out, `${at}.config.advancementRule.count`, rule.count, { min: 1 });
       }
+      // Ex aequo à la barre (ADR-0040) : 'barrage' attend le lot F1b
+      const ties = tiesIssue((rule as { ties?: unknown }).ties);
+      if (ties) out.push({ field: `${at}.config.advancementRule.ties`, message: ties });
     }
   }
   if (node.type === 'direct_elimination' && c.bracketSizeOverride !== undefined) {

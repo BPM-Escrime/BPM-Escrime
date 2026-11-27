@@ -14,6 +14,8 @@ import {
   DryRun,
   ExpectedRevision,
   Revision,
+  TiedAtBarSchema,
+  TiesAtBarInput,
 } from './contractDef';
 
 /** Scission faite (état de session de l'épreuve d'origine, docs/adr/0039) */
@@ -64,9 +66,9 @@ export const splitOperations = {
   splitCompetition: command({
     description:
       'Scission de la formule (dernière phase, docs/adr/0039) : quand la phase qui la précède est close (tour de poules terminé, tableau arrêté clos), répartit son classement entre les branches ' +
-      '(sexe ou catégorie du tireur ; rang : nombre ou pourcentage de l’effectif entrant, ex aequo à la borne gardés, la dernière branche prend le reste ; manuelle : « assignments »). ' +
+      '(sexe ou catégorie du tireur ; rang : nombre ou pourcentage de l’effectif entrant, ex aequo à la borne selon « take.ties » de la branche ou « ties » (tous gardés par défaut, docs/adr/0040), la dernière branche prend le reste ; manuelle : « assignments »). ' +
       'Dans une seule transaction, chaque branche devient une compétition fille (titre « titre d’origine – libellé », formule de la branche, tireurs copiés avec leur rang dans la branche) ; l’épreuve d’origine garde les autres tireurs. ' +
-      '« dryRun: true » rend la répartition, les tireurs sans valeur pour le critère et le classement d’entrée (« entrants »), sans refus. ' +
+      '« dryRun: true » rend la répartition, les tireurs sans valeur pour le critère, les ex aequo à une borne au-delà du nombre (« tiedAtBar ») et le classement d’entrée (« entrants »), sans refus. ' +
       'Toutes les branches partent en compétitions filles (« stayInCompetition » vaut false) ; scission par sexe dont toutes les branches restent dans l’épreuve (compétition couplée, tableaux séparés) : refus invalid_settings. ' +
       'Refus : invalid_settings (pas de scission en dernière phase), pools_not_complete, tableau_stage_not_complete, split_value_missing (tireur sans sexe, sans catégorie ou non affecté), split_group_not_found (épreuve déjà scindée), not_enough_fencers (branche vide).',
     input: z.object({
@@ -81,6 +83,7 @@ export const splitOperations = {
         .max(2000)
         .optional()
         .describe('Scission manuelle : branche de chaque tireur (libellé)'),
+      ties: TiesAtBarInput,
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
       commandId: CommandId,
@@ -99,6 +102,8 @@ export const splitOperations = {
       ),
       /** Tireurs sans valeur pour le critère */
       missing: z.array(SplitFencer),
+      /** Par rang : ex aequo à une borne au-delà du nombre de la branche (docs/adr/0040) */
+      tiedAtBar: z.array(TiedAtBarSchema),
       /** Classement d'entrée de la scission, dans l'ordre (répartition manuelle) */
       entrants: z.array(
         SplitFencer.extend({
