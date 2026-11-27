@@ -1,6 +1,6 @@
 # ADR-0043 — Tournoi des rapières en briques génériques de la formule, fin du mode spécial
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (poules de 2 à 15 en vagues classiques ; ordre d'entrée des têtes de poule ; validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (poules de 2 à 15 en vagues classiques ; ordre d'entrée des têtes de poule ; niveaux de la liste des rapières, du plus faible au plus fort ; exports des membres ; validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F4, décision D8), #1948, #1441, #1118 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (phases), [ADR-0040](0040-ex-aequo-a-la-barre.md) (qualification), [ADR-0039](0039-scission-competitions-filles.md) (catégorie du tireur), s'appuie sur [ADR-0007](0007-format-evenement.md), [ADR-0008](0008-nommage-contrat.md), [ADR-0011](0011-migrations-schema-3-0.md), [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -65,13 +65,22 @@
 **F4c — Entrée en équipes (binômes)**
 
 - Réglage général de la formule `entry: { kind: 'individual' } | { kind: 'team'; size: 2;
-levels: string[] }` (défaut individuel ; libellés par défaut Débutant, Intermédiaire, Expert).
+levels: string[] }` (défaut individuel). `levels` est rangé du plus faible au plus fort ; par
+  défaut, la liste du mode rapières : `beginner`, `intermediate`, `expert` (Débutant,
+  Intermédiaire, Expert, libellés traduits) ; un libellé saisi par l'organisateur s'affiche tel
+  quel. _(Amendé le 2026-11-27 : remplace « (défaut individuel ; libellés par défaut Débutant,
+  Intermédiaire, Expert). »)_
 - **Migration 54**, additive, sans valeur par défaut, avec son test depuis une base en version
   53 (ADR-0011) : `fencers.members` (`TEXT NULL`, JSON `[{ lastName, firstName, gender?,
-birthDate? }]`), `fencers.level` (`INTEGER NULL`, 1 = le plus fort, indice dans `levels`),
+birthDate? }]`), `fencers.level` (`INTEGER NULL`, indice dans `levels` à partir de 1 : le plus
+  grand est le plus fort _(amendé le 2026-11-27 : remplace « 1 = le plus fort, indice dans
+  `levels` »)_),
   `fencers.handicap` (`INTEGER NULL`, 0 ou 1 : marqueur « HANDI » distinct de la catégorie).
-  Les membres suivent le tireur : export, RGPD (export et effacement de la personne),
-  suppression.
+  Les membres suivent le tireur : export de la personne et archives (`.bpf`, `.bpm`), RGPD
+  (export et effacement de la personne), suppression ; les exports de liste aux formats
+  fédéraux (XML FIE, FFE) et CSV n'ont pas de membres. _(Amendé le 2026-11-27 : remplace « Les
+  membres suivent le tireur : export, RGPD (export et effacement de la personne),
+  suppression. »)_
 - Commandes d'inscription et de modification du tireur : champs `members`, `level`,
   `handicap` optionnels (ADR-0018). `setRapieresTeams` devient un alias jusqu'à F4e.
 - Catégorie d'une équipe = moyenne des années de naissance des membres, arrondie au-dessus,
