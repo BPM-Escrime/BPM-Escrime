@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 25 | 284 |
-| `src/main/` | 163 | 1458 |
+| `src/main/` | 165 | 1479 |
 | `src/renderer/services/` | 14 | 70 |
-| `src/renderer/hooks/` | 43 | 231 |
-| `src/renderer/components/` | 144 | 822 |
+| `src/renderer/hooks/` | 44 | 237 |
+| `src/renderer/components/` | 145 | 833 |
 | E2E Playwright (`e2e/`) | 23 | 58 |
 | `src/remote/` | 60 | 443 |
 | `src/renderer/api/` | 10 | 46 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 59 | 758 |
+| `src/shared/domain/` | 61 | 801 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **663** | **5338** |
+| **Total** | **669** | **5419** |
 
-Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3287,7 +3287,7 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 17 tests</summary>
+<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 19 tests</summary>
 
 - liste : fournis puis personnels, standard du contexte
 - enregistrer une copie, la retrouver, la supprimer ; un modèle fourni est refusé
@@ -3300,6 +3300,8 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - createCompetition avec un modèle : Tournoi des rapières, arme « Autre »
 - outils MCP de la formule d’une épreuve
 - updateCompetitionFormula écrit formula et les réglages plats du 1er tour
+- tour en vagues (docs/adr/0043) : ordre « waves », poules de 2 à 10, au-delà refusé
+- arme « Autre » : tour en vagues de 2 à 10 aussi, ordre gardé dans les réglages plats
 - bornes du tour 2 refusées
 - réglages plats écrits sans formula : formule retirée, reconstruite à la lecture
 - modèle appliqué ou choisi à la création : formula enregistrée
@@ -3447,6 +3449,37 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - annulation : Directoire technique seulement, jaune ou rouge P ; noir P refusé ; rejeu
 - dépôt : cartons E et cartons P de la même table lus séparément (même milliseconde)
 - outil MCP give\_passivity\_card (écriture sportive)
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/poolHeads.test.ts</code> — 8 tests</summary>
+
+- 2 poules, 4 qualifiés : A1, B1, A2, B2, donc A1–B2 et B1–A2
+- le tableau tiré garde ces 4 qualifiés, sans composition
+- plus de poules que de qualifiés : la formule est refusée (S4), avec la phase en cause
+- formule « têtes de poule » 4 : les 4 demi-finalistes, croisement
+- mode hérité « semis » (clé de session rapieres) : même sortie, sans formule
+- tableau tiré : changer la qualification du tour est refusé (invalid\_settings), le reste passe
+- la formule décide ensuite
+- simulation : rien n’est effacé
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/poolWaves.test.ts</code> — 11 tests</summary>
+
+- le tirage suit l’ordre des vagues, launchPoolWave lance une vague, journal PoolWaveLaunched
+- épreuve sans tour en vagues : commandes refusées
+- vagues arrêtées : tour terminé sans les matchs non joués, puis reprises
+- reconstruction : l’état des vagues est réaligné sur le journal (clé waves)
+- tablettes : le moteur pousse la vague active (lancée, arrêtée, reprise, tirage)
+- vagues classiques : poules de 11 à 15 tirées avec la table fixe
+- un nouveau tirage remet les vagues à zéro
+- ordre « waves\_classic » : table fixe des poules de 10, vagues lues sur les matchs
+- poules de 2 : admises pour un tour en vagues, refusées sinon
+- launchRapieresWave / endRapieresWaves délèguent aux nouvelles (état waves, événements PoolWave\*)
+- ancienne clé rapieres.launchedWave lue comme alias de waves ; journal mêlant anciens et nouveaux événements, sans écart
 
 </details>
 
@@ -5786,11 +5819,14 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionNavigation.test.tsx</code> — 10 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionNavigation.test.tsx</code> — 12 tests</summary>
 
 - **handleGoToTableau (#1996)**
   - tableau déjà tiré : retour au tableau, rien n’est effacé
   - pas encore de tableau : petite finale reprise de la formule, sans question (#2013) — %s _(each)_
+- **passage au tableau des rapières : plus de fenêtre de mode (docs/adr/0043, F4b)**
+  - tirage direct avec les réglages de la formule (3e place), sans rien demander
+  - demi-finales (têtes de poule 4) : ex aequo à la barre proposés comme pour toute épreuve
 - **passage au tableau : ex aequo à la barre (ADR-0040)**
   - ex aequo listés avant la génération ; le choix vaut pour ce tableau
   - choix annulé : rien n’est tiré
@@ -6064,13 +6100,24 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/hooks/usePoolWavesView.test.tsx</code> — 4 tests</summary>
+
+- **usePoolWavesView**
+  - tour en vagues : matchs de la vague en cours, tablettes suivent la vague active
+  - vagues arrêtées : plus de surbrillance, tablettes sans match de poule
+  - tour ordinaire : aucune vague, tablettes non filtrées
+  - nouvelles poules sans match joué : vagues remises à zéro
+
+</details>
+
+<details>
 <summary><code>src/renderer/hooks/usePoolsLaunch.test.tsx</code> — 11 tests</summary>
 
 - **usePoolsLaunch**
   - composition : identifiants, piste, ordre des matchs
   - generatePools avec la composition, remplacement admis
   - hors moteur : local ; refus : message
-- **useRapieresWaves**
+- **usePoolWaveCommands**
   - vague lancée et vagues arrêtées par le moteur
   - hors moteur : local
 - **useScoreClear**
@@ -7347,6 +7394,17 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/competition/PoolsPhase.test.tsx</code> — 4 tests</summary>
+
+- **barre des vagues d’un tour en vagues (docs/adr/0043)**
+  - tour en vagues hors mode rapières : barre affichée, vague lancée au clic
+  - vague lancée : suivante bloquée tant que la vague n’est pas saisie ; arrêt proposé
+  - vagues arrêtées : reprise proposée
+  - tour ordinaire : pas de barre des vagues
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/competition/SplitLaunchDialog.test.tsx</code> — 5 tests</summary>
 
 - **SplitLaunchDialog (ADR-0039)**
@@ -7447,7 +7505,7 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 21 tests</summary>
+<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 24 tests</summary>
 
 - **FormulaEditor (formule v2)**
   - frise : appel, poules, tableau, classement ; pas de « + Classement »
@@ -7473,11 +7531,15 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - personnalisée : le tour ajouté est enregistré
   - « Revenir au modèle » annule la personnalisation
   - arme « Autre » : formule enregistrée sans « Classement final »
+- **FormulaEditor : qualification « têtes de poule, puis suivants » (docs/adr/0043, F4b)**
+  - mode expert : option proposée avant un tableau, 4 qualifiés par défaut
+  - niveau simple : option absente (réglage expert)
+  - rapières : formule experte, mode expert rallumé ; tous qualifiés ou têtes de poule (ADR-0043)
 
 </details>
 
 <details>
-<summary><code>src/renderer/components/formula/FormulaEditorRemarks.test.tsx</code> — 15 tests</summary>
+<summary><code>src/renderer/components/formula/FormulaEditorRemarks.test.tsx</code> — 19 tests</summary>
 
 - **remarques en direct sur la carte de la phase (ADR-0041)**
   - formule valide : aucune remarque
@@ -7489,6 +7551,9 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - niveau simple : ni Tour Quest ni scission au « ＋ », ni tableau arrêté, ni réglages avancés
   - niveau simple : la fin de frise ne propose pas la scission
   - interrupteur : expert allumé propose scission, ex aequo, arrêt du tableau, ordre des matchs
+  - ordre des matchs en vagues : proposé en expert, poules de 2 à 10 (docs/adr/0043)
+  - vagues classiques : poules jusqu’à 15 (docs/adr/0043)
+  - formule en vagues : mode expert rallumé pour cette édition
   - préférence allumée : expert d’emblée
   - formule qui contient de l’expert : mode rallumé pour cette édition, préférence intacte
   - tableau arrêté déjà dans la formule : expert rallumé, tableau arrêté réglable
@@ -7496,6 +7561,7 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - formule valide : Enregistrer actif
   - remarque bloquante : Enregistrer grisé, remarque sur la phase
   - phase commencée : sa suppression grise Enregistrer (S6)
+  - tableau tiré : changer la qualification du tour grise Enregistrer (S6, ADR-0041)
 - **avertissements dans l’aperçu (ADR-0041)**
   - poules de moins de 4 tireurs, moins de 4 qualifiés, plus de 3 tours
 
@@ -9784,7 +9850,7 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaStructure.test.ts</code> — 39 tests</summary>
+<summary><code>src/shared/domain/formula/formulaStructure.test.ts</code> — 56 tests</summary>
 
 - **remarques situées (ADR-0041)**
   - formule par défaut : aucune remarque
@@ -9805,6 +9871,13 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - part d’une branche vers un tour de poules
   - somme des parts sous l’effectif connu
   - splitIssues rend aussi des remarques situées sur la scission
+- **têtes de poule (pool\_heads) : remarques S3 / S4 (docs/adr/0043, F4b, ADR-0041)**
+  - avant un tableau, avec assez de qualifiés : aucune remarque
+  - plus de poules que de qualifiés : remarque bloquante sur le tour (S4)
+  - nombre de qualifiés : entier ≥ 1
+  - ne qualifie que pour un tableau qui suit le tour
+  - un seul qualifié ne suffit pas au tableau (S3)
+  - réglage expert : la formule rallume le mode expert
 - **S5 : chaque branche finit par une phase qui classe**
   - branche terminée par un tableau arrêté
   - branche : tableau arrêté suivi de poules, valide
@@ -9813,6 +9886,12 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - une phase commencée ne se retire pas
   - ne change pas de nature, rien ne s’insère avant elle
   - un tour inséré après la dernière phase commencée est permis
+- **S6 : la qualification qui mène à une phase commencée ne change plus (ADR-0041, amendement)**
+  - tableau tiré : la règle du tour qui le précède est figée, sur sa carte
+  - toutes les règles : nombre, pourcentage, têtes de poule, ex aequo
+  - règle identique (ex aequo « all » = absent) : aucune remarque
+  - phase suivante pas commencée : la règle reste modifiable ; sans formule enregistrée, pas de contrôle
+  - tour suivant lancé : la règle du tour précédent est figée, pas celle du dernier tour
 - **formulaProgress : phases commencées d’après l’état de session**
   - rien : aucune phase
   - poules du tour courant lancées, ou tours clos dans l’historique
@@ -9827,9 +9906,16 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - plus de la moitié d’exempts au premier tour du tableau (taille automatique)
   - taille de tableau imposée : la taille effective compte
   - plus de 3 tours de poules
+- **tour en vagues : poules de 2 à 10 (docs/adr/0043, F4a)**
+  - poules de 2 à 10 admises pour « waves » et « waves\_classic »
+  - au-delà de 10, ou sous 2 : remarque sur le tour
+  - vagues classiques : jusqu’à 15 ; « waves » reste borné à 10
+  - borne basse 2 pour ce seul ordre : sous 3, FIE et libre refusés
+  - chaque tour jugé avec son ordre : un tour en vagues à côté d’un tour FIE
 - **mode expert : briques et réglages**
   - une formule reste valide quel que soit le mode : le jugement ignore le mode expert
-  - formule par défaut : simple
+  - formule par défaut : simple ; épreuve du mode spécial rapières : experte (docs/adr/0043)
+  - ordre des matchs en vagues : réglage avancé (docs/adr/0043)
   - scission, Tour Quest, tableau arrêté
   - réglages avancés : ex aequo, cumul, ordre libre, barème à zones
   - formule rendue par les opérations (aucun expert par défaut)
@@ -9955,14 +10041,16 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/validateFormulaSettings.test.ts</code> — 7 tests</summary>
+<summary><code>src/shared/domain/formula/validateFormulaSettings.test.ts</code> — 9 tests</summary>
 
 - **validateFormulaSettings**
   - réglages par défaut et de repli : conformes pour toutes les armes et catégories
   - bornes : score de poule, tours, tailles de poule
+  - ordre des matchs : valeurs connues ; tour en vagues, poules de 2 à 10 (docs/adr/0043)
   - score max du Sabre Laser individuel : 15 à 50 (#2208) ; équipes et olympique : 1-15
   - qualifiés : pas plus de valeurs que de tours suivants
   - formule à la carte : ex aequo à la barre (ADR-0040), « barrage » refusé jusqu’à F1b
+  - formule à la carte : « têtes de poule » connu, nombre ≥ 1 (docs/adr/0043, F4b)
   - formule à la carte : version, phases, règles de passage, taille de tableau
   - champs jugés : un réglage ancien hors bornes ne bloque pas une autre modification
 
@@ -9978,7 +10066,7 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - score, annulation ; statut spécial : perdant seulement
   - correction avec tableau à refaire : tableau retiré
   - tableau : décision, retrait puis réintégration (match rouvert)
-  - rapières : vague, arrêt, remise à zéro au tirage suivant
+  - tour en vagues : vague, arrêt, remise à zéro au tirage suivant (anciens et nouveaux noms)
 - **tableaux séparés après les poules (docs/adr/0024)**
   - un tableau par groupe ; décisions rangées dans leur tableau
   - nouveau tirage d’un groupe : ses décisions seules sont retirées
@@ -10215,6 +10303,43 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/pools/waves.test.ts</code> — 14 tests</summary>
+
+- **Tour en vagues (docs/adr/0043)**
+  - **vagues**
+    - ${n} équipes (impair) : une équipe au repos par vague, la dernière d'abord
+    - ${n} équipes : round-robin complet, toutes les équipes tirent à chaque vague
+    - ordre des matchs de la poule suivant les vagues
+    - vague suivante lancée seulement quand la précédente est saisie
+    - équipe retirée : ses matchs ne bloquent pas la vague
+  - **feuilles de la vague active**
+    - ne contient que les matchs de la vague, triés par poule
+    - vague 0 ou inexistante : aucune feuille
+    - exclut les matchs annulés et ceux d’une équipe retirée
+    - reprend la piste de la poule
+  - **ordre « waves » et « waves\_classic », état de session**
+    - isWavesOrder : seulement waves et waves\_classic
+    - « waves » : ordre des vagues, toutes tailles de 2 à 10
+    - « waves\_classic » : table fixe de la taille (10), sinon vagues calculées
+    - poolWavesOf : clé waves, sinon ancienne clé des rapières (alias), sinon rien
+    - isPoolRoundFinished : poules réglées, ou vagues arrêtées pour un tour en vagues
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/pools/wavesClassicOrder.test.ts</code> — 6 tests</summary>
+
+- **ordre classique des rapières (#1816)**
+  - poule de %i : chaque paire une seule fois _(each)_
+  - nombre de tours par taille
+  - pas de table hors 10 à 15
+  - applyClassicOrder renumérote, garde les ids et donne les vagues des tours
+  - ordre standard conservé si la poule ne suit pas la table
+  - poule sans table inchangée
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/ranking/advancement.test.ts</code> — 9 tests</summary>
 
 - **cutAtBar : ex aequo à la barre (docs/adr/0040)**
@@ -10227,6 +10352,29 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - nombre de qualifiés : règle inchangée
   - « draw » (FIE o.73.2.f) : tirage au sort des ex aequo, hasard injecté, quota tenu
   - « draw » sans hasard (affichage avant la coupe) : tous les ex aequo restent
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/ranking/poolHeads.test.ts</code> — 14 tests</summary>
+
+- **poolHeadsCut : count 4**
+  - 1 poule : les 4 premiers
+  - 2 poules : A1, B1, A2, B2, donc au tableau A1–B2 et B1–A2
+  - 2 poules : le croisement tient même si un 2e devance un 1er du général
+  - 3 poules : les 3 premiers et le meilleur deuxième du général
+  - 4 poules : les premiers, dans l’ordre du général
+  - équipe retirée : écartée, rangs de poule renumérotés
+- **poolHeadsCut : autres nombres et poules en surnombre**
+  - count 6 sur 2 poules : trois rangs de poule complets, rang par rang
+  - count 5 sur 2 poules : A1, B1, A2, B2 puis le meilleur 3e du général
+  - plus de poules que de qualifiés : seuls les meilleurs premiers de poule passent
+  - getAdvancementCount : count
+- **poolHeadsCut : ex aequo à la barre (ADR-0040) sur le dernier rang de poule**
+  - 'all' (par défaut) : tous les ex aequo passent, le quota est dépassé
+  - 'initial\_ranking' : départagés par le rang d'entrée, le quota est tenu
+  - 'draw' : tirage au sort avec le hasard injecté, le quota est tenu
+  - pas d’ex aequo à la barre : rien à proposer
 
 </details>
 
@@ -10254,7 +10402,7 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/ranking/tableauRanking.test.ts</code> — 15 tests</summary>
+<summary><code>src/shared/domain/ranking/tableauRanking.test.ts</code> — 20 tests</summary>
 
 - **computeMatchProgress**
   - renvoie null sans poule ni tableau
@@ -10276,6 +10424,12 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - **tableauRankingOfScreen : classement, PDF et résultats de l’écran (docs/adr/0040)**
   - avant le tirage : choix de l’écran, sinon la formule
   - tableau tiré : coupe figée par le tableau, même si le choix est perdu (rechargement)
+- **tableauCut : têtes de poule (pool\_heads, docs/adr/0043, F4b)**
+  - épreuve non rapières : règle de la formule v2, 4 qualifiés croisés
+  - rapières : la formule « têtes de poule » donne les demi-finales
+  - rapières : sans « têtes de poule », mode hérité « semis » (valeur par défaut) ou toutes les équipes
+  - rapières : la formule prime sur le mode hérité
+  - ex aequo à la barre : proposés, choix de l’écran appliqué
 
 </details>
 
@@ -10295,23 +10449,12 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/rapieres/rapieresCalculations.test.ts</code> — 21 tests</summary>
+<summary><code>src/shared/domain/rapieres/rapieresCalculations.test.ts</code> — 12 tests</summary>
 
 - **Tournoi des rapières (#1118)**
   - libellé des tireurs de l’équipe
   - **répartition**
     - regroupe par niveau, tailles équilibrées
-  - **vagues**
-    - ${n} équipes (impair) : une équipe au repos par vague, la dernière d'abord
-    - ${n} équipes : round-robin complet, toutes les équipes tirent à chaque vague
-    - ordre des matchs de la poule suivant les vagues
-    - vague suivante lancée seulement quand la précédente est saisie
-    - équipe retirée : ses matchs ne bloquent pas la vague
-  - **feuilles de la vague active**
-    - ne contient que les matchs de la vague, triés par poule
-    - vague 0 ou inexistante : aucune feuille
-    - exclut les matchs annulés et ceux d’une équipe retirée
-    - reprend la piste de la poule
   - **qualification**
     - mode %s : toutes les équipes au tableau _(each)_
     - mode semis : 4 équipes
@@ -10324,19 +10467,6 @@ Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage stat
     - filtres cumulables (niveau + sexe)
     - rapieresPoolNumbers : numéro de poule par équipe
     - final : tableau, puis non qualifiées, exclues en dernier
-
-</details>
-
-<details>
-<summary><code>src/shared/domain/rapieres/rapieresClassicOrder.test.ts</code> — 6 tests</summary>
-
-- **ordre classique des rapières (#1816)**
-  - poule de %i : chaque paire une seule fois _(each)_
-  - nombre de tours par taille
-  - pas de table hors 10 à 15
-  - applyClassicOrder renumérote, garde les ids et donne les vagues des tours
-  - ordre standard conservé si la poule ne suit pas la table
-  - poule sans table inchangée
 
 </details>
 
