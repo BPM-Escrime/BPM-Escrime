@@ -19,7 +19,7 @@ import {
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
-import { compatibleTemplate } from './competitionFormula';
+import { assertProgressLock, compatibleTemplate } from './competitionFormula';
 import { templateToSettings } from '../../../shared/domain/formula/formulaTemplate';
 import { formulaOf } from '../../../shared/domain/formula/formulaV2';
 import {
@@ -280,6 +280,10 @@ export function updateCompetitionSettings(
   if (staleFormula) {
     const { formula: _stale, ...rest } = (update.settings ?? comp.settings) as CompetitionSettings;
     update.settings = rest as CompetitionSettings;
+  }
+  // Verrou S6 (docs/adr/0041, ADR-0043 F4b) : formule ou réglages plats écrits après le début
+  if ('formula' in patch || Object.keys(patch).some(k => FORMULA_FLAT_KEYS.has(k))) {
+    assertProgressLock(ctx, comp, (update.settings ?? comp.settings) as CompetitionSettings);
   }
   const changed = [
     ...Object.keys(update).filter(k => k !== 'settings'),

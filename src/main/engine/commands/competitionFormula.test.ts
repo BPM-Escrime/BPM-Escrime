@@ -453,6 +453,64 @@ d('contrôles de structure en direct (docs/adr/0041)', () => {
     ).toMatchObject({ qualification: { mode: 'fixed_count', count: 6 } });
   });
 
+  it('S6 : updateCompetitionSettings ne contourne pas le verrou du tour clos', async () => {
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [
+        {
+          op: 'setPhase',
+          phase: 'pool-0',
+          settings: { qualification: { mode: 'fixed_count', count: 8 } },
+        },
+      ],
+    });
+    db.saveSessionState(competitionId, {
+      currentPhase: 1,
+      currentPoolRound: 2,
+      poolHistory: [[{ id: 'p1', matches: [] }]],
+      pools: [],
+      poolsLaunched: false,
+    });
+    const formula = db.getCompetition(competitionId)!.settings!.formula!;
+    const changed = {
+      ...formula,
+      phases: formula.phases.map(p =>
+        p.kind === 'pool' ? { ...p, qualification: { mode: 'fixed_count', count: 4 } } : p
+      ),
+    };
+    await expect(
+      op('updateCompetitionSettings', { competitionId, settings: { formula: changed } })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    expect(
+      db.getCompetition(competitionId)?.settings?.formula?.phases.find(p => p.kind === 'pool')
+    ).toMatchObject({ qualification: { mode: 'fixed_count', count: 8 } });
+    // Réglage hors formule : admis
+    await op('updateCompetitionSettings', { competitionId, settings: { expertMode: true } });
+  });
+
+  it('ADR-0043 F4b : petite finale et « toutes les places » modifiables jusqu’au tirage du tableau', async () => {
+    const mode = (thirdPlace: boolean, allPlaces: boolean) => [
+      { op: 'setPhase', phase: 'tableau', settings: { thirdPlace, allPlaces } },
+    ];
+    // Tableau pas tiré : modifiable
+    await op('updateCompetitionFormula', { competitionId, operations: mode(true, false) });
+    await op('updateCompetitionFormula', { competitionId, operations: mode(false, true) });
+    // Tableau tiré
+    db.saveSessionState(competitionId, {
+      currentPhase: 3,
+      poolHistory: [[{ id: 'p1', matches: [] }]],
+      tableauMatches: [{ id: 'm1', round: 2, position: 0 }],
+    });
+    const e = await reject(mode(true, false));
+    expect(e.code).toBe('invalid_settings');
+    expect(e.message).toContain('[tableau] tableau déjà tiré');
+    // Ni par les réglages plats
+    await expect(
+      op('updateCompetitionSettings', { competitionId, settings: { playAllPositions: false } })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    expect(db.getCompetition(competitionId)?.settings?.playAllPositions).toBe(true);
+  });
+
   it('S6 : après un tour joué, la phase commencée ne se retire plus', async () => {
     await op('updateCompetitionFormula', {
       competitionId,

@@ -34,6 +34,7 @@ import {
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { updateCompetitionSettings } from './competitionSetup';
+import { progressIssues } from '../../../shared/domain/formula/formulaStructure';
 import { readSession } from './sessionView';
 import { PHASE } from './sport';
 import { allFormulaTemplates } from './formulaTemplates';
@@ -110,6 +111,44 @@ export function applyFormulaTemplate(
   return writeFormula(ctx, comp, formula, patch, input.dryRun);
 }
 
+/** Formule enregistrée et avancement de l'épreuve (S6, docs/adr/0041) */
+function storedProgress(
+  ctx: CommandContext,
+  comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings }
+) {
+  const session = readSession(ctx, comp.id);
+  const stored = formulaOf({
+    weapon: comp.weapon,
+    category: comp.category,
+    settings: comp.settings,
+  });
+  const progress = formulaProgress(stored, {
+    ...session,
+    questStarted: session.currentPhase === PHASE.quest,
+  });
+  return { stored, progress };
+}
+
+/**
+ * Verrou S6 de toute écriture des réglages de la formule (docs/adr/0041, ADR-0043 F4b) :
+ * `updateCompetitionSettings` (écran, MCP) passe ici comme `updateCompetitionFormula`. Seules
+ * les remarques d'avancement sont jugées : une épreuve 2.0 hors bornes reste modifiable.
+ */
+export function assertProgressLock(
+  ctx: CommandContext,
+  comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings },
+  next: CompetitionSettings
+): void {
+  const { stored, progress } = storedProgress(ctx, comp);
+  if (progress.length === 0) return;
+  const issues = progressIssues(
+    formulaOf({ weapon: comp.weapon, category: comp.category, settings: next }),
+    progress,
+    stored
+  );
+  if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
+}
+
 /**
  * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0036), après le jugement de la
  * formule (bornes, S1 à S6 ; une remarque par ligne avec la clé de sa phase, ADR-0041) ; `extra` :
@@ -129,16 +168,7 @@ export function writeFormula(
   extra: Partial<CompetitionSettings>,
   dryRun?: boolean
 ) {
-  const session = readSession(ctx, comp.id);
-  const stored = formulaOf({
-    weapon: comp.weapon,
-    category: comp.category,
-    settings: comp.settings,
-  });
-  const progress = formulaProgress(stored, {
-    ...session,
-    questStarted: session.currentPhase === PHASE.quest,
-  });
+  const { stored, progress } = storedProgress(ctx, comp);
   const issues = formulaV2Issues(
     formula,
     {

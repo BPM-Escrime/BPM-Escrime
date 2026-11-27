@@ -246,9 +246,37 @@ function lockedQualificationIssues(
 }
 
 /**
+ * Mode du tableau tiré (docs/adr/0043, F4b) : petite finale et « toutes les places » sont
+ * modifiables tant que le tableau n'est pas tiré ; ensuite, ceux de la formule enregistrée.
+ */
+function lockedTableauModeIssues(
+  f: FormulaV2,
+  progress: FormulaProgress,
+  stored: FormulaV2
+): FormulaRemark[] {
+  const keys = phaseKeys(f.phases);
+  const out: FormulaRemark[] = [];
+  for (let i = 0; i < progress.length; i++) {
+    const was = stored.phases[i];
+    const now = f.phases[i];
+    if (was?.kind !== 'tableau' || now?.kind !== 'tableau') continue;
+    if (!!was.thirdPlace === !!now.thirdPlace && !!was.allPlaces === !!now.allPlaces) continue;
+    out.push(
+      remark(
+        'started_tableau_mode_changed',
+        keys[i],
+        'tableau déjà tiré : la petite finale et « toutes les places » ne changent plus'
+      )
+    );
+  }
+  return out;
+}
+
+/**
  * S6 : une phase commencée ne se retire pas, ne change pas de nature, et rien ne s'insère avant
  * elle ; la règle de qualification qui sort d'un tour de poules clos, ou qui mène à une phase
- * commencée, ne change plus (`stored` : formule enregistrée). Ses autres réglages restent soumis aux règles actuelles (Q15). Première
+ * commencée, ne change plus ; le mode d'un tableau tiré non plus (ADR-0043, F4b) (`stored` :
+ * formule enregistrée). Ses autres réglages restent soumis aux règles actuelles (Q15). Première
  * incohérence de structure seulement (les suivantes en découlent).
  */
 export function progressIssues(
@@ -257,7 +285,13 @@ export function progressIssues(
   stored?: FormulaV2
 ): FormulaRemark[] {
   const at = progress.findIndex((kind, i) => f.phases[i]?.kind !== kind);
-  if (at < 0) return stored ? lockedQualificationIssues(f, progress, stored) : [];
+  if (at < 0)
+    return stored
+      ? [
+          ...lockedQualificationIssues(f, progress, stored),
+          ...lockedTableauModeIssues(f, progress, stored),
+        ]
+      : [];
   const kind = progress[at];
   const key = keyOfKinds(progress, at);
   const found = f.phases[at];

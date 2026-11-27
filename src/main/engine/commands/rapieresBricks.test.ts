@@ -12,6 +12,7 @@ import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
 import { readSession } from './sessionView';
 import { listMatches, writeSession } from './sport';
+import { classicMatchOrder } from '../../../shared/domain/pools/wavesClassicOrder';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -256,5 +257,57 @@ d('Tournoi des rapières en briques : piloté par le moteur', () => {
       distribution: 'byLevel',
     });
     expect(settings.formula.general.entry).toMatchObject({ kind: 'team' });
+  });
+
+  it('ordre classique réglé dans la formule, ancienne épreuve comprise (waves_classic, F4e)', async () => {
+    const comp = db.createCompetition({
+      title: 'Ancienne',
+      date: new Date('2026-12-06'),
+      weapon: 'C' as never,
+      gender: Gender.MIXED,
+      category: 'SEN' as never,
+      settings: {
+        poolRounds: 1,
+        hasDirectElimination: true,
+        manualRanking: false,
+        defaultRanking: 9999,
+        randomScore: false,
+        defaultPoolMaxScore: 5,
+        defaultTableMaxScore: 15,
+        defaultPoolTimerSeconds: 180,
+        defaultTableTimerSeconds: 180,
+        thirdPlaceMatch: true,
+        minTeamSize: 3,
+        specialMode: 'rapieres',
+      } as never,
+    });
+    addTeams(comp.id);
+    for (const i of [8, 9])
+      db.addFencer(comp.id, {
+        lastName: `EQ${i + 1}`,
+        firstName: `A${i} / B${i}`,
+        gender: Gender.MIXED,
+        club: `Club${i}`,
+        ranking: i + 1,
+        status: FencerStatus.CHECKED_IN,
+        level: 1,
+      } as never);
+    // Plus de fenêtre à la validation des poules : l'ordre classique se règle dans la formule
+    await call('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [{ op: 'setPhase', phase: 'pool-0', settings: { boutOrder: 'waves_classic' } }],
+    });
+    const settings = db.getCompetition(comp.id)!.settings as any;
+    expect(settings.formula.phases[0]).toMatchObject({ boutOrder: 'waves_classic' });
+    expect(settings.poolBoutOrder).toBe('waves_classic');
+    await call('generatePools', { competitionId: comp.id, poolCount: 1 });
+    const pool = (readSession(ctx, comp.id) as any).pools[0];
+    const pos = new Map(pool.fencers.map((f: any, i: number) => [f.id, i + 1]));
+    const order = listMatches(ctx, comp.id, {})
+      .slice(0, 5)
+      .map((m: any) =>
+        [pos.get(m.fencerA.id), pos.get(m.fencerB.id)].sort((a: any, b: any) => a - b)
+      );
+    expect(order).toEqual(classicMatchOrder(10)!.slice(0, 5));
   });
 });
