@@ -38,6 +38,8 @@ import { progressIssues } from '../../../shared/domain/formula/formulaStructure'
 import { readSession } from './sessionView';
 import { PHASE } from './sport';
 import { allFormulaTemplates } from './formulaTemplates';
+import { withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
+import { teamFormatOf } from '../../../shared/domain/teams/relay';
 
 const newPhaseId = () => `phase_${randomUUID()}`;
 
@@ -164,17 +166,22 @@ export function writeFormula(
     isTeamEvent?: boolean;
     settings?: CompetitionSettings;
   },
-  formula: FormulaV2,
+  written: FormulaV2,
   extra: Partial<CompetitionSettings>,
   dryRun?: boolean
 ) {
   const { stored, progress } = storedProgress(ctx, comp);
+  // Épreuve par équipes en relais FIE : la formule écrite porte sa règle de rencontre et fait
+  // foi pour les phases (ADR-0044)
+  const formula = withTeamMatch(written, comp);
   const issues = formulaV2Issues(
     formula,
     {
       weapon: comp.weapon,
       isTeamEvent: !!comp.isTeamEvent,
       fencerCount: ctx.db.getFencersByCompetition(comp.id).length,
+      teamFormat: teamFormatOf(comp.settings),
+      teamCount: comp.isTeamEvent ? ctx.db.teams.getTeamsByCompetition(comp.id).length : undefined,
     },
     progress,
     stored

@@ -50,6 +50,8 @@ import {
 } from './formulaStructure';
 import { tiesIssue } from '../ranking/advancement';
 import { normalizeRankingFilterKeys, rankingFilterKeysIssue } from '../ranking/rankingFilters';
+import { teamFormulaIssues } from '../teams/teamMatchRule';
+import type { TeamFormat } from '../teams/relay';
 export { tiesIssue };
 
 const isPool = (p: FormulaPhaseV2): p is PoolRoundPhase => p.kind === 'pool';
@@ -397,6 +399,7 @@ const POOL_FIELDS = [
   'seeding',
   'boutOrder',
   'distribution',
+  'teamMatch',
 ] as const;
 const TABLEAU_FIELDS = [
   'label',
@@ -406,6 +409,7 @@ const TABLEAU_FIELDS = [
   'allPlaces',
   'scoring',
   'stopAt',
+  'teamMatch',
 ] as const;
 
 /** Arrêt du tableau : puissance de 2, de 2 à 128 tireurs restants (ADR-0037) */
@@ -424,6 +428,7 @@ const GENERAL_FIELDS = [
   'entry',
   'rankingFilters',
   'tieBreakByVictory',
+  'teamMatch',
 ] as const;
 
 /**
@@ -460,6 +465,27 @@ function checkFields(settings: Record<string, unknown>, allowed: readonly string
     );
 }
 
+/**
+ * Surcharge de la règle de rencontre d'une phase (ADR-0044) : null la retire ; sinon un objet,
+ * bornes jugées par formulaV2Issues
+ */
+function withTeamMatchOverride<T extends { teamMatch?: unknown }>(
+  phase: T,
+  raw: Record<string, unknown>,
+  where: string
+): T {
+  if (!('teamMatch' in raw)) return phase;
+  if (raw.teamMatch == null) {
+    const { teamMatch: _t, ...rest } = phase;
+    return rest as T;
+  }
+  if (typeof raw.teamMatch !== 'object' || Array.isArray(raw.teamMatch))
+    throw new FormulaOperationError(
+      `${where} : « teamMatch » attend { starters, reserves, relayStep, relayOrder }`
+    );
+  return phase;
+}
+
 const isRule = (v: unknown): v is AdvancementRule =>
   typeof v === 'object' && v !== null && typeof (v as { mode?: unknown }).mode === 'string';
 
@@ -473,7 +499,7 @@ function setPool(
 ): PoolRoundPhase {
   const { qualifiers, poolWinnersOnly, ...rest } = renamed(raw, POOL_ALIASES);
   checkFields(rest, POOL_FIELDS, where);
-  let next = { ...p, ...(rest as Partial<PoolRoundPhase>) };
+  let next = withTeamMatchOverride({ ...p, ...(rest as Partial<PoolRoundPhase>) }, rest, where);
   if (rest.qualification !== undefined && !isRule(rest.qualification))
     throw new FormulaOperationError(`${where} : « qualification » attend { mode, … }`);
   if ('distribution' in rest) {
@@ -512,7 +538,11 @@ function setTableau(p: TableauPhase, raw: Record<string, unknown>, where: string
   const s = renamed(raw, TABLEAU_ALIASES);
   checkFields(s, TABLEAU_FIELDS, where);
   const { stopAt, ...rest } = s;
-  const next: TableauPhase = { ...p, ...(rest as Partial<TableauPhase>) };
+  const next: TableauPhase = withTeamMatchOverride(
+    { ...p, ...(rest as Partial<TableauPhase>) },
+    rest,
+    where
+  );
   if (stopAt !== undefined) {
     // null ou 0 : tableau jusqu'à la finale
     if (stopAt === null || stopAt === 0) delete next.stopAt;
@@ -716,9 +746,20 @@ export function applyOperationsV2(
         entry,
         rankingFilters,
         tieBreakByVictory,
+        teamMatch,
         ...rest
       } = o.settings as Partial<FormulaV2['general']>;
       f = { ...f, general: { ...f.general, ...rest } };
+      if ('teamMatch' in o.settings) {
+        // null : règle retirée (réglages d'épreuve) ; sinon un objet, bornes jugées par
+        // formulaV2Issues (ADR-0044)
+        const { teamMatch: _old, ...general } = f.general;
+        if (teamMatch != null && (typeof teamMatch !== 'object' || Array.isArray(teamMatch)))
+          throw new FormulaOperationError(
+            `${where} : « teamMatch » attend { starters, reserves, relayStep, relayOrder }`
+          );
+        f = { ...f, general: teamMatch ? { ...general, teamMatch } : general };
+      }
       if ('tieBreakByVictory' in o.settings) {
         // null ou false : réglage retiré (défaut : selon l'arme) ; vrai : égalité par vainqueur désigné
         const { tieBreakByVictory: _old, ...general } = f.general;
@@ -812,6 +853,10 @@ export interface FormulaScope {
   weapon: Weapon;
   isTeamEvent?: boolean;
   fencerCount?: number;
+  /** Épreuve par équipes : relais FIE (défaut) ou arène Sabre Laser (ADR-0044) */
+  teamFormat?: TeamFormat;
+  /** Épreuve par équipes : équipes inscrites (S3, S4 sur l'effectif d'équipes, ADR-0044) */
+  teamCount?: number;
 }
 
 /**
@@ -946,6 +991,8 @@ function formulaIssues(
         'scission : rester dans l’épreuve seulement après un tour de poules'
       )
     );
+  // Épreuve par équipes en relais FIE : briques admises, règle de rencontre, effectif (ADR-0044)
+  if (!inBranch) out.push(...teamFormulaIssues(f, scope));
   if (progress) out.push(...progressIssues(f, progress, stored));
   return out;
 }

@@ -26,6 +26,7 @@ import {
   formulaOf,
   withFlatSettings,
 } from '../../../shared/domain/formula/formulaV2';
+import { withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
 import {
   validateFormulaSettings,
   type FormulaIssue,
@@ -64,6 +65,10 @@ const FORMULA_FLAT_KEYS: ReadonlySet<string> = new Set([
   'poolSizeMax',
   'questConfig',
   'customFormula',
+  // Règle de rencontre générale des équipes (ADR-0044) : reportée dans `general.teamMatch`
+  'minTeamSize',
+  'teamReserveCount',
+  'teamRelayStepSize',
 ]);
 
 /** Réglages figés une fois les poules tirées (ou le tableau généré) : ils changent les règles */
@@ -275,6 +280,15 @@ export function updateCompetitionSettings(
   if (input.isTeamEvent !== undefined) update.isTeamEvent = input.isTeamEvent;
   if (Object.keys(patch).length) {
     update.settings = { ...comp.settings, ...patch } as CompetitionSettings;
+    // Formule écrite pour une épreuve par équipes en relais FIE : elle porte sa règle de
+    // rencontre et fait foi pour les phases (ADR-0044)
+    if (patch.formula) {
+      update.settings.formula = withTeamMatch(patch.formula, {
+        weapon: input.weapon ?? comp.weapon,
+        isTeamEvent: input.isTeamEvent ?? !!comp.isTeamEvent,
+        settings: update.settings,
+      });
+    }
   }
   const flatKeys = Object.keys(patch).filter(k => FORMULA_FLAT_KEYS.has(k));
   const weaponChanged = input.weapon !== undefined && input.weapon !== comp.weapon;
