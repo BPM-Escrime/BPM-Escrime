@@ -948,6 +948,52 @@ d(
   }
 );
 
+d(
+  'Tirage d’une épreuve par équipes : réglages et inscription figés (drawDone, docs/adr/0024, ADR-0044)',
+  () => {
+    it('poules d’équipes tirées : type d’épreuve, formule à la carte, classement d’entrée, désinscription refusés', async () => {
+      const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+      await teamsRegistered(comp.id, ['A', 'B', 'C']);
+      // Avant le tirage : modifiable (essai à blanc)
+      await call('updateCompetitionSettings', {
+        competitionId: comp.id,
+        isTeamEvent: false,
+        dryRun: true,
+      });
+      await call('generateTeamPools', { competitionId: comp.id });
+      const fencerId = db.getFencersByCompetition(comp.id)[0].id;
+      await reject('updateCompetitionSettings', {
+        competitionId: comp.id,
+        isTeamEvent: false,
+      }).toMatchObject({ code: 'draw_done', message: expect.stringContaining('isTeamEvent') });
+      await reject('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { customFormula: { version: 1, phases: [] } },
+      }).toMatchObject({ code: 'draw_done', message: expect.stringContaining('customFormula') });
+      await reject('setFencerRankings', {
+        competitionId: comp.id,
+        rankings: [{ fencerId, ranking: 1 }],
+      }).toMatchObject({ code: 'draw_done' });
+      await reject('unregisterFencers', {
+        competitionId: comp.id,
+        fencerIds: [fencerId],
+      }).toMatchObject({ code: 'draw_done' });
+      expect(db.getCompetition(comp.id)!.isTeamEvent).toBe(true);
+    });
+
+    it('tableau d’équipes tiré sans poule : arme figée', async () => {
+      const comp = competition(Weapon.FOIL, { formula: teamFormula({ pool: null }) });
+      await teamsRegistered(comp.id, ['A', 'B', 'C', 'D']);
+      await call('generateTeamTableau', { competitionId: comp.id });
+      await reject('updateCompetitionSettings', {
+        competitionId: comp.id,
+        weapon: Weapon.SABRE,
+      }).toMatchObject({ code: 'draw_done', message: expect.stringContaining('weapon') });
+      expect(db.getCompetition(comp.id)!.weapon).toBe(Weapon.FOIL);
+    });
+  }
+);
+
 d('Cible d’une rencontre = relayStep × starters² (docs/adr/0044)', () => {
   it('formule d’équipe palier 4, 3 titulaires : cible 36 ; score_above_max au-delà', async () => {
     const comp = competition(Weapon.EPEE, {
@@ -1284,13 +1330,13 @@ d('Formule d’une épreuve par équipes commencée : verrou S6 (docs/adr/0041, 
     expect(db.getCompetition(comp.id)!.settings).toEqual(before);
   });
 
-  it('poules d’équipes tirées : une écriture plate qui retire le tour est refusée', async () => {
+  it('poules d’équipes tirées : une écriture plate qui retire le tour est refusée (formule à la carte figée, S6)', async () => {
     const comp = competition(Weapon.CUSTOM, { formula: teamFormula({ pool: { maxScore: 15 } }) });
     await teamsRegistered(comp.id, ['A', 'B', 'C']);
     await call('generateTeamPools', { competitionId: comp.id });
     const before = db.getCompetition(comp.id)!.settings!;
-    // Réglage plat : formule à la carte v1 (arme « Autre ») réduite au tableau ; en épée, fleuret,
-    // sabre, les réglages plats gardent au moins un tour (poolRounds ≥ 1)
+    // Réglage plat : formule à la carte v1 (arme « Autre ») réduite au tableau, figée après le
+    // tirage des poules d'équipes (draw_done)
     await reject('updateCompetitionSettings', {
       competitionId: comp.id,
       settings: {
@@ -1299,10 +1345,7 @@ d('Formule d’une épreuve par équipes commencée : verrou S6 (docs/adr/0041, 
           phases: [{ id: 'de', type: 'direct_elimination', config: {} }],
         },
       },
-    }).toMatchObject({
-      code: 'invalid_settings',
-      message: expect.stringContaining('phase déjà commencée'),
-    });
+    }).toMatchObject({ code: 'draw_done' });
     // Formule sans tour de poules écrite par les réglages
     await reject('updateCompetitionSettings', {
       competitionId: comp.id,

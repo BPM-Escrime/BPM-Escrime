@@ -78,8 +78,13 @@ export function fencerDTO(f: Fencer) {
   };
 }
 
-/** Poules tirées, épreuve sans poules ou tableau généré : l'inscription est close */
+/**
+ * Poules tirées, épreuve sans poules ou tableau généré, rencontres d'équipe comprises :
+ * l'inscription est close
+ */
 export function drawDone(ctx: CommandContext, competitionId: string): boolean {
+  // Épreuve par équipes : rencontres de poule ou de tableau créées (docs/adr/0024, ADR-0044)
+  if (ctx.db.teams.countTeamMatches(competitionId) > 0) return true;
   const session = readSession(ctx, competitionId);
   return (
     sessionPools(session).length > 0 ||
