@@ -1130,7 +1130,9 @@ class RefereeAppBase {
           ? 'referee.card_white_short'
           : preview === 'yellow'
             ? 'referee.card_yellow_short'
-            : 'referee.card_red_short'
+            : preview === 'black'
+              ? 'referee.black_card_title'
+              : 'referee.card_red_short'
       );
       const titleEl = document.createElement('div');
       titleEl.className = 'reason-group-title';
@@ -1160,6 +1162,12 @@ class RefereeAppBase {
       return;
     }
     const cardType = this.determineCardFromGroup(group, fencer);
+    if (cardType === 'black') {
+      // Sabre Laser, récidive du 3e groupe (#2209) : noir, confirmé comme le bouton N
+      document.getElementById('reason-selector-overlay').classList.remove('open');
+      this._openRecidiveBlackCard(fencer, reason);
+      return;
+    }
     const history = fencer === 'A' ? this.faultHistoryA : this.faultHistoryB;
     const prevCount = history[group] || 0;
 
@@ -1219,6 +1227,19 @@ class RefereeAppBase {
     document.getElementById('black-card-fencer-name').textContent = fencerName;
     document.getElementById('black-card-cause').innerHTML =
       `<strong>${escHtml(window.T('referee.black_card_direct'))}</strong>`;
+    document.getElementById('black-card-modal').classList.add('active');
+  }
+
+  // Noir de récidive (fencer = position effective) : même confirmation que le noir direct
+  _openRecidiveBlackCard(fencer, reason) {
+    if (this.matchStatus === 'finished') return;
+    this._pendingBlackCardFencer = fencer;
+    const displayPos = this._effectiveFencer(fencer);
+    const nameEl = document.getElementById(`fencer-${displayPos.toLowerCase()}-name`);
+    document.getElementById('black-card-fencer-name').textContent = nameEl
+      ? nameEl.textContent.trim()
+      : window.T('referee.fencer_default', { pos: fencer });
+    document.getElementById('black-card-cause').innerHTML = `<strong>${escHtml(reason)}</strong>`;
     document.getElementById('black-card-modal').classList.add('active');
   }
 

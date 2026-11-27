@@ -38,6 +38,7 @@ describe('refereeCards.js cartons', () => {
     expect(C.cardFromGroup(2, h({}))).toBe('yellow');
     expect(C.cardFromGroup(2, h({ 2: 1 }))).toBe('red');
     expect(C.cardFromGroup(3, h({}))).toBe('red');
+    expect(C.cardFromGroup(3, h({ 3: 1 }))).toBe('black');
     expect(C.cardFromGroup(1, { isModern: false })).toBe('white');
     // Escrime olympique, numérotation FIE (#2207) : 1er groupe jaune puis rouge, 2e et 3e rouge
     expect(C.cardFromGroup(1, { isModern: true, standardCards: [] })).toBe('yellow');
@@ -208,6 +209,43 @@ describe('refereeCards.js passivité', () => {
         }
       }
     expect(count).toBeGreaterThan(100);
+  });
+
+  it('Sabre Laser : carton par groupe, parité tablette / domaine (#2209)', () => {
+    // 3e groupe : rouge, puis noir à la récidive (Livret 3 ASL) ; la suite s'arrête au noir
+    const reasonOf: Record<number, CardReason> = {
+      1: CardReason.COUNTER_ATTACK,
+      2: CardReason.ESTOC,
+      3: CardReason.BRUTALITY,
+    };
+    const sequences: number[][] = [[]];
+    for (let n = 0; n < 4; n++)
+      for (const s of sequences.filter(q => q.length === n))
+        for (const g of [1, 2, 3]) sequences.push([...s, g]);
+    let count = 0;
+    for (const seq of sequences.filter(q => q.length > 0)) {
+      const domain: Card[] = [];
+      const history: Record<number, number> = {};
+      for (const group of seq) {
+        const fromTablet = C.cardFromGroup(group, { isModern: false, history });
+        const card = buildCard({
+          id: `l${count}`,
+          at: new Date(0),
+          matchId: 'm',
+          fencerId: 'f',
+          reason: reasonOf[group],
+          previousCards: domain,
+          weapon: Weapon.LASER,
+        });
+        expect(fromTablet, seq.join('-')).toBe(card.type.toLowerCase());
+        expect(card.group).toBe(group);
+        history[group] = (history[group] || 0) + 1;
+        domain.push(card);
+        count++;
+        if (fromTablet === 'black') break;
+      }
+    }
+    expect(count).toBeGreaterThan(50);
   });
 
   it('Sabre Laser : points des cartons, parité tablette / domaine (provisoire, #2208)', () => {
