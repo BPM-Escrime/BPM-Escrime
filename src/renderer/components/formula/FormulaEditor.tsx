@@ -58,6 +58,13 @@ import { AdvancementRuleEditor } from './AdvancementRuleEditor';
 import { ScoringZoneEditor } from './ScoringZoneEditor';
 import { FormulaSimulationPreview } from './FormulaSimulationPreview';
 import { SplitPhaseEditor } from './SplitPhaseEditor';
+import { FormulaTeamMatchFields } from './FormulaTeamMatchFields';
+import {
+  TEAM_QUALIFICATIONS,
+  teamBrickAllowed,
+  teamMatchRuleOf,
+} from '../../../shared/domain/teams/teamMatchRule';
+import type { TeamFormat } from '../../../shared/domain/teams/relay';
 import { FormulaHelpLink } from './FormulaHelpLink';
 import { helpTopicOfPhase } from './formulaHelp';
 
@@ -73,6 +80,12 @@ export interface FormulaEditorProps {
   fencerCount?: number;
   /** Épreuve par équipes (bornes des réglages) */
   isTeamEvent?: boolean;
+  /** Épreuve par équipes : relais FIE (défaut) ou arène Sabre Laser (ADR-0044) */
+  teamFormat?: TeamFormat;
+  /** Épreuve par équipes : équipes inscrites (S3, S4 sur l'effectif d'équipes, ADR-0044) */
+  teamCount?: number;
+  /** Consultation seule (arène Sabre Laser : formule d'un modèle fixe, ADR-0044) */
+  readOnly?: boolean;
   /** Effectif connu de l'épreuve (S4, somme des parts d'une scission) ; absent : inconnu */
   knownFencerCount?: number;
   /** Phases déjà commencées de l'épreuve (S6) ; absent : création, rien de commencé */
@@ -97,6 +110,9 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   onChange,
   fencerCount = 32,
   isTeamEvent,
+  teamFormat,
+  teamCount,
+  readOnly = false,
   knownFencerCount,
   progress,
   stored,
@@ -125,10 +141,13 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
     judged ??
     formulaV2Issues(
       formula,
-      { weapon, isTeamEvent, fencerCount: knownFencerCount },
+      { weapon, isTeamEvent, fencerCount: knownFencerCount, teamFormat, teamCount },
       progress,
       stored
     );
+  // Épreuve par équipes en relais FIE (ADR-0044) : règle de rencontre, briques admises
+  const teamRelay = !!isTeamEvent && teamFormat !== 'laser-arena';
+  const generalRule = teamMatchRuleOf(formula, undefined, undefined, weapon);
   const remarksOf = (key: string) => remarks.filter(r => r.phase === key);
   // Formule entière (phase null) ou phase absente de la frise (retirée) : en tête
   const headRemarks = remarks.filter(r => r.phase === null || !phases.some(p => p.key === r.phase));
@@ -216,7 +235,12 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   };
 
   const plus = (at: number) => {
-    const options = bricksForLevel(insertOptionsV2(formula, weapon, at), expert);
+    // Épreuve par équipes : briques non admises masquées (ADR-0044) ; consultation : aucune
+    const options = readOnly
+      ? []
+      : bricksForLevel(insertOptionsV2(formula, weapon, at), expert).filter(
+          brick => !teamRelay || teamBrickAllowed(formula, brick)
+        );
     if (options.length === 0) return null;
     return (
       <span key={`plus-${at}`} className="formula-editor__plus">
@@ -282,7 +306,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
           </span>
           <span className="formula-frieze__summary">{summary(p)}</span>
         </button>
-        {canRemoveV2(formula, p) && (
+        {!readOnly && canRemoveV2(formula, p) && (
           <button
             type="button"
             className="formula-editor__remove"
@@ -385,12 +409,23 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 inputFencers={simCount}
                 expert={expert}
                 headsAvailable={
-                  expert && formula.phases[formula.phases.indexOf(pool) + 1]?.kind === 'tableau'
+                  !teamRelay &&
+                  expert &&
+                  formula.phases[formula.phases.indexOf(pool) + 1]?.kind === 'tableau'
                 }
+                only={teamRelay ? TEAM_QUALIFICATIONS : undefined}
               />
             </div>
           )}
         </fieldset>
+        {teamRelay && (
+          <FormulaTeamMatchFields
+            id={`${id}-team-match`}
+            rule={pool.teamMatch ?? {}}
+            inherited={generalRule}
+            onChange={rule => set({ teamMatch: Object.keys(rule).length ? rule : undefined })}
+          />
+        )}
         {expert && (
           <details className="properties-expert" data-testid={`${id}-expert`}>
             <summary>{t('properties.expert_settings')}</summary>
@@ -426,31 +461,37 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 <option value="fie">{t('properties.bout_order_fie')}</option>
                 {/* Arme « Autre » : ordre libre non proposé (réglage plat non reporté) */}
                 {!isOther && <option value="free">{t('properties.bout_order_free')}</option>}
-                <option value="waves">{t('properties.bout_order_waves')}</option>
-                <option value="waves_classic">{t('properties.bout_order_waves_classic')}</option>
+                {/* Tour en vagues : refusé pour une épreuve par équipes (ADR-0044) */}
+                {!teamRelay && <option value="waves">{t('properties.bout_order_waves')}</option>}
+                {!teamRelay && (
+                  <option value="waves_classic">{t('properties.bout_order_waves_classic')}</option>
+                )}
               </select>
               <small className="u-hint">{t('properties.bout_order_hint')}</small>
               {isWavesOrder(pool.boutOrder) && (
                 <small className="u-hint">{t('properties.bout_order_waves_hint')}</small>
               )}
             </div>
-            {/* Répartition par niveau : équipes de même niveau regroupées (docs/adr/0043) */}
-            <div className="form-group">
-              <label htmlFor={`${id}-distribution`}>{t('formulaEditor.distribution')}</label>
-              <select
-                id={`${id}-distribution`}
-                className="form-input form-select"
-                value={pool.distribution ?? 'serpentine'}
-                onChange={e =>
-                  // Serpentin : réglage retiré (défaut)
-                  set({ distribution: e.target.value === 'byLevel' ? 'byLevel' : undefined })
-                }
-              >
-                <option value="serpentine">{t('formulaEditor.distribution_serpentine')}</option>
-                <option value="byLevel">{t('formulaEditor.distribution_by_level')}</option>
-              </select>
-              <small className="u-hint">{t('formulaEditor.distribution_hint')}</small>
-            </div>
+            {/* Répartition par niveau : équipes de même niveau regroupées (docs/adr/0043) ;
+                épreuve par équipes : serpentin au rang d'entrée seulement (ADR-0044) */}
+            {!teamRelay && (
+              <div className="form-group">
+                <label htmlFor={`${id}-distribution`}>{t('formulaEditor.distribution')}</label>
+                <select
+                  id={`${id}-distribution`}
+                  className="form-input form-select"
+                  value={pool.distribution ?? 'serpentine'}
+                  onChange={e =>
+                    // Serpentin : réglage retiré (défaut)
+                    set({ distribution: e.target.value === 'byLevel' ? 'byLevel' : undefined })
+                  }
+                >
+                  <option value="serpentine">{t('formulaEditor.distribution_serpentine')}</option>
+                  <option value="byLevel">{t('formulaEditor.distribution_by_level')}</option>
+                </select>
+                <small className="u-hint">{t('formulaEditor.distribution_hint')}</small>
+              </div>
+            )}
             {isOther && (
               <div className="form-group">
                 <label className="form-label">{t('formulaPhase.scoring')}</label>
@@ -513,48 +554,59 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             <span>{t('competition.third_place_match_label')}</span>
           </label>
         </fieldset>
-        <details className="properties-expert">
-          <summary>{t('properties.expert_settings')}</summary>
-          <label className="u-row cursor-pointer">
-            <input
-              type="checkbox"
-              checked={tableau.allPlaces}
-              onChange={e => set({ allPlaces: e.target.checked })}
-            />
-            <span>{t('properties.all_places')}</span>
-          </label>
-          <small className="u-hint">{t('properties.all_places_hint')}</small>
-          {expert && ownTableau && !formula.phases.some(x => x.kind === 'quest') && (
-            <div className="form-group">
-              <label htmlFor="tableau-stop-at" className="form-label">
-                {t('formulaEditor.stop_at')}
-              </label>
-              <select
-                id="tableau-stop-at"
-                className="form-input form-select"
-                value={tableau.stopAt ?? 0}
-                onChange={e => setStopAt(Number(e.target.value))}
-              >
-                <option value={0}>{t('formulaEditor.stop_at_none')}</option>
-                {TABLEAU_STOP_AT.map(n => (
-                  <option key={n} value={n}>
-                    {t('formulaEditor.stop_at_n', { n })}
-                  </option>
-                ))}
-              </select>
-              <small className="u-hint">{t('formulaEditor.stop_at_hint')}</small>
-            </div>
-          )}
-          {expert && isOther && (
-            <div className="form-group">
-              <label className="form-label">{t('formulaPhase.scoring')}</label>
-              <ScoringZoneEditor
-                scoring={tableau.scoring ?? { type: 'standard', maxScore: tableau.maxScore }}
-                onChange={(s: CustomScoringConfig) => set({ scoring: s })}
+        {teamRelay && ownTableau && (
+          <FormulaTeamMatchFields
+            id="tableau-team-match"
+            rule={ownTableau.teamMatch ?? {}}
+            inherited={generalRule}
+            onChange={rule => set({ teamMatch: Object.keys(rule).length ? rule : undefined })}
+          />
+        )}
+        {/* Épreuve par équipes : toutes les places (lot G2) et tableau arrêté refusés (ADR-0044) */}
+        {!teamRelay && (
+          <details className="properties-expert">
+            <summary>{t('properties.expert_settings')}</summary>
+            <label className="u-row cursor-pointer">
+              <input
+                type="checkbox"
+                checked={tableau.allPlaces}
+                onChange={e => set({ allPlaces: e.target.checked })}
               />
-            </div>
-          )}
-        </details>
+              <span>{t('properties.all_places')}</span>
+            </label>
+            <small className="u-hint">{t('properties.all_places_hint')}</small>
+            {expert && ownTableau && !formula.phases.some(x => x.kind === 'quest') && (
+              <div className="form-group">
+                <label htmlFor="tableau-stop-at" className="form-label">
+                  {t('formulaEditor.stop_at')}
+                </label>
+                <select
+                  id="tableau-stop-at"
+                  className="form-input form-select"
+                  value={tableau.stopAt ?? 0}
+                  onChange={e => setStopAt(Number(e.target.value))}
+                >
+                  <option value={0}>{t('formulaEditor.stop_at_none')}</option>
+                  {TABLEAU_STOP_AT.map(n => (
+                    <option key={n} value={n}>
+                      {t('formulaEditor.stop_at_n', { n })}
+                    </option>
+                  ))}
+                </select>
+                <small className="u-hint">{t('formulaEditor.stop_at_hint')}</small>
+              </div>
+            )}
+            {expert && isOther && (
+              <div className="form-group">
+                <label className="form-label">{t('formulaPhase.scoring')}</label>
+                <ScoringZoneEditor
+                  scoring={tableau.scoring ?? { type: 'standard', maxScore: tableau.maxScore }}
+                  onChange={(s: CustomScoringConfig) => set({ scoring: s })}
+                />
+              </div>
+            )}
+          </details>
+        )}
       </>
     );
   }
@@ -590,9 +642,10 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
     const showRest = isOlympicWeapon(weapon) || (isOther && ruleSet === 'modern');
     // Compétition couplée = scission par sexe : brique expert
     const showCoupled =
-      expert && !isOther && pools.length > 0 && ((ownTableau && !split) || coupled);
-    // Entrée en équipes (binômes) : réglage expert, toutes armes (docs/adr/0043)
-    const showEntry = expert;
+      !teamRelay && expert && !isOther && pools.length > 0 && ((ownTableau && !split) || coupled);
+    // Entrée en équipes (binômes) : réglage expert, toutes armes (docs/adr/0043) ; refusée pour
+    // une épreuve par équipes (ADR-0044)
+    const showEntry = expert && !teamRelay;
     // Filtres du classement final : réglage expert, toutes armes (docs/adr/0043, F4d)
     const showRankingFilters = expert;
     if (!isOther && !showRest && !showCoupled && !showEntry && !showRankingFilters) return null;
@@ -782,83 +835,97 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
   return (
     <div className="formula-editor" data-testid="formula-editor">
-      <div className="formula-editor__expert">
-        <label className="u-row cursor-pointer">
-          <input
-            type="checkbox"
-            data-testid="formula-expert-toggle"
-            checked={expert}
-            disabled={forced}
-            onChange={e => setExpert(e.target.checked)}
-          />
-          <span>{t('formulaEditor.expert_mode')}</span>
-        </label>
-        <small className="u-hint">
-          {forced ? t('formulaEditor.expert_forced') : t('formulaEditor.expert_hint')}
-        </small>
-        <FormulaHelpLink topic="expert" />
-      </div>
-      {renderRemarks(headRemarks, 'formula-remarks')}
-      <nav className="formula-frieze" aria-label={t('properties.frieze_label')}>
-        {frieze}
-      </nav>
-
-      <div className="formula-builder-content">
-        <div className="formula-editor__settings">
-          {/* Aide intégrée : section du guide qui décrit la brique de la phase affichée (F5) */}
-          {current && (
-            <div className="formula-editor__help-row">
-              <FormulaHelpLink topic={helpTopicOfPhase(current, formula)} />
-            </div>
-          )}
-          {current &&
-            current.kind !== 'split' &&
-            renderRemarks(remarksOf(current.key), 'phase-remarks')}
-          {current?.kind === 'pool' && renderPool(current)}
-          {current?.kind === 'tableau' && renderTableau(current)}
-          {current?.kind === 'quest' && renderQuest(current)}
-          {current?.kind === 'split' && split && (
-            <SplitPhaseEditor
-              split={split}
-              weapon={weapon}
-              category={category}
-              newId={newPhaseId}
-              remarks={remarksOf('split')}
-              onChange={next =>
-                onChange({
-                  ...formula,
-                  phases: formula.phases.map(x => (x === split ? next : x)),
-                })
-              }
-            />
-          )}
-          {current?.kind === 'split' && keptTableau && (
-            <div data-testid="split-kept-tableau">{renderTableau(current)}</div>
-          )}
-          {renderGeneral()}
-          {renderCoherence()}
-        </div>
-        <aside className="formula-simulation-panel" data-testid="formula-simulation">
-          <label className="form-label formula-editor__sim-count">
-            {t('formulaEditor.sim_fencers')}
+      {readOnly && (
+        <p className="u-hint" data-testid="formula-read-only">
+          {t('formulaEditor.arena_read_only')}
+        </p>
+      )}
+      <fieldset className="formula-editor__body" disabled={readOnly}>
+        <div className="formula-editor__expert">
+          <label className="u-row cursor-pointer">
             <input
-              type="number"
-              className="form-input"
-              min={2}
-              max={512}
-              value={simCount}
-              onChange={e =>
-                setSimCount(Math.min(512, Math.max(2, parseInt(e.target.value, 10) || 2)))
-              }
+              type="checkbox"
+              data-testid="formula-expert-toggle"
+              checked={expert}
+              disabled={forced}
+              onChange={e => setExpert(e.target.checked)}
             />
+            <span>{t('formulaEditor.expert_mode')}</span>
           </label>
-          <FormulaSimulationPreview
-            simulation={simulation}
-            fencerCount={simCount}
-            split={simulatedSplit}
-          />
-        </aside>
-      </div>
+          <small className="u-hint">
+            {forced ? t('formulaEditor.expert_forced') : t('formulaEditor.expert_hint')}
+          </small>
+          <FormulaHelpLink topic="expert" />
+        </div>
+        {renderRemarks(headRemarks, 'formula-remarks')}
+        <nav className="formula-frieze" aria-label={t('properties.frieze_label')}>
+          {frieze}
+        </nav>
+
+        <div className="formula-builder-content">
+          <div className="formula-editor__settings">
+            {/* Aide intégrée : section du guide qui décrit la brique de la phase affichée (F5) */}
+            {current && (
+              <div className="formula-editor__help-row">
+                <FormulaHelpLink topic={helpTopicOfPhase(current, formula)} />
+              </div>
+            )}
+            {current &&
+              current.kind !== 'split' &&
+              renderRemarks(remarksOf(current.key), 'phase-remarks')}
+            {current?.kind === 'pool' && renderPool(current)}
+            {current?.kind === 'tableau' && renderTableau(current)}
+            {current?.kind === 'quest' && renderQuest(current)}
+            {current?.kind === 'split' && split && (
+              <SplitPhaseEditor
+                split={split}
+                weapon={weapon}
+                category={category}
+                newId={newPhaseId}
+                remarks={remarksOf('split')}
+                onChange={next =>
+                  onChange({
+                    ...formula,
+                    phases: formula.phases.map(x => (x === split ? next : x)),
+                  })
+                }
+              />
+            )}
+            {current?.kind === 'split' && keptTableau && (
+              <div data-testid="split-kept-tableau">{renderTableau(current)}</div>
+            )}
+            {teamRelay && (
+              <FormulaTeamMatchFields
+                id="formula-team-match"
+                rule={generalRule}
+                onChange={rule => patchGeneral({ teamMatch: { ...generalRule, ...rule } })}
+              />
+            )}
+            {renderGeneral()}
+            {renderCoherence()}
+          </div>
+          <aside className="formula-simulation-panel" data-testid="formula-simulation">
+            <label className="form-label formula-editor__sim-count">
+              {t('formulaEditor.sim_fencers')}
+              <input
+                type="number"
+                className="form-input"
+                min={2}
+                max={512}
+                value={simCount}
+                onChange={e =>
+                  setSimCount(Math.min(512, Math.max(2, parseInt(e.target.value, 10) || 2)))
+                }
+              />
+            </label>
+            <FormulaSimulationPreview
+              simulation={simulation}
+              fencerCount={simCount}
+              split={simulatedSplit}
+            />
+          </aside>
+        </div>
+      </fieldset>
     </div>
   );
 };
