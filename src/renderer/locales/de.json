@@ -1500,7 +1500,8 @@
     "club_plan_time": "Uhrzeit",
     "club_plan_exercise": "Übung",
     "club_plan_empty": "Keine Übung geplant",
-    "club_plan_notes": "Notizen"
+    "club_plan_notes": "Notizen",
+    "col_level": "Niveau"
   },
   "rsm": {
     "strip_plan": "Bahnplan",
@@ -1887,7 +1888,8 @@
     "col_category": "Kat.",
     "compute_categories": "Kategorien berechnen",
     "compute_categories_title": "Altersklasse der Fechter ohne Kategorie, aus Geburtsdatum und Saison des Turniers",
-    "compute_categories_done": "{{count}} Kategorien berechnet; {{missing}} Fechter ohne Geburtsdatum"
+    "compute_categories_done": "{{count}} Kategorien berechnet; {{missing}} Fechter ohne Geburtsdatum",
+    "col_level": "Niveau"
   },
   "questPhase": {
     "running_title": "Quest-Runde läuft",
@@ -4803,7 +4805,14 @@
     "expert_mode": "Expertenmodus",
     "expert_hint": "Aufteilung, Quest-Runde, vorzeitig beendetes Tableau und erweiterte Einstellungen (Gleichstand an der Grenze, kumulierte Runden, Gefechtsreihenfolge, Zonenwertung). Einstellung dieses Rechners.",
     "expert_forced": "Diese Formel enthält einen Experten-Baustein oder eine Experten-Einstellung: Der Expertenmodus bleibt für diese Bearbeitung aktiv.",
-    "remark_on_phase": "Hinweis zu dieser Phase"
+    "remark_on_phase": "Hinweis zu dieser Phase",
+    "entry": "Anmeldung der Teilnehmer",
+    "entry_individual": "Einzeln",
+    "entry_team": "Teams zu zweit (Paare)",
+    "entry_levels": "Niveaus, vom stärksten zum schwächsten (durch Kommas getrennt)",
+    "distribution": "Verteilung auf die Gruppen",
+    "distribution_serpentine": "Schlangenverteilung nach Rangliste",
+    "distribution_by_level": "Nach Niveau"
   },
   "formulaTemplates": {
     "template": "Formelvorlage",
@@ -4896,5 +4905,12 @@
     "notice": "{{n}} Fechter gleichauf auf Platz {{rank}} für {{places}} Platz/Plätze: {{names}}",
     "choose": "Wie soll dieser Gleichstand bei diesem Schnitt behandelt werden?",
     "formula": "{{label}} (Formel)"
+  },
+  "teamEntry": {
+    "team_name": "Teamname",
+    "member_n": "Mitglied {{n}}",
+    "unknown": "Nicht angegeben",
+    "auto_hint": "Kategorie und Geschlecht werden aus den Mitgliedern abgeleitet, wenn leer.",
+    "members_required": "Teamnamen und mindestens ein Mitglied angeben."
   }
 }

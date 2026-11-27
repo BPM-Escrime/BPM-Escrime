@@ -7,7 +7,7 @@ import {
   FENCER_CATEGORIES,
   normalizeFencerCategory,
 } from '../../shared/domain/fencers/fencerCategory';
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useTranslation } from '../hooks/useTranslation';
 import { Fencer, Gender, FencerStatus } from '../../shared/types';
@@ -15,20 +15,36 @@ import FencerPhoto from './FencerPhoto';
 import NationalityPicker from './common/NationalityPicker';
 import DepartmentPicker from './common/DepartmentPicker';
 import { Button } from './common/Button';
+import { useToast } from './Toast';
+import { teamEntryComplete, teamEntryDraftOf, teamEntryUpdates } from './teamEntryDraft';
+
+// Fiche d'équipe (ADR-0043), à la demande
+const TeamEntryFields = React.lazy(() => import('./TeamEntryFields'));
 
 interface EditFencerModalProps {
   fencer: Fencer;
+  /** Entrée en équipes : libellés des niveaux (ADR-0043) */
+  teamLevels?: readonly string[];
   onSave: (id: string, updates: Partial<Fencer>) => void;
   onClose: () => void;
 }
 
-const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClose }) => {
+const EditFencerModal: React.FC<EditFencerModalProps> = ({
+  fencer,
+  teamLevels,
+  onSave,
+  onClose,
+}) => {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
   const [lastName, setLastName] = useState(fencer.lastName);
   const [firstName, setFirstName] = useState(fencer.firstName);
   const [gender, setGender] = useState<Gender>(fencer.gender);
   const [category, setCategory] = useState<string>(fencer.category ?? '');
+  const [categoryTouched, setCategoryTouched] = useState(false);
+  const [genderTouched, setGenderTouched] = useState(false);
+  const [team, setTeam] = useState(() => teamEntryDraftOf(fencer));
   const [club, setClub] = useState(fencer.club || '');
   const [region, setRegion] = useState(fencer.region || '');
   const [department, setDepartment] = useState(fencer.department || '');
@@ -41,12 +57,15 @@ const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (teamLevels && !teamEntryComplete(team)) {
+      showToast(t('teamEntry.members_required'), 'warning');
+      return;
+    }
 
     onSave(fencer.id, {
       lastName: lastName.toUpperCase(),
       firstName,
       gender,
-      category: normalizeFencerCategory(category),
       club: club || undefined,
       region: region || undefined,
       department: department || undefined,
@@ -56,6 +75,14 @@ const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClo
       status,
       photo,
       handedness,
+      ...(teamLevels
+        ? teamEntryUpdates({
+            draft: team,
+            initial: fencer,
+            category: { value: category, touched: categoryTouched },
+            gender: { value: gender, touched: genderTouched },
+          })
+        : { category: normalizeFencerCategory(category) }),
     });
 
     onClose();
@@ -93,7 +120,9 @@ const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClo
 
           <div className="u-grid-2">
             <div className="form-group">
-              <label className="form-label">{t('fencer.last_name')} *</label>
+              <label className="form-label">
+                {teamLevels ? t('teamEntry.team_name') : t('fencer.last_name')} *
+              </label>
               <input
                 type="text"
                 className="form-input"
@@ -103,17 +132,30 @@ const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClo
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">{t('fencer.first_name')} *</label>
-              <input
-                type="text"
-                className="form-input"
-                value={firstName}
-                onChange={e => setFirstName(e.target.value)}
-                required
-              />
-            </div>
+            {!teamLevels && (
+              <div className="form-group">
+                <label className="form-label">{t('fencer.first_name')} *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
           </div>
+
+          {teamLevels && (
+            <Suspense fallback={null}>
+              <TeamEntryFields
+                idPrefix="edit-fencer"
+                draft={team}
+                onChange={setTeam}
+                levels={teamLevels}
+              />
+            </Suspense>
+          )}
 
           <div className="u-grid-2">
             <div className="form-group">
@@ -121,7 +163,10 @@ const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClo
               <select
                 className="form-input form-select"
                 value={gender}
-                onChange={e => setGender(e.target.value as Gender)}
+                onChange={e => {
+                  setGender(e.target.value as Gender);
+                  setGenderTouched(true);
+                }}
               >
                 <option value={Gender.MALE}>{t('editFencer.male')}</option>
                 <option value={Gender.FEMALE}>{t('editFencer.female')}</option>
@@ -137,7 +182,10 @@ const EditFencerModal: React.FC<EditFencerModalProps> = ({ fencer, onSave, onClo
                 id="edit-fencer-category"
                 className="form-input form-select"
                 value={category}
-                onChange={e => setCategory(e.target.value)}
+                onChange={e => {
+                  setCategory(e.target.value);
+                  setCategoryTouched(true);
+                }}
               >
                 <option value="">{t('editFencer.category_unknown')}</option>
                 {FENCER_CATEGORIES.map(c => (

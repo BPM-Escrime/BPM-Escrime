@@ -50,6 +50,8 @@ sont compatibles (même date, ou date inconnue et candidat unique).
 | Rectification | fiche tireur / membre | Modification classique depuis la liste des tireurs ou le Mode Club |
 
 Effacer un tireur supprime aussi ses matchs : les résultats de ses adversaires changent.
+
+Équipes (entrée en binômes, ADR-0043) : le tireur-équipe porte les noms, sexes et dates de naissance de ses membres (`fencers.members`). L'export de la personne les contient, l'anonymisation les efface (avec la composition de l'ancien mode rapières de l'état de session), l'effacement supprime la fiche avec ses membres, et la recherche trouve l'équipe par le nom d'un membre.
 Pour une compétition terminée, préférer **Anonymiser**.
 
 **Anonymiser** et **Effacer** sont refusés tant qu'une compétition de la personne est ouverte

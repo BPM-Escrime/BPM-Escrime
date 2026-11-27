@@ -3,7 +3,7 @@
  * Licensed under GPL-3.0
  */
 
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { Fencer, Gender, FencerStatus } from '../../shared/types';
 import { useToast } from './Toast';
@@ -12,17 +12,29 @@ import NationalityPicker from './common/NationalityPicker';
 import DepartmentPicker from './common/DepartmentPicker';
 import { useTranslation } from '../contexts/TranslationContext';
 import { Button } from './common/Button';
+import {
+  emptyTeamEntryDraft,
+  teamEntryComplete,
+  teamEntryUpdates,
+  type TeamEntryDraft,
+} from './teamEntryDraft';
+
+// Fiche d'équipe (ADR-0043), à la demande
+const TeamEntryFields = React.lazy(() => import('./TeamEntryFields'));
 
 interface AddFencerModalProps {
   onClose: () => void;
   onAdd: (fencer: Partial<Fencer>) => void;
   competitionGender?: Gender;
+  /** Entrée en équipes : libellés des niveaux (ADR-0043) */
+  teamLevels?: readonly string[];
 }
 
 const AddFencerModalComponent: React.FC<AddFencerModalProps> = ({
   onClose,
   onAdd,
   competitionGender,
+  teamLevels,
 }) => {
   const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
   const { showToast } = useToast();
@@ -42,6 +54,8 @@ const AddFencerModalComponent: React.FC<AddFencerModalProps> = ({
   const [nationality, setNationality] = useState('FRA');
   const [handedness, setHandedness] = useState<'R' | 'L'>('R');
   const [photo, setPhoto] = useState<string | undefined>();
+  const [genderTouched, setGenderTouched] = useState(false);
+  const [team, setTeam] = useState<TeamEntryDraft>(emptyTeamEntryDraft);
 
   const buildFencer = (): Partial<Fencer> => ({
     lastName: lastName.trim().toUpperCase(),
@@ -56,7 +70,18 @@ const AddFencerModalComponent: React.FC<AddFencerModalProps> = ({
     handedness,
     status: FencerStatus.NOT_CHECKED_IN,
     photo,
+    ...(teamLevels
+      ? teamEntryUpdates({
+          draft: team,
+          gender: { value: gender, touched: genderTouched || !!lockedGender },
+        })
+      : {}),
   });
+
+  const incomplete = () =>
+    teamLevels
+      ? !lastName.trim() || !teamEntryComplete(team)
+      : !lastName.trim() || !firstName.trim();
 
   // Efface les champs saisis (Annuler / Ajouter) ; le sexe imposé par la compétition est conservé
   const resetForm = () => {
@@ -71,12 +96,17 @@ const AddFencerModalComponent: React.FC<AddFencerModalProps> = ({
     setNationality('FRA');
     setHandedness('R');
     setPhoto(undefined);
+    setGenderTouched(false);
+    setTeam(emptyTeamEntryDraft());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!lastName.trim() || !firstName.trim()) {
-      showToast(t('messages.name_required'), 'warning');
+    if (incomplete()) {
+      showToast(
+        teamLevels ? t('teamEntry.members_required') : t('messages.name_required'),
+        'warning'
+      );
       return;
     }
     onAdd(buildFencer());
@@ -85,8 +115,11 @@ const AddFencerModalComponent: React.FC<AddFencerModalProps> = ({
 
   const handleSaveAndAdd = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!lastName.trim() || !firstName.trim()) {
-      showToast(t('messages.name_required'), 'warning');
+    if (incomplete()) {
+      showToast(
+        teamLevels ? t('teamEntry.members_required') : t('messages.name_required'),
+        'warning'
+      );
       return;
     }
     onAdd(buildFencer());
@@ -126,29 +159,44 @@ const AddFencerModalComponent: React.FC<AddFencerModalProps> = ({
 
             <div className="u-grid-2">
               <div className="form-group">
-                <label className="form-label">{t('fencer.last_name')} *</label>
+                <label className="form-label">
+                  {teamLevels ? t('teamEntry.team_name') : t('fencer.last_name')} *
+                </label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder={t('addFencer.last_name_ph')}
+                  placeholder={teamLevels ? undefined : t('addFencer.last_name_ph')}
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
                   required
                   autoFocus
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">{t('fencer.first_name')} *</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder={t('addFencer.first_name_ph')}
-                  value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
-                  required
-                />
-              </div>
+              {!teamLevels && (
+                <div className="form-group">
+                  <label className="form-label">{t('fencer.first_name')} *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={t('addFencer.first_name_ph')}
+                    value={firstName}
+                    onChange={e => setFirstName(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
             </div>
+
+            {teamLevels && (
+              <Suspense fallback={null}>
+                <TeamEntryFields
+                  idPrefix="add-fencer"
+                  draft={team}
+                  onChange={setTeam}
+                  levels={teamLevels}
+                />
+              </Suspense>
+            )}
 
             <div className="u-grid-2">
               <div className="form-group">
@@ -164,10 +212,14 @@ const AddFencerModalComponent: React.FC<AddFencerModalProps> = ({
                   <select
                     className="form-input form-select"
                     value={gender}
-                    onChange={e => setGender(e.target.value as Gender)}
+                    onChange={e => {
+                      setGender(e.target.value as Gender);
+                      setGenderTouched(true);
+                    }}
                   >
                     <option value={Gender.MALE}>{t('genders.male')}</option>
                     <option value={Gender.FEMALE}>{t('genders.female')}</option>
+                    {teamLevels && <option value={Gender.MIXED}>{t('genders.mixed')}</option>}
                   </select>
                 )}
               </div>

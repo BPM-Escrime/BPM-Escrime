@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Fencer, FencerStatus, Gender, Match, MatchStatus, Pool } from '../../types';
 import {
-  distributeByLevel,
   filterRanking,
   rapieresPoolNumbers,
   rapieresTableauQualifiers,
@@ -11,7 +10,7 @@ import {
   waveMatchOrder,
 } from './rapieresCalculations';
 import { calculateOverallRanking } from '../../utils/poolCalculations';
-import { RapieresLevel, RapieresTeamInfo } from './rapieres.types';
+import { RapieresTeamInfo } from './rapieres.types';
 
 /** Date de référence fixe des catégories d'âge (domaine pur : date injectée) */
 const REF = new Date('2026-11-20');
@@ -28,8 +27,6 @@ const fencer = (id: string, status = FencerStatus.CHECKED_IN): Fencer =>
     createdAt: new Date(),
     updatedAt: new Date(),
   }) as Fencer;
-
-const ids = (n: number) => Array.from({ length: n }, (_, i) => `t${i + 1}`);
 
 /** Poule générée comme en préparation : ordre des matchs suivant les vagues */
 const makePool = (fencers: Fencer[], number = 1): Pool => {
@@ -80,36 +77,6 @@ describe('Tournoi des rapières (#1118)', () => {
         { lastName: 'Martin', firstName: 'B', category: 'V1' },
       ])
     ).toBe('DUPONT / MARTIN');
-  });
-
-  describe('répartition', () => {
-    it('regroupe par niveau, tailles équilibrées', () => {
-      const levels: Record<string, RapieresLevel> = {
-        e1: 'expert',
-        b1: 'beginner',
-        i1: 'intermediate',
-        b2: 'beginner',
-        e2: 'expert',
-        i2: 'intermediate',
-      };
-      const pools = distributeByLevel(
-        Object.keys(levels).map(id => fencer(id)),
-        3,
-        id => levels[id]
-      );
-      expect(pools.map(p => p.map(f => f.id))).toEqual([
-        ['b1', 'b2'],
-        ['i1', 'i2'],
-        ['e1', 'e2'],
-      ]);
-      expect(
-        distributeByLevel(
-          ids(23).map(id => fencer(id)),
-          3,
-          () => 'beginner'
-        ).map(p => p.length)
-      ).toEqual([8, 8, 7]);
-    });
   });
 
   describe('qualification', () => {

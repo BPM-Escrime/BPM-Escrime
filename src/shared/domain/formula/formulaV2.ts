@@ -38,6 +38,12 @@ export type LegacyTableauSettings = Pick<
   'placesToFence' | 'bracketSizeOverride' | 'fifthPlaceMatch'
 >;
 
+/** Répartition d'un tour de poules : serpentin (défaut) ou par niveau (équipes, docs/adr/0043) */
+export type PoolDistribution = 'serpentine' | 'byLevel';
+
+/** Entrée (ADR-0043) : individuelle ou en binômes ; `levels` : du plus fort (niveau 1) au plus faible */
+export type FormulaEntry = { kind: 'individual' } | { kind: 'team'; size: 2; levels: string[] };
+
 export interface PoolRoundPhase {
   kind: 'pool';
   id: string;
@@ -54,6 +60,8 @@ export interface PoolRoundPhase {
   seeding: 'previous_round' | 'cumulative';
   /** Ordre des matchs : FIE, libre, ou en vagues (réglage avancé, docs/adr/0043) */
   boutOrder: PoolBoutOrder;
+  /** Répartition (réglage expert, ADR-0043) : serpentin (défaut, absent) ou par niveau */
+  distribution?: PoolDistribution;
   legacy?: LegacyPoolSettings;
 }
 
@@ -125,6 +133,8 @@ export interface FormulaV2 {
      * quand cette scission n'a pas sa place (Tour Quest, pas de tour de poules avant le tableau)
      */
     postPoolSplitCriteria?: PostPoolSplitCriteria;
+    /** Entrée (réglage expert, ADR-0043) ; absente : individuelle */
+    entry?: FormulaEntry;
   };
   name?: string;
   notes?: string;
@@ -463,6 +473,21 @@ export function isWavesRound(
   return (
     settings?.specialMode === 'rapieres' || isWavesOrder(poolBoutOrderOfRound(settings, round))
   );
+}
+
+/** Entrée de l'épreuve : celle de la formule, individuelle par défaut (docs/adr/0043) */
+export function entryOf(f: FormulaV2 | undefined): FormulaEntry {
+  return f?.general.entry ?? { kind: 'individual' };
+}
+
+/** Répartition du tour `round` (1 = 1er) : serpentin par défaut (docs/adr/0043) */
+export function poolDistributionOfRound(
+  settings: Partial<CompetitionSettings> | undefined,
+  round: number
+): PoolDistribution {
+  const f = settings?.formula;
+  if (!f || pools(f).length === 0) return 'serpentine';
+  return phaseSettings(f, { kind: 'pool', round: round - 1 }).distribution ?? 'serpentine';
 }
 
 /**

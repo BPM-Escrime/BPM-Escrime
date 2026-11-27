@@ -11,6 +11,7 @@ import { usePlatform } from '../../renderer/platform/PlatformContext';
 import { RapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
 import type { RapieresNotify } from './rapieresNotify';
 import { teamMembersLabel } from '../../shared/domain/rapieres/rapieresCalculations';
+import { rapieresTeamEntry } from '../../shared/domain/rapieres/rapieresEntry';
 import { buildRapieresImportTemplate, parseRapieresTeams } from './rapieresImport';
 import { RapieresTeamDraft } from './RapieresTeamModal';
 
@@ -44,18 +45,21 @@ export function useRapieresTeams({
     skipped: number[];
   } | null>(null);
 
-  // Nom = nom d'équipe, prénom = noms des deux tireurs, club / région = séparations des poules (#1441)
+  // Nom = nom d'équipe, prénom = noms des deux tireurs, club / région = séparations des poules
+  // (#1441) ; membres, niveau, HANDI, catégorie et sexe d'équipe portés par le tireur (F4c,
+  // docs/adr/0043) : l'import (CSV / XLSX) les écrit avec l'inscription
   const rapieresFencerFields = (team: RapieresTeamDraft) => ({
     lastName: team.name,
     firstName: teamMembersLabel(team.info.fencers),
     club: team.info.club ?? '',
     region: team.info.region ?? '',
+    ...rapieresTeamEntry(team.info, competitionDate ? new Date(competitionDate) : new Date()),
   });
 
   const newTeamFencer = (team: RapieresTeamDraft) =>
     ({
-      ...rapieresFencerFields(team),
       gender: Gender.MIXED,
+      ...rapieresFencerFields(team),
       nationality: 'FRA',
       status: FencerStatus.NOT_CHECKED_IN,
     }) as NewFencer;

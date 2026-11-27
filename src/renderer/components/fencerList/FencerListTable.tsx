@@ -4,6 +4,7 @@
  */
 
 import { categoryShortLabel } from '../../../shared/domain/fencers/fencerCategory';
+import { levelLabel } from '../../../shared/domain/fencers/teamEntry';
 import React from 'react';
 import { ClipboardList, Pencil, RotateCcw, Search, Swords, Trash2 } from 'lucide-react';
 import { Icon } from '../common/Icon';
@@ -231,6 +232,13 @@ export function FencerListTable({ ctx }: { ctx: FencerListCtx }) {
                           return (
                             <td key="category" className="text-sm text-muted">
                               {categoryShortLabel(fencer.category) || '-'}
+                              {fencer.handicap && ' · HANDI'}
+                            </td>
+                          );
+                        case 'level':
+                          return (
+                            <td key="level" className="text-sm text-muted">
+                              {levelLabel(fencer.level, ctx.teamLevels ?? []) || '-'}
                             </td>
                           );
                         case 'club':

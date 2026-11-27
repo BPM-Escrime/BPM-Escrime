@@ -1500,7 +1500,8 @@
     "club_plan_time": "Horário",
     "club_plan_exercise": "Exercício",
     "club_plan_empty": "Nenhum exercício previsto",
-    "club_plan_notes": "Notas"
+    "club_plan_notes": "Notas",
+    "col_level": "Nível"
   },
   "rsm": {
     "strip_plan": "Plano das pistas",
@@ -1887,7 +1888,8 @@
     "col_category": "Cat.",
     "compute_categories": "Calcular as categorias",
     "compute_categories_title": "Categoria de idade dos atiradores que não a têm, pela data de nascimento e pela época da prova",
-    "compute_categories_done": "{{count}} categorias calculadas; {{missing}} atiradores sem data de nascimento"
+    "compute_categories_done": "{{count}} categorias calculadas; {{missing}} atiradores sem data de nascimento",
+    "col_level": "Nível"
   },
   "questPhase": {
     "running_title": "Ronda Quest em curso",
@@ -4803,7 +4805,14 @@
     "expert_mode": "Modo especialista",
     "expert_hint": "Divisão, Ronda Quest, quadro interrompido e definições avançadas (empates na barra, rondas acumuladas, ordem dos combates, pontuação por zonas). Preferência deste posto.",
     "expert_forced": "Esta fórmula contém um bloco ou uma definição de especialista: o modo especialista continua ativo nesta edição.",
-    "remark_on_phase": "Observação sobre esta fase"
+    "remark_on_phase": "Observação sobre esta fase",
+    "entry": "Inscrição dos participantes",
+    "entry_individual": "Individual",
+    "entry_team": "Equipas de 2 (pares)",
+    "entry_levels": "Níveis, do mais forte ao mais fraco (separados por vírgulas)",
+    "distribution": "Distribuição nas poules",
+    "distribution_serpentine": "Serpentina segundo a classificação",
+    "distribution_by_level": "Por nível"
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",
@@ -4896,5 +4905,12 @@
     "notice": "{{n}} atiradores empatados no {{rank}}º lugar para {{places}} vaga(s): {{names}}",
     "choose": "O que fazer com estes empates neste corte?",
     "formula": "{{label}} (fórmula)"
+  },
+  "teamEntry": {
+    "team_name": "Nome da equipa",
+    "member_n": "Membro {{n}}",
+    "unknown": "Não indicado",
+    "auto_hint": "Categoria e sexo deduzidos dos membros se não preenchidos.",
+    "members_required": "Indique o nome da equipa e pelo menos um membro."
   }
 }

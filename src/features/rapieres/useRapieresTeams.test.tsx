@@ -53,5 +53,14 @@ describe('useRapieresTeams : import des équipes (#1211)', () => {
     expect(setRapieresTeam).toHaveBeenCalledWith('f1', pending!.teams[1].info);
     // Notification injectée par l'écran (lot 5 de #1979)
     expect(notify).toHaveBeenCalledWith('rapieres.import_done', 'success');
+    // F4c (docs/adr/0043) : l'import écrit membres, niveau et sexe d'équipe avec l'inscription
+    const first = bulkAddFencers.mock.calls[0][0][0] as Fencer;
+    expect(first.members?.map(m => m.lastName)).toEqual(
+      pending!.teams[0].info.fencers.map(f => f.lastName).filter(Boolean)
+    );
+    expect(first.level).toBe(
+      { expert: 1, intermediate: 2, beginner: 3 }[pending!.teams[0].info.level]
+    );
+    expect(first.handicap).toBe(false);
   });
 });

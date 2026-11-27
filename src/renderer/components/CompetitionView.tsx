@@ -10,12 +10,15 @@ import {
   formulaOf,
   pendingSplitOf,
   poolBoutOrderOfRound,
+  poolDistributionOfRound,
+  entryOf,
 } from '../../shared/domain/formula/formulaV2';
 import { screenFormulaProgress } from './formula/screenFormulaProgress';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
 import React, { Suspense, useState } from 'react';
 import { Fencer, Gender, type Pool } from '../../shared/types';
+import { levelRankOf } from '../../shared/domain/fencers/teamEntry';
 import FencerList from './FencerList';
 import ResultsView from './ResultsView';
 import AddFencerModal from './AddFencerModal';
@@ -99,6 +102,10 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     ...competitionCore,
     ...competitionSessionSync,
   });
+  // Entrée en binômes (ADR-0043) ; les rapières gardent leur fenêtre d'équipe jusqu'à F4e
+  const entry = entryOf(props.competition.settings?.formula);
+  const teamLevels =
+    entry.kind === 'team' && !props.competition.settings?.specialMode ? entry.levels : undefined;
   // Poules du classement ajusté, en attente de la réponse du moteur (repli local)
   const pendingRankingPoolsRef = React.useRef<Pool[] | null>(null);
   // Rapières : choix de l'ordre des combats au lancement des poules (#1816)
@@ -500,6 +507,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             competitionId={competition.id}
             competition={competition}
             onCheckIn={handleCheckInFencer}
+            teamLevels={teamLevels}
             onAddFencer={() =>
               isRapieres ? setRapieresTeamModal({}) : modals.setShowAddFencerModal(true)
             }
@@ -551,6 +559,9 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             minFencersPerPool={isRapieres ? 2 : minFencersPerPool}
             maxFencersPerPool={isRapieres ? POOL_WAVES_SIZE.max : maxFencersPerPool}
             boutOrderMode={poolBoutOrderOfRound(competition.settings, currentPoolRound)}
+            // Répartition de la formule : « par niveau » pour l'entrée en équipes (docs/adr/0043)
+            distribution={poolDistributionOfRound(competition.settings, currentPoolRound)}
+            {...(teamLevels ? { levelRankOf } : {})}
             {...(isRapieres ? rapieresViewProps.poolPrep : {})}
             expertMode={expertMode}
             arenaCount={remoteArenaCount}
@@ -907,6 +918,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
           onClose={() => modals.setShowAddFencerModal(false)}
           onAdd={addFencer}
           competitionGender={competition.gender}
+          teamLevels={teamLevels}
         />
       )}
 

@@ -1500,7 +1500,8 @@
     "club_plan_time": "時段",
     "club_plan_exercise": "練習",
     "club_plan_empty": "未有計劃練習",
-    "club_plan_notes": "備註"
+    "club_plan_notes": "備註",
+    "col_level": "級別"
   },
   "rsm": {
     "strip_plan": "劍道圖",
@@ -1887,7 +1888,8 @@
     "col_category": "組別",
     "compute_categories": "計算組別",
     "compute_categories_title": "按出生日期及比賽季度，為未有組別的劍手計算年齡組別",
-    "compute_categories_done": "已計算 {{count}} 個組別；{{missing}} 名劍手沒有出生日期"
+    "compute_categories_done": "已計算 {{count}} 個組別；{{missing}} 名劍手沒有出生日期",
+    "col_level": "級別"
   },
   "questPhase": {
     "running_title": "Quest 回合進行中",
@@ -4803,7 +4805,14 @@
     "expert_mode": "專家模式",
     "expert_hint": "分流、Quest 輪、提前停止的淘汰賽表及進階設定（分界同分、累計輪次、對戰次序、分區計分）。此工作站的偏好設定。",
     "expert_forced": "此賽制包含專家區塊或專家設定：本次編輯期間專家模式保持開啟。",
-    "remark_on_phase": "此階段的備註"
+    "remark_on_phase": "此階段的備註",
+    "entry": "參賽者報名方式",
+    "entry_individual": "個人",
+    "entry_team": "兩人隊伍（雙人組）",
+    "entry_levels": "級別，由最強至最弱（以逗號分隔）",
+    "distribution": "分組方式",
+    "distribution_serpentine": "依排名蛇形分組",
+    "distribution_by_level": "按級別"
   },
   "formulaTemplates": {
     "template": "賽制範本",
@@ -4896,5 +4905,12 @@
     "notice": "{{n}} 名劍手同列第 {{rank}} 名，爭奪 {{places}} 個名額：{{names}}",
     "choose": "此輪晉級如何處理同分劍手？",
     "formula": "{{label}}（賽制）"
+  },
+  "teamEntry": {
+    "team_name": "隊伍名稱",
+    "member_n": "成員 {{n}}",
+    "unknown": "未填寫",
+    "auto_hint": "未填寫時，組別與性別由成員推算。",
+    "members_required": "請填寫隊伍名稱及至少一名成員。"
   }
 }

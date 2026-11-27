@@ -8,7 +8,6 @@
 import { Fencer, FencerStatus, PoolRanking } from '../../types';
 import { POOL_WAVES_SIZE } from '../pools/waves';
 import {
-  RAPIERES_LEVELS,
   RapieresAgeCategory,
   RapieresFencer,
   RapieresLevel,
@@ -25,35 +24,6 @@ export const teamMembersLabel = (fencers: [RapieresFencer, RapieresFencer]): str
     .map(f => f.lastName.trim().toUpperCase())
     .filter(Boolean)
     .join(' / ');
-
-// ─── Poules ──────────────────────────────────────────────────────────────────
-
-/**
- * Répartit les équipes en `poolCount` poules de tailles équilibrées (écart ≤ 1),
- * équipes de même niveau regroupées (débutants, puis intermédiaires, puis experts).
- */
-export function distributeByLevel(
-  fencers: Fencer[],
-  poolCount: number,
-  levelOf: (fencerId: string) => RapieresLevel | undefined
-): Fencer[][] {
-  const count = Math.max(1, Math.min(poolCount, fencers.length || 1));
-  const rank = (f: Fencer) => {
-    const i = RAPIERES_LEVELS.indexOf(levelOf(f.id) ?? 'beginner');
-    return i < 0 ? 0 : i;
-  };
-  const sorted = [...fencers].sort((a, b) => rank(a) - rank(b));
-  const base = Math.floor(sorted.length / count);
-  const extra = sorted.length % count;
-  const pools: Fencer[][] = [];
-  let i = 0;
-  for (let p = 0; p < count; p++) {
-    const size = base + (p < extra ? 1 : 0);
-    pools.push(sorted.slice(i, i + size));
-    i += size;
-  }
-  return pools;
-}
 
 // ─── Vagues ──────────────────────────────────────────────────────────────────
 // Déplacées dans shared/domain/pools/waves.ts (docs/adr/0043, F4a) : réexportées jusqu'à F4e.

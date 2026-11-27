@@ -1500,7 +1500,8 @@
     "club_plan_time": "Orario",
     "club_plan_exercise": "Esercizio",
     "club_plan_empty": "Nessun esercizio previsto",
-    "club_plan_notes": "Note"
+    "club_plan_notes": "Note",
+    "col_level": "Livello"
   },
   "rsm": {
     "strip_plan": "Piano delle pedane",
@@ -1887,7 +1888,8 @@
     "col_category": "Cat.",
     "compute_categories": "Calcolare le categorie",
     "compute_categories_title": "Categoria d'età degli schermidori che non ne hanno, dalla data di nascita e dalla stagione della gara",
-    "compute_categories_done": "{{count}} categorie calcolate; {{missing}} schermidori senza data di nascita"
+    "compute_categories_done": "{{count}} categorie calcolate; {{missing}} schermidori senza data di nascita",
+    "col_level": "Livello"
   },
   "questPhase": {
     "running_title": "Turno Quest in corso",
@@ -4803,7 +4805,14 @@
     "expert_mode": "Modalità esperto",
     "expert_hint": "Scissione, Turno Quest, tabellone interrotto e impostazioni avanzate (parità sulla soglia, turni cumulati, ordine degli assalti, punteggio per zone). Preferenza di questa postazione.",
     "expert_forced": "Questa formula contiene un blocco o un'impostazione da esperto: la modalità esperto resta attiva per questa modifica.",
-    "remark_on_phase": "Osservazione su questa fase"
+    "remark_on_phase": "Osservazione su questa fase",
+    "entry": "Iscrizione dei partecipanti",
+    "entry_individual": "Individuale",
+    "entry_team": "Squadre di 2 (coppie)",
+    "entry_levels": "Livelli, dal più forte al più debole (separati da virgole)",
+    "distribution": "Ripartizione nei gironi",
+    "distribution_serpentine": "Serpentina sulla classifica",
+    "distribution_by_level": "Per livello"
   },
   "formulaTemplates": {
     "template": "Modello di formula",
@@ -4896,5 +4905,12 @@
     "notice": "{{n}} schermidori ex aequo al {{rank}}º posto per {{places}} posto/i: {{names}}",
     "choose": "Cosa fare con questi ex aequo per questo taglio?",
     "formula": "{{label}} (formula)"
+  },
+  "teamEntry": {
+    "team_name": "Nome della squadra",
+    "member_n": "Membro {{n}}",
+    "unknown": "Non indicato",
+    "auto_hint": "Categoria e sesso dedotti dai membri se lasciati vuoti.",
+    "members_required": "Indicare il nome della squadra e almeno un membro."
   }
 }

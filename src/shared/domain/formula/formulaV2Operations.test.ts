@@ -266,6 +266,53 @@ describe('tableau arrêté à N (ADR-0037, D2)', () => {
     expect(again.phases[1]).not.toHaveProperty('stopAt');
   });
 
+  it('entrée en équipes et répartition par niveau : aller et retour (docs/adr/0043)', () => {
+    const base = formulaOf(epee());
+    const levels = ['Expert', 'Débutant'];
+    const f = applyOperationsV2(
+      epee(),
+      [
+        { op: 'setGeneral', settings: { entry: { kind: 'team', size: 2, levels } } },
+        { op: 'setPhase', phase: 'pool-0', settings: { distribution: 'byLevel' } },
+      ],
+      id
+    );
+    expect(f.general.entry).toEqual({ kind: 'team', size: 2, levels });
+    expect(phaseSettings(f, { kind: 'pool', round: 0 }).distribution).toBe('byLevel');
+    const there = operationsBetweenV2(base, f);
+    expect(there).toEqual([
+      { op: 'setPhase', phase: 'pool-0', settings: { distribution: 'byLevel' } },
+      { op: 'setGeneral', settings: { entry: { kind: 'team', size: 2, levels } } },
+    ]);
+    // Retour : les réglages sont retirés (défauts : serpentin, entrée individuelle)
+    const back = operationsBetweenV2(f, base);
+    const again = applyOperationsV2(
+      { ...epee(), settings: { ...epee().settings, formula: f } },
+      back,
+      id
+    );
+    expect(again.general).not.toHaveProperty('entry');
+    expect(phaseSettings(again, { kind: 'pool', round: 0 })).not.toHaveProperty('distribution');
+  });
+
+  it('entrée ou répartition invalide : remarque bloquante sur la formule', () => {
+    const f = formulaOf(epee());
+    const bad = {
+      ...f,
+      general: { ...f.general, entry: { kind: 'team', size: 2, levels: ['A', 'A'] } as never },
+    };
+    expect(formulaV2Issues(bad, { weapon: Weapon.EPEE })).toEqual([
+      'entrée : équipe : libellés de niveau distincts',
+    ]);
+    const bad2 = {
+      ...f,
+      phases: f.phases.map(p => (p.kind === 'pool' ? { ...p, distribution: 'x' as never } : p)),
+    };
+    expect(formulaV2Issues(bad2, { weapon: Weapon.EPEE })).toEqual([
+      'tour 1 : répartition inconnue',
+    ]);
+  });
+
   it('réglages plats : vainqueurs de poule lus au tour qui précède le tableau', () => {
     const f = applyOperationsV2(
       epee(),
