@@ -1,6 +1,6 @@
 # ADR-0037 — Déroulé généré par la formule v2 : navigation, 0 tour de poules, tableau arrêté à N, phase après un tableau
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b, retrait de la dernière phase d'après, Q5, scission ouverte au MCP, publication GREG / FTP du classement du tableau arrêté)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b, retrait de la dernière phase d'après, Q5, scission ouverte au MCP, publication GREG / FTP du classement du tableau arrêté) ; amendée le 2026-11-26 (formules à plusieurs tours ouvertes au MCP, ADR-0042, validé par le mainteneur)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape D ; question Q5), #1948 ; complète [ADR-0036](0036-formule-v2-arbre-par-phase.md), [ADR-0007](0007-format-evenement.md) et [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -83,23 +83,27 @@ eliminatedIds }`.
   - étape close : onglet « Tableau (clos) » en lecture seule ; classement final, CSV, XML, PDF
     du classement et livret par `rankAfterStages` (libellé « Tableau de N ») et
     `resultsTableauMatches` (tableau clos). La publication GREG / FTP par le moteur reprend le
-    classement de l'écran (`rankAfterStages`, `originFinalRanking`). Le pilotage du tableau
-    arrêté par le MCP relève de l'étape F, sauf la scission (`split_competition`, ADR-0039).
-    _(Amendé le 2026-11-26 : remplace « La publication GREG / FTP par le moteur et le pilotage
-    par le MCP relèvent de l'étape F. »)_
+    classement de l'écran (`rankAfterStages`, `originFinalRanking`). Le MCP pilote le tableau
+    arrêté comme le reste de la formule (ADR-0042). _(Amendé le 2026-11-26, étape F3 : remplace
+    « La publication GREG / FTP par le moteur reprend le classement de l'écran (`rankAfterStages`,
+    `originFinalRanking`). Le pilotage du tableau arrêté par le MCP relève de l'étape F, sauf la
+    scission (`split_competition`, ADR-0039). », qui remplaçait lui-même « La publication GREG /
+    FTP par le moteur et le pilotage par le MCP relèvent de l'étape F. »)_
 
 ## Conséquences
 
 - D1 ne change pas le moteur : il branche la navigation sur la formule et réutilise
   `skipPools`. D2 ajoute une commande, un événement et une clé d'état de session.
-- Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) pour le tirage
-  des poules et du tableau sans placement fourni par l'écran ; seule la scission (`split_competition`,
-  [ADR-0039](0039-scission-competitions-filles.md)) lui est ouverte dès l'étape E, y compris
+- Le serveur MCP pilote les formules à plusieurs tours et le tableau arrêté : le moteur tire
+  lui-même les tours suivants et le tableau ([ADR-0042](0042-moteur-formules-multi-tours.md)) ;
+  `assertSupported` ne refuse plus que les épreuves par équipes et le mode spécial. _(Amendé le
+  2026-11-26, étape F3 : remplace « Le serveur MCP continue de refuser plusieurs tours de poules
+  (`assertSupported`) pour le tirage des poules et du tableau sans placement fourni par l'écran ;
+  seule la scission (`split_competition`, ADR-0039) lui est ouverte dès l'étape E, y compris
   après plusieurs tours ou un tableau arrêté. L'ouverture au MCP du reste des formules à
-  plusieurs tours et du tableau arrêté relève de l'étape F. _(Amendé le 2026-11-26 : remplace
-  « Le serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) ;
-  l'ouverture au MCP des formules à plusieurs tours et du tableau arrêté relève de l'étape
-  F. »)_
+  plusieurs tours et du tableau arrêté relève de l'étape F. », qui remplaçait lui-même « Le
+  serveur MCP continue de refuser plusieurs tours de poules (`assertSupported`) ; l'ouverture au
+  MCP des formules à plusieurs tours et du tableau arrêté relève de l'étape F. »)_
 - Chaque PR en draft, sans auto-merge (ticket `refactor`).
 
 ## Alternatives écartées
