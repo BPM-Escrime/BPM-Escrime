@@ -4,6 +4,8 @@
  */
 
 import { FencerStatus, MatchStatus } from '../../../shared/types';
+import type { Fencer, PoolRanking } from '../../../shared/types';
+import { finalRanking, type TableauResult } from '../../../shared/domain/ranking/finalRanking';
 import type { RouteContext } from './context';
 import {
   scoreValue,
@@ -15,6 +17,7 @@ import {
 import { logger, LogCategory, toError } from '../../../shared/services/logger';
 import {
   allTableauMatches,
+  filterSplitGroup,
   sessionGroupTableaux,
 } from '../../../shared/domain/ranking/splitGroups';
 
@@ -95,23 +98,51 @@ export function publicTableauRounds(matches: TableauMatchView[] | undefined) {
 
 /**
  * Classement final de la page publique : tableau unique, ou classements des groupes à la
- * suite, chacun avec son groupe (docs/adr/0024)
+ * suite, chacun avec son groupe (docs/adr/0024). Même règle que l'écran et les exports
+ * (`finalRanking`, docs/adr/0043 amendée, F4d) : le tableau, puis les non-qualifiés dans l'ordre
+ * des poules ; un exclu au bas sans rang (`rank: null`, « - »), les autres renumérotés.
+ * `fencers` : liste courante, qui rafraîchit le statut des instantanés de l'état de session.
  */
-export function publicFinalResults(state: SessionStateView | null) {
-  const rows = (list: RankingRowView[] | undefined, group: string | null) =>
-    (list || [])
-      .filter(r => !!r?.fencer?.id && typeof r.rank === 'number')
-      .map(r => ({
-        rank: r.rank as number,
-        fencer: publicFencer(r.fencer),
-        ...(group ? { group } : {}),
-      }));
+export function publicFinalResults(
+  state: SessionStateView | null,
+  fencers: readonly FencerView[] = []
+) {
+  const live = new Map(fencers.map(f => [f.id, f]));
+  const refresh = (f: Fencer): Fencer => {
+    const l = live.get(f.id);
+    return l ? { ...f, status: l.status as Fencer['status'] } : f;
+  };
+  const rows = (
+    list: RankingRowView[] | undefined,
+    overall: PoolRanking[],
+    group: string | null
+  ) => {
+    const results = (list || []).filter(
+      r => !!r?.fencer?.id && typeof r.rank === 'number'
+    ) as unknown as TableauResult[];
+    // Pas de résultats du tableau : pas de classement final
+    if (results.length === 0) return [];
+    return finalRanking({ finalResults: results, poolRanking: overall, refresh }).map(r => ({
+      rank: r.rank as number | null,
+      fencer: publicFencer(r.fencer as FencerView),
+      ...(group ? { group } : {}),
+    }));
+  };
+  const overall = (state?.overallRanking || []).filter(
+    r => !!r?.fencer?.id
+  ) as unknown as PoolRanking[];
   const groups = sessionGroupTableaux((state ?? {}) as Record<string, unknown>);
   return [
-    ...rows(state?.finalResults, null),
+    ...rows(state?.finalResults, overall, null),
     ...Object.keys(groups)
       .sort()
-      .flatMap(g => rows(groups[g].finalResults as unknown as RankingRowView[], g)),
+      .flatMap(g =>
+        rows(
+          groups[g].finalResults as unknown as RankingRowView[],
+          filterSplitGroup(overall, 'gender', g, undefined),
+          g
+        )
+      ),
   ];
 }
 
@@ -194,7 +225,10 @@ export function registerResultsRoutes(ctx: RouteContext): void {
           overallRanking,
           // Tableau unique ou tableaux des groupes (docs/adr/0024)
           tableau: publicTableauRounds(tableauMatches),
-          finalResults: publicFinalResults(sessionState),
+          finalResults: publicFinalResults(
+            sessionState,
+            ctx.db.getFencersByCompetition(competitionId)
+          ),
         });
       }
 

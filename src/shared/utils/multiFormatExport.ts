@@ -375,6 +375,8 @@ export function exportResultsXMLFFE(
   for (const r of finalRanking({
     finalResults: finalResults.filter(r => r.fencer?.id) as TableauResult[],
     poolRanking,
+    // Le XML garde le rang du classement des poules pour les éliminés des poules, égalités comprises
+    poolRanks: 'pool',
     refresh: fresh,
   })) {
     finalRankMap.set(r.fencer.id, r.rank);

@@ -34,6 +34,12 @@ export interface FinalRankingInput {
   poolRanking: readonly PoolRanking[];
   /** Éliminés d'un tableau arrêté : « Tableau de N » au lieu de « Poules » (docs/adr/0037) */
   stageEliminatedAt?: ReadonlyMap<string, string>;
+  /**
+   * Rang des éliminés des poules : `'sequential'` (défaut, écran, moteur, exports) les numérote à la
+   * suite du tableau ; `'pool'` garde le rang du classement des poules, égalités comprises (XML
+   * fédéral). Dans les deux cas, un exclu est au bas sans rang et les autres sont renumérotés.
+   */
+  poolRanks?: 'sequential' | 'pool';
   /** Rafraîchit le tireur figé dans les résultats (statut courant), sans changer le classement */
   refresh?: (fencer: Fencer) => Fencer;
 }
@@ -43,6 +49,7 @@ export function finalRanking({
   finalResults,
   poolRanking,
   stageEliminatedAt,
+  poolRanks = 'sequential',
   refresh = f => f,
 }: FinalRankingInput): FinalRankingEntry[] {
   const base: FinalRankingEntry[] = (() => {
@@ -51,7 +58,7 @@ export function finalRanking({
         const fencer = refresh(pr.fencer);
         return {
           // Tableau arrêté : rangs du classement final, ex aequo compris (Q5, ADR-0037)
-          rank: stageEliminatedAt?.size ? pr.rank : idx + 1,
+          rank: stageEliminatedAt?.size || poolRanks === 'pool' ? pr.rank : idx + 1,
           fencer,
           eliminatedAt: stageEliminatedAt?.get(fencer.id) ?? poolEliminatedAt(fencer),
         };
@@ -63,7 +70,7 @@ export function finalRanking({
       .map((pr, idx) => {
         const fencer = refresh(pr.fencer);
         return {
-          rank: finalResults.length + idx + 1,
+          rank: poolRanks === 'pool' ? pr.rank : finalResults.length + idx + 1,
           fencer,
           eliminatedAt: poolEliminatedAt(fencer),
         };

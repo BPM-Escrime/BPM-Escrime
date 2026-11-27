@@ -5,7 +5,7 @@
 
 import { entrySeeds, resultsTableauMatches } from '../../shared/domain/tableau/tableauStage';
 import { formulaSegment } from '../../shared/domain/formula/formulaSteps';
-import { originFinalRanking } from '../../shared/domain/formula/splitPlan';
+import { resultsRanking } from '../../shared/domain/ranking/resultsRanking';
 import {
   formulaOf,
   pendingSplitOf,
@@ -27,7 +27,6 @@ import CompetitionPropertiesModal from './CompetitionPropertiesModal';
 import {
   defaultSplitCompetitionTitle,
   extractSplitGroupRanking,
-  filterSplitGroup,
 } from '../../shared/domain/ranking/splitGroups';
 import PoolPrepView from './PoolPrepView';
 import { TEAM_PHASE_VIEWS, isTeamPhase } from './competition/teamPhases';
@@ -355,16 +354,14 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
   // le groupe affiché (docs/adr/0024).
   const stagedRanking = React.useMemo(
     () =>
-      originFinalRanking(
-        filterSplitGroup(
-          overallRanking,
-          postPoolSplitCriteria,
-          activeSplitGroup,
-          splitOffCompetitionIds
-        ),
-        competitionCore.stageHistory,
-        competitionCore.splitHistory
-      ),
+      resultsRanking({
+        overallRanking,
+        postPoolSplitCriteria,
+        activeSplitGroup,
+        splitOffCompetitionIds,
+        stageHistory: competitionCore.stageHistory,
+        splitHistory: competitionCore.splitHistory,
+      }),
     [
       overallRanking,
       postPoolSplitCriteria,

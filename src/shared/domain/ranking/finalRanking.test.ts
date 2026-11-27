@@ -69,6 +69,43 @@ describe('finalRanking', () => {
     expect(out(rows)).toEqual(['b:1:Finale', 'c:2:Poules', 'a:null:Vainqueur']);
   });
 
+  it('égalités du tableau gardées sans exclu : 3es ex aequo, puis 5e', () => {
+    const rows = finalRanking({
+      finalResults: [
+        { rank: 1, fencer: a, eliminatedAt: 'Vainqueur' },
+        { rank: 2, fencer: b, eliminatedAt: 'Finale' },
+        { rank: 3, fencer: c, eliminatedAt: 'Demi-finales' },
+        { rank: 3, fencer: d, eliminatedAt: 'Demi-finales' },
+      ],
+      poolRanking: [pr(a, 1), pr(b, 2), pr(c, 3), pr(d, 3), pr(e, 5)],
+    });
+    expect(out_(rows)).toEqual(['a:1', 'b:2', 'c:3', 'd:3', 'e:5']);
+  });
+
+  it('rang des poules gardé, égalités comprises (XML fédéral) ; l’exclu reste au bas sans rang', () => {
+    const x = f('c', FencerStatus.EXCLUDED);
+    const tied = [pr(a, 1), pr(b, 2), pr(x, 2), pr(d, 4)];
+    expect(out_(finalRanking({ finalResults: [], poolRanking: tied, poolRanks: 'pool' }))).toEqual([
+      'a:1',
+      'b:2',
+      'd:3',
+      'c:null',
+    ]);
+    const noExclusion = [pr(a, 1), pr(b, 2), pr(c, 2), pr(d, 4)];
+    expect(
+      out_(finalRanking({ finalResults: [], poolRanking: noExclusion, poolRanks: 'pool' }))
+    ).toEqual(['a:1', 'b:2', 'c:2', 'd:4']);
+    expect(
+      out_(
+        finalRanking({
+          finalResults: [{ rank: 1, fencer: a }],
+          poolRanking: noExclusion,
+          poolRanks: 'pool',
+        })
+      )
+    ).toEqual(['a:1', 'b:2', 'c:2', 'd:4']);
+  });
+
   it('exclu, même après son entrée au tableau : au bas sans rang, les autres renumérotés (FIE o.74)', () => {
     const out = f('b', FencerStatus.EXCLUDED);
     const rows = finalRanking({

@@ -315,7 +315,13 @@
           if (f.club) html += '<p class="club">' + esc(f.club) + '</p>';
           const stats = [];
           const fin = (data.finalResults || []).find(r => r.fencer && r.fencer.id === f.id);
-          if (fin) stats.push(esc(tk('results.final_rank')) + ' : <b>' + esc(fin.rank) + '</b>');
+          if (fin)
+            stats.push(
+              esc(tk('results.final_rank')) +
+                ' : <b>' +
+                esc(fin.rank == null ? '-' : fin.rank) +
+                '</b>'
+            );
           const ovIdx = (data.overallRanking || []).findIndex(r => r.id === f.id);
           if (ovIdx >= 0)
             stats.push(esc(tk('results.pool_rank')) + ' : <b>' + esc(ovIdx + 1) + '</b>');
@@ -439,7 +445,7 @@
               '<tr' +
               (hl ? ' class="hl"' : '') +
               '><td class="rank">' +
-              esc(r.rank) +
+              esc(r.rank == null ? '-' : r.rank) +
               '</td><td><span class="name">' +
               fullName(r.fencer) +
               '</span>' +
