@@ -571,3 +571,57 @@ d('Classement final dans getCompetitionState (docs/adr/0044, G0d)', () => {
     expect(divergences(comp.id)).toEqual([]);
   });
 });
+
+d('Formule d’une épreuve par équipes écrite par le moteur (docs/adr/0044, G0a)', () => {
+  it('updateCompetitionFormula : règle de rencontre posée depuis les réglages, réglages plats écrits', async () => {
+    const comp = competition(Weapon.EPEE, { teamReserveCount: 2, teamRelayStepSize: 4 });
+    await call('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [{ op: 'setPhase', phase: 'tableau', settings: { thirdPlace: true } }],
+    });
+    const settings = db.getCompetition(comp.id)!.settings!;
+    expect(settings.formula?.general.teamMatch).toEqual({
+      starters: 3,
+      reserves: 2,
+      relayStep: 4,
+      relayOrder: 'fie',
+    });
+    await call('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [
+        {
+          op: 'setGeneral',
+          settings: { teamMatch: { ...RULE, starters: 4, relayOrder: 'rotation' } },
+        },
+      ],
+    });
+    expect(db.getCompetition(comp.id)!.settings).toMatchObject({
+      minTeamSize: 4,
+      teamReserveCount: 1,
+      teamRelayStepSize: 5,
+    });
+  });
+
+  it('refus : brique non admise (team_brick_unsupported), effectif d’équipes (S3)', async () => {
+    const comp = competition(Weapon.EPEE);
+    await reject('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [{ op: 'insertPhase', brick: 'pool', at: 1 }],
+    }).toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('un seul tour de poules'),
+    });
+    await teamsRegistered(comp.id, ['A', 'B']);
+    await reject('updateCompetitionFormula', {
+      competitionId: comp.id,
+      operations: [{ op: 'setPhase', phase: 'pool-0', settings: { sizeMin: 3, sizeMax: 6 } }],
+    }).toMatchObject({ code: 'invalid_settings', message: expect.stringContaining('2 équipe(s)') });
+    // Arène Sabre Laser : aucune règle d'équipe de la formule
+    const arena = competition(Weapon.LASER, { teamFormat: 'laser-arena' });
+    await call('updateCompetitionFormula', {
+      competitionId: arena.id,
+      operations: [{ op: 'setPhase', phase: 'tableau', settings: { thirdPlace: true } }],
+    });
+    expect(db.getCompetition(arena.id)!.settings!.formula?.general.teamMatch).toBeUndefined();
+  });
+});
