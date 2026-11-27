@@ -1124,6 +1124,71 @@ d('Formule d’une épreuve par équipes commencée : verrou S6 (docs/adr/0041, 
     });
   });
 
+  it('tableau d’équipes tiré : petite finale figée aussi par updateCompetitionSettings (réglage plat, settings.formula)', async () => {
+    const comp = competition(Weapon.FOIL, { formula: teamFormula({ pool: null }) });
+    await teamsRegistered(comp.id, [
+      { name: 'A', ranking: 1 },
+      { name: 'B', ranking: 2 },
+      { name: 'C', ranking: 3 },
+      { name: 'D', ranking: 4 },
+    ]);
+    // Avant le tirage : modifiable (essai à blanc)
+    await call('updateCompetitionSettings', {
+      competitionId: comp.id,
+      settings: { thirdPlaceMatch: true },
+      dryRun: true,
+    });
+    await call('generateTeamTableau', { competitionId: comp.id });
+    const before = db.getCompetition(comp.id)!.settings!;
+    // Réglage plat
+    await reject('updateCompetitionSettings', {
+      competitionId: comp.id,
+      settings: { thirdPlaceMatch: true },
+    }).toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('tableau déjà tiré'),
+    });
+    // Formule écrite par les réglages
+    await reject('updateCompetitionSettings', {
+      competitionId: comp.id,
+      settings: { formula: teamFormula({ pool: null, tableau: { thirdPlace: true } }) },
+    }).toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('tableau déjà tiré'),
+    });
+    expect(db.getCompetition(comp.id)!.settings).toEqual(before);
+  });
+
+  it('poules d’équipes tirées : une écriture plate qui retire le tour est refusée', async () => {
+    const comp = competition(Weapon.CUSTOM, { formula: teamFormula({ pool: { maxScore: 15 } }) });
+    await teamsRegistered(comp.id, ['A', 'B', 'C']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    const before = db.getCompetition(comp.id)!.settings!;
+    // Réglage plat : formule à la carte v1 (arme « Autre ») réduite au tableau ; en épée, fleuret,
+    // sabre, les réglages plats gardent au moins un tour (poolRounds ≥ 1)
+    await reject('updateCompetitionSettings', {
+      competitionId: comp.id,
+      settings: {
+        customFormula: {
+          version: 1,
+          phases: [{ id: 'de', type: 'direct_elimination', config: {} }],
+        },
+      },
+    }).toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('phase déjà commencée'),
+    });
+    // Formule sans tour de poules écrite par les réglages
+    await reject('updateCompetitionSettings', {
+      competitionId: comp.id,
+      settings: { formula: teamFormula({ pool: null, tableau: { maxScore: 15 } }) },
+    }).toMatchObject({
+      code: 'invalid_settings',
+      message: expect.stringContaining('phase déjà commencée'),
+    });
+    expect(db.getCompetition(comp.id)!.settings).toEqual(before);
+  });
+
   it('poules d’équipes tirées : le tour de poules ne se retire plus', async () => {
     const comp = competition(Weapon.EPEE, { formula: teamFormula() });
     await teamsRegistered(comp.id, ['A', 'B', 'C']);
