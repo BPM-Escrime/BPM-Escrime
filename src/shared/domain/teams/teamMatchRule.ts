@@ -15,6 +15,8 @@ import {
   type FormulaPhaseV2,
   type FormulaV2,
   type PhaseRef,
+  type PoolRoundPhase,
+  type TableauPhase,
   type TeamMatchRule,
   type TeamRelayOrder,
 } from '../formula/formulaV2';
@@ -118,6 +120,20 @@ export function teamFormulaOf(comp: {
 }
 
 /**
+ * Tour de poules d'une formule d'équipe, lu par `phaseSettings` (ADR-0036 : une seule entrée
+ * pour les lecteurs, ADR-0044 : un seul tour en G0) ; undefined : tableau seul
+ */
+export function teamPoolRoundOf(f: FormulaV2): PoolRoundPhase | undefined {
+  return f.phases.some(p => p.kind === 'pool')
+    ? phaseSettings(f, { kind: 'pool', round: 0 })
+    : undefined;
+}
+
+/** Tableau d'une formule d'équipe, lu par `phaseSettings` (ADR-0036) ; undefined : aucun */
+export const teamTableauOf = (f: FormulaV2): TableauPhase | undefined =>
+  phaseSettings(f, { kind: 'tableau' });
+
+/**
  * Phase des poules d'équipes (ADR-0044) : formule d'équipe avec un tour de poules ; épreuve
  * sans formule d'équipe (existante, arène) : poule unique, comme avant
  */
@@ -126,7 +142,7 @@ export function hasTeamPools(comp: {
   settings?: Partial<CompetitionSettings> | null;
 }): boolean {
   const f = teamFormulaOf(comp);
-  return !f || f.phases.some(p => p.kind === 'pool');
+  return !f || !!teamPoolRoundOf(f);
 }
 
 /** Épreuve par équipes en relais FIE : seule épreuve dont la formule lit `teamMatch` (ADR-0044) */

@@ -5,13 +5,19 @@
  * getCompetitionState. Base SQLite réelle.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { DatabaseManager } from '../../../database';
 import { hasNodeSqlite } from '../../../database/testing/nodeSqliteDatabase';
 import { Category, FencerStatus, Gender, Weapon } from '../../../shared/types';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
 import { projectCompetition } from '../../../shared/domain/journal/projectCompetition';
 import { compareWithState, stateView } from '../../../shared/domain/journal/compareWithState';
-import type { FormulaV2, TeamMatchRule } from '../../../shared/domain/formula/formulaV2';
+import {
+  phaseSettings,
+  type FormulaV2,
+  type TeamMatchRule,
+} from '../../../shared/domain/formula/formulaV2';
 import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import type { CommandContext } from './context';
 import { teamStateView } from './teams';
@@ -26,6 +32,12 @@ import {
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
 }));
+
+// Lecture des phases par phaseSettings (ADR-0036 : une seule entrée pour les lecteurs) : espion
+vi.mock('../../../shared/domain/formula/formulaV2', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../../shared/domain/formula/formulaV2')>();
+  return { ...actual, phaseSettings: vi.fn(actual.phaseSettings) };
+});
 
 const d = hasNodeSqlite ? describe : describe.skip;
 
@@ -303,6 +315,30 @@ d('Poules d’équipes lues dans la formule (docs/adr/0044, G0c)', () => {
       ...Array(9).fill('TeamMatchScheduled'),
     ]);
     expect(divergences(comp.id)).toEqual([]);
+  });
+
+  it('generateTeamPools et generateTeamTableau lisent leurs phases par phaseSettings (ADR-0036)', async () => {
+    const comp = competition(Weapon.EPEE, {
+      formula: teamFormula({ pool: { sizeMin: 3, sizeMax: 3 } }),
+    });
+    await teamsRegistered(comp.id, ['A', 'B', 'C', 'D', 'E', 'F']);
+    vi.mocked(phaseSettings).mockClear();
+    const pools = await call('generateTeamPools', { competitionId: comp.id });
+    expect(vi.mocked(phaseSettings)).toHaveBeenCalledWith(expect.anything(), {
+      kind: 'pool',
+      round: 0,
+    });
+    // Taille du tour lue : 2 poules de 3
+    expect(pools.pools.map((p: { teamIds: string[] }) => p.teamIds.length)).toEqual([3, 3]);
+    for (const m of db.getTeamMatchesByCompetition(comp.id)) await playMatch(comp.id, m.id);
+    vi.mocked(phaseSettings).mockClear();
+    await call('generateTeamTableau', { competitionId: comp.id });
+    expect(vi.mocked(phaseSettings)).toHaveBeenCalledWith(expect.anything(), { kind: 'tableau' });
+    // Aucune lecture directe des phases dans les commandes d'équipe
+    for (const file of ['teams.ts', 'teamRelays.ts', 'teamCards.ts'])
+      expect(readFileSync(join(__dirname, file), 'utf8')).not.toMatch(
+        /phases\.(find|some|filter)\(/
+      );
   });
 
   it('formule « individuelle » enregistrée (sans general.teamMatch) : poule unique par nom, à l’identique', async () => {

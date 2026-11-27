@@ -27,12 +27,12 @@ import { teamEntryRanking } from '../../../shared/domain/teams/teamEntryRanking'
 import {
   relayPairsOf,
   teamFormulaOf,
+  teamPoolRoundOf,
   teamMatchRuleOf,
 } from '../../../shared/domain/teams/teamMatchRule';
 import {
   tableauQualificationOf,
   type PhaseRef,
-  type PoolRoundPhase,
   type TeamMatchRule,
 } from '../../../shared/domain/formula/formulaV2';
 import { calculateOptimalPoolCount } from '../../../shared/domain/pools/poolDistribution';
@@ -293,7 +293,8 @@ function teamPoolsDraw(
   if (teamFormatOf(comp.settings) !== 'fie-relay') return undefined;
   const formula = teamFormulaOf(comp);
   if (!formula && poolCount === undefined) return undefined;
-  const round = formula?.phases.find((p): p is PoolRoundPhase => p.kind === 'pool');
+  // Tour de poules lu par phaseSettings (ADR-0036, ADR-0044)
+  const round = formula ? teamPoolRoundOf(formula) : undefined;
   if (formula && !round) {
     throw new CommandError(
       'no_pools',
@@ -608,7 +609,7 @@ export function tableauEntryOf(
     teams: ranked.teams,
     poolMatches: ranked.matches,
     entryOrder: entryRankedTeams(ctx, comp, ranked.teams, starters),
-    hasPools: formula.phases.some(p => p.kind === 'pool'),
+    hasPools: !!teamPoolRoundOf(formula),
     qualification: tableauQualificationOf(formula),
     random,
   });
@@ -631,7 +632,7 @@ function finalRankingOf(
   const teams = ctx.db.teams.getTeamsByCompetition(comp.id) as TeamRow[];
   const byId = new Map(teams.map(t => [t.id, t]));
   const fact = projectCompetition(readJournal(ctx, comp.id)).teams?.tableau;
-  const hasPools = formula.phases.some(p => p.kind === 'pool');
+  const hasPools = !!teamPoolRoundOf(formula);
   if (!fact) {
     const order = hasPools
       ? poolOrder

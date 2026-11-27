@@ -38,7 +38,12 @@ import {
   type TeamTableauMatchState,
   type TeamTableauOptions,
 } from '../../../shared/domain/teams/teamTableau';
-import { relayPairsOf, teamFormulaOf } from '../../../shared/domain/teams/teamMatchRule';
+import {
+  relayPairsOf,
+  teamFormulaOf,
+  teamPoolRoundOf,
+  teamTableauOf,
+} from '../../../shared/domain/teams/teamMatchRule';
 import { phaseSettings, type PhaseRef } from '../../../shared/domain/formula/formulaV2';
 import { relayPenaltyTouches } from '../../../shared/domain/teams/teamCards';
 import { involvesWithdrawn } from '../../../shared/domain/teams/teamWithdrawal';
@@ -211,7 +216,7 @@ export function generateTeamTableau(
 ) {
   const comp = teamCompetitionOrThrow(ctx, input.competitionId);
   const formula = teamFormulaOf(comp);
-  if (formula && !formula.phases.some(p => p.kind === 'tableau')) {
+  if (formula && !teamTableauOf(formula)) {
     throw new CommandError('no_direct_elimination', 'Formule de l’épreuve sans tableau');
   }
   const teams = teamsOf(ctx, comp);
@@ -236,7 +241,7 @@ export function generateTeamTableau(
     throw new CommandError('pools_not_complete', 'Rencontres de poule non terminées');
   }
   // Formule d'équipe avec un tour de poules : poules tirées et jouées d'abord
-  if (formula?.phases.some(p => p.kind === 'pool') && ranked.matches.length === 0) {
+  if (formula && teamPoolRoundOf(formula) && ranked.matches.length === 0) {
     throw new CommandError('pools_not_complete', 'Poules d’équipes pas encore tirées');
   }
   const existing = tableauMatchesOf(ctx, comp);
