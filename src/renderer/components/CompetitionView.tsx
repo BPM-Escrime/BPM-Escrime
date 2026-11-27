@@ -11,15 +11,14 @@ import {
   pendingSplitOf,
   poolBoutOrderOfRound,
   poolDistributionOfRound,
-  entryOf,
   rankingFiltersOf,
 } from '../../shared/domain/formula/formulaV2';
 import { screenFormulaProgress } from './formula/screenFormulaProgress';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
 import React, { Suspense, useState } from 'react';
-import { Fencer, Gender, type Pool } from '../../shared/types';
-import { levelRankOf } from '../../shared/domain/fencers/teamEntry';
+import { Gender, type Pool } from '../../shared/types';
+import { teamPoolPrepProps } from '../../features/teamEntry/teamPoolPrepProps';
 import FencerList from './FencerList';
 import ResultsView from './ResultsView';
 import AddFencerModal from './AddFencerModal';
@@ -32,18 +31,7 @@ import PoolPrepView from './PoolPrepView';
 import { TEAM_PHASE_VIEWS, isTeamPhase } from './competition/teamPhases';
 import type { TeamPhase } from './competition/teamPhases';
 import { CV_STYLES } from './competition/competitionViewStyles';
-import { emptyRapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
-import { mergeFinalRanking } from '../../shared/domain/rapieres/rapieresCalculations';
-import {
-  applyClassicOrder,
-  hasClassicOrder,
-  POOL_WAVES_SIZE,
-} from '../../shared/domain/pools/waves';
-import RapieresTeamModal from '../../features/rapieres/RapieresTeamModal';
-import RapieresMatchOrderDialog from '../../features/rapieres/RapieresMatchOrderDialog';
-import type { RapieresMatchOrder } from '../../shared/domain/rapieres/rapieresClassicOrder';
-import RapieresImportModal from '../../features/rapieres/RapieresImportModal';
-import RapieresRankingPanel from '../../features/rapieres/RapieresRankingPanel';
+import TeamImportModal from '../../features/teamEntry/TeamImportModal';
 import { ScoreAuditLog } from './ScoreAuditLog';
 import CompetitionHeader from './competition/CompetitionHeader';
 import CompetitionNav from './competition/CompetitionNav';
@@ -103,22 +91,8 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     ...competitionCore,
     ...competitionSessionSync,
   });
-  // Entrée en binômes (ADR-0043) ; les rapières gardent leur fenêtre d'équipe jusqu'à F4e
-  const entry = entryOf(props.competition.settings?.formula);
-  const teamLevels =
-    entry.kind === 'team' && !props.competition.settings?.specialMode ? entry.levels : undefined;
   // Poules du classement ajusté, en attente de la réponse du moteur (repli local)
   const pendingRankingPoolsRef = React.useRef<Pool[] | null>(null);
-  // Rapières : choix de l'ordre des combats au lancement des poules (#1816)
-  const [matchOrderPrompt, setMatchOrderPrompt] = React.useState<
-    ((order: RapieresMatchOrder | null) => void) | null
-  >(null);
-  const askMatchOrder = () =>
-    new Promise<RapieresMatchOrder | null>(resolve => setMatchOrderPrompt(() => resolve));
-  const answerMatchOrder = (order: RapieresMatchOrder | null) => {
-    matchOrderPrompt?.(order);
-    setMatchOrderPrompt(null);
-  };
   const {
     competition,
     language,
@@ -150,10 +124,10 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     viewedPoolRound,
     currentAppelFencers,
     handleCheckInFencer,
-    isRapieres,
-    setRapieresTeamModal,
-    rapieresViewProps,
-    rapieresTeams,
+    isTeamEntry,
+    entry,
+    withTeams,
+    teamImport,
     remoteServerUrl,
     updateFencer,
     deleteFencer,
@@ -192,7 +166,6 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     poolCorrectionDialog,
     tableauDrift,
     requestRebuild,
-    rapieres,
     isWaves,
     waves,
     updateWaves,
@@ -222,7 +195,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     isLastPoolRound,
     canAdvanceFromPools,
     handleNextPoolRound,
-    rapieresStats,
+    teamStats,
     setRankingValidated,
     handleQuestConfigUpdate,
     activeSplitGroup,
@@ -259,8 +232,6 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     arenaStates,
     exports,
     poolsRemoteInfo,
-    rapieresTeamModal,
-    handleSaveRapieresTeam,
     addFencer,
     pendingSplitOffGroup,
     createSplitOffCompetition,
@@ -285,6 +256,20 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     handleEditFencer,
     handleGoToRanking,
   } = { ...props, ...competitionCore, ...competitionSessionSync, ...competitionPhaseFlow };
+  // Entrée en binômes (ADR-0043) : libellés des niveaux de la formule (ou de la lecture du mode spécial)
+  const teamLevels = entry.kind === 'team' ? entry.levels : undefined;
+  const teamFencers = React.useMemo(() => withTeams(fencers), [withTeams, fencers]);
+  const appelTeamFencers = React.useMemo(
+    () => withTeams(currentAppelFencers),
+    [withTeams, currentAppelFencers]
+  );
+  // Tireurs pointés pour le tirage : recalculés quand la liste ou le classement du tour précédent change
+  const seededTeamFencers = React.useMemo(
+    () => withTeams(getSeededCheckedInFencers()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getSeededCheckedInFencers suit fencers et le classement du tour précédent
+    [withTeams, fencers, getSeededCheckedInFencers]
+  );
+  const filterKeys = rankingFiltersOf(competitionCore.readableFormula);
   // Rapport de carton noir demandé depuis l'appel DT (#2190)
   useBlackCardReportRequest(
     competition,
@@ -517,21 +502,13 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         )}
         {currentPhase === 'checkin' && !viewedRoundAppel && (
           <FencerList
-            fencers={currentAppelFencers}
+            fencers={appelTeamFencers}
             competitionId={competition.id}
             competition={competition}
             onCheckIn={handleCheckInFencer}
             teamLevels={teamLevels}
-            onAddFencer={() =>
-              isRapieres ? setRapieresTeamModal({}) : modals.setShowAddFencerModal(true)
-            }
-            {...(isRapieres
-              ? {
-                  ...rapieresViewProps.appel,
-                  onEditRequest: (fencer: Fencer) => setRapieresTeamModal({ fencer }),
-                  ...rapieresTeams.importButtons,
-                }
-              : {})}
+            onAddFencer={() => modals.setShowAddFencerModal(true)}
+            {...(isTeamEntry ? teamImport.importButtons : {})}
             registerUrl={
               isRemoteActive && remoteServerUrl ? `${remoteServerUrl}/register` : undefined
             }
@@ -540,9 +517,9 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onDeleteAllFencers={deleteAllFencers}
             onCheckInAll={checkInAll}
             onUncheckAll={uncheckAll}
-            onComputeCategories={isRapieres ? undefined : competitionCore.computeCategories}
-            onImport={isRapieres ? undefined : type => handleOpenImportDialog(type)}
-            onImportFFEConnect={isRapieres ? undefined : () => modals.setShowFFEConnect(true)}
+            onComputeCategories={isTeamEntry ? undefined : competitionCore.computeCategories}
+            onImport={isTeamEntry ? undefined : type => handleOpenImportDialog(type)}
+            onImportFFEConnect={isTeamEntry ? undefined : () => modals.setShowFFEConnect(true)}
             onFencersImported={loadFencers}
             onAppelStateChange={handleAppelStateChange}
             onSetFencerStatus={handleSetFencerStatus}
@@ -567,16 +544,15 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         )}
         {currentPhase === 'poolprep' && (
           <PoolPrepView
-            fencers={getSeededCheckedInFencers()}
+            fencers={seededTeamFencers}
             initialPools={pools.length > 0 ? pools : undefined}
             maxScore={poolMaxScore}
-            minFencersPerPool={isRapieres ? 2 : minFencersPerPool}
-            maxFencersPerPool={isRapieres ? POOL_WAVES_SIZE.max : maxFencersPerPool}
+            minFencersPerPool={minFencersPerPool}
+            maxFencersPerPool={maxFencersPerPool}
             boutOrderMode={poolBoutOrderOfRound(competition.settings, currentPoolRound)}
             // Répartition de la formule : « par niveau » pour l'entrée en équipes (docs/adr/0043)
             distribution={poolDistributionOfRound(competition.settings, currentPoolRound)}
-            {...(teamLevels ? { levelRankOf } : {})}
-            {...(isRapieres ? rapieresViewProps.poolPrep : {})}
+            {...(isTeamEntry ? teamPoolPrepProps(teamLevels, t) : {})}
             expertMode={expertMode}
             arenaCount={remoteArenaCount}
             stripStart={remoteStripStart}
@@ -594,14 +570,9 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             }
             onPoolsConfirm={async preparedPools => {
               if (!(await confirmScoresLoss(preparedPools))) return;
-              let confirmedPools = preparedPools;
-              if (isRapieres && preparedPools.some(p => hasClassicOrder(p.fencers.length))) {
-                const order = await askMatchOrder();
-                if (!order) return;
-                if (order === 'classic') confirmedPools = preparedPools.map(applyClassicOrder);
-              }
+              const confirmedPools = preparedPools;
               // Lancement par le moteur (generatePools, PoolsGenerated au journal, docs/adr/0017) :
-              // poules, vagues des rapières et phase relues dans l'état de l'épreuve
+              // poules, vagues du tour et phase relues dans l'état de l'épreuve
               const outcome = await launchPools(confirmedPools);
               if (outcome === 'refused') return;
               // Tirage lancé : la préparation gardée par le poste n'a plus lieu d'être
@@ -640,7 +611,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             isLaserSabre={isLaserSabre}
             onBackToCheckin={() => setCurrentPhase('checkin')}
             renderPoolCard={renderPoolCard}
-            isRapieres={isRapieres}
+            isTeamEntry={isTeamEntry}
             isWaves={isWaves}
             launchedWave={waves.launched}
             wavesEnded={waves.ended}
@@ -651,7 +622,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
               }
             }}
             onEndWaves={async () => {
-              if (!(await confirm(t('rapieres.confirm_end_waves')))) return;
+              if (!(await confirm(t('poolWaves.confirm_end_waves')))) return;
               const outcome = await poolWaves.endWaves(true);
               if (outcome === 'refused') return;
               if (outcome === 'local') {
@@ -697,7 +668,6 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             computeOverallRanking={computeOverallRanking}
             pools={pools}
             overallRanking={overallRanking}
-            fencers={fencers}
             weapon={competition.weapon}
             competitionTitle={competition.title}
             hasDirectElimination={hasDirectElimination}
@@ -733,11 +703,12 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onSplitOff={handleSplitOff}
             nextRoundAction={rankingNextRound}
             tableauActionInNav={rankingTableauAction != null}
-            isRapieres={isRapieres}
+            isTeamEntry={isTeamEntry}
             launchedWave={waves.launched}
-            rapieresTeams={rapieres.teams}
-            rapieresStats={rapieresStats}
-            rankingFilters={rankingFiltersOf(competition.settings?.formula)}
+            teamFencers={teamFencers}
+            teamStats={teamStats}
+            teamLevels={teamLevels}
+            rankingFilters={filterKeys}
           />
         )}
 
@@ -812,7 +783,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             poolRanking={stagedRanking.ranking}
             stageEliminatedAt={stagedRanking.eliminatedAt}
             finalResults={finalResults}
-            fencers={fencers}
+            fencers={teamFencers}
             pools={[...poolHistory.flat(), ...pools]}
             tableauMatches={resultsTableauMatches(tableauMatches, closedStage)}
             consolationBrackets={consolationBrackets}
@@ -822,18 +793,6 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             appelVisibleColumns={appelVisibleColumns.length > 0 ? appelVisibleColumns : undefined}
             splitBranches={competitionCore.splitHistory}
             onOpenCompetition={props.onOpenCompetition}
-          />
-        )}
-        {currentPhase === 'results' && isRapieres && (
-          <RapieresRankingPanel
-            competitionTitle={competition.title}
-            final={finalResults.length > 0}
-            wave={waves.launched}
-            ranked={mergeFinalRanking(finalResults, overallRanking)}
-            fencers={fencers}
-            teams={rapieres.teams}
-            stats={rapieresStats}
-            filterKeys={rankingFiltersOf(competition.settings?.formula)}
           />
         )}
         {currentPhase === 'remote' && (
@@ -911,23 +870,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         poolsRemoteInfo={poolsRemoteInfo}
       />
 
-      {rapieresTeams.rapieresImportModal && (
-        <RapieresImportModal {...rapieresTeams.rapieresImportModal} />
-      )}
-      {rapieresTeamModal && (
-        <RapieresTeamModal
-          initial={
-            rapieresTeamModal.fencer
-              ? {
-                  name: rapieresTeamModal.fencer.lastName,
-                  info: rapieres.teams[rapieresTeamModal.fencer.id] ?? emptyRapieresTeamInfo(),
-                }
-              : undefined
-          }
-          onSave={team => handleSaveRapieresTeam(team, rapieresTeamModal.fencer)}
-          onClose={() => setRapieresTeamModal(null)}
-        />
-      )}
+      {teamImport.teamImportModal && <TeamImportModal {...teamImport.teamImportModal} />}
 
       {modals.showAddFencerModal && (
         <AddFencerModal
@@ -983,13 +926,6 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             onClose={() => setImportData(null)}
           />
         </Suspense>
-      )}
-
-      {matchOrderPrompt && (
-        <RapieresMatchOrderDialog
-          onChoose={answerMatchOrder}
-          onClose={() => answerMatchOrder(null)}
-        />
       )}
 
       {poolCorrectionDialog}

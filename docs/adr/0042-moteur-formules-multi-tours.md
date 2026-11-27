@@ -1,6 +1,6 @@
 # ADR-0042 — Le moteur pilote les formules à plusieurs tours : tirage des tours suivants et tableau, ouverts au MCP
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (un seul tableau : refus après la clôture d'un tableau arrêté ; outil MCP `close_tableau_stage` ; validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (un seul tableau : refus après la clôture d'un tableau arrêté ; outil MCP `close_tableau_stage` ; validé par le mainteneur) ; amendée le 2026-11-27 (F4e : `assertSupported` ne refuse plus que les épreuves par équipes, rapières pilotées au MCP ; validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F3), #1880, #1948 ; amende [ADR-0037](0037-deroule-genere-par-la-formule.md) (Conséquences, MCP), s'appuie sur [ADR-0017](0017-projections-etat-epreuve.md) et [ADR-0036](0036-formule-v2-arbre-par-phase.md) (Q4 : répartition du tour)
 
@@ -34,7 +34,10 @@
   (`generateTableau` sans composition) sur le classement retenu (`tableauRanking`, coupe
   d'ADR-0040). »)_
 - L'affectation des arbitres (`assignPoolReferees`, `assignPoolReferee`) suit le tour courant.
-- `assertSupported` ne refuse plus que les épreuves par équipes et le mode spécial (rapières).
+- `assertSupported` ne refuse plus que les épreuves par équipes. _(Amendé le 2026-11-27, lot
+  F4e : remplace « `assertSupported` ne refuse plus que les épreuves par équipes et le mode
+  spécial (rapières). » ; le Tournoi des rapières est une formule en briques, ADR-0043 ; le MCP
+  pilote le tirage et les vagues.)_
   ADR-0037, Conséquences, est amendée en conséquence (phrase réécrite à sa place).
 - Aucun nouvel événement : `PoolsGenerated`, `TableauGenerated` et `PoolRoundClosed` portent
   déjà le tour et le placement complet (ADR-0017).
@@ -45,7 +48,9 @@
   par le contrat (formule à deux tours, tableau arrêté puis tour, scission), description des
   outils MCP et `docs/MCP.md` régénérés.
 - Le placement composé par l'écran reste admis (`composition`), tel quel.
-- Rapières et équipes restent refusées au MCP jusqu'à F4 (rapières) et leurs propres lots.
+- Les épreuves par équipes (relais) restent refusées au MCP jusqu'à leurs propres lots ; les
+  rapières sont pilotées depuis F4e. _(Amendé le 2026-11-27 : remplace « Rapières et équipes
+  restent refusées au MCP jusqu'à F4 (rapières) et leurs propres lots. »)_
 - Chaque PR en draft, sans auto-merge (ticket `refactor`).
 
 ## Alternatives écartées

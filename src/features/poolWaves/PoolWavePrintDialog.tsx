@@ -9,7 +9,7 @@ import { useFocusTrap } from '../../renderer/hooks/useFocusTrap';
 import { useTranslation } from '../../renderer/hooks/useTranslation';
 import { Button } from '../../renderer/components/common/Button';
 
-interface RapieresWavePrintDialogProps {
+interface PoolWavePrintDialogProps {
   total: number;
   /** Vague par défaut : la vague en cours (ou la première) */
   defaultFrom: number;
@@ -17,7 +17,7 @@ interface RapieresWavePrintDialogProps {
   onClose: () => void;
 }
 
-const RapieresWavePrintDialog: React.FC<RapieresWavePrintDialogProps> = ({
+const PoolWavePrintDialog: React.FC<PoolWavePrintDialogProps> = ({
   total,
   defaultFrom,
   onConfirm,
@@ -40,15 +40,15 @@ const RapieresWavePrintDialog: React.FC<RapieresWavePrintDialogProps> = ({
         aria-modal="true"
       >
         <div className="modal-header">
-          <h2 className="modal-title">{t('rapieres.print_wave_range_title')}</h2>
+          <h2 className="modal-title">{t('poolWaves.print_wave_range_title')}</h2>
         </div>
-        <div className="modal-body rapieres-wave-print-dialog-1">
+        <div className="modal-body pool-wave-print-dialog-1">
           <div className="form-group">
-            <label className="form-label" htmlFor="rapieres-print-from">
-              {t('rapieres.print_wave_from')}
+            <label className="form-label" htmlFor="pool-wave-print-from">
+              {t('poolWaves.print_wave_from')}
             </label>
             <select
-              id="rapieres-print-from"
+              id="pool-wave-print-from"
               className="form-input"
               value={from}
               onChange={e => {
@@ -59,17 +59,17 @@ const RapieresWavePrintDialog: React.FC<RapieresWavePrintDialogProps> = ({
             >
               {waves.map(w => (
                 <option key={w} value={w}>
-                  {t('rapieres.wave_n', { n: String(w) })}
+                  {t('poolWaves.wave_n', { n: String(w) })}
                 </option>
               ))}
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label" htmlFor="rapieres-print-to">
-              {t('rapieres.print_wave_to')}
+            <label className="form-label" htmlFor="pool-wave-print-to">
+              {t('poolWaves.print_wave_to')}
             </label>
             <select
-              id="rapieres-print-to"
+              id="pool-wave-print-to"
               className="form-input"
               value={to}
               onChange={e => setTo(Number(e.target.value))}
@@ -78,7 +78,7 @@ const RapieresWavePrintDialog: React.FC<RapieresWavePrintDialogProps> = ({
                 .filter(w => w >= from)
                 .map(w => (
                   <option key={w} value={w}>
-                    {t('rapieres.wave_n', { n: String(w) })}
+                    {t('poolWaves.wave_n', { n: String(w) })}
                   </option>
                 ))}
             </select>
@@ -86,7 +86,7 @@ const RapieresWavePrintDialog: React.FC<RapieresWavePrintDialogProps> = ({
         </div>
         <div className="modal-footer">
           <Button type="button" onClick={onClose}>
-            {t('rapieres.cancel')}
+            {t('actions.cancel')}
           </Button>
           <Button
             type="button"
@@ -94,7 +94,7 @@ const RapieresWavePrintDialog: React.FC<RapieresWavePrintDialogProps> = ({
             disabled={!valid}
             onClick={() => onConfirm(from, to)}
           >
-            {t('rapieres.print')}
+            {t('teamEntry.print')}
           </Button>
         </div>
       </div>
@@ -102,4 +102,4 @@ const RapieresWavePrintDialog: React.FC<RapieresWavePrintDialogProps> = ({
   );
 };
 
-export default RapieresWavePrintDialog;
+export default PoolWavePrintDialog;

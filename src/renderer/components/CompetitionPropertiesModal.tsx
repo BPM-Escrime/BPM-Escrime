@@ -27,10 +27,8 @@ import { usePlatform } from '../platform/PlatformContext';
 import { useDirectoryRefusal } from '../hooks/useDirectoryRefusal';
 import { GREG_DEFAULT_LEVEL, GREG_LEVELS, GregLevel } from '../../shared/utils/gregPublication';
 import { createDefaultCustomFormula } from '../../shared/utils/tournamentTemplates';
-import {
-  deriveSettingsFromFormula,
-  isRapieresMode,
-} from '../../shared/utils/customFormulaSettings';
+import { deriveSettingsFromFormula } from '../../shared/utils/customFormulaSettings';
+import { isLegacyRapieres } from '../../shared/domain/formula/rapieresFormula';
 import { FormulaBuilder } from './formula/FormulaBuilder';
 import { Button } from './common/Button';
 import { PropertiesFormulaTab } from './formula/PropertiesFormulaTab';
@@ -180,6 +178,8 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
   };
 
   const isCustomWeapon = weapon === Weapon.CUSTOM;
+  // Épreuve enregistrée en mode spécial rapières : lue comme sa formule, l'avancement n'y est pas réglé
+  const legacySpecial = isLegacyRapieres(competition.weapon, competition.settings);
   const coherenceIssues = isCustomWeapon ? [] : draftCoherenceIssues(formula, weapon, category);
   const contextChanged = category !== competition.category || weapon !== competition.weapon;
 
@@ -374,10 +374,8 @@ const CompetitionPropertiesModal: React.FC<CompetitionPropertiesModalProps> = ({
             formula={customFormula}
             fencerCount={32}
             onChange={setCustomFormula}
-            advancementDisabled={isRapieresMode(competition.weapon, competition.settings)}
-            defaultRuleSet={
-              isRapieresMode(competition.weapon, competition.settings) ? 'modern' : 'laser'
-            }
+            advancementDisabled={legacySpecial}
+            defaultRuleSet={legacySpecial ? 'modern' : 'laser'}
           />
         )}
         {!isCustomWeapon && (

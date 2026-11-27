@@ -20,7 +20,7 @@ import { useTranslation } from './useTranslation';
 interface UsePoolWavesViewParams {
   competitionId: string;
   competitionTitle: string;
-  /** Le tour courant est en vagues (ordre « waves » / « waves_classic », ou mode rapières) */
+  /** Le tour courant est en vagues (ordre « waves » / « waves_classic » de la formule) */
   isWaves: boolean;
   isRemoteActive: boolean;
   pools: Pool[];
@@ -70,7 +70,7 @@ export function usePoolWavesView({
       const sheets = [];
       for (let wave = from; wave <= to; wave++) sheets.push(...waveSheetMatches(pools, wave));
       if (sheets.length === 0) {
-        notify(t('rapieres.print_wave_sheets_empty'), 'error');
+        notify(t('poolWaves.print_wave_sheets_empty'), 'error');
         return;
       }
       const label = from === to ? `Vague ${from}` : `Vagues ${from} à ${to}`;

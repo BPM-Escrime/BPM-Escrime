@@ -46,7 +46,7 @@ const props = (over: Record<string, unknown> = {}) =>
     isLaserSabre: false,
     onBackToCheckin: vi.fn(),
     renderPoolCard: () => <div data-testid="pool-card" />,
-    isRapieres: false,
+    isTeamEntry: false,
     isWaves: true,
     launchedWave: 0,
     wavesEnded: false,
@@ -70,29 +70,29 @@ describe('barre des vagues d’un tour en vagues (docs/adr/0043)', () => {
   it('tour en vagues hors mode rapières : barre affichée, vague lancée au clic', () => {
     const onLaunchWave = vi.fn();
     render(<PoolsPhase {...props({ onLaunchWave })} />);
-    expect(screen.getByRole('region', { name: 'rapieres.waves' })).toBeInTheDocument();
-    fireEvent.click(screen.getByText('rapieres.launch_wave:1'));
+    expect(screen.getByRole('region', { name: 'poolWaves.waves' })).toBeInTheDocument();
+    fireEvent.click(screen.getByText('poolWaves.launch_wave:1'));
     expect(onLaunchWave).toHaveBeenCalledWith(1);
   });
 
   it('vague lancée : suivante bloquée tant que la vague n’est pas saisie ; arrêt proposé', () => {
     const onEndWaves = vi.fn();
     render(<PoolsPhase {...props({ launchedWave: 1, onEndWaves })} />);
-    expect(screen.getByText('rapieres.launch_wave:2')).toBeDisabled();
-    fireEvent.click(screen.getByText('rapieres.end_waves'));
+    expect(screen.getByText('poolWaves.launch_wave:2')).toBeDisabled();
+    fireEvent.click(screen.getByText('poolWaves.end_waves'));
     expect(onEndWaves).toHaveBeenCalled();
   });
 
   it('vagues arrêtées : reprise proposée', () => {
     const onResumeWaves = vi.fn();
     render(<PoolsPhase {...props({ launchedWave: 1, wavesEnded: true, onResumeWaves })} />);
-    expect(screen.getByText('rapieres.waves_ended')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('rapieres.resume_waves'));
+    expect(screen.getByText('poolWaves.waves_ended')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('poolWaves.resume_waves'));
     expect(onResumeWaves).toHaveBeenCalled();
   });
 
   it('tour ordinaire : pas de barre des vagues', () => {
     render(<PoolsPhase {...props({ isWaves: false })} />);
-    expect(screen.queryByRole('region', { name: 'rapieres.waves' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'poolWaves.waves' })).toBeNull();
   });
 });

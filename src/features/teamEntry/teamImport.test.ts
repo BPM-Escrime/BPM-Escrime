@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildRapieresImportTemplate,
+  buildTeamImportTemplate,
   parseBirthDate,
   parseDelimited,
-  parseRapieresGender,
-  parseRapieresTeams,
-  rapieresCategoryFromBirthDate,
-  RAPIERES_IMPORT_HEADER,
-} from './rapieresImport';
+  parseImportGender,
+  parseTeamImport,
+  categoryFromBirthDate,
+  TEAM_IMPORT_HEADER,
+} from './teamImport';
 
 const HEADER =
   'Référence commande;Date de la commande;Statut de la commande;Nom participant;Prénom participant;' +
@@ -21,7 +21,7 @@ const row = (cells: Record<number, string>) =>
 
 const REF = new Date(2025, 9, 26); // saison 2025-2026
 
-describe('rapieresImport (#1211)', () => {
+describe('teamImport (#1211)', () => {
   it('parseDelimited gère BOM, guillemets et CRLF', () => {
     expect(parseDelimited('\uFEFFa;"b;c";"d""e"\r\nf;g;h')).toEqual([
       ['a', 'b;c', 'd"e'],
@@ -38,7 +38,7 @@ describe('rapieresImport (#1211)', () => {
   });
 
   it('catégorie selon l’âge atteint dans l’année de début de saison', () => {
-    const cat = (y: number) => rapieresCategoryFromBirthDate(new Date(y, 5, 1), REF);
+    const cat = (y: number) => categoryFromBirthDate(new Date(y, 5, 1), REF);
     expect(cat(2006)).toBe('M20');
     expect(cat(2005)).toBe('SENIOR');
     expect(cat(1986)).toBe('SENIOR');
@@ -46,31 +46,28 @@ describe('rapieresImport (#1211)', () => {
     expect(cat(1975)).toBe('V2');
     expect(cat(1965)).toBe('V3');
     expect(cat(1955)).toBe('V4');
-    expect(rapieresCategoryFromBirthDate(null, REF)).toBe('SENIOR');
+    expect(categoryFromBirthDate(null, REF)).toBe('SENIOR');
     // Janvier 2026 : toujours la saison 2025-2026
-    expect(rapieresCategoryFromBirthDate(new Date(2006, 0, 1), new Date(2026, 0, 10))).toBe('M20');
+    expect(categoryFromBirthDate(new Date(2006, 0, 1), new Date(2026, 0, 10))).toBe('M20');
   });
 
-  it('parseRapieresGender reconnaît homme/femme et variantes', () => {
-    expect(parseRapieresGender('Femme')).toBe('F');
-    expect(parseRapieresGender('féminin')).toBe('F');
-    expect(parseRapieresGender('F')).toBe('F');
-    expect(parseRapieresGender('Homme')).toBe('M');
-    expect(parseRapieresGender('H')).toBe('M');
-    expect(parseRapieresGender('masculin')).toBe('M');
-    expect(parseRapieresGender('')).toBeUndefined();
-    expect(parseRapieresGender('?')).toBeUndefined();
+  it('parseImportGender reconnaît homme/femme et variantes', () => {
+    expect(parseImportGender('Femme')).toBe('F');
+    expect(parseImportGender('féminin')).toBe('F');
+    expect(parseImportGender('F')).toBe('F');
+    expect(parseImportGender('Homme')).toBe('M');
+    expect(parseImportGender('H')).toBe('M');
+    expect(parseImportGender('masculin')).toBe('M');
+    expect(parseImportGender('')).toBeUndefined();
+    expect(parseImportGender('?')).toBeUndefined();
   });
 
-  it('parseRapieresTeams lit le sexe en R et W', () => {
+  it('parseTeamImport lit le sexe en R et W', () => {
     const csv = row({ 3: 'A', 4: 'a', 17: 'Femme', 19: 'B', 20: 'b', 22: 'Homme', 24: 'T' });
-    expect(parseRapieresTeams(csv, REF).teams[0].info.fencers.map(f => f.gender)).toEqual([
-      'F',
-      'M',
-    ]);
+    expect(parseTeamImport(csv, REF).teams[0].info.fencers.map(f => f.gender)).toEqual(['F', 'M']);
   });
 
-  it('parseRapieresTeams lit D/E/Q, T/U/V et Y, ignore l’en-tête et les lignes incomplètes', () => {
+  it('parseTeamImport lit D/E/Q, T/U/V et Y, ignore l’en-tête et les lignes incomplètes', () => {
     const csv = [
       HEADER,
       row({
@@ -94,7 +91,7 @@ describe('rapieresImport (#1211)', () => {
       }),
       '',
     ].join('\r\n');
-    const { teams, skipped } = parseRapieresTeams(csv.replace('Brie; Seine', '"Brie; Seine"'), REF);
+    const { teams, skipped } = parseTeamImport(csv.replace('Brie; Seine', '"Brie; Seine"'), REF);
     expect(skipped).toEqual([3]);
     expect(teams).toEqual([
       {
@@ -121,7 +118,7 @@ describe('rapieresImport (#1211)', () => {
   });
 });
 
-describe('rapieresImport : club de l’équipe (#1441)', () => {
+describe('teamImport : club de l’équipe (#1441)', () => {
   it('club des deux tireurs (colonnes S et X) : distincts joints par « / », identiques une seule fois', () => {
     const csv = [
       HEADER,
@@ -129,22 +126,22 @@ describe('rapieresImport : club de l’équipe (#1441)', () => {
       row({ 3: 'C', 4: 'c', 18: 'Lame', 19: 'D', 20: 'd', 23: 'Lame', 24: 'Same' }),
       row({ 3: 'E', 4: 'e', 19: 'F', 20: 'f', 24: 'Sans' }),
     ].join('\r\n');
-    const { teams } = parseRapieresTeams(csv, REF);
+    const { teams } = parseTeamImport(csv, REF);
     expect(teams.map(t => t.info.club)).toEqual(['Escrime Nord / Escrime Sud', 'Lame', undefined]);
   });
 });
 
-describe("buildRapieresImportTemplate (modèle d'import des équipes)", () => {
+describe("buildTeamImportTemplate (modèle d'import des équipes)", () => {
   it("commence par un BOM et reprend les 25 colonnes de l'export d'inscriptions", () => {
-    const template = buildRapieresImportTemplate();
+    const template = buildTeamImportTemplate();
     expect(template.charCodeAt(0)).toBe(0xfeff);
     const [header] = parseDelimited(template);
     expect(header).toHaveLength(25);
-    expect(header).toEqual([...RAPIERES_IMPORT_HEADER]);
+    expect(header).toEqual([...TEAM_IMPORT_HEADER]);
   });
 
   it("est relu par l'import : une équipe d'exemple, colonnes correctement placées", () => {
-    const { teams, skipped } = parseRapieresTeams(buildRapieresImportTemplate(), REF);
+    const { teams, skipped } = parseTeamImport(buildTeamImportTemplate(), REF);
     expect(skipped).toEqual([]);
     expect(teams).toHaveLength(1);
     expect(teams[0].name).toBe('EXEMPLE Les Lames Rouges');
@@ -163,7 +160,7 @@ describe("buildRapieresImportTemplate (modèle d'import des équipes)", () => {
   });
 
   it("un modèle sans ligne d'exemple ne produit aucune équipe", () => {
-    const headerOnly = buildRapieresImportTemplate().split('\r\n')[0];
-    expect(parseRapieresTeams(headerOnly, REF).teams).toEqual([]);
+    const headerOnly = buildTeamImportTemplate().split('\r\n')[0];
+    expect(parseTeamImport(headerOnly, REF).teams).toEqual([]);
   });
 });

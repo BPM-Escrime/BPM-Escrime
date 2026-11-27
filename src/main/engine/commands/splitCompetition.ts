@@ -141,8 +141,6 @@ function entryRanking(
     const overall = computeOverallRankingAllRoundsFor(pools, history, isLaser(comp));
     const q = prev.qualification;
     ranking = computeEffectiveTableauRanking(overall, pools, {
-      isRapieres: false,
-      rapieresTableauMode: undefined,
       poolWinnersOnly: q.mode === 'pool_winner',
       customFormula: undefined,
       tableauQualification: q.mode === 'pool_winner' || q.mode === 'all' ? undefined : q,
@@ -229,9 +227,6 @@ export function splitCompetition(
 ) {
   const source = getCompetitionOrThrow(ctx, input.competitionId);
   assertScoreSupported(source);
-  if (source.settings?.specialMode) {
-    throw new CommandError('unsupported_format', 'Mode spécial (rapières) : pas de scission');
-  }
   const { formula, split } = storedSplit(source);
   const session = readSession(ctx, source.id);
   const done = source.settings?.splitOffCompetitionIds ?? {};

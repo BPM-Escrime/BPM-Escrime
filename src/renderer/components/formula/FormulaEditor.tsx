@@ -11,10 +11,8 @@
 import React, { useState } from 'react';
 import { Plus, TriangleAlert, X } from 'lucide-react';
 import {
-  AdvancementMode,
   AdvancementRule,
   Category,
-  CompetitionSpecialMode,
   CustomScoringConfig,
   PoolBoutOrder,
   Weapon,
@@ -69,11 +67,6 @@ export interface FormulaEditorProps {
   category: Category;
   formula: FormulaV2;
   onChange: (formula: FormulaV2) => void;
-  /** Mode spécial de l'arme « Autre » (création seulement, #1118) */
-  specialMode?: CompetitionSpecialMode;
-  onSpecialModeChange?: (mode: CompetitionSpecialMode | undefined) => void;
-  /** Épreuve des rapières existante : qualification sans effet, grisée */
-  rapieres?: boolean;
   /** Effectif de départ de la simulation (modifiable dans le panneau) */
   fencerCount?: number;
   /** Épreuve par équipes (bornes des réglages) */
@@ -88,10 +81,6 @@ export interface FormulaEditorProps {
   remarks?: FormulaRemark[];
 }
 
-const SPECIAL_MODES: CompetitionSpecialMode[] = ['rapieres'];
-/** Qualification vers le tableau du mode spécial rapières : tous, ou demi-finales (docs/adr/0043) */
-const RAPIERES_QUALIFICATIONS: readonly AdvancementMode[] = ['all', 'pool_heads'];
-
 const newPhaseId = () => `phase_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
 const int = (v: string, fallback: number) => {
@@ -104,9 +93,6 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   category,
   formula,
   onChange,
-  specialMode,
-  onSpecialModeChange,
-  rapieres,
   fencerCount = 32,
   isTeamEvent,
   knownFencerCount,
@@ -120,10 +106,8 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const { expert: preferred, setExpert } = useFormulaExpert();
   // Formule ouverte avec de l'expert : rallumé pour toute l'édition, même si la brique est
   // retirée ensuite ; une brique experte ajoutée garde aussi le mode
-  // Mode spécial rapières : formule experte (docs/adr/0043, F4b)
-  const special = !!rapieres || !!specialMode;
-  const [openedExpert] = useState(() => formulaNeedsExpert(formula, special));
-  const forced = openedExpert || formulaNeedsExpert(formula, special);
+  const [openedExpert] = useState(() => formulaNeedsExpert(formula));
+  const forced = openedExpert || formulaNeedsExpert(formula);
   const expert = preferred || forced;
   const isOther = weapon === Weapon.CUSTOM;
   const phases = friezeOfV2(formula);
@@ -231,7 +215,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
   const plus = (at: number) => {
     const options = bricksForLevel(insertOptionsV2(formula, weapon, at), expert);
-    if (options.length === 0 || specialMode) return null;
+    if (options.length === 0) return null;
     return (
       <span key={`plus-${at}`} className="formula-editor__plus">
         <button
@@ -296,7 +280,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
           </span>
           <span className="formula-frieze__summary">{summary(p)}</span>
         </button>
-        {canRemoveV2(formula, p) && !specialMode && (
+        {canRemoveV2(formula, p) && (
           <button
             type="button"
             className="formula-editor__remove"
@@ -401,7 +385,6 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 headsAvailable={
                   expert && formula.phases[formula.phases.indexOf(pool) + 1]?.kind === 'tableau'
                 }
-                only={special ? RAPIERES_QUALIFICATIONS : undefined}
               />
             </div>
           )}
@@ -601,15 +584,15 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   }
 
   function renderGeneral() {
-    const ruleSet = formula.general.ruleSet ?? (rapieres || specialMode ? 'modern' : 'laser');
+    const ruleSet = formula.general.ruleSet ?? 'laser';
     const showRest = isOlympicWeapon(weapon) || (isOther && ruleSet === 'modern');
     // Compétition couplée = scission par sexe : brique expert
     const showCoupled =
       expert && !isOther && pools.length > 0 && ((ownTableau && !split) || coupled);
     // Entrée en équipes (binômes) : réglage expert, toutes armes (docs/adr/0043)
-    const showEntry = expert && !specialMode;
+    const showEntry = expert;
     // Filtres du classement final : réglage expert, toutes armes (docs/adr/0043, F4d)
-    const showRankingFilters = expert && !specialMode;
+    const showRankingFilters = expert;
     if (!isOther && !showRest && !showCoupled && !showEntry && !showRankingFilters) return null;
     return (
       <details className="properties-expert formula-editor__general">
@@ -642,28 +625,6 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             }}
           />
         )}
-        {isOther && onSpecialModeChange && (
-          <div className="form-group">
-            <label className="form-label" htmlFor="formula-special-mode">
-              {t('rapieres.special_modes')}
-            </label>
-            <select
-              id="formula-special-mode"
-              className="form-input form-select"
-              value={specialMode ?? ''}
-              onChange={e =>
-                onSpecialModeChange((e.target.value || undefined) as CompetitionSpecialMode)
-              }
-            >
-              <option value="">{t('rapieres.mode_none')}</option>
-              {SPECIAL_MODES.map(mode => (
-                <option key={mode} value={mode}>
-                  {t(`rapieres.mode_${mode}`)}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
         {isOther && (
           <div className="form-group">
             <label className="form-label" htmlFor="formula-editor-rule-set">
@@ -678,6 +639,27 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
               <option value="laser">{t('formula.rule_set_laser')}</option>
               <option value="modern">{t('formula.rule_set_modern')}</option>
             </select>
+          </div>
+        )}
+        {isOther && (
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                data-testid="formula-editor-tie-break"
+                checked={!!formula.general.tieBreakByVictory}
+                onChange={e => {
+                  // Décoché : réglage retiré (défaut), comme le serveur
+                  const { tieBreakByVictory: _tie, ...general } = formula.general;
+                  onChange({
+                    ...formula,
+                    general: e.target.checked ? { ...general, tieBreakByVictory: true } : general,
+                  });
+                }}
+              />{' '}
+              {t('formula.tie_break_by_victory')}
+            </label>
+            <small className="u-hint">{t('formula.tie_break_by_victory_hint')}</small>
           </div>
         )}
         {showRest &&
@@ -798,23 +780,21 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
   return (
     <div className="formula-editor" data-testid="formula-editor">
-      {!specialMode && (
-        <div className="formula-editor__expert">
-          <label className="u-row cursor-pointer">
-            <input
-              type="checkbox"
-              data-testid="formula-expert-toggle"
-              checked={expert}
-              disabled={forced}
-              onChange={e => setExpert(e.target.checked)}
-            />
-            <span>{t('formulaEditor.expert_mode')}</span>
-          </label>
-          <small className="u-hint">
-            {forced ? t('formulaEditor.expert_forced') : t('formulaEditor.expert_hint')}
-          </small>
-        </div>
-      )}
+      <div className="formula-editor__expert">
+        <label className="u-row cursor-pointer">
+          <input
+            type="checkbox"
+            data-testid="formula-expert-toggle"
+            checked={expert}
+            disabled={forced}
+            onChange={e => setExpert(e.target.checked)}
+          />
+          <span>{t('formulaEditor.expert_mode')}</span>
+        </label>
+        <small className="u-hint">
+          {forced ? t('formulaEditor.expert_forced') : t('formulaEditor.expert_hint')}
+        </small>
+      </div>
       {renderRemarks(headRemarks, 'formula-remarks')}
       <nav className="formula-frieze" aria-label={t('properties.frieze_label')}>
         {frieze}
@@ -822,64 +802,53 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
       <div className="formula-builder-content">
         <div className="formula-editor__settings">
-          {isOther && specialMode ? (
-            <div className="card formula-builder-3">
-              <strong>{t(`rapieres.mode_${specialMode}`)}</strong>
-              <p className="formula-builder-4">{t('rapieres.mode_description')}</p>
-            </div>
-          ) : (
-            <>
-              {current &&
-                current.kind !== 'split' &&
-                renderRemarks(remarksOf(current.key), 'phase-remarks')}
-              {current?.kind === 'pool' && renderPool(current)}
-              {current?.kind === 'tableau' && renderTableau(current)}
-              {current?.kind === 'quest' && renderQuest(current)}
-              {current?.kind === 'split' && split && (
-                <SplitPhaseEditor
-                  split={split}
-                  weapon={weapon}
-                  category={category}
-                  newId={newPhaseId}
-                  remarks={remarksOf('split')}
-                  onChange={next =>
-                    onChange({
-                      ...formula,
-                      phases: formula.phases.map(x => (x === split ? next : x)),
-                    })
-                  }
-                />
-              )}
-              {current?.kind === 'split' && keptTableau && (
-                <div data-testid="split-kept-tableau">{renderTableau(current)}</div>
-              )}
-            </>
+          {current &&
+            current.kind !== 'split' &&
+            renderRemarks(remarksOf(current.key), 'phase-remarks')}
+          {current?.kind === 'pool' && renderPool(current)}
+          {current?.kind === 'tableau' && renderTableau(current)}
+          {current?.kind === 'quest' && renderQuest(current)}
+          {current?.kind === 'split' && split && (
+            <SplitPhaseEditor
+              split={split}
+              weapon={weapon}
+              category={category}
+              newId={newPhaseId}
+              remarks={remarksOf('split')}
+              onChange={next =>
+                onChange({
+                  ...formula,
+                  phases: formula.phases.map(x => (x === split ? next : x)),
+                })
+              }
+            />
+          )}
+          {current?.kind === 'split' && keptTableau && (
+            <div data-testid="split-kept-tableau">{renderTableau(current)}</div>
           )}
           {renderGeneral()}
           {renderCoherence()}
         </div>
-        {!specialMode && (
-          <aside className="formula-simulation-panel" data-testid="formula-simulation">
-            <label className="form-label formula-editor__sim-count">
-              {t('formulaEditor.sim_fencers')}
-              <input
-                type="number"
-                className="form-input"
-                min={2}
-                max={512}
-                value={simCount}
-                onChange={e =>
-                  setSimCount(Math.min(512, Math.max(2, parseInt(e.target.value, 10) || 2)))
-                }
-              />
-            </label>
-            <FormulaSimulationPreview
-              simulation={simulation}
-              fencerCount={simCount}
-              split={simulatedSplit}
+        <aside className="formula-simulation-panel" data-testid="formula-simulation">
+          <label className="form-label formula-editor__sim-count">
+            {t('formulaEditor.sim_fencers')}
+            <input
+              type="number"
+              className="form-input"
+              min={2}
+              max={512}
+              value={simCount}
+              onChange={e =>
+                setSimCount(Math.min(512, Math.max(2, parseInt(e.target.value, 10) || 2)))
+              }
             />
-          </aside>
-        )}
+          </label>
+          <FormulaSimulationPreview
+            simulation={simulation}
+            fencerCount={simCount}
+            split={simulatedSplit}
+          />
+        </aside>
       </div>
     </div>
   );

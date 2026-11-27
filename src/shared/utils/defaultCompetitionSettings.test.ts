@@ -60,10 +60,10 @@ describe('buildDefaultCompetitionSettings', () => {
       weapon: Weapon.CUSTOM,
       category: Category.SENIOR,
       customFormula,
-      specialMode: 'rapieres',
     });
     expect(s?.customFormula).toBe(customFormula);
-    expect(s?.specialMode).toBe('rapieres');
+    // Le mode spécial n'est plus écrit (docs/adr/0043, F4e)
+    expect(s?.specialMode).toBeUndefined();
     expect(s).toMatchObject(deriveSettingsFromFormula(customFormula));
   });
 });

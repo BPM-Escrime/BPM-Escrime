@@ -239,7 +239,7 @@ export function FencerListTable({ ctx }: { ctx: FencerListCtx }) {
                           return (
                             <td key="level" className="text-sm text-muted">
                               {levelLabel(fencer.level, ctx.teamLevels ?? [], c =>
-                                t(`rapieres.level_${c}`)
+                                t(`teamEntry.level_${c}`)
                               ) || '-'}
                             </td>
                           );

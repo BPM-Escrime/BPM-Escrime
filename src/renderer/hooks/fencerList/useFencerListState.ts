@@ -456,7 +456,7 @@ export function useFencerListState(ctx: Ctx) {
       undefined,
       undefined,
       undefined,
-      teamLevels?.map(l => (DEFAULT_TEAM_LEVELS.includes(l) ? t(`rapieres.level_${l}`) : l))
+      teamLevels?.map(l => (DEFAULT_TEAM_LEVELS.includes(l) ? t(`teamEntry.level_${l}`) : l))
     );
   };
 

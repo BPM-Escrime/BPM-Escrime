@@ -160,8 +160,13 @@ d('formule d’une épreuve (docs/adr/0033)', () => {
       templateId: 'bpm/C/rapieres',
     });
     const comp = db.getCompetition(r.competitionId)!;
-    expect(comp.settings?.specialMode).toBe('rapieres');
+    // Formule en briques, plus de mode spécial (docs/adr/0043, F4e)
+    expect(comp.settings?.specialMode).toBeUndefined();
     expect(comp.settings?.formulaOrigin).toEqual({ templateId: 'bpm/C/rapieres' });
+    expect(comp.settings?.formula?.phases[0]).toMatchObject({
+      boutOrder: 'waves',
+      distribution: 'byLevel',
+    });
     expect(comp.settings?.customFormula?.phases.map(p => p.type)).toEqual([
       'pool_round',
       'direct_elimination',

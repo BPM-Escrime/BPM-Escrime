@@ -28,8 +28,7 @@ export function useScreenTableauRanking({
 }): PoolRanking[] {
   const choice = useTableauTies(competitionId);
   const {
-    isRapieres,
-    rapieresTableauMode,
+    legacyRapieres,
     poolWinnersOnly,
     customFormula,
     tableauQualification,
@@ -37,14 +36,16 @@ export function useScreenTableauRanking({
     activeSplitGroup,
     splitOffCompetitionIds,
   } = options;
+  // Épreuve enregistrée en mode spécial : mode de tableau hérité (docs/adr/0043, F4e)
+  const isLegacy = !!legacyRapieres;
+  const legacyMode = legacyRapieres?.mode;
   return useMemo(
     () =>
       tableauRankingOfScreen(
         overallRanking,
         pools,
         {
-          isRapieres,
-          rapieresTableauMode,
+          legacyRapieres: isLegacy ? { mode: legacyMode } : undefined,
           poolWinnersOnly,
           customFormula,
           tableauQualification,
@@ -62,8 +63,8 @@ export function useScreenTableauRanking({
       pools,
       tableauMatches,
       choice,
-      isRapieres,
-      rapieresTableauMode,
+      isLegacy,
+      legacyMode,
       poolWinnersOnly,
       customFormula,
       tableauQualification,

@@ -71,7 +71,7 @@ interface Props {
   canMoveDown?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
-  /** Réglage « Avancement vers la phase suivante » grisé (mode rapières : non pris en compte) (#1118) */
+  /** Réglage « Avancement vers la phase suivante » grisé (épreuve enregistrée en mode spécial rapières : non pris en compte) (#1118) */
   advancementDisabled?: boolean;
   /**
    * Carte affichée sous la frise de la nouvelle interface (docs/adr/0032) : ni déplacement,

@@ -15,7 +15,7 @@ import type {
 import type { SplitHistoryEntry } from '../../shared/domain/formula/splitPlan';
 import type { TableauStageRecord } from '../../shared/domain/tableau/tableauStage';
 import { inferPoolsLaunched } from '../components/poolLaunchState';
-import type { useRapieresSessionState } from '../../features/rapieres/useRapieresSessionState';
+import type { useWavesSessionState } from '../../features/poolWaves/useWavesSessionState';
 import { useCompetitionSession, phaseFromNumber, phaseNumber } from './useCompetitionSession';
 import { readPoolDraft, readPosteUiState, tabToRestore, writePosteUiState } from './posteUiState';
 import type { Phase, SessionState } from './useCompetitionSession';
@@ -48,8 +48,8 @@ interface UseCompetitionRestoreParams {
   setRemoteArenaCount: Setter<number>;
   /** Piste de départ du plan des pistes, lue par le contrat (docs/adr/0015) */
   remoteStripStart: number;
-  setRapieresState: ReturnType<typeof useRapieresSessionState>['setRapieresState'];
-  setWavesState: ReturnType<typeof useRapieresSessionState>['setWavesState'];
+  setRapieresState: ReturnType<typeof useWavesSessionState>['setRapieresState'];
+  setWavesState: ReturnType<typeof useWavesSessionState>['setWavesState'];
   minFencersPerPool: number;
   maxFencersPerPool: number;
   setMinFencersPerPool: Setter<number>;

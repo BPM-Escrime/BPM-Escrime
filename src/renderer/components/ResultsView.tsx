@@ -31,7 +31,11 @@ import {
   loadExportTableauSignatures,
 } from './results/resultsExportData';
 import type { SplitHistoryEntry } from '../../shared/domain/formula/splitPlan';
-import { entryOf, rankingFiltersOf } from '../../shared/domain/formula/formulaV2';
+import {
+  entryOf,
+  rankingFiltersOf,
+  readableFormulaOf,
+} from '../../shared/domain/formula/formulaV2';
 import { DEFAULT_TEAM_LEVELS } from '../../shared/domain/fencers/teamEntry';
 import { finalRanking } from '../../shared/domain/ranking/finalRanking';
 import {
@@ -383,12 +387,12 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   });
 
   // Classement filtré (réglage `rankingFilters` de la formule) : affichage, CSV, PDF, impression
-  const filterKeys = rankingFiltersOf(competition.settings?.formula);
+  const filterKeys = rankingFiltersOf(readableFormulaOf(competition.settings));
   const subjectOf = (r: { fencer: Fencer }) =>
     subjectOfFencer(fencerById.get(r.fencer.id) ?? r.fencer);
   const filter = restrictRankingFilter(filterValues, filterKeys);
   const resultsToDisplay = filterRanking(fullResults, subjectOf, filter);
-  const entry = entryOf(competition.settings?.formula);
+  const entry = entryOf(readableFormulaOf(competition.settings));
   const levels = entry.kind === 'team' ? entry.levels : DEFAULT_TEAM_LEVELS;
   const filterOptions = rankingFilterOptions(fullResults.map(subjectOf), levels, t);
   // Sous-titre des PDF : critères retenus, ex. « Résultats — Épreuve — Féminin · HANDI »

@@ -7,10 +7,11 @@
  * - two_rounds : 2 tours de poules (tous qualifiés) puis le tableau ;
  * - pools_only : poules seules, classement aux poules ;
  * - other : formule par défaut de l'arme « Autre » ;
- * - rapieres : Tournoi des rapières (#2013 D8, temps 1), arme « Autre » et mode spécial.
+ * - rapieres : Tournoi des rapières (#2013 D8), arme « Autre », formule en briques (ADR-0043).
  * Licensed under GPL-3.0
  */
 
+import { rapieresFormula } from '../rapieresFormula';
 import { Category, CompetitionSettings, Weapon } from '../../../types';
 import { buildDefaultCompetitionSettings } from '../../../utils/defaultCompetitionSettings';
 import { createDefaultCustomFormula } from '../../../utils/tournamentTemplates';
@@ -101,12 +102,9 @@ function otherTemplates(): FormulaTemplate[] {
       code: 'rapieres',
       name: 'Tournoi des rapières',
       applies: { weapons: [Weapon.CUSTOM] },
-      body: {
-        kind: 'custom',
-        // Même formule que la création actuelle en mode spécial (règles modernes par défaut)
-        formula: stable,
-        specialMode: 'rapieres',
-      },
+      // Formule v2 en briques (docs/adr/0043, F4e) : un tour en vagues par niveau, binômes, tableau,
+      // filtres du classement, départage par la victoire
+      body: { kind: 'formula', formula: rapieresFormula(), other: true },
     },
   ];
 }

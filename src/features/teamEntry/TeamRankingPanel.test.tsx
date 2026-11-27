@@ -1,16 +1,15 @@
 // @vitest-environment jsdom
 /**
- * Classement des rapières : filtres génériques du domaine (docs/adr/0043, F4d). Sans réglage de la
- * formule, les filtres actuels des rapières (catégorie, sexe, niveau, HANDI) ; sinon ceux de la
- * formule.
+ * Classement des équipes : filtres génériques du domaine (docs/adr/0043, F4d, F4e) sur les champs
+ * du tireur-équipe ; seuls les critères de la formule sont proposés.
  */
 import '@testing-library/jest-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { Fencer, FencerStatus, Gender } from '../../shared/types';
-import type { RapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
-import RapieresRankingPanel from './RapieresRankingPanel';
+import { Category, Fencer, FencerStatus, Gender } from '../../shared/types';
+import type { RankingFilterKey } from '../../shared/domain/ranking/rankingFilters';
+import TeamRankingPanel from './TeamRankingPanel';
 
 const { pdf } = vi.hoisted(() => ({ pdf: vi.fn(async (..._args: unknown[]) => undefined) }));
 vi.mock('../../renderer/hooks/useTranslation', () => ({
@@ -19,41 +18,31 @@ vi.mock('../../renderer/hooks/useTranslation', () => ({
   }),
 }));
 vi.mock('../../renderer/components/Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('./rapieresPdf', () => ({
-  exportRapieresRankingToPDF: pdf,
-  printRapieresRanking: vi.fn(async () => undefined),
+vi.mock('./teamRankingPdf', () => ({
+  exportTeamRankingToPDF: pdf,
+  printTeamRanking: vi.fn(async () => undefined),
 }));
 
-const fencer = (id: string): Fencer =>
+const team = (id: string, level: number, category: Category, handicap = false): Fencer =>
   ({
     id,
     lastName: `Équipe ${id}`,
     firstName: '',
-    gender: Gender.MIXED,
+    gender: Gender.FEMALE,
     status: FencerStatus.CHECKED_IN,
+    members: [
+      { lastName: 'a', firstName: 'A', gender: 'F' },
+      { lastName: 'b', firstName: 'B', gender: 'F' },
+    ],
+    level,
+    category,
+    handicap,
   }) as Fencer;
-
-const info = (
-  level: RapieresTeamInfo['level'],
-  categories: [string, string],
-  handi = false
-): RapieresTeamInfo => ({
-  level,
-  fencers: [
-    {
-      firstName: 'A',
-      lastName: 'a',
-      category: (handi ? 'HANDI' : categories[0]) as never,
-      gender: 'F',
-    },
-    { firstName: 'B', lastName: 'b', category: categories[1] as never, gender: 'F' },
-  ],
-});
-const teams: Record<string, RapieresTeamInfo> = {
-  x: info('expert', ['V1', 'V1']),
-  y: info('beginner', ['SENIOR', 'SENIOR'], true),
-  z: info('beginner', ['SENIOR', 'SENIOR']),
-};
+const fencers = [
+  team('x', 3, Category.V1),
+  team('y', 1, Category.SENIOR, true),
+  team('z', 1, Category.SENIOR),
+];
 const ranked = [
   { teamId: 'x', rank: 1 },
   { teamId: 'y', rank: 2 },
@@ -62,16 +51,16 @@ const ranked = [
 const stats = new Map(
   ['x', 'y', 'z'].map(id => [id, { victories: 1, matches: 2, index: 0, touchesGiven: 5 }])
 );
+const ALL: RankingFilterKey[] = ['category', 'gender', 'level', 'handicap'];
 
-const panel = (filterKeys?: React.ComponentProps<typeof RapieresRankingPanel>['filterKeys']) =>
+const panel = (filterKeys: RankingFilterKey[] = ALL) =>
   render(
-    <RapieresRankingPanel
+    <TeamRankingPanel
       competitionTitle="Rapières"
       final
       wave={0}
       ranked={ranked}
-      fencers={['x', 'y', 'z'].map(fencer)}
-      teams={teams}
+      fencers={fencers}
       stats={stats}
       filterKeys={filterKeys}
     />
@@ -88,8 +77,8 @@ const lines = () =>
 
 beforeEach(() => vi.clearAllMocks());
 
-describe('RapieresRankingPanel : filtres', () => {
-  it('sans réglage de la formule : catégorie, sexe, niveau et HANDI (épreuve inchangée)', () => {
+describe('TeamRankingPanel : filtres', () => {
+  it('filtres de la formule des rapières : catégorie, sexe, niveau et HANDI', () => {
     panel();
     const bar = screen.getByTestId('ranking-filters');
     for (const key of ['category', 'gender', 'level'])
@@ -99,7 +88,7 @@ describe('RapieresRankingPanel : filtres', () => {
     const categories = within(screen.getByLabelText('rankingFilters.category'))
       .getAllByRole('option')
       .map(o => o.getAttribute('value'));
-    expect(categories).toEqual(['', 'M20', 'SENIOR', 'V1', 'V2', 'V3', 'V4']);
+    expect(categories).toEqual(['', 'SEN', 'V1']);
     expect(lines()).toHaveLength(3);
   });
 
@@ -107,7 +96,7 @@ describe('RapieresRankingPanel : filtres', () => {
     panel();
     expect(lines()).toEqual(['1 Équipe x', '2 Équipe y', '3 Équipe z']);
     fireEvent.change(screen.getByLabelText('rankingFilters.level'), {
-      target: { value: 'beginner' },
+      target: { value: '1' },
     });
     expect(lines()).toEqual(['1 Équipe y', '2 Équipe z']);
     fireEvent.click(screen.getByLabelText('rankingFilters.handicap_only'));
@@ -117,10 +106,10 @@ describe('RapieresRankingPanel : filtres', () => {
   it('PDF : classement filtré, critères dans le sous-titre', () => {
     panel();
     fireEvent.click(screen.getByLabelText('rankingFilters.handicap_only'));
-    fireEvent.click(screen.getByText('rapieres.export_pdf'));
+    fireEvent.click(screen.getByText('teamEntry.export_pdf'));
     const table = pdf.mock.calls[0][0] as { subtitle: string; rows: unknown[][] };
     expect(table.rows).toHaveLength(1);
-    expect(table.subtitle).toContain('rankingFilters.handicap');
+    expect(table.subtitle).toContain('teamEntry.handicap');
   });
 
   it('filtres de la formule : seuls ceux-là sont proposés', () => {

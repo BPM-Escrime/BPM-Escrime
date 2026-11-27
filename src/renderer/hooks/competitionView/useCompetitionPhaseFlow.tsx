@@ -5,10 +5,8 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import type { Fencer } from '../../../shared/types';
-import {
-  rapieresCategoryAbbr,
-  rapieresTeamCategory,
-} from '../../../shared/domain/rapieres/rapieresAge';
+import { teamCategoryAbbr } from '../../../shared/domain/fencers/teamEntry';
+import { legacyRapieresRead } from '../../../shared/domain/formula/rapieresFormula';
 import type { PoolPrepLaunchAction } from '../../components/PoolPrepView';
 import { buildStripQrs } from '../useExport';
 import { usePoolStripChange } from '../usePoolStripChange';
@@ -44,8 +42,9 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     pools,
     poolHistory,
     areAllPoolsComplete,
-    isRapieres,
-    rapieres,
+    isTeamEntry,
+    legacyTableauMode,
+    withTeams,
     isWaves,
     waves,
     currentPoolRound,
@@ -221,8 +220,11 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     pools,
     tableauMatches,
     options: {
-      isRapieres,
-      rapieresTableauMode: rapieres.tableauMode,
+      // Épreuve enregistrée en mode spécial : lue comme avant (docs/adr/0043, F4e)
+      legacyRapieres: legacyRapieresRead(
+        competition.settings,
+        legacyTableauMode ? { rapieres: { tableauMode: legacyTableauMode } } : undefined
+      ),
       // Sans tableau à venir (après un tableau arrêté) : classement complet (ADR-0037)
       poolWinnersOnly: poolWinnersOnly && hasDirectElimination,
       customFormula: hasDirectElimination ? customFormula : undefined,
@@ -275,17 +277,10 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
   const handlePoolStripChange = usePoolStripChange(pools, setPools, ctx.assignMatches);
 
   const stripQrs = buildStripQrs(pools, poolsRemoteInfo);
-  // Tournoi des rapières : colonne « Cat. » des poules (#1864)
-  const rapieresTeams = rapieres.teams;
+  // Équipes (binômes) : colonne « Cat. » des poules (#1864), catégorie d'équipe portée par le tireur
   const poolCategoryOf = useMemo(
-    () =>
-      isRapieres
-        ? (f: Fencer) => {
-            const info = rapieresTeams[f.id];
-            return info ? rapieresCategoryAbbr(rapieresTeamCategory(info, new Date())) : '';
-          }
-        : undefined,
-    [isRapieres, rapieresTeams]
+    () => (isTeamEntry ? (f: Fencer) => teamCategoryAbbr(withTeams([f])[0] ?? f) : undefined),
+    [isTeamEntry, withTeams]
   );
   const renderPoolCard = (pool: (typeof pools)[number], poolIndex: number) => (
     <CompetitionPoolCard

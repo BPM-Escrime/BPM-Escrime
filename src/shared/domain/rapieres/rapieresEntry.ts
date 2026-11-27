@@ -1,16 +1,12 @@
 /**
- * BPM - Escrime - Rapières : pont vers l'entrée en équipes (docs/adr/0043, F4c). Membres, niveau
- * et HANDI vivent sur le tireur ; `rapieres.teams` est lu en repli (alias, jusqu'à F4e).
+ * BPM - Escrime - Rapières : pont vers l'entrée en équipes (docs/adr/0043, F4c, F4e). Membres,
+ * niveau et HANDI vivent sur le tireur ; la clé de session `rapieres.teams` d'une épreuve
+ * enregistrée en mode spécial est lue en alias (`withLegacyTeams`).
  * Licensed under GPL-3.0
  */
 import { Category, type Fencer, type FencerMember, type Gender } from '../../types';
 import { teamCategory, teamGender } from '../fencers/teamEntry';
-import type {
-  RapieresAgeCategory,
-  RapieresFencer,
-  RapieresLevel,
-  RapieresTeamInfo,
-} from './rapieres.types';
+import type { RapieresAgeCategory, RapieresLevel, RapieresTeamInfo } from './rapieres.types';
 
 /** Niveaux des rapières = liste par défaut de la formule (du plus faible au plus fort) */
 const LEVEL_NUMBER: Record<RapieresLevel, number> = { beginner: 1, intermediate: 2, expert: 3 };
@@ -36,7 +32,7 @@ function isoDay(v: string | undefined): string | undefined {
   return m ? `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` : undefined;
 }
 
-/** Champs du tireur-équipe écrits pour une composition (alias de setRapieresTeams) */
+/** Champs du tireur-équipe d'une composition : import des équipes, lecture de l'ancienne clé de session */
 export function rapieresTeamEntry(
   info: RapieresTeamInfo,
   refDate: Date
@@ -67,47 +63,31 @@ export function rapieresTeamEntry(
 }
 
 /**
- * Composition vue par le mode rapières : champs du tireur de préférence, sinon `rapieres.teams`
- * (`fallback`) ; undefined si aucune des deux.
+ * Équipes d'une épreuve enregistrée en mode spécial rapières, lues comme champs du tireur
+ * (docs/adr/0043, F4e) : avant la migration 54, la composition n'était que dans l'état de session
+ * (clé `rapieres.teams`, lue en alias). Les champs du tireur (membres, niveau) priment ; sans eux,
+ * la composition de la session les fournit (membres, niveau, HANDI, catégorie et sexe d'équipe,
+ * club et région). Aucune écriture : copies du tireur pour l'affichage.
  */
-export function rapieresInfoOf(
-  fencer: Pick<Fencer, 'members' | 'level' | 'handicap' | 'club' | 'region'>,
-  fallback?: RapieresTeamInfo
-): RapieresTeamInfo | undefined {
-  if (!fencer.members?.length && fencer.level === undefined) return fallback;
-  const member = (i: number): RapieresFencer => {
-    const m = fencer.members?.[i];
-    const category = fallback?.fencers[i]?.category ?? 'SENIOR';
+export function withLegacyTeams<T extends Fencer>(
+  fencers: readonly T[],
+  sessionTeams: Record<string, RapieresTeamInfo> | undefined,
+  /** Date de la saison (catégorie d'équipe), injectée */
+  refDate: Date
+): T[] {
+  // Même tableau rendu quand rien ne change : l'écran le passe à des effets qui le comparent
+  if (!sessionTeams || Object.keys(sessionTeams).length === 0) return fencers as T[];
+  const read = fencers.map(f => {
+    const info = sessionTeams[f.id];
+    if (!info || f.members?.length || f.level !== undefined) return f;
+    const entry = rapieresTeamEntry(info, refDate);
     return {
-      lastName: m?.lastName ?? '',
-      firstName: m?.firstName ?? '',
-      category: i === 0 && fencer.handicap ? 'HANDI' : category === 'HANDI' ? 'SENIOR' : category,
-      ...(m?.gender ? { gender: m.gender } : {}),
-      ...(m?.birthDate ? { birthDate: m.birthDate } : {}),
+      ...f,
+      ...entry,
+      category: f.category ?? entry.category,
+      club: f.club || info.club || f.club,
+      region: f.region || info.region || f.region,
     };
-  };
-  const club = fencer.club || fallback?.club;
-  const region = fencer.region || fallback?.region;
-  return {
-    level:
-      fencer.level !== undefined
-        ? rapieresLevelOfNumber(fencer.level)
-        : (fallback?.level ?? 'beginner'),
-    fencers: [member(0), member(1)],
-    ...(club ? { club } : {}),
-    ...(region ? { region } : {}),
-  };
-}
-
-/** Compositions par tireur : champs du tireur d'abord, `rapieres.teams` en repli */
-export function rapieresTeamsOf(
-  fencers: ReadonlyArray<Fencer>,
-  sessionTeams: Record<string, RapieresTeamInfo>
-): Record<string, RapieresTeamInfo> {
-  const teams = { ...sessionTeams };
-  for (const f of fencers) {
-    const info = rapieresInfoOf(f, sessionTeams[f.id]);
-    if (info) teams[f.id] = info;
-  }
-  return teams;
+  });
+  return read.every((f, i) => f === fencers[i]) ? (fencers as T[]) : read;
 }

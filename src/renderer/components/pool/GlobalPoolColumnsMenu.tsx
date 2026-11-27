@@ -14,7 +14,7 @@ import { Button } from '../common/Button';
 
 interface GlobalPoolColumnsMenuProps {
   isLaserSabre: boolean;
-  /** Tournoi des rapières : colonne « Cat. » proposée (#1864) */
+  /** Entrée en équipes : colonne « Cat. » proposée (#1864) */
   hasCategory?: boolean;
 }
 

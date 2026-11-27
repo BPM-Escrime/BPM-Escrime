@@ -189,7 +189,8 @@ Feature Modules (src/features/)
 ├── matchAuditLog/       # useMatchAuditStore
 ├── pdfTemplates/        # usePdfTemplateStore
 ├── penalties/           # penaltyUtils (libellés, couleurs) + usePenaltyStore ; types → shared/domain/penalties
-├── rapieres/            # Tournoi des rapières (mode spécial arme CUSTOM) dans CompetitionView : équipe = tireur (club = niveau), composition + vagues dans session_state (clé rapieres) ; interface seulement (règles : shared/domain/rapieres, notifications injectées — lot 5 de #1979)
+├── poolWaves/           # Tour en vagues (ordre « waves » / « waves_classic » de la formule) : barre des vagues, impression des feuilles, état de session `waves` (ADR-0043)
+├── teamEntry/           # Entrée en équipes (binômes, formule `entry`, ADR-0043) : classement des équipes filtré, PDF, import CSV / XLSX, props de préparation des poules ; interface seulement (règles : shared/domain/fencers/teamEntry). Le Tournoi des rapières est le modèle de formule `bpm/C/rapieres` ; `specialMode` n'est plus écrit, lu en compatibilité (`shared/domain/formula/rapieresFormula.ts`)
 └── teams/               # useTeamStore + baril index.ts ; règles → shared/domain/teams (#1979)
 
 Shared (src/shared/)

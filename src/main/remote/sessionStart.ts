@@ -79,7 +79,6 @@ export async function startSession(
 
   // Stocker le type d'arme pour l'arrêt automatique à 15 points en Laser Sabre
   ctx.sessionWeapon = competition.weapon || null;
-  // Rapières (mode spécial) : pas de barème personnalisé, vue arbitre olympique (#1808)
   // Armes modernes en barème standard : vue olympique, sans barème personnalisé (#1936)
   ctx.sessionCustomScoring = remoteCustomScoring(competition.weapon, competition.settings);
   ctx.applyCompetitionSettings(competition);

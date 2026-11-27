@@ -59,6 +59,7 @@ import {
   type TableauMatch,
 } from '../../../shared/domain/tableau/tableauTypes';
 import type { RapieresSession } from '../../../shared/domain/rapieres/rapieres.types';
+import { rapieresLevelNumber } from '../../../shared/domain/rapieres/rapieresEntry';
 import { rankingOfDrawnTableau, tableauCut } from '../../../shared/domain/ranking/tableauRanking';
 import type { TiedAtBar } from '../../../shared/domain/ranking/advancement';
 import { assertTies } from './ties';
@@ -94,6 +95,7 @@ import {
   poolDistributionOfRound,
   tableauQualificationOf,
 } from '../../../shared/domain/formula/formulaV2';
+import { legacyRapieresRead } from '../../../shared/domain/formula/rapieresFormula';
 import { stoppedTableauOf } from '../../../shared/domain/formula/formulaSteps';
 import { originFinalRanking, splitHistoryOf } from '../../../shared/domain/formula/splitPlan';
 import { finalRanking } from '../../../shared/domain/ranking/finalRanking';
@@ -162,16 +164,13 @@ export function effectiveSettings(comp: Competition, round = 1) {
 }
 
 /**
- * Formats non pilotables hors écran : erreur explicite. Seuls restent refusés les équipes
- * (commandes d'équipe, ADR-0024) et le mode spécial (rapières, étape F4) ; les formules à
- * plusieurs tours sont pilotées par le moteur (ADR-0042).
+ * Formats non pilotables hors écran : erreur explicite. Seules restent refusées les épreuves par
+ * équipes (commandes d'équipe, ADR-0024) ; les formules à plusieurs tours (ADR-0042) et le tour en
+ * vagues des rapières (ADR-0043, F4e) sont pilotés par le moteur.
  */
 export function assertSupported(comp: Competition): void {
   if (comp.isTeamEvent) {
     throw new CommandError('unsupported_format', 'Épreuve par équipes : à piloter à l’écran');
-  }
-  if (comp.settings?.specialMode) {
-    throw new CommandError('unsupported_format', 'Mode spécial (rapières) : à piloter à l’écran');
   }
 }
 
@@ -212,6 +211,21 @@ export function writeSession(
 export const emitSession = (ctx: CommandContext, competitionId: string) =>
   ctx.emitChange?.({ scope: 'session', competitionIds: [competitionId] });
 
+/**
+ * Équipes d'une épreuve enregistrée en mode spécial rapières : leur niveau n'est que dans l'état
+ * de session (`rapieres.teams`, avant la migration 54), lu en alias du niveau du tireur
+ * (docs/adr/0043, F4e) pour le tirage « par niveau ».
+ */
+function withLegacyTeamLevels(fencers: Fencer[], session: Record<string, unknown>): Fencer[] {
+  const teams = (session.rapieres as Partial<RapieresSession> | undefined)?.teams;
+  if (!teams) return fencers;
+  return fencers.map(f =>
+    f.level === undefined && teams[f.id]
+      ? { ...f, level: rapieresLevelNumber(teams[f.id].level) }
+      : f
+  );
+}
+
 export const sessionPools = (session: Record<string, unknown>): Pool[] =>
   Array.isArray(session.pools) ? (session.pools as Pool[]) : [];
 export const sessionTableau = (session: Record<string, unknown>): TableauMatch[] =>
@@ -222,7 +236,6 @@ export const sessionConsolation = (session: Record<string, unknown>): Consolatio
     : [];
 export const sessionPoolHistory = (session: Record<string, unknown>): Pool[][] =>
   Array.isArray(session.poolHistory) ? (session.poolHistory as Pool[][]) : [];
-const isRapieres = (comp: Competition) => comp.settings?.specialMode === 'rapieres';
 
 // ─── Poules ──────────────────────────────────────────────────────────────────
 
@@ -351,7 +364,7 @@ export function generatePools(
       );
     }
     try {
-      pools = buildPools(fencers, {
+      pools = buildPools(withLegacyTeamLevels(fencers, session), {
         poolMaxScore: effectiveSettings(comp, round).poolMaxScore,
         round,
         poolCount: options.poolCount,
@@ -409,7 +422,7 @@ export function generatePools(
       if (pool.strip) ctx.db.updatePool(pool);
     }
     // Vagues du tour remises à zéro par un nouveau tirage (docs/adr/0043) ; ancienne clé des
-    // rapières remise à zéro aussi tant qu'elle existe (alias de `waves`)
+    // rapières (épreuve enregistrée avant F4a) remise à zéro aussi tant qu'elle existe (alias de `waves`)
     const rapieres = session.rapieres as Record<string, unknown> | undefined;
     writeSession(ctx, competitionId, {
       currentPhase: PHASE.pools,
@@ -420,7 +433,7 @@ export function generatePools(
       ...(isWavesRound(comp.settings, round) || session.waves
         ? { waves: { launched: 0, ended: false } }
         : {}),
-      ...(isRapieres(comp) && rapieres
+      ...(rapieres && ('launchedWave' in rapieres || 'wavesEnded' in rapieres)
         ? { rapieres: { ...rapieres, launchedWave: 0, wavesEnded: false } }
         : {}),
       tableauMatches: [],
@@ -883,10 +896,8 @@ export function tableauRankingCut(
   const overall = Array.isArray(session.overallRanking)
     ? (session.overallRanking as PoolRanking[])
     : [];
-  const rapieres = session.rapieres as Partial<RapieresSession> | undefined;
   const { ranking, tiedAtBar } = tableauCut(overall, sessionPools(session), {
-    isRapieres: isRapieres(comp),
-    rapieresTableauMode: isRapieres(comp) ? rapieres?.tableauMode : undefined,
+    legacyRapieres: legacyRapieresRead(comp.settings, session as { rapieres?: RapieresSession }),
     poolWinnersOnly: effectiveSettings(comp).poolWinnersOnly,
     customFormula: getActiveFormula(comp.weapon, comp.settings),
     tableauQualification: comp.settings?.formula
@@ -982,8 +993,6 @@ export function buildBracket(
      * tableaux séparés après les poules.
      */
     composition?: TableauMatchInput[];
-    /** Tournoi des rapières : mode de tableau choisi au passage au tableau (#1441) */
-    rapieresTableauMode?: 'normal' | 'third' | 'all' | 'semis';
     /** Tableaux séparés après les poules : groupe du tableau (docs/adr/0024) */
     group?: string;
     /** Ex aequo à la barre pour ce tableau, prime sur la formule (docs/adr/0040) */
@@ -1100,7 +1109,6 @@ export function buildBracket(
       });
     }
     persistTableau(ctx, comp, matches);
-    const rapieres = session.rapieres as Record<string, unknown> | undefined;
     const fresh = { tableauMatches: matches, finalResults: [], consolationBrackets: [] };
     writeSession(ctx, competitionId, {
       currentPhase: PHASE.tableau,
@@ -1113,9 +1121,6 @@ export function buildBracket(
               : {}),
           }
         : fresh),
-      ...(options.rapieresTableauMode && isRapieres(comp)
-        ? { rapieres: { ...(rapieres ?? {}), tableauMode: options.rapieresTableauMode } }
-        : {}),
     });
     recordEvents(ctx, competitionId, [
       {
@@ -1125,9 +1130,6 @@ export function buildBracket(
           size,
           thirdPlaceMatch: thirdPlace,
           playAllPositions: !!comp.settings?.playAllPositions,
-          ...(options.rapieresTableauMode
-            ? { rapieresTableauMode: options.rapieresTableauMode }
-            : {}),
           matches: tableauComposition(matches).map(m => ({
             ...m,
             seedA: m.seedA ?? null,

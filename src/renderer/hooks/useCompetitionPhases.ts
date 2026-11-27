@@ -25,7 +25,7 @@ interface UseCompetitionPhasesParams {
   pools: Pool[];
   poolHistory: Pool[][];
   areAllPoolsComplete: () => boolean;
-  /** Tour en vagues (formule, ou mode rapières) : vagues arrêtées avant leur terme (docs/adr/0043) */
+  /** Tour en vagues (formule) : vagues arrêtées avant leur terme (docs/adr/0043) */
   isWaves: boolean;
   wavesEnded: boolean;
   currentPoolRound: number;

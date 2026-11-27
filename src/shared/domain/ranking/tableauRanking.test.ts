@@ -202,28 +202,27 @@ describe('tableauCut : têtes de poule (pool_heads, docs/adr/0043, F4b)', () => 
     expect(cut.tiedAtBar).toBeNull();
   });
 
-  it('rapières : la formule « têtes de poule » donne les demi-finales', () => {
+  it('épreuve du mode spécial : la formule « têtes de poule » donne les demi-finales', () => {
     const cut = tableauCut(general, pools, {
       ...baseOptions,
-      isRapieres: true,
+      legacyRapieres: { mode: undefined },
       tableauQualification: heads,
     });
     expect(ids(cut.ranking)).toEqual(['a1', 'b1', 'a2', 'b2']);
   });
 
-  it('rapières : sans « têtes de poule », mode hérité « semis » (valeur par défaut) ou toutes les équipes', () => {
-    const rapieres = { ...baseOptions, isRapieres: true };
+  it('épreuve du mode spécial : sans « têtes de poule », mode hérité « semis » (valeur par défaut) ou toutes les équipes', () => {
+    const rapieres = { ...baseOptions, legacyRapieres: { mode: undefined } };
     expect(
-      ids(tableauCut(general, pools, { ...rapieres, rapieresTableauMode: 'semis' }).ranking)
+      ids(tableauCut(general, pools, { ...rapieres, legacyRapieres: { mode: 'semis' } }).ranking)
     ).toEqual(['a1', 'b1', 'a2', 'b2']);
     expect(ids(tableauCut(general, pools, rapieres).ranking)).toHaveLength(6);
   });
 
-  it('rapières : la formule prime sur le mode hérité', () => {
+  it('épreuve du mode spécial : la formule prime sur le mode hérité', () => {
     const cut = tableauCut(general, pools, {
       ...baseOptions,
-      isRapieres: true,
-      rapieresTableauMode: 'normal',
+      legacyRapieres: { mode: 'normal' as const },
       tableauQualification: { mode: 'pool_heads', count: 2 },
     });
     expect(ids(cut.ranking)).toEqual(['a1', 'b1']);

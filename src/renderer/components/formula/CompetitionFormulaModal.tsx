@@ -9,7 +9,6 @@
 import React, { useState } from 'react';
 import { Competition, CompetitionSettings, Weapon } from '../../../shared/types';
 import { ApiError } from '../../../shared/api/client';
-import { isRapieresMode } from '../../../shared/utils/customFormulaSettings';
 import {
   flatSettingsOf,
   formulaOf,
@@ -68,10 +67,8 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
   const { weapon, category } = competition;
   const [formula, setFormula] = useState<FormulaV2>(() => formulaOf(competition));
   const [saving, setSaving] = useState(false);
-  const rapieres = isRapieresMode(weapon, competition.settings);
   // Modèle d'origine (docs/adr/0033) : gardé tant qu'on n'en choisit pas un autre
   const [origin, setOrigin] = useState(competition.settings?.formulaOrigin);
-  const [specialMode, setSpecialMode] = useState(competition.settings?.specialMode);
   const templates = useFormulaTemplates({
     weapon,
     category,
@@ -91,7 +88,6 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
 
   const nextSettings = (): CompetitionSettings => ({
     ...formulaSettingsUpdate(competition, formula),
-    ...(weapon === Weapon.CUSTOM ? { specialMode } : {}),
     formulaOrigin: origin,
   });
   const { state, deviations } = formulaDeviations(
@@ -115,7 +111,6 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
   const selectTemplate = (tpl: FormulaTemplate) => {
     setOrigin({ templateId: tpl.id, ...(tpl.season ? { season: tpl.season } : {}) });
     setFormula(formulaOfTemplate(tpl));
-    if (tpl.body.kind !== 'draft') setSpecialMode(tpl.body.specialMode);
   };
 
   const saveAs = async (name: string) => {
@@ -123,7 +118,6 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
       kind: 'formula',
       formula,
       ...(weapon === Weapon.CUSTOM ? { other: true } : {}),
-      ...(weapon === Weapon.CUSTOM && specialMode ? { specialMode } : {}),
     };
     const from = selected?.source === 'provided' ? origin : selected?.origin;
     const { template } = await templates.save({ name, body, ...(from ? { origin: from } : {}) });
@@ -194,7 +188,6 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
         category={category}
         formula={formula}
         onChange={setFormula}
-        rapieres={rapieres}
         fencerCount={competition.fencerCount || 32}
         isTeamEvent={!!competition.isTeamEvent}
         knownFencerCount={knownFencerCount}

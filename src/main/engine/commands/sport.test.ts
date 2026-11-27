@@ -777,52 +777,6 @@ d('correction de poule après tirage du tableau (#1996, docs/adr/0017)', () => {
   });
 });
 
-d('vagues des rapières (docs/adr/0017, palier rapières)', () => {
-  it('vague lancée, vagues arrêtées puis reprises, mode de tableau au journal', async () => {
-    const comp = await setup(6);
-    generatePools(ctx, comp.id, { poolCount: 1 });
-    await expect(
-      invoke(ctx, 'launchRapieresWave', { competitionId: comp.id, wave: 1 })
-    ).rejects.toMatchObject({ code: 'unsupported_format' });
-    db.updateCompetition(comp.id, {
-      settings: { ...comp.settings, specialMode: 'rapieres' },
-    } as never);
-    const res = (await invoke(ctx, 'launchRapieresWave', {
-      competitionId: comp.id,
-      wave: 1,
-    })) as any;
-    expect(res.matchIds.length).toBeGreaterThan(0);
-    // Alias des anciennes commandes (docs/adr/0043, F4a) : état `waves`, événements PoolWave*
-    expect((db.getSessionState(comp.id) as any).waves).toEqual({ launched: 1, ended: false });
-    await expect(
-      invoke(ctx, 'launchRapieresWave', { competitionId: comp.id, wave: 99 })
-    ).rejects.toMatchObject({ code: 'invalid_wave' });
-    await invoke(ctx, 'endRapieresWaves', { competitionId: comp.id, ended: true });
-    expect((db.getSessionState(comp.id) as any).waves.ended).toBe(true);
-    await invoke(ctx, 'endRapieresWaves', { competitionId: comp.id, ended: false });
-    const types = db.eventLog.getSince(comp.id).map(e => e.type);
-    expect(types.slice(-3)).toEqual(['PoolWaveLaunched', 'PoolWavesEnded', 'PoolWavesEnded']);
-
-    playAll(comp.id, 'pool');
-    const ranking = (db.getSessionState(comp.id) as any).overallRanking;
-    const { matches } = planTableau(ranking, { playAllPositions: false, thirdPlaceMatch: true });
-    const { tableauComposition } =
-      await import('../../../shared/domain/tableau/tableauComposition');
-    await invoke(ctx, 'generateTableau', {
-      competitionId: comp.id,
-      composition: tableauComposition(matches),
-      thirdPlaceMatch: true,
-      rapieresTableauMode: 'third',
-    });
-    expect((db.getSessionState(comp.id) as any).rapieres.tableauMode).toBe('third');
-    const all = db.eventLog.getSince(comp.id);
-    expect(all[all.length - 1]).toMatchObject({
-      type: 'TableauGenerated',
-      payload: { rapieresTableauMode: 'third' },
-    });
-  });
-});
-
 d('clearScore (docs/adr/0017, annulation d’un score)', () => {
   it('poule : match remis à jouer, classement recalculé, ScoreCleared', async () => {
     const comp = await setup(4);
@@ -943,70 +897,5 @@ d('classement ajusté, poules passées, tableau retiré (docs/adr/0017)', () => 
     ).rejects.toMatchObject({
       code: 'fencer_not_found',
     });
-  });
-});
-
-d('setRapieresTeams (docs/adr/0017)', () => {
-  it('composition écrite dans l’état ; journal sans nom ; tireur inconnu refusé', async () => {
-    const comp = await setup(2);
-    db.updateCompetition(comp.id, {
-      settings: { ...comp.settings, specialMode: 'rapieres' },
-    } as never);
-    const [team] = db.getFencersByCompetition(comp.id);
-    const info = {
-      level: 'expert' as const,
-      fencers: [
-        { firstName: 'Ann', lastName: 'DUPONT', category: 'SENIOR' as const },
-        { firstName: 'Bob', lastName: 'MARTIN', category: 'V1' as const },
-      ],
-      club: 'Paris',
-    };
-    await invoke(ctx, 'setRapieresTeams', {
-      competitionId: comp.id,
-      teams: [{ fencerId: team.id, info }],
-    });
-    expect((db.getSessionState(comp.id) as any).rapieres.teams[team.id]).toEqual(info);
-    const all = db.eventLog.getSince(comp.id);
-    expect(all[all.length - 1]).toMatchObject({
-      type: 'RapieresTeamsUpdated',
-      payload: { fencerIds: [team.id] },
-    });
-    expect(JSON.stringify(all)).not.toContain('DUPONT');
-    await expect(
-      invoke(ctx, 'setRapieresTeams', { competitionId: comp.id, teams: [{ fencerId: 'x', info }] })
-    ).rejects.toMatchObject({ code: 'fencer_not_found' });
-  });
-
-  it('alias (docs/adr/0043, F4c) : écrit aussi membres, niveau, HANDI, catégorie et sexe sur le tireur', async () => {
-    const comp = await setup(2);
-    db.updateCompetition(comp.id, {
-      settings: { ...comp.settings, specialMode: 'rapieres' },
-    } as never);
-    const [team] = db.getFencersByCompetition(comp.id);
-    const info = {
-      level: 'beginner' as const,
-      fencers: [
-        { firstName: 'Ann', lastName: 'DUPONT', category: 'HANDI' as const, gender: 'F' as const },
-        { firstName: 'Bob', lastName: 'MARTIN', category: 'SENIOR' as const, gender: 'F' as const },
-      ],
-    };
-    await invoke(ctx, 'setRapieresTeams', {
-      competitionId: comp.id,
-      teams: [{ fencerId: team.id, info }],
-    });
-    // Session conservée (alias de compatibilité) ET champs du tireur
-    expect((db.getSessionState(comp.id) as any).rapieres.teams[team.id]).toEqual(info);
-    expect(db.getFencer(team.id)).toMatchObject({
-      level: 1,
-      handicap: true,
-      gender: 'F',
-      category: 'SEN',
-      members: [
-        { firstName: 'Ann', lastName: 'DUPONT', gender: 'F' },
-        { firstName: 'Bob', lastName: 'MARTIN', gender: 'F' },
-      ],
-    });
-    // Journal : identifiants seulement (ADR-0007), jamais les noms des membres
-    expect(JSON.stringify(db.eventLog.getSince(comp.id))).not.toContain('DUPONT');
   });
 });

@@ -65,8 +65,12 @@ describe('catalogue fourni (docs/adr/0033)', () => {
     expect(other.map(t => t.code)).toEqual(['standard', 'rapieres']);
     const rap = other[1];
     const s = templateToSettings(rap, Weapon.CUSTOM, undefined);
-    expect(s.specialMode).toBe('rapieres');
+    // Formule en briques, plus de mode spécial (docs/adr/0043, F4e)
+    expect(s.specialMode).toBeUndefined();
     expect(s.customFormula?.phases.map(p => p.type)).toEqual(['pool_round', 'direct_elimination']);
+    expect(s.formula?.phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
+    expect(s.poolBoutOrder).toBe('waves');
+    expect(s.formula?.general.entry).toMatchObject({ kind: 'team', size: 2 });
   });
 
   it('recherche sans accents ni casse', () => {

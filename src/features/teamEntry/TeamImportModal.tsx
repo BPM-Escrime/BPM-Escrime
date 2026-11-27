@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Tournoi des rapières : sélection des équipes à importer (#1211)
+ * BPM - Escrime - Entrée en équipes : sélection des équipes à importer (#1211)
  * Même principe que l'import de tireurs : liste du fichier, cases à cocher, import groupé.
  * Licensed under GPL-3.0
  */
@@ -15,19 +15,19 @@ import {
   STICKY_HEAD,
 } from '../../renderer/components/importModal.styles';
 import { RapieresFencer } from '../../shared/domain/rapieres/rapieres.types';
-import { RapieresTeamDraft } from './RapieresTeamModal';
+import type { TeamImportDraft } from './teamImport';
 import { Button } from '../../renderer/components/common/Button';
 
-interface RapieresImportModalProps {
+interface TeamImportModalProps {
   filename: string;
-  teams: RapieresTeamDraft[];
+  teams: TeamImportDraft[];
   /** Lignes ignorées (incomplètes) du fichier */
   skipped: number[];
-  onImport: (teams: RapieresTeamDraft[]) => void | Promise<void>;
+  onImport: (teams: TeamImportDraft[]) => void | Promise<void>;
   onClose: () => void;
 }
 
-const RapieresImportModal: React.FC<RapieresImportModalProps> = ({
+const TeamImportModal: React.FC<TeamImportModalProps> = ({
   filename,
   teams,
   skipped,
@@ -63,8 +63,8 @@ const RapieresImportModal: React.FC<RapieresImportModalProps> = ({
     <>
       {[f.lastName.toUpperCase(), f.firstName].filter(Boolean).join(' ')}
       <br />
-      <small className="rapieres-import-meta">
-        {t(`rapieres.cat_${f.category}`)}
+      <small className="team-import-meta">
+        {t(`teamEntry.cat_${f.category}`)}
         {f.gender ? ` · ${t(f.gender === 'M' ? 'genders.male' : 'genders.female')}` : ''}
       </small>
     </>
@@ -72,7 +72,7 @@ const RapieresImportModal: React.FC<RapieresImportModalProps> = ({
 
   return (
     <Modal
-      title={t('rapieres.import_teams')}
+      title={t('teamEntry.import_teams')}
       onClose={onClose}
       size="lg"
       scroll
@@ -80,37 +80,37 @@ const RapieresImportModal: React.FC<RapieresImportModalProps> = ({
         <>
           <Button onClick={onClose}>{t('actions.cancel')}</Button>
           <Button variant="primary" onClick={handleImport} disabled={busy || selected.size === 0}>
-            {t('rapieres.import_n', { n: String(selected.size) })}
+            {t('teamEntry.import_n', { n: String(selected.size) })}
           </Button>
         </>
       }
     >
-      <div className="rapieres-import-info">
+      <div className="team-import-info">
         <strong>{t('importModal.file')}</strong> {filename}
       </div>
 
       {skipped.length > 0 && (
-        <div className="rapieres-import-warning">
-          {t('rapieres.import_skipped', { lines: skipped.join(', ') })}
+        <div className="team-import-warning">
+          {t('teamEntry.import_skipped', { lines: skipped.join(', ') })}
         </div>
       )}
 
-      <div className="rapieres-import-toolbar">
-        <span>{t('rapieres.import_found', { n: String(teams.length) })}</span>
+      <div className="team-import-toolbar">
+        <span>{t('teamEntry.import_found', { n: String(teams.length) })}</span>
         <Button size="sm" onClick={toggleAll}>
           {allSelected ? t('importModal.deselect_all') : t('importModal.select_all')}
         </Button>
       </div>
 
-      <div className="rapieres-import-table">
+      <div className="team-import-table">
         <table style={TABLE}>
           <thead style={STICKY_HEAD}>
             <tr>
-              <th className="rapieres-import-check">✓</th>
-              <th style={TD_LEFT}>{t('rapieres.team')}</th>
-              <th style={TD_LEFT}>{t('rapieres.fencer')} 1</th>
-              <th style={TD_LEFT}>{t('rapieres.fencer')} 2</th>
-              <th style={TD_CENTER}>{t('rapieres.level')}</th>
+              <th className="team-import-check">✓</th>
+              <th style={TD_LEFT}>{t('teamEntry.team')}</th>
+              <th style={TD_LEFT}>{t('teamEntry.fencer')} 1</th>
+              <th style={TD_LEFT}>{t('teamEntry.fencer')} 2</th>
+              <th style={TD_CENTER}>{t('teamEntry.level')}</th>
             </tr>
           </thead>
           <tbody>
@@ -120,7 +120,7 @@ const RapieresImportModal: React.FC<RapieresImportModalProps> = ({
                 <tr
                   key={index}
                   onClick={() => toggle(index)}
-                  className={`rapieres-import-row${on ? ' is-selected' : ''}`}
+                  className={`team-import-row${on ? ' is-selected' : ''}`}
                 >
                   <td style={TD_CENTER}>
                     <input
@@ -134,7 +134,7 @@ const RapieresImportModal: React.FC<RapieresImportModalProps> = ({
                   <td style={TD}>{team.name}</td>
                   <td style={TD}>{fencerCell(team.info.fencers[0])}</td>
                   <td style={TD}>{fencerCell(team.info.fencers[1])}</td>
-                  <td style={TD_CENTER}>{t(`rapieres.level_${team.info.level}`)}</td>
+                  <td style={TD_CENTER}>{t(`teamEntry.level_${team.info.level}`)}</td>
                 </tr>
               );
             })}
@@ -145,4 +145,4 @@ const RapieresImportModal: React.FC<RapieresImportModalProps> = ({
   );
 };
 
-export default RapieresImportModal;
+export default TeamImportModal;

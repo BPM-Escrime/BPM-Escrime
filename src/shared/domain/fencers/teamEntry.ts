@@ -63,3 +63,14 @@ export function levelLabel(
 export function levelRankOf(fencer: Pick<Fencer, 'level'>): number {
   return fencer.level || Number.MAX_SAFE_INTEGER;
 }
+
+/**
+ * Abréviation de la catégorie d'une équipe (colonne « Cat. » des poules, #1864) : « Hand » pour une
+ * équipe HANDI, « Sen » pour les seniors, « M20 » pour les moins de 20 ans, sinon le code (V1…).
+ */
+export function teamCategoryAbbr(fencer: Pick<Fencer, 'category' | 'handicap'>): string {
+  if (fencer.handicap) return 'Hand';
+  const category = String(fencer.category ?? '');
+  if (category === 'SEN' || category === 'SENIOR') return 'Sen';
+  return category.startsWith('U') ? 'M20' : category;
+}

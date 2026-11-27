@@ -7,16 +7,16 @@ import { BASE_CSS, pdfLang, printHTML, savePDF } from '../../shared/utils/pdfExp
 import { RANKING_TABLE_CSS } from '../../shared/utils/pdfExport/rankingPdf';
 import { getActiveLocale } from '../../shared/utils/localeFormat';
 
-export interface RapieresPdfTable {
+export interface TeamRankingPdfTable {
   title: string;
   subtitle: string;
   headers: string[];
   rows: (string | number)[][];
   /** Nature de chaque colonne (défaut : rang, 3 textes, chiffres) — utile quand des colonnes sont masquées */
-  kinds?: RapieresColumnKind[];
+  kinds?: TeamRankingColumnKind[];
 }
 
-export type RapieresColumnKind = 'rank' | 'text' | 'num' | 'index';
+export type TeamRankingColumnKind = 'rank' | 'text' | 'num' | 'index';
 
 const esc = (s: string | number) =>
   String(s)
@@ -26,9 +26,14 @@ const esc = (s: string | number) =>
     .replace(/"/g, '&quot;');
 
 /** Même mise en page que le classement après poules : rang en gras, textes à gauche, chiffres centrés */
-const defaultKind = (i: number): RapieresColumnKind => (i === 0 ? 'rank' : i <= 3 ? 'text' : 'num');
+const defaultKind = (i: number): TeamRankingColumnKind =>
+  i === 0 ? 'rank' : i <= 3 ? 'text' : 'num';
 
-const rankingCellStyle = (kind: RapieresColumnKind, firstText: boolean, value: string | number) =>
+const rankingCellStyle = (
+  kind: TeamRankingColumnKind,
+  firstText: boolean,
+  value: string | number
+) =>
   kind === 'index'
     ? `text-align:center;font-weight:600;color:${String(value).startsWith('-') ? '#dc2626' : 'var(--green)'}`
     : kind === 'rank'
@@ -39,7 +44,7 @@ const rankingCellStyle = (kind: RapieresColumnKind, firstText: boolean, value: s
           : ''
         : 'text-align:center';
 
-export function generateRapieresRankingHTML(table: RapieresPdfTable): string {
+export function generateTeamRankingHTML(table: TeamRankingPdfTable): string {
   const kinds = table.headers.map((_, i) => table.kinds?.[i] ?? defaultKind(i));
   const firstText = kinds.indexOf('text');
   const now = new Date().toLocaleDateString(getActiveLocale(), {
@@ -84,14 +89,14 @@ export function generateRapieresRankingHTML(table: RapieresPdfTable): string {
 </html>`;
 }
 
-export async function exportRapieresRankingToPDF(
-  table: RapieresPdfTable,
+export async function exportTeamRankingToPDF(
+  table: TeamRankingPdfTable,
   fileName: string
 ): Promise<void> {
-  await savePDF(generateRapieresRankingHTML(table), fileName);
+  await savePDF(generateTeamRankingHTML(table), fileName);
 }
 
 /** Impression du classement (boîte d'impression intégrée avec aperçu, #1214) */
-export async function printRapieresRanking(table: RapieresPdfTable): Promise<void> {
-  await printHTML(generateRapieresRankingHTML(table));
+export async function printTeamRanking(table: TeamRankingPdfTable): Promise<void> {
+  await printHTML(generateTeamRankingHTML(table));
 }

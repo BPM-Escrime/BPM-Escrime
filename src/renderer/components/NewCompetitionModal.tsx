@@ -5,14 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import {
-  Competition,
-  CompetitionSpecialMode,
-  CustomFormulaConfig,
-  Weapon,
-  Gender,
-  Category,
-} from '../../shared/types';
+import { Competition, CustomFormulaConfig, Weapon, Gender, Category } from '../../shared/types';
 import { useTranslation } from '../hooks/useTranslation';
 import { createDefaultCustomFormula } from '../../shared/utils/tournamentTemplates';
 import { FormulaBuilder } from './formula/FormulaBuilder';
@@ -66,7 +59,6 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
   const [customFormula, setCustomFormula] = useState<CustomFormulaConfig>(
     createDefaultCustomFormula()
   );
-  const [specialMode, setSpecialMode] = useState<CompetitionSpecialMode | undefined>(undefined);
   // Nouvelle interface de formule (aperçu, docs/adr/0032) : formule repliée pour toutes les
   // armes ; standard de l'arme et de la catégorie tant qu'elle n'est pas personnalisée (Q21)
   const formulaPreview = useFormulaPreview();
@@ -148,7 +140,6 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
       laserTeamMode,
       teamFormat,
       customFormula: formulaPreview ? normalizeCustomFormula(customFormula) : customFormula,
-      specialMode,
     });
 
   // Modèle de départ (docs/adr/0033) : standard de l'arme × catégorie × type tant que rien
@@ -159,9 +150,8 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
   useEffect(() => {
     if (personalized || !chosen) return;
     if (templateMatches(chosen, { weapon, category, isTeamEvent })) return;
-    // Modèle choisi hors du nouveau contexte : retour au standard, mode spécial compris
+    // Modèle choisi hors du nouveau contexte : retour au standard
     setTemplateId(null);
-    setSpecialMode(undefined);
     setCustomFormula(createDefaultCustomFormula());
     // eslint-disable-next-line react-hooks/exhaustive-deps -- réagit au seul changement de contexte ; chosen et personalized sont lus à ce moment-là
   }, [weapon, category, isTeamEvent]);
@@ -202,7 +192,6 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
   const selectTemplate = (tpl: FormulaTemplate) => {
     setTemplateId(tpl.id);
     setPersonalFormula(null);
-    if (tpl.body.kind !== 'draft') setSpecialMode(tpl.body.specialMode);
   };
 
   const formulaState = () =>
@@ -216,7 +205,6 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
       kind: 'formula',
       formula: currentFormula(),
       ...(isOtherWeapon ? { other: true } : {}),
-      ...(isOtherWeapon && specialMode ? { specialMode } : {}),
     };
     const origin =
       activeTemplate?.source === 'provided' ? originOf(activeTemplate) : activeTemplate?.origin;
@@ -290,8 +278,7 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
         location,
         ...(organizer ? { organizer } : {}),
         color: getRandomColor(),
-        // Tournoi des rapières : binômes gérés par le mode spécial, pas par les équipes classiques
-        isTeamEvent: isTeamEvent && !(weapon === Weapon.CUSTOM && specialMode),
+        isTeamEvent,
         ...(settings ? { settings } : {}),
       },
       payload
@@ -563,8 +550,6 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
                   category={category}
                   formula={currentFormula()}
                   onChange={setPersonalFormula}
-                  specialMode={isCustom ? specialMode : undefined}
-                  onSpecialModeChange={isCustom ? setSpecialMode : undefined}
                   picker={{
                     templates: templates.templates,
                     selectedId: activeTemplate?.id ?? null,
@@ -589,8 +574,6 @@ const NewCompetitionModal: React.FC<NewCompetitionModalProps> = ({ onClose, onCr
                     formula={customFormula}
                     fencerCount={32}
                     onChange={setCustomFormula}
-                    specialMode={specialMode}
-                    onSpecialModeChange={setSpecialMode}
                   />
                 </div>
               )}

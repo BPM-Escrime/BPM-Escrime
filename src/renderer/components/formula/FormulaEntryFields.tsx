@@ -24,7 +24,7 @@ const parseLevels = (text: string): string[] =>
 const FormulaEntryFields: React.FC<FormulaEntryFieldsProps> = ({ id, entry, onChange }) => {
   const { t } = useTranslation();
   const shown = (levels: readonly string[]) =>
-    levels.map(l => (DEFAULT_TEAM_LEVELS.includes(l) ? t(`rapieres.level_${l}`) : l));
+    levels.map(l => (DEFAULT_TEAM_LEVELS.includes(l) ? t(`teamEntry.level_${l}`) : l));
   // Liste saisie → niveaux enregistrés : les libellés par défaut traduits redeviennent des codes
   const stored = (text: string): string[] => {
     const list = parseLevels(text);

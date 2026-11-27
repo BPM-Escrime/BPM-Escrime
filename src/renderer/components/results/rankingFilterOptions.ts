@@ -32,8 +32,8 @@ const sexLabel = (value: string | number, t: Translate): string =>
 /** Libellé d'un niveau : de la formule (codes par défaut traduits), sinon le numéro */
 const levelText = (value: string | number, levels: readonly string[], t: Translate): string =>
   typeof value === 'number'
-    ? levelLabel(value, levels, code => t(`rapieres.level_${code}`)) || String(value)
-    : t(`rapieres.level_${value}`);
+    ? levelLabel(value, levels, code => t(`teamEntry.level_${code}`)) || String(value)
+    : t(`teamEntry.level_${value}`);
 
 /** Options des filtres d'après les classés : seules les valeurs présentes sont proposées */
 export function rankingFilterOptions(

@@ -1,7 +1,9 @@
 /**
- * BPM - Escrime - Tournoi des rapières : classements filtrés (#1118)
- * Filtres cumulables sur les équipes (catégorie d'âge, niveau, sexe — #1441). Export PDF.
- * Utilisé après les poules (classement intermédiaire) et dans les résultats (final).
+ * BPM - Escrime - Entrée en équipes : classement des équipes, filtres et PDF (#1118, docs/adr/0043)
+ * Filtres de la formule (`rankingFilters` : catégorie, sexe, niveau, HANDI) sur les champs du
+ * tireur-équipe, colonnes Équipe / Tireurs / Niveau / V / M / Ind. / TD, export PDF et impression.
+ * Utilisé après les poules (classement intermédiaire) ; le classement final a les mêmes filtres
+ * dans la page des résultats (F4d).
  * Licensed under GPL-3.0
  */
 
@@ -11,34 +13,25 @@ import type { Fencer } from '../../shared/types';
 import { useTranslation } from '../../renderer/hooks/useTranslation';
 import { useToast } from '../../renderer/components/Toast';
 import {
-  RAPIERES_AGE_CATEGORIES,
-  RAPIERES_LEVELS,
-  RapieresFencer,
-  RapieresTeamGender,
-  RapieresTeamInfo,
-} from '../../shared/domain/rapieres/rapieres.types';
-import {
-  RAPIERES_RANKING_FILTERS,
-  rapieresRankingSubject,
-} from '../../shared/domain/rapieres/rapieresCalculations';
-import {
   filterRanking,
   restrictRankingFilter,
+  subjectOfFencer,
   type RankingFilter,
   type RankingFilterKey,
 } from '../../shared/domain/ranking/rankingFilters';
+import { DEFAULT_TEAM_LEVELS, levelLabel } from '../../shared/domain/fencers/teamEntry';
 import RankingFilterBar from '../../renderer/components/results/RankingFilterBar';
 import {
-  exportRapieresRankingToPDF,
-  printRapieresRanking,
-  RapieresColumnKind,
-} from './rapieresPdf';
+  rankingFilterLabels,
+  rankingFilterOptions,
+} from '../../renderer/components/results/rankingFilterOptions';
+import { exportTeamRankingToPDF, printTeamRanking, TeamRankingColumnKind } from './teamRankingPdf';
 import { Button } from '../../renderer/components/common/Button';
 
-const HIDDEN_KEY = 'bpm_escrime_rapieres_ranking_hidden_columns';
+const HIDDEN_KEY = 'bpm_escrime_team_ranking_hidden_columns';
 
 /** Colonnes du classement d'équipes (#1441 : une ligne par équipe, colonne « Poule » optionnelle) */
-const COLUMNS: { id: string; kind: RapieresColumnKind }[] = [
+const COLUMNS: { id: string; kind: TeamRankingColumnKind }[] = [
   { id: 'rank', kind: 'rank' },
   { id: 'team', kind: 'text' },
   { id: 'fencers', kind: 'text' },
@@ -59,60 +52,61 @@ const loadHidden = (): string[] => {
   }
 };
 
-export interface RapieresRankedTeam {
+export interface RankedTeam {
   teamId: string;
   /** null : exclue, au bas sans classement (« - », docs/adr/0043, F4d) */
   rank: number | null;
 }
 
-export interface RapieresTeamStats {
+export interface TeamRankingStats {
   victories: number;
   matches: number;
   index: number;
   touchesGiven: number;
 }
 
-interface RapieresRankingPanelProps {
+interface TeamRankingPanelProps {
   competitionTitle: string;
   /** Classement final (sinon intermédiaire, titré avec la vague en cours) */
   final?: boolean;
   wave: number;
-  ranked: RapieresRankedTeam[];
+  ranked: RankedTeam[];
+  /** Équipes : tireurs de l'épreuve, membres, niveau, HANDI, catégorie et sexe portés par le tireur */
   fencers: Fencer[];
-  teams: Record<string, RapieresTeamInfo>;
-  stats: Map<string, RapieresTeamStats>;
+  stats: Map<string, TeamRankingStats>;
   /** Numéro de poule par équipe : ajoute la colonne « Poule » (classement après poules) */
   poolOf?: Record<string, number>;
-  /**
-   * Filtres proposés : ceux de la formule (`rankingFilters`, docs/adr/0043, F4d) ; absents, les
-   * filtres actuels des rapières (catégorie, sexe, niveau, HANDI)
-   */
-  filterKeys?: readonly RankingFilterKey[];
+  /** Filtres proposés : ceux de la formule (`rankingFilters`, docs/adr/0043, F4d) */
+  filterKeys: readonly RankingFilterKey[];
+  /** Libellés des niveaux de la formule (`entry.levels`, du plus faible au plus fort) */
+  levels?: readonly string[];
 }
 
-const fencerName = (f: RapieresFencer) => `${f.lastName.toUpperCase()} ${f.firstName}`.trim();
+const membersLabel = (f: Fencer) =>
+  f.members?.length
+    ? f.members.map(m => `${m.lastName.toUpperCase()} ${m.firstName}`.trim()).join(' · ')
+    : f.firstName;
 
-const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
+const TeamRankingPanel: React.FC<TeamRankingPanelProps> = ({
   competitionTitle,
   final = false,
   wave,
   ranked,
   fencers,
-  teams,
   stats,
   poolOf,
   filterKeys,
+  levels = DEFAULT_TEAM_LEVELS,
 }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
   const title = final
-    ? t('rapieres.ranking_final')
+    ? t('teamEntry.ranking_final')
     : wave > 0
-      ? t('rapieres.ranking_intermediate_wave', { n: wave })
-      : t('rapieres.ranking_intermediate');
+      ? t('teamEntry.ranking_intermediate_wave', { n: wave })
+      : t('teamEntry.ranking_intermediate');
   // Filtres cumulables sur les équipes (vide = non pris en compte), domaine générique
   const [filterValues, setFilterValues] = useState<RankingFilter>({});
-  const keys = filterKeys && filterKeys.length > 0 ? filterKeys : RAPIERES_RANKING_FILTERS;
   const [hidden, setHidden] = useState<string[]>(loadHidden);
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleColumn = (id: string) => {
@@ -125,62 +119,41 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
     }
   };
 
-  const genderLabel = (g: RapieresTeamGender) =>
-    g === 'MIXED' ? t('rapieres.gender_mixed') : t(g === 'M' ? 'genders.male' : 'genders.female');
-  const filter = restrictRankingFilter(filterValues, keys);
-  const activeLabels = [
-    filter.category !== undefined && t(`rapieres.cat_${filter.category}`),
-    filter.level !== undefined && t(`rapieres.level_${filter.level}`),
-    filter.gender !== undefined && genderLabel(filter.gender as RapieresTeamGender),
-    filter.handicap && t('rankingFilters.handicap'),
-  ].filter(Boolean);
-  const filterLabel =
-    activeLabels.length > 0 ? activeLabels.join(' · ') : t('rapieres.ranking_teams');
-
-  // Listes fixes du mode : catégories d'âge (HANDI est un filtre à part), niveaux, sexes d'équipe
-  const filterOptions = {
-    category: RAPIERES_AGE_CATEGORIES.filter(c => c !== 'HANDI').map(c => ({
-      value: c,
-      label: t(`rapieres.cat_${c}`),
-    })),
-    gender: (['M', 'F', 'MIXED'] as RapieresTeamGender[]).map(g => ({
-      value: g,
-      label: genderLabel(g),
-    })),
-    level: RAPIERES_LEVELS.map(l => ({ value: l as string, label: t(`rapieres.level_${l}`) })),
-  };
   const byId = new Map(fencers.map(f => [f.id, f]));
-  const rows = filterRanking(
-    ranked,
-    r => (teams[r.teamId] ? rapieresRankingSubject(teams[r.teamId], new Date()) : undefined),
-    filter
-  );
+  const subjectOf = (r: RankedTeam) => {
+    const f = byId.get(r.teamId);
+    return f ? subjectOfFencer(f) : undefined;
+  };
+  const filter = restrictRankingFilter(filterValues, filterKeys);
+  const filterOptions = rankingFilterOptions(ranked.map(subjectOf), levels, t);
+  const filterText = rankingFilterLabels(filter, levels, t).join(' · ');
+  const filterLabel = filterText || t('teamEntry.ranking_teams');
+  const rows = filterRanking(ranked, subjectOf, filter);
   const showPool = !!poolOf;
 
   const allHeaders: Record<string, string> = {
-    rank: t('rapieres.rank'),
-    team: t('rapieres.team'),
-    fencers: t('rapieres.fencers'),
-    pool: t('rapieres.pool'),
-    level: t('rapieres.level'),
-    victories: t('rapieres.victories'),
-    matches: t('rapieres.matches'),
-    index: t('rapieres.indice'),
-    touches: t('rapieres.touches_given'),
+    rank: t('teamEntry.rank'),
+    team: t('teamEntry.team'),
+    fencers: t('teamEntry.fencers'),
+    pool: t('teamEntry.pool'),
+    level: t('teamEntry.level'),
+    victories: t('teamEntry.victories'),
+    matches: t('teamEntry.matches'),
+    index: t('teamEntry.indice'),
+    touches: t('teamEntry.touches_given'),
   };
   const shown = COLUMNS.filter(c => (c.id !== 'pool' || showPool) && !hidden.includes(c.id));
   const headers = shown.map(c => allHeaders[c.id]);
   const kinds = shown.map(c => c.kind);
   const tableRows = rows.map(r => {
     const team = byId.get(r.teamId);
-    const info = teams[r.teamId];
     const s = stats.get(r.teamId) ?? { victories: 0, matches: 0, index: 0, touchesGiven: 0 };
     const cells: Record<string, string | number> = {
       rank: r.rank ?? '-',
       team: team?.lastName ?? '?',
-      fencers: info ? info.fencers.map(fencerName).join(' · ') : (team?.firstName ?? ''),
+      fencers: team ? membersLabel(team) : '',
       pool: poolOf?.[r.teamId] ?? '',
-      level: info ? t(`rapieres.level_${info.level}`) : (team?.club ?? ''),
+      level: team ? levelLabel(team.level, levels, c => t(`teamEntry.level_${c}`)) : '',
       victories: s.victories,
       matches: s.matches,
       index: s.index > 0 ? `+${s.index}` : String(s.index),
@@ -199,34 +172,34 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
 
   const exportPdf = async () => {
     try {
-      await exportRapieresRankingToPDF(
+      await exportTeamRankingToPDF(
         pdfTable(),
         `classement-${title.replace(/\W+/g, '-').toLowerCase()}.pdf`
       );
     } catch {
-      showToast(t('rapieres.pdf_error'), 'error');
+      showToast(t('teamEntry.pdf_error'), 'error');
     }
   };
 
   // Boîte d'impression intégrée avec aperçu (#1214)
   const print = async () => {
     try {
-      await printRapieresRanking(pdfTable());
+      await printTeamRanking(pdfTable());
     } catch (e) {
       showToast((e as Error).message, 'error');
     }
   };
 
   return (
-    <div className="card rapieres-ranking-panel-1">
-      <div className="rapieres-ranking-panel-2">
-        <h3 className="rapieres-ranking-panel-3">{title}</h3>
+    <div className="card team-ranking-panel-1">
+      <div className="team-ranking-panel-2">
+        <h3 className="team-ranking-panel-3">{title}</h3>
         <RankingFilterBar
-          keys={keys}
+          keys={filterKeys}
           value={filter}
           onChange={setFilterValues}
           options={filterOptions}
-          className="rapieres-ranking-panel-2"
+          className="team-ranking-panel-2"
         />
         <div className="ranking-col-wrap">
           <Button
@@ -260,7 +233,7 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
           disabled={rows.length === 0}
           onClick={exportPdf}
         >
-          {t('rapieres.export_pdf')}
+          {t('teamEntry.export_pdf')}
         </Button>
         <Button
           type="button"
@@ -268,11 +241,11 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
           disabled={rows.length === 0}
           onClick={print}
         >
-          {t('rapieres.print')}
+          {t('teamEntry.print')}
         </Button>
       </div>
       {rows.length === 0 ? (
-        <p className="text-muted">{t('rapieres.no_ranking')}</p>
+        <p className="text-muted">{t('teamEntry.no_ranking')}</p>
       ) : (
         <table className="table">
           <thead>
@@ -299,4 +272,4 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
   );
 };
 
-export default RapieresRankingPanel;
+export default TeamRankingPanel;

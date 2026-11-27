@@ -122,8 +122,10 @@ l'écran : tireurs pointés répartis sur le classement du tour précédent (ou 
 rang d'entrée au tableau après un tableau arrêté), tailles et score maximum du tour lus dans la formule (`minPerPool` / `maxPerPool` priment) ;
 `build_bracket` prend le classement de tous les tours ; `assign_referees` suit le tour courant
 ([ADR-0042](adr/0042-moteur-formules-multi-tours.md)). Une fois le tableau arrêté clos, plus de tableau :
-`build_bracket` refuse (`no_direct_elimination`). Équipes, rapières (étape F4) et « tirer toutes les places » restent à
-l'écran (erreur `unsupported_format`) pour `generate_pools` et `build_bracket` sans `composition`, et pour `assign_referees`.
+`build_bracket` refuse (`no_direct_elimination`). Les épreuves par équipes (relais) et « tirer toutes les places » restent à
+l'écran (erreur `unsupported_format`) pour `generate_pools` et `build_bracket` sans `composition`, et pour `assign_referees` ;
+le Tournoi des rapières, formule en briques (tour en vagues par niveau, binômes, [ADR-0043](adr/0043-rapieres-briques-generiques.md)),
+est piloté comme toute formule, vagues comprises (`launch_pool_wave`, `end_pool_waves`).
 `record_score` accepte aussi les tours multiples (tour courant ; tour terminé figé : `round_closed`),
 les rapières et « toutes les places » (barrages, tableaux de classement listés par `list_matches`
 avec leur nom dans `bracket`) et les tableaux séparés après les poules (un tableau par groupe, identifiants préfixés `F:32-0`). Refusées : épreuves par équipes, qui ont leurs outils
@@ -192,7 +194,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (78)
+## Référence des outils (75)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -364,7 +366,7 @@ Aucun argument.
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 
-### En écriture, sur autorisation (57)
+### En écriture, sur autorisation (54)
 
 ### `create_competition` — Créer une épreuve
 
@@ -631,46 +633,9 @@ Aucun argument.
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `thirdPlaceMatch` | boolean |  | Match pour la 3e place |
 | `composition` | object[] |  | Placement calculé par l’écran : pas de planification |
-| `rapieresTableauMode` | `normal`, `third`, `all`, `semis` |  | Tournoi des rapières : mode de tableau, ancien réglage (alias ; la formule porte maintenant le mode : qualification pool_heads, thirdPlace, allPlaces, docs/adr/0043) |
 | `group` | string |  | Tableaux séparés après les poules : groupe du tableau (« F », « M »), exigé pour ce format |
 | `replace` | boolean |  | Remplacer un tableau existant |
 | `ties` | `all`, `initial_ranking`, `draw`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour, draw = tirage au sort (FIE o.73.2.f) ; barrage pas encore disponible (refus invalid_settings) |
-| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
-| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
-| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
-
-### `launch_rapieres_wave` — Lancer une vague (rapières)
-
-*écriture.* Alias de launchPoolWave pour le tournoi des rapières (retiré à l’étape F4e, docs/adr/0043) : lance la vague « wave » (ses matchs deviennent ceux à tirer ; 0 = aucune vague lancée).
-
-| Argument | Type | Requis | Description |
-|---|---|---|---|
-| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
-| `wave` | integer | oui | Vague à lancer (0 : aucune) |
-| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
-| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
-| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
-
-### `set_rapieres_teams` — Composition des équipes (rapières)
-
-*écriture, idempotent.* Tournoi des rapières : composition des équipes (binômes ; l’équipe est un tireur de l’épreuve) : niveau, deux tireurs, club, région.
-
-| Argument | Type | Requis | Description |
-|---|---|---|---|
-| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
-| `teams` | object[] | oui |  |
-| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
-| `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
-| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
-
-### `end_rapieres_waves` — Arrêter ou reprendre les vagues (rapières)
-
-*écriture.* Alias de endPoolWaves pour le tournoi des rapières (retiré à l’étape F4e, docs/adr/0043) : arrête les vagues avant leur terme (« ended: true », passage au classement sur les matchs joués) ou les reprend (« ended: false »).
-
-| Argument | Type | Requis | Description |
-|---|---|---|---|
-| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
-| `ended` | boolean | oui | true : vagues arrêtées ; false : reprises |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
@@ -830,7 +795,7 @@ Aucun argument.
 
 ### `update_competition_formula` — Modifier la formule d’une épreuve
 
-*écriture.* Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau | split, position « at » comme insertOptions ; split : scission, toujours en dernier, après un tour de poules ou un tableau arrêté, docs/adr/0039), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode all | percentage | fixed_count | fixed_bracket | pool_winner | pool_heads, count, percentage } ou qualifiers ; pool_heads, têtes de poule puis suivants jusqu’à count (premiers de chaque poule, puis deuxièmes…, chaque rang pris dans l’ordre du classement général ; réglage avancé, avant un tableau ; plus de poules que de qualifiés refusé ; ex aequo à la barre sur le dernier rang pris ; docs/adr/0043), seeding previous_round | cumulative, boutOrder fie | free | waves | waves_classic (réglage avancé ; vagues : poules de 2 à 10, vagues classiques de 2 à 15, docs/adr/0043), distribution serpentine | byLevel (expert : équipes de même niveau regroupées, du plus faible au plus fort ; null : serpentin, docs/adr/0043), scoring ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring ; Tour Quest qualifiersCount ; scission criterion gender | category | rank | manual, branches [{ label, phases, gender, categories, take, stayInCompetition }] ; stayInCompetition : scission par sexe, toutes les branches réduites à un tableau ou aucune (compétition couplée, tableaux séparés dans l’épreuve) ; « tableau » règle alors le tableau des branches restées), setGeneral (restTimeSeconds, ruleSet, entry { kind individual } ou { kind team, size 2, levels [du plus faible, niveau 1, au plus fort] } (binômes, expert ; null : individuelle, docs/adr/0043) ; rankingFilters [category | gender | level | handicap] (expert : filtres proposés pour le classement final affiché, les PDF et le CSV ; renumérote depuis 1, un affichage sans compétition fille ni publication distincte ; null ou liste vide : aucun filtre, docs/adr/0043) ; postPoolSplitCriteria : gender pose la compétition couplée, scission par sexe dont les deux branches restent, null la retire). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour, structure contrôlée (au moins une phase de combat, nombre de qualifiés suffisant et réparti en poules, branche terminée par une phase qui classe, phases déjà commencées de l’épreuve conservées, avec la règle de qualification qui y mène, docs/adr/0041) ; refus : invalid_settings, une remarque par ligne avec la clé de la phase en cause ([pool-0], [tableau], [split], [formule] pour la formule entière), draw_done.
+*écriture.* Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau | split, position « at » comme insertOptions ; split : scission, toujours en dernier, après un tour de poules ou un tableau arrêté, docs/adr/0039), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode all | percentage | fixed_count | fixed_bracket | pool_winner | pool_heads, count, percentage } ou qualifiers ; pool_heads, têtes de poule puis suivants jusqu’à count (premiers de chaque poule, puis deuxièmes…, chaque rang pris dans l’ordre du classement général ; réglage avancé, avant un tableau ; plus de poules que de qualifiés refusé ; ex aequo à la barre sur le dernier rang pris ; docs/adr/0043), seeding previous_round | cumulative, boutOrder fie | free | waves | waves_classic (réglage avancé ; vagues : poules de 2 à 10, vagues classiques de 2 à 15, docs/adr/0043), distribution serpentine | byLevel (expert : équipes de même niveau regroupées, du plus faible au plus fort ; null : serpentin, docs/adr/0043), scoring ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring ; Tour Quest qualifiersCount ; scission criterion gender | category | rank | manual, branches [{ label, phases, gender, categories, take, stayInCompetition }] ; stayInCompetition : scission par sexe, toutes les branches réduites à un tableau ou aucune (compétition couplée, tableaux séparés dans l’épreuve) ; « tableau » règle alors le tableau des branches restées), setGeneral (restTimeSeconds, ruleSet, entry { kind individual } ou { kind team, size 2, levels [du plus faible, niveau 1, au plus fort] } (binômes, expert ; null : individuelle, docs/adr/0043) ; rankingFilters [category | gender | level | handicap] (expert : filtres proposés pour le classement final affiché, les PDF et le CSV ; renumérote depuis 1, un affichage sans compétition fille ni publication distincte ; null ou liste vide : aucun filtre, docs/adr/0043) ; tieBreakByVictory (arme « Autre » : une égalité en fin de temps se tranche par un vainqueur désigné, tirage au sort puis minute supplémentaire, comme l’épée, le fleuret, le sabre et le Sabre Laser ; true ou null : selon l’arme, docs/adr/0043) ; postPoolSplitCriteria : gender pose la compétition couplée, scission par sexe dont les deux branches restent, null la retire). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour, structure contrôlée (au moins une phase de combat, nombre de qualifiés suffisant et réparti en poules, branche terminée par une phase qui classe, phases déjà commencées de l’épreuve conservées, avec la règle de qualification qui y mène, docs/adr/0041) ; refus : invalid_settings, une remarque par ligne avec la clé de la phase en cause ([pool-0], [tableau], [split], [formule] pour la formule entière), draw_done.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|

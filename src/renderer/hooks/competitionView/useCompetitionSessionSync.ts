@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Session, synchronisation distante, menu natif et rapières de la compétition
+ * BPM - Escrime - Session, synchronisation distante, menu natif et entrée en équipes de la compétition
  * Licensed under GPL-3.0
  */
 
@@ -39,10 +39,9 @@ import {
   type WithdrawalReason,
 } from '../../../shared/domain/fencers/withdrawal';
 import { useCompetitionReferees } from '../useCompetitionReferees';
-import { useRapieresCompetition } from '../../../features/rapieres/useRapieresCompetition';
+import { useTeamEntryCompetition } from '../../../features/teamEntry/useTeamEntryCompetition';
 import { usePoolWavesView } from '../usePoolWavesView';
-import { useRapieresTeams } from '../../../features/rapieres/useRapieresTeams';
-import { useRapieresViewProps } from '../../../features/rapieres/useRapieresViewProps';
+import { useTeamImport } from '../../../features/teamEntry/useTeamImport';
 import type { CompetitionViewProps } from '../../components/competition/competitionViewTypes';
 import { useCompetitionCore } from './useCompetitionCore';
 import { useRemoteApi } from '../../api/remoteApi';
@@ -56,7 +55,7 @@ const REASON_BY_STATUS: Partial<Record<FencerStatus, WithdrawalReason>> = {
   [FencerStatus.EXCLUDED]: 'exclusion',
 };
 
-/** Session, synchronisation distante, menu natif et rapières de la compétition (extrait de CompetitionView, #1599) */
+/** Session, synchronisation distante, menu natif et entrée en équipes de la compétition (extrait de CompetitionView, #1599) */
 export function useCompetitionSessionSync(ctx: Ctx) {
   const remote = useRemoteApi();
   const {
@@ -83,7 +82,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     remoteArenaCount,
     setRemoteArenaCount,
     remoteStripStart,
-    isRapieres,
+    isTeamEntry,
     isWaves,
     waves,
     setWavesState,
@@ -113,10 +112,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     t,
     generatePoolsHook,
     getSeededCheckedInFencers,
-    rapieres,
-    addFencer,
     bulkAddFencers,
-    setRapieresTeam,
     remoteServerUrl,
     exportPoolsPDF,
     printPoolsPDF,
@@ -453,37 +449,25 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     }
   };
 
-  // ─── Tournoi des rapières : équipes enregistrées comme tireurs (#1118) ─────
-  const rapieresViewProps = useRapieresViewProps(rapieres.teams, t); // appel + préparation (#1441)
-  const rapieresTeams = useRapieresTeams({
+  // ─── Entrée en équipes : import des équipes (binômes tireurs, #1118, docs/adr/0043) ─────
+  const teamImport = useTeamImport({
     competitionDate: competition.date,
-    addFencer,
     bulkAddFencers,
-    updateFencer,
-    // Composition par le moteur (setRapieresTeams, docs/adr/0017) ; repli local hors moteur
-    setRapieresTeam: (id, info) => {
-      void runCompetitionCommand('setRapieresTeams', { teams: [{ fencerId: id, info }] }).then(
-        outcome => {
-          if (outcome === 'local') setRapieresTeam(id, info);
-        }
-      );
-    },
     notify: ctx.showToast,
   });
-  const { rapieresFencerFields, handleSaveRapieresTeam } = rapieresTeams;
 
-  const { rapieresStats } = useRapieresCompetition({
-    isRapieres,
+  const { teamStats } = useTeamEntryCompetition({
+    isTeamEntry,
     isLoaded,
     fencers,
     overallRanking,
     rapieresState,
     setRapieresState,
     bulkAddFencers,
-    rapieresFencerFields,
+    teamFencerFields: teamImport.teamFencerFields,
   });
 
-  // Tour en vagues (formule, ou mode rapières) : vague en cours, tablettes, feuilles (docs/adr/0043)
+  // Tour en vagues (formule) : vague en cours, tablettes, feuilles (docs/adr/0043)
   const { resetPoolWaves, currentWaveMatchIds, printWaves, handlePrintWaveSheets } =
     usePoolWavesView({
       competitionId: competition.id,
@@ -541,7 +525,6 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     hasDirectElimination,
     thirdPlaceMatch,
     playAllPositions,
-    isRapieres,
     setPoolsLaunched,
     setViewedPoolRound,
     setRankingValidated,
@@ -609,11 +592,9 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     confirmScoresLoss,
     checkinUnchanged,
     handleGeneratePools,
-    rapieresViewProps,
-    rapieresTeams,
-    handleSaveRapieresTeam,
+    teamImport,
     resetPoolWaves,
-    rapieresStats,
+    teamStats,
     currentWaveMatchIds,
     printWaves,
     handlePrintWaveSheets,

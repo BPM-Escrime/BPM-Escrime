@@ -13,8 +13,8 @@ import { usePoolNumbering } from '../../hooks/usePoolNumbering';
 
 interface PoolsToolbarProps {
   isLaserSabre: boolean;
-  /** Tournoi des rapières : colonne « Cat. » proposée (#1864) */
-  isRapieres?: boolean;
+  /** Entrée en équipes : colonne « Cat. » proposée (#1864) */
+  isTeamEntry?: boolean;
   poolCardSize: React.ComponentProps<typeof WindowSizePresets>['value'];
   onPoolCardSizeChange: React.ComponentProps<typeof WindowSizePresets>['onChange'];
   poolsViewMode: 'grid' | 'single';
@@ -26,7 +26,7 @@ interface PoolsToolbarProps {
 
 const PoolsToolbar: React.FC<PoolsToolbarProps> = ({
   isLaserSabre,
-  isRapieres = false,
+  isTeamEntry = false,
   poolCardSize,
   onPoolCardSizeChange,
   poolsViewMode,
@@ -39,7 +39,7 @@ const PoolsToolbar: React.FC<PoolsToolbarProps> = ({
   const { numbering, toggleNumbering } = usePoolNumbering();
   return (
     <div className="pools-toolbar-1">
-      <GlobalPoolColumnsMenu isLaserSabre={isLaserSabre} hasCategory={isRapieres} />
+      <GlobalPoolColumnsMenu isLaserSabre={isLaserSabre} hasCategory={isTeamEntry} />
       {/* Numérotage : bulles = placement dans la poule au lieu des initiales (#1864) */}
       <Button
         variant={numbering ? 'primary' : 'secondary'}

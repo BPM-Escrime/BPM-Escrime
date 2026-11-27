@@ -50,10 +50,9 @@
 @import './screens/presentation-mode.css';
 @import './screens/qr-code-share.css';
 @import './screens/ranking-filter-bar.css';
-@import './screens/rapieres-ranking-panel.css';
-@import './screens/rapieres-team-modal.css';
-@import './screens/rapieres-wave-bar.css';
-@import './screens/rapieres-wave-print-dialog.css';
+@import './screens/team-ranking-panel.css';
+@import './screens/pool-wave-bar.css';
+@import './screens/pool-wave-print-dialog.css';
 @import './screens/referee-manager.css';
 @import './screens/remote-arena-grid.css';
 @import './screens/remote-header-section.css';

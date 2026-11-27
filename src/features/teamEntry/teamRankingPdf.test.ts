@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { generateRapieresRankingHTML } from './rapieresPdf';
+import { generateTeamRankingHTML } from './teamRankingPdf';
 
-describe('generateRapieresRankingHTML', () => {
+describe('generateTeamRankingHTML', () => {
   it('aligne les colonnes selon leur nature quand des colonnes sont masquées (#1279)', () => {
-    const html = generateRapieresRankingHTML({
+    const html = generateTeamRankingHTML({
       title: 'T',
       subtitle: 'S',
       headers: ['Équipe', 'V'],
@@ -16,7 +16,7 @@ describe('generateRapieresRankingHTML', () => {
   });
 
   it('garde la mise en page par défaut sans kinds', () => {
-    const html = generateRapieresRankingHTML({
+    const html = generateTeamRankingHTML({
       title: 'T',
       subtitle: 'S',
       headers: ['Rg'],
@@ -26,7 +26,7 @@ describe('generateRapieresRankingHTML', () => {
   });
 
   it("reprend le style du classement après poules et colore l'indice (#1279)", () => {
-    const html = generateRapieresRankingHTML({
+    const html = generateTeamRankingHTML({
       title: 'T',
       subtitle: 'S',
       headers: ['Rg', 'Équipe', 'Indice'],

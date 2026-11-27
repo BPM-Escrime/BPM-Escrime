@@ -16,12 +16,14 @@ import {
 import { deriveSettingsFromFormula } from '../../utils/customFormulaSettings';
 import { FormulaDraft, draftFromSettings, draftToSettings } from './formulaDraft';
 import { normalizeCustomFormula } from './formulaFrieze';
-import { flatSettingsOf, formulaOf, type FormulaV2 } from './formulaV2';
+import { flatSettingsOf, formulaFromCustom, formulaOf, type FormulaV2 } from './formulaV2';
+import { rapieresFormulaFrom } from './rapieresFormula';
 import { formulaV2Issues, operationsBetweenV2 } from './formulaV2Operations';
 import { validateFormulaSettings } from './validateFormulaSettings';
 
 export type FormulaTemplateBody =
   | { kind: 'draft'; draft: FormulaDraft }
+  /** `specialMode` : modèle personnel enregistré avant F4e, lu comme la formule des rapières */
   | { kind: 'custom'; formula: CustomFormulaConfig; specialMode?: CompetitionSpecialMode }
   /** Formule v2 (ADR-0036) ; `other` : modèle de l'arme « Autre » */
   | { kind: 'formula'; formula: FormulaV2; other?: boolean; specialMode?: CompetitionSpecialMode };
@@ -113,20 +115,33 @@ export function templateToSettings(
   base: Partial<CompetitionSettings> | undefined
 ): Partial<CompetitionSettings> {
   const formulaOrigin = { templateId: t.id, ...(t.season ? { season: t.season } : {}) };
+  // Le mode spécial n'est plus écrit (docs/adr/0043, F4e) : appliquer un modèle l'efface (clé
+  // retirée à l'enregistrement) ; un modèle personnel qui en portait un devient la formule des rapières
   if (t.body.kind === 'formula') {
+    const formula =
+      t.body.specialMode === 'rapieres' ? rapieresFormulaFrom(t.body.formula) : t.body.formula;
     return {
-      ...flatSettingsOf(t.body.formula, weapon),
-      formula: t.body.formula,
-      ...(weapon === Weapon.CUSTOM ? { specialMode: t.body.specialMode } : {}),
+      ...flatSettingsOf(formula, weapon),
+      formula,
+      ...(weapon === Weapon.CUSTOM ? { specialMode: undefined } : {}),
       formulaOrigin,
     };
   }
   if (t.body.kind === 'custom') {
-    const formula = normalizeCustomFormula(t.body.formula);
+    const custom = normalizeCustomFormula(t.body.formula);
+    if (t.body.specialMode === 'rapieres') {
+      const formula = rapieresFormulaFrom(formulaFromCustom(custom));
+      return {
+        ...flatSettingsOf(formula, weapon),
+        formula,
+        specialMode: undefined,
+        formulaOrigin,
+      };
+    }
     return {
-      customFormula: formula,
-      ...deriveSettingsFromFormula(formula),
-      specialMode: t.body.specialMode,
+      customFormula: custom,
+      ...deriveSettingsFromFormula(custom),
+      specialMode: undefined,
       formulaOrigin,
     };
   }
@@ -302,15 +317,6 @@ export function formulaDeviations(
         });
       }
     }
-    if (
-      template.body.kind !== 'draft' &&
-      (competition.settings?.specialMode ?? null) !== (template.body.specialMode ?? null)
-    )
-      deviations.push({
-        field: 'specialMode',
-        expected: template.body.specialMode,
-        actual: competition.settings?.specialMode,
-      });
     return { state: deviations.length ? 'adapted' : 'standard', template, deviations };
   }
   if (template.body.kind === 'custom') {

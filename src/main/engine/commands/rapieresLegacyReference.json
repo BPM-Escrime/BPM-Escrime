@@ -1,0 +1,1169 @@
+{
+  "v2_no_mode": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 2,
+      "ended": false,
+      "count": 3,
+      "canLaunchNext": true,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "teams": {
+      "EQ1": {
+        "level": "expert",
+        "category": "SENIOR",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ2": {
+        "level": "expert",
+        "category": "V1",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ3": {
+        "level": "intermediate",
+        "category": "V1",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ4": {
+        "level": "intermediate",
+        "category": "M20",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ5": {
+        "level": "intermediate",
+        "category": "V3",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ6": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ7": {
+        "level": "beginner",
+        "category": "V2",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ8": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "MIXED",
+        "club": "Club1"
+      }
+    },
+    "replay": []
+  },
+  "v2_normal": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 3,
+      "ended": false,
+      "count": 3,
+      "canLaunchNext": false,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "teams": {
+      "EQ1": {
+        "level": "expert",
+        "category": "SENIOR",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ2": {
+        "level": "expert",
+        "category": "V1",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ3": {
+        "level": "intermediate",
+        "category": "V1",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ4": {
+        "level": "intermediate",
+        "category": "M20",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ5": {
+        "level": "intermediate",
+        "category": "V3",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ6": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ7": {
+        "level": "beginner",
+        "category": "V2",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ8": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "MIXED",
+        "club": "Club1"
+      }
+    },
+    "replay": []
+  },
+  "v2_third": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 3,
+      "ended": true,
+      "count": 3,
+      "canLaunchNext": false,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "teams": {
+      "EQ1": {
+        "level": "expert",
+        "category": "SENIOR",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ2": {
+        "level": "expert",
+        "category": "V1",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ3": {
+        "level": "intermediate",
+        "category": "V1",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ4": {
+        "level": "intermediate",
+        "category": "M20",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ5": {
+        "level": "intermediate",
+        "category": "V3",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ6": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ7": {
+        "level": "beginner",
+        "category": "V2",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ8": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "MIXED",
+        "club": "Club1"
+      }
+    },
+    "replay": []
+  },
+  "v2_all": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 3,
+      "ended": false,
+      "count": 3,
+      "canLaunchNext": false,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "teams": {
+      "EQ1": {
+        "level": "expert",
+        "category": "SENIOR",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ2": {
+        "level": "expert",
+        "category": "V1",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ3": {
+        "level": "intermediate",
+        "category": "V1",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ4": {
+        "level": "intermediate",
+        "category": "M20",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ5": {
+        "level": "intermediate",
+        "category": "V3",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ6": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ7": {
+        "level": "beginner",
+        "category": "V2",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ8": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "MIXED",
+        "club": "Club1"
+      }
+    },
+    "replay": []
+  },
+  "v2_normal_excluded": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 3,
+      "ended": false,
+      "count": 3,
+      "canLaunchNext": false,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ4", 3],
+      ["EQ6", 4],
+      ["EQ5", 5],
+      ["EQ7", 6],
+      ["EQ8", 7]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ4", 3],
+      ["EQ6", 4],
+      ["EQ5", 5],
+      ["EQ7", 6],
+      ["EQ8", 7],
+      ["EQ3", null]
+    ],
+    "teams": {
+      "EQ1": {
+        "level": "expert",
+        "category": "SENIOR",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ2": {
+        "level": "expert",
+        "category": "V1",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ3": {
+        "level": "intermediate",
+        "category": "V1",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ4": {
+        "level": "intermediate",
+        "category": "M20",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ5": {
+        "level": "intermediate",
+        "category": "V3",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ6": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ7": {
+        "level": "beginner",
+        "category": "V2",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ8": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "MIXED",
+        "club": "Club1"
+      }
+    },
+    "replay": []
+  },
+  "v2_stored_percentage_excluded": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 3,
+      "ended": false,
+      "count": 3,
+      "canLaunchNext": false,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ3", 2],
+      ["EQ4", 3],
+      ["EQ6", 4],
+      ["EQ5", 5],
+      ["EQ7", 6],
+      ["EQ8", 7]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ3", 2],
+      ["EQ4", 3],
+      ["EQ6", 4],
+      ["EQ5", 5],
+      ["EQ7", 6],
+      ["EQ8", 7],
+      ["EQ2", null]
+    ],
+    "teams": {
+      "EQ1": {
+        "level": "expert",
+        "category": "SENIOR",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ2": {
+        "level": "expert",
+        "category": "V1",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ3": {
+        "level": "intermediate",
+        "category": "V1",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ4": {
+        "level": "intermediate",
+        "category": "M20",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ5": {
+        "level": "intermediate",
+        "category": "V3",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ6": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ7": {
+        "level": "beginner",
+        "category": "V2",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ8": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "MIXED",
+        "club": "Club1"
+      }
+    },
+    "replay": []
+  },
+  "v2_semis": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 3,
+      "ended": false,
+      "count": 3,
+      "canLaunchNext": false,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", null]
+    ],
+    "teams": {
+      "EQ1": {
+        "level": "expert",
+        "category": "SENIOR",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ2": {
+        "level": "expert",
+        "category": "V1",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ3": {
+        "level": "intermediate",
+        "category": "V1",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ4": {
+        "level": "intermediate",
+        "category": "M20",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ5": {
+        "level": "intermediate",
+        "category": "V3",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ6": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ7": {
+        "level": "beginner",
+        "category": "V2",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ8": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "MIXED",
+        "club": "Club1"
+      }
+    },
+    "replay": []
+  },
+  "v2_stored_percentage": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 1,
+      "ended": false,
+      "count": 3,
+      "canLaunchNext": true,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "teams": {
+      "EQ1": {
+        "level": "expert",
+        "category": "SENIOR",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ2": {
+        "level": "expert",
+        "category": "V1",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ3": {
+        "level": "intermediate",
+        "category": "V1",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ4": {
+        "level": "intermediate",
+        "category": "M20",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ5": {
+        "level": "intermediate",
+        "category": "V3",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ6": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ7": {
+        "level": "beginner",
+        "category": "V2",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ8": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "MIXED",
+        "club": "Club1"
+      }
+    },
+    "replay": []
+  },
+  "v2_stored_pool_heads": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 1,
+      "ended": false,
+      "count": 3,
+      "canLaunchNext": true,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "teams": {
+      "EQ1": {
+        "level": "expert",
+        "category": "SENIOR",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ2": {
+        "level": "expert",
+        "category": "V1",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ3": {
+        "level": "intermediate",
+        "category": "V1",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ4": {
+        "level": "intermediate",
+        "category": "M20",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ5": {
+        "level": "intermediate",
+        "category": "V3",
+        "gender": "MIXED",
+        "club": "Club1"
+      },
+      "EQ6": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "F",
+        "club": "Club2"
+      },
+      "EQ7": {
+        "level": "beginner",
+        "category": "V2",
+        "gender": "M",
+        "club": "Club0"
+      },
+      "EQ8": {
+        "level": "beginner",
+        "category": "SENIOR",
+        "gender": "MIXED",
+        "club": "Club1"
+      }
+    },
+    "replay": []
+  },
+  "v1": {
+    "effective": {
+      "poolRounds": 1,
+      "hasDirectElimination": true,
+      "poolWinnersOnly": false,
+      "thirdPlaceMatch": true,
+      "poolMaxScore": 5,
+      "tableMaxScore": 15,
+      "modernRules": true,
+      "wavesRound": true,
+      "victoryTieBreak": true
+    },
+    "state": {
+      "currentPhase": 2,
+      "pools": [
+        {
+          "number": 1,
+          "fencers": ["EQ1", "EQ3", "EQ5", "EQ7"]
+        },
+        {
+          "number": 2,
+          "fencers": ["EQ2", "EQ4", "EQ6", "EQ8"]
+        }
+      ],
+      "currentPoolRound": 1
+    },
+    "waves": {
+      "launched": 0,
+      "ended": false,
+      "count": 3,
+      "canLaunchNext": true,
+      "perPool": [
+        [
+          ["EQ1", "EQ3", 1],
+          ["EQ5", "EQ7", 1],
+          ["EQ1", "EQ5", 2],
+          ["EQ3", "EQ7", 2],
+          ["EQ1", "EQ7", 3],
+          ["EQ3", "EQ5", 3]
+        ],
+        [
+          ["EQ2", "EQ4", 1],
+          ["EQ6", "EQ8", 1],
+          ["EQ2", "EQ6", 2],
+          ["EQ4", "EQ8", 2],
+          ["EQ2", "EQ8", 3],
+          ["EQ4", "EQ6", 3]
+        ]
+      ]
+    },
+    "ranking": ["EQ1", "EQ2", "EQ3", "EQ4", "EQ6", "EQ5", "EQ7", "EQ8"],
+    "qualified": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "final": [
+      ["EQ1", 1],
+      ["EQ2", 2],
+      ["EQ3", 3],
+      ["EQ4", 4],
+      ["EQ6", 5],
+      ["EQ5", 6],
+      ["EQ7", 7],
+      ["EQ8", 8]
+    ],
+    "teams": {},
+    "replay": []
+  }
+}

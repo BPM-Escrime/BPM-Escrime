@@ -423,6 +423,7 @@ const GENERAL_FIELDS = [
   'postPoolSplitCriteria',
   'entry',
   'rankingFilters',
+  'tieBreakByVictory',
 ] as const;
 
 /**
@@ -714,9 +715,20 @@ export function applyOperationsV2(
         postPoolSplitCriteria: coupled,
         entry,
         rankingFilters,
+        tieBreakByVictory,
         ...rest
       } = o.settings as Partial<FormulaV2['general']>;
       f = { ...f, general: { ...f.general, ...rest } };
+      if ('tieBreakByVictory' in o.settings) {
+        // null ou false : réglage retiré (défaut : selon l'arme) ; vrai : égalité par vainqueur désigné
+        const { tieBreakByVictory: _old, ...general } = f.general;
+        if (tieBreakByVictory != null && typeof tieBreakByVictory !== 'boolean')
+          throw new FormulaOperationError(`${where} : « tieBreakByVictory » attend un booléen`);
+        f = {
+          ...f,
+          general: tieBreakByVictory === true ? { ...general, tieBreakByVictory } : general,
+        };
+      }
       if ('entry' in o.settings) {
         // null ou individuelle : clé absente (défaut) ; équipes : libellés contrôlés
         const { entry: _old, ...general } = f.general;
