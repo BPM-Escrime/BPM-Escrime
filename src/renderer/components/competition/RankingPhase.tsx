@@ -7,6 +7,7 @@ import type { Fencer, Pool, PoolRanking, Weapon } from '../../../shared/types';
 import RapieresRankingPanel from '../../../features/rapieres/RapieresRankingPanel';
 import type { RapieresTeamStats } from '../../../features/rapieres/RapieresRankingPanel';
 import type { RapieresTeamInfo } from '../../../shared/domain/rapieres/rapieres.types';
+import type { RankingFilterKey } from '../../../shared/domain/ranking/rankingFilters';
 import { rapieresPoolNumbers } from '../../../shared/domain/rapieres/rapieresCalculations';
 import PoolRankingView from '../PoolRankingView';
 
@@ -43,6 +44,8 @@ interface RankingPhaseProps {
   launchedWave: number;
   rapieresTeams: Record<string, RapieresTeamInfo>;
   rapieresStats: Map<string, RapieresTeamStats>;
+  /** Filtres du classement de la formule (docs/adr/0043, F4d) ; vide : ceux des rapières */
+  rankingFilters?: RankingFilterKey[];
 }
 
 const RankingPhase: React.FC<RankingPhaseProps> = ({
@@ -72,6 +75,7 @@ const RankingPhase: React.FC<RankingPhaseProps> = ({
   launchedWave,
   rapieresTeams,
   rapieresStats,
+  rankingFilters,
 }) => (
   <>
     {poolRoundSelector}
@@ -115,6 +119,7 @@ const RankingPhase: React.FC<RankingPhaseProps> = ({
         teams={rapieresTeams}
         stats={rapieresStats}
         poolOf={rapieresPoolNumbers(pools)}
+        filterKeys={rankingFilters}
       />
     )}
   </>

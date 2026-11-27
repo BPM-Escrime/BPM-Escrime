@@ -27,6 +27,7 @@ import { createDefaultCustomFormula } from '../../utils/tournamentTemplates';
 import { draftFromSettings, effectivePoolRounds } from './formulaDraft';
 import { normalizeCustomFormula } from './formulaFrieze';
 import { isWavesOrder } from '../pools/waves';
+import { normalizeRankingFilterKeys, type RankingFilterKey } from '../ranking/rankingFilters';
 
 /** Réglages v1 non exécutés, gardés pour l'aller-retour avec `customFormula` (retirés à la 3.0) */
 export type LegacyPoolSettings = Pick<
@@ -135,6 +136,11 @@ export interface FormulaV2 {
     postPoolSplitCriteria?: PostPoolSplitCriteria;
     /** Entrée (réglage expert, ADR-0043) ; absente : individuelle */
     entry?: FormulaEntry;
+    /**
+     * Filtres du classement final affiché (réglage expert, ADR-0043, F4d) : critères proposés à
+     * l'écran, aux PDF et au CSV ; absents : aucun filtre. Un affichage, pas une compétition fille.
+     */
+    rankingFilters?: RankingFilterKey[];
   };
   name?: string;
   notes?: string;
@@ -473,6 +479,11 @@ export function isWavesRound(
   return (
     settings?.specialMode === 'rapieres' || isWavesOrder(poolBoutOrderOfRound(settings, round))
   );
+}
+
+/** Filtres du classement final de l'épreuve : ceux de la formule, aucun par défaut (docs/adr/0043, F4d) */
+export function rankingFiltersOf(f: FormulaV2 | undefined): RankingFilterKey[] {
+  return normalizeRankingFilterKeys(f?.general.rankingFilters);
 }
 
 /** Entrée de l'épreuve : celle de la formule, individuelle par défaut (docs/adr/0043) */

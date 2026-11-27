@@ -35,6 +35,7 @@ import {
 import { simulateSplit } from '../../../shared/domain/formula/splitPlan';
 import { isWavesOrder, wavesSizeBounds } from '../../../shared/domain/pools/waves';
 import FormulaEntryFields from './FormulaEntryFields';
+import FormulaRankingFilterFields from './FormulaRankingFilterFields';
 import { bricksForLevel, formulaNeedsExpert } from '../../../shared/domain/formula/formulaExpert';
 import type { FormulaProgress, FormulaRemark } from '../../../shared/domain/formula/formulaRemarks';
 import {
@@ -607,7 +608,9 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
       expert && !isOther && pools.length > 0 && ((ownTableau && !split) || coupled);
     // Entrée en équipes (binômes) : réglage expert, toutes armes (docs/adr/0043)
     const showEntry = expert && !specialMode;
-    if (!isOther && !showRest && !showCoupled && !showEntry) return null;
+    // Filtres du classement final : réglage expert, toutes armes (docs/adr/0043, F4d)
+    const showRankingFilters = expert && !specialMode;
+    if (!isOther && !showRest && !showCoupled && !showEntry && !showRankingFilters) return null;
     return (
       <details className="properties-expert formula-editor__general">
         <summary>{t('properties.formula_general')}</summary>
@@ -621,6 +624,20 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
               onChange({
                 ...formula,
                 general: entry.kind === 'team' ? { ...general, entry } : general,
+              });
+            }}
+          />
+        )}
+        {showRankingFilters && (
+          <FormulaRankingFilterFields
+            id="formula-editor"
+            filters={formula.general.rankingFilters ?? []}
+            onChange={filters => {
+              // Aucun critère : réglage retiré (défaut), comme le serveur
+              const { rankingFilters: _filters, ...general } = formula.general;
+              onChange({
+                ...formula,
+                general: filters.length > 0 ? { ...general, rankingFilters: filters } : general,
               });
             }}
           />

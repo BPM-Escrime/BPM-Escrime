@@ -4815,7 +4815,9 @@
     "distribution_serpentine": "Serpentin sur le classement",
     "distribution_by_level": "Par niveau",
     "entry_levels_hint": "Libellés séparés par des virgules, du plus faible au plus fort ; le dernier est le niveau le plus fort.",
-    "distribution_hint": "Par niveau : les équipes de même niveau sont regroupées, du plus faible au plus fort, poule après poule."
+    "distribution_hint": "Par niveau : les équipes de même niveau sont regroupées, du plus faible au plus fort, poule après poule.",
+    "ranking_filters": "Filtres du classement final",
+    "ranking_filters_hint": "Critères proposés pour filtrer le classement final (écran, PDF, CSV) : un classement filtré est renuméroté depuis 1. Simple affichage : le classement publié reste le classement complet."
   },
   "formulaTemplates": {
     "template": "Modèle de formule",
@@ -4918,5 +4920,16 @@
     "handicap": "HANDI",
     "level_unknown": "Non précisé",
     "handicap_hint": "Équipe handisport : marqueur distinct de la catégorie."
+  },
+  "rankingFilters": {
+    "title": "Filtres du classement",
+    "category": "Catégorie",
+    "gender": "Sexe",
+    "level": "Niveau",
+    "handicap": "HANDI",
+    "all_categories": "Toutes catégories",
+    "all_genders": "Tous sexes",
+    "all_levels": "Tous niveaux",
+    "handicap_only": "HANDI seulement"
   }
 }

@@ -13,16 +13,21 @@ import { useToast } from '../../renderer/components/Toast';
 import {
   RAPIERES_AGE_CATEGORIES,
   RAPIERES_LEVELS,
-  RapieresAgeCategory,
   RapieresFencer,
-  RapieresLevel,
   RapieresTeamGender,
   RapieresTeamInfo,
 } from '../../shared/domain/rapieres/rapieres.types';
 import {
-  filterRanking,
-  RapieresRankingFilter,
+  RAPIERES_RANKING_FILTERS,
+  rapieresRankingSubject,
 } from '../../shared/domain/rapieres/rapieresCalculations';
+import {
+  filterRanking,
+  restrictRankingFilter,
+  type RankingFilter,
+  type RankingFilterKey,
+} from '../../shared/domain/ranking/rankingFilters';
+import RankingFilterBar from '../../renderer/components/results/RankingFilterBar';
 import {
   exportRapieresRankingToPDF,
   printRapieresRanking,
@@ -77,6 +82,11 @@ interface RapieresRankingPanelProps {
   stats: Map<string, RapieresTeamStats>;
   /** Numéro de poule par équipe : ajoute la colonne « Poule » (classement après poules) */
   poolOf?: Record<string, number>;
+  /**
+   * Filtres proposés : ceux de la formule (`rankingFilters`, docs/adr/0043, F4d) ; absents, les
+   * filtres actuels des rapières (catégorie, sexe, niveau, HANDI)
+   */
+  filterKeys?: readonly RankingFilterKey[];
 }
 
 const fencerName = (f: RapieresFencer) => `${f.lastName.toUpperCase()} ${f.firstName}`.trim();
@@ -90,6 +100,7 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
   teams,
   stats,
   poolOf,
+  filterKeys,
 }) => {
   const { t } = useTranslation();
   const { showToast } = useToast();
@@ -98,10 +109,9 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
     : wave > 0
       ? t('rapieres.ranking_intermediate_wave', { n: wave })
       : t('rapieres.ranking_intermediate');
-  // Filtres cumulables sur les équipes : catégorie, niveau, sexe (vide = non pris en compte)
-  const [category, setCategory] = useState<RapieresAgeCategory | ''>('');
-  const [level, setLevel] = useState<RapieresLevel | ''>('');
-  const [gender, setGender] = useState<RapieresTeamGender | ''>('');
+  // Filtres cumulables sur les équipes (vide = non pris en compte), domaine générique
+  const [filterValues, setFilterValues] = useState<RankingFilter>({});
+  const keys = filterKeys && filterKeys.length > 0 ? filterKeys : RAPIERES_RANKING_FILTERS;
   const [hidden, setHidden] = useState<string[]>(loadHidden);
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleColumn = (id: string) => {
@@ -116,21 +126,34 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
 
   const genderLabel = (g: RapieresTeamGender) =>
     g === 'MIXED' ? t('rapieres.gender_mixed') : t(g === 'M' ? 'genders.male' : 'genders.female');
-  const filter: RapieresRankingFilter = {
-    ...(category ? { category } : {}),
-    ...(level ? { level } : {}),
-    ...(gender ? { gender } : {}),
-  };
+  const filter = restrictRankingFilter(filterValues, keys);
   const activeLabels = [
-    category && t(`rapieres.cat_${category}`),
-    level && t(`rapieres.level_${level}`),
-    gender && genderLabel(gender),
+    filter.category !== undefined && t(`rapieres.cat_${filter.category}`),
+    filter.level !== undefined && t(`rapieres.level_${filter.level}`),
+    filter.gender !== undefined && genderLabel(filter.gender as RapieresTeamGender),
+    filter.handicap && t('rankingFilters.handicap'),
   ].filter(Boolean);
   const filterLabel =
     activeLabels.length > 0 ? activeLabels.join(' · ') : t('rapieres.ranking_teams');
 
+  // Listes fixes du mode : catégories d'âge (HANDI est un filtre à part), niveaux, sexes d'équipe
+  const filterOptions = {
+    category: RAPIERES_AGE_CATEGORIES.filter(c => c !== 'HANDI').map(c => ({
+      value: c,
+      label: t(`rapieres.cat_${c}`),
+    })),
+    gender: (['M', 'F', 'MIXED'] as RapieresTeamGender[]).map(g => ({
+      value: g,
+      label: genderLabel(g),
+    })),
+    level: RAPIERES_LEVELS.map(l => ({ value: l as string, label: t(`rapieres.level_${l}`) })),
+  };
   const byId = new Map(fencers.map(f => [f.id, f]));
-  const rows = filterRanking(ranked, teams, filter, new Date());
+  const rows = filterRanking(
+    ranked,
+    r => (teams[r.teamId] ? rapieresRankingSubject(teams[r.teamId], new Date()) : undefined),
+    filter
+  );
   const showPool = !!poolOf;
 
   const allHeaders: Record<string, string> = {
@@ -197,45 +220,13 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
     <div className="card rapieres-ranking-panel-1">
       <div className="rapieres-ranking-panel-2">
         <h3 className="rapieres-ranking-panel-3">{title}</h3>
-        <select
-          className="form-input rapieres-ranking-panel-4"
-          aria-label={t('rapieres.category')}
-          value={category}
-          onChange={e => setCategory(e.target.value as RapieresAgeCategory | '')}
-        >
-          <option value="">{t('rapieres.filter_category_all')}</option>
-          {RAPIERES_AGE_CATEGORIES.map(c => (
-            <option key={c} value={c}>
-              {t(`rapieres.cat_${c}`)}
-            </option>
-          ))}
-        </select>
-        <select
-          className="form-input rapieres-ranking-panel-4"
-          aria-label={t('rapieres.level')}
-          value={level}
-          onChange={e => setLevel(e.target.value as RapieresLevel | '')}
-        >
-          <option value="">{t('rapieres.filter_level_all')}</option>
-          {RAPIERES_LEVELS.map(l => (
-            <option key={l} value={l}>
-              {t(`rapieres.level_${l}`)}
-            </option>
-          ))}
-        </select>
-        <select
-          className="form-input rapieres-ranking-panel-4"
-          aria-label={t('rapieres.gender')}
-          value={gender}
-          onChange={e => setGender(e.target.value as RapieresTeamGender | '')}
-        >
-          <option value="">{t('rapieres.filter_gender_all')}</option>
-          {(['M', 'F', 'MIXED'] as RapieresTeamGender[]).map(g => (
-            <option key={g} value={g}>
-              {genderLabel(g)}
-            </option>
-          ))}
-        </select>
+        <RankingFilterBar
+          keys={keys}
+          value={filter}
+          onChange={setFilterValues}
+          options={filterOptions}
+          className="rapieres-ranking-panel-2"
+        />
         <div className="ranking-col-wrap">
           <Button
             type="button"

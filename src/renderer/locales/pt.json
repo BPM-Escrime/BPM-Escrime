@@ -4815,7 +4815,9 @@
     "distribution_serpentine": "Serpentina segundo a classificação",
     "distribution_by_level": "Por nível",
     "entry_levels_hint": "Etiquetas separadas por vírgulas, da mais fraca à mais forte; a última é o nível mais forte.",
-    "distribution_hint": "Por nível: as equipas do mesmo nível são agrupadas, da mais fraca à mais forte, poule após poule."
+    "distribution_hint": "Por nível: as equipas do mesmo nível são agrupadas, da mais fraca à mais forte, poule após poule.",
+    "ranking_filters": "Filtros da classificação final",
+    "ranking_filters_hint": "Critérios para filtrar a classificação final (ecrã, PDF, CSV): uma classificação filtrada é renumerada a partir de 1. Apenas visualização: a classificação publicada continua a ser a completa."
   },
   "formulaTemplates": {
     "template": "Modelo de fórmula",
@@ -4918,5 +4920,16 @@
     "handicap": "Adaptado",
     "level_unknown": "Não especificado",
     "handicap_hint": "Equipa de desporto adaptado: marcador distinto da categoria."
+  },
+  "rankingFilters": {
+    "title": "Filtros da classificação",
+    "category": "Categoria",
+    "gender": "Género",
+    "level": "Nível",
+    "handicap": "Adaptado",
+    "all_categories": "Todas as categorias etárias",
+    "all_genders": "Todos os géneros",
+    "all_levels": "Todos os níveis",
+    "handicap_only": "Apenas adaptado"
   }
 }

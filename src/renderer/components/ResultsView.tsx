@@ -10,12 +10,11 @@ import type { Pool } from '../../shared/types';
 import { useToast } from './Toast';
 import { exportBlackCardReport, isBlackCardExclusion } from '../services/blackCardReport';
 import { useTranslation } from '../hooks/useTranslation';
-import { applyBlackCardRanking } from '../../shared/utils/blackCardRanking';
 import { exportResultsXMLFFE } from '../../shared/utils/multiFormatExport';
 import { encodeFFFWin1252, exportResultsToFFF } from '../../shared/utils/fencerExport';
 // pdfExport (jsPDF) chargé à la demande pour alléger le bundle initial
 import type { TableauMatchForPDF, FinalResultForPDF } from '../../shared/utils/pdfExport';
-import { statusCode, finalRankLabel, poolEliminatedAt } from '../../shared/utils/forfeit';
+import { statusCode, finalRankLabel } from '../../shared/utils/forfeit';
 import { usePdfTemplateStore } from '../../features/pdfTemplates/hooks/usePdfTemplateStore';
 import type { ConsolationBracket, TableauMatch } from '../../shared/domain/tableau/tableauTypes';
 import BookSectionsModal from './BookSectionsModal';
@@ -32,6 +31,17 @@ import {
   loadExportTableauSignatures,
 } from './results/resultsExportData';
 import type { SplitHistoryEntry } from '../../shared/domain/formula/splitPlan';
+import { entryOf, rankingFiltersOf } from '../../shared/domain/formula/formulaV2';
+import { DEFAULT_TEAM_LEVELS } from '../../shared/domain/fencers/teamEntry';
+import { finalRanking } from '../../shared/domain/ranking/finalRanking';
+import {
+  filterRanking,
+  restrictRankingFilter,
+  subjectOfFencer,
+  type RankingFilter,
+} from '../../shared/domain/ranking/rankingFilters';
+import RankingFilterBar from './results/RankingFilterBar';
+import { rankingFilterLabels, rankingFilterOptions } from './results/rankingFilterOptions';
 
 // Bloc « Branches » chargé à la demande (épreuve scindée seulement, budget du bundle)
 const SplitBranchesPanel = React.lazy(() =>
@@ -329,6 +339,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   const [isExportMenuOpen, setIsExportMenuOpen] = React.useState(false);
   const [isBookModalOpen, setIsBookModalOpen] = React.useState(false);
   const exportMenuRef = React.useRef<HTMLDivElement>(null);
+  const [filterValues, setFilterValues] = React.useState<RankingFilter>({});
 
   React.useEffect(() => {
     if (!isExportMenuOpen) return;
@@ -363,38 +374,26 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     return live ? { ...f, status: live.status, exclusionReason: live.exclusionReason } : f;
   };
 
-  const baseResults = (() => {
-    if (finalResults.length === 0) {
-      return poolRanking.map((pr, idx) => {
-        const fencer = freshFencer(pr.fencer);
-        return {
-          // Tableau arrêté : rangs du classement final, ex aequo compris (Q5, ADR-0037)
-          rank: stageEliminatedAt?.size ? pr.rank : idx + 1,
-          fencer,
-          eliminatedAt: stageEliminatedAt?.get(fencer.id) ?? poolEliminatedAt(fencer),
-        };
-      });
-    }
-    const tableauIds = new Set(finalResults.map(r => r.fencer.id));
-    const poolEliminated = poolRanking
-      .filter(pr => !tableauIds.has(pr.fencer.id))
-      .map((pr, idx) => {
-        const fencer = freshFencer(pr.fencer);
-        return {
-          rank: finalResults.length + idx + 1,
-          fencer,
-          eliminatedAt: poolEliminatedAt(fencer),
-        };
-      });
-    return [...finalResults.map(r => ({ ...r, fencer: freshFencer(r.fencer) })), ...poolEliminated];
-  })();
+  // Classement final complet (domaine, docs/adr/0043 F4d) : XML, FFF et livre complet le gardent
+  const fullResults = finalRanking({
+    finalResults,
+    poolRanking,
+    stageEliminatedAt,
+    refresh: freshFencer,
+  });
 
-  // Carton noir (#1418) : rang perdu (« - »), en bas de liste, les suivants remontent ;
-  // ex aequo départagés par le classement de composition du tableau (rang de poules)
-  const resultsToDisplay = applyBlackCardRanking(
-    baseResults,
-    new Map(poolRanking.map(pr => [pr.fencer.id, pr.rank]))
-  );
+  // Classement filtré (réglage `rankingFilters` de la formule) : affichage, CSV, PDF, impression
+  const filterKeys = rankingFiltersOf(competition.settings?.formula);
+  const subjectOf = (r: { fencer: Fencer }) =>
+    subjectOfFencer(fencerById.get(r.fencer.id) ?? r.fencer);
+  const filter = restrictRankingFilter(filterValues, filterKeys);
+  const resultsToDisplay = filterRanking(fullResults, subjectOf, filter);
+  const entry = entryOf(competition.settings?.formula);
+  const levels = entry.kind === 'team' ? entry.levels : DEFAULT_TEAM_LEVELS;
+  const filterOptions = rankingFilterOptions(fullResults.map(subjectOf), levels, t);
+  // Sous-titre des PDF : critères retenus, ex. « Résultats — Épreuve — Féminin · HANDI »
+  const filterSuffix = rankingFilterLabels(filter, levels, t).join(' · ');
+  const pdfTitle = `Résultats — ${competition.title}${filterSuffix ? ` — ${filterSuffix}` : ''}`;
 
   // Export CSV
   const exportCSV = () => {
@@ -440,12 +439,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     try {
       const logo = localStorage.getItem('bellepoule-logo') ?? undefined;
       const { exportResultsToPDF } = await import('../../shared/utils/pdfExport');
-      await exportResultsToPDF(
-        resultsToDisplay,
-        `Résultats — ${competition.title}`,
-        logo,
-        rankingTemplate
-      );
+      await exportResultsToPDF(resultsToDisplay, pdfTitle, logo, rankingTemplate);
     } catch (e) {
       showToast((e as Error).message, 'error');
     }
@@ -456,12 +450,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     try {
       const logo = localStorage.getItem('bellepoule-logo') ?? undefined;
       const { printResultsHTML } = await import('../../shared/utils/pdfExport');
-      await printResultsHTML(
-        resultsToDisplay,
-        `Résultats — ${competition.title}`,
-        logo,
-        rankingTemplate
-      );
+      await printResultsHTML(resultsToDisplay, pdfTitle, logo, rankingTemplate);
     } catch (e) {
       showToast((e as Error).message, 'error');
     }
@@ -472,7 +461,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     const xmlContent = exportResultsXMLFFE(
       competition,
       poolRanking,
-      resultsToDisplay.map(r => ({
+      fullResults.map(r => ({
         rank: r.rank,
         fencer: r.fencer,
         eliminatedAt: r.eliminatedAt,
@@ -493,7 +482,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   const exportFFF = () => {
     const content = exportResultsToFFF(
       competition,
-      resultsToDisplay.map(r => ({ rank: r.rank, fencer: r.fencer, eliminatedAt: r.eliminatedAt }))
+      fullResults.map(r => ({ rank: r.rank, fencer: r.fencer, eliminatedAt: r.eliminatedAt }))
     );
     const blob = new Blob([encodeFFFWin1252(content) as BlobPart], {
       type: 'text/plain;charset=windows-1252',
@@ -548,7 +537,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
           name: b.name,
           matches: b.matches as TableauMatchForPDF[],
         })),
-        finalResults: resultsToDisplay as FinalResultForPDF[],
+        finalResults: fullResults as FinalResultForPDF[],
         competitionTitle: competition.title,
         isLaserSabre,
         template: rankingTemplate,
@@ -599,7 +588,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   // résultats finals) : vainqueurs dans les filles, ni champion ni podium ici
   const split = (splitBranches?.length ?? 0) > 0;
   const noWinnerHere = split && finalResults.length === 0;
-  const champion = noWinnerHere ? undefined : resultsToDisplay.find(r => r.rank === 1);
+  const champion = noWinnerHere ? undefined : fullResults.find(r => r.rank === 1);
 
   return (
     <div style={RV_STYLES.wrapper}>
@@ -632,34 +621,34 @@ const ResultsView: React.FC<ResultsViewProps> = ({
       {!noWinnerHere && (
         <div style={RV_STYLES.podiumRow}>
           {/* 2ème place */}
-          {resultsToDisplay[1] && (
+          {fullResults[1] && (
             <div style={RV_STYLES.podium2}>
               <div style={RV_STYLES.podium2Medal}>
                 <Icon icon={Medal} className="medal-silver" />
               </div>
-              <div style={RV_STYLES.podium2Name}>{resultsToDisplay[1].fencer.lastName}</div>
+              <div style={RV_STYLES.podium2Name}>{fullResults[1].fencer.lastName}</div>
               <div style={RV_STYLES.podium2Place}>{t('resultsView.second')}</div>
             </div>
           )}
 
           {/* 1ère place */}
-          {resultsToDisplay[0] && (
+          {fullResults[0] && (
             <div style={RV_STYLES.podium1}>
               <div style={RV_STYLES.podium1Medal}>
                 <Icon icon={Medal} className="medal-gold" />
               </div>
-              <div style={RV_STYLES.podium1Name}>{resultsToDisplay[0].fencer.lastName}</div>
+              <div style={RV_STYLES.podium1Name}>{fullResults[0].fencer.lastName}</div>
               <div style={RV_STYLES.podium1Place}>{t('resultsView.first')}</div>
             </div>
           )}
 
           {/* 3ème place */}
-          {resultsToDisplay[2] && (
+          {fullResults[2] && (
             <div style={RV_STYLES.podium3}>
               <div style={RV_STYLES.podium3Medal}>
                 <Icon icon={Medal} className="medal-bronze" />
               </div>
-              <div style={RV_STYLES.podium3Name}>{resultsToDisplay[2].fencer.lastName}</div>
+              <div style={RV_STYLES.podium3Name}>{fullResults[2].fencer.lastName}</div>
               <div style={RV_STYLES.podium3Place}>{t('resultsView.third')}</div>
             </div>
           )}
@@ -667,7 +656,15 @@ const ResultsView: React.FC<ResultsViewProps> = ({
       )}
 
       {/* Tableau complet des résultats : masqué si l'épreuve scindée ne classe personne */}
-      {!(split && resultsToDisplay.length === 0) && (
+      {!(split && fullResults.length === 0) && filterKeys.length > 0 && (
+        <RankingFilterBar
+          keys={filterKeys}
+          value={filter}
+          onChange={setFilterValues}
+          options={filterOptions}
+        />
+      )}
+      {!(split && fullResults.length === 0) && (
         <div style={RV_STYLES.tableWrapper}>
           <div style={RV_STYLES.tableHeader}>
             {t('resultsView.final_title', { n: resultsToDisplay.length })}

@@ -12,6 +12,7 @@ import {
   poolBoutOrderOfRound,
   poolDistributionOfRound,
   entryOf,
+  rankingFiltersOf,
 } from '../../shared/domain/formula/formulaV2';
 import { screenFormulaProgress } from './formula/screenFormulaProgress';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
@@ -723,6 +724,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             launchedWave={waves.launched}
             rapieresTeams={rapieres.teams}
             rapieresStats={rapieresStats}
+            rankingFilters={rankingFiltersOf(competition.settings?.formula)}
           />
         )}
 
@@ -818,6 +820,7 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
             fencers={fencers}
             teams={rapieres.teams}
             stats={rapieresStats}
+            filterKeys={rankingFiltersOf(competition.settings?.formula)}
           />
         )}
         {currentPhase === 'remote' && (
