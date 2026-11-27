@@ -611,7 +611,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </div>
-            <div className="w-28">
+            <div className="w-24">
               <label
                 htmlFor="new-team-ranking"
                 className="text-xs font-medium text-gray-500 block mb-1"
