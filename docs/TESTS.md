@@ -106,7 +106,7 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 25 | 284 |
-| `src/main/` | 161 | 1428 |
+| `src/main/` | 161 | 1429 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 41 | 220 |
 | `src/renderer/components/` | 141 | 798 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 56 | 693 |
+| `src/shared/domain/` | 56 | 694 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **653** | **5206** |
+| **Total** | **653** | **5208** |
 
-Unitaires : 630 fichiers, 5148 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3607,7 +3607,7 @@ Unitaires : 630 fichiers, 5148 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/splitCompetition.test.ts</code> — 16 tests</summary>
+<summary><code>src/main/engine/commands/splitCompetition.test.ts</code> — 17 tests</summary>
 
 - outil MCP split\_competition, droit competition:write
 - qualification du tour appliquée : les non-qualifiés restent classés dans l’origine
@@ -3615,6 +3615,7 @@ Unitaires : 630 fichiers, 5148 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - écart d’historique réparé par la reconstruction (projection du journal)
 - par sexe, branche « poules puis tableau » : appel, tireurs pointés, rang d’entrée
 - par catégorie : catégorie de la fille quand la branche n’en a qu’une
+- par catégorie : plusieurs catégories dans la branche → la plus jeune (V3 + V4 → V3)
 - split\_value\_missing : tireur sans catégorie ; la simulation le liste sans refuser
 - refus : sans scission, poules non terminées, branche manuelle inconnue
 - échec au milieu : tout est annulé (ni fille, ni tireurs, ni marque, ni journal)
@@ -9516,13 +9517,14 @@ Unitaires : 630 fichiers, 5148 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/fencers/fencerCategory.test.ts</code> — 4 tests</summary>
+<summary><code>src/shared/domain/fencers/fencerCategory.test.ts</code> — 5 tests</summary>
 
 - **catégorie du tireur (docs/adr/0039)**
   - codes reconnus : U17, M17, Senior, V3 ; inconnus rejetés
   - date de naissance et saison de l’épreuve (1er septembre → 31 août)
   - « Calculer les catégories » : seulement les tireurs sans catégorie
   - libellé court comme les feuilles FFE
+  - catégorie de la fille de scission : la plus jeune de la branche, sinon l’origine
 
 </details>
 
