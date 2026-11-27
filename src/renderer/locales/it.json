@@ -1122,12 +1122,6 @@
     "match_order_standard": "Ordine standard",
     "match_order_classic": "Ordine classico",
     "match_order_hint": "L'ordine classico si applica ai gironi da 10 a 15 squadre; gli altri gironi mantengono l'ordine standard.",
-    "tableau_mode_title": "Quale modalità di tabellone vuoi usare?",
-    "tableau_mode_normal": "Tabellone normale",
-    "tableau_mode_third": "Tabellone con 3° posto",
-    "tableau_mode_all": "Tabellone con tutti i posti disputati",
-    "tableau_mode_semis": "Semifinali",
-    "semis_unavailable": "Semifinali impossibili con questo numero di gironi (da 1 a 4).",
     "club": "Società",
     "region": "Regione",
     "print_wave_range": "Scegli turni da stampare",
@@ -3387,7 +3381,8 @@
     "mode_percentage": "Top %",
     "mode_fixed_count": "Numero fisso",
     "mode_fixed_bracket": "Tabellone successivo",
-    "mode_pool_winner": "Vincitore del girone"
+    "mode_pool_winner": "Vincitore del girone",
+    "mode_pool_heads": "Primi dei gironi, poi i successivi"
   },
   "print": {
     "title": "Stampa",

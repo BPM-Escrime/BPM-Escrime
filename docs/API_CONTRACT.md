@@ -413,8 +413,8 @@ après le tirage passe par `recordScore` avec `correction { reason, rebuildTable
 journal des scores, `ScoreRecorded.correction`, tableau gardé ou retiré dans la même commande).
 Palier « état d'interface » commencé : une relecture après une commande ne change plus l'onglet
 affiché (seul le chargement de l'épreuve le reprend de l'état). Palier « rapières » fait : vagues
-lancées, arrêtées ou reprises par `launchPoolWave` / `endPoolWaves` (tour en vagues, alias `launchRapieresWave` / `endRapieresWaves`, ADR-0043) ; mode de tableau joint
-à `generateTableau` (`rapieresTableauMode`, dans `TableauGenerated`). Annulation d'un score (poule
+lancées, arrêtées ou reprises par `launchPoolWave` / `endPoolWaves` (tour en vagues, alias `launchRapieresWave` / `endRapieresWaves`, ADR-0043) ; mode de tableau des rapières : réglages de la formule (qualification `pool_heads` 4 + `thirdPlace` pour les demi-finales, `thirdPlace`, `allPlaces`, ADR-0043 F4b), plus de fenêtre au passage au tableau ; l'option `rapieresTableauMode` de
+`generateTableau` (dans `TableauGenerated`) reste lue au rejeu et acceptée comme alias. Annulation d'un score (poule
 et tableau) par `clearScore` (`ScoreCleared`). Arbitres et pistes par `assignMatches`
 (arbitres d'une poule, affectations de l'onglet Arbitres, piste d'une poule, pistes et arbitres
 des matchs de tableau dont l'affectation automatique des pistes) ; pas encore d'événement : le

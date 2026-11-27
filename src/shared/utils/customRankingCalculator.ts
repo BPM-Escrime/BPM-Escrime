@@ -195,6 +195,8 @@ export function resolveAdvancement(
       cutoff = Math.round(eligible.length * ((rule.percentage ?? 80) / 100));
       break;
     case 'fixed_count':
+    case 'pool_heads':
+      // Têtes de poule : sans accès aux poules ici, `count` premiers du classement
       cutoff = Math.min(rule.count ?? eligible.length, eligible.length);
       break;
     case 'fixed_bracket': {
@@ -272,6 +274,7 @@ function calcAdvancingCount(
     case 'percentage':
       return Math.round(eligible * ((rule.percentage ?? 80) / 100));
     case 'fixed_count':
+    case 'pool_heads':
       return Math.min(rule.count ?? eligible, eligible);
     case 'fixed_bracket': {
       const sizes = [2, 4, 8, 16, 32, 64, 128, 256];

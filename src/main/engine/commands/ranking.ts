@@ -141,14 +141,24 @@ export function clearTableau(
   const slot = slotOfGroup(comp, session, group);
   const had = slot.matches.length;
   const report = { dryRun: !!input.dryRun, cleared: had };
-  if (input.dryRun || had === 0) return report;
+  // Mode de tableau hérité des rapières (`rapieres.tableauMode`) : effacé avec le tableau, la
+  // formule décide ensuite (docs/adr/0043, F4b)
+  const { tableauMode, ...rapieres } = (session.rapieres ?? {}) as Record<string, unknown>;
+  const legacyMode = tableauMode !== undefined;
+  if (input.dryRun || (had === 0 && !legacyMode)) return report;
   ctx.db.transaction(() => {
-    writeSession(
-      ctx,
-      comp.id,
-      slotPatch(session, slot, { tableauMatches: [], consolationBrackets: [], finalResults: [] })
-    );
-    recordEvents(ctx, comp.id, [{ type: EVENT.tableauCleared, payload: group ? { group } : {} }]);
+    writeSession(ctx, comp.id, {
+      ...(had > 0
+        ? slotPatch(session, slot, {
+            tableauMatches: [],
+            consolationBrackets: [],
+            finalResults: [],
+          })
+        : {}),
+      ...(legacyMode ? { rapieres } : {}),
+    });
+    if (had > 0)
+      recordEvents(ctx, comp.id, [{ type: EVENT.tableauCleared, payload: group ? { group } : {} }]);
   });
   emitSession(ctx, comp.id);
   return report;

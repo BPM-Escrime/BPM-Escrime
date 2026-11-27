@@ -80,10 +80,13 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
 
   // Jugement en direct (ADR-0041) : mêmes fonctions que le moteur, qui reste le dernier rempart
   const knownFencerCount = competition.fencerCount || undefined;
+  // Formule enregistrée : la qualification des phases commencées ne change plus (S6)
+  const [stored] = useState<FormulaV2>(() => formulaOf(competition));
   const remarks = formulaV2Issues(
     formula,
     { weapon, isTeamEvent: !!competition.isTeamEvent, fencerCount: knownFencerCount },
-    progress
+    progress,
+    stored
   );
 
   const nextSettings = (): CompetitionSettings => ({
@@ -196,6 +199,7 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
         isTeamEvent={!!competition.isTeamEvent}
         knownFencerCount={knownFencerCount}
         progress={progress}
+        stored={stored}
         remarks={remarks}
       />
     </Modal>

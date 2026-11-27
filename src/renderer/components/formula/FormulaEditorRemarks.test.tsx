@@ -297,6 +297,28 @@ describe('Organisation ▸ Formule : Enregistrer grisé tant qu’une remarque b
     expect(screen.getByTestId('formula-modal-save')).toBeDisabled();
     expect(screen.getByTestId('formula-remarks')).toHaveTextContent('phase déjà commencée');
   });
+
+  it('tableau tiré : changer la qualification du tour grise Enregistrer (S6, ADR-0041)', () => {
+    const f = withPools([{ qualification: { mode: 'fixed_count', count: 16 } }]);
+    render(
+      <CompetitionFormulaModal
+        competition={competition(f)}
+        progress={['pool', 'tableau']}
+        onApplied={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.getByTestId('formula-modal-save')).not.toBeDisabled();
+    fireEvent.change(screen.getByTestId('advancement-count'), { target: { value: '8' } });
+    expect(screen.getByTestId('formula-modal-save')).toBeDisabled();
+    expect(screen.getByTestId('formula-remark-pool-0')).toBeInTheDocument();
+    expect(screen.getByTestId('phase-remarks')).toHaveTextContent(
+      'elle mène à une phase déjà commencée'
+    );
+    // Retour à la règle enregistrée : levée
+    fireEvent.change(screen.getByTestId('advancement-count'), { target: { value: '16' } });
+    expect(screen.getByTestId('formula-modal-save')).not.toBeDisabled();
+  });
 });
 
 describe('avertissements dans l’aperçu (ADR-0041)', () => {

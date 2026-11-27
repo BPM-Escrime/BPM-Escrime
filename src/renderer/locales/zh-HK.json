@@ -1122,12 +1122,6 @@
     "match_order_standard": "標準次序",
     "match_order_classic": "經典次序",
     "match_order_hint": "經典次序適用於 10 至 15 隊的小組；其他小組保留標準次序。",
-    "tableau_mode_title": "要採用哪種賽程模式？",
-    "tableau_mode_normal": "普通賽程",
-    "tableau_mode_third": "含第3名賽",
-    "tableau_mode_all": "全部名次均需比賽的對陣表",
-    "tableau_mode_semis": "半決賽",
-    "semis_unavailable": "此池數無法進行半決賽（1 至 4 池）。",
     "club": "俱樂部",
     "region": "地區",
     "print_wave_range": "選擇要列印的輪次",
@@ -3387,7 +3381,8 @@
     "mode_percentage": "前 %",
     "mode_fixed_count": "固定人數",
     "mode_fixed_bracket": "下一淘汰表",
-    "mode_pool_winner": "分組首名"
+    "mode_pool_winner": "分組首名",
+    "mode_pool_heads": "各組首名，其後依次遞補"
   },
   "print": {
     "title": "列印",

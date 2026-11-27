@@ -9,6 +9,7 @@ import { filterPoolWinners } from '../../utils/poolCalculations';
 import { countTableauBouts } from '../../utils/tableauBouts';
 import { getTableauAdvancement, tableauAdvancementCut } from '../../utils/customFormulaSettings';
 import type { TiedAtBar } from './advancement';
+import { poolHeadsCut } from './poolHeads';
 import type { getActiveFormula } from '../../utils/customFormulaSettings';
 import { rapieresTableauQualifiers, type RapieresTableauMode } from '../rapieres/tableauQualifiers';
 import type { TableauMatch } from '../tableau/tableauTypes';
@@ -88,20 +89,33 @@ export function tableauCut(
 ): { ranking: PoolRanking[]; tiedAtBar: TiedAtBar | null } {
   let ranking = overallRanking;
   let tiedAtBar: TiedAtBar | null = null;
+  // Règle de qualification vers le tableau : formule « Autre » (v1), sinon formule v2
+  const rule = customFormula ? getTableauAdvancement(customFormula) : tableauQualification;
+  const withTies = rule && ties ? { ...rule, ties } : rule;
   if (isRapieres && pools.length > 0) {
-    // Rapières : toutes les équipes, ou les 4 demi-finalistes (#1441)
-    ranking = rapieresTableauQualifiers(pools, ranking, rapieresTableauMode);
+    // Rapières : « têtes de poule » de la formule (demi-finales, docs/adr/0043, F4b) ; sinon
+    // mode de tableau hérité (`rapieres.tableauMode`, valeur par défaut) : toutes les équipes
+    // ou les 4 demi-finalistes (#1441)
+    if (withTies?.mode === 'pool_heads') {
+      ({ ranking, tiedAtBar } = poolHeadsCut(pools, ranking, withTies.count, {
+        ties: withTies.ties,
+        random,
+      }));
+    } else {
+      ranking = rapieresTableauQualifiers(pools, ranking, rapieresTableauMode);
+    }
   } else if (poolWinnersOnly && pools.length > 0) {
     ranking = filterPoolWinners(pools, ranking);
+  } else if (withTies?.mode === 'pool_heads' && pools.length > 0) {
+    // Têtes de poule, puis suivants (docs/adr/0043, F4b) : coupe à la barre sur le dernier rang
+    ({ ranking, tiedAtBar } = poolHeadsCut(pools, ranking, withTies.count, {
+      ties: withTies.ties,
+      random,
+    }));
   } else if (customFormula || tableauQualification) {
     // Qualifiés pour le tableau selon la formule (pourcentage, nombre, taille de tableau) :
     // arme « Autre » (v1), sinon formule v2 pour toutes les armes (#2013 R1)
-    const rule = customFormula ? getTableauAdvancement(customFormula) : tableauQualification;
-    ({ ranking, tiedAtBar } = tableauAdvancementCut(
-      ranking,
-      rule && ties ? { ...rule, ties } : rule,
-      random
-    ));
+    ({ ranking, tiedAtBar } = tableauAdvancementCut(ranking, withTies, random));
   }
   // Tableaux séparés : groupe affiché, ou groupes extraits écartés (docs/adr/0024)
   return {

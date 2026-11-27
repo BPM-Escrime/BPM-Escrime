@@ -38,14 +38,6 @@ export function useRapieresSessionState() {
     waves: wavesState,
     rapieres: rapieresState?.version === 2 ? rapieresState : undefined,
   });
-  const updateRapieres = useCallback(
-    (patch: Partial<RapieresSession>) =>
-      setRapieresState(prev => ({
-        ...(prev?.version === 2 ? prev : createRapieresSession()),
-        ...patch,
-      })),
-    [setRapieresState]
-  );
   /** Repli local (moteur absent) : vagues du tour courant */
   const updateWaves = useCallback(
     (patch: Partial<PoolWavesState>) =>
@@ -66,7 +58,6 @@ export function useRapieresSessionState() {
     rapieresTeamModal,
     setRapieresTeamModal,
     rapieres,
-    updateRapieres,
     setRapieresTeam,
     waves,
     setWavesState,

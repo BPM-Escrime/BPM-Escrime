@@ -1,6 +1,6 @@
 # ADR-0043 — Tournoi des rapières en briques génériques de la formule, fin du mode spécial
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (poules de 2 à 15 en vagues classiques, validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (poules de 2 à 15 en vagues classiques ; ordre d'entrée des têtes de poule ; validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F4, décision D8), #1948, #1441, #1118 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (phases), [ADR-0040](0040-ex-aequo-a-la-barre.md) (qualification), [ADR-0039](0039-scission-competitions-filles.md) (catégorie du tireur), s'appuie sur [ADR-0007](0007-format-evenement.md), [ADR-0008](0008-nommage-contrat.md), [ADR-0011](0011-migrations-schema-3-0.md), [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -47,11 +47,16 @@
 **F4b — Qualification « têtes de poule, puis suivants »**
 
 - `AdvancementRule.mode` gagne `'pool_heads'` (avec `count`) : les premiers de chaque poule,
-  puis les deuxièmes, etc., chaque rang de poule pris dans l'ordre du classement général,
-  jusqu'à `count`. Avec `count` = 4 : une poule → les 4 premiers ; deux poules → A1, B1, A2, B2
-  (croisement au tableau A1-B2, B1-A2) ; trois poules → les trois premiers et le meilleur
-  deuxième ; quatre poules → les premiers. Plus de poules que `count` : remarque bloquante
-  (S4, ADR-0041). La coupe à la barre (ADR-0040) s'applique au dernier rang de poule pris.
+  puis les deuxièmes, etc., jusqu'à `count`. Ordre d'entrée au tableau : quand au moins deux
+  rangs de poule sont pris en entier, rang par rang, chacun dans l'ordre des poules (croisement
+  garanti) ; sinon, tous les qualifiés dans l'ordre du classement général. Avec `count` = 4 :
+  une poule → les 4 premiers ; deux poules → A1, B1, A2, B2 (croisement au tableau A1-B2,
+  B1-A2) ; trois poules → les trois premiers et le meilleur deuxième ; quatre poules → les
+  premiers. Plus de poules que `count` : remarque bloquante (S4, ADR-0041). La coupe à la barre
+  (ADR-0040) s'applique au dernier rang de poule pris. _(Amendé le 2026-11-27 : remplace « les
+  premiers de chaque poule, puis les deuxièmes, etc., chaque rang de poule pris dans l'ordre du
+  classement général, jusqu'à `count`. » ; ordre d'entrée des demi-finales des rapières
+  conservé.)_
 - Mode de tableau des rapières = réglages de la formule, modifiables tant que le tableau
   n'est pas tiré : « normal » = tous qualifiés ; « 3ᵉ place » = `thirdPlace` ; « toutes les
   places » = `allPlaces` ; « demi-finales » = `pool_heads` 4 + `thirdPlace`. Plus de fenêtre

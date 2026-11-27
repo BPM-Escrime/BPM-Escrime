@@ -160,7 +160,6 @@ export function useCompetitionCore(ctx: Ctx) {
     rapieresTeamModal,
     setRapieresTeamModal,
     rapieres,
-    updateRapieres,
     setRapieresTeam,
     waves,
     setWavesState,
@@ -297,7 +296,6 @@ export function useCompetitionCore(ctx: Ctx) {
   }, [getCheckedInFencers, previousRoundRanking]);
   // Tour consulté (null = tour courant)
   const [viewedPoolRound, setViewedPoolRound] = useState<number | null>(null);
-  const [showRapieresTableauDialog, setShowRapieresTableauDialog] = useState(false);
   // Appel du tour courant : éliminés des tours précédents retirés (#1051)
   const currentAppelFencers = useMemo(
     () =>
@@ -403,7 +401,6 @@ export function useCompetitionCore(ctx: Ctx) {
     rapieresTeamModal,
     setRapieresTeamModal,
     rapieres,
-    updateRapieres,
     setRapieresTeam,
     isWaves,
     waves,
@@ -475,8 +472,6 @@ export function useCompetitionCore(ctx: Ctx) {
     getSeededCheckedInFencers,
     viewedPoolRound,
     setViewedPoolRound,
-    showRapieresTableauDialog,
-    setShowRapieresTableauDialog,
     currentAppelFencers,
     viewedRoundAppel,
     viewedRoundPools,

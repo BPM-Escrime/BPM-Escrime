@@ -1122,12 +1122,6 @@
     "match_order_standard": "Ordem padrão",
     "match_order_classic": "Ordem clássica",
     "match_order_hint": "A ordem clássica aplica-se às poules de 10 a 15 equipas; as restantes poules mantêm a ordem padrão.",
-    "tableau_mode_title": "Que formato de quadro pretende disputar?",
-    "tableau_mode_normal": "Quadro normal",
-    "tableau_mode_third": "Quadro com 3.º lugar",
-    "tableau_mode_all": "Quadro com todos os lugares disputados",
-    "tableau_mode_semis": "Meias-finais",
-    "semis_unavailable": "Meias-finais impossíveis com este número de poules (1 a 4).",
     "club": "Clube",
     "region": "Região",
     "print_wave_range": "Escolher as vagas a imprimir",
@@ -3387,7 +3381,8 @@
     "mode_percentage": "Melhores %",
     "mode_fixed_count": "Número fixo",
     "mode_fixed_bracket": "Quadro seguinte",
-    "mode_pool_winner": "Vencedor da poule"
+    "mode_pool_winner": "Vencedor da poule",
+    "mode_pool_heads": "Primeiros da poule, depois os seguintes"
   },
   "print": {
     "title": "Imprimir",

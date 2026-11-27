@@ -88,6 +88,7 @@ function computeInputFencers(phases: FormulaPhaseNode[], index: number, initial:
           count = Math.round(count * ((rule.percentage ?? 80) / 100));
           break;
         case 'fixed_count':
+        case 'pool_heads':
           count = Math.min(rule.count ?? count, count);
           break;
         case 'fixed_bracket': {

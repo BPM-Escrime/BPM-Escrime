@@ -29,17 +29,13 @@ import { TEAM_PHASE_VIEWS, isTeamPhase } from './competition/teamPhases';
 import type { TeamPhase } from './competition/teamPhases';
 import { CV_STYLES } from './competition/competitionViewStyles';
 import { emptyRapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
-import {
-  rapieresSemifinalists,
-  mergeFinalRanking,
-} from '../../shared/domain/rapieres/rapieresCalculations';
+import { mergeFinalRanking } from '../../shared/domain/rapieres/rapieresCalculations';
 import {
   applyClassicOrder,
   hasClassicOrder,
   POOL_WAVES_SIZE,
 } from '../../shared/domain/pools/waves';
 import RapieresTeamModal from '../../features/rapieres/RapieresTeamModal';
-import RapieresTableauModeDialog from '../../features/rapieres/RapieresTableauModeDialog';
 import RapieresMatchOrderDialog from '../../features/rapieres/RapieresMatchOrderDialog';
 import type { RapieresMatchOrder } from '../../shared/domain/rapieres/rapieresClassicOrder';
 import RapieresImportModal from '../../features/rapieres/RapieresImportModal';
@@ -267,9 +263,6 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     handleImportRanking,
     handleImportReferees,
     setImportData,
-    showRapieresTableauDialog,
-    handleRapieresTableauMode,
-    setShowRapieresTableauDialog,
     areAllPoolsComplete,
     updateScore,
     recordScreenScore,
@@ -968,14 +961,6 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         <RapieresMatchOrderDialog
           onChoose={answerMatchOrder}
           onClose={() => answerMatchOrder(null)}
-        />
-      )}
-
-      {showRapieresTableauDialog && (
-        <RapieresTableauModeDialog
-          semisAvailable={!!rapieresSemifinalists(pools, overallRanking)}
-          onChoose={handleRapieresTableauMode}
-          onClose={() => setShowRapieresTableauDialog(false)}
         />
       )}
 

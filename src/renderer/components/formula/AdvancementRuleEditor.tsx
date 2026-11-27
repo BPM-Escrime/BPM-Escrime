@@ -14,6 +14,13 @@ interface Props {
   readOnly?: boolean;
   /** Réglages avancés (ex aequo à la barre, ADR-0041) : mode expert de l'éditeur */
   expert?: boolean;
+  /**
+   * Proposer « têtes de poule, puis suivants » (docs/adr/0043, F4b) : réglage expert, seulement
+   * avant un tableau. Par défaut le mode expert ; un mode déjà choisi reste affiché.
+   */
+  headsAvailable?: boolean;
+  /** Modes proposés (tournoi des rapières : tous qualifiés ou têtes de poule) ; absent : tous */
+  only?: readonly AdvancementMode[];
 }
 
 function computeAdvancing(fencers: number, rule: AdvancementRule): number {
@@ -31,6 +38,8 @@ function computeAdvancing(fencers: number, rule: AdvancementRule): number {
     }
     case 'pool_winner':
       return 1;
+    case 'pool_heads':
+      return Math.min(rule.count ?? fencers, fencers);
   }
 }
 
@@ -40,6 +49,7 @@ const MODE_LABELS: Record<AdvancementMode, string> = {
   fixed_count: 'advancement.mode_fixed_count',
   fixed_bracket: 'advancement.mode_fixed_bracket',
   pool_winner: 'advancement.mode_pool_winner',
+  pool_heads: 'advancement.mode_pool_heads',
 };
 
 const AdvancementRuleEditor_: React.FC<Props> = ({
@@ -48,6 +58,8 @@ const AdvancementRuleEditor_: React.FC<Props> = ({
   inputFencers,
   readOnly,
   expert,
+  headsAvailable = expert,
+  only,
 }) => {
   const { t } = useTranslation();
   const advancing = inputFencers ? computeAdvancing(inputFencers, rule) : null;
@@ -59,6 +71,7 @@ const AdvancementRuleEditor_: React.FC<Props> = ({
       fixed_count: { count: 16 },
       fixed_bracket: { count: 16 },
       pool_winner: {},
+      pool_heads: { count: 4 },
     };
     // Ex aequo à la barre (ADR-0040) : gardé d'un mode à l'autre
     onChange({ mode, ...defaults[mode], ...(rule.ties ? { ties: rule.ties } : {}) });
@@ -73,11 +86,17 @@ const AdvancementRuleEditor_: React.FC<Props> = ({
           onChange={e => setMode(e.target.value as AdvancementMode)}
           disabled={readOnly}
         >
-          {(Object.entries(MODE_LABELS) as [AdvancementMode, string][]).map(([mode, label]) => (
-            <option key={mode} value={mode}>
-              {t(label)}
-            </option>
-          ))}
+          {(Object.entries(MODE_LABELS) as [AdvancementMode, string][])
+            .filter(
+              ([mode]) =>
+                (!only || only.includes(mode)) &&
+                (mode !== 'pool_heads' || headsAvailable || rule.mode === 'pool_heads')
+            )
+            .map(([mode, label]) => (
+              <option key={mode} value={mode}>
+                {t(label)}
+              </option>
+            ))}
         </select>
 
         {rule.mode === 'percentage' && (
@@ -95,12 +114,15 @@ const AdvancementRuleEditor_: React.FC<Props> = ({
           </div>
         )}
 
-        {(rule.mode === 'fixed_count' || rule.mode === 'fixed_bracket') && (
+        {(rule.mode === 'fixed_count' ||
+          rule.mode === 'fixed_bracket' ||
+          rule.mode === 'pool_heads') && (
           <div className="advancement-value-group">
             <input
               type="number"
               className="form-input advancement-value-input"
-              min={2}
+              data-testid="advancement-count"
+              min={rule.mode === 'pool_heads' ? 1 : 2}
               max={256}
               value={rule.count ?? 16}
               onChange={e => onChange({ ...rule, count: Number(e.target.value) })}
@@ -118,7 +140,8 @@ const AdvancementRuleEditor_: React.FC<Props> = ({
       {expert &&
         (rule.mode === 'percentage' ||
           rule.mode === 'fixed_count' ||
-          rule.mode === 'fixed_bracket') && (
+          rule.mode === 'fixed_bracket' ||
+          rule.mode === 'pool_heads') && (
           <TiesAtBarSelect
             value={rule.ties}
             disabled={readOnly}
