@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 25 | 284 |
-| `src/main/` | 162 | 1446 |
+| `src/main/` | 163 | 1458 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 43 | 231 |
-| `src/renderer/components/` | 143 | 819 |
+| `src/renderer/components/` | 144 | 822 |
 | E2E Playwright (`e2e/`) | 23 | 58 |
 | `src/remote/` | 60 | 443 |
 | `src/renderer/api/` | 10 | 46 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 59 | 753 |
+| `src/shared/domain/` | 59 | 758 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **661** | **5318** |
+| **Total** | **663** | **5338** |
 
-Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 640 fichiers, 5280 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3419,6 +3419,24 @@ Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/multiRound.test.ts</code> — 12 tests</summary>
+
+- tour 2 : tireurs pointés, serpentin sur la place au tour 1, réglages du tour 2
+- tour 2 : réparti sur le classement du tour 1, pas sur le rang relu en base
+- tour 2 : tireurs non pointés écartés, poules lancées, replace refusé sans lui
+- tableau après deux tours : les survivants du tour 2, sur son classement
+- scission après deux tours : poules du tour 2 tirées par le moteur, puis scission
+- arbitres du tour courant : poules du tour 2
+- 3e tour « cumulative » : serpentin sur le classement cumulé, pas sur le tour 2 seul
+- 3e tour « previous\_round » (défaut) : serpentin sur le tour 2 seul
+- tour suivant tiré par le moteur sur le rang d’entrée au tableau
+- plus de tableau après le tableau arrêté : les tours de poules terminent l’épreuve
+- outil MCP close\_tableau\_stage : clôture du tableau arrêté ouverte à l’agent (ADR-0042)
+- %s : tirage sans composition, tableau et arbitres refusés _(each)_
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/passivityCards.test.ts</code> — 8 tests</summary>
 
 - jaune P, rouge P (sans touche), noir P : rencontre décidée au score, même commandId, rejeu
@@ -3760,7 +3778,7 @@ Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - demies jouées : finalistes au tour suivant par rang d’entrée, demi-finalistes éliminés
 - refus : demie non jouée, ou formule sans tableau arrêté
 - tours après l’arrêt : score refusé, écran comme tablettes (ADR-0037)
-- pilotage hors écran (MCP) toujours refusé : plusieurs tours de poules (ADR-0037)
+- pilotage hors écran (MCP) : plusieurs tours de poules plus refusés (ADR-0042)
 - publication du moteur (GREG / FTP) : restants, éliminés du tableau, puis des poules
 
 </details>
@@ -7484,6 +7502,16 @@ Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/formula/screenFormulaProgress.test.ts</code> — 3 tests</summary>
+
+- **screenFormulaProgress (S6, ADR-0041)**
+  - poules tirées mais non lancées : rien de commencé
+  - tour 1 lancé, puis tour 1 joué et tour 2 lancé
+  - tableau tiré après deux tours
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/guidedTourFlags.test.ts</code> — 6 tests</summary>
 
 - **guidedTour**
@@ -9756,7 +9784,7 @@ Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaStructure.test.ts</code> — 38 tests</summary>
+<summary><code>src/shared/domain/formula/formulaStructure.test.ts</code> — 39 tests</summary>
 
 - **remarques situées (ADR-0041)**
   - formule par défaut : aucune remarque
@@ -9800,6 +9828,7 @@ Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - taille de tableau imposée : la taille effective compte
   - plus de 3 tours de poules
 - **mode expert : briques et réglages**
+  - une formule reste valide quel que soit le mode : le jugement ignore le mode expert
   - formule par défaut : simple
   - scission, Tour Quest, tableau arrêté
   - réglages avancés : ex aequo, cumul, ordre libre, barème à zones
@@ -9847,7 +9876,7 @@ Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaV2.test.ts</code> — 9 tests</summary>
+<summary><code>src/shared/domain/formula/formulaV2.test.ts</code> — 10 tests</summary>
 
 - **formule v2 construite à la lecture (épée… Sabre Laser)**
   - %s : mêmes réglages qu’aujourd’hui _(each)_
@@ -9861,6 +9890,8 @@ Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - tous qualifiés, sans tableau ou tableau en tête : aucune
   - Tour Quest avant le tableau : aucune
   - épreuve sans formule v2 : réglages plats, aucune qualification en % (comportement historique)
+- **ordre des matchs du tour tiré (ADR-0042 : réglages du tour)**
+  - réglage du tour dans la formule, sinon le réglage plat
 
 </details>
 
@@ -10516,7 +10547,7 @@ Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/tableau/tableauStage.test.ts</code> — 11 tests</summary>
+<summary><code>src/shared/domain/tableau/tableauStage.test.ts</code> — 14 tests</summary>
 
 - **tableau arrêté à N (ADR-0037)**
   - seuls les tours où il reste plus de N tireurs se jouent
@@ -10533,6 +10564,10 @@ Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - **répartition du tour à tirer, écran (Q5, ADR-0037)**
   - premier tour après le tableau clos : restants par rang d’entrée
   - autres tours, ou sans étape close : classement du dernier tour
+- **répartition du tour à tirer : cumul des tours (Q4, ADR-0036)**
+  - tour à tirer « cumulative » : classement cumulé de tous les tours joués
+  - « previous\_round » (défaut), ou sans formule : classement du dernier tour seul
+  - le réglage lu est celui du tour à tirer, pas celui du tour terminé
 - **classement final avant le tour suivant (restants renumérotés)**
   - restants rangés depuis 1 même si le classement reçu est celui d’avant le tableau
 
