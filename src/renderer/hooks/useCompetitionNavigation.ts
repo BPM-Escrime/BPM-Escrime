@@ -431,7 +431,7 @@ export function useCompetitionNavigation({
     if (cut.tiedAtBar) {
       const ties = await chooseTies(cut.tiedAtBar, plan.ties);
       if (!ties) return;
-      cut = selectNextRoundFencers(plan.ranking, plan.qualifierCount, ties);
+      cut = selectNextRoundFencers(plan.ranking, plan.qualifierCount, ties, Math.random);
     }
     const { qualified, eliminated } = cut;
     if (qualified.length < 4) {

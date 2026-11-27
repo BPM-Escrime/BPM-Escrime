@@ -236,7 +236,8 @@ export function splitCompetition(
   }
   const ranking = entryRanking(ctx, source, formula, session);
   checkAssignments(split, ranking, input.assignments);
-  const plan = planSplit(ranking, split, input.assignments, assertTies(input.ties));
+  // Tirage au sort des ex aequo (ADR-0040) : hasard de la coupe, figé par GroupSplitOff
+  const plan = planSplit(ranking, split, input.assignments, assertTies(input.ties), Math.random);
   const byId = new Map(ranking.map(r => [r.fencer.id, r.fencer]));
   const missing = plan.missing.map(id => fencerRef(byId.get(id)!));
   const report = (ids: Array<string | null>) => ({

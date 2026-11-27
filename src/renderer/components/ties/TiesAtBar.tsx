@@ -9,8 +9,8 @@ import type { TiesAtBar } from '../../../shared/types';
 import type { TiedAtBar } from '../../../shared/domain/ranking/advancement';
 import { useTranslation } from '../../hooks/useTranslation';
 
-/** Choix offerts en F1 ; « barrage » attend le lot F1b */
-export const TIES_CHOICES = ['all', 'initial_ranking'] as const;
+/** Choix offerts (F1, F1c) ; « barrage » reporté (docs/adr/0040) */
+export const TIES_CHOICES = ['all', 'initial_ranking', 'draw'] as const;
 export type TiesChoice = (typeof TIES_CHOICES)[number];
 
 type T = (key: string, params?: Record<string, string | number>) => string;

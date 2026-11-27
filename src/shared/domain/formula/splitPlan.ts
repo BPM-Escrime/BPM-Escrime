@@ -77,7 +77,8 @@ function branchIndexOf(
 function byRank(
   ranking: PoolRanking[],
   branches: SplitBranch[],
-  ties: TiesAtBar | undefined
+  ties: TiesAtBar | undefined,
+  random: (() => number) | undefined
 ): { rows: PoolRanking[][]; tiedAtBar: TiedAtBar[] } {
   const total = ranking.length;
   let left = ranking;
@@ -85,7 +86,7 @@ function byRank(
   const rows = branches.map((b, i) => {
     if (i === branches.length - 1) return left;
     const count = Math.min(getAdvancementCount(total, b.take) ?? left.length, left.length);
-    const cut = cutAtBar(left, count, ties ?? b.take?.ties);
+    const cut = cutAtBar(left, count, ties ?? b.take?.ties, undefined, random);
     if (cut.tiedAtBar) tiedAtBar.push(cut.tiedAtBar);
     left = cut.eliminated;
     return cut.qualified;
@@ -101,11 +102,13 @@ export function planSplit(
   ranking: PoolRanking[],
   split: SplitPhase,
   assignments: readonly SplitAssignment[] = [],
-  ties?: TiesAtBar
+  ties?: TiesAtBar,
+  /** Hasard injecté pour le tirage au sort des ex aequo ('draw') */
+  random?: () => number
 ): SplitPlan {
   const ordered = [...ranking].sort((a, b) => a.rank - b.rank);
   if (split.criterion === 'rank') {
-    const { rows, tiedAtBar } = byRank(ordered, split.branches, ties);
+    const { rows, tiedAtBar } = byRank(ordered, split.branches, ties, random);
     return {
       branches: rows.map((r, i) => ({ label: split.branches[i].label, rows: renumberRanks(r) })),
       missing: [],

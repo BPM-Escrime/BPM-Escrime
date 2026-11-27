@@ -91,10 +91,10 @@ export const SplitGroup = z
 export const DryRun = z.boolean().optional().describe('Décrit le résultat sans rien écrire');
 /** Ex aequo à la barre pour cette coupe seulement (docs/adr/0040) ; prime sur la formule */
 export const TiesAtBarInput = z
-  .enum(['all', 'initial_ranking', 'barrage'])
+  .enum(['all', 'initial_ranking', 'draw', 'barrage'])
   .optional()
   .describe(
-    'Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour ; barrage pas encore disponible (refus invalid_settings)'
+    'Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour, draw = tirage au sort (FIE o.73.2.f) ; barrage pas encore disponible (refus invalid_settings)'
   );
 /** Ex aequo à la barre au-delà du quota, rendus par la simulation (docs/adr/0040) */
 export const TiedAtBarSchema = z.object({

@@ -50,6 +50,8 @@ export interface TableauRankingOptions {
   tableauQualification?: AdvancementRule;
   /** Ex aequo à la barre pour ce tableau, prime sur la formule (docs/adr/0040) */
   ties?: TiesAtBar;
+  /** Hasard injecté pour le tirage au sort des ex aequo ('draw') */
+  random?: () => number;
   postPoolSplitCriteria: string | undefined;
   activeSplitGroup: string | null;
   splitOffCompetitionIds: Partial<Record<string, string>> | undefined;
@@ -78,6 +80,7 @@ export function tableauCut(
     customFormula,
     tableauQualification,
     ties,
+    random,
     postPoolSplitCriteria,
     activeSplitGroup,
     splitOffCompetitionIds,
@@ -96,7 +99,8 @@ export function tableauCut(
     const rule = customFormula ? getTableauAdvancement(customFormula) : tableauQualification;
     ({ ranking, tiedAtBar } = tableauAdvancementCut(
       ranking,
-      rule && ties ? { ...rule, ties } : rule
+      rule && ties ? { ...rule, ties } : rule,
+      random
     ));
   }
   // Tableaux séparés : groupe affiché, ou groupes extraits écartés (docs/adr/0024)

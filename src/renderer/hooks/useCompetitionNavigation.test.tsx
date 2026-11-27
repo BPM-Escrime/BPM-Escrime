@@ -225,6 +225,7 @@ describe('handleNextPoolRound par le moteur (docs/adr/0017)', () => {
     expect(asked.choices.map((c: { value: string }) => c.value)).toEqual([
       'all',
       'initial_ranking',
+      'draw',
     ]);
     expect(asked.message).toContain('tiesAtBar.notice');
     expect(call).toHaveBeenNthCalledWith(2, 'closePoolRound', {

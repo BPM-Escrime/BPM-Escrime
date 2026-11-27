@@ -628,7 +628,7 @@ Aucun argument.
 | `rapieresTableauMode` | `normal`, `third`, `all`, `semis` |  | Tournoi des rapières : mode de tableau choisi |
 | `group` | string |  | Tableaux séparés après les poules : groupe du tableau (« F », « M »), exigé pour ce format |
 | `replace` | boolean |  | Remplacer un tableau existant |
-| `ties` | `all`, `initial_ranking`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour ; barrage pas encore disponible (refus invalid_settings) |
+| `ties` | `all`, `initial_ranking`, `draw`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour, draw = tirage au sort (FIE o.73.2.f) ; barrage pas encore disponible (refus invalid_settings) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
@@ -842,7 +842,7 @@ Aucun argument.
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `qualifierCount` | integer |  | Nombre de qualifiés imposé |
-| `ties` | `all`, `initial_ranking`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour ; barrage pas encore disponible (refus invalid_settings) |
+| `ties` | `all`, `initial_ranking`, `draw`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour, draw = tirage au sort (FIE o.73.2.f) ; barrage pas encore disponible (refus invalid_settings) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
@@ -868,7 +868,7 @@ Aucun argument.
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 | `assignments` | object[] |  | Scission manuelle : branche de chaque tireur (libellé) |
-| `ties` | `all`, `initial_ranking`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour ; barrage pas encore disponible (refus invalid_settings) |
+| `ties` | `all`, `initial_ranking`, `draw`, `barrage` |  | Ex aequo à la barre, pour cette coupe seulement (prime sur la formule) : all = tous qualifiés, initial_ranking = départagés par le rang d’entrée du tour, draw = tirage au sort (FIE o.73.2.f) ; barrage pas encore disponible (refus invalid_settings) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. Les écritures qui ne passent pas encore par le contrat (écran, tablettes) ne sont pas détectées. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |

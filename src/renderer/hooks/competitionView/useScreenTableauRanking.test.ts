@@ -51,4 +51,27 @@ describe('useScreenTableauRanking (ADR-0040)', () => {
     rerender({ matches: drawn });
     expect(ids(result.current)).toEqual(['a', 'c']);
   });
+
+  it('« draw » : tirage fait une fois au choix, le même à chaque calcul', () => {
+    let k = 0;
+    const seq = [0, 0.9, 0.5, 0.1];
+    setTableauTies('d', 'draw', () => seq[k++ % seq.length]);
+    const { result, rerender } = renderHook(
+      ({ n }: { n: number }) =>
+        useScreenTableauRanking({
+          competitionId: 'd',
+          overallRanking: overall.slice(0, n),
+          pools: [],
+          tableauMatches: [],
+          options,
+        }),
+      { initialProps: { n: 4 } }
+    );
+    const first = ids(result.current);
+    expect(first).toHaveLength(2);
+    expect(first[0]).toBe('a');
+    rerender({ n: 4 });
+    rerender({ n: 4 });
+    expect(ids(result.current)).toEqual(first);
+  });
 });

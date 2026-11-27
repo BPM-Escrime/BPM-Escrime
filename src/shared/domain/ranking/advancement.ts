@@ -62,14 +62,16 @@ const nameOf = (r: CutRow) => `${r.fencer.lastName ?? ''} ${r.fencer.firstName ?
  * `count` absent ou ≥ effectif : tout le monde passe. Ex aequo à la barre au-delà du quota :
  * 'all' les garde tous ; 'initial_ranking' les départage par le rang d'entrée du tour
  * (`entryRank`, par défaut `fencer.ranking`) ; rang d'entrée égal ou absent : ordre du
- * classement (rang), puis nom ; le quota est tenu. 'barrage' (lot F1b)
- * est refusé par la grammaire et les commandes avant d'arriver ici : traité comme 'all'.
+ * classement (rang), puis nom ; le quota est tenu. 'draw' les tire au sort avec le hasard
+ * injecté `random` (quota tenu) ; sans `random` (affichage avant la coupe), ils restent tous.
+ * 'barrage' (reporté) est refusé par la grammaire et les commandes : traité comme 'all'.
  */
 export function cutAtBar<T extends CutRow>(
   sorted: readonly T[],
   count: number | undefined,
   ties: TiesAtBar | undefined = 'all',
-  entryRank: (row: T) => number | undefined = fencerEntryRank
+  entryRank: (row: T) => number | undefined = fencerEntryRank,
+  random?: () => number
 ): { qualified: T[]; eliminated: T[]; tiedAtBar: TiedAtBar | null } {
   if (count === undefined || count >= sorted.length) {
     return { qualified: [...sorted], eliminated: [], tiedAtBar: null };
@@ -86,6 +88,19 @@ export function cutAtBar<T extends CutRow>(
   const tied = sorted.slice(start, end);
   const places = count - start;
   const tiedAtBar = { rank: barRank, fencerIds: tied.map(r => r.fencer.id), places };
+  if (ties === 'draw' && random) {
+    // Tirage au sort (FIE o.73.2.f) : mélange de Fisher-Yates des ex aequo, hasard injecté
+    const drawn = [...tied];
+    for (let i = drawn.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [drawn[i], drawn[j]] = [drawn[j], drawn[i]];
+    }
+    return {
+      qualified: [...sorted.slice(0, start), ...drawn.slice(0, places)],
+      eliminated: [...drawn.slice(places), ...sorted.slice(end)],
+      tiedAtBar,
+    };
+  }
   if (ties !== 'initial_ranking') {
     return { qualified: sorted.slice(0, end), eliminated: sorted.slice(end), tiedAtBar };
   }
@@ -108,9 +123,10 @@ export function cutAtBar<T extends CutRow>(
   };
 }
 
-/** Réglage des ex aequo à la barre (ADR-0040) : 'all', 'initial_ranking' ; 'barrage' en F1b */
+/** Réglage des ex aequo à la barre (ADR-0040) : 'all', 'initial_ranking', 'draw' ; 'barrage' reporté */
 export function tiesIssue(ties: unknown): string | null {
-  if (ties === undefined || ties === 'all' || ties === 'initial_ranking') return null;
+  if (ties === undefined || ties === 'all' || ties === 'initial_ranking' || ties === 'draw')
+    return null;
   if (ties === 'barrage') return 'ex aequo à la barre : barrage pas encore disponible';
-  return 'ex aequo à la barre : all ou initial_ranking attendu';
+  return 'ex aequo à la barre : all, initial_ranking ou draw attendu';
 }

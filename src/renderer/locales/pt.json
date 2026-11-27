@@ -4889,6 +4889,7 @@
     "label": "Empates no corte",
     "all": "Todos qualificados",
     "initial_ranking": "Desempate pela classificação de entrada",
+    "draw": "Sorteio",
     "keep": "Conforme a fórmula",
     "notice": "{{n}} atiradores empatados no {{rank}}º lugar para {{places}} vaga(s): {{names}}",
     "choose": "O que fazer com estes empates neste corte?",

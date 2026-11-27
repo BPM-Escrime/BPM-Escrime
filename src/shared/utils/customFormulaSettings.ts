@@ -173,13 +173,15 @@ export function applyTableauAdvancement(
 /** Comme `applyTableauAdvancement`, avec les ex aequo à la barre au-delà du quota */
 export function tableauAdvancementCut(
   ranking: PoolRanking[],
-  rule: AdvancementRule | undefined
+  rule: AdvancementRule | undefined,
+  /** Hasard injecté pour le tirage au sort des ex aequo ('draw') */
+  random?: () => number
 ): { ranking: PoolRanking[]; tiedAtBar: TiedAtBar | null } {
   const active = [...ranking]
     .filter(r => !INACTIVE.has(r.fencer.status))
     .sort((a, b) => a.rank - b.rank);
   const count = getAdvancementCount(active.length, rule);
   if (count === undefined || count >= active.length) return { ranking, tiedAtBar: null };
-  const cut = cutAtBar(active, count, rule?.ties);
+  const cut = cutAtBar(active, count, rule?.ties, undefined, random);
   return { ranking: cut.qualified, tiedAtBar: cut.tiedAtBar };
 }

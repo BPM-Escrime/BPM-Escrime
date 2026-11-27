@@ -4889,6 +4889,7 @@
     "label": "Ties at the cut",
     "all": "All qualify",
     "initial_ranking": "Split by entry ranking",
+    "draw": "Random draw",
     "keep": "As set in the formula",
     "notice": "{{n}} fencers tied in place {{rank}} for {{places}} spot(s): {{names}}",
     "choose": "What should happen to these tied fencers for this cut?",
