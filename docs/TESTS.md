@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 83 | 889 |
+| `src/shared/utils/` | 83 | 891 |
 | `src/shared/services/` | 8 | 83 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 25 | 284 |
-| `src/main/` | 161 | 1429 |
+| `src/main/` | 162 | 1440 |
 | `src/renderer/services/` | 14 | 70 |
-| `src/renderer/hooks/` | 41 | 220 |
-| `src/renderer/components/` | 141 | 798 |
+| `src/renderer/hooks/` | 42 | 227 |
+| `src/renderer/components/` | 142 | 803 |
 | E2E Playwright (`e2e/`) | 23 | 58 |
 | `src/remote/` | 60 | 443 |
 | `src/renderer/api/` | 10 | 46 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 56 | 694 |
+| `src/shared/domain/` | 58 | 713 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **653** | **5208** |
+| **Total** | **658** | **5252** |
 
-Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 635 fichiers, 5194 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -1413,7 +1413,7 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/poolRounds.test.ts</code> — 10 tests</summary>
+<summary><code>src/shared/utils/poolRounds.test.ts</code> — 12 tests</summary>
 
 - **getRoundQualifierCount**
   - retourne le nombre pour le tour demandé
@@ -1429,6 +1429,9 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - **mergeRoundRankings**
   - dernier tour puis éliminés, sans cumul, éliminés marqués
   - conserve les ex-aequo des éliminés
+- **selectNextRoundFencers : ex aequo à la barre (docs/adr/0040)**
+  - défaut : tous les ex aequo retenus, signalés
+  - « initial\_ranking » : quota tenu, départagé au rang d’entrée, places renumérotées
 
 </details>
 
@@ -3807,6 +3810,23 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/main/engine/commands/ties.test.ts</code> — 11 tests</summary>
+
+- tableau, réglage absent : tous les ex aequo passent ; la simulation les signale
+- tableau : « ties » de la commande prime ; départage au rang d’entrée, quota tenu
+- tableau : réglage de la formule « initial\_ranking » appliqué sans champ
+- tour de poules : simulation, réglage de la formule, « ties » qui prime, PoolRoundClosed
+- « barrage » refusé jusqu’au lot F1b (invalid\_settings), rien d’écrit
+- scission par rang : simulation, réglage de la branche, « ties » qui prime, GroupSplitOff
+- scission : « barrage » refusé (invalid\_settings), aucune fille créée
+- 2e tour : rang d’entrée = place au tour précédent, pas le classement initial
+- scission après deux tours : rang d’entrée = place au tour précédent
+- classement final du tableau : coupe figée par le tableau tiré, pas par la formule
+- MCP : même champ « ties » sur les outils de coupe (ADR-0008)
+
+</details>
+
+<details>
 <summary><code>src/main/engine/commands/training.test.ts</code> — 15 tests</summary>
 
 - **serveur d’entraînement**
@@ -5593,6 +5613,14 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/hooks/competitionView/useScreenTableauRanking.test.ts</code> — 1 test</summary>
+
+- **useScreenTableauRanking (ADR-0040)**
+  - choix au passage au tableau appliqué, puis coupe figée par le tableau tiré
+
+</details>
+
+<details>
 <summary><code>src/renderer/hooks/desktopHooks.test.tsx</code> — 7 tests</summary>
 
 - **useAppGlobalEffects : chargement après whenReady**
@@ -5733,14 +5761,21 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/hooks/useCompetitionNavigation.test.tsx</code> — 4 tests</summary>
+<summary><code>src/renderer/hooks/useCompetitionNavigation.test.tsx</code> — 10 tests</summary>
 
 - **handleGoToTableau (#1996)**
   - tableau déjà tiré : retour au tableau, rien n’est effacé
   - pas encore de tableau : petite finale reprise de la formule, sans question (#2013) — %s _(each)_
+- **passage au tableau : ex aequo à la barre (ADR-0040)**
+  - ex aequo listés avant la génération ; le choix vaut pour ce tableau
+  - choix annulé : rien n’est tiré
+  - sans ex aequo à la barre : pas de question, choix précédent oublié
 - **handleNextPoolRound par le moteur (docs/adr/0017)**
   - simulation pour la confirmation, puis closePoolRound ; écran vers l’appel
   - confirmation refusée : aucune clôture
+  - ex aequo à la barre (ADR-0040) : listés, choix pour cette coupe, closePoolRound avec « ties »
+  - ex aequo à la barre : choix annulé, aucune clôture
+  - moteur absent (repli local) : ex aequo listés et choisis, comme le moteur
 
 </details>
 
@@ -7277,13 +7312,14 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/competition/SplitLaunchDialog.test.tsx</code> — 4 tests</summary>
+<summary><code>src/renderer/components/competition/SplitLaunchDialog.test.tsx</code> — 5 tests</summary>
 
 - **SplitLaunchDialog (ADR-0039)**
   - simulation, confirmation, puis commande
   - tireurs sans valeur : liste, moyen de corriger, pas de confirmation
   - refus du moteur à la simulation : message, fenêtre fermée
   - manuelle : une branche par tireur, tri, « Tout dans… », confirmation après affectation
+  - ex aequo à la borne (ADR-0040) : listés, choix pour cette scission, commande avec « ties »
 
 </details>
 
@@ -7923,6 +7959,18 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - piste par défaut, kiosque à part
 - **VarRow (#2200)**
   - ligne texte : libellé affiché, saisie transmise
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/ties/TiesAtBar.test.tsx</code> — 4 tests</summary>
+
+- **éditeur de formule : ex aequo à la barre (ADR-0040)**
+  - règle à nombre fixé : réglage proposé, gardé quand le mode change
+  - tous qualifiés : pas de réglage (aucune barre)
+  - scission par rang : réglage sur le nombre de la branche
+- **fenêtre de confirmation : choose**
+  - un bouton par choix ; la valeur cliquée est rendue
 
 </details>
 
@@ -9692,6 +9740,17 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/formula/formulaTies.test.ts</code> — 4 tests</summary>
+
+- **ex aequo à la barre dans la formule (ADR-0040)**
+  - réglage absent : comportement actuel, aucune remarque
+  - « initial\_ranking » et « all » : acceptés et gardés sur la règle du tour
+  - « barrage » refusé jusqu’au lot F1b ; valeur inconnue refusée
+  - branche de scission par rang : « take.ties » jugé de même
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/formula/formulaV2.test.ts</code> — 9 tests</summary>
 
 - **formule v2 construite à la lecture (épée… Sabre Laser)**
@@ -9745,11 +9804,12 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/splitPlan.test.ts</code> — 12 tests</summary>
+<summary><code>src/shared/domain/formula/splitPlan.test.ts</code> — 13 tests</summary>
 
 - **planSplit par rang (ADR-0039)**
   - nombre : chaque branche prend son nombre, la dernière le reste ; rangs depuis 1
   - ex aequo à la borne : gardés dans la branche, comme la qualification
+  - ex aequo à la borne, « initial\_ranking » (ADR-0040) : départagés au rang d’entrée
   - pourcentage de l’effectif entrant (arrondi comme la qualification)
   - pourcentage avec ex aequo à la borne
 - **planSplit par sexe, catégorie, manuel (ADR-0039)**
@@ -9768,13 +9828,14 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/validateFormulaSettings.test.ts</code> — 6 tests</summary>
+<summary><code>src/shared/domain/formula/validateFormulaSettings.test.ts</code> — 7 tests</summary>
 
 - **validateFormulaSettings**
   - réglages par défaut et de repli : conformes pour toutes les armes et catégories
   - bornes : score de poule, tours, tailles de poule
   - score max du Sabre Laser individuel : 15 à 50 (#2208) ; équipes et olympique : 1-15
   - qualifiés : pas plus de valeurs que de tours suivants
+  - formule à la carte : ex aequo à la barre (ADR-0040), « barrage » refusé jusqu’à F1b
   - formule à la carte : version, phases, règles de passage, taille de tableau
   - champs jugés : un réglage ancien hors bornes ne bloque pas une autre modification
 
@@ -10027,6 +10088,20 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/ranking/advancement.test.ts</code> — 7 tests</summary>
+
+- **cutAtBar : ex aequo à la barre (docs/adr/0040)**
+  - sans ex aequo à la barre : quota tenu, rien à signaler
+  - « all » (défaut, réglage absent) : tous les ex aequo passent, quota dépassé
+  - « initial\_ranking » : départagés par le rang d’entrée, quota tenu
+  - « initial\_ranking » : rang d’entrée égal ou absent → ordre du classement, puis nom
+  - rang d’entrée fourni par l’appelant (4e paramètre \`entryRank\`)
+  - quota absent ou ≥ effectif : tout le monde passe
+  - nombre de qualifiés : règle inchangée
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/ranking/splitGroups.test.ts</code> — 14 tests</summary>
 
 - **splitCompetition**
@@ -10050,7 +10125,7 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/ranking/tableauRanking.test.ts</code> — 9 tests</summary>
+<summary><code>src/shared/domain/ranking/tableauRanking.test.ts</code> — 15 tests</summary>
 
 - **computeMatchProgress**
   - renvoie null sans poule ni tableau
@@ -10063,6 +10138,15 @@ Unitaires : 630 fichiers, 5150 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - ne garde que le groupe actif et renumérote
   - exclut les groupes déjà extraits dans une compétition séparée
   - formule v2 (épée) : % de qualifiés vers le tableau, égalité à la coupe gardée (#2013 R1)
+- **tableauCut : ex aequo à la barre du tableau (docs/adr/0040)**
+  - réglage de la formule par défaut : tous les ex aequo ; simulation des ex aequo
+  - « ties » de l’écran ou de la commande : prime sur la formule
+- **rankingOfDrawnTableau : coupe figée par le tableau tiré (docs/adr/0040)**
+  - ex aequo absents du tableau retirés ; les autres tireurs gardés
+  - sans ex aequo à la barre ou sans tableau : classement inchangé
+- **tableauRankingOfScreen : classement, PDF et résultats de l’écran (docs/adr/0040)**
+  - avant le tirage : choix de l’écran, sinon la formule
+  - tableau tiré : coupe figée par le tableau, même si le choix est perdu (rechargement)
 
 </details>
 
