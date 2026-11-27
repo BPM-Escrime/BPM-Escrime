@@ -23,6 +23,7 @@ import {
   formulaFromCustom,
   formulaOf,
   phaseSettings,
+  playedTableauOf,
   poolBoutOrderOfRound,
   tableauQualificationOf,
   tieBreakByVictoryOf,
@@ -266,8 +267,30 @@ describe('arme « Autre » : customFormula v1 ↔ v2', () => {
     expect(customFormulaOf(v2)).toEqual(normalizeCustomFormula(custom));
     const flat = flatSettingsOf(v2, Weapon.CUSTOM);
     expect(flat.customFormula).toEqual(normalizeCustomFormula(custom));
-    const { customFormula: _cf, ...derived } = flat;
+    const { customFormula: _cf, playAllPositions, ...derived } = flat;
     expect(derived).toEqual(deriveSettingsFromFormula(custom));
+    // « Toutes les places » lu dans la brique tableau (#2013, F4g) : absent de la v1
+    expect(playAllPositions).toBe(
+      custom.phases.some(p => p.type === 'direct_elimination') ? false : undefined
+    );
+  });
+
+  it('« toutes les places » de la brique tableau projeté sur les réglages plats (#2013, F4g)', () => {
+    const v2 = formulaFromCustom(formulas[0][1]);
+    const on: FormulaV2 = {
+      ...v2,
+      phases: v2.phases.map(p => (p.kind === 'tableau' ? { ...p, allPlaces: true } : p)),
+    };
+    expect(flatSettingsOf(on, Weapon.CUSTOM).playAllPositions).toBe(true);
+    expect(flatSettingsOf(v2, Weapon.CUSTOM).playAllPositions).toBe(false);
+    // Sans formule v2 enregistrée : réglage plat relu, pas effacé à la réécriture
+    const read = formulaOf({
+      weapon: Weapon.CUSTOM,
+      category: Category.SENIOR,
+      settings: { customFormula: formulas[0][1], playAllPositions: true },
+    });
+    expect(playedTableauOf(read)?.allPlaces).toBe(true);
+    expect(flatSettingsOf(read, Weapon.CUSTOM).playAllPositions).toBe(true);
   });
 
   it('lecture par phase : touches du tour 2 distinctes du tour 1', () => {

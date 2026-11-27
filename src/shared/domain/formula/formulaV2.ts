@@ -451,8 +451,15 @@ export function formulaOf(src: FormulaSource): FormulaV2 {
   const stored = src.settings?.formula;
   // Formule enregistrée avant l'étape E3 avec l'ancienne compétition couplée : relue (ADR-0039)
   if (stored && stored.version === 2) return coupledFormula(stored);
-  if (src.weapon === Weapon.CUSTOM)
-    return formulaFromCustom(src.settings?.customFormula ?? createDefaultCustomFormula());
+  if (src.weapon === Weapon.CUSTOM) {
+    const f = formulaFromCustom(src.settings?.customFormula ?? createDefaultCustomFormula());
+    // « Toutes les places » absent de la v1 : lu dans le réglage enregistré (#2013, F4g)
+    if (!src.settings?.playAllPositions) return f;
+    return {
+      ...f,
+      phases: f.phases.map(p => (p.kind === 'tableau' ? { ...p, allPlaces: true } : p)),
+    };
+  }
   return fromFlat(src);
 }
 
@@ -569,9 +576,12 @@ export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<Competitio
   if (weapon === Weapon.CUSTOM) {
     const customFormula = customFormulaOf(f);
     const firstPool = pools(f)[0];
+    // « Toutes les places » : absent de la formule v1, lu dans la brique tableau (#2013, F4g)
+    const tableau = playedTableauOf(f);
     return {
       customFormula,
       ...deriveSettingsFromFormula(customFormula),
+      ...(tableau ? { playAllPositions: tableau.allPlaces } : {}),
       // Tour en vagues au 1er tour : l'ordre suit les tailles de poule (2 à 10, docs/adr/0043)
       ...(firstPool && isWavesOrder(firstPool.boutOrder)
         ? { poolBoutOrder: firstPool.boutOrder }
