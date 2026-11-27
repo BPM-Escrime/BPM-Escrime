@@ -45,7 +45,7 @@ export const emptyPoolWaves = (): PoolWavesState => ({ launched: 0, ended: false
 /**
  * Vagues du tour courant lues dans l'état de session : clé `waves`, sinon ancienne clé des
  * rapières (`rapieres.launchedWave` / `wavesEnded`) lue comme alias tant qu'elle existe
- * (jusqu'à F4e, docs/adr/0043).
+ * (épreuves enregistrées, docs/adr/0043, F4e).
  */
 export function poolWavesOf(session: {
   waves?: Partial<PoolWavesState> | null;

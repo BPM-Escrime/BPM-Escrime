@@ -25,7 +25,7 @@ import {
   writeSession,
 } from './sport';
 
-/** Vagues de la session : clé `waves`, sinon ancienne clé des rapières (alias, jusqu'à F4e) */
+/** Vagues de la session : clé `waves`, sinon ancienne clé des rapières (alias des épreuves enregistrées, F4e) */
 export const wavesOf = (session: Record<string, unknown>) =>
   poolWavesOf(session as Parameters<typeof poolWavesOf>[0]);
 
