@@ -396,7 +396,10 @@ describe('withFlatSettings : réglages plats reportés dans la formule (ADR-0036
     const f = formulaOf({
       weapon: Weapon.EPEE,
       category: Category.SENIOR,
-      settings: { ...buildDefaultCompetitionSettings(Weapon.EPEE), poolRounds: 2 },
+      settings: {
+        ...buildDefaultCompetitionSettings({ weapon: Weapon.EPEE, category: Category.SENIOR }),
+        poolRounds: 2,
+      },
     });
     return {
       ...f,
@@ -441,7 +444,7 @@ describe('withFlatSettings : réglages plats reportés dans la formule (ADR-0036
       weapon: Weapon.EPEE,
       category: Category.SENIOR,
       settings: {
-        ...buildDefaultCompetitionSettings(Weapon.EPEE),
+        ...buildDefaultCompetitionSettings({ weapon: Weapon.EPEE, category: Category.SENIOR }),
         postPoolSplitCriteria: 'gender',
       },
     });
