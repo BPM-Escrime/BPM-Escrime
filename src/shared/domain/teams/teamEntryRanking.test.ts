@@ -62,19 +62,20 @@ describe('teamEntryKey', () => {
 });
 
 describe('teamEntryRanking', () => {
-  it('classées par rang effectif, puis le nom ; non classées ensuite, par nom', () => {
+  it('rangs saisis d’abord, puis rangs calculés, puis sans rang au nom ; échelles jamais mêlées', () => {
     const teams = [
       team('Zulu', null, ['x', 'y', 'z']),
       team('Bravo', null, ['b1', 'b2', 'b3']), // somme 12
       team('Alpha', null, ['a1', 'a2', 'a3']), // somme 6
-      team('Echo', 6, []), // rang saisi 6 : même rang qu'Alpha, départagé par le nom
+      team('Echo', 40, []), // rang saisi 40 : devant toute somme
       team('Delta', null, ['c1', 'x', 'y']),
       team('Kilo', 2, []),
+      team('India', 2, []), // même rang saisi que Kilo : le nom
     ];
     const order = teamEntryRanking(teams, 3, rankOf).map(t => t.id);
-    expect(order).toEqual(['Kilo', 'Alpha', 'Echo', 'Bravo', 'Delta', 'Zulu']);
+    expect(order).toEqual(['India', 'Kilo', 'Echo', 'Alpha', 'Bravo', 'Delta', 'Zulu']);
     expect([...teamEntryRanks(teamEntryRanking(teams, 3, rankOf)).entries()][0]).toEqual([
-      'Kilo',
+      'India',
       1,
     ]);
   });

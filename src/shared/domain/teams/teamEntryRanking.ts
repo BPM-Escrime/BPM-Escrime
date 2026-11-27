@@ -31,20 +31,25 @@ export function teamEntryKey(
 }
 
 /**
- * Équipes dans l'ordre d'entrée (1re = la meilleure) : classées d'abord, par rang effectif
- * croissant, puis le nom ; non classées ensuite, par nom.
+ * Équipes dans l'ordre d'entrée (1re = la meilleure) : d'abord les équipes au rang saisi, par
+ * rang croissant ; puis celles au rang calculé (somme des titulaires), par somme croissante ;
+ * puis les équipes sans rang. Les deux échelles ne se comparent jamais ; égalité : le nom.
  */
 export function teamEntryRanking<T extends Pick<TeamRow, 'id' | 'name' | 'ranking' | 'fencers'>>(
   teams: readonly T[],
   starters: number,
   fencerRanking: FencerRankingOf
 ): T[] {
-  const keyed = teams.map(team => ({ team, key: teamEntryKey(team, starters, fencerRanking) }));
-  const INF = Number.POSITIVE_INFINITY;
+  const keyed = teams.map(team => {
+    if (ranked(team.ranking)) return { team, tier: 0, key: team.ranking };
+    const sum = teamEntryKey(team, starters, fencerRanking);
+    return sum === null ? { team, tier: 2, key: 0 } : { team, tier: 1, key: sum };
+  });
   return keyed
     .sort(
       (a, b) =>
-        (a.key ?? INF) - (b.key ?? INF) ||
+        a.tier - b.tier ||
+        a.key - b.key ||
         a.team.name.localeCompare(b.team.name, 'fr') ||
         a.team.id.localeCompare(b.team.id)
     )
