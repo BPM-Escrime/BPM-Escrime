@@ -30,13 +30,7 @@ import {
   relayRuleOf,
   teamFormatOf,
 } from '../../shared/domain/teams/relay';
-import { rankTeamsForTableau } from '../../shared/domain/teams/teamTableau';
-import {
-  hasTeamPools,
-  teamFormulaOf,
-  teamMatchRuleOf,
-} from '../../shared/domain/teams/teamMatchRule';
-import { teamEntryRanking } from '../../shared/domain/teams/teamEntryRanking';
+import { hasTeamPools, teamFormulaOf } from '../../shared/domain/teams/teamMatchRule';
 import { hasPassivityCards } from '../../shared/domain/teams/passivityCards';
 import TeamPoolView, { CardHandlers, CardTarget, RelayHandlers } from './TeamPoolView';
 import TeamTableauView from './TeamTableauView';
@@ -122,6 +116,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     passivityCards,
     withdrawn,
     finalRanking,
+    tableauSeeds,
     loading,
     run,
   } = useTeamCompetition(competitionId);
@@ -459,19 +454,10 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     .map(r => ({ ...r, team: teamById.get(r.teamId) }))
     .filter((r): r is typeof r & { team: TeamRow } => !!r.team);
   const rankedTeamsForBracket = rankings.map(r => r.team);
-  // Placement affiché du tableau (exempts, cases en attente) : même règle que le moteur ;
-  // formule d'équipe sans poules : rang d'entrée (docs/adr/0044)
-  const tableauStarters = teamMatchRuleOf(
-    teamFormula,
-    { kind: 'tableau' },
-    competition.settings,
-    competition.weapon
-  ).starters;
-  const bracketSeeding = useMemo(() => {
-    if (teamPools) return rankTeamsForTableau(teams, matches, format);
-    const ranks = new Map(fencers.map(f => [f.id, f.ranking]));
-    return teamEntryRanking(teams, tableauStarters, id => ranks.get(id));
-  }, [teams, matches, format, teamPools, fencers, tableauStarters]);
+  // Placement affiché du tableau (exempts, cases en attente) : têtes de série du tableau tiré
+  // par le moteur, ou, avant le tirage, classement d'entrée coupé par la qualification
+  // (teams.tableauSeeds, docs/adr/0044), jamais recalculé ici
+  const bracketSeeding = tableauSeeds.flatMap(id => teamById.get(id) ?? []);
   // Classement final du moteur (docs/adr/0044) : équipes dans l'ordre, rang du moteur
   const finalRows = finalRanking.rows
     .map(r => ({ rank: r.rank, team: teamById.get(r.teamId) }))
@@ -479,7 +465,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
 
   const canExportPdf =
     (view === 'pool' && matches.length > 0) ||
-    (view === 'tableau' && rankedTeamsForBracket.length >= 2 && tableauMatches.length > 0) ||
+    (view === 'tableau' && bracketSeeding.length >= 2 && tableauMatches.length > 0) ||
     (view === 'ranking' && rankedTeamsForBracket.length > 0);
 
   const handleExportPdf = async () => {
@@ -488,7 +474,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
       const opts = { title: competition.title, teams, fencerName, isLaserArena };
       if (view === 'pool') await pdf.exportTeamPoolsToPDF(opts, matches);
       else if (view === 'tableau')
-        await pdf.exportTeamTableauToPDF(opts, rankedTeamsForBracket, tableauMatches);
+        await pdf.exportTeamTableauToPDF(opts, bracketSeeding, tableauMatches);
       else await pdf.exportTeamRankingToPDF(opts, rankedTeamsForBracket, tableauMatches);
     } catch (e) {
       showToast(`${t('teams.pdfError')} : ${(e as Error).message}`, 'error');

@@ -117,6 +117,13 @@ export const TeamsStateSchema = z.object({
   /** Équipes retirées ou exclues (docs/adr/0028) : hors classement de poule */
   withdrawn: z.array(TeamWithdrawalSchema),
   /**
+   * Têtes de série du tableau, dans l'ordre d'entrée (docs/adr/0044) : tableau tiré par le
+   * moteur (TeamTableauGenerated) ; avant le tirage, classement d'entrée coupé par la
+   * qualification du tour (teamTableauEntry), ou rang d'entrée sans poule. Placement du
+   * tableau de l'écran et des PDF.
+   */
+  tableauSeeds: z.array(z.string()),
+  /**
    * Classement final (teamFinalRanking, docs/adr/0044) : perdants ex aequo par tour, départagés
    * par le classement d'entrée du tableau ; petite finale ; éliminées à l'issue des poules
    * ensuite. provisional : tableau pas terminé (ou pas encore tiré).

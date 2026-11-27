@@ -32,33 +32,24 @@ import {
   nextTableauSlot,
   planTeamTableau,
   planTeamTableauMatches,
-  rankTeamsForTableau,
   tableauSeedIds,
   THIRD_PLACE_SLOT,
   type TeamTableauMatchPlan,
   type TeamTableauMatchState,
   type TeamTableauOptions,
-  type TeamTableauPlan,
 } from '../../../shared/domain/teams/teamTableau';
 import { relayPairsOf, teamFormulaOf } from '../../../shared/domain/teams/teamMatchRule';
-import { teamTableauEntry } from '../../../shared/domain/teams/teamTableauEntry';
-import {
-  phaseSettings,
-  tableauQualificationOf,
-  type PhaseRef,
-} from '../../../shared/domain/formula/formulaV2';
-import { projectCompetition } from '../../../shared/domain/journal/projectCompetition';
+import { phaseSettings, type PhaseRef } from '../../../shared/domain/formula/formulaV2';
 import { relayPenaltyTouches } from '../../../shared/domain/teams/teamCards';
-import {
-  involvesWithdrawn,
-  withoutWithdrawnTeams,
-} from '../../../shared/domain/teams/teamWithdrawal';
+import { involvesWithdrawn } from '../../../shared/domain/teams/teamWithdrawal';
 import type { NewJournalEvent } from '../../../database/repos/eventLogRepo';
 import { CommandError, type CommandContext } from './context';
-import { EVENT, readJournal, recordEvents } from './eventLog';
+import { EVENT, recordEvents } from './eventLog';
 import {
   changed,
-  entryRankedTeams,
+  rankable,
+  tableauEntryOf,
+  tableauOf,
   teamCompetitionOrThrow,
   teamRuleOf,
   withdrawnTeams,
@@ -149,61 +140,10 @@ const tableauMatchesOf = (ctx: CommandContext, comp: Competition) =>
     TeamMatchRow & TeamTableauMatchState
   >;
 
-/** Équipes et rencontres de poule classables : sans les équipes retirées (o.99.8) */
-function rankable(ctx: CommandContext, comp: Competition) {
-  const pools = ctx.db.teams.getTeamMatchesByCompetition(comp.id) as TeamMatchRow[];
-  const out = withoutWithdrawnTeams(
-    teamsOf(ctx, comp),
-    pools,
-    new Set(withdrawnTeams(ctx, comp.id).keys())
-  );
-  return out;
-}
-
-/**
- * Tableau tiré : celui du journal (TeamTableauGenerated) ; à défaut (tableau créé par l'écran,
- * sans journal), recalculé sur le classement de poule comme l'écran
- */
-function tableauOf(ctx: CommandContext, comp: Competition): TeamTableauPlan {
-  const fact = projectCompetition(readJournal(ctx, comp.id)).teams?.tableau;
-  if (fact) return fact;
-  const { teams, matches } = rankable(ctx, comp);
-  return planTeamTableau(rankTeamsForTableau(teams, matches, teamFormatOf(comp.settings)));
-}
-
 /** Équipes du tableau tiré, dans l'ordre d'entrée (têtes de série, fait du journal) */
 export function tableauSeeds(ctx: CommandContext, comp: Competition): TeamRow[] {
   const byId = new Map(teamsOf(ctx, comp).map(t => [t.id, t]));
   return tableauSeedIds(tableauOf(ctx, comp)).flatMap(id => byId.get(id) ?? []);
-}
-
-/**
- * Classement d'entrée du tableau (docs/adr/0044) : formule d'équipe, classement de poule coupé
- * par la qualification du tour (cutAtBar), ou rang d'entrée sans tour de poules ; sinon
- * classement de poule de l'écran (inchangé). Équipes retirées exclues (o.99.8).
- */
-export function tableauEntryOf(
-  ctx: CommandContext,
-  comp: Competition,
-  random?: () => number
-): { qualified: TeamRow[]; eliminated: TeamRow[] } {
-  const ranked = rankable(ctx, comp);
-  const formula = teamFormulaOf(comp);
-  if (!formula) {
-    return {
-      qualified: rankTeamsForTableau(ranked.teams, ranked.matches, teamFormatOf(comp.settings)),
-      eliminated: [],
-    };
-  }
-  const starters = teamRuleOf(comp).starters;
-  return teamTableauEntry({
-    teams: ranked.teams,
-    poolMatches: ranked.matches,
-    entryOrder: entryRankedTeams(ctx, comp, ranked.teams, starters),
-    hasPools: formula.phases.some(p => p.kind === 'pool'),
-    qualification: tableauQualificationOf(formula),
-    random,
-  });
 }
 
 /** Rencontre d'une équipe retirée ou exclue : plus de relais (docs/adr/0028 § 4) */

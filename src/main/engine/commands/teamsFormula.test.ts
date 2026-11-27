@@ -17,7 +17,10 @@ import type { CommandContext } from './context';
 import { teamStateView } from './teams';
 import { matchRelayRule } from './teamRelays';
 import { invoke } from '../api/engine';
-import { computeTeamFinalRanking } from '../../../shared/utils/pdfExport/teamPdf';
+import {
+  computeTeamFinalRanking,
+  generateTeamTableauHTML,
+} from '../../../shared/utils/pdfExport/teamPdf';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -852,5 +855,62 @@ d('Remplaçant choisi (substituteTeamFencer, inFencerId ; docs/adr/0044 amendée
       outFencerId: m.bouts[0][side],
     });
     expect(done.inFencerId).toBe(r1);
+  });
+});
+
+d('Têtes de série du tableau dans getCompetitionState (docs/adr/0044, tableauSeeds)', () => {
+  it('qualification qui coupe : classement d’entrée coupé avant le tirage, tableau tiré ensuite', async () => {
+    const comp = competition(Weapon.FOIL, {
+      formula: teamFormula({
+        pool: {
+          sizeMin: 3,
+          sizeMax: 6,
+          qualification: { mode: 'fixed_count', count: 4, ties: 'initial_ranking' },
+        },
+      }),
+    });
+    await teamsRegistered(comp.id, ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    for (const m of db.getTeamMatchesByCompetition(comp.id)) await playMatch(comp.id, m.id);
+    const before = (await stateOf(comp.id)).teams;
+    // 5 équipes au classement de poule, 4 au tableau
+    expect(before.poolRanking).toHaveLength(5);
+    expect(before.tableauSeeds).toHaveLength(4);
+    const out = await call('generateTeamTableau', { competitionId: comp.id });
+    const after = (await stateOf(comp.id)).teams;
+    expect(after.tableauSeeds).toEqual(before.tableauSeeds);
+    const drawn = out.slots.flatMap((s: { teamAId: string; teamBId: string }) => [
+      s.teamAId,
+      s.teamBId,
+    ]);
+    expect([...after.tableauSeeds].sort()).toEqual([...drawn].sort());
+    // Tête de série 1 en haut du tableau tiré
+    expect(out.slots[0].teamAId).toBe(after.tableauSeeds[0]);
+    // PDF du tableau sur les têtes de série de l'état : tableau de 4, équipe coupée absente
+    const byId = new Map(db.getTeamsByCompetition(comp.id).map(t => [t.id, t]));
+    const cut = db.getTeamsByCompetition(comp.id).find(t => !drawn.includes(t.id))!;
+    const html = generateTeamTableauHTML(
+      { title: 'Coupe', teams: [...byId.values()], fencerName: id => id, isLaserArena: false },
+      after.tableauSeeds.map((id: string) => byId.get(id)!),
+      tableauOf(comp.id) as never
+    );
+    expect(html).toContain('4 équipes');
+    expect(html).toContain('tableau de 4');
+    expect(html).not.toContain(cut.name);
+  });
+
+  it('tableau sans poule : rang d’entrée, avant et après le tirage', async () => {
+    const comp = competition(Weapon.SABRE, { formula: teamFormula({ pool: null }) });
+    const [a, b, c, dd, e] = await teamsRegistered(comp.id, [
+      { name: 'A', ranking: 4 },
+      { name: 'B', ranking: 3 },
+      { name: 'C', ranking: 2 },
+      { name: 'D', ranking: 1 },
+      { name: 'E', ranking: 5 },
+    ]);
+    expect((await stateOf(comp.id)).teams.tableauSeeds).toEqual([dd, c, b, a, e]);
+    const out = await call('generateTeamTableau', { competitionId: comp.id });
+    expect(out.size).toBe(8);
+    expect((await stateOf(comp.id)).teams.tableauSeeds).toEqual([dd, c, b, a, e]);
   });
 });

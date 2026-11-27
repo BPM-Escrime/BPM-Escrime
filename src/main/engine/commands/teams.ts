@@ -29,10 +29,11 @@ import {
   teamFormulaOf,
   teamMatchRuleOf,
 } from '../../../shared/domain/teams/teamMatchRule';
-import type {
-  PhaseRef,
-  PoolRoundPhase,
-  TeamMatchRule,
+import {
+  tableauQualificationOf,
+  type PhaseRef,
+  type PoolRoundPhase,
+  type TeamMatchRule,
 } from '../../../shared/domain/formula/formulaV2';
 import { calculateOptimalPoolCount } from '../../../shared/domain/pools/poolDistribution';
 import { calculateLaserArenaPoolRanking } from '../../../shared/domain/teams/laserArenaCalculations';
@@ -47,7 +48,13 @@ import { getCompetitionOrThrow } from './competitions';
 import { EVENT, readJournal, recordEvents } from './eventLog';
 import { projectCompetition } from '../../../shared/domain/journal/projectCompetition';
 import { teamFinalRanking } from '../../../shared/domain/teams/teamFinalRanking';
-import { tableauSeedIds } from '../../../shared/domain/teams/teamTableau';
+import {
+  planTeamTableau,
+  rankTeamsForTableau,
+  tableauSeedIds,
+  type TeamTableauPlan,
+} from '../../../shared/domain/teams/teamTableau';
+import { teamTableauEntry } from '../../../shared/domain/teams/teamTableauEntry';
 
 type Ops = typeof teamSetupOperations;
 export type TeamsHandler<N extends keyof Ops> = (
@@ -517,6 +524,12 @@ export function teamsState(ctx: CommandContext, comp: Competition): TeamsStateDT
     ranking.map(r => r.team),
     tableau
   );
+  // Têtes de série du tableau (docs/adr/0044) : tableau tiré par le moteur, sinon classement
+  // d'entrée coupé par la qualification (même fonction que le tirage, sans tirage au sort)
+  const seeds =
+    tableau.length > 0
+      ? tableauSeedIds(tableauOf(ctx, comp))
+      : tableauEntryOf(ctx, comp).qualified.map(t => t.id);
   return {
     format,
     teamSize: format === 'laser-arena' ? teamSizeOf(comp.settings) : teamRuleOf(comp).starters,
@@ -540,11 +553,65 @@ export function teamsState(ctx: CommandContext, comp: Competition): TeamsStateDT
       tied: r.tied,
     })),
     withdrawn: [...withdrawn.values()],
+    tableauSeeds: seeds,
     finalRanking: {
       rows: final.rows.map(r => ({ teamId: r.team.id, rank: r.rank })),
       provisional: final.provisional,
     },
   };
+}
+
+// ─── Tableau tiré et classement d'entrée du tableau ────────────────────────
+
+/** Équipes et rencontres de poule classables : sans les équipes retirées (o.99.8) */
+export function rankable(ctx: CommandContext, comp: Competition) {
+  const pools = ctx.db.teams.getTeamMatchesByCompetition(comp.id) as TeamMatchRow[];
+  const out = withoutWithdrawnTeams(
+    ctx.db.teams.getTeamsByCompetition(comp.id) as TeamRow[],
+    pools,
+    new Set(withdrawnTeams(ctx, comp.id).keys())
+  );
+  return out;
+}
+
+/**
+ * Tableau tiré : celui du journal (TeamTableauGenerated) ; à défaut (tableau créé par l'écran,
+ * sans journal), recalculé sur le classement de poule comme l'écran
+ */
+export function tableauOf(ctx: CommandContext, comp: Competition): TeamTableauPlan {
+  const fact = projectCompetition(readJournal(ctx, comp.id)).teams?.tableau;
+  if (fact) return fact;
+  const { teams, matches } = rankable(ctx, comp);
+  return planTeamTableau(rankTeamsForTableau(teams, matches, teamFormatOf(comp.settings)));
+}
+
+/**
+ * Classement d'entrée du tableau (docs/adr/0044) : formule d'équipe, classement de poule coupé
+ * par la qualification du tour (cutAtBar), ou rang d'entrée sans tour de poules ; sinon
+ * classement de poule de l'écran (inchangé). Équipes retirées exclues (o.99.8).
+ */
+export function tableauEntryOf(
+  ctx: CommandContext,
+  comp: Competition,
+  random?: () => number
+): { qualified: TeamRow[]; eliminated: TeamRow[] } {
+  const ranked = rankable(ctx, comp);
+  const formula = teamFormulaOf(comp);
+  if (!formula) {
+    return {
+      qualified: rankTeamsForTableau(ranked.teams, ranked.matches, teamFormatOf(comp.settings)),
+      eliminated: [],
+    };
+  }
+  const starters = teamRuleOf(comp).starters;
+  return teamTableauEntry({
+    teams: ranked.teams,
+    poolMatches: ranked.matches,
+    entryOrder: entryRankedTeams(ctx, comp, ranked.teams, starters),
+    hasPools: formula.phases.some(p => p.kind === 'pool'),
+    qualification: tableauQualificationOf(formula),
+    random,
+  });
 }
 
 /**

@@ -22,6 +22,7 @@ const data = vi.hoisted(() => ({
   poolMatches: [] as unknown[],
   tableauMatches: [] as unknown[],
   finalRanking: { rows: [] as Array<{ teamId: string; rank: number }>, provisional: true },
+  tableauSeeds: [] as string[],
 }));
 vi.mock('../hooks/useTeamCompetition', () => ({
   useTeamCompetition: () => ({
@@ -34,11 +35,19 @@ vi.mock('../hooks/useTeamCompetition', () => ({
     passivityCards: {},
     withdrawn: {},
     finalRanking: data.finalRanking,
+    tableauSeeds: data.tableauSeeds,
     loading: false,
     run,
   }),
 }));
 vi.mock('../api/remoteApi', () => ({ useRemoteApi: () => ({}) }));
+const pdf = vi.hoisted(() => ({
+  exportTeamTableauToPDF: vi.fn(async () => {}),
+  exportTeamRankingToPDF: vi.fn(async () => {}),
+  exportTeamPoolsToPDF: vi.fn(async () => {}),
+  exportTeamBookToPDF: vi.fn(async () => {}),
+}));
+vi.mock('../../shared/utils/pdfExport/teamPdf', () => pdf);
 
 import { TeamManagerView, type TeamViewMode } from './TeamManagerView';
 import { ConfirmProvider } from './ConfirmDialog';
@@ -132,6 +141,8 @@ beforeEach(() => {
   data.poolMatches = [];
   data.tableauMatches = [];
   data.finalRanking = { rows: [], provisional: true };
+  data.tableauSeeds = ['ta', 'tb'];
+  Object.values(pdf).forEach(f => f.mockClear());
 });
 
 describe('TeamManagerView — rang d’entrée (docs/adr/0044)', () => {
@@ -214,6 +225,7 @@ describe('TeamManagerView — phases de la formule d’équipe (docs/adr/0044)',
       tableauMatch('f', 1, 0, 'ta', 'tb'),
       tableauMatch('p', 1, 1, 'tc', 'td'),
     ];
+    data.tableauSeeds = ['ta', 'tb', 'tc', 'td'];
     show('tableau', { formula: tableauOnly });
     const third = screen.getByTestId('team-third-place');
     expect(third).toHaveTextContent(frT('tableau.round_third_place'));
@@ -233,6 +245,77 @@ describe('TeamManagerView — phases de la formule d’équipe (docs/adr/0044)',
     show('ranking', { formula: tableauOnly });
     const rows = within(screen.getByTestId('team-final-ranking')).getAllByRole('row');
     expect(rows.map(r => r.textContent)).toEqual(['1Bravo', '2Alpha']);
+  });
+});
+
+describe('TeamManagerView — tableau tiré par le moteur (teams.tableauSeeds, docs/adr/0044)', () => {
+  const five = () => [
+    team('ta', 'Alpha'),
+    team('tb', 'Bravo'),
+    team('tc', 'Charlie'),
+    team('td', 'Delta'),
+    team('te', 'Echo'),
+  ];
+  const cutFormula = {
+    ...tableauOnly,
+    phases: [
+      {
+        kind: 'pool',
+        id: 'pool-1',
+        sizeMin: 3,
+        sizeMax: 6,
+        maxScore: 45,
+        timerSeconds: 180,
+        qualification: { mode: 'fixed_count', count: 4 },
+        seeding: 'previous_round',
+        boutOrder: 'fie',
+      },
+      tableauOnly.phases[0],
+    ],
+  };
+
+  it('qualification qui coupe : 4 équipes au tableau sur 5, comme le moteur', async () => {
+    data.teams = five();
+    // Classement de poule : Echo 5e, coupée par la qualification (moteur)
+    data.tableauSeeds = ['ta', 'tb', 'tc', 'td'];
+    show('tableau', { formula: cutFormula });
+    expect(
+      screen.getByRole('button', { name: frT('teams.tableauGenerate', { count: 4 }) })
+    ).toBeInTheDocument();
+  });
+
+  it('tableau tiré : tableau de 4 sans exempt, PDF sur les mêmes têtes de série', async () => {
+    data.teams = five();
+    data.tableauSeeds = ['ta', 'tb', 'tc', 'td'];
+    data.tableauMatches = [
+      tableauMatch('s1', 2, 0, 'ta', 'td'),
+      tableauMatch('s2', 2, 1, 'tc', 'tb'),
+    ];
+    show('tableau', { formula: cutFormula });
+    expect(screen.queryByText(/Echo/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(frT('teams.pdfExport')) }));
+    await waitFor(() => expect(pdf.exportTeamTableauToPDF).toHaveBeenCalled());
+    const [, seeds] = pdf.exportTeamTableauToPDF.mock.calls[0] as unknown as [
+      unknown,
+      Array<{ id: string }>,
+    ];
+    expect(seeds.map(x => x.id)).toEqual(['ta', 'tb', 'tc', 'td']);
+  });
+
+  it('tableau sans poule : têtes de série au rang d’entrée du moteur', async () => {
+    data.teams = [team('ta', 'Alpha', 2), team('tb', 'Bravo', 1), team('tc', 'Charlie', 3)];
+    data.tableauSeeds = ['tb', 'ta', 'tc'];
+    data.tableauMatches = [tableauMatch('s2', 2, 1, 'tc', 'ta')];
+    show('tableau', { formula: tableauOnly });
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(frT('teams.pdfExport')) }));
+    await waitFor(() => expect(pdf.exportTeamTableauToPDF).toHaveBeenCalled());
+    const [, seeds] = pdf.exportTeamTableauToPDF.mock.calls[0] as unknown as [
+      unknown,
+      Array<{ id: string }>,
+    ];
+    expect(seeds.map(x => x.id)).toEqual(['tb', 'ta', 'tc']);
+    // Tête de série 1 exempte au premier tour (tableau de 4)
+    expect(screen.getAllByText(/Bravo/).length).toBeGreaterThan(0);
   });
 });
 
