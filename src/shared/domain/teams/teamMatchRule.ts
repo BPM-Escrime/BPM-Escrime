@@ -34,9 +34,17 @@ export const TEAM_MATCH_LIMITS = {
 const TEAM_RELAY_ORDERS: readonly TeamRelayOrder[] = ['fie', 'rotation'];
 const FIE_WEAPONS: readonly Weapon[] = [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE];
 
+/**
+ * Ordre FIE imposé (o.99.3 : ordre impératif dans les trois armes) : 3 titulaires en épée,
+ * fleuret, sabre ; la rotation y est refusée (ADR-0044 amendée). Sabre Laser, arme « Autre »,
+ * équipes de 2 ou 4 : rotation admise.
+ */
+export const fieRelayOrderRequired = (starters: number | undefined, weapon: Weapon): boolean =>
+  starters === 3 && FIE_WEAPONS.includes(weapon);
+
 /** Ordre des relais par défaut (`relayOrderFor`) : FIE à 3 titulaires en épée, fleuret, sabre */
 export const defaultRelayOrder = (starters: number, weapon: Weapon): TeamRelayOrder =>
-  starters === 3 && FIE_WEAPONS.includes(weapon) ? 'fie' : 'rotation';
+  fieRelayOrderRequired(starters, weapon) ? 'fie' : 'rotation';
 
 type TeamSettings = Pick<
   CompetitionSettings,
@@ -61,7 +69,8 @@ function phaseOverride(f: FormulaV2, ref: PhaseRef): Partial<TeamMatchRule> {
  * Règle de rencontre de la phase `ref` (undefined : règle générale) : réglages d'épreuve, puis
  * `general.teamMatch`, puis la surcharge de la phase, champ par champ. Ordre des relais non
  * réglé : celui de l'arme et des titulaires (`relayOrderFor`) ; 'fie' hors 3 titulaires (refusé
- * par les contrôles) : rotation.
+ * par les contrôles) : rotation ; 'rotation' à 3 titulaires en épée, fleuret, sabre (refusée par
+ * les contrôles) : ordre FIE, imposé (o.99.3).
  */
 export function teamMatchRuleOf(
   formula: FormulaV2 | undefined,
@@ -77,7 +86,11 @@ export function teamMatchRuleOf(
     starters,
     reserves: phase.reserves ?? general.reserves ?? settings?.teamReserveCount ?? 1,
     relayStep: phase.relayStep ?? general.relayStep ?? settings?.teamRelayStepSize ?? 5,
-    relayOrder: order === 'fie' && starters !== 3 ? 'rotation' : order,
+    relayOrder: fieRelayOrderRequired(starters, weapon)
+      ? 'fie'
+      : order === 'fie' && starters !== 3
+        ? 'rotation'
+        : order,
   };
 }
 
@@ -187,10 +200,14 @@ export function withTeamMatch(
 
 const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
 
-/** Bornes d'une règle (partielle) ; `starters` : titulaires effectifs pour l'ordre FIE */
+/**
+ * Bornes d'une règle (partielle) ; `starters` : titulaires effectifs pour l'ordre FIE, imposé à 3
+ * titulaires en épée, fleuret, sabre (o.99.3, ADR-0044 amendée)
+ */
 function ruleIssues(
   rule: Partial<TeamMatchRule>,
   starters: number | undefined,
+  weapon: Weapon,
   where: string,
   phase: string | null
 ): FormulaRemark[] {
@@ -209,6 +226,8 @@ function ruleIssues(
     add(`relayOrder attendu : ${TEAM_RELAY_ORDERS.join(', ')}`);
   if (order === 'fie' && starters !== undefined && starters !== 3)
     add('ordre FIE des relais (o.99.3) : 3 titulaires seulement');
+  if (order === 'rotation' && fieRelayOrderRequired(starters, weapon))
+    add('ordre FIE des relais imposé à 3 titulaires en épée, fleuret et sabre (o.99.3)');
   return out;
 }
 
@@ -236,12 +255,13 @@ const poolable = (n: number, min: number, max: number) =>
 /**
  * Remarques propres à une épreuve par équipes en relais FIE (ADR-0044) : briques admises (un
  * tour de poules puis un tableau, ou un tableau seul : `team_brick_unsupported`), bornes de la
- * règle de rencontre (`invalid_team_match`), S3 et S4 sur l'effectif d'équipes `teamCount`.
+ * règle de rencontre (`invalid_team_match`, dont l'ordre FIE imposé à 3 titulaires en épée,
+ * fleuret, sabre), S3 et S4 sur l'effectif d'équipes `teamCount`.
  * Arène Sabre Laser et épreuve individuelle : aucune.
  */
 export function teamFormulaIssues(
   f: FormulaV2,
-  scope: { isTeamEvent?: boolean; teamFormat?: TeamFormat; teamCount?: number }
+  scope: { weapon: Weapon; isTeamEvent?: boolean; teamFormat?: TeamFormat; teamCount?: number }
 ): FormulaRemark[] {
   if (!scope.isTeamEvent || teamFormatOf(scope) !== 'fie-relay') return [];
   const out: FormulaRemark[] = [];
@@ -251,7 +271,7 @@ export function teamFormulaIssues(
 
   // Règle de rencontre : générale, puis surcharge de chaque phase
   const general = defined(f.general.teamMatch);
-  out.push(...ruleIssues(general, general.starters, 'règle de rencontre', null));
+  out.push(...ruleIssues(general, general.starters, scope.weapon, 'règle de rencontre', null));
   f.phases.forEach((p, i) => {
     if (p.kind !== 'pool' && p.kind !== 'tableau') return;
     if (!p.teamMatch) return;
@@ -262,6 +282,7 @@ export function teamFormulaIssues(
       ...ruleIssues(
         { ...own, relayOrder: order },
         starters,
+        scope.weapon,
         `${keys[i]} : règle de rencontre`,
         keys[i]
       )

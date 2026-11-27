@@ -2,19 +2,26 @@
  * BPM - Escrime - Règle de rencontre d'une épreuve par équipes en relais FIE dans l'éditeur de
  * formule (ADR-0044) : titulaires, remplaçants, palier, ordre des relais. Règle générale
  * (`general.teamMatch`, complète) ou surcharge d'une phase (`teamMatch`, champ vide : règle
- * générale). Bornes : TEAM_MATCH_LIMITS du domaine, jugées aussi par le moteur.
+ * générale). Bornes : TEAM_MATCH_LIMITS du domaine, jugées aussi par le moteur. Ordre FIE imposé à 3
+ * titulaires en épée, fleuret, sabre (o.99.3) : rotation non proposée (`fieRelayOrderRequired`).
  * Licensed under GPL-3.0
  */
 
 import React from 'react';
 import type { TeamMatchRule, TeamRelayOrder } from '../../../shared/domain/formula/formulaV2';
-import { TEAM_MATCH_LIMITS } from '../../../shared/domain/teams/teamMatchRule';
+import {
+  TEAM_MATCH_LIMITS,
+  fieRelayOrderRequired,
+} from '../../../shared/domain/teams/teamMatchRule';
+import type { Weapon } from '../../../shared/types';
 import { useTranslation } from '../../hooks/useTranslation';
 
 type NumberKey = 'starters' | 'reserves' | 'relayStep';
 
 interface Props {
   id: string;
+  /** Arme de l'épreuve : ordre FIE imposé à 3 titulaires en épée, fleuret, sabre */
+  weapon: Weapon;
   /** Règle générale (complète) ou surcharge de la phase (partielle) */
   rule: Partial<TeamMatchRule>;
   /** Phase : règle générale héritée (valeurs affichées des champs vides) ; absent : générale */
@@ -33,19 +40,32 @@ const clamp = (key: NumberKey, n: number) => {
   return Math.min(max, Math.max(min, n));
 };
 
-export const FormulaTeamMatchFields: React.FC<Props> = ({ id, rule, inherited, onChange }) => {
+export const FormulaTeamMatchFields: React.FC<Props> = ({
+  id,
+  weapon,
+  rule,
+  inherited,
+  onChange,
+}) => {
   const { t } = useTranslation();
   const isPhase = !!inherited;
   const starters = rule.starters ?? inherited?.starters;
+  const fieRequired = fieRelayOrderRequired(starters, weapon);
 
   /** Champ réglé ; vide (phase seulement) : retiré, la règle générale s'applique */
   const set = <K extends keyof TeamMatchRule>(key: K, value: TeamMatchRule[K] | undefined) => {
     const { [key]: _old, ...rest } = rule;
     const next: Partial<TeamMatchRule> = value === undefined ? rest : { ...rest, [key]: value };
-    // Ordre FIE : 3 titulaires seulement (o.99.3) ; autre nombre : rotation
+    // Ordre FIE : 3 titulaires seulement (o.99.3) ; autre nombre : rotation. À 3 titulaires en
+    // épée, fleuret, sabre : ordre FIE imposé, la rotation (réglée ou héritée) est remplacée
     const nextStarters = next.starters ?? inherited?.starters;
     if (key === 'starters' && next.relayOrder === 'fie' && nextStarters !== 3)
       next.relayOrder = 'rotation';
+    if (
+      fieRelayOrderRequired(nextStarters, weapon) &&
+      (next.relayOrder ?? inherited?.relayOrder) === 'rotation'
+    )
+      next.relayOrder = 'fie';
     onChange(next);
   };
 
@@ -98,7 +118,9 @@ export const FormulaTeamMatchFields: React.FC<Props> = ({ id, rule, inherited, o
             <option value="fie" disabled={starters !== 3}>
               {t('formulaEditor.team_relay_order_fie')}
             </option>
-            <option value="rotation">{t('formulaEditor.team_relay_order_rotation')}</option>
+            {!fieRequired && (
+              <option value="rotation">{t('formulaEditor.team_relay_order_rotation')}</option>
+            )}
           </select>
         </div>
       </div>

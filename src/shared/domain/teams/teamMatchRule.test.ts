@@ -50,7 +50,7 @@ const formula = (phases: FormulaV2['phases'], general: FormulaV2['general'] = {}
   general,
 });
 const RULE = { starters: 3, reserves: 1, relayStep: 5, relayOrder: 'fie' as const };
-const team = { isTeamEvent: true, teamFormat: 'fie-relay' as const };
+const team = { weapon: Weapon.EPEE, isTeamEvent: true, teamFormat: 'fie-relay' as const };
 const codes = (f: FormulaV2, scope: Parameters<typeof teamFormulaIssues>[1] = team) =>
   teamFormulaIssues(f, scope).map(r => `${r.code}@${r.phase}`);
 
@@ -244,8 +244,8 @@ describe('Contrôles d’une épreuve par équipes en relais FIE (ADR-0044)', ()
 
   it('arène Sabre Laser et épreuve individuelle : aucune remarque d’équipe', () => {
     const f = formula([pool(), pool(), tableau({ allPlaces: true })]);
-    expect(codes(f, { isTeamEvent: true, teamFormat: 'laser-arena' })).toEqual([]);
-    expect(codes(f, { isTeamEvent: false })).toEqual([]);
+    expect(codes(f, { ...team, teamFormat: 'laser-arena' })).toEqual([]);
+    expect(codes(f, { ...team, isTeamEvent: false })).toEqual([]);
   });
 
   it('bornes de la règle : titulaires 2-4, remplaçants 0-2, palier ≥ 1, ordre FIE à 3', () => {
@@ -275,6 +275,47 @@ describe('Contrôles d’une épreuve par équipes en relais FIE (ADR-0044)', ()
         })
       )
     ).toEqual([]);
+  });
+
+  it('ordre FIE imposé à 3 titulaires en épée, fleuret, sabre : rotation refusée (o.99.3, ADR-0044 amendée)', () => {
+    const rotation = { ...RULE, relayOrder: 'rotation' as const };
+    // Règle générale : remarque sur la formule, dans les trois armes
+    for (const weapon of [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE])
+      expect(codes(formula([tableau()], { teamMatch: rotation }), { ...team, weapon })).toEqual([
+        'invalid_team_match@null',
+      ]);
+    // Surcharge de phase : sur la phase concernée
+    expect(
+      codes(
+        formula([pool({ teamMatch: { relayOrder: 'rotation' } }), tableau()], { teamMatch: RULE })
+      )
+    ).toEqual(['invalid_team_match@pool-0']);
+    // Phase à 3 titulaires qui hérite de la rotation d'une règle générale à 4
+    expect(
+      codes(
+        formula([pool(), tableau({ teamMatch: { starters: 3 } })], {
+          teamMatch: { ...rotation, starters: 4 },
+        })
+      )
+    ).toEqual(['invalid_team_match@tableau']);
+    // Rotation admise : Sabre Laser, arme « Autre », équipes de 2 ou 4
+    expect(
+      codes(formula([tableau()], { teamMatch: rotation }), { ...team, weapon: Weapon.LASER })
+    ).toEqual([]);
+    expect(
+      codes(formula([tableau()], { teamMatch: rotation }), { ...team, weapon: Weapon.CUSTOM })
+    ).toEqual([]);
+    for (const starters of [2, 4])
+      expect(codes(formula([tableau()], { teamMatch: { ...rotation, starters } }))).toEqual([]);
+    // Lecture : ordre FIE imposé, même si la formule enregistrée porte la rotation
+    expect(
+      teamMatchRuleOf(formula([tableau()], { teamMatch: rotation }), undefined, {}, Weapon.SABRE)
+        .relayOrder
+    ).toBe('fie');
+    expect(
+      teamMatchRuleOf(formula([tableau()], { teamMatch: rotation }), undefined, {}, Weapon.CUSTOM)
+        .relayOrder
+    ).toBe('rotation');
   });
 
   it('S3, S4 sur l’effectif d’équipes : poules réalisables, 2 équipes pour un tableau', () => {

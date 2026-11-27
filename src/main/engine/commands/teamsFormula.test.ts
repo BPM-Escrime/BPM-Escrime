@@ -386,11 +386,13 @@ d('Poules d’équipes lues dans la formule (docs/adr/0044, G0c)', () => {
 
 d('Règle de rencontre de la phase (docs/adr/0044, G0c)', () => {
   it('relais créés avec la règle de leur phase ; rencontre figée si la formule change', async () => {
+    // Arme « Autre » : rotation admise à 3 titulaires (ordre FIE imposé en épée, fleuret,
+    // sabre seulement, o.99.3, ADR-0044 amendée)
     const formula = teamFormula({
       pool: { teamMatch: { relayOrder: 'rotation' } },
       tableau: { teamMatch: { relayStep: 3 } },
     });
-    const comp = competition(Weapon.EPEE, { formula });
+    const comp = competition(Weapon.CUSTOM, { formula });
     await teamsRegistered(comp.id, ['A', 'B', 'C']);
     await call('generateTeamPools', { competitionId: comp.id });
     // Poule : rotation (1-1 d'abord), palier 5 de la règle générale
@@ -425,6 +427,71 @@ d('Règle de rencontre de la phase (docs/adr/0044, G0c)', () => {
       scoreB: 1,
     });
     expect(divergences(comp.id)).toEqual([]);
+  });
+
+  it('épée à 3 titulaires : palier par phase, ordre FIE dans chaque phase', async () => {
+    const formula = teamFormula({ tableau: { teamMatch: { relayStep: 3 } } });
+    const comp = competition(Weapon.EPEE, { formula });
+    await teamsRegistered(comp.id, ['A', 'B', 'C']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    const first = match(`${comp.id}-p1-1`);
+    // Poule : palier 5 de la règle générale, ordre FIE o.99.3 (3-6 d'abord)
+    expect(first.bouts.every(r => r.maxScore === 5)).toBe(true);
+    expect(orderOf(comp.id, first.bouts[0].fencerAId)).toBe(3);
+    for (const m of db.getTeamMatchesByCompetition(comp.id)) await playMatch(comp.id, m.id);
+    await call('generateTeamTableau', { competitionId: comp.id });
+    const t = match(tableauOf(comp.id)[0].id);
+    expect(t.bouts.every(r => r.maxScore === 3)).toBe(true);
+    expect(orderOf(comp.id, t.bouts[0].fencerAId)).toBe(3);
+    expect(divergences(comp.id)).toEqual([]);
+  });
+
+  it('ordre FIE imposé à 3 titulaires en épée, fleuret, sabre : rotation refusée (invalid_team_match)', async () => {
+    // Touches de poule dans les bornes (1 à 15) : seule la règle de rencontre est jugée
+    const valid = () => teamFormula({ pool: { maxScore: 15 } });
+    for (const weapon of [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE]) {
+      const comp = competition(weapon, { formula: valid() });
+      // Sur la phase concernée
+      await reject('updateCompetitionFormula', {
+        competitionId: comp.id,
+        operations: [
+          { op: 'setPhase', phase: 'pool-0', settings: { teamMatch: { relayOrder: 'rotation' } } },
+        ],
+      }).toMatchObject({
+        code: 'invalid_settings',
+        message: expect.stringMatching(/\[pool-0\].*ordre FIE des relais imposé/),
+      });
+      // Sur la formule entière
+      await reject('updateCompetitionFormula', {
+        competitionId: comp.id,
+        operations: [
+          { op: 'setGeneral', settings: { teamMatch: { ...RULE, relayOrder: 'rotation' } } },
+        ],
+      }).toMatchObject({
+        code: 'invalid_settings',
+        message: expect.stringMatching(/\[formule\].*ordre FIE des relais imposé/),
+      });
+    }
+    // Rotation admise : arme « Autre », équipes de 4 (Sabre Laser : teamMatchRule.test.ts)
+    const custom = competition(Weapon.CUSTOM, { formula: valid() });
+    await call('updateCompetitionFormula', {
+      competitionId: custom.id,
+      operations: [
+        { op: 'setPhase', phase: 'pool-0', settings: { teamMatch: { relayOrder: 'rotation' } } },
+      ],
+      dryRun: true,
+    });
+    const four = competition(Weapon.EPEE, { formula: valid() });
+    await call('updateCompetitionFormula', {
+      competitionId: four.id,
+      operations: [
+        {
+          op: 'setGeneral',
+          settings: { teamMatch: { ...RULE, starters: 4, relayOrder: 'rotation' } },
+        },
+      ],
+      dryRun: true,
+    });
   });
 
   it('remplaçants contrôlés par le moteur à l’inscription (assignTeamFencer)', async () => {

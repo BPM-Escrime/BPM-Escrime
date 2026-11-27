@@ -101,16 +101,38 @@ describe('Éditeur de formule, épreuve par équipes en relais FIE (docs/adr/004
     expect(last!.general.teamMatch).toMatchObject({ reserves: 2, relayStep: 4 });
   });
 
+  it('épée à 3 titulaires : ordre FIE imposé, rotation non proposée (o.99.3, ADR-0044 amendée)', () => {
+    render(<Harness />);
+    const rotationOption = (testId: string) =>
+      screen.getByTestId(testId).querySelector('option[value="rotation"]');
+    expect(rotationOption('formula-team-match-relayOrder')).toBeNull();
+    expect(rotationOption('pool-0-team-match-relayOrder')).toBeNull();
+    // 4 titulaires : rotation proposée ; retour à 3 : ordre FIE reposé
+    fireEvent.change(screen.getByTestId('formula-team-match-starters'), {
+      target: { value: '4' },
+    });
+    expect(rotationOption('formula-team-match-relayOrder')).not.toBeNull();
+    expect(last!.general.teamMatch?.relayOrder).toBe('rotation');
+    fireEvent.change(screen.getByTestId('formula-team-match-starters'), {
+      target: { value: '3' },
+    });
+    expect(last!.general.teamMatch).toEqual(RULE);
+    expect(rotationOption('formula-team-match-relayOrder')).toBeNull();
+  });
+
   it('surcharge par phase, champ par champ ; champ vidé : règle générale', () => {
     render(<Harness />);
     fireEvent.change(screen.getByTestId('pool-0-team-match-relayStep'), {
       target: { value: '3' },
     });
     expect(pool().teamMatch).toEqual({ relayStep: 3 });
+    // 4 titulaires sur la phase : rotation (ordre FIE à 3 seulement)
+    fireEvent.change(screen.getByTestId('pool-0-team-match-starters'), { target: { value: '4' } });
     fireEvent.change(screen.getByTestId('pool-0-team-match-relayOrder'), {
       target: { value: 'rotation' },
     });
-    expect(pool().teamMatch).toEqual({ relayStep: 3, relayOrder: 'rotation' });
+    expect(pool().teamMatch).toEqual({ relayStep: 3, starters: 4, relayOrder: 'rotation' });
+    fireEvent.change(screen.getByTestId('pool-0-team-match-starters'), { target: { value: '' } });
     fireEvent.change(screen.getByTestId('pool-0-team-match-relayStep'), { target: { value: '' } });
     fireEvent.change(screen.getByTestId('pool-0-team-match-relayOrder'), { target: { value: '' } });
     expect(pool().teamMatch).toBeUndefined();

@@ -421,6 +421,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
         {teamRelay && (
           <FormulaTeamMatchFields
             id={`${id}-team-match`}
+            weapon={weapon}
             rule={pool.teamMatch ?? {}}
             inherited={generalRule}
             onChange={rule => set({ teamMatch: Object.keys(rule).length ? rule : undefined })}
@@ -557,6 +558,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
         {teamRelay && ownTableau && (
           <FormulaTeamMatchFields
             id="tableau-team-match"
+            weapon={weapon}
             rule={ownTableau.teamMatch ?? {}}
             inherited={generalRule}
             onChange={rule => set({ teamMatch: Object.keys(rule).length ? rule : undefined })}
@@ -897,6 +899,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             {teamRelay && (
               <FormulaTeamMatchFields
                 id="formula-team-match"
+                weapon={weapon}
                 rule={generalRule}
                 onChange={rule => patchGeneral({ teamMatch: { ...generalRule, ...rule } })}
               />
