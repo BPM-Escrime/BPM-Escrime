@@ -1,5 +1,5 @@
 /**
- * BPM - Escrime - Vague active du tournoi des rapières par compétition (#1118) :
+ * BPM - Escrime - Vague active d'un tour en vagues par compétition (#1118, docs/adr/0043) :
  * mémorisée même sans serveur démarré, réappliquée à chaque (re)démarrage pour que
  * les tablettes arbitre restent filtrées sur la vague (et les sous-pistes actives).
  * Licensed under GPL-3.0

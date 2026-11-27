@@ -37,6 +37,7 @@ import { fileOperations } from './contractFiles';
 import { simulationOperations } from './contractSimulation';
 import { SplitHistorySchema, splitOperations } from './contractSplit';
 import { poolRoundOperations } from './contractPoolRound';
+import { poolWavesOperations } from './contractPoolWaves';
 import { teamOperations, TeamsStateSchema } from './contractTeams';
 import { stripOperations } from './contractStrips';
 import { JournalEventSchema } from './events';
@@ -207,6 +208,8 @@ const CompetitionStateSchema = z.object({
   poolsLaunched: z.boolean().optional(),
   remoteArenaCount: z.number().int().optional(),
   rapieres: z.custom<RapieresSession | RapieresLegacyState>().optional(),
+  /** Vagues du tour courant (tour en vagues, docs/adr/0043) */
+  waves: z.object({ launched: z.number().int(), ended: z.boolean() }).optional(),
   /** Étapes closes : tableau arrêté à N tireurs (docs/adr/0037) */
   stageHistory: z.array(z.custom<TableauStageRecord>()).optional(),
   splitHistory: SplitHistorySchema.optional(), // Scission faite : filles (docs/adr/0039)
@@ -494,7 +497,7 @@ export const contract = {
 
   launchRapieresWave: command({
     description:
-      'Tournoi des rapières : lance la vague « wave » (ses matchs deviennent ceux à tirer ; 0 = aucune vague lancée).',
+      'Alias de launchPoolWave pour le tournoi des rapières (retiré à l’étape F4e, docs/adr/0043) : lance la vague « wave » (ses matchs deviennent ceux à tirer ; 0 = aucune vague lancée).',
     input: z.object({
       competitionId: CompetitionId,
       wave: z.number().int().min(0).max(200).describe('Vague à lancer (0 : aucune)'),
@@ -546,7 +549,7 @@ export const contract = {
 
   endRapieresWaves: command({
     description:
-      'Tournoi des rapières : arrête les vagues avant leur terme (« ended: true », passage au classement sur les matchs joués) ou les reprend (« ended: false »).',
+      'Alias de endPoolWaves pour le tournoi des rapières (retiré à l’étape F4e, docs/adr/0043) : arrête les vagues avant leur terme (« ended: true », passage au classement sur les matchs joués) ou les reprend (« ended: false »).',
     input: z.object({
       competitionId: CompetitionId,
       ended: z.boolean().describe('true : vagues arrêtées ; false : reprises'),
@@ -680,7 +683,7 @@ export const contract = {
     description:
       'Maintenance (docs/adr/0017) : rejoue le journal de l’épreuve et le compare à son état. ' +
       '« dryRun: true » (conseillé d’abord) rend les écarts sans rien écrire. Sinon l’état est aligné sur le journal pour les faits rejouables : ' +
-      'statuts des tireurs, scores de poule du tour courant, décisions du tableau et des tableaux de classement, vagues des rapières ; classements et classement final recalculés. ' +
+      'statuts des tireurs, scores de poule du tour courant, décisions du tableau et des tableaux de classement, vagues d’un tour en vagues ; classements et classement final recalculés. ' +
       'Les écarts de structure (poules, tours, placement du tableau) et les abandons sans touches restent dans « remaining ». Journal incomplet (épreuve antérieure) : statuts seuls.',
     input: z.object({
       competitionId: CompetitionId,
@@ -1455,6 +1458,7 @@ export const contract = {
   // Événements simulés du remplissage automatique : données d'essai, sans journal
   ...simulationOperations,
   ...poolRoundOperations, // Clôture d'un tour de poules, ex aequo à la barre (docs/adr/0040)
+  ...poolWavesOperations, // Tour en vagues : lancer, arrêter (docs/adr/0043)
   ...splitOperations, // Tableaux séparés : groupe extrait en épreuve séparée (docs/adr/0024)
   ...stripOperations, // Plan des pistes : départ, pistes indisponibles (docs/adr/0015)
   ...teamOperations, // Épreuves par équipes : inscription, poules, relais, tableau (docs/adr/0024)

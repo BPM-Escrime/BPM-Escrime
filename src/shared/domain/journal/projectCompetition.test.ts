@@ -134,20 +134,26 @@ describe('projectCompetition', () => {
     expect(reopened.fencerStatus.b).toBe('Q');
   });
 
-  it('rapières : vague, arrêt, remise à zéro au tirage suivant', () => {
+  it('tour en vagues : vague, arrêt, remise à zéro au tirage suivant (anciens et nouveaux noms)', () => {
     const facts = projectCompetition([
+      drawn(1),
+      ev('PoolWaveLaunched', { wave: 2, matchIds: [] }),
+      ev('PoolWavesEnded', { ended: true }),
+    ]);
+    expect(facts.waves).toEqual({ wave: 2, ended: true });
+    expect(
+      projectCompetition([drawn(1), ev('PoolWaveLaunched', { wave: 2, matchIds: [] }), drawn(2)])
+        .waves
+    ).toEqual({ wave: 0, ended: false });
+    // Journal d'avant F4a : événements Rapieres*, puis nouveaux, rejoués sans divergence
+    const mixed = projectCompetition([
       drawn(1),
       ev('RapieresWaveLaunched', { wave: 2, matchIds: [] }),
       ev('RapieresWavesEnded', { ended: true }),
+      ev('RapieresWavesEnded', { ended: false }),
+      ev('PoolWaveLaunched', { wave: 3, matchIds: [] }),
     ]);
-    expect(facts.rapieres).toEqual({ wave: 2, ended: true });
-    expect(
-      projectCompetition([
-        drawn(1),
-        ev('RapieresWaveLaunched', { wave: 2, matchIds: [] }),
-        drawn(2),
-      ]).rapieres
-    ).toEqual({ wave: 0, ended: false });
+    expect(mixed.waves).toEqual({ wave: 3, ended: false });
   });
 });
 

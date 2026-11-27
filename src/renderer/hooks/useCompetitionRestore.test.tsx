@@ -62,6 +62,7 @@ function Harness({
     isRapieres: false,
     rapieresState: undefined,
     setRapieresState: noop,
+    setWavesState: noop,
     minFencersPerPool: 3,
     maxFencersPerPool: 6,
     setMinFencersPerPool: noop,

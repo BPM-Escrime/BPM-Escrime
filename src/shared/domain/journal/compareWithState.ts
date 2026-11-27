@@ -14,6 +14,7 @@ import type {
   TeamsFact,
 } from './projectCompetition';
 import { sessionGroupTableaux } from '../ranking/splitGroups';
+import { poolWavesOf } from '../pools/waves';
 
 export type DivergenceKind =
   | 'fencer_status'
@@ -28,7 +29,7 @@ export type DivergenceKind =
   | 'tableau_slot'
   | 'bracket_result'
   | 'bracket_result_unknown'
-  | 'rapieres'
+  | 'waves'
   | 'split_off'
   | 'imported_ranking'
   | 'team_pool'
@@ -102,6 +103,9 @@ export interface CompetitionStateView {
     string,
     { tableauMatches: TableauMatch[]; consolationBrackets: ConsolationBracket[] }
   >;
+  /** Vagues du tour courant (clé `waves`) */
+  waves?: { launched?: number; ended?: boolean };
+  /** Ancienne clé des rapières, lue comme alias de `waves` (docs/adr/0043, jusqu'à F4e) */
   rapieres?: { launchedWave?: number; wavesEnded?: boolean };
   /** Classement après poules (épreuve séparée : classement importé) */
   overallRanking?: PoolRanking[];
@@ -308,13 +312,11 @@ export function compareWithState(
   if (state.teams) compareTeams(facts.teams, state.teams, facts.complete, out);
   if (state.strips && facts.strips) compareStrips(facts.strips, state.strips, out);
 
-  if (facts.rapieres) {
-    const actual = {
-      wave: state.rapieres?.launchedWave ?? 0,
-      ended: !!state.rapieres?.wavesEnded,
-    };
-    if (!same(facts.rapieres, actual)) {
-      out.push({ kind: 'rapieres', id: 'rapieres', expected: facts.rapieres, actual });
+  if (facts.waves) {
+    const now = poolWavesOf(state);
+    const actual = { wave: now.launched, ended: now.ended };
+    if (!same(facts.waves, actual)) {
+      out.push({ kind: 'waves', id: 'waves', expected: facts.waves, actual });
     }
   }
   return out;
@@ -506,6 +508,7 @@ export function stateView(
     tableauMatches: list<TableauMatch>(session.tableauMatches),
     consolationBrackets: list<ConsolationBracket>(session.consolationBrackets),
     groupTableaux: sessionGroupTableaux(session),
+    waves: session.waves as CompetitionStateView['waves'],
     rapieres: session.rapieres as CompetitionStateView['rapieres'],
     ...(Array.isArray(session.splitHistory)
       ? { splitHistory: session.splitHistory as CompetitionStateView['splitHistory'] }

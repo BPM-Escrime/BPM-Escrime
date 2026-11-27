@@ -543,6 +543,7 @@ d('generatePools avec composition de l’écran (docs/adr/0017, palier tirage)',
     expect(session.poolHistory).toHaveLength(1);
     expect(session.currentPoolRound).toBe(2);
     expect(session.rapieres).toMatchObject({ teams: {}, launchedWave: 0, wavesEnded: false });
+    expect(session.waves).toEqual({ launched: 0, ended: false });
   });
 
   it('composition invalide ou épreuve par équipes : refus, rien d’écrit', async () => {
@@ -791,23 +792,16 @@ d('vagues des rapières (docs/adr/0017, palier rapières)', () => {
       wave: 1,
     })) as any;
     expect(res.matchIds.length).toBeGreaterThan(0);
-    expect((db.getSessionState(comp.id) as any).rapieres).toMatchObject({
-      version: 2,
-      launchedWave: 1,
-      wavesEnded: false,
-    });
+    // Alias des anciennes commandes (docs/adr/0043, F4a) : état `waves`, événements PoolWave*
+    expect((db.getSessionState(comp.id) as any).waves).toEqual({ launched: 1, ended: false });
     await expect(
       invoke(ctx, 'launchRapieresWave', { competitionId: comp.id, wave: 99 })
     ).rejects.toMatchObject({ code: 'invalid_wave' });
     await invoke(ctx, 'endRapieresWaves', { competitionId: comp.id, ended: true });
-    expect((db.getSessionState(comp.id) as any).rapieres.wavesEnded).toBe(true);
+    expect((db.getSessionState(comp.id) as any).waves.ended).toBe(true);
     await invoke(ctx, 'endRapieresWaves', { competitionId: comp.id, ended: false });
     const types = db.eventLog.getSince(comp.id).map(e => e.type);
-    expect(types.slice(-3)).toEqual([
-      'RapieresWaveLaunched',
-      'RapieresWavesEnded',
-      'RapieresWavesEnded',
-    ]);
+    expect(types.slice(-3)).toEqual(['PoolWaveLaunched', 'PoolWavesEnded', 'PoolWavesEnded']);
 
     playAll(comp.id, 'pool');
     const ranking = (db.getSessionState(comp.id) as any).overallRanking;

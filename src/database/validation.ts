@@ -17,6 +17,7 @@ import {
   MatchStatus,
 } from '../shared/types';
 import { maxScoreLimits } from '../shared/domain/formula/laserMaxScores';
+import { wavesSizeBounds } from '../shared/domain/pools/waves';
 
 // ============================================================================
 // Validation Error Class
@@ -192,10 +193,17 @@ export const validateCompetitionSettings = (
       validateNumber(n, `poolRoundQualifiers[${i}]`, 0, 10000)
     );
   }
+  // Tour en vagues : poules de 2 à 10 (vagues classiques : 15) tireurs (docs/adr/0043) ; sinon 3 à 64
+  const sizeBounds = wavesSizeBounds(settings.poolBoutOrder) ?? { min: 3, max: 64 };
   if (settings.poolSizeMin !== undefined)
-    validateNumber(settings.poolSizeMin, 'poolSizeMin', 3, 64);
+    validateNumber(settings.poolSizeMin, 'poolSizeMin', sizeBounds.min, sizeBounds.max);
   if (settings.poolSizeMax !== undefined)
-    validateNumber(settings.poolSizeMax, 'poolSizeMax', settings.poolSizeMin ?? 3, 64);
+    validateNumber(
+      settings.poolSizeMax,
+      'poolSizeMax',
+      settings.poolSizeMin ?? sizeBounds.min,
+      sizeBounds.max
+    );
   validateNumber(settings.defaultRanking, 'defaultRanking', 0);
   validateNumber(settings.minTeamSize, 'minTeamSize', 1);
 

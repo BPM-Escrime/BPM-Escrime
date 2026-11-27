@@ -1,6 +1,6 @@
 /**
  * BPM - Escrime - Sous-pistes (#1118, #2300) : plusieurs tablettes arbitrent en même temps
- * des matchs différents d'une même piste (vagues des rapières, poule de la piste sinon).
+ * des matchs différents d'une même piste (vagues d'un tour en vagues, poule de la piste sinon).
  * Chaque tablette réclame une sous-piste (`arena3`, `arena3s2`, `arena3s3`…), arène à part
  * entière (score, chrono, cartons) qui partage le mot de passe et la poule de la piste.
  * Licensed under GPL-3.0
@@ -231,7 +231,7 @@ export const SLOT_CLAIM_CONTEXT_KEYS = {
 } as const;
 
 /**
- * Sous-piste attribuée à une tablette arbitre : pendant les vagues des rapières (#1118), et
+ * Sous-piste attribuée à une tablette arbitre : pendant les vagues d'un tour en vagues (#1118), et
  * hors vagues quand la piste arbitre une poule (#2300) ; sinon la piste elle-même.
  */
 export function claimArenaSlot(

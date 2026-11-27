@@ -161,8 +161,11 @@ export interface CompetitionFacts {
   } | null;
   /** Épreuve par équipes (docs/adr/0024) ; null : aucun fait d'équipe */
   teams: TeamsFact | null;
-  /** Tournoi des rapières : vague lancée, vagues arrêtées (undefined : jamais lancées) */
-  rapieres?: { wave: number; ended: boolean };
+  /**
+   * Tour en vagues : vague lancée, vagues arrêtées (undefined : jamais lancées). Écrit par
+   * PoolWaveLaunched / PoolWavesEnded, et par les anciens RapieresWave* (docs/adr/0043)
+   */
+  waves?: { wave: number; ended: boolean };
   /**
    * Plan des pistes (docs/adr/0015) : dernière piste de départ et état de chaque piste nommés
    * par le journal ; null : aucun événement de plan (plan repris par la migration 50)
@@ -271,7 +274,7 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
         facts.rounds = [...facts.rounds.filter(r => r.round < round), next];
         facts.skippedPoolsFencerIds = null;
         clearTableau();
-        if (facts.rapieres) facts.rapieres = { wave: 0, ended: false };
+        if (facts.waves) facts.waves = { wave: 0, ended: false };
         break;
       }
       case JOURNAL_EVENT.poolFencerAdded: {
@@ -450,11 +453,13 @@ export function projectCompetition(events: readonly ReplayEvent[]): CompetitionF
       case JOURNAL_EVENT.teamWithdrawn:
         facts.teams = projectTeamEvent(facts.teams, event);
         break;
+      case JOURNAL_EVENT.poolWaveLaunched:
       case JOURNAL_EVENT.rapieresWaveLaunched:
-        facts.rapieres = { ended: false, ...facts.rapieres, wave: event.payload.wave };
+        facts.waves = { wave: event.payload.wave, ended: facts.waves?.ended ?? false };
         break;
+      case JOURNAL_EVENT.poolWavesEnded:
       case JOURNAL_EVENT.rapieresWavesEnded:
-        facts.rapieres = { wave: 0, ...facts.rapieres, ended: event.payload.ended };
+        facts.waves = { wave: facts.waves?.wave ?? 0, ended: event.payload.ended };
         break;
       // Plan des pistes (docs/adr/0015)
       case JOURNAL_EVENT.stripStartChanged:

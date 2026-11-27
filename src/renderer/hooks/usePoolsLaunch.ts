@@ -122,10 +122,10 @@ export function useTableauGenerate(competitionId: string | undefined) {
 }
 
 /**
- * Vagues du tournoi des rapières par le moteur (launchRapieresWave, endRapieresWaves,
- * docs/adr/0017) ; « local » : moteur absent, l'écran garde l'état lui-même.
+ * Vagues d'un tour en vagues par le moteur (launchPoolWave, endPoolWaves, docs/adr/0017 et
+ * 0043) ; « local » : moteur absent, l'écran garde l'état lui-même.
  */
-export function useRapieresWaves(competitionId: string | undefined) {
+export function usePoolWaveCommands(competitionId: string | undefined) {
   const client = useBpmClient();
   const { showToast } = useToast();
   const run = useCallback(
@@ -145,12 +145,12 @@ export function useRapieresWaves(competitionId: string | undefined) {
   );
   const launchWave = useCallback(
     (wave: number) =>
-      run(() => client.call('launchRapieresWave', { competitionId: competitionId!, wave })),
+      run(() => client.call('launchPoolWave', { competitionId: competitionId!, wave })),
     [client, competitionId, run]
   );
   const endWaves = useCallback(
     (ended: boolean) =>
-      run(() => client.call('endRapieresWaves', { competitionId: competitionId!, ended })),
+      run(() => client.call('endPoolWaves', { competitionId: competitionId!, ended })),
     [client, competitionId, run]
   );
   return { launchWave, endWaves };

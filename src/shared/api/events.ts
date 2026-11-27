@@ -33,6 +33,9 @@ export const JOURNAL_EVENT = {
   poolRoundClosed: 'PoolRoundClosed',
   tableauStageClosed: 'TableauStageClosed',
   tableauGenerated: 'TableauGenerated',
+  // Tour en vagues (docs/adr/0043, F4a) ; les anciens noms Rapieres* restent lus au rejeu
+  poolWaveLaunched: 'PoolWaveLaunched',
+  poolWavesEnded: 'PoolWavesEnded',
   rapieresWaveLaunched: 'RapieresWaveLaunched',
   rapieresWavesEnded: 'RapieresWavesEnded',
   scoreCleared: 'ScoreCleared',
@@ -170,7 +173,13 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
       ),
     })
   ),
-  // Tournoi des rapières : vague lancée (0 = aucune), vagues arrêtées ou reprises
+  // Tour en vagues : vague lancée (0 = aucune), vagues arrêtées ou reprises (docs/adr/0043)
+  member(
+    JOURNAL_EVENT.poolWaveLaunched,
+    z.object({ wave: z.number().int(), matchIds: z.array(Id) })
+  ),
+  member(JOURNAL_EVENT.poolWavesEnded, z.object({ ended: z.boolean() })),
+  // Anciens événements des rapières : plus écrits, lus au rejeu jusqu'à F4e
   member(
     JOURNAL_EVENT.rapieresWaveLaunched,
     z.object({ wave: z.number().int(), matchIds: z.array(Id) })

@@ -3,7 +3,7 @@
  * rebuildCompetitionState : commande de maintenance. Rejoue le journal (projectCompetition),
  * compare à la projection du moteur (compareWithState), puis aligne l'état sur le journal pour
  * les faits rejouables : statuts des tireurs, résultats des matchs de poule du tour courant,
- * décisions du tableau et des tableaux de classement, vagues des rapières. Les dérivés touchés
+ * décisions du tableau et des tableaux de classement, vagues d'un tour en vagues. Les dérivés touchés
  * (classements, propagation, classement final) sont recalculés.
  * Pas d'événement : la commande ne crée aucun fait, elle remet l'état d'accord avec le journal.
  * Les écarts de structure (poules, tours, placement du tableau) sont rendus sans être corrigés.
@@ -236,9 +236,8 @@ export function rebuildCompetitionState(
       if (done) patch.currentPhase = PHASE.results;
       else if (session.currentPhase === PHASE.results) patch.currentPhase = PHASE.tableau;
     }
-    if (plan.rapieres) {
-      patch.rapieres = { ...(session.rapieres as object), ...plan.rapieres };
-    }
+    // Vagues du tour courant : clé `waves` (anciens RapieresWave* rejoués dans les mêmes faits)
+    if (plan.waves) patch.waves = plan.waves;
     // Tableaux séparés (docs/adr/0024, lot A3) : groupes extraits, classement importé
     if (plan.splitOff) {
       const splitOffCompetitionIds = { ...comp.settings?.splitOffCompetitionIds, ...plan.splitOff };
@@ -295,7 +294,7 @@ function planRepair(
   const slots = tableauSlots(comp, session).map(cloneSlot);
   const mainChanged = new Set<TableauSlot>();
   const bracketChanged = new Set<TableauSlot>();
-  let rapieres: { launchedWave: number; wavesEnded: boolean } | null = null;
+  let waves: { launched: number; ended: boolean } | null = null;
   let splitOff: Record<string, string> | null = null;
   let splitHistory = false;
   let importRanking = false;
@@ -330,9 +329,9 @@ function planRepair(
         if (where) repaired.push(d);
         break;
       }
-      case 'rapieres':
-        if (facts.rapieres) {
-          rapieres = { launchedWave: facts.rapieres.wave, wavesEnded: facts.rapieres.ended };
+      case 'waves':
+        if (facts.waves) {
+          waves = { launched: facts.waves.wave, ended: facts.waves.ended };
           repaired.push(d);
         }
         break;
@@ -362,5 +361,5 @@ function planRepair(
       slot,
       ...settleBracket(comp, session, slot.matches, slot.brackets, mainChanged.has(slot), slot),
     }));
-  return { repaired, statuses, pools, tableaux, rapieres, splitOff, splitHistory, importRanking };
+  return { repaired, statuses, pools, tableaux, waves, splitOff, splitHistory, importRanking };
 }

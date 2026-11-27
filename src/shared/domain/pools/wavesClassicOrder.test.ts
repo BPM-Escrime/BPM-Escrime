@@ -1,12 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Fencer, FencerStatus, Gender, Match, MatchStatus, Pool } from '../../types';
-import { classicMatchOrder, classicWaves, hasClassicOrder } from './rapieresClassicOrder';
-import {
-  applyClassicOrder,
-  poolMatchWaves,
-  waveCount,
-  waveMatchOrder,
-} from './rapieresCalculations';
+import { classicMatchOrder, classicWaves, hasClassicOrder } from './wavesClassicOrder';
+import { applyClassicOrder, poolMatchWaves, waveCount, waveMatchOrder } from './waves';
 
 const fencer = (id: string): Fencer =>
   ({

@@ -26,7 +26,7 @@ import { useFencerWithdrawal, type WithdrawInput } from '../useFencerWithdrawal'
 import {
   usePoolFencerAdd,
   usePoolsLaunch,
-  useRapieresWaves,
+  usePoolWaveCommands,
   useAssignMatches,
   useCompetitionCommand,
   useScoreClear,
@@ -40,6 +40,7 @@ import {
 } from '../../../shared/domain/fencers/withdrawal';
 import { useCompetitionReferees } from '../useCompetitionReferees';
 import { useRapieresCompetition } from '../../../features/rapieres/useRapieresCompetition';
+import { usePoolWavesView } from '../usePoolWavesView';
 import { useRapieresTeams } from '../../../features/rapieres/useRapieresTeams';
 import { useRapieresViewProps } from '../../../features/rapieres/useRapieresViewProps';
 import type { CompetitionViewProps } from '../../components/competition/competitionViewTypes';
@@ -83,6 +84,10 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setRemoteArenaCount,
     remoteStripStart,
     isRapieres,
+    isWaves,
+    waves,
+    setWavesState,
+    updateWaves,
     rapieresState,
     setRapieresState,
     minFencersPerPool,
@@ -199,6 +204,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     setRemoteArenaCount,
     remoteStripStart,
     setRapieresState,
+    setWavesState,
     minFencersPerPool,
     maxFencersPerPool,
     setMinFencersPerPool,
@@ -233,7 +239,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   const launchPools = usePoolsLaunch(competition.id);
   const addPoolFencer = usePoolFencerAdd(competition.id);
   const generateTableauCommand = useTableauGenerate(competition.id);
-  const rapieresWaves = useRapieresWaves(competition.id);
+  const poolWaves = usePoolWaveCommands(competition.id);
   const clearScore = useScoreClear(competition.id);
   const assignMatches = useAssignMatches(competition.id);
   // Tableaux séparés (docs/adr/0024) : retirer « le tableau » sans groupe retire celui de
@@ -431,7 +437,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     if (!(await confirmScoresLoss())) return;
     const newPools = generatePoolsHook(getSeededCheckedInFencers(), currentPoolRound);
     if (newPools) {
-      resetRapieresWaves(newPools);
+      resetPoolWaves(newPools);
       setPoolPrepDraft(null);
       if (poolsLaunched) {
         setPoolsLaunched(false);
@@ -468,29 +474,29 @@ export function useCompetitionSessionSync(ctx: Ctx) {
   });
   const { rapieresFencerFields, handleSaveRapieresTeam } = rapieresTeams;
 
-  const {
-    resetRapieresWaves,
-    rapieresStats,
-    currentWaveMatchIds,
-    printWaves,
-    handlePrintWaveSheets,
-  } = useRapieresCompetition({
-    competitionId: competition.id,
-    competitionTitle: competition.title,
+  const { rapieresStats } = useRapieresCompetition({
     isRapieres,
     isLoaded,
-    isRemoteActive,
     fencers,
-    pools,
     overallRanking,
-    rapieres,
     rapieresState,
     setRapieresState,
-    updateRapieres,
     bulkAddFencers,
     rapieresFencerFields,
-    notify: ctx.showToast,
   });
+
+  // Tour en vagues (formule, ou mode rapières) : vague en cours, tablettes, feuilles (docs/adr/0043)
+  const { resetPoolWaves, currentWaveMatchIds, printWaves, handlePrintWaveSheets } =
+    usePoolWavesView({
+      competitionId: competition.id,
+      competitionTitle: competition.title,
+      isWaves,
+      isRemoteActive,
+      pools,
+      waves,
+      updateWaves,
+      notify: ctx.showToast,
+    });
 
   // Saisie distante active : QR de la piste sur chaque feuille de poule (#1037)
   const poolsRemoteInfo =
@@ -589,7 +595,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     launchPools,
     addPoolFencer,
     generateTableau,
-    rapieresWaves,
+    poolWaves,
     clearScore,
     assignMatches,
     runCompetitionCommand,
@@ -611,7 +617,7 @@ export function useCompetitionSessionSync(ctx: Ctx) {
     rapieresViewProps,
     rapieresTeams,
     handleSaveRapieresTeam,
-    resetRapieresWaves,
+    resetPoolWaves,
     rapieresStats,
     currentWaveMatchIds,
     printWaves,

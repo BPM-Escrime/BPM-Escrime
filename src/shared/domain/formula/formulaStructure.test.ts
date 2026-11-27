@@ -346,6 +346,49 @@ describe('avertissements de la simulation (ADR-0041)', () => {
   });
 });
 
+describe('tour en vagues : poules de 2 à 10 (docs/adr/0043, F4a)', () => {
+  const waves = (over: Partial<PoolRoundPhase> = {}) =>
+    formula(pool({ boutOrder: 'waves', sizeMin: 2, sizeMax: 10, ...over }), tableau());
+
+  it('poules de 2 à 10 admises pour « waves » et « waves_classic »', () => {
+    expect(formulaV2Issues(waves(), scope)).toEqual([]);
+    expect(formulaV2Issues(waves({ boutOrder: 'waves_classic' }), scope)).toEqual([]);
+  });
+
+  it('au-delà de 10, ou sous 2 : remarque sur le tour', () => {
+    expect(codes(waves({ sizeMax: 11 }))).toEqual(['pool_settings']);
+    expect(codes(waves({ sizeMin: 1 }))).toEqual(['pool_settings']);
+    const [remark] = formulaV2Issues(waves({ sizeMax: 11 }), scope);
+    expect(remark.phase).toBe('pool-0');
+    expect(remark.message).toContain('2 à 10');
+  });
+
+  it('vagues classiques : jusqu’à 15 ; « waves » reste borné à 10', () => {
+    expect(formulaV2Issues(waves({ boutOrder: 'waves_classic', sizeMax: 15 }), scope)).toEqual([]);
+    expect(codes(waves({ boutOrder: 'waves_classic', sizeMax: 16 }))).toEqual(['pool_settings']);
+    expect(codes(waves({ boutOrder: 'waves', sizeMax: 11 }))).toEqual(['pool_settings']);
+    expect(codes(waves({ boutOrder: 'waves', sizeMax: 15 }))).toEqual(['pool_settings']);
+  });
+
+  it('borne basse 2 pour ce seul ordre : sous 3, FIE et libre refusés', () => {
+    expect(codes(formula(pool({ boutOrder: 'fie', sizeMin: 2, sizeMax: 6 }), tableau()))).toEqual([
+      'pool_settings',
+    ]);
+    expect(codes(formula(pool({ boutOrder: 'free', sizeMin: 2, sizeMax: 6 }), tableau()))).toEqual([
+      'pool_settings',
+    ]);
+  });
+
+  it('chaque tour jugé avec son ordre : un tour en vagues à côté d’un tour FIE', () => {
+    const f = formula(
+      pool({ boutOrder: 'waves', sizeMin: 2, sizeMax: 10 }),
+      pool({ boutOrder: 'fie', sizeMin: 5, sizeMax: 7 }),
+      tableau()
+    );
+    expect(formulaV2Issues(f, scope).filter(r => r.code === 'pool_settings')).toEqual([]);
+  });
+});
+
 describe('mode expert : briques et réglages', () => {
   it('une formule reste valide quel que soit le mode : le jugement ignore le mode expert', () => {
     // Formule experte valide (tableau arrêté suivi d'un tour) : aucune remarque, sans mode
@@ -358,6 +401,12 @@ describe('mode expert : briques et réglages', () => {
 
   it('formule par défaut : simple', () => {
     expect(formulaNeedsExpert(base())).toBe(false);
+  });
+
+  it('ordre des matchs en vagues : réglage avancé (docs/adr/0043)', () => {
+    expect(formulaNeedsExpert(formula(pool({ boutOrder: 'waves' }), tableau()))).toBe(true);
+    expect(formulaNeedsExpert(formula(pool({ boutOrder: 'waves_classic' }), tableau()))).toBe(true);
+    expect(formulaNeedsExpert(formula(pool({ boutOrder: 'fie' }), tableau()))).toBe(false);
   });
 
   it('scission, Tour Quest, tableau arrêté', () => {

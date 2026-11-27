@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { Category, PostPoolSplitCriteria, Weapon } from '../../../shared/types';
+import { Category, PoolBoutOrder, PostPoolSplitCriteria, Weapon } from '../../../shared/types';
 import { isOlympicWeapon } from '../../../shared/utils/defaultMaxScores';
 import { hasCoherenceReference } from '../../../shared/utils/formulaCoherence';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -269,10 +269,12 @@ export const PropertiesFormulaTab: React.FC<Props> = ({
                 id="poolBoutOrder"
                 className="form-input form-select"
                 value={draft.poolBoutOrder}
-                onChange={e => onChange({ poolBoutOrder: e.target.value as 'fie' | 'free' })}
+                onChange={e => onChange({ poolBoutOrder: e.target.value as PoolBoutOrder })}
               >
                 <option value="fie">{t('properties.bout_order_fie')}</option>
                 <option value="free">{t('properties.bout_order_free')}</option>
+                <option value="waves">{t('properties.bout_order_waves')}</option>
+                <option value="waves_classic">{t('properties.bout_order_waves_classic')}</option>
               </select>
               <small style={HINT}>{t('properties.bout_order_hint')}</small>
             </div>

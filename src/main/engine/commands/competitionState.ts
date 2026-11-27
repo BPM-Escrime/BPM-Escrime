@@ -10,6 +10,7 @@ import type { CompetitionStateDTO } from '../../../shared/api/contract';
 import type { Competition } from '../../../shared/types';
 import type { TeamsStateDTO } from '../../../shared/api/contractTeams';
 import { sessionGroupTableaux } from '../../../shared/domain/ranking/splitGroups';
+import { poolWavesOf } from '../../../shared/domain/pools/waves';
 import { groupTableauxView } from './groupTableaux';
 
 const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
@@ -70,6 +71,7 @@ export function competitionState(
       ? { remoteArenaCount: session.remoteArenaCount }
       : {}),
     ...(session.rapieres ? { rapieres: session.rapieres as CompetitionStateDTO['rapieres'] } : {}),
+    ...(session.waves ? { waves: poolWavesOf(session as Parameters<typeof poolWavesOf>[0]) } : {}),
     ...(prep ? { poolPrepParams: prep } : {}),
     // Étapes closes (tableau arrêté, docs/adr/0037) : classement final de l'écran
     ...(Array.isArray(session.stageHistory) && session.stageHistory.length > 0

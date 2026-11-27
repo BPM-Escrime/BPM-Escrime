@@ -10,7 +10,7 @@ import {
   tableauAssignmentsDiff,
   tableauScoreOps,
   usePoolsLaunch,
-  useRapieresWaves,
+  usePoolWaveCommands,
   useScoreClear,
 } from './usePoolsLaunch';
 import { BpmClientProvider } from '../api/BpmClientContext';
@@ -75,9 +75,9 @@ describe('usePoolsLaunch', () => {
   });
 });
 
-describe('useRapieresWaves', () => {
+describe('usePoolWaveCommands', () => {
   const waves = () =>
-    renderHook(() => useRapieresWaves('c1'), {
+    renderHook(() => usePoolWaveCommands('c1'), {
       wrapper: ({ children }) => (
         <BpmClientProvider client={{ call } as unknown as BpmClient}>{children}</BpmClientProvider>
       ),
@@ -85,9 +85,9 @@ describe('useRapieresWaves', () => {
 
   it('vague lancée et vagues arrêtées par le moteur', async () => {
     expect(await waves().current.launchWave(2)).toBe('recorded');
-    expect(call).toHaveBeenCalledWith('launchRapieresWave', { competitionId: 'c1', wave: 2 });
+    expect(call).toHaveBeenCalledWith('launchPoolWave', { competitionId: 'c1', wave: 2 });
     expect(await waves().current.endWaves(true)).toBe('recorded');
-    expect(call).toHaveBeenCalledWith('endRapieresWaves', { competitionId: 'c1', ended: true });
+    expect(call).toHaveBeenCalledWith('endPoolWaves', { competitionId: 'c1', ended: true });
   });
 
   it('hors moteur : local', async () => {

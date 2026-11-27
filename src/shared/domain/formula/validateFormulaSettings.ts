@@ -9,6 +9,7 @@ import type { CompetitionSettings, CustomFormulaConfig, FormulaPhaseNode } from 
 import { MAX_POOL_ROUNDS } from './formulaDraft';
 import { FormulaScope, MAX_SCORE_LIMITS, maxScoreLimits } from './laserMaxScores';
 import { tiesIssue } from '../ranking/advancement';
+import { POOL_WAVES_SIZE, wavesSizeBounds } from '../pools/waves';
 
 export { maxScoreLimits };
 export type { FormulaScope };
@@ -25,11 +26,14 @@ export const FORMULA_LIMITS = {
   tableMaxScore: MAX_SCORE_LIMITS.table,
   poolRounds: { min: 1, max: MAX_POOL_ROUNDS },
   poolSize: { min: 3, max: 64 },
+  /** Tour en vagues (poolBoutOrder « waves » : 2 à 10 ; « waves_classic » : 2 à 15, docs/adr/0043) */
+  poolSizeWaves: POOL_WAVES_SIZE,
   timerSeconds: { min: 1, max: 3600 },
 } as const;
 
 const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
 const PHASE_TYPES = ['pool_round', 'direct_elimination', 'classification'];
+const POOL_BOUT_ORDERS: readonly string[] = ['fie', 'free', 'waves', 'waves_classic'];
 const ADVANCEMENT = ['all', 'percentage', 'fixed_count', 'fixed_bracket', 'pool_winner'];
 
 function range(
@@ -47,7 +51,7 @@ function range(
   }
 }
 
-function checkPhase(out: FormulaIssue[], node: FormulaPhaseNode, i: number) {
+function checkPhase(out: FormulaIssue[], node: FormulaPhaseNode, i: number, sizeMin: number) {
   const at = `customFormula.phases[${i}]`;
   if (typeof node?.id !== 'string' || !node.id) {
     out.push({ field: `${at}.id`, message: 'identifiant requis' });
@@ -60,8 +64,9 @@ function checkPhase(out: FormulaIssue[], node: FormulaPhaseNode, i: number) {
   range(out, `${at}.config.maxScore`, c.maxScore, { min: 1, max: 99 });
   range(out, `${at}.config.timerSeconds`, c.timerSeconds, FORMULA_LIMITS.timerSeconds);
   if (node.type === 'pool_round') {
-    range(out, `${at}.config.minPoolSize`, c.minPoolSize, FORMULA_LIMITS.poolSize);
-    range(out, `${at}.config.maxPoolSize`, c.maxPoolSize, FORMULA_LIMITS.poolSize);
+    const sizes = { ...FORMULA_LIMITS.poolSize, min: sizeMin };
+    range(out, `${at}.config.minPoolSize`, c.minPoolSize, sizes);
+    range(out, `${at}.config.maxPoolSize`, c.maxPoolSize, sizes);
     if (isInt(c.minPoolSize) && isInt(c.maxPoolSize) && c.maxPoolSize < c.minPoolSize) {
       out.push({ field: `${at}.config.maxPoolSize`, message: 'inférieur à la taille minimum' });
     }
@@ -90,13 +95,17 @@ function checkPhase(out: FormulaIssue[], node: FormulaPhaseNode, i: number) {
   }
 }
 
-function checkCustomFormula(out: FormulaIssue[], f: CustomFormulaConfig) {
+/**
+ * `sizeMin` : borne basse des poules de la formule v1. Adossée à une formule v2 (`formula`), la v1
+ * n'est qu'un miroir : la borne par tour (tour en vagues : 2) est jugée sur la v2.
+ */
+function checkCustomFormula(out: FormulaIssue[], f: CustomFormulaConfig, sizeMin: number) {
   if (f.version !== 1) out.push({ field: 'customFormula.version', message: 'version 1 attendue' });
   if (!Array.isArray(f.phases) || f.phases.length === 0) {
     out.push({ field: 'customFormula.phases', message: 'au moins une phase' });
     return;
   }
-  f.phases.forEach((node, i) => checkPhase(out, node, i));
+  f.phases.forEach((node, i) => checkPhase(out, node, i, sizeMin));
   const ids = f.phases.map(p => p?.id);
   if (new Set(ids).size !== ids.length) {
     out.push({ field: 'customFormula.phases', message: 'identifiants de phase en double' });
@@ -132,8 +141,16 @@ export function validateFormulaSettings(
       });
     }
   }
-  range(out, 'poolSizeMin', s.poolSizeMin, FORMULA_LIMITS.poolSize);
-  range(out, 'poolSizeMax', s.poolSizeMax, FORMULA_LIMITS.poolSize);
+  if (s.poolBoutOrder !== undefined && !POOL_BOUT_ORDERS.includes(s.poolBoutOrder)) {
+    out.push({
+      field: 'poolBoutOrder',
+      message: `valeur attendue : ${POOL_BOUT_ORDERS.join(', ')}`,
+    });
+  }
+  // Tour en vagues : poules de 2 à 10 tireurs (borne basse 2 pour ce seul ordre)
+  const sizeLimits = wavesSizeBounds(s.poolBoutOrder) ?? FORMULA_LIMITS.poolSize;
+  range(out, 'poolSizeMin', s.poolSizeMin, sizeLimits);
+  range(out, 'poolSizeMax', s.poolSizeMax, sizeLimits);
   if (isInt(s.poolSizeMin) && isInt(s.poolSizeMax) && s.poolSizeMax < s.poolSizeMin) {
     out.push({ field: 'poolSizeMax', message: 'inférieur à la taille minimum' });
   }
@@ -145,7 +162,14 @@ export function validateFormulaSettings(
     range(out, 'questConfig.qualifiersCount', s.questConfig.qualifiersCount, { min: 2 });
     range(out, 'questConfig.fightsPerFencer', s.questConfig.fightsPerFencer, { min: 1 });
   }
-  if (s.customFormula !== undefined) checkCustomFormula(out, s.customFormula);
+  if (s.customFormula !== undefined) {
+    const mirror = s.formula !== undefined;
+    checkCustomFormula(
+      out,
+      s.customFormula,
+      mirror ? FORMULA_LIMITS.poolSizeWaves.min : FORMULA_LIMITS.poolSize.min
+    );
+  }
   if (!fields) return out;
   const judged = new Set<string>(fields as readonly string[]);
   // poolRoundQualifiers dépend de poolRounds : changer l'un juge l'autre

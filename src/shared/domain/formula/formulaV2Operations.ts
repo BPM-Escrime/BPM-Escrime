@@ -763,6 +763,8 @@ function formulaIssues(
         defaultPoolTimerSeconds: p.timerSeconds,
         poolSizeMin: p.sizeMin,
         poolSizeMax: p.sizeMax,
+        // Tour en vagues : poules de 2 à 10 (docs/adr/0043)
+        poolBoutOrder: p.boutOrder,
       },
       undefined,
       scope

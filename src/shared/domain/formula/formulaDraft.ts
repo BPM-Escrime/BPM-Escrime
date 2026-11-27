@@ -10,6 +10,7 @@
 import {
   Category,
   CompetitionSettings,
+  PoolBoutOrder,
   PostPoolSplitCriteria,
   QuestPhaseConfig,
   Weapon,
@@ -38,7 +39,7 @@ export interface FormulaDraft {
   playAllPositions: boolean;
   poolWinnersOnly: boolean;
   postPoolSplitCriteria: PostPoolSplitCriteria | '';
-  poolBoutOrder: 'fie' | 'free';
+  poolBoutOrder: PoolBoutOrder;
   poolSizeMin: number;
   poolSizeMax: number;
   questEnabled: boolean;

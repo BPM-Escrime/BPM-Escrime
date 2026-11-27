@@ -11,7 +11,7 @@ import {
   CV_DATA_INIT,
 } from '../../components/competition/competitionViewState';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { phaseSettings } from '../../../shared/domain/formula/formulaV2';
+import { isWavesRound, phaseSettings } from '../../../shared/domain/formula/formulaV2';
 import type { SplitHistoryEntry } from '../../../shared/domain/formula/splitPlan';
 import { formulaSegment } from '../../../shared/domain/formula/formulaSteps';
 import {
@@ -162,6 +162,9 @@ export function useCompetitionCore(ctx: Ctx) {
     rapieres,
     updateRapieres,
     setRapieresTeam,
+    waves,
+    setWavesState,
+    updateWaves,
   } = useRapieresSessionState();
   // Préparation des poules et classement (#1241)
   const {
@@ -243,6 +246,8 @@ export function useCompetitionCore(ctx: Ctx) {
     syncFencersToPool,
   } = usePoolManagement({ isLaserSabre, poolMaxScoreFor, showToast });
   const poolMaxScore = poolMaxScoreFor(currentPoolRound);
+  // Tour en vagues (ordre « waves » de la formule, ou mode spécial rapières, docs/adr/0043)
+  const isWaves = isWavesRound(competition.settings, currentPoolRound);
 
   // Formule modifiée, ou tour suivant : la taille de poule cible du tour remplace la valeur de
   // préparation (formule enregistrée : taille du tour, ADR-0036 ; sinon réglage commun)
@@ -400,6 +405,10 @@ export function useCompetitionCore(ctx: Ctx) {
     rapieres,
     updateRapieres,
     setRapieresTeam,
+    isWaves,
+    waves,
+    setWavesState,
+    updateWaves,
     minFencersPerPool,
     setMinFencersPerPool,
     maxFencersPerPool,

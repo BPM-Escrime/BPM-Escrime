@@ -23,6 +23,7 @@ import type {
   RapieresSession,
 } from '../../shared/domain/rapieres/rapieres.types';
 import type { GroupTableau } from '../../shared/domain/ranking/splitGroups';
+import type { PoolWavesState } from '../../shared/domain/pools/waves';
 
 export type Phase =
   | 'checkin'
@@ -86,6 +87,8 @@ export interface SessionState {
   remoteArenaCount?: number;
   /** Tournoi des rapières : composition des équipes et vagues (#1118) */
   rapieres?: RapieresSession | RapieresLegacyState;
+  /** Vagues du tour courant (docs/adr/0043) ; absent : ancienne clé des rapières */
+  waves?: PoolWavesState;
   poolPrepParams: {
     poolCount: number;
     minFencersPerPool: number;
@@ -190,6 +193,7 @@ export const useCompetitionSession = (props: UseCompetitionSessionProps) => {
             poolsLaunched: state.poolsLaunched,
             remoteArenaCount: state.remoteArenaCount,
             rapieres: state.rapieres,
+            waves: state.waves,
             stageHistory: state.stageHistory ?? [],
             splitHistory: splitHistoryOf(state.splitHistory),
             ...(state.groupTableaux ? { groupTableaux: state.groupTableaux } : {}),

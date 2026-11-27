@@ -42,6 +42,22 @@ describe('validateFormulaSettings', () => {
     expect(fields({ ...base(), defaultTableMaxScore: 2.5 })).toEqual(['defaultTableMaxScore']);
   });
 
+  it('ordre des matchs : valeurs connues ; tour en vagues, poules de 2 à 10 (docs/adr/0043)', () => {
+    expect(fields({ ...base(), poolBoutOrder: 'waves_classic' })).toEqual([]);
+    expect(fields({ ...base(), poolBoutOrder: 'spirale' as never })).toEqual(['poolBoutOrder']);
+    const sizes = (order: 'fie' | 'waves', min: number, max: number) =>
+      fields({ ...base(), poolBoutOrder: order, poolSizeMin: min, poolSizeMax: max });
+    expect(sizes('waves', 2, 10)).toEqual([]);
+    expect(sizes('waves', 2, 11)).toEqual(['poolSizeMax']);
+    expect(sizes('waves', 1, 8)).toEqual(['poolSizeMin']);
+    expect(sizes('fie', 2, 7)).toEqual(['poolSizeMin']);
+    // Vagues classiques : tables jusqu'à 15
+    const classic = (min: number, max: number) =>
+      fields({ ...base(), poolBoutOrder: 'waves_classic', poolSizeMin: min, poolSizeMax: max });
+    expect(classic(2, 15)).toEqual([]);
+    expect(classic(2, 16)).toEqual(['poolSizeMax']);
+  });
+
   it('score max du Sabre Laser individuel : 15 à 50 (#2208) ; équipes et olympique : 1-15', () => {
     const laser = (v: number, isTeamEvent = false) =>
       validateFormulaSettings({ defaultPoolMaxScore: v, defaultTableMaxScore: v }, undefined, {

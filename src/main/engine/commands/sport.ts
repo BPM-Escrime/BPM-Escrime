@@ -85,8 +85,11 @@ import { EVENT, recordEvents } from './eventLog';
 import { resolveSetting } from './settings';
 import { bracketMatchView, fencerRef, readSession, summarizePool } from './sessionView';
 import { areAllPoolsComplete, isPoolComplete } from '../../../shared/domain/pools/poolCompletion';
+import { clearActiveWave, pushActiveWave } from './wavesRemote';
+import { isPoolRoundFinished, poolWavesOf } from '../../../shared/domain/pools/waves';
 import {
   phaseSettings,
+  isWavesRound,
   poolBoutOrderOfRound,
   tableauQualificationOf,
 } from '../../../shared/domain/formula/formulaV2';
@@ -334,7 +337,12 @@ export function generatePools(
       );
     }
     if (min > max) throw new CommandError('invalid_pool_size', 'minPerPool > maxPerPool');
-    if (options.poolCount !== undefined && options.poolCount > Math.floor(fencers.length / 3)) {
+    // Tour en vagues : poules de 2 tireurs au moins (docs/adr/0043) ; sinon 3
+    const wavesRound = isWavesRound(comp.settings, round);
+    if (
+      options.poolCount !== undefined &&
+      options.poolCount > Math.floor(fencers.length / (wavesRound ? 2 : 3))
+    ) {
       throw new CommandError(
         'invalid_pool_count',
         'Trop de poules pour le nombre de tireurs pointés'
@@ -396,7 +404,8 @@ export function generatePools(
       }
       if (pool.strip) ctx.db.updatePool(pool);
     }
-    // Rapières : vagues remises à zéro par un nouveau tirage (resetRapieresWaves de l'écran)
+    // Vagues du tour remises à zéro par un nouveau tirage (docs/adr/0043) ; ancienne clé des
+    // rapières remise à zéro aussi tant qu'elle existe (alias de `waves`)
     const rapieres = session.rapieres as Record<string, unknown> | undefined;
     writeSession(ctx, competitionId, {
       currentPhase: PHASE.pools,
@@ -404,6 +413,9 @@ export function generatePools(
       pools,
       poolHistory,
       overallRanking,
+      ...(isWavesRound(comp.settings, round) || session.waves
+        ? { waves: { launched: 0, ended: false } }
+        : {}),
       ...(isRapieres(comp) && rapieres
         ? { rapieres: { ...rapieres, launchedWave: 0, wavesEnded: false } }
         : {}),
@@ -444,6 +456,10 @@ export function generatePools(
     ]);
   });
   emitSession(ctx, competitionId);
+  // Tablettes : vagues remises à zéro par le tirage (docs/adr/0043)
+  if (isWavesRound(comp.settings, round))
+    pushActiveWave(ctx, competitionId, readSession(ctx, competitionId));
+  else if (session.waves) clearActiveWave(ctx, competitionId);
   return summary;
 }
 
@@ -1007,7 +1023,11 @@ export function buildBracket(
     !options.composition &&
     !session.skipPoolPhase &&
     !imported &&
-    (pools.length === 0 || !areAllPoolsComplete(pools))
+    !isPoolRoundFinished(
+      pools,
+      poolWavesOf(session as Parameters<typeof poolWavesOf>[0]),
+      isWavesRound(comp.settings, sessionRound(session))
+    )
   ) {
     throw new CommandError('pools_not_complete', 'Toutes les poules doivent être terminées');
   }

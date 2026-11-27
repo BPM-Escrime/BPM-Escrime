@@ -1,69 +1,44 @@
 /**
- * BPM - Escrime - Tournoi des rapières : logique des vagues et migration (extrait de
- * CompetitionView, #1599)
+ * BPM - Escrime - Tournoi des rapières : statistiques d'équipe et migration v1 (extrait de
+ * CompetitionView, #1599). Les vagues sont celles de tout tour en vagues (usePoolWavesView,
+ * docs/adr/0043).
  * Licensed under GPL-3.0
  */
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { FencerStatus, Gender, MatchStatus } from '../../shared/types';
-import type { Fencer, Pool, PoolRanking } from '../../shared/types';
+import { useEffect, useMemo, useRef } from 'react';
+import { FencerStatus, Gender } from '../../shared/types';
+import type { Fencer, PoolRanking } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
-import { useTranslation } from '../../renderer/hooks/useTranslation';
 import type { useFencerManagement } from '../../renderer/hooks/useFencerManagement';
-import { usePdfTemplateStore } from '../pdfTemplates/hooks/usePdfTemplateStore';
 import { createRapieresSession } from '../../shared/domain/rapieres/rapieres.types';
-import type {
-  RapieresSession,
-  RapieresTeamInfo,
-} from '../../shared/domain/rapieres/rapieres.types';
-import type { RapieresNotify } from './rapieresNotify';
-import { waveMatchIds, waveSheetMatches } from '../../shared/domain/rapieres/rapieresCalculations';
+import type { RapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
 import type { RapieresTeamStats } from './RapieresRankingPanel';
 import type { useRapieresSessionState } from './useRapieresSessionState';
 import type { useRapieresTeams } from './useRapieresTeams';
-import { useRemoteApi } from '../../renderer/api/remoteApi';
 
 type SessionState = ReturnType<typeof useRapieresSessionState>;
 
 interface UseRapieresCompetitionParams {
-  competitionId: string;
-  competitionTitle: string;
   isRapieres: boolean;
   isLoaded: boolean;
-  isRemoteActive: boolean;
   fencers: Fencer[];
-  pools: Pool[];
   overallRanking: PoolRanking[];
-  rapieres: RapieresSession;
   rapieresState: SessionState['rapieresState'];
   setRapieresState: SessionState['setRapieresState'];
-  updateRapieres: SessionState['updateRapieres'];
   bulkAddFencers: ReturnType<typeof useFencerManagement>['bulkAddFencers'];
   rapieresFencerFields: ReturnType<typeof useRapieresTeams>['rapieresFencerFields'];
-  /** Notification de l'écran (toast) */
-  notify: RapieresNotify;
 }
 
-/** Vagues, statistiques d'équipe, migration v1 et impression des feuilles du tournoi des rapières. */
+/** Statistiques d'équipe et migration v1 du tournoi des rapières. */
 export function useRapieresCompetition({
-  competitionId,
-  competitionTitle,
   isRapieres,
   isLoaded,
-  isRemoteActive,
   fencers,
-  pools,
   overallRanking,
-  rapieres,
   rapieresState,
   setRapieresState,
-  updateRapieres,
   bulkAddFencers,
   rapieresFencerFields,
-  notify,
 }: UseRapieresCompetitionParams) {
-  const remote = useRemoteApi();
-  const { t } = useTranslation();
-
   // Migration de la première version (vue dédiée) : équipes recréées comme tireurs
   const rapieresMigrating = useRef(false);
   useEffect(() => {
@@ -105,13 +80,6 @@ export function useRapieresCompetition({
     });
   }, [isRapieres, isLoaded, rapieresState, fencers.length]);
 
-  /** Nouvelles poules : aucune vague lancée tant qu'aucun match n'est joué */
-  const resetRapieresWaves = (newPools: Pool[]) => {
-    if (!isRapieres) return;
-    const played = newPools.some(p => p.matches.some(m => m.status !== MatchStatus.NOT_STARTED));
-    if (!played) updateRapieres({ launchedWave: 0, wavesEnded: false });
-  };
-
   // Statistiques de poule par équipe (classements rapières)
   const rapieresStats = useMemo(
     () =>
@@ -129,66 +97,5 @@ export function useRapieresCompetition({
     [overallRanking]
   );
 
-  // Matchs de la vague en cours (surbrillance violette)
-  const currentWaveMatchIds = useMemo(
-    () =>
-      isRapieres && !rapieres.wavesEnded ? waveMatchIds(pools, rapieres.launchedWave) : undefined,
-    [isRapieres, pools, rapieres.launchedWave, rapieres.wavesEnded]
-  );
-
-  // Tablettes arbitre : matchs de la vague active seulement (rapières, #1118), mémorisé par le main
-  useEffect(() => {
-    if (!isRapieres || !competitionId) return;
-    const ids = currentWaveMatchIds ? [...currentWaveMatchIds] : null;
-    void remote.setActiveWave(competitionId, ids, !!rapieres.wavesEnded);
-  }, [isRapieres, isRemoteActive, competitionId, currentWaveMatchIds, rapieres.wavesEnded, remote]);
-
-  // Impression des feuilles de match d'un intervalle de vagues (#1118, plage #1441).
-  // Flux continu : une feuille qui ne tient pas sur la page bascule sur la suivante.
-  const printWaves = useCallback(
-    async (from: number, to: number) => {
-      const sheets = [];
-      for (let wave = from; wave <= to; wave++) sheets.push(...waveSheetMatches(pools, wave));
-      if (sheets.length === 0) {
-        notify(t('rapieres.print_wave_sheets_empty'), 'error');
-        return;
-      }
-      const label = from === to ? `Vague ${from}` : `Vagues ${from} à ${to}`;
-      try {
-        const logo = localStorage.getItem('bellepoule-logo') ?? undefined;
-        const { printTableauHTML } = await import('../../shared/utils/pdfExport');
-        await printTableauHTML(
-          sheets,
-          3,
-          `${competitionTitle} — ${label}`,
-          logo,
-          usePdfTemplateStore.getState().templates.tableau,
-          undefined,
-          {
-            subtitle: `Feuilles d'arbitrage — ${label}`,
-            badge: 'V' + from,
-            continuous: true,
-            sheetsOnly: true, // sans bandeau titre ni pied de page (#1441)
-          }
-        );
-      } catch (e) {
-        notify((e as Error).message, 'error');
-      }
-    },
-    [pools, competitionTitle, notify, t]
-  );
-
-  // Impression des feuilles de match de la vague active (même rendu que les feuilles du tableau) (#1118)
-  const handlePrintWaveSheets = useCallback(
-    () => printWaves(rapieres.launchedWave, rapieres.launchedWave),
-    [printWaves, rapieres.launchedWave]
-  );
-
-  return {
-    resetRapieresWaves,
-    rapieresStats,
-    currentWaveMatchIds,
-    printWaves,
-    handlePrintWaveSheets,
-  };
+  return { rapieresStats };
 }

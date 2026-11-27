@@ -274,7 +274,7 @@ export class RemoteScoreServer {
   private sessionModernRules = false; // Règles armes modernes (E/F/S ou formule personnalisée, #1125)
   private sessionCategory: string | null = null; // Catégorie d'âge (noir P : FFE dès M15, #2214)
   private sessionMatches: SessionMatch[] = []; // Matches passés depuis le renderer
-  private activeWaveMatchIds: Set<string> | null = null; // Rapières : matchs de la vague active (#1118), null = pas de filtre
+  private activeWaveMatchIds: Set<string> | null = null; // Tour en vagues : matchs de la vague active (#1118, docs/adr/0043), null = pas de filtre
   /** Rapières : vagues terminées, plus aucun match de poule proposé aux tablettes (#1118) */
   private poolsClosed = false;
   private arenaSlots = new slots.ArenaSlotRegistry();
@@ -844,7 +844,7 @@ export class RemoteScoreServer {
   }
 
   /**
-   * Définit les matchs de la vague active (`null` : tous les matchs, hors mode rapières).
+   * Définit les matchs de la vague active (`null` : tous les matchs, hors tour en vagues).
    * `poolsClosed` : vagues terminées, les matchs de poule restants ne sont plus joués (#1118).
    */
   public setActiveWaveMatchIds(ids: string[] | null, poolsClosed = false): void {
@@ -867,7 +867,7 @@ export class RemoteScoreServer {
     dropPendingPoolMatches(this.ctx<ArenaSetupContext>(ARENA_SETUP_CONTEXT_KEYS));
   }
 
-  /** Sous-piste d'une tablette arbitre : vagues des rapières (#1118), piste de poule (#2300) */
+  /** Sous-piste d'une tablette arbitre : vagues d'un tour en vagues (#1118, docs/adr/0043), piste de poule (#2300) */
   public claimArenaSlot(arenaId: string, deviceKey: string, current?: string): string {
     const ctx = this.ctx<slots.SlotClaimContext>(slots.SLOT_CLAIM_CONTEXT_KEYS);
     return slots.claimArenaSlot(ctx, { arenaId, deviceKey, current });
