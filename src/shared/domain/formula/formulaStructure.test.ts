@@ -22,7 +22,12 @@ import {
   splitIssues,
 } from './formulaV2Operations';
 import { bricksForLevel, formulaNeedsExpert } from './formulaExpert';
-import { formulaProgress, remarksMessage } from './formulaRemarks';
+import {
+  formulaProgress,
+  remarksMessage,
+  withClosedRounds,
+  type FormulaProgress,
+} from './formulaRemarks';
 
 let n = 0;
 const id = () => `id-${++n}`;
@@ -331,6 +336,72 @@ describe('S6 : la qualification qui mène à une phase commencée ne change plus
     const now = two({ mode: 'fixed_count', count: 10 }, { mode: 'fixed_count', count: 6 });
     const r = formulaV2Issues(now, scope, ['pool', 'pool'], was);
     expect(r.map(x => [x.code, x.phase])).toEqual([['started_qualification_changed', 'pool-0']]);
+  });
+});
+
+describe('S6 : la qualification qui sort d’un tour de poules clos ne change plus (ADR-0041, amendement)', () => {
+  const stored = formula(
+    pool({ id: 'p0', qualification: { mode: 'fixed_count', count: 8 } }),
+    tableau({ id: 't' })
+  );
+  const edited = (rule: AdvancementRule) =>
+    formula(pool({ id: 'p0', qualification: rule }), tableau({ id: 't' }));
+  const lock = (f: FormulaV2, progress: FormulaProgress) =>
+    formulaV2Issues(f, scope, progress, stored).filter(
+      r => r.code === 'started_qualification_changed'
+    );
+  const four = { mode: 'fixed_count', count: 4 } as const;
+
+  it('tour clos, phase suivante pas commencée : verrouillé dès la clôture, sur sa carte', () => {
+    const r = lock(edited(four), withClosedRounds(['pool'], 1));
+    expect(r.map(x => x.phase)).toEqual(['pool-0']);
+    expect(r[0].message).toContain('clos');
+  });
+
+  it('tour non clos (lancé, en cours) : la règle reste modifiable', () => {
+    expect(lock(edited(four), withClosedRounds(['pool'], 0))).toEqual([]);
+    expect(lock(edited(four), ['pool'])).toEqual([]);
+  });
+
+  it('tour clos, règle identique : aucune remarque', () => {
+    expect(lock(edited({ mode: 'fixed_count', count: 8 }), withClosedRounds(['pool'], 1))).toEqual(
+      []
+    );
+  });
+
+  it('seul le tour clos est verrouillé, pas le tour en cours', () => {
+    const two = (q0: AdvancementRule, q1: AdvancementRule) =>
+      formula(
+        pool({ id: 'a', qualification: q0 }),
+        pool({ id: 'b', qualification: q1 }),
+        tableau()
+      );
+    const lock2 = (f: FormulaV2, progress: FormulaProgress, was: FormulaV2) =>
+      formulaV2Issues(f, scope, progress, was)
+        .filter(r => r.code === 'started_qualification_changed')
+        .map(r => r.phase);
+    const was = two({ mode: 'fixed_count', count: 12 }, { mode: 'fixed_count', count: 8 });
+    const now = two({ mode: 'fixed_count', count: 12 }, four);
+    expect(lock2(now, withClosedRounds(['pool', 'pool'], 1), was)).toEqual([]);
+    const later = two(four, { mode: 'fixed_count', count: 8 });
+    expect(lock2(later, withClosedRounds(['pool', 'pool'], 1), was)).toEqual(['pool-0']);
+  });
+
+  it('tableau arrêté clos : non concerné (ses réglages restent admis)', () => {
+    const was = formula(pool(), tableau({ id: 't', stopAt: 8 }), pool());
+    const now = formula(pool(), tableau({ id: 't', stopAt: 4 }), pool());
+    expect(
+      formulaV2Issues(now, scope, withClosedRounds(['pool', 'tableau'], 1), was).map(x => x.code)
+    ).toEqual([]);
+  });
+
+  it('formulaProgress : porte les tours clos de l’historique, hors énumération', () => {
+    const full = formula(pool(), pool(), tableau());
+    const p = formulaProgress(full, { poolHistory: [[{}]], poolsLaunched: false });
+    expect(p).toEqual(['pool']);
+    expect(p.closedRounds).toBe(1);
+    expect(formulaProgress(full, { pools: [{}], poolsLaunched: true }).closedRounds).toBe(0);
+    expect(formulaProgress(full, {}).closedRounds).toBe(0);
   });
 });
 

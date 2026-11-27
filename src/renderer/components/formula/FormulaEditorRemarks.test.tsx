@@ -53,6 +53,10 @@ import {
   type TableauPhase,
 } from '../../../shared/domain/formula/formulaV2';
 import { buildDefaultCompetitionSettings } from '../../../shared/utils/defaultCompetitionSettings';
+import {
+  withClosedRounds,
+  type FormulaProgress,
+} from '../../../shared/domain/formula/formulaRemarks';
 
 const settings = (weapon: Weapon) =>
   buildDefaultCompetitionSettings({ weapon, category: Category.SENIOR }) as CompetitionSettings;
@@ -317,6 +321,34 @@ describe('Organisation ▸ Formule : Enregistrer grisé tant qu’une remarque b
     );
     // Retour à la règle enregistrée : levée
     fireEvent.change(screen.getByTestId('advancement-count'), { target: { value: '16' } });
+    expect(screen.getByTestId('formula-modal-save')).not.toBeDisabled();
+  });
+
+  // Tour de poules clos (S6, ADR-0041, amendement)
+  const edit = (progress: FormulaProgress) => {
+    const f = withPools([{ qualification: { mode: 'fixed_count', count: 16 } }]);
+    render(
+      <CompetitionFormulaModal
+        competition={competition(f)}
+        progress={progress}
+        onApplied={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+    fireEvent.change(screen.getByTestId('advancement-count'), { target: { value: '8' } });
+  };
+
+  it('tour clos, tableau pas tiré : changer la qualification grise Enregistrer', () => {
+    edit(withClosedRounds(['pool'], 1));
+    expect(screen.getByTestId('formula-modal-save')).toBeDisabled();
+    expect(screen.getByTestId('formula-remark-pool-0')).toBeInTheDocument();
+    expect(screen.getByTestId('phase-remarks')).toHaveTextContent('le tour est clos');
+    fireEvent.change(screen.getByTestId('advancement-count'), { target: { value: '16' } });
+    expect(screen.getByTestId('formula-modal-save')).not.toBeDisabled();
+  });
+
+  it('tour lancé, non clos : la qualification reste modifiable', () => {
+    edit(['pool']);
     expect(screen.getByTestId('formula-modal-save')).not.toBeDisabled();
   });
 });

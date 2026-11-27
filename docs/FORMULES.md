@@ -167,7 +167,9 @@ Mode expert, réglage général : **Filtres du classement final**. Critères au 
 
 - L'écran, le PDF du classement, l'impression et l'export CSV proposent ces filtres. Un classement filtré est **renuméroté depuis 1**, égalités gardées.
 - C'est un affichage. Il ne crée pas de compétition fille et ne change pas le classement publié : le livre PDF signé et les exports fédéraux restent complets.
-- Le classement final compte les non-qualifiés après le tableau, dans l'ordre des poules. Un tireur exclu (y compris après son entrée au tableau) ou sanctionné d'un carton noir est inscrit au bas, sans rang (FIE o.74).
+- Le classement final compte les non-qualifiés après le tableau. Les éliminés des poules se classent d'après le classement de ce tour (FIE o.82.5).
+- Un tireur exclu (y compris après son entrée au tableau) ou sanctionné d'un carton noir est inscrit au bas, sans rang. Ses résultats sont annulés, comme s'il n'avait pas participé (FIE o.74.3 et o.79.2). Les autres sont renumérotés.
+- Des ex aequo derrière un exclu sont départagés par le classement de composition du tableau, c'est-à-dire leur rang de sortie des poules (FIE o.82.4).
 
 ## La qualification entre deux phases
 
@@ -209,7 +211,7 @@ Ces contrôles tournent à chaque changement dans l'éditeur. Un contrôle **blo
 | **S3** | Quand la qualification fixe un nombre, il suffit à la phase suivante : au moins la taille minimale d'une poule, au moins 2 pour un tableau, plus de N pour un tableau arrêté à N. | « tour 1 : 3 qualifié(s) pour des poules de 4 tireurs au moins » |
 | **S4** | Ce nombre est compatible avec la phase suivante : il se répartit en poules de la taille voulue. Dans une scission par rang, la somme des parts reste sous l'effectif. Avec « têtes de poule », il y a au plus autant de poules que de qualifiés. | « tour 1 : 8 qualifiés ne se répartissent pas en poules de 6 à 7 tireurs » |
 | **S5** | Chaque branche d'une scission se termine par une phase qui classe : un tour de poules ou un tableau complet, jamais un tableau arrêté. | « se termine par un tableau arrêté à 8 : finir par un tour de poules ou un tableau complet » |
-| **S6** | Une phase commencée ne se retire pas, ne change pas de nature, et rien ne s'insère avant elle. La règle de qualification qui mène à une phase commencée ne change plus : le classement final relit la formule, la coupe doit rester celle du tirage. | « phase déjà commencée (tableau) : elle ne se retire pas » |
+| **S6** | Une phase commencée ne se retire pas, ne change pas de nature, et rien ne s'insère avant elle. La règle de qualification qui sort d'un tour de poules clos, ou qui mène à une phase commencée, ne change plus : les éliminés d'un tour clos sont fixés dès la clôture, et le classement final relit la formule, la coupe doit rester celle du tirage. Un tableau arrêté clos n'est pas concerné. | « phase déjà commencée (tableau) : elle ne se retire pas » |
 
 Le contrôle S3 d'un pourcentage dépend de l'effectif : il ne bloque pas, il alimente les avertissements de la simulation.
 

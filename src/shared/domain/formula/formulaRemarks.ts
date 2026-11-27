@@ -29,7 +29,15 @@ export const remark = (code: string, phase: string | null, message: string): For
 export type FormulaPhaseKind = FormulaPhaseV2['kind'];
 
 /** Natures des phases commencées de l'épreuve, dans l'ordre de la formule (ADR-0041, S6) */
-export type FormulaProgress = readonly FormulaPhaseKind[];
+export type FormulaProgress = readonly FormulaPhaseKind[] & {
+  /**
+   * Tours de poules clos, dans l'ordre (`closePoolRound`) : leur qualification est fixée dès la
+   * clôture, même si la phase suivante n'est pas commencée (S6, amendement du 2026-11-27).
+   * Propriété non énumérable posée par `formulaProgress` : l'avancement reste une liste de
+   * natures pour qui la compare ou la sérialise ; absente = aucun tour clos connu.
+   */
+  readonly closedRounds?: number;
+};
 
 /** Clés de la frise des phases (pool-0, pool-1…, quest, tableau, split), dans l'ordre */
 export function phaseKeys(phases: readonly FormulaPhaseV2[]): string[] {
@@ -101,5 +109,18 @@ export function formulaProgress(stored: FormulaV2, facts: ProgressFacts): Formul
     } else if (count(facts.splitHistory) === 0) break;
     started.push(p.kind);
   }
-  return started;
+  // Tours clos : l'historique des poules (clôture d'un tour, ou dernier tour avant un tableau
+  // arrêté clos, suivi alors d'une phase commencée), borné aux tours commencés
+  const startedRounds = started.filter(k => k === 'pool').length;
+  return withClosedRounds(started, Math.min(count(facts.poolHistory), startedRounds));
+}
+
+/** Avancement portant le nombre de tours de poules clos (propriété non énumérable) */
+export function withClosedRounds(
+  kinds: readonly FormulaPhaseKind[],
+  closedRounds: number
+): FormulaProgress {
+  const progress = [...kinds];
+  Object.defineProperty(progress, 'closedRounds', { value: closedRounds, enumerable: false });
+  return progress;
 }

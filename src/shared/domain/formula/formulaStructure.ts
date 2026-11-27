@@ -203,11 +203,13 @@ const ruleKey = (rule: AdvancementRule): string =>
       });
 
 /**
- * S6, qualification verrouillée (docs/adr/0041, amendement du 2026-11-27) : la règle de
- * qualification du tour qui précède une phase commencée (tour suivant lancé, tableau tiré,
- * scission faite) est celle de la formule enregistrée `stored`. Toutes les règles : nombre,
- * pourcentage, têtes de poule, ex aequo à la barre. Le classement final relit la formule : la
- * coupe doit rester celle du tirage.
+ * S6, qualification verrouillée (docs/adr/0041, amendements du 2026-11-27) : la règle de
+ * qualification d'un tour de poules clos (`closePoolRound`, `progress.closedRounds`) ou du tour
+ * qui précède une phase commencée (tour suivant lancé, tableau tiré, scission faite) est celle
+ * de la formule enregistrée `stored`. Toutes les règles : nombre, pourcentage, têtes de poule,
+ * ex aequo à la barre. Les éliminés d'un tour clos sont fixés dès la clôture, et le classement
+ * final relit la formule : la coupe doit rester celle du tirage. Un tableau arrêté clos n'est
+ * pas concerné (il n'a pas de règle de qualification).
  */
 function lockedQualificationIssues(
   f: FormulaV2,
@@ -215,17 +217,28 @@ function lockedQualificationIssues(
   stored: FormulaV2
 ): FormulaRemark[] {
   const keys = phaseKeys(f.phases);
+  const closed = progress.closedRounds ?? 0;
   const out: FormulaRemark[] = [];
-  for (let i = 1; i < progress.length; i++) {
-    const was = stored.phases[i - 1];
-    const now = f.phases[i - 1];
-    if (was?.kind !== 'pool' || now?.kind !== 'pool') continue;
-    if (ruleKey(was.qualification) !== ruleKey(now.qualification))
+  let round = 0;
+  for (let i = 0; i < progress.length; i++) {
+    const was = stored.phases[i];
+    const now = f.phases[i];
+    if (was?.kind !== 'pool') continue;
+    const ordinal = round++;
+    if (now?.kind !== 'pool' || ruleKey(was.qualification) === ruleKey(now.qualification)) continue;
+    // Phase suivante commencée, ou à défaut tour clos (closePoolRound)
+    const reason =
+      i + 1 < progress.length
+        ? `elle mène à une phase déjà commencée (${NAMES[progress[i + 1]]})`
+        : ordinal < closed
+          ? 'le tour est clos, ses éliminés sont fixés'
+          : null;
+    if (reason)
       out.push(
         remark(
           'started_qualification_changed',
-          keys[i - 1],
-          `qualification du tour : elle mène à une phase déjà commencée (${NAMES[progress[i]]}), elle ne change plus`
+          keys[i],
+          `qualification du tour : ${reason}, elle ne change plus`
         )
       );
   }
@@ -234,8 +247,8 @@ function lockedQualificationIssues(
 
 /**
  * S6 : une phase commencée ne se retire pas, ne change pas de nature, et rien ne s'insère avant
- * elle ; la règle de qualification qui mène à une phase commencée ne change plus (`stored` :
- * formule enregistrée). Ses autres réglages restent soumis aux règles actuelles (Q15). Première
+ * elle ; la règle de qualification qui sort d'un tour de poules clos, ou qui mène à une phase
+ * commencée, ne change plus (`stored` : formule enregistrée). Ses autres réglages restent soumis aux règles actuelles (Q15). Première
  * incohérence de structure seulement (les suivantes en découlent).
  */
 export function progressIssues(

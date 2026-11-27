@@ -528,7 +528,8 @@ export interface RankingCriterion {
 
 /**
  * `pool_heads` (docs/adr/0043, F4b) : têtes de poule, puis suivants, jusqu'à `count` — premiers de
- * chaque poule, puis deuxièmes, etc., chaque rang de poule pris dans l'ordre du classement général.
+ * chaque poule, puis deuxièmes, etc. Ordre d'entrée : au moins deux rangs de poule pris en entier,
+ * rang par rang dans l'ordre des poules ; sinon classement général.
  */
 export type AdvancementMode =
   'all' | 'percentage' | 'fixed_count' | 'fixed_bracket' | 'pool_winner' | 'pool_heads';

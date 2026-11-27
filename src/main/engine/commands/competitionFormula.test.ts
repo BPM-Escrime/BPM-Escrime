@@ -375,6 +375,41 @@ d('contrôles de structure en direct (docs/adr/0041)', () => {
     expect(e.message).toContain('[split] scission : les parts (16 tireurs)');
   });
 
+  it('S6 : tour clos (closePoolRound), la qualification qui en sort est verrouillée dès la clôture', async () => {
+    const qualify = (count: number) => [
+      {
+        op: 'setPhase',
+        phase: 'pool-0',
+        settings: { qualification: { mode: 'fixed_count', count } },
+      },
+    ];
+    await op('updateCompetitionFormula', { competitionId, operations: qualify(8) });
+    // Tour 1 lancé, pas clos : la règle reste modifiable
+    db.saveSessionState(competitionId, {
+      currentPhase: 2,
+      currentPoolRound: 1,
+      pools: [{ id: 'p1', matches: [] }],
+      poolsLaunched: true,
+    });
+    await op('updateCompetitionFormula', { competitionId, operations: qualify(6) });
+    // Tour 1 clos : archivé, plus de poules, tableau pas tiré
+    db.saveSessionState(competitionId, {
+      currentPhase: 1,
+      currentPoolRound: 2,
+      poolHistory: [[{ id: 'p1', matches: [] }]],
+      pools: [],
+      poolsLaunched: false,
+    });
+    const e = await reject(qualify(4));
+    expect(e.code).toBe('invalid_settings');
+    expect(e.message).toContain('[pool-0] qualification du tour : le tour est clos');
+    // Même règle : admise ; autres réglages du tour : admis
+    await op('updateCompetitionFormula', { competitionId, operations: qualify(6) });
+    expect(
+      db.getCompetition(competitionId)?.settings?.formula?.phases.find(p => p.kind === 'pool')
+    ).toMatchObject({ qualification: { mode: 'fixed_count', count: 6 } });
+  });
+
   it('S6 : après un tour joué, la phase commencée ne se retire plus', async () => {
     await op('updateCompetitionFormula', {
       competitionId,
