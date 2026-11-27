@@ -103,10 +103,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `matchAuditLog` (`src/features/matchAuditLog/`) | 1 | 9 |
 | Feature `pdfTemplates` (`src/features/pdfTemplates/`) | 1 | 6 |
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
-| Feature `rapieres` (`src/features/rapieres/`) | 5 | 21 |
+| Feature `teamEntry` (`src/features/teamEntry/`) | 5 | 20 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 26 | 295 |
-| `src/main/` | 168 | 1498 |
+| `src/main/` | 170 | 1498 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 44 | 237 |
 | `src/renderer/components/` | 146 | 855 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 67 | 864 |
+| `src/shared/domain/` | 66 | 851 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **681** | **5540** |
+| **Total** | **682** | **5526** |
 
-Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 659 fichiers, 5468 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -2139,23 +2139,22 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 
 </details>
 
-### Feature `rapieres` (`src/features/rapieres/`)
+### Feature `teamEntry` (`src/features/teamEntry/`)
 
 <details>
-<summary><code>src/features/rapieres/RapieresComponents.test.tsx</code> — 3 tests</summary>
+<summary><code>src/features/teamEntry/TeamEntryComponents.test.tsx</code> — 2 tests</summary>
 
-- **Tournoi des rapières : composants (#1118)**
-  - fenêtre équipe : nom, niveau, deux tireurs avec catégorie
+- **Tour en vagues et entrée en équipes : composants (#1118, ADR-0043)**
   - barre des vagues : lancement, vague incomplète, fin anticipée
   - fenêtre d'import : équipes cochées par défaut, sélection transmise (#1211)
 
 </details>
 
 <details>
-<summary><code>src/features/rapieres/RapieresRankingPanel.test.tsx</code> — 4 tests</summary>
+<summary><code>src/features/teamEntry/TeamRankingPanel.test.tsx</code> — 4 tests</summary>
 
-- **RapieresRankingPanel : filtres**
-  - sans réglage de la formule : catégorie, sexe, niveau et HANDI (épreuve inchangée)
+- **TeamRankingPanel : filtres**
+  - filtres de la formule des rapières : catégorie, sexe, niveau et HANDI
   - niveau : équipes seules, rangs depuis 1 ; HANDI cumulable
   - PDF : classement filtré, critères dans le sous-titre
   - filtres de la formule : seuls ceux-là sont proposés
@@ -2163,18 +2162,18 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/features/rapieres/rapieresImport.test.ts</code> — 10 tests</summary>
+<summary><code>src/features/teamEntry/teamImport.test.ts</code> — 10 tests</summary>
 
-- **rapieresImport (#1211)**
+- **teamImport (#1211)**
   - parseDelimited gère BOM, guillemets et CRLF
   - parseBirthDate lit JJ/MM/AAAA, ISO et série Excel
   - catégorie selon l’âge atteint dans l’année de début de saison
-  - parseRapieresGender reconnaît homme/femme et variantes
-  - parseRapieresTeams lit le sexe en R et W
-  - parseRapieresTeams lit D/E/Q, T/U/V et Y, ignore l’en-tête et les lignes incomplètes
-- **rapieresImport : club de l’équipe (#1441)**
+  - parseImportGender reconnaît homme/femme et variantes
+  - parseTeamImport lit le sexe en R et W
+  - parseTeamImport lit D/E/Q, T/U/V et Y, ignore l’en-tête et les lignes incomplètes
+- **teamImport : club de l’équipe (#1441)**
   - club des deux tireurs (colonnes S et X) : distincts joints par « / », identiques une seule fois
-- **buildRapieresImportTemplate (modèle d'import des équipes)**
+- **buildTeamImportTemplate (modèle d'import des équipes)**
   - commence par un BOM et reprend les 25 colonnes de l'export d'inscriptions
   - est relu par l'import : une équipe d'exemple, colonnes correctement placées
   - un modèle sans ligne d'exemple ne produit aucune équipe
@@ -2182,9 +2181,9 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/features/rapieres/rapieresPdf.test.ts</code> — 3 tests</summary>
+<summary><code>src/features/teamEntry/teamRankingPdf.test.ts</code> — 3 tests</summary>
 
-- **generateRapieresRankingHTML**
+- **generateTeamRankingHTML**
   - aligne les colonnes selon leur nature quand des colonnes sont masquées (#1279)
   - garde la mise en page par défaut sans kinds
   - reprend le style du classement après poules et colore l'indice (#1279)
@@ -2192,9 +2191,9 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/features/rapieres/useRapieresTeams.test.tsx</code> — 1 test</summary>
+<summary><code>src/features/teamEntry/useTeamImport.test.tsx</code> — 1 test</summary>
 
-- **useRapieresTeams : import des équipes (#1211)**
+- **useTeamImport : import des équipes (#1211)**
   - ouvre la fenêtre de sélection puis ajoute toutes les équipes en un lot
 
 </details>
@@ -3511,7 +3510,7 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/poolWaves.test.ts</code> — 11 tests</summary>
+<summary><code>src/main/engine/commands/poolWaves.test.ts</code> — 10 tests</summary>
 
 - le tirage suit l’ordre des vagues, launchPoolWave lance une vague, journal PoolWaveLaunched
 - épreuve sans tour en vagues : commandes refusées
@@ -3522,7 +3521,6 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - un nouveau tirage remet les vagues à zéro
 - ordre « waves\_classic » : table fixe des poules de 10, vagues lues sur les matchs
 - poules de 2 : admises pour un tour en vagues, refusées sinon
-- launchRapieresWave / endRapieresWaves délèguent aux nouvelles (état waves, événements PoolWave\*)
 - ancienne clé rapieres.launchedWave lue comme alias de waves ; journal mêlant anciens et nouveaux événements, sans écart
 
 </details>
@@ -3559,6 +3557,21 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - droit du poste, pas d’outil MCP, refusé sur le réseau, pas de journal
 - rend les poules écrites en base tant que l’état n’en a pas
 - vide sans préparation en base, ou quand l’état a ses poules
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/rapieresBricks.test.ts</code> — 4 tests</summary>
+
+- modèle bpm/C/rapieres : tirage sans composition par niveau, vagues, tableau
+- mode spécial plus écrit : création et modification refusées
+- épreuve enregistrée en mode spécial : pilotée par le moteur, niveau lu dans la session
+- formule modifiée avant le tirage : le mode spécial est effacé, les briques gardées
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/rapieresLegacyReplay.test.ts</code> — 0 test</summary>
 
 </details>
 
@@ -3743,7 +3756,7 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/sport.test.ts</code> — 35 tests</summary>
+<summary><code>src/main/engine/commands/sport.test.ts</code> — 32 tests</summary>
 
 - poules → arbitres → scores → tableau → classement final → exports
 - régénérer des poules jouées exige replace
@@ -3770,14 +3783,11 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - placement invalide ou tableaux séparés sans groupe : refus
 - sans correction : refusée ; avec motif : tableau gardé, journal des scores et du journal
 - tableau à refaire : retiré avec la correction ; statut spécial refusé
-- vague lancée, vagues arrêtées puis reprises, mode de tableau au journal
 - poule : match remis à jouer, classement recalculé, ScoreCleared
 - tableau : match rouvert tant que le tour suivant n’est pas joué ; poules figées
 - poule : piste et arbitres (principal propagé aux matchs) ; match de tableau : piste et arbitre
 - adjustRanking : ordre du DT, classements de poule alignés, RankingAdjusted
 - skipPools puis tableau ; clearTableau retire le tableau
-- composition écrite dans l’état ; journal sans nom ; tireur inconnu refusé
-- alias (docs/adr/0043, F4c) : écrit aussi membres, niveau, HANDI, catégorie et sexe sur le tireur
 - **validation des scores de poule (identique à l’écran)**
   - score max, égalité, vainqueur contraire
   - statut spécial au perdant, priorité marquée
@@ -7621,14 +7631,14 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - sans personnaliser : mêmes réglages qu’aujourd’hui, plus l’origine standard
   - changer de catégorie présélectionne le standard de la nouvelle catégorie
   - choisir un autre modèle fourni : appliqué et enregistré avec son origine
-  - arme « Autre » : le modèle Tournoi des rapières active le mode spécial
+  - arme « Autre » : le modèle Tournoi des rapières est une formule en briques, sans mode spécial
   - personnalisée : le tour ajouté est enregistré
   - « Revenir au modèle » annule la personnalisation
   - arme « Autre » : formule enregistrée sans « Classement final »
 - **FormulaEditor : qualification « têtes de poule, puis suivants » (docs/adr/0043, F4b)**
   - mode expert : option proposée avant un tableau, 4 qualifiés par défaut
   - niveau simple : option absente (réglage expert)
-  - rapières : formule experte, mode expert rallumé ; tous qualifiés ou têtes de poule (ADR-0043)
+  - formule des rapières : briques expertes, mode expert rallumé ; tous qualifiés ou têtes de poule (ADR-0043)
 - **FormulaEditor : entrée en équipes et répartition par niveau (docs/adr/0043, F4c)**
   - entrée individuelle par défaut ; équipes de 2 avec les libellés par défaut
   - libellés des niveaux modifiables ; retour à l’individuelle retire le réglage
@@ -10038,7 +10048,7 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - chaque tour jugé avec son ordre : un tour en vagues à côté d’un tour FIE
 - **mode expert : briques et réglages**
   - une formule reste valide quel que soit le mode : le jugement ignore le mode expert
-  - formule par défaut : simple ; épreuve du mode spécial rapières : experte (docs/adr/0043)
+  - formule par défaut : simple ; formule des rapières (vagues, binômes) : experte (docs/adr/0043)
   - ordre des matchs en vagues : réglage avancé (docs/adr/0043)
   - scission, Tour Quest, tableau arrêté
   - réglages avancés : ex aequo, cumul, ordre libre, barème à zones
@@ -10611,9 +10621,9 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - tableau tiré : coupe figée par le tableau, même si le choix est perdu (rechargement)
 - **tableauCut : têtes de poule (pool\_heads, docs/adr/0043, F4b)**
   - épreuve non rapières : règle de la formule v2, 4 qualifiés croisés
-  - rapières : la formule « têtes de poule » donne les demi-finales
-  - rapières : sans « têtes de poule », mode hérité « semis » (valeur par défaut) ou toutes les équipes
-  - rapières : la formule prime sur le mode hérité
+  - épreuve du mode spécial : la formule « têtes de poule » donne les demi-finales
+  - épreuve du mode spécial : sans « têtes de poule », mode hérité « semis » (valeur par défaut) ou toutes les équipes
+  - épreuve du mode spécial : la formule prime sur le mode hérité
   - ex aequo à la barre : proposés, choix de l’écran appliqué
 
 </details>
@@ -10634,28 +10644,7 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/rapieres/rapieresCalculations.test.ts</code> — 12 tests</summary>
-
-- **Tournoi des rapières (#1118)**
-  - libellé des tireurs de l’équipe
-  - **qualification**
-    - mode %s : toutes les équipes au tableau _(each)_
-    - mode semis : 4 équipes
-    - équipe retirée exclue
-    - réglages : petite finale sauf en normal, toutes places en « all »
-  - **classements**
-    - filtre par niveau : équipes seules, rangs conservés (#1441)
-    - filtre par catégorie d’équipe (moyenne des années de naissance, #1441)
-    - filtre par sexe d’équipe : M, F, mixte ; sexe incomplet exclu (#1441)
-    - filtres cumulables (niveau + sexe)
-    - filtres génériques : HANDI est un critère à part, pas une catégorie (docs/adr/0043, F4d)
-    - rapieresPoolNumbers : numéro de poule par équipe
-    - final : tableau, puis non qualifiées ; exclue au bas sans rang (ADR-0043 amendée, F4d)
-
-</details>
-
-<details>
-<summary><code>src/shared/domain/rapieres/rapieresEntry.test.ts</code> — 9 tests</summary>
+<summary><code>src/shared/domain/rapieres/rapieresEntry.test.ts</code> — 8 tests</summary>
 
 - **niveaux des rapières comme niveaux de la formule**
   - 1 = débutant, 2 = intermédiaire, 3 = expert (le plus grand est le plus fort), et retour
@@ -10664,23 +10653,10 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - HANDI devient le marqueur handicap, plus une catégorie
   - sans date de naissance : catégorie saisie des membres
   - membre sans nom : non écrit
-- **rapieresInfoOf : champs du tireur de préférence, sinon la session**
+- **withLegacyTeams : champs du tireur de préférence, sinon l’ancienne clé de session**
   - le tireur porte la composition : elle prime sur la session
-  - tireur sans composition : la session (alias de compatibilité) ; sans rien : undefined
-  - écriture puis lecture : composition conservée
-  - rapieresTeamsOf fusionne : tireurs d’abord, session pour les autres
-
-</details>
-
-<details>
-<summary><code>src/shared/domain/rapieres/rapieresFinalRankingParity.test.ts</code> — 4 tests</summary>
-
-- **classement final : rapières (mergeFinalRanking) et générique (finalRanking)**
-  - %s : même classement _(each)_
-  - le classement complet liste les non-qualifiées après le tableau (écran, comme le moteur)
-  - **équipe exclue, carton noir**
-    - équipe %s après son entrée au tableau : au bas sans rang, les autres renumérotées _(each)_
-    - équipe exclue avant le tableau : au bas sans rang, comme une exclue du tableau
+  - tireur sans composition : la session (alias de compatibilité) ; sans rien : inchangé
+  - la catégorie et le club du tireur priment ; aucune écriture (copie)
 
 </details>
 
@@ -10694,6 +10670,17 @@ Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - 1 poule : les 4 premières de la poule
   - plus de 4 poules : pas de scénario
   - équipe retirée : écartée, rangs de poule renumérotés
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/rapieres/tableauQualifiers.test.ts</code> — 4 tests</summary>
+
+- **qualification (mode de tableau hérité)**
+  - mode %s : toutes les équipes au tableau _(each)_
+  - mode semis : 4 équipes
+  - équipe retirée exclue
+  - réglages : petite finale sauf en normal, toutes places en « all »
 
 </details>
 
