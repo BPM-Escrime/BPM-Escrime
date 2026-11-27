@@ -6,7 +6,15 @@ import { describe, expect, it } from 'vitest';
 import { Category, CompetitionSettings, Weapon } from '../../types';
 import { buildDefaultCompetitionSettings } from '../../utils/defaultCompetitionSettings';
 import { formulaOf, type FormulaV2, type SplitPhase } from './formulaV2';
-import { applyOperationsV2, formulaV2Issues, tiesIssue } from './formulaV2Operations';
+import {
+  applyOperationsV2,
+  formulaV2Issues as formulaRemarks,
+  tiesIssue,
+} from './formulaV2Operations';
+
+/** Messages des remarques (les codes et les phases ont leurs propres tests) */
+const formulaV2Issues = (...args: Parameters<typeof formulaRemarks>) =>
+  formulaRemarks(...args).map(r => r.message);
 
 let n = 0;
 const id = () => `id-${++n}`;

@@ -4801,7 +4801,11 @@
     "split_rest": "Die übrigen Fechter",
     "split_add_branch": "Zweig hinzufügen",
     "split_remove_branch": "Zweig {{label}} entfernen",
-    "split_issues": "Vor dem Speichern zu korrigieren"
+    "split_issues": "Vor dem Speichern zu korrigieren",
+    "expert_mode": "Expertenmodus",
+    "expert_hint": "Aufteilung, Quest-Runde, vorzeitig beendetes Tableau und erweiterte Einstellungen (Gleichstand an der Grenze, kumulierte Runden, Gefechtsreihenfolge, Zonenwertung). Einstellung dieses Rechners.",
+    "expert_forced": "Diese Formel enthält einen Experten-Baustein oder eine Experten-Einstellung: Der Expertenmodus bleibt für diese Bearbeitung aktiv.",
+    "remark_on_phase": "Hinweis zu dieser Phase"
   },
   "formulaTemplates": {
     "template": "Formelvorlage",

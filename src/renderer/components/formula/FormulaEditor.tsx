@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, TriangleAlert, X } from 'lucide-react';
 import {
   AdvancementRule,
   Category,
@@ -31,8 +31,11 @@ import {
   type TableauPhase,
 } from '../../../shared/domain/formula/formulaV2';
 import { simulateSplit } from '../../../shared/domain/formula/splitPlan';
+import { bricksForLevel, formulaNeedsExpert } from '../../../shared/domain/formula/formulaExpert';
+import type { FormulaProgress, FormulaRemark } from '../../../shared/domain/formula/formulaRemarks';
 import {
   canRemoveV2,
+  formulaV2Issues,
   formulaViewV2,
   friezeOfV2,
   insertOptionsV2,
@@ -45,7 +48,9 @@ import { isOlympicWeapon } from '../../../shared/utils/defaultMaxScores';
 import { simulateFormula } from '../../../shared/utils/customRankingCalculator';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useDurationSources } from '../../hooks/useDurationSources';
+import { useFormulaExpert } from '../../hooks/useFormulaExpert';
 import { Button } from '../common/Button';
+import { Icon } from '../common/Icon';
 import { AdvancementRuleEditor } from './AdvancementRuleEditor';
 import { ScoringZoneEditor } from './ScoringZoneEditor';
 import { FormulaSimulationPreview } from './FormulaSimulationPreview';
@@ -63,6 +68,14 @@ export interface FormulaEditorProps {
   rapieres?: boolean;
   /** Effectif de départ de la simulation (modifiable dans le panneau) */
   fencerCount?: number;
+  /** Épreuve par équipes (bornes des réglages) */
+  isTeamEvent?: boolean;
+  /** Effectif connu de l'épreuve (S4, somme des parts d'une scission) ; absent : inconnu */
+  knownFencerCount?: number;
+  /** Phases déjà commencées de l'épreuve (S6) ; absent : création, rien de commencé */
+  progress?: FormulaProgress;
+  /** Remarques déjà jugées par l'appelant (bouton Enregistrer) ; absent : jugées ici */
+  remarks?: FormulaRemark[];
 }
 
 const SPECIAL_MODES: CompetitionSpecialMode[] = ['rapieres'];
@@ -83,8 +96,17 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   onSpecialModeChange,
   rapieres,
   fencerCount = 32,
+  isTeamEvent,
+  knownFencerCount,
+  progress,
+  remarks: judged,
 }) => {
   const { t } = useTranslation();
+  // Mode expert (ADR-0041) : préférence du poste, rallumée pour cette édition quand la formule
+  // contient une brique ou un réglage expert (la préférence ne change pas)
+  const { expert: preferred, setExpert } = useFormulaExpert();
+  const forced = formulaNeedsExpert(formula);
+  const expert = preferred || forced;
   const isOther = weapon === Weapon.CUSTOM;
   const phases = friezeOfV2(formula);
   const [selectedKey, setSelectedKey] = useState<string>(phases[0]?.key ?? '');
@@ -94,6 +116,13 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const current = phases.find(p => p.key === selectedKey) ?? phases[0];
   const pools = formula.phases.filter((p): p is PoolRoundPhase => p.kind === 'pool');
   const view = formulaViewV2({ weapon, category, settings: { formula } });
+  // Jugement en direct (ADR-0041) : mêmes fonctions que le moteur, remarques situées
+  const remarks =
+    judged ??
+    formulaV2Issues(formula, { weapon, isTeamEvent, fencerCount: knownFencerCount }, progress);
+  const remarksOf = (key: string) => remarks.filter(r => r.phase === key);
+  // Formule entière (phase null) ou phase absente de la frise (retirée) : en tête
+  const headRemarks = remarks.filter(r => r.phase === null || !phases.some(p => p.key === r.phase));
   const categoryLabel = t(`categories.${category === Category.SENIOR ? 'senior' : category}`);
 
   const insert = (brick: FriezeBrick, at: number) => {
@@ -178,7 +207,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   };
 
   const plus = (at: number) => {
-    const options = insertOptionsV2(formula, weapon, at);
+    const options = bricksForLevel(insertOptionsV2(formula, weapon, at), expert);
     if (options.length === 0 || specialMode) return null;
     return (
       <span key={`plus-${at}`} className="formula-editor__plus">
@@ -220,16 +249,28 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   ];
   phases.forEach((p, i) => {
     const selected = p.key === current?.key;
+    const phaseRemarks = remarksOf(p.key);
     frieze.push(
       <span key={p.key} className="formula-editor__phase">
         <button
           type="button"
           data-testid={`formula-step-${p.key}`}
-          className={`formula-frieze__step${selected ? ' is-selected' : ''}`}
+          className={`formula-frieze__step${selected ? ' is-selected' : ''}${phaseRemarks.length ? ' has-remark' : ''}`}
           aria-pressed={selected}
           onClick={() => setSelectedKey(p.key)}
         >
-          <span className="formula-frieze__title">{title(p)}</span>
+          <span className="formula-frieze__title">
+            {phaseRemarks.length > 0 && (
+              <span
+                className="formula-frieze__remark"
+                data-testid={`formula-remark-${p.key}`}
+                title={phaseRemarks.map(r => r.message).join('\n')}
+              >
+                <Icon icon={TriangleAlert} label={t('formulaEditor.remark_on_phase')} />
+              </span>
+            )}
+            {title(p)}
+          </span>
           <span className="formula-frieze__summary">{summary(p)}</span>
         </button>
         {canRemoveV2(formula, p) && !specialMode && (
@@ -327,52 +368,55 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 onChange={(rule: AdvancementRule) => set({ qualification: rule })}
                 inputFencers={simCount}
                 readOnly={rapieres}
+                expert={expert}
               />
             </div>
           )}
         </fieldset>
-        <details className="properties-expert">
-          <summary>{t('properties.expert_settings')}</summary>
-          {p.round > 0 && (
-            <div className="form-group">
-              <label htmlFor={`${id}-seeding`}>{t('formulaEditor.seeding')}</label>
-              <select
-                id={`${id}-seeding`}
-                className="form-input form-select"
-                value={pool.seeding}
-                onChange={e => set({ seeding: e.target.value as PoolRoundPhase['seeding'] })}
-              >
-                <option value="previous_round">{t('formulaEditor.seeding_previous')}</option>
-                <option value="cumulative">{t('formulaEditor.seeding_cumulative')}</option>
-              </select>
-              <small className="u-hint">{t('formulaEditor.seeding_hint')}</small>
-            </div>
-          )}
-          {!isOther && (
-            <div className="form-group">
-              <label htmlFor={`${id}-order`}>{t('properties.bout_order')}</label>
-              <select
-                id={`${id}-order`}
-                className="form-input form-select"
-                value={pool.boutOrder}
-                onChange={e => set({ boutOrder: e.target.value as 'fie' | 'free' })}
-              >
-                <option value="fie">{t('properties.bout_order_fie')}</option>
-                <option value="free">{t('properties.bout_order_free')}</option>
-              </select>
-              <small className="u-hint">{t('properties.bout_order_hint')}</small>
-            </div>
-          )}
-          {isOther && (
-            <div className="form-group">
-              <label className="form-label">{t('formulaPhase.scoring')}</label>
-              <ScoringZoneEditor
-                scoring={pool.scoring ?? { type: 'standard', maxScore: pool.maxScore }}
-                onChange={(s: CustomScoringConfig) => set({ scoring: s })}
-              />
-            </div>
-          )}
-        </details>
+        {expert && (
+          <details className="properties-expert" data-testid={`${id}-expert`}>
+            <summary>{t('properties.expert_settings')}</summary>
+            {p.round > 0 && (
+              <div className="form-group">
+                <label htmlFor={`${id}-seeding`}>{t('formulaEditor.seeding')}</label>
+                <select
+                  id={`${id}-seeding`}
+                  className="form-input form-select"
+                  value={pool.seeding}
+                  onChange={e => set({ seeding: e.target.value as PoolRoundPhase['seeding'] })}
+                >
+                  <option value="previous_round">{t('formulaEditor.seeding_previous')}</option>
+                  <option value="cumulative">{t('formulaEditor.seeding_cumulative')}</option>
+                </select>
+                <small className="u-hint">{t('formulaEditor.seeding_hint')}</small>
+              </div>
+            )}
+            {!isOther && (
+              <div className="form-group">
+                <label htmlFor={`${id}-order`}>{t('properties.bout_order')}</label>
+                <select
+                  id={`${id}-order`}
+                  className="form-input form-select"
+                  value={pool.boutOrder}
+                  onChange={e => set({ boutOrder: e.target.value as 'fie' | 'free' })}
+                >
+                  <option value="fie">{t('properties.bout_order_fie')}</option>
+                  <option value="free">{t('properties.bout_order_free')}</option>
+                </select>
+                <small className="u-hint">{t('properties.bout_order_hint')}</small>
+              </div>
+            )}
+            {isOther && (
+              <div className="form-group">
+                <label className="form-label">{t('formulaPhase.scoring')}</label>
+                <ScoringZoneEditor
+                  scoring={pool.scoring ?? { type: 'standard', maxScore: pool.maxScore }}
+                  onChange={(s: CustomScoringConfig) => set({ scoring: s })}
+                />
+              </div>
+            )}
+          </details>
+        )}
       </>
     );
   }
@@ -435,7 +479,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             <span>{t('properties.all_places')}</span>
           </label>
           <small className="u-hint">{t('properties.all_places_hint')}</small>
-          {ownTableau && !formula.phases.some(x => x.kind === 'quest') && (
+          {expert && ownTableau && !formula.phases.some(x => x.kind === 'quest') && (
             <div className="form-group">
               <label htmlFor="tableau-stop-at" className="form-label">
                 {t('formulaEditor.stop_at')}
@@ -456,7 +500,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
               <small className="u-hint">{t('formulaEditor.stop_at_hint')}</small>
             </div>
           )}
-          {isOther && (
+          {expert && isOther && (
             <div className="form-group">
               <label className="form-label">{t('formulaPhase.scoring')}</label>
               <ScoringZoneEditor
@@ -499,6 +543,10 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
   function renderGeneral() {
     const ruleSet = formula.general.ruleSet ?? (rapieres || specialMode ? 'modern' : 'laser');
     const showRest = isOlympicWeapon(weapon) || (isOther && ruleSet === 'modern');
+    // Compétition couplée = scission par sexe : brique expert
+    const showCoupled =
+      expert && !isOther && pools.length > 0 && ((ownTableau && !split) || coupled);
+    if (!isOther && !showRest && !showCoupled) return null;
     return (
       <details className="properties-expert formula-editor__general">
         <summary>{t('properties.formula_general')}</summary>
@@ -548,7 +596,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             v => patchGeneral({ restTimeSeconds: Math.max(0, v) }),
             { min: 0, hint: t('properties.rest_time_hint') }
           )}
-        {!isOther && pools.length > 0 && ((ownTableau && !split) || coupled) && (
+        {showCoupled && (
           <div className="form-group">
             <label htmlFor="formula-editor-coupled">{t('properties.coupled')}</label>
             {/* Compétition couplée = scission par sexe dont les branches restent (ADR-0039 E3) */}
@@ -629,6 +677,20 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
     );
   }
 
+  /** Remarques bloquantes (ADR-0041) : sur la carte de la phase, ou en tête pour la formule */
+  function renderRemarks(list: FormulaRemark[], testId: string) {
+    if (list.length === 0) return null;
+    return (
+      <div className="formula-coherence has-issues is-blocking" data-testid={testId} role="alert">
+        <ul>
+          {list.map(r => (
+            <li key={`${r.code}-${r.message}`}>{r.message}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
   const simulation = simulateFormula(
     simCount,
     simulationFormulaOf(formula),
@@ -644,6 +706,24 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
   return (
     <div className="formula-editor" data-testid="formula-editor">
+      {!specialMode && (
+        <div className="formula-editor__expert">
+          <label className="u-row cursor-pointer">
+            <input
+              type="checkbox"
+              data-testid="formula-expert-toggle"
+              checked={expert}
+              disabled={forced}
+              onChange={e => setExpert(e.target.checked)}
+            />
+            <span>{t('formulaEditor.expert_mode')}</span>
+          </label>
+          <small className="u-hint">
+            {forced ? t('formulaEditor.expert_forced') : t('formulaEditor.expert_hint')}
+          </small>
+        </div>
+      )}
+      {renderRemarks(headRemarks, 'formula-remarks')}
       <nav className="formula-frieze" aria-label={t('properties.frieze_label')}>
         {frieze}
       </nav>
@@ -657,6 +737,9 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
             </div>
           ) : (
             <>
+              {current &&
+                current.kind !== 'split' &&
+                renderRemarks(remarksOf(current.key), 'phase-remarks')}
               {current?.kind === 'pool' && renderPool(current)}
               {current?.kind === 'tableau' && renderTableau(current)}
               {current?.kind === 'quest' && renderQuest(current)}
@@ -666,6 +749,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
                   weapon={weapon}
                   category={category}
                   newId={newPhaseId}
+                  remarks={remarksOf('split')}
                   onChange={next =>
                     onChange({
                       ...formula,

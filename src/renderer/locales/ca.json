@@ -4801,7 +4801,11 @@
     "split_rest": "La resta de tiradors",
     "split_add_branch": "Afegir una branca",
     "split_remove_branch": "Treure la branca {{label}}",
-    "split_issues": "Cal corregir abans de desar"
+    "split_issues": "Cal corregir abans de desar",
+    "expert_mode": "Mode expert",
+    "expert_hint": "Escissió, Ronda Quest, quadre aturat i ajustos avançats (empats a la barra, rondes acumulades, ordre dels assalts, barem per zones). Preferència d'aquest equip.",
+    "expert_forced": "Aquesta fórmula conté un bloc o un ajust expert: el mode expert continua actiu per a aquesta edició.",
+    "remark_on_phase": "Observació sobre aquesta fase"
   },
   "formulaTemplates": {
     "template": "Model de fórmula",

@@ -1,0 +1,175 @@
+/**
+ * BPM - Escrime - Contrôles de structure de la formule S1, S3, S4, S5, S6 (#2013 étape F, lot F2 ;
+ * docs/adr/0041). Remarques situées (`FormulaRemark`), bloquantes. S2 (tableau arrêté, place de
+ * la scission) reste dans formulaV2Operations. Domaine pur.
+ * Licensed under GPL-3.0
+ */
+
+import type { AdvancementRule } from '../../types';
+import {
+  keyOfKinds,
+  phaseKeys,
+  remark,
+  type FormulaPhaseKind,
+  type FormulaProgress,
+  type FormulaRemark,
+} from './formulaRemarks';
+import type { FormulaPhaseV2, FormulaV2, SplitPhase } from './formulaV2';
+
+const NAMES: Record<FormulaPhaseKind, string> = {
+  pool: 'tour de poules',
+  quest: 'Tour Quest',
+  tableau: 'tableau',
+  split: 'scission',
+};
+
+/** S1 : au moins une phase de combat (tour de poules, Tour Quest ou tableau) */
+export function fightPhaseIssues(phases: readonly FormulaPhaseV2[]): FormulaRemark[] {
+  return phases.some(p => p.kind !== 'split')
+    ? []
+    : [
+        remark(
+          'no_fight_phase',
+          null,
+          'au moins une phase de combat (tour de poules, Tour Quest ou tableau)'
+        ),
+      ];
+}
+
+/** Nombre fixé par une règle de qualification (nombre ou taille de tableau) ; null : autre mode */
+const fixedNumber = (rule?: AdvancementRule): number | null => {
+  if (!rule || (rule.mode !== 'fixed_count' && rule.mode !== 'fixed_bracket')) return null;
+  const n = Number(rule.count);
+  return Number.isFinite(n) ? n : null;
+};
+
+/** `n` tireurs se répartissent-ils en poules de `min` à `max` ? */
+export const poolable = (n: number, min: number, max: number): boolean =>
+  min >= 1 && max >= min && Math.ceil(n / max) <= Math.floor(n / min);
+
+/**
+ * S3 et S4 : le nombre fixé par `rule` (`where` : « tour 1 », « branche A ») convient à la phase
+ * qui le reçoit. S3 : assez de tireurs (au moins `sizeMin` pour un tour de poules, 2 pour un
+ * tableau, plus de `stopAt` pour un tableau arrêté). S4 : répartition possible en poules de
+ * `sizeMin` à `sizeMax`. Un pourcentage dépend de l'effectif : avertissement de la simulation.
+ */
+export function qualificationIssues(
+  rule: AdvancementRule | undefined,
+  next: FormulaPhaseV2 | undefined,
+  where: string,
+  phase: string
+): FormulaRemark[] {
+  const n = fixedNumber(rule);
+  if (n === null || !next) return [];
+  if (next.kind === 'pool') {
+    if (n < next.sizeMin)
+      return [
+        remark(
+          'qualified_below_pool_min',
+          phase,
+          `${where} : ${n} qualifié(s) pour des poules de ${next.sizeMin} tireurs au moins`
+        ),
+      ];
+    if (!poolable(n, next.sizeMin, next.sizeMax))
+      return [
+        remark(
+          'qualified_not_poolable',
+          phase,
+          `${where} : ${n} qualifiés ne se répartissent pas en poules de ${next.sizeMin} à ${next.sizeMax} tireurs`
+        ),
+      ];
+  }
+  if (next.kind === 'tableau') {
+    if (next.stopAt && n <= next.stopAt)
+      return [
+        remark(
+          'qualified_not_above_stop',
+          phase,
+          `${where} : ${n} qualifié(s) pour un tableau arrêté à ${next.stopAt} (plus de ${next.stopAt} requis)`
+        ),
+      ];
+    if (n < 2)
+      return [
+        remark(
+          'qualified_below_tableau_min',
+          phase,
+          `${where} : 2 qualifiés au moins pour le tableau`
+        ),
+      ];
+  }
+  return [];
+}
+
+/** S3 et S4 de la qualification de chaque tour de poules, vers la phase qui le suit */
+export function poolQualificationIssues(f: FormulaV2): FormulaRemark[] {
+  const keys = phaseKeys(f.phases);
+  let round = 0;
+  return f.phases.flatMap((p, i) =>
+    p.kind === 'pool'
+      ? qualificationIssues(p.qualification, f.phases[i + 1], `tour ${++round}`, keys[i])
+      : []
+  );
+}
+
+/**
+ * S3 et S4 de la part de chaque branche d'une scission par rang (vers sa première phase) ; la
+ * somme des parts reste sous l'effectif connu `fencerCount`.
+ */
+export function splitTakeIssues(split: SplitPhase, fencerCount?: number): FormulaRemark[] {
+  if (split.criterion !== 'rank') return [];
+  const out: FormulaRemark[] = [];
+  const last = split.branches.length - 1;
+  let sum = 0;
+  split.branches.forEach((b, i) => {
+    if (i === last) return;
+    const name = `branche « ${(b.label ?? '').trim() || i + 1} »`;
+    out.push(...qualificationIssues(b.take, b.phases[0], name, 'split'));
+    if (b.take?.mode === 'fixed_count') sum += Number(b.take.count) || 0;
+  });
+  if (fencerCount && fencerCount > 0 && sum >= fencerCount)
+    out.push(
+      remark(
+        'split_takes_exceed',
+        'split',
+        `scission : les parts (${sum} tireurs) ne laissent rien à la dernière branche (effectif : ${fencerCount})`
+      )
+    );
+  return out;
+}
+
+/** S5 : une branche se termine par une phase qui classe, jamais par un tableau arrêté */
+export function branchEndIssues(phases: readonly FormulaPhaseV2[]): FormulaRemark[] {
+  const last = phases[phases.length - 1];
+  return last?.kind === 'tableau' && last.stopAt
+    ? [
+        remark(
+          'ends_with_stopped_tableau',
+          'tableau',
+          `se termine par un tableau arrêté à ${last.stopAt} : finir par un tour de poules ou un tableau complet`
+        ),
+      ]
+    : [];
+}
+
+/**
+ * S6 : une phase commencée ne se retire pas, ne change pas de nature, et rien ne s'insère avant
+ * elle. Ses réglages restent soumis aux règles actuelles (Q15). Première incohérence seulement
+ * (les suivantes en découlent).
+ */
+export function progressIssues(f: FormulaV2, progress: FormulaProgress): FormulaRemark[] {
+  const at = progress.findIndex((kind, i) => f.phases[i]?.kind !== kind);
+  if (at < 0) return [];
+  const kind = progress[at];
+  const key = keyOfKinds(progress, at);
+  const found = f.phases[at];
+  const name = `phase déjà commencée (${NAMES[kind]})`;
+  return [
+    found
+      ? remark(
+          'started_phase_moved',
+          key,
+          `${name} : sa nature ne change pas et rien ne s'insère avant elle`
+        )
+      : remark('started_phase_removed', key, `${name} : elle ne se retire pas`),
+  ];
+}

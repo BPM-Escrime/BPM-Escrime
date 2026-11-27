@@ -25,13 +25,17 @@ import {
 } from './formulaV2';
 import {
   applyOperationsV2,
-  formulaV2Issues,
+  formulaV2Issues as formulaRemarks,
   friezeOfV2,
   operationsBetweenV2,
   summarizeFormulaV2,
   withSplitCriterion,
 } from './formulaV2Operations';
 import { formulaSteps } from './formulaSteps';
+
+/** Messages des remarques (les codes et les phases ont leurs propres tests) */
+const formulaV2Issues = (...args: Parameters<typeof formulaRemarks>) =>
+  formulaRemarks(...args).map(r => r.message);
 
 let n = 0;
 const id = () => `id-${++n}`;

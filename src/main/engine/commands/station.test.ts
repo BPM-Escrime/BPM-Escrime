@@ -180,6 +180,19 @@ d('Poste : réglages', () => {
     expect(await op('getStationSettings')).toMatchObject({ language: 'en', inkSaving: true });
   });
 
+  it('mode expert de l’éditeur de formule : éteint par défaut, préférence du poste (ADR-0041)', async () => {
+    expect((await op('getStationSettings')).formulaExpert).toBe(false);
+    expect(await op('getResolvedSetting', { key: 'formulaExpert' })).toBe(false);
+    expect(await op('updateStationSettings', { formulaExpert: true })).toMatchObject({
+      formulaExpert: true,
+    });
+    expect(await op('getResolvedSetting', { key: 'formulaExpert' })).toBe(true);
+    // Réglage d'épreuve `expertMode` (pistes, arbitres) : distinct
+    expect((await refusal(op('updateStationSettings', { formulaExpert: 'oui' }))).code).toBe(
+      'invalid_input'
+    );
+  });
+
   it('refuse une clé inconnue ou les dossiers de l’agent (schéma), une valeur invalide (dépôt)', async () => {
     expect((await refusal(op('updateStationSettings', { color: 'red' }))).code).toBe(
       'invalid_input'

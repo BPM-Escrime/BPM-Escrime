@@ -36,6 +36,13 @@ export interface AppSettings {
    * jamais par le moteur ni le MCP. Retiré à la sortie de la 3.0.
    */
   formulaPreview: boolean;
+  /**
+   * Mode expert de l'éditeur de formule (#2013 F2, docs/adr/0041) : scission, Tour Quest, tableau
+   * arrêté et réglages avancés. Éteint par défaut ; ne change que ce que l'éditeur propose (une
+   * formule reste valide quel que soit le mode). Distinct du réglage d'épreuve `expertMode`
+   * (pistes, arbitres).
+   */
+  formulaExpert: boolean;
   /** Durées de match : réglages du DT, historique du poste, changement de piste (#1965) */
   matchDurations: MatchDurationConfig;
   /**
@@ -57,6 +64,7 @@ export const APP_SETTINGS_DEFAULTS: Readonly<AppSettings> = Object.freeze({
   agentFolders: [],
   inkSaving: false,
   formulaPreview: false,
+  formulaExpert: false,
   matchDurations: DEFAULT_DURATION_CONFIG,
   formulaTemplates: [],
 });
@@ -117,6 +125,7 @@ export function validateAppSetting<K extends AppSettingKey>(
       return value as AppSettings[K];
     case 'inkSaving':
     case 'formulaPreview':
+    case 'formulaExpert':
       if (typeof value !== 'boolean') fail('booléen');
       return value as AppSettings[K];
     case 'matchDurations':

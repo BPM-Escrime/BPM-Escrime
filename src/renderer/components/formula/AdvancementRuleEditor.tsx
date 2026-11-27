@@ -12,6 +12,8 @@ interface Props {
   onChange: (rule: AdvancementRule) => void;
   inputFencers?: number; // pour afficher l'aperçu "→ X tireurs"
   readOnly?: boolean;
+  /** Réglages avancés (ex aequo à la barre, ADR-0041) : mode expert de l'éditeur */
+  expert?: boolean;
 }
 
 function computeAdvancing(fencers: number, rule: AdvancementRule): number {
@@ -40,7 +42,13 @@ const MODE_LABELS: Record<AdvancementMode, string> = {
   pool_winner: 'advancement.mode_pool_winner',
 };
 
-const AdvancementRuleEditor_: React.FC<Props> = ({ rule, onChange, inputFencers, readOnly }) => {
+const AdvancementRuleEditor_: React.FC<Props> = ({
+  rule,
+  onChange,
+  inputFencers,
+  readOnly,
+  expert,
+}) => {
   const { t } = useTranslation();
   const advancing = inputFencers ? computeAdvancing(inputFencers, rule) : null;
 
@@ -107,16 +115,17 @@ const AdvancementRuleEditor_: React.FC<Props> = ({ rule, onChange, inputFencers,
         )}
       </div>
       {/* Ex aequo à la barre quand un nombre de qualifiés est fixé (docs/adr/0040) */}
-      {(rule.mode === 'percentage' ||
-        rule.mode === 'fixed_count' ||
-        rule.mode === 'fixed_bracket') && (
-        <TiesAtBarSelect
-          value={rule.ties}
-          disabled={readOnly}
-          testId="advancement-ties"
-          onChange={ties => onChange({ ...rule, ties })}
-        />
-      )}
+      {expert &&
+        (rule.mode === 'percentage' ||
+          rule.mode === 'fixed_count' ||
+          rule.mode === 'fixed_bracket') && (
+          <TiesAtBarSelect
+            value={rule.ties}
+            disabled={readOnly}
+            testId="advancement-ties"
+            onChange={ties => onChange({ ...rule, ties })}
+          />
+        )}
     </div>
   );
 };

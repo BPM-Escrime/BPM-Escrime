@@ -20,7 +20,7 @@ import {
   removeSplitBranch,
   withSplitCriterion,
   canRemoveV2,
-  formulaV2Issues,
+  formulaV2Issues as formulaRemarks,
   friezeOfV2,
   insertOptionsV2,
   operationsBetweenV2,
@@ -29,6 +29,10 @@ import {
   simulationFormulaOf,
 } from './formulaV2Operations';
 import { formulaSegment, formulaSteps, stoppedTableauOf } from './formulaSteps';
+
+/** Messages des remarques (les codes et les phases ont leurs propres tests) */
+const formulaV2Issues = (...args: Parameters<typeof formulaRemarks>) =>
+  formulaRemarks(...args).map(r => r.message);
 
 let n = 0;
 const id = () => `id-${++n}`;
@@ -173,7 +177,9 @@ describe('règles de la scission (formulaV2Issues, ADR-0039)', () => {
       'scission : deux branches au moins'
     );
     const empty = withSplit(f, { branches: [branches[0], { ...branches[1], phases: [] }] });
-    expect(formulaV2Issues(empty, scope)).toContain('branche « Tableau B » : au moins une phase');
+    expect(formulaV2Issues(empty, scope)).toContain(
+      'branche « Tableau B » : au moins une phase de combat (tour de poules, Tour Quest ou tableau)'
+    );
     const nested = withSplit(f, {
       branches: [branches[0], { ...branches[1], phases: [splitOf(f)] }],
     });

@@ -25,7 +25,7 @@ describe('éditeur de formule : ex aequo à la barre (ADR-0040)', () => {
   it('règle à nombre fixé : réglage proposé, gardé quand le mode change', () => {
     const onChange = vi.fn();
     const { rerender } = render(
-      <AdvancementRuleEditor rule={{ mode: 'fixed_count', count: 16 }} onChange={onChange} />
+      <AdvancementRuleEditor rule={{ mode: 'fixed_count', count: 16 }} onChange={onChange} expert />
     );
     fireEvent.change(screen.getByTestId('advancement-ties'), {
       target: { value: 'initial_ranking' },
@@ -39,6 +39,7 @@ describe('éditeur de formule : ex aequo à la barre (ADR-0040)', () => {
       <AdvancementRuleEditor
         rule={{ mode: 'fixed_count', count: 16, ties: 'initial_ranking' }}
         onChange={onChange}
+        expert
       />
     );
     expect(screen.getByTestId('advancement-ties')).toHaveValue('initial_ranking');
@@ -53,7 +54,12 @@ describe('éditeur de formule : ex aequo à la barre (ADR-0040)', () => {
   });
 
   it('tous qualifiés : pas de réglage (aucune barre)', () => {
-    render(<AdvancementRuleEditor rule={{ mode: 'all' }} onChange={vi.fn()} />);
+    render(<AdvancementRuleEditor rule={{ mode: 'all' }} onChange={vi.fn()} expert />);
+    expect(screen.queryByTestId('advancement-ties')).toBeNull();
+  });
+
+  it('niveau simple : réglage réservé au mode expert (ADR-0041)', () => {
+    render(<AdvancementRuleEditor rule={{ mode: 'fixed_count', count: 16 }} onChange={vi.fn()} />);
     expect(screen.queryByTestId('advancement-ties')).toBeNull();
   });
 

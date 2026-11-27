@@ -33,6 +33,7 @@ import {
   type SplitPhase,
 } from '../../../shared/domain/formula/formulaV2';
 import { formulaV2Issues } from '../../../shared/domain/formula/formulaV2Operations';
+import { remarksMessage } from '../../../shared/domain/formula/formulaRemarks';
 import {
   planSplit,
   splitHistoryOf,
@@ -99,7 +100,7 @@ function storedSplit(comp: Competition): { formula: FormulaV2; split: SplitPhase
   }
   const issues = formulaV2Issues(formula, { weapon: comp.weapon, isTeamEvent: !!comp.isTeamEvent });
   if (issues.length) {
-    throw new CommandError('invalid_settings', `Formule refusée : ${issues.join(' ; ')}`);
+    throw new CommandError('invalid_settings', remarksMessage(issues));
   }
   return { formula, split };
 }

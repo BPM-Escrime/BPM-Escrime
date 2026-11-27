@@ -21,7 +21,11 @@ const BUDGETS = {
   dt: 2.25 * MiB,
   initial: 2.75 * MiB,
   chunk: 1.25 * MiB, // CompetitionView ≈ 1.23 MiB en build dev (25 nov. 2026, modales rares en React.lazy)
-  total: 9.5 * MiB, // ≈ 9.25 MiB en build dev (25 nov. 2026 ; 9.00 MiB avec ADR-0028 lots C1-C3, 8.51 MiB avec #1981)
+  // ≈ 9.25 MiB en build dev (25 nov. 2026 ; 9.00 MiB avec ADR-0028 lots C1-C3, 8.51 MiB avec #1981).
+  // Relevé de 9.50 à 9.60 MiB (26 nov. 2026) : F2 de #2013, ADR-0041 (contrôles S1 à S6, remarques
+  // situées, mode expert de l'éditeur ; ≈ 9.54 MiB). Le build dev n'est pas minifié : le code et ses
+  // commentaires comptent en entier.
+  total: 9.6 * MiB,
 };
 
 function walkJsFiles(dir) {

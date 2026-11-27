@@ -4801,7 +4801,11 @@
     "split_rest": "其餘劍手",
     "split_add_branch": "新增分支",
     "split_remove_branch": "移除分支 {{label}}",
-    "split_issues": "儲存前須修正"
+    "split_issues": "儲存前須修正",
+    "expert_mode": "專家模式",
+    "expert_hint": "分流、Quest 輪、提前停止的淘汰賽表及進階設定（分界同分、累計輪次、對戰次序、分區計分）。此工作站的偏好設定。",
+    "expert_forced": "此賽制包含專家區塊或專家設定：本次編輯期間專家模式保持開啟。",
+    "remark_on_phase": "此階段的備註"
   },
   "formulaTemplates": {
     "template": "賽制範本",

@@ -27,6 +27,7 @@ import {
   type BranchPreset,
 } from '../../../shared/domain/formula/formulaV2Operations';
 import { TiesAtBarSelect } from '../ties/TiesAtBar';
+import type { FormulaRemark } from '../../../shared/domain/formula/formulaRemarks';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Button } from '../common/Button';
 
@@ -36,6 +37,8 @@ interface SplitPhaseEditorProps {
   category: Category;
   onChange: (split: SplitPhase) => void;
   newId: () => string;
+  /** Remarques de la formule sur la scission (ADR-0041) ; absent : celles de la scission seule */
+  remarks?: FormulaRemark[];
 }
 
 /** Critères réglables à l'écran (manuelle : étape E3) */
@@ -64,10 +67,11 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
   category,
   onChange: emit,
   newId,
+  remarks,
 }) => {
   const { t } = useTranslation();
   const ctx = { weapon, category };
-  const issues = splitIssues(split, { weapon });
+  const issues = remarks ?? splitIssues(split, { weapon });
   const last = split.branches.length - 1;
   const staying = split.branches.some(b => b.stayInCompetition);
   // Hors de la forme « couplée » (critère, nombre ou modèle des branches), personne ne reste
@@ -284,7 +288,7 @@ export const SplitPhaseEditor: React.FC<SplitPhaseEditorProps> = ({
           <strong>{t('formulaEditor.split_issues')}</strong>
           <ul>
             {issues.map(issue => (
-              <li key={issue}>{issue}</li>
+              <li key={issue.message}>{issue.message}</li>
             ))}
           </ul>
         </div>

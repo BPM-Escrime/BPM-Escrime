@@ -203,7 +203,9 @@ export function templateIssues(t: unknown): string[] {
         ? [{ weapon: applies.weapons[0], isTeamEvent: applies.team === true }]
         : [{ weapon: Weapon.EPEE }, { weapon: Weapon.LASER }];
     const results = scopes.map(scope => formulaV2Issues(f, scope));
-    out.push(...(results.find(r => r.length === 0) ?? results[0]).map(i => `body.formula (${i})`));
+    out.push(
+      ...(results.find(r => r.length === 0) ?? results[0]).map(i => `body.formula (${i.message})`)
+    );
   } else if (body.kind === 'custom') {
     if (body.specialMode !== undefined && body.specialMode !== 'rapieres')
       out.push('body.specialMode');

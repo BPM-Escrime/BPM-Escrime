@@ -1,6 +1,6 @@
 # ADR-0042 — Le moteur pilote les formules à plusieurs tours : tirage des tours suivants et tableau, ouverts au MCP
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-26 (un seul tableau : refus après la clôture d'un tableau arrêté ; outil MCP `close_tableau_stage` ; validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F3), #1880, #1948 ; amende [ADR-0037](0037-deroule-genere-par-la-formule.md) (Conséquences, MCP), s'appuie sur [ADR-0017](0017-projections-etat-epreuve.md) et [ADR-0036](0036-formule-v2-arbre-par-phase.md) (Q4 : répartition du tour)
 
@@ -25,9 +25,14 @@
   du tour 1 (`buildPools`, hasard injecté), tailles et réglages du tour lus dans la
   formule (`phaseSettings`). Mêmes fonctions que l'écran : écran et moteur tirent pareil à
   hasard égal.
-- Le moteur construit le tableau après plusieurs tours ou après un tableau arrêté
+- Le moteur construit le tableau après plusieurs tours, y compris un tableau arrêté
+  (`generateTableau` sans composition), sur le classement retenu (`tableauRanking`, coupe
+  d'ADR-0040). La formule n'a qu'un tableau : après la clôture d'un tableau arrêté
+  (`closeTableauStage`, outil MCP `close_tableau_stage`), plus de tableau (ADR-0037) et
+  `generateTableau` refuse (`no_direct_elimination`). _(Amendé le 2026-11-26 : remplace « Le
+  moteur construit le tableau après plusieurs tours ou après un tableau arrêté
   (`generateTableau` sans composition) sur le classement retenu (`tableauRanking`, coupe
-  d'ADR-0040).
+  d'ADR-0040). »)_
 - L'affectation des arbitres (`assignPoolReferees`, `assignPoolReferee`) suit le tour courant.
 - `assertSupported` ne refuse plus que les épreuves par équipes et le mode spécial (rapières).
   ADR-0037, Conséquences, est amendée en conséquence (phrase réécrite à sa place).

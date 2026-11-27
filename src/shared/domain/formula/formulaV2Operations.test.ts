@@ -6,13 +6,17 @@ import { flatSettingsOf, formulaOf, phaseSettings } from './formulaV2';
 import {
   applyOperationsV2,
   canRemoveV2,
-  formulaV2Issues,
+  formulaV2Issues as formulaRemarks,
   formulaViewV2,
   friezeOfV2,
   insertOptionsV2,
   operationsBetweenV2,
   removeV2,
 } from './formulaV2Operations';
+
+/** Messages des remarques (les codes et les phases ont leurs propres tests) */
+const formulaV2Issues = (...args: Parameters<typeof formulaRemarks>) =>
+  formulaRemarks(...args).map(r => r.message);
 
 let n = 0;
 const id = () => `id-${++n}`;

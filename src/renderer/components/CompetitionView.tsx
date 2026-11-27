@@ -6,7 +6,8 @@
 import { entrySeeds, resultsTableauMatches } from '../../shared/domain/tableau/tableauStage';
 import { formulaSegment } from '../../shared/domain/formula/formulaSteps';
 import { originFinalRanking } from '../../shared/domain/formula/splitPlan';
-import { pendingSplitOf } from '../../shared/domain/formula/formulaV2';
+import { formulaOf, pendingSplitOf } from '../../shared/domain/formula/formulaV2';
+import { formulaProgress } from '../../shared/domain/formula/formulaRemarks';
 import GregAutoPublishToggle from './remote/GregAutoPublishToggle';
 import { useGregAutoPublish } from '../hooks/useGregAutoPublish';
 import React, { Suspense, useState } from 'react';
@@ -43,7 +44,6 @@ import { ScoreAuditLog } from './ScoreAuditLog';
 import CompetitionHeader from './competition/CompetitionHeader';
 import CompetitionNav from './competition/CompetitionNav';
 import OrganizationModal from './competition/OrganizationModal';
-import { CompetitionFormulaModal } from './formula/CompetitionFormulaModal';
 import { useFormulaPreview } from '../hooks/useFormulaPreview';
 import { startsWithTableau } from '../../shared/domain/formula/formulaSteps';
 import CompetitionExportModals from './competition/CompetitionExportModals';
@@ -66,6 +66,7 @@ import { writePoolDraft } from '../hooks/posteUiState';
 
 // Modales ouvertes à la demande : hors du chunk CompetitionView (budget check:bundle-size)
 const ImportModal = React.lazy(() => import('./ImportModal'));
+const CompetitionFormulaModal = React.lazy(() => import('./formula/CompetitionFormulaModal'));
 const SplitCompetitionModal = React.lazy(() => import('./SplitCompetitionModal'));
 const SplitLaunchDialog = React.lazy(() => import('./competition/SplitLaunchDialog'));
 const OrganizerNotesModal = React.lazy(() => import('./competition/OrganizerNotesModal'));
@@ -398,12 +399,24 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
         </Suspense>
       )}
       {showFormula && (
-        <CompetitionFormulaModal
-          competition={competition}
-          // Écrit par applyFormulaTemplate / updateCompetitionFormula (docs/adr/0033)
-          onApplied={settings => onUpdate({ ...competition, settings })}
-          onClose={() => setShowFormula(false)}
-        />
+        <Suspense fallback={null}>
+          <CompetitionFormulaModal
+            competition={competition}
+            // Phases commencées (S6, docs/adr/0041) : lues dans l'état de l'épreuve
+            progress={formulaProgress(storedFormula ?? formulaOf(competition), {
+              // Tirage non lancé : pas encore commencé
+              pools: poolsLaunched ? pools : [],
+              poolHistory,
+              tableauMatches,
+              stageHistory,
+              splitHistory: competitionCore.splitHistory,
+              questStarted: currentPhase === 'quest',
+            })}
+            // Écrit par applyFormulaTemplate / updateCompetitionFormula (docs/adr/0033)
+            onApplied={settings => onUpdate({ ...competition, settings })}
+            onClose={() => setShowFormula(false)}
+          />
+        </Suspense>
       )}
       <CompetitionHeader
         competition={competition}
