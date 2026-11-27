@@ -15,6 +15,7 @@ import type { FormulaV2, TeamMatchRule } from '../../../shared/domain/formula/fo
 import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import type { CommandContext } from './context';
 import { teamStateView } from './teams';
+import { matchRelayRule } from './teamRelays';
 import { invoke } from '../api/engine';
 import { computeTeamFinalRanking } from '../../../shared/utils/pdfExport/teamPdf';
 
@@ -616,13 +617,148 @@ d('Formule d’une épreuve par équipes écrite par le moteur (docs/adr/0044, G
       competitionId: comp.id,
       operations: [{ op: 'setPhase', phase: 'pool-0', settings: { sizeMin: 3, sizeMax: 6 } }],
     }).toMatchObject({ code: 'invalid_settings', message: expect.stringContaining('2 équipe(s)') });
-    // Arène Sabre Laser : aucune règle d'équipe de la formule
+  });
+
+  it('arène Sabre Laser : formule d’un modèle fixe, non modifiable (unsupported_format)', async () => {
     const arena = competition(Weapon.LASER, { teamFormat: 'laser-arena' });
-    await call('updateCompetitionFormula', {
+    const before = db.getCompetition(arena.id)!.settings!.formula;
+    await reject('updateCompetitionFormula', {
       competitionId: arena.id,
       operations: [{ op: 'setPhase', phase: 'tableau', settings: { thirdPlace: true } }],
+      dryRun: true,
+    }).toMatchObject({ code: 'unsupported_format' });
+    await reject('updateCompetitionFormula', {
+      competitionId: arena.id,
+      operations: [{ op: 'setPhase', phase: 'tableau', settings: { thirdPlace: true } }],
+    }).toMatchObject({ code: 'unsupported_format' });
+    await reject('applyFormulaTemplate', {
+      competitionId: arena.id,
+      templateId: 'bpm/L/sen',
+    }).toMatchObject({ code: 'unsupported_format' });
+    await reject('updateCompetitionSettings', {
+      competitionId: arena.id,
+      settings: { formula: teamFormula({ pool: null }) },
+    }).toMatchObject({ code: 'unsupported_format' });
+    expect(db.getCompetition(arena.id)!.settings!.formula).toEqual(before);
+    // Réglage plat : écrit, sans report dans une formule figée
+    await call('updateCompetitionSettings', {
+      competitionId: arena.id,
+      settings: { minTeamSize: 4 },
     });
-    expect(db.getCompetition(arena.id)!.settings!.formula?.general.teamMatch).toBeUndefined();
+    expect(db.getCompetition(arena.id)!.settings).toMatchObject({ minTeamSize: 4 });
+    expect(db.getCompetition(arena.id)!.settings!.formula).toEqual(before);
+  });
+
+  it('épreuve individuelle : teamMatch (général et de phase) retiré à l’écriture, aucun réglage d’équipe dérivé', async () => {
+    const solo = db.createCompetition({
+      title: 'Individuel',
+      date: new Date('2026-12-06'),
+      location: 'Gymnase',
+      weapon: Weapon.EPEE,
+      gender: Gender.MIXED,
+      category: Category.SENIOR,
+      settings: buildDefaultCompetitionSettings({
+        weapon: Weapon.EPEE,
+        category: Category.SENIOR,
+      }) as never,
+    });
+    const flatBefore = db.getCompetition(solo.id)!.settings!;
+    await call('updateCompetitionFormula', {
+      competitionId: solo.id,
+      operations: [
+        { op: 'setGeneral', settings: { teamMatch: { ...RULE, starters: 4, reserves: 2 } } },
+        { op: 'setPhase', phase: 'tableau', settings: { teamMatch: { relayStep: 3 } } },
+      ],
+    });
+    const after = db.getCompetition(solo.id)!.settings!;
+    expect(after.formula?.general.teamMatch).toBeUndefined();
+    expect(after.formula?.phases.some(p => 'teamMatch' in p)).toBe(false);
+    expect(after.minTeamSize).toBe(flatBefore.minTeamSize);
+    expect(after.teamReserveCount).toBe(flatBefore.teamReserveCount);
+    expect(after.teamRelayStepSize).toBe(flatBefore.teamRelayStepSize);
+    // Même chose par updateCompetitionSettings avec settings.formula
+    await call('updateCompetitionSettings', {
+      competitionId: solo.id,
+      settings: { formula: teamFormula() },
+    });
+    const written = db.getCompetition(solo.id)!.settings!.formula!;
+    expect(written.general.teamMatch).toBeUndefined();
+  });
+
+  it('épreuve devenue individuelle : règle de rencontre retirée de la formule enregistrée', async () => {
+    const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+    await call('updateCompetitionSettings', { competitionId: comp.id, isTeamEvent: false });
+    expect(db.getCompetition(comp.id)!.settings!.formula!.general.teamMatch).toBeUndefined();
+  });
+});
+
+d('updateCompetitionSettings avec settings.formula (docs/adr/0044, Formule d’équipe)', () => {
+  it('pose general.teamMatch depuis les réglages ; garde celle de la formule écrite', async () => {
+    const comp = competition(Weapon.EPEE, { teamReserveCount: 2, teamRelayStepSize: 4 });
+    await call('updateCompetitionSettings', {
+      competitionId: comp.id,
+      settings: { formula: { ...teamFormula(), general: {} } },
+    });
+    expect(db.getCompetition(comp.id)!.settings!.formula!.general.teamMatch).toEqual({
+      starters: 3,
+      reserves: 2,
+      relayStep: 4,
+      relayOrder: 'fie',
+    });
+    await call('updateCompetitionSettings', {
+      competitionId: comp.id,
+      settings: { formula: teamFormula({ rule: { relayStep: 6 } }) },
+    });
+    expect(db.getCompetition(comp.id)!.settings!.formula!.general.teamMatch).toEqual({
+      ...RULE,
+      relayStep: 6,
+    });
+  });
+});
+
+d('Cible d’une rencontre = relayStep × starters² (docs/adr/0044)', () => {
+  it('formule d’équipe palier 4, 3 titulaires : cible 36 ; score_above_max au-delà', async () => {
+    const comp = competition(Weapon.EPEE, {
+      teamRelayStepSize: 5,
+      formula: teamFormula({ pool: null, rule: { relayStep: 4 } }),
+    });
+    await teamsRegistered(comp.id, ['A', 'B']);
+    await call('generateTeamTableau', { competitionId: comp.id });
+    const [final] = tableauOf(comp.id);
+    const m = match(final.id);
+    expect(m.bouts).toHaveLength(9);
+    expect(matchRelayRule(db.getCompetition(comp.id)!, m)).toMatchObject({
+      stepSize: 4,
+      target: 36,
+    });
+    // Relais 1 à 8 : 4 touches chacun pour A (cumul 32)
+    for (let relay = 1; relay <= 8; relay++)
+      await call('recordRelayScore', {
+        competitionId: comp.id,
+        matchId: final.id,
+        relay,
+        scoreA: 4,
+        scoreB: 0,
+      });
+    // Dernier relais : 37 > 36 refusé, 36 accepté
+    await reject('recordRelayScore', {
+      competitionId: comp.id,
+      matchId: final.id,
+      relay: 9,
+      scoreA: 5,
+      scoreB: 0,
+    }).toMatchObject({ code: 'score_above_max' });
+    await call('recordRelayScore', {
+      competitionId: comp.id,
+      matchId: final.id,
+      relay: 9,
+      scoreA: 4,
+      scoreB: 0,
+    });
+    const done = match(final.id);
+    expect(done).toMatchObject({ status: 'finished', winnerId: done.teamAId });
+    expect(done.bouts.reduce((s, r) => s + r.scoreA, 0)).toBe(36);
+    expect(divergences(comp.id)).toEqual([]);
   });
 });
 

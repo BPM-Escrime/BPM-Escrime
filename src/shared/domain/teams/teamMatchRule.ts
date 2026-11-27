@@ -12,6 +12,7 @@ import {
   phaseSettings,
   playedTableauOf,
   readableFormulaOf,
+  type FormulaPhaseV2,
   type FormulaV2,
   type PhaseRef,
   type TeamMatchRule,
@@ -103,16 +104,63 @@ export function teamFormulaOf(comp: {
   return f?.general.teamMatch ? f : undefined;
 }
 
+/** Épreuve par équipes en relais FIE : seule épreuve dont la formule lit `teamMatch` (ADR-0044) */
+export const isFieRelayTeamEvent = (comp: {
+  isTeamEvent?: boolean;
+  settings?: Partial<CompetitionSettings> | null;
+}): boolean => !!comp.isTeamEvent && teamFormatOf(comp.settings) === 'fie-relay';
+
+/** Épreuve en arène Sabre Laser : formule d'un modèle fixe, non modifiable (ADR-0044) */
+export const isArenaTeamEvent = (comp: {
+  isTeamEvent?: boolean;
+  settings?: Partial<CompetitionSettings> | null;
+}): boolean => !!comp.isTeamEvent && teamFormatOf(comp.settings) === 'laser-arena';
+
+/** Phases sans surcharge `teamMatch` (branches de scission comprises) ; même liste sinon */
+function phasesWithoutTeamMatch(list: FormulaPhaseV2[]): FormulaPhaseV2[] {
+  let changed = false;
+  const out = list.map((p): FormulaPhaseV2 => {
+    if (p.kind === 'split') {
+      const branches = p.branches.map(b => {
+        const phases = phasesWithoutTeamMatch(b.phases);
+        return phases === b.phases ? b : { ...b, phases };
+      });
+      if (branches.every((b, i) => b === p.branches[i])) return p;
+      changed = true;
+      return { ...p, branches };
+    }
+    if ((p.kind === 'pool' || p.kind === 'tableau') && 'teamMatch' in p) {
+      changed = true;
+      const { teamMatch: _t, ...rest } = p;
+      return rest as FormulaPhaseV2;
+    }
+    return p;
+  });
+  return changed ? out : list;
+}
+
 /**
- * Formule écrite pour une épreuve par équipes en relais FIE : `general.teamMatch` posée depuis
- * les réglages si elle manque, pour que la formule fasse foi (ADR-0044) ; autres épreuves :
- * inchangée.
+ * Formule sans règle de rencontre (générale et de phase) : `teamMatch` n'est lu que si
+ * l'épreuve est par équipes en relais FIE, et n'est pas écrit ailleurs (ADR-0044). Même objet
+ * s'il n'y a rien à retirer.
+ */
+export function withoutTeamMatch(f: FormulaV2): FormulaV2 {
+  const phases = phasesWithoutTeamMatch(f.phases);
+  if (!('teamMatch' in f.general) && phases === f.phases) return f;
+  const { teamMatch: _t, ...general } = f.general;
+  return { ...f, phases, general };
+}
+
+/**
+ * Formule écrite pour une épreuve : par équipes en relais FIE, `general.teamMatch` posée depuis
+ * les réglages si elle manque, pour que la formule fasse foi (ADR-0044) ; autres épreuves
+ * (individuelle, arène) : `teamMatch` retiré, ni lu ni écrit hors épreuve par équipes.
  */
 export function withTeamMatch(
   f: FormulaV2,
   comp: { weapon: Weapon; isTeamEvent?: boolean; settings?: Partial<CompetitionSettings> | null }
 ): FormulaV2 {
-  if (!comp.isTeamEvent || teamFormatOf(comp.settings) !== 'fie-relay') return f;
+  if (!isFieRelayTeamEvent(comp)) return withoutTeamMatch(f);
   if (f.general.teamMatch) return f;
   return {
     ...f,

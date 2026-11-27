@@ -19,6 +19,7 @@ import {
   teamFormulaOf,
   teamFormulaIssues,
   teamMatchRuleOf,
+  withoutTeamMatch,
   withTeamMatch,
 } from './teamMatchRule';
 
@@ -128,6 +129,24 @@ describe('Formule d’équipe : marque `general.teamMatch` (ADR-0044)', () => {
     ).toBe(f);
     const own = formula([tableau()], { teamMatch: { ...RULE, reserves: 0 } });
     expect(withTeamMatch(own, comp)).toBe(own);
+  });
+
+  it('withTeamMatch retire teamMatch (général, de phase) hors épreuve par équipes en relais FIE', () => {
+    const stamped = formula([pool({ teamMatch: { reserves: 0 } }), tableau({ teamMatch: {} })], {
+      teamMatch: RULE,
+    });
+    const comp = { weapon: Weapon.EPEE, isTeamEvent: false, settings: { minTeamSize: 3 } };
+    const solo = withTeamMatch(stamped, comp);
+    expect(solo.general.teamMatch).toBeUndefined();
+    expect(solo.phases.some(p => 'teamMatch' in p)).toBe(false);
+    expect(flatSettingsOf(solo, Weapon.EPEE)).not.toHaveProperty('minTeamSize');
+    const arena = withTeamMatch(stamped, {
+      ...comp,
+      isTeamEvent: true,
+      settings: { teamFormat: 'laser-arena' as const },
+    });
+    expect(arena.general.teamMatch).toBeUndefined();
+    expect(withoutTeamMatch(solo)).toBe(solo);
   });
 });
 

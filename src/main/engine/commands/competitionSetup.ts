@@ -19,14 +19,23 @@ import {
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
-import { assertProgressLock, compatibleTemplate } from './competitionFormula';
+import {
+  assertFormulaWritable,
+  assertProgressLock,
+  compatibleTemplate,
+} from './competitionFormula';
 import { templateToSettings } from '../../../shared/domain/formula/formulaTemplate';
 import {
   flatSettingsOf,
   formulaOf,
   withFlatSettings,
 } from '../../../shared/domain/formula/formulaV2';
-import { withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
+import {
+  isArenaTeamEvent,
+  isFieRelayTeamEvent,
+  withoutTeamMatch,
+  withTeamMatch,
+} from '../../../shared/domain/teams/teamMatchRule';
 import { teamFormatOf } from '../../../shared/domain/teams/relay';
 import {
   validateFormulaSettings,
@@ -283,29 +292,46 @@ export function updateCompetitionSettings(
   if (input.gender !== undefined) update.gender = input.gender;
   if (input.category !== undefined) update.category = input.category;
   if (input.isTeamEvent !== undefined) update.isTeamEvent = input.isTeamEvent;
+  const next = {
+    weapon: input.weapon ?? comp.weapon,
+    isTeamEvent: input.isTeamEvent ?? !!comp.isTeamEvent,
+    settings: { ...comp.settings, ...patch } as CompetitionSettings,
+  };
+  // Arène Sabre Laser : formule d'un modèle fixe, non modifiable (ADR-0044)
+  if (
+    'formula' in patch &&
+    JSON.stringify(patch.formula ?? null) !== JSON.stringify(comp.settings?.formula ?? null)
+  )
+    assertFormulaWritable(next);
   if (Object.keys(patch).length) {
-    update.settings = { ...comp.settings, ...patch } as CompetitionSettings;
-    // Formule écrite pour une épreuve par équipes en relais FIE : elle porte sa règle de
-    // rencontre et fait foi pour les phases (ADR-0044)
-    if (patch.formula) {
-      update.settings.formula = withTeamMatch(patch.formula, {
-        weapon: input.weapon ?? comp.weapon,
-        isTeamEvent: input.isTeamEvent ?? !!comp.isTeamEvent,
-        settings: update.settings,
-      });
-    }
+    update.settings = next.settings;
+    // Formule écrite, ou type d'épreuve changé : par équipes en relais FIE, la formule porte sa
+    // règle de rencontre et fait foi pour les phases ; ailleurs, `teamMatch` est retiré, ni lu
+    // ni écrit (ADR-0044)
+    if (patch.formula) update.settings.formula = withTeamMatch(patch.formula, next);
   }
   const flatKeys = Object.keys(patch).filter(k => FORMULA_FLAT_KEYS.has(k));
   const weaponChanged = input.weapon !== undefined && input.weapon !== comp.weapon;
-  if (comp.settings?.formula && !('formula' in patch) && (flatKeys.length || weaponChanged)) {
+  // Arène Sabre Laser : réglages plats sans report dans la formule figée (ADR-0044)
+  if (
+    comp.settings?.formula &&
+    !isArenaTeamEvent(next) &&
+    !('formula' in patch) &&
+    (flatKeys.length || weaponChanged)
+  ) {
     const base = (update.settings ?? comp.settings) as CompetitionSettings;
     // Réglage plat qui a sa place dans la formule : reporté dans la formule enregistrée, gardée
     // avec ses réglages dérivés (ADR-0036 amendée) ; sinon (structure, arme changée) : formule
     // périmée, retirée et relue depuis les réglages plats
+    const stored = formulaOf({
+      weapon: comp.weapon,
+      category: comp.category,
+      settings: comp.settings,
+    });
     const merged = weaponChanged
       ? null
       : withFlatSettings(
-          formulaOf({ weapon: comp.weapon, category: comp.category, settings: comp.settings }),
+          isFieRelayTeamEvent(next) ? stored : withoutTeamMatch(stored),
           Object.fromEntries(flatKeys.map(k => [k, (patch as Record<string, unknown>)[k]]))
         );
     if (merged) {
@@ -318,6 +344,14 @@ export function updateCompetitionSettings(
       const { formula: _stale, ...rest } = base;
       update.settings = rest as CompetitionSettings;
     }
+  }
+  // Épreuve devenue individuelle ou arène : règle de rencontre retirée de la formule
+  // enregistrée, ni lue ni écrite hors épreuve par équipes en relais FIE (ADR-0044)
+  if ((input.isTeamEvent !== undefined || 'teamFormat' in patch) && !isFieRelayTeamEvent(next)) {
+    const base = update.settings ?? comp.settings;
+    const stripped = base?.formula ? withoutTeamMatch(base.formula) : undefined;
+    if (base && stripped && stripped !== base.formula)
+      update.settings = { ...base, formula: stripped };
   }
   // Verrou S6 (docs/adr/0041, ADR-0043 F4b) : formule ou réglages plats écrits après le début,
   // jugés sur la formule qui en résulte

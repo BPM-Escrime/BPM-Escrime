@@ -38,8 +38,24 @@ import { progressIssues } from '../../../shared/domain/formula/formulaStructure'
 import { readSession } from './sessionView';
 import { PHASE } from './sport';
 import { allFormulaTemplates } from './formulaTemplates';
-import { withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
+import { isArenaTeamEvent, withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
 import { teamFormatOf } from '../../../shared/domain/teams/relay';
+
+/**
+ * Épreuve en arène Sabre Laser : sa formule reste celle d'un modèle fixe, non modifiable
+ * (ADR-0044) ; refus de toute écriture (updateCompetitionFormula, applyFormulaTemplate,
+ * updateCompetitionSettings avec `settings.formula`)
+ */
+export function assertFormulaWritable(comp: {
+  isTeamEvent?: boolean;
+  settings?: Partial<CompetitionSettings> | null;
+}): void {
+  if (isArenaTeamEvent(comp))
+    throw new CommandError(
+      'unsupported_format',
+      'Arène Sabre Laser : la formule est celle d’un modèle fixe, non modifiable'
+    );
+}
 
 const newPhaseId = () => `phase_${randomUUID()}`;
 
@@ -99,6 +115,7 @@ export function applyFormulaTemplate(
   input: { competitionId: string; templateId: string; dryRun?: boolean }
 ) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
+  assertFormulaWritable(comp);
   const template = compatibleTemplate(ctx, input.templateId, {
     weapon: comp.weapon,
     category: comp.category,
@@ -170,9 +187,11 @@ export function writeFormula(
   extra: Partial<CompetitionSettings>,
   dryRun?: boolean
 ) {
+  // Arène Sabre Laser : formule d'un modèle fixe, non modifiable (ADR-0044)
+  assertFormulaWritable(comp);
   const { stored, progress } = storedProgress(ctx, comp);
   // Épreuve par équipes en relais FIE : la formule écrite porte sa règle de rencontre et fait
-  // foi pour les phases (ADR-0044)
+  // foi pour les phases ; ailleurs, `teamMatch` est retiré (ADR-0044)
   const formula = withTeamMatch(written, comp);
   const issues = formulaV2Issues(
     formula,
