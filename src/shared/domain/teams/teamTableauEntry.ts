@@ -1,6 +1,6 @@
 /**
  * BPM - Escrime - Classement d'entrée du tableau d'équipes d'une formule (ADR-0044) : classement
- * de poule (victoires, indice des relais, indice des touches ; inchangé) coupé à la barre par la
+ * de poule (ratio V/M toutes poules confondues, indice des relais, indice des touches) coupé à la barre par la
  * qualification du tour (`cutAtBar`, ADR-0040), ou, sans tour de poules, le rang d'entrée
  * effectif des équipes. Domaine pur : hasard injecté (ex aequo tirés au sort).
  * Licensed under GPL-3.0
@@ -8,28 +8,30 @@
 import type { AdvancementRule } from '../../types';
 import { cutAtBar, getAdvancementCount, type TiedAtBar } from '../ranking/advancement';
 import type { TeamMatchRow, TeamRow } from './team.types';
-import { calculateTeamPoolRanking, type TeamPoolRankingRow } from './teamCalculations';
+import {
+  calculateTeamOverallRanking,
+  sameOverallStanding,
+  type TeamOverallRankingRow,
+} from './teamCalculations';
 
 /** Ligne du classement de poule avec son rang ; rang partagé par les équipes à égalité */
-export interface RankedTeamPoolRow extends TeamPoolRankingRow {
+export interface RankedTeamPoolRow extends TeamOverallRankingRow {
   rank: number;
 }
 
-const sameStanding = (a: TeamPoolRankingRow, b: TeamPoolRankingRow) =>
-  a.victories === b.victories &&
-  a.boutsWon - a.boutsLost === b.boutsWon - b.boutsLost &&
-  a.pointsFor - a.pointsAgainst === b.pointsFor - b.pointsAgainst;
-
 /**
- * Classement de poule (calculateTeamPoolRanking, toutes poules confondues) avec ses rangs :
- * égalité de victoires, d'indice des relais et d'indice des touches → même rang
+ * Classement de poule toutes poules confondues (calculateTeamOverallRanking : ratio V/M, indice
+ * des relais, indice des touches ; poule unique : victoires) avec ses rangs : égalité → même rang
  */
 export function rankedTeamPool(teams: TeamRow[], matches: TeamMatchRow[]): RankedTeamPoolRow[] {
-  const rows = calculateTeamPoolRanking(teams, matches);
+  const rows = calculateTeamOverallRanking(teams, matches);
   const out: RankedTeamPoolRow[] = [];
   rows.forEach((row, i) => {
     const prev = out[i - 1];
-    out.push({ ...row, rank: prev && sameStanding(prev, row) ? prev.rank : i + 1 });
+    out.push({
+      ...row,
+      rank: prev && sameOverallStanding(prev, row, matches) ? prev.rank : i + 1,
+    });
   });
   return out;
 }

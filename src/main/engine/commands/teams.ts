@@ -22,7 +22,7 @@ import {
   teamSizeOf,
   type TeamPoolsDraw,
 } from '../../../shared/domain/teams/relay';
-import { calculateTeamPoolRanking } from '../../../shared/domain/teams/teamCalculations';
+import { calculateTeamOverallRanking } from '../../../shared/domain/teams/teamCalculations';
 import { teamEntryRanking } from '../../../shared/domain/teams/teamEntryRanking';
 import {
   relayPairsOf,
@@ -505,7 +505,7 @@ export function teamsState(ctx: CommandContext, comp: Competition): TeamsStateDT
   const ranking =
     format === 'laser-arena'
       ? calculateLaserArenaPoolRanking(ranked.teams, ranked.matches)
-      : calculateTeamPoolRanking(ranked.teams, ranked.matches).map(r => ({
+      : calculateTeamOverallRanking(ranked.teams, ranked.matches).map(r => ({
           ...r,
           draws: 0,
           tied: false,

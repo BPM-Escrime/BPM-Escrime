@@ -307,6 +307,59 @@ export function calculateTeamPoolRanking(
   );
 }
 
+/** Rencontres terminées d'une équipe */
+function finishedCount(teamId: string, matches: TeamMatchRow[]): number {
+  return matches.filter(
+    m => m.status === 'finished' && (m.teamAId === teamId || m.teamBId === teamId)
+  ).length;
+}
+
+/** Ligne du classement toutes poules confondues : ratio victoires / rencontres */
+export interface TeamOverallRankingRow extends TeamPoolRankingRow {
+  /** Victoires / rencontres terminées (0 sans rencontre) */
+  ratio: number;
+}
+
+/** Plusieurs poules d'équipes parmi ces rencontres ? */
+const multiplePools = (matches: TeamMatchRow[]) =>
+  new Set(matches.map(m => m.poolNumber ?? 1)).size > 1;
+
+/**
+ * Classement de poule toutes poules confondues (docs/adr/0044, amendement du 2026-11-27) :
+ * ratio victoires / rencontres, puis indice des relais, puis indice des touches. Poule unique :
+ * exactement `calculateTeamPoolRanking` (victoires brutes), le classement d'avant.
+ */
+export function calculateTeamOverallRanking(
+  teams: TeamRow[],
+  matches: TeamMatchRow[]
+): TeamOverallRankingRow[] {
+  const rows = calculateTeamPoolRanking(teams, matches).map(r => {
+    const n = finishedCount(r.team.id, matches);
+    return { ...r, ratio: n > 0 ? r.victories / n : 0 };
+  });
+  if (!multiplePools(matches)) return rows;
+  return [...rows].sort(
+    (a, b) =>
+      b.ratio - a.ratio ||
+      b.boutsWon - b.boutsLost - (a.boutsWon - a.boutsLost) ||
+      b.pointsFor - b.pointsAgainst - (a.pointsFor - a.pointsAgainst)
+  );
+}
+
+/** Deux lignes à égalité au classement toutes poules confondues (même rang) */
+export function sameOverallStanding(
+  a: TeamOverallRankingRow,
+  b: TeamOverallRankingRow,
+  matches: TeamMatchRow[]
+): boolean {
+  const first = multiplePools(matches) ? a.ratio === b.ratio : a.victories === b.victories;
+  return (
+    first &&
+    a.boutsWon - a.boutsLost === b.boutsWon - b.boutsLost &&
+    a.pointsFor - a.pointsAgainst === b.pointsFor - b.pointsAgainst
+  );
+}
+
 // ============================================================================
 // Tableau équipes (élimination directe) — résolution d'un round/position à
 // partir des lignes DB (pas d'arbre séparé à persister : round/position

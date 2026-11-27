@@ -11,7 +11,7 @@ import type { Weapon } from '../../types';
 import type { TeamMatchRow, TeamRow } from './team.types';
 import {
   calculateTableSize,
-  calculateTeamPoolRanking,
+  calculateTeamOverallRanking,
   placeRankedTeamsInTable,
   resolveTeamTableauSlot,
 } from './teamCalculations';
@@ -54,7 +54,8 @@ export interface TeamTableauMatchPlan {
 }
 
 /**
- * Classement de poule qui place le tableau, comme l'écran : relais FIE par victoires, arène
+ * Classement de poule qui place le tableau, comme l'écran : relais FIE par ratio V/M toutes
+ * poules confondues (poule unique : victoires, docs/adr/0044), arène
  * Sabre Laser par points, avec l'évitement de revanche au premier tour (5↔6, 7↔8)
  */
 export function rankTeamsForTableau(
@@ -63,7 +64,7 @@ export function rankTeamsForTableau(
   format: TeamFormat
 ): TeamRow[] {
   if (format !== 'laser-arena')
-    return calculateTeamPoolRanking(teams, poolMatches).map(r => r.team);
+    return calculateTeamOverallRanking(teams, poolMatches).map(r => r.team);
   const ranked = calculateLaserArenaPoolRanking(teams, poolMatches).map(r => r.team);
   return applyRematchAvoidanceSwap(ranked, buildPoolPairHistory(poolMatches));
 }

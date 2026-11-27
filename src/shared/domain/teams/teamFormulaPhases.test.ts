@@ -13,10 +13,12 @@ import {
   isThirdPlaceSlot,
   planTeamTableau,
   planTeamTableauMatches,
+  rankTeamsForTableau,
   tableauSeedIds,
   type TeamTableauMatchState,
 } from './teamTableau';
 import { rankedTeamPool, teamTableauEntry } from './teamTableauEntry';
+import { calculateTeamOverallRanking, calculateTeamPoolRanking } from './teamCalculations';
 import { generatePoolMatchOrder } from '../pools/poolMatchOrder';
 
 const team = (id: string, club = id, titulars = 3): TeamRow => ({
@@ -204,6 +206,45 @@ describe('Classement d’entrée du tableau (docs/adr/0044)', () => {
         hasPools: false,
       }).qualified.map(t => t.id)
     ).toEqual(['C', 'A', 'B']);
+  });
+});
+
+describe('Classement toutes poules confondues : ratio V/M (docs/adr/0044 amendée)', () => {
+  const T = ['A', 'B', 'C', 'D', 'E'].map(id => team(id));
+
+  it('poule unique : exactement le classement actuel (victoires), même poule en cours', () => {
+    const single = [
+      finished('1', 'A', 'B', 'A', 10, 5),
+      finished('2', 'C', 'D', 'C', 10, 9),
+      finished('3', 'A', 'C', 'C', 4, 10),
+      // E : une seule rencontre, gagnée (ratio 1, mais 1 victoire)
+      finished('4', 'E', 'D', 'E', 6, 5),
+      { ...finished('5', 'B', 'E', null, 0, 0), status: 'in_progress' },
+    ];
+    expect(calculateTeamOverallRanking(T, single).map(r => r.team.id)).toEqual(
+      calculateTeamPoolRanking(T, single).map(r => r.team.id)
+    );
+    expect(rankTeamsForTableau(T, single, 'fie-relay').map(t => t.id)).toEqual(
+      calculateTeamPoolRanking(T, single).map(r => r.team.id)
+    );
+  });
+
+  it('plusieurs poules : ratio victoires / rencontres avant les victoires brutes', () => {
+    // Poule 1 (4 équipes) : A gagne 2 sur 3 ; poule 2 (2 équipes) : E gagne 1 sur 1
+    const matches = [
+      finished('1', 'A', 'B', 'A', 10, 5, 1),
+      finished('2', 'A', 'C', 'A', 10, 5, 1),
+      finished('3', 'A', 'D', 'D', 5, 10, 1),
+      finished('4', 'B', 'C', 'B', 10, 5, 1),
+      finished('5', 'B', 'D', 'B', 10, 5, 1),
+      finished('6', 'C', 'D', 'C', 10, 5, 1),
+      finished('7', 'E', team('F').id, 'E', 6, 5, 2),
+    ];
+    const teams = [...T, team('F')];
+    const overall = calculateTeamOverallRanking(teams, matches);
+    expect(overall[0]).toMatchObject({ team: { id: 'E' }, ratio: 1 });
+    expect(calculateTeamPoolRanking(teams, matches)[0].team.id).not.toBe('E');
+    expect(rankedTeamPool(teams, matches)[0]).toMatchObject({ rank: 1, ratio: 1 });
   });
 });
 

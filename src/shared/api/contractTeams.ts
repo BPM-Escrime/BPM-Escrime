@@ -98,7 +98,7 @@ export const TeamsStateSchema = z.object({
   ),
   poolMatches: z.array(TeamMatchSchema),
   tableauMatches: z.array(TeamMatchSchema),
-  /** Classement de poule (dérivé) : relais FIE par victoires, arène par points marqués */
+  /** Classement de poule (dérivé) : relais FIE au ratio V/M toutes poules confondues (poule unique : victoires, docs/adr/0044), arène par points marqués */
   poolRanking: z.array(
     z.object({
       teamId: z.string(),
