@@ -416,14 +416,15 @@ describe('withFlatSettings : réglages plats reportés dans la formule (ADR-0036
     const out = withFlatSettings(f, {
       defaultPoolMaxScore: 4,
       poolSizeMax: 8,
+      poolBoutOrder: 'waves',
       defaultTableTimerSeconds: 240,
       playAllPositions: true,
       restTimeSeconds: 90,
     })!;
     const pools = out.phases.filter(p => p.kind === 'pool');
-    expect(pools.map(p => [p.maxScore, p.sizeMax])).toEqual([
-      [4, 8],
-      [4, 8],
+    expect(pools.map(p => [p.maxScore, p.sizeMax, p.boutOrder])).toEqual([
+      [4, 8, 'waves'],
+      [4, 8, 'waves'],
     ]);
     expect(pools[0]).toMatchObject({ qualification: { mode: 'fixed_count', count: 10 } });
     expect(playedTableauOf(out)).toMatchObject({ timerSeconds: 240, allPlaces: true });

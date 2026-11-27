@@ -371,6 +371,14 @@ d('formule v2 écrite et lue par phase (docs/adr/0036)', () => {
     await op('updateCompetitionSettings', { competitionId, settings: { poolWinnersOnly: true } });
     comp = db.getCompetition(competitionId)!;
     expect(comp.settings?.formula).toBeUndefined();
+    // Changement d'arme : formule d'un autre modèle, retirée
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [{ op: 'setPhase', phase: 'pool-0', settings: { maxScore: 5 } }],
+    });
+    expect(db.getCompetition(competitionId)?.settings?.formula).toBeDefined();
+    await op('updateCompetitionSettings', { competitionId, weapon: 'F' });
+    expect(db.getCompetition(competitionId)?.settings?.formula).toBeUndefined();
     // Réglage sans rapport avec la formule : formule gardée
     await op('updateCompetitionFormula', {
       competitionId,
