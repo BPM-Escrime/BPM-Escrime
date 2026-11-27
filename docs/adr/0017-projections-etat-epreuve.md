@@ -1,6 +1,6 @@
 # ADR-0017 — L'état de l'épreuve devient une projection du moteur
 
-- **Statut** : Proposée
+- **Statut** : Proposée ; amendée le 2026-11-27 (vagues d'un tour en vagues, [ADR-0043](0043-rapieres-briques-generiques.md), validé par le mainteneur)
 - **Date** : 2026-11-21
 - **Tickets** : #1980 (étapes 4 et 5), #1981
 

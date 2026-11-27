@@ -14,9 +14,11 @@
    * @returns {{ranked: {rank:number, fencer:object}[]|null}} ranked = null tant que la finale n'est pas jouée
    */
   function computeFinalRanking(data, sortBySeed) {
-    // Classement final de l'application : places réelles, sans ex æquo (#1013)
+    // Classement final de l'application : places réelles, sans ex æquo (#1013) ; un exclu
+    // (rang null, docs/adr/0043 amendée) en bas, dans l'ordre reçu
     if (data?.finalResults?.length) {
-      return { ranked: [...data.finalResults].sort((a, b) => a.rank - b.rank) };
+      const key = r => (typeof r.rank === 'number' ? r.rank : Infinity);
+      return { ranked: [...data.finalResults].sort((a, b) => key(a) - key(b)) };
     }
     if (!data?.rounds?.length) return { ranked: null };
 
@@ -98,7 +100,7 @@
               ${ranked
                 .map(
                   ({ rank, fencer }) => `<tr class="${rank === 1 ? 'top-row' : ''}">
-                <td><span class="rank-medal">${bpRank(rank)}</span></td>
+                <td><span class="rank-medal">${typeof rank === 'number' ? bpRank(rank) : '-'}</span></td>
                 <td style="font-weight:600;font-size:1.1rem">${escHtml(fencer.lastName + ' ' + (fencer.firstName || ''))}</td>
                 <td style="color:var(--slate-500)">${escHtml(fencer.club || '—')}</td>
               </tr>`

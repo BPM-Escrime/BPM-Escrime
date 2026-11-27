@@ -23,8 +23,11 @@ import {
   formulaFromCustom,
   formulaOf,
   phaseSettings,
+  playedTableauOf,
   poolBoutOrderOfRound,
   tableauQualificationOf,
+  tieBreakByVictoryOf,
+  withFlatSettings,
   type FormulaV2,
 } from './formulaV2';
 
@@ -265,8 +268,30 @@ describe('arme « Autre » : customFormula v1 ↔ v2', () => {
     expect(customFormulaOf(v2)).toEqual(normalizeCustomFormula(custom));
     const flat = flatSettingsOf(v2, Weapon.CUSTOM);
     expect(flat.customFormula).toEqual(normalizeCustomFormula(custom));
-    const { customFormula: _cf, ...derived } = flat;
+    const { customFormula: _cf, playAllPositions, ...derived } = flat;
     expect(derived).toEqual(deriveSettingsFromFormula(custom));
+    // « Toutes les places » lu dans la brique tableau (#2013, F4g) : absent de la v1
+    expect(playAllPositions).toBe(
+      custom.phases.some(p => p.type === 'direct_elimination') ? false : undefined
+    );
+  });
+
+  it('« toutes les places » de la brique tableau projeté sur les réglages plats (#2013, F4g)', () => {
+    const v2 = formulaFromCustom(formulas[0][1]);
+    const on: FormulaV2 = {
+      ...v2,
+      phases: v2.phases.map(p => (p.kind === 'tableau' ? { ...p, allPlaces: true } : p)),
+    };
+    expect(flatSettingsOf(on, Weapon.CUSTOM).playAllPositions).toBe(true);
+    expect(flatSettingsOf(v2, Weapon.CUSTOM).playAllPositions).toBe(false);
+    // Sans formule v2 enregistrée : réglage plat relu, pas effacé à la réécriture
+    const read = formulaOf({
+      weapon: Weapon.CUSTOM,
+      category: Category.SENIOR,
+      settings: { customFormula: formulas[0][1], playAllPositions: true },
+    });
+    expect(playedTableauOf(read)?.allPlaces).toBe(true);
+    expect(flatSettingsOf(read, Weapon.CUSTOM).playAllPositions).toBe(true);
   });
 
   it('lecture par phase : touches du tour 2 distinctes du tour 1', () => {
@@ -330,5 +355,101 @@ describe('ordre des matchs du tour tiré (ADR-0042 : réglages du tour)', () => 
     expect(poolBoutOrderOfRound({ formula: f }, 2)).toBe('free');
     expect(poolBoutOrderOfRound({ poolBoutOrder: 'free' }, 1)).toBe('free');
     expect(poolBoutOrderOfRound(undefined, 1)).toBeUndefined();
+  });
+});
+
+describe('départage par vainqueur désigné : tieBreakByVictoryOf (docs/adr/0043, F4e)', () => {
+  const withGeneral = (general: FormulaV2['general']): Partial<CompetitionSettings> => ({
+    formula: { version: 2, general, phases: [] },
+  });
+
+  it('armes olympiques et Sabre Laser : toujours, quelle que soit la formule', () => {
+    for (const weapon of [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE, Weapon.LASER]) {
+      expect(tieBreakByVictoryOf(weapon, undefined)).toBe(true);
+      expect(tieBreakByVictoryOf(weapon, withGeneral({}))).toBe(true);
+    }
+  });
+
+  it('arme « Autre » : par défaut non, oui si la formule le demande (valeur lue)', () => {
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, undefined)).toBe(false);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, {})).toBe(false);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, withGeneral({}))).toBe(false);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, withGeneral({ tieBreakByVictory: true }))).toBe(true);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, withGeneral({ tieBreakByVictory: false }))).toBe(
+      false
+    );
+    expect(tieBreakByVictoryOf(undefined, withGeneral({ tieBreakByVictory: true }))).toBe(true);
+  });
+
+  it('ancienne épreuve rapières (specialMode, sans formule) : lue comme la formule des rapières', () => {
+    const legacy: Partial<CompetitionSettings> = { specialMode: 'rapieres' };
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, legacy)).toBe(true);
+    // Même avec des réglages plats enregistrés, sans formule
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, { ...legacy, defaultPoolMaxScore: 5 })).toBe(true);
+    // Une épreuve « Autre » sans mode spécial reste au défaut
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, { defaultPoolMaxScore: 5 })).toBe(false);
+  });
+});
+
+describe('withFlatSettings : réglages plats reportés dans la formule (ADR-0036 amendée)', () => {
+  const twoRounds = (): FormulaV2 => {
+    const f = formulaOf({
+      weapon: Weapon.EPEE,
+      category: Category.SENIOR,
+      settings: {
+        ...buildDefaultCompetitionSettings({ weapon: Weapon.EPEE, category: Category.SENIOR }),
+        poolRounds: 2,
+      },
+    });
+    return {
+      ...f,
+      phases: f.phases.map((p, i) =>
+        i === 0 && p.kind === 'pool'
+          ? { ...p, qualification: { mode: 'fixed_count' as const, count: 10 } }
+          : p
+      ),
+    };
+  };
+
+  it('scores, durées, tailles des poules (tous les tours), tableau et repos ; le reste gardé', () => {
+    const f = twoRounds();
+    const out = withFlatSettings(f, {
+      defaultPoolMaxScore: 4,
+      poolSizeMax: 8,
+      poolBoutOrder: 'waves',
+      defaultTableTimerSeconds: 240,
+      playAllPositions: true,
+      restTimeSeconds: 90,
+    })!;
+    const pools = out.phases.filter(p => p.kind === 'pool');
+    expect(pools.map(p => [p.maxScore, p.sizeMax, p.boutOrder])).toEqual([
+      [4, 8, 'waves'],
+      [4, 8, 'waves'],
+    ]);
+    expect(pools[0]).toMatchObject({ qualification: { mode: 'fixed_count', count: 10 } });
+    expect(playedTableauOf(out)).toMatchObject({ timerSeconds: 240, allPlaces: true });
+    expect(out.general.restTimeSeconds).toBe(90);
+  });
+
+  it('structure ou phase absente : null (formule retirée, relue à plat)', () => {
+    const f = twoRounds();
+    expect(withFlatSettings(f, { poolRounds: 1 })).toBeNull();
+    expect(withFlatSettings(f, { poolWinnersOnly: true })).toBeNull();
+    expect(withFlatSettings(f, { hasDirectElimination: false })).toBeNull();
+    const noTableau = { ...f, phases: f.phases.filter(p => p.kind !== 'tableau') };
+    expect(withFlatSettings(noTableau, { thirdPlaceMatch: true })).toBeNull();
+  });
+
+  it('compétition couplée : tableau des branches restées mis à jour', () => {
+    const f = formulaOf({
+      weapon: Weapon.EPEE,
+      category: Category.SENIOR,
+      settings: {
+        ...buildDefaultCompetitionSettings({ weapon: Weapon.EPEE, category: Category.SENIOR }),
+        postPoolSplitCriteria: 'gender',
+      },
+    });
+    const out = withFlatSettings(f, { thirdPlaceMatch: true })!;
+    expect(playedTableauOf(out)).toMatchObject({ thirdPlace: true });
   });
 });

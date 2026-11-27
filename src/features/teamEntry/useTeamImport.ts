@@ -11,7 +11,11 @@ import { Fencer, FencerStatus, Gender } from '../../shared/types';
 import { useTranslation } from '../../renderer/hooks/useTranslation';
 import { usePlatform } from '../../renderer/platform/PlatformContext';
 import type { TeamNotify } from './teamNotify';
-import { teamMembersLabel } from '../../shared/domain/fencers/teamEntry';
+import {
+  DEFAULT_TEAM_LEVELS,
+  levelLabel,
+  teamMembersLabel,
+} from '../../shared/domain/fencers/teamEntry';
 import { rapieresTeamEntry } from '../../shared/domain/rapieres/rapieresEntry';
 import { buildTeamImportTemplate, parseTeamImport } from './teamImport';
 import type { TeamImportDraft } from './teamImport';
@@ -24,11 +28,20 @@ interface UseTeamImportOptions {
   bulkAddFencers: (fencers: NewFencer[]) => Promise<Fencer[]>;
   /** Notification de l'écran (toast) */
   notify: TeamNotify;
+  /** Libellés des niveaux de la formule (`entry.levels`), du plus faible au plus fort */
+  levels?: readonly string[];
 }
 
-export function useTeamImport({ competitionDate, bulkAddFencers, notify }: UseTeamImportOptions) {
+export function useTeamImport({
+  competitionDate,
+  bulkAddFencers,
+  notify,
+  levels = DEFAULT_TEAM_LEVELS,
+}: UseTeamImportOptions) {
   const { t } = useTranslation();
   const platform = usePlatform();
+  // Codes des niveaux par défaut : libellé traduit (« Débutant »…)
+  const levelText = (code: string) => t(`teamEntry.level_${code}`);
   // Fichier lu, en attente de sélection des équipes (fenêtre d'import)
   const [pendingImport, setPendingImport] = useState<{
     filename: string;
@@ -45,6 +58,8 @@ export function useTeamImport({ competitionDate, bulkAddFencers, notify }: UseTe
     club: team.info.club ?? '',
     region: team.info.region ?? '',
     ...rapieresTeamEntry(team.info, competitionDate ? new Date(competitionDate) : new Date()),
+    // Niveau lu dans les niveaux de la formule (colonne Z), pas dans les trois niveaux des rapières
+    level: team.level,
   });
 
   const newTeamFencer = (team: TeamImportDraft) =>
@@ -66,7 +81,7 @@ export function useTeamImport({ competitionDate, bulkAddFencers, notify }: UseTe
     });
     if (!result) return;
     const refDate = competitionDate ? new Date(competitionDate) : new Date();
-    const { teams, skipped } = parseTeamImport(result.content || '', refDate);
+    const { teams, skipped } = parseTeamImport(result.content || '', refDate, levels, levelText);
     if (teams.length === 0) {
       notify(t('teamEntry.import_empty'), 'error');
       return;
@@ -84,7 +99,7 @@ export function useTeamImport({ competitionDate, bulkAddFencers, notify }: UseTe
         { name: 'CSV', extensions: ['csv'] },
         { name: t('fencerList.all_files'), extensions: ['*'] },
       ],
-      content: buildTeamImportTemplate(),
+      content: buildTeamImportTemplate(levelLabel(1, levels, levelText)),
       mimeType: 'text/csv;charset=utf-8',
     });
   };
@@ -111,6 +126,7 @@ export function useTeamImport({ competitionDate, bulkAddFencers, notify }: UseTe
     /** Props de la fenêtre de sélection (null = fermée) */
     teamImportModal: pendingImport && {
       ...pendingImport,
+      levels,
       onImport: confirmImport,
       onClose: () => setPendingImport(null),
     },

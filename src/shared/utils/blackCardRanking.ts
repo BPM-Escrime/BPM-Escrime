@@ -2,9 +2,12 @@
  * BPM - Escrime - Classement final et carton noir (#1418)
  *
  * Un tireur exclu avec carton noir perd son classement (rang « - », NULL à l'export XML) et passe
- * en bas de la liste ; les tireurs classés derrière remontent d'une place. Si des ex aequo se
- * trouvent derrière un tireur au carton noir (ex. 3e non départagé), ils sont départagés par leur
- * classement de composition du tableau (rang de sortie de poules). Un carton noir de passivité
+ * en bas de la liste, sans classement : ses résultats sont annulés comme s'il n'avait pas
+ * participé (FIE o.74.3, o.79.2) ; les tireurs classés derrière remontent d'une place. Si des
+ * ex aequo se trouvent derrière un tireur au carton noir (ex. 3e non départagé), ils sont
+ * départagés par leur classement de composition du tableau, rang de sortie de poules (FIE
+ * o.82.4). Les éliminés des poules suivent l'ordre du classement de ce tour (FIE o.82.5, rangs
+ * fournis par l'appelant). Un carton noir de passivité
  * (perte de match « P ») n'est pas un carton noir d'exclusion : il n'est pas concerné.
  * Licensed under GPL-3.0
  */

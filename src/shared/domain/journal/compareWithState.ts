@@ -105,7 +105,7 @@ export interface CompetitionStateView {
   >;
   /** Vagues du tour courant (clé `waves`) */
   waves?: { launched?: number; ended?: boolean };
-  /** Ancienne clé des rapières, lue comme alias de `waves` (docs/adr/0043, jusqu'à F4e) */
+  /** Ancienne clé des rapières, lue comme alias de `waves` pour les épreuves enregistrées (docs/adr/0043, F4e) */
   rapieres?: { launchedWave?: number; wavesEnded?: boolean };
   /** Classement après poules (épreuve séparée : classement importé) */
   overallRanking?: PoolRanking[];

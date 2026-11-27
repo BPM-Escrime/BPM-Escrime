@@ -53,4 +53,15 @@ describe('screenFormulaProgress (S6, ADR-0041)', () => {
       })
     ).toEqual(['pool', 'pool', 'tableau']);
   });
+
+  it('tour clos : le nombre de tours clos suit l’historique, tour en cours exclu', () => {
+    expect(screenFormulaProgress({ ...base, poolHistory: [[pool]] }).closedRounds).toBe(1);
+    expect(
+      screenFormulaProgress({ ...base, poolsLaunched: true, pools: [pool], poolHistory: [[pool]] })
+        .closedRounds
+    ).toBe(1);
+    expect(
+      screenFormulaProgress({ ...base, poolsLaunched: true, pools: [pool] }).closedRounds
+    ).toBe(0);
+  });
 });

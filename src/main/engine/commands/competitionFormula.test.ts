@@ -11,6 +11,7 @@ import { contract } from '../../../shared/api/contract';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
 import { effectiveSettings } from './sport';
+import { tieBreakByVictoryOf } from '../../../shared/domain/formula/formulaV2';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -283,6 +284,48 @@ d('formule v2 écrite et lue par phase (docs/adr/0036)', () => {
     });
   });
 
+  it('tieBreakByVictory : posé et retiré par le contrat, lu par la formule (docs/adr/0043, F4e)', async () => {
+    const other = db.createCompetition({
+      title: 'Autre',
+      date: new Date('2026-12-06'),
+      weapon: Weapon.CUSTOM,
+      gender: Gender.MIXED,
+      category: Category.SENIOR,
+      settings: buildDefaultCompetitionSettings({
+        weapon: Weapon.CUSTOM,
+        category: Category.SENIOR,
+      }) as never,
+    });
+    const read = () => db.getCompetition(other.id)!.settings;
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, read())).toBe(false);
+    await op('updateCompetitionFormula', {
+      competitionId: other.id,
+      operations: [{ op: 'setGeneral', settings: { tieBreakByVictory: true } }],
+    });
+    expect(read()?.formula?.general.tieBreakByVictory).toBe(true);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, read())).toBe(true);
+    const f = await op('getCompetitionFormula', { competitionId: other.id });
+    expect(f.formula.general.tieBreakByVictory).toBe(true);
+    await op('updateCompetitionFormula', {
+      competitionId: other.id,
+      operations: [{ op: 'setGeneral', settings: { tieBreakByVictory: null } }],
+    });
+    expect('tieBreakByVictory' in (read()?.formula?.general ?? {})).toBe(false);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, read())).toBe(false);
+  });
+
+  it('tieBreakByVictory non booléen : refus invalid_settings, rien d’écrit', async () => {
+    await expect(
+      op('updateCompetitionFormula', {
+        competitionId,
+        operations: [{ op: 'setGeneral', settings: { tieBreakByVictory: 'oui' } }],
+      })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    expect(db.getCompetition(competitionId)!.settings?.formula?.general.tieBreakByVictory).toBe(
+      undefined
+    );
+  });
+
   it('bornes du tour 2 refusées', async () => {
     await expect(
       op('updateCompetitionFormula', {
@@ -295,16 +338,47 @@ d('formule v2 écrite et lue par phase (docs/adr/0036)', () => {
     ).rejects.toMatchObject({ code: 'invalid_settings' });
   });
 
-  it('réglages plats écrits sans formula : formule retirée, reconstruite à la lecture', async () => {
+  it('réglages plats écrits sans formula : reportés dans la formule (ADR-0036 amendée), ou formule retirée pour la structure', async () => {
     await op('updateCompetitionFormula', {
       competitionId,
-      operations: [{ op: 'insertPhase', brick: 'pool', at: 1 }],
+      operations: [
+        { op: 'insertPhase', brick: 'pool', at: 1 },
+        {
+          op: 'setPhase',
+          phase: 'pool-0',
+          settings: { qualification: { mode: 'fixed_count', count: 10 } },
+        },
+      ],
     });
     expect(db.getCompetition(competitionId)?.settings?.formula).toBeDefined();
-    await op('updateCompetitionSettings', { competitionId, settings: { defaultPoolMaxScore: 4 } });
-    const comp = db.getCompetition(competitionId)!;
-    expect(comp.settings?.formula).toBeUndefined();
+    // Réglage qui a sa place dans la formule : reporté, tous les tours de poules, formule gardée
+    await op('updateCompetitionSettings', {
+      competitionId,
+      settings: { defaultPoolMaxScore: 4, thirdPlaceMatch: true, restTimeSeconds: 90 },
+    });
+    let comp = db.getCompetition(competitionId)!;
+    expect(comp.settings?.formula?.phases[0]).toMatchObject({
+      maxScore: 4,
+      qualification: { mode: 'fixed_count', count: 10 },
+    });
+    expect(comp.settings?.formula?.phases[1]).toMatchObject({ maxScore: 4 });
+    expect(comp.settings?.formula?.phases.find(p => p.kind === 'tableau')).toMatchObject({
+      thirdPlace: true,
+    });
+    expect(comp.settings?.formula?.general.restTimeSeconds).toBe(90);
     expect(effectiveSettings(comp, 2).poolMaxScore).toBe(4);
+    // Réglage de structure : formule périmée, retirée et relue depuis les réglages plats
+    await op('updateCompetitionSettings', { competitionId, settings: { poolWinnersOnly: true } });
+    comp = db.getCompetition(competitionId)!;
+    expect(comp.settings?.formula).toBeUndefined();
+    // Changement d'arme : formule d'un autre modèle, retirée
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [{ op: 'setPhase', phase: 'pool-0', settings: { maxScore: 5 } }],
+    });
+    expect(db.getCompetition(competitionId)?.settings?.formula).toBeDefined();
+    await op('updateCompetitionSettings', { competitionId, weapon: 'F' });
+    expect(db.getCompetition(competitionId)?.settings?.formula).toBeUndefined();
     // Réglage sans rapport avec la formule : formule gardée
     await op('updateCompetitionFormula', {
       competitionId,
@@ -373,6 +447,111 @@ d('contrôles de structure en direct (docs/adr/0041)', () => {
       { op: 'insertPhase', brick: 'split', at: 1 },
     ]);
     expect(e.message).toContain('[split] scission : les parts (16 tireurs)');
+  });
+
+  it('S6 : tour clos (closePoolRound), la qualification qui en sort est verrouillée dès la clôture', async () => {
+    const qualify = (count: number) => [
+      {
+        op: 'setPhase',
+        phase: 'pool-0',
+        settings: { qualification: { mode: 'fixed_count', count } },
+      },
+    ];
+    await op('updateCompetitionFormula', { competitionId, operations: qualify(8) });
+    // Tour 1 lancé, pas clos : la règle reste modifiable
+    db.saveSessionState(competitionId, {
+      currentPhase: 2,
+      currentPoolRound: 1,
+      pools: [{ id: 'p1', matches: [] }],
+      poolsLaunched: true,
+    });
+    await op('updateCompetitionFormula', { competitionId, operations: qualify(6) });
+    // Tour 1 clos : archivé, plus de poules, tableau pas tiré
+    db.saveSessionState(competitionId, {
+      currentPhase: 1,
+      currentPoolRound: 2,
+      poolHistory: [[{ id: 'p1', matches: [] }]],
+      pools: [],
+      poolsLaunched: false,
+    });
+    const e = await reject(qualify(4));
+    expect(e.code).toBe('invalid_settings');
+    expect(e.message).toContain('[pool-0] qualification du tour : le tour est clos');
+    // Même règle : admise ; autres réglages du tour : admis
+    await op('updateCompetitionFormula', { competitionId, operations: qualify(6) });
+    expect(
+      db.getCompetition(competitionId)?.settings?.formula?.phases.find(p => p.kind === 'pool')
+    ).toMatchObject({ qualification: { mode: 'fixed_count', count: 6 } });
+  });
+
+  it('S6 : updateCompetitionSettings ne contourne pas le verrou du tour clos', async () => {
+    await op('updateCompetitionFormula', {
+      competitionId,
+      operations: [
+        {
+          op: 'setPhase',
+          phase: 'pool-0',
+          settings: { qualification: { mode: 'fixed_count', count: 8 } },
+        },
+      ],
+    });
+    db.saveSessionState(competitionId, {
+      currentPhase: 1,
+      currentPoolRound: 2,
+      poolHistory: [[{ id: 'p1', matches: [] }]],
+      pools: [],
+      poolsLaunched: false,
+    });
+    const formula = db.getCompetition(competitionId)!.settings!.formula!;
+    const changed = {
+      ...formula,
+      phases: formula.phases.map(p =>
+        p.kind === 'pool' ? { ...p, qualification: { mode: 'fixed_count', count: 4 } } : p
+      ),
+    };
+    await expect(
+      op('updateCompetitionSettings', { competitionId, settings: { formula: changed } })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    expect(
+      db.getCompetition(competitionId)?.settings?.formula?.phases.find(p => p.kind === 'pool')
+    ).toMatchObject({ qualification: { mode: 'fixed_count', count: 8 } });
+    // Réglage hors formule : admis
+    await op('updateCompetitionSettings', { competitionId, settings: { expertMode: true } });
+    // Autre réglage plat (Q15) : admis, reporté dans la formule, la règle du tour clos gardée
+    await op('updateCompetitionSettings', {
+      competitionId,
+      settings: { defaultTableTimerSeconds: 240 },
+    });
+    expect(
+      db.getCompetition(competitionId)?.settings?.formula?.phases.find(p => p.kind === 'pool')
+    ).toMatchObject({ qualification: { mode: 'fixed_count', count: 8 } });
+    // Qualification changée par un réglage plat : refusée
+    await expect(
+      op('updateCompetitionSettings', { competitionId, settings: { poolWinnersOnly: true } })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+  });
+
+  it('ADR-0043 F4b : petite finale et « toutes les places » modifiables jusqu’au tirage du tableau', async () => {
+    const mode = (thirdPlace: boolean, allPlaces: boolean) => [
+      { op: 'setPhase', phase: 'tableau', settings: { thirdPlace, allPlaces } },
+    ];
+    // Tableau pas tiré : modifiable
+    await op('updateCompetitionFormula', { competitionId, operations: mode(true, false) });
+    await op('updateCompetitionFormula', { competitionId, operations: mode(false, true) });
+    // Tableau tiré
+    db.saveSessionState(competitionId, {
+      currentPhase: 3,
+      poolHistory: [[{ id: 'p1', matches: [] }]],
+      tableauMatches: [{ id: 'm1', round: 2, position: 0 }],
+    });
+    const e = await reject(mode(true, false));
+    expect(e.code).toBe('invalid_settings');
+    expect(e.message).toContain('[tableau] tableau déjà tiré');
+    // Ni par les réglages plats
+    await expect(
+      op('updateCompetitionSettings', { competitionId, settings: { playAllPositions: false } })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    expect(db.getCompetition(competitionId)?.settings?.playAllPositions).toBe(true);
   });
 
   it('S6 : après un tour joué, la phase commencée ne se retire plus', async () => {

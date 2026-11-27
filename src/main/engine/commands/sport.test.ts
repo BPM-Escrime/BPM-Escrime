@@ -691,6 +691,41 @@ d('generateTableau avec placement de l’écran (docs/adr/0017, palier tableau)'
     expect((db.getSessionState(comp.id) as any).finalResults).toHaveLength(10);
   });
 
+  it('« toutes les places » sans placement (#2013, F4g) : tableau de l’écran, classement complet', async () => {
+    const comp = await setup(10);
+    generatePools(ctx, comp.id, { poolCount: 2 });
+    playAll(comp.id, 'pool');
+    db.updateCompetition(comp.id, {
+      settings: { ...comp.settings, playAllPositions: true, thirdPlaceMatch: false },
+    } as never);
+    // Tableau que l'écran tire pour le même classement (useTableauViewScoring, planTableau)
+    const ranking = (db.getSessionState(comp.id) as any).overallRanking;
+    const screen = planTableau(ranking, { playAllPositions: true, thirdPlaceMatch: true });
+    const res = (await invoke(ctx, 'generateTableau', { competitionId: comp.id })) as any;
+    // Petite finale imposée, comme à l'écran ; réglage écrit comme l'écran le fait
+    expect(res).toMatchObject({ size: 8, qualified: 10, thirdPlaceMatch: true });
+    expect(db.getCompetition(comp.id)!.settings?.thirdPlaceMatch).toBe(true);
+    const drawn = (db.getSessionState(comp.id) as any).tableauMatches;
+    expect(drawn).toEqual(JSON.parse(JSON.stringify(screen.matches)));
+    // Barrages des seeds 7 à 10, petite finale
+    expect(drawn.filter((m: any) => m.round === 16)).toHaveLength(2);
+    expect(drawn.some((m: any) => m.id === '3-0')).toBe(true);
+    const all = db.eventLog.getSince(comp.id);
+    expect(all[all.length - 1]).toMatchObject({
+      type: 'TableauGenerated',
+      payload: { size: 8, thirdPlaceMatch: true, playAllPositions: true },
+    });
+    // Propagation : barrages, tableaux de classement, classement final complet
+    playAll(comp.id, 'bracket');
+    const after = db.getSessionState(comp.id) as any;
+    expect(after.currentPhase).toBe(6);
+    expect(after.consolationBrackets.length).toBeGreaterThan(0);
+    expect(after.consolationBrackets.every((b: any) => b.isComplete)).toBe(true);
+    const ranks = after.finalResults.map((r: { rank: number }) => r.rank);
+    expect(ranks).toHaveLength(10);
+    expect(new Set(ranks).size).toBe(10);
+  });
+
   it('placement invalide ou tableaux séparés sans groupe : refus', async () => {
     const comp = await setup(4);
     generatePools(ctx, comp.id, { poolCount: 1 });

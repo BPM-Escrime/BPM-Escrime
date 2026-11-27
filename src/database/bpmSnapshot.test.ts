@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { DatabaseManager } from './index';
+import { decryptBpmFile, encryptBpmFileTo } from '../main/bpmCrypto';
 
 type Raw = {
   prepare: (sql: string) => { all: (...a: unknown[]) => unknown[] };
@@ -203,5 +204,73 @@ describe('.bpm snapshot (DatabaseManager réel)', () => {
     }
     src.close();
     dst.close();
+  });
+
+  // ADR-0043 (F4c) : les membres suivent le tireur dans les archives .bpm
+  describe('entrée en équipes (ADR-0043, F4c) : membres, niveau, handicap', () => {
+    const members = [
+      { lastName: 'Martin', firstName: 'Léa', gender: 'F', birthDate: '2001-04-12' },
+      { lastName: 'Durand', firstName: 'Tom', gender: 'M', birthDate: '1999-11-30' },
+    ];
+    const seedTeam = async (dir: string) => {
+      const src = new DatabaseManager(path.join(dir, 'src.db'));
+      await src.open();
+      const c = src.createCompetition({ title: 'Binômes' } as never) as unknown as { id: string };
+      const team = src.addFencer(c.id, {
+        firstName: 'Léa',
+        lastName: 'Martin / Durand',
+        members,
+        level: 2,
+        handicap: true,
+      } as never) as unknown as { id: string };
+      const solo = src.addFencer(c.id, {
+        firstName: 'Solo',
+        lastName: 'Seul',
+      } as never) as unknown as {
+        id: string;
+      };
+      return { src, c, team, solo };
+    };
+    const expectTeam = (dst: DatabaseManager, teamId: string, soloId: string) => {
+      const f = dst.getFencer(teamId);
+      expect(f?.members).toEqual(members);
+      expect(f?.members).toHaveLength(2);
+      expect(f?.level).toBe(2);
+      expect(f?.handicap).toBe(true);
+      const solo = dst.getFencer(soloId);
+      expect(solo?.members).toBeUndefined();
+      expect(solo?.level).toBeUndefined();
+      expect(solo?.handicap).toBeUndefined();
+    };
+
+    it('.bpm en clair : members, level et handicap identiques après réimport', async () => {
+      const dir = newDir();
+      const { src, c, team, solo } = await seedTeam(dir);
+      const file = path.join(dir, 'equipes.bpm');
+      await src.exportCompetitionToFile(c.id, file);
+      const dst = new DatabaseManager(path.join(dir, 'dst.db'));
+      await dst.open();
+      expect(await dst.mergeFromFile(file)).toEqual([c.id]);
+      expectTeam(dst, team.id, solo.id);
+      src.close();
+      dst.close();
+    });
+
+    it('.bpm chiffré : members, level et handicap identiques après déchiffrement et réimport', async () => {
+      const dir = newDir();
+      const { src, c, team, solo } = await seedTeam(dir);
+      const plain = path.join(dir, 'equipes.bpm');
+      await src.exportCompetitionToFile(c.id, plain);
+      const enc = path.join(dir, 'equipes-chiffre.bpm');
+      await encryptBpmFileTo(plain, enc, 'mot-de-passe-solide');
+      const back = path.join(dir, 'equipes-dechiffre.bpm');
+      await decryptBpmFile(enc, back, 'mot-de-passe-solide');
+      const dst = new DatabaseManager(path.join(dir, 'dst.db'));
+      await dst.open();
+      expect(await dst.mergeFromFile(back)).toEqual([c.id]);
+      expectTeam(dst, team.id, solo.id);
+      src.close();
+      dst.close();
+    });
   });
 });

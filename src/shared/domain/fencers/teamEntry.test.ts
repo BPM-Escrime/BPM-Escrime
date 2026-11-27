@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { Category, Gender } from '../../types';
 import {
   DEFAULT_TEAM_LEVELS,
+  levelFromText,
   levelLabel,
   levelRankOf,
   memberBirthYear,
@@ -84,6 +85,17 @@ describe('niveau et libellés', () => {
     const t = (c: string) => `T:${c}`;
     expect(levelLabel(3, DEFAULT_TEAM_LEVELS, t)).toBe('T:expert');
     expect(levelLabel(2, ['Loisir', 'Compétition'], t)).toBe('Compétition');
+  });
+
+  it('niveau lu d’un texte : rang, libellé saisi ou code traduit, sans casse ni accents', () => {
+    const t = (c: string) => ({ beginner: 'Débutant', expert: 'Expert' })[c] ?? c;
+    expect(levelFromText(' 2 ', ['Loisir', 'Compétition'])).toBe(2);
+    expect(levelFromText('3', ['Loisir', 'Compétition'])).toBeUndefined();
+    expect(levelFromText('competition', ['Loisir', 'Compétition'])).toBe(2);
+    expect(levelFromText('DEBUTANT', DEFAULT_TEAM_LEVELS, t)).toBe(1);
+    expect(levelFromText('expert', DEFAULT_TEAM_LEVELS)).toBe(3);
+    expect(levelFromText('', DEFAULT_TEAM_LEVELS)).toBeUndefined();
+    expect(levelFromText('Pro', DEFAULT_TEAM_LEVELS, t)).toBeUndefined();
   });
 
   it('rang de regroupement : du plus faible au plus fort, sans niveau en dernier', () => {

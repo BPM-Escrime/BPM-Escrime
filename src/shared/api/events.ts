@@ -179,7 +179,7 @@ export const JournalEventBodySchema = z.discriminatedUnion('type', [
     z.object({ wave: z.number().int(), matchIds: z.array(Id) })
   ),
   member(JOURNAL_EVENT.poolWavesEnded, z.object({ ended: z.boolean() })),
-  // Anciens événements des rapières : plus écrits, lus au rejeu jusqu'à F4e
+  // Anciens événements des rapières : plus écrits, toujours lus au rejeu des épreuves enregistrées (docs/adr/0043, F4e)
   member(
     JOURNAL_EVENT.rapieresWaveLaunched,
     z.object({ wave: z.number().int(), matchIds: z.array(Id) })

@@ -44,7 +44,10 @@ export interface FinalRankingInput {
   refresh?: (fencer: Fencer) => Fencer;
 }
 
-/** Classement final : tableau, puis éliminés des poules (carton noir appliqué) */
+/**
+ * Classement final : tableau, puis éliminés des poules d'après le classement de ce tour (FIE
+ * o.82.5) ; exclu au bas sans classement (FIE o.74.3, o.79.2), carton noir compris
+ */
 export function finalRanking({
   finalResults,
   poolRanking,
@@ -79,8 +82,11 @@ export function finalRanking({
   })();
 
   // Exclu (y compris après son entrée au tableau, carton noir compris) : inscrit au bas sans
-  // classement (rang « - »), les autres sont renumérotés (FIE o.74, docs/adr/0043 amendée, F4d) ;
-  // ex aequo départagés par le classement de composition du tableau (rang de poules)
+  // classement (rang « - »), les autres sont renumérotés (FIE o.74.3 et o.79.2 : ses résultats
+  // sont annulés, comme s'il n'avait pas participé ; docs/adr/0043 amendée, F4d) ; ex aequo
+  // derrière un exclu départagés par le classement de composition du tableau (FIE o.82.4, rang
+  // de poules passé en `seedRank`). Éliminés des poules : ordre du classement de ce tour
+  // (FIE o.82.5, `poolRanking` ci-dessus)
   return applyBlackCardRanking(
     base,
     new Map(poolRanking.map(pr => [pr.fencer.id, pr.rank])),

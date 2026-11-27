@@ -55,7 +55,7 @@ export interface RapieresSession {
   teams: Record<string, RapieresTeamInfo>;
   /**
    * Ancienne clé des vagues (dernière vague lancée, 0 = aucune) : plus écrite depuis F4a, lue
-   * comme alias de la clé de session `waves` (docs/adr/0043, jusqu'à F4e)
+   * comme alias de la clé de session `waves` pour les épreuves enregistrées (docs/adr/0043, F4e)
    */
   launchedWave?: number;
   /** Ancienne clé de l'arrêt des vagues : alias de `waves.ended`, comme `launchedWave` */

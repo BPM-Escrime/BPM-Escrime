@@ -451,8 +451,15 @@ export function formulaOf(src: FormulaSource): FormulaV2 {
   const stored = src.settings?.formula;
   // Formule enregistrée avant l'étape E3 avec l'ancienne compétition couplée : relue (ADR-0039)
   if (stored && stored.version === 2) return coupledFormula(stored);
-  if (src.weapon === Weapon.CUSTOM)
-    return formulaFromCustom(src.settings?.customFormula ?? createDefaultCustomFormula());
+  if (src.weapon === Weapon.CUSTOM) {
+    const f = formulaFromCustom(src.settings?.customFormula ?? createDefaultCustomFormula());
+    // « Toutes les places » absent de la v1 : lu dans le réglage enregistré (#2013, F4g)
+    if (!src.settings?.playAllPositions) return f;
+    return {
+      ...f,
+      phases: f.phases.map(p => (p.kind === 'tableau' ? { ...p, allPlaces: true } : p)),
+    };
+  }
   return fromFlat(src);
 }
 
@@ -556,6 +563,65 @@ export function tableauQualificationOf(f: FormulaV2): AdvancementRule | undefine
 // ── Écriture : réglages plats dérivés ─────────────────────────────────────
 
 /**
+ * Réglages plats reportés dans la formule enregistrée (ADR-0036 amendée, 2026-11-27) : un réglage
+ * plat qui a sa place dans la formule (scores, durées, repos, tailles et ordre des poules,
+ * petite finale, toutes les places du tableau) la met à jour au lieu de la retirer. Comme la
+ * relecture plate, un réglage des poules vaut pour tous les tours de poules de la formule.
+ * null : le patch touche la structure (tours, qualification, tableau, Tour Quest, scission) ou
+ * une phase absente ; la formule est alors retirée et relue depuis les réglages plats.
+ */
+export function withFlatSettings(
+  f: FormulaV2,
+  patch: Partial<CompetitionSettings>
+): FormulaV2 | null {
+  const keys = Object.keys(patch) as Array<keyof CompetitionSettings>;
+  const POOL: Partial<Record<keyof CompetitionSettings, keyof PoolRoundPhase>> = {
+    defaultPoolMaxScore: 'maxScore',
+    defaultPoolTimerSeconds: 'timerSeconds',
+    poolSizeMin: 'sizeMin',
+    poolSizeMax: 'sizeMax',
+    poolBoutOrder: 'boutOrder',
+  };
+  const TABLEAU: Partial<Record<keyof CompetitionSettings, keyof TableauPhase>> = {
+    defaultTableMaxScore: 'maxScore',
+    defaultTableTimerSeconds: 'timerSeconds',
+    thirdPlaceMatch: 'thirdPlace',
+    playAllPositions: 'allPlaces',
+  };
+  if (keys.some(k => !(k in POOL) && !(k in TABLEAU) && k !== 'restTimeSeconds')) return null;
+  const poolList = pools(f);
+  const tableau = playedTableauOf(f);
+  if (keys.some(k => k in POOL) && poolList.length === 0) return null;
+  if (keys.some(k => k in TABLEAU) && !tableau) return null;
+  const set = <T extends object>(phase: T, map: Partial<Record<string, keyof T>>): T => {
+    const out = { ...phase } as Record<string, unknown>;
+    for (const k of keys) {
+      const field = map[k];
+      if (field && patch[k] !== undefined) out[field as string] = patch[k];
+    }
+    return out as T;
+  };
+  const replaced = new Map<FormulaPhaseV2, FormulaPhaseV2>();
+  for (const pool of poolList) replaced.set(pool, set(pool, POOL));
+  if (tableau) replaced.set(tableau, set(tableau, TABLEAU));
+  const mapPhases = (list: FormulaPhaseV2[]): FormulaPhaseV2[] =>
+    list.map(p => {
+      const r = replaced.get(p);
+      if (r) return r;
+      if (p.kind !== 'split') return p;
+      return { ...p, branches: p.branches.map(b => ({ ...b, phases: mapPhases(b.phases) })) };
+    });
+  return {
+    ...f,
+    phases: mapPhases(f.phases),
+    general:
+      patch.restTimeSeconds !== undefined
+        ? { ...f.general, restTimeSeconds: patch.restTimeSeconds }
+        : f.general,
+  };
+}
+
+/**
  * Réglages plats écrits avec `formula` tant que des lecteurs plats existent (ADR-0036) :
  * valeurs du premier tour et du tableau. Arme « Autre » : mêmes réglages que
  * deriveSettingsFromFormula, plus `customFormula` v1 équivalente.
@@ -569,9 +635,12 @@ export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<Competitio
   if (weapon === Weapon.CUSTOM) {
     const customFormula = customFormulaOf(f);
     const firstPool = pools(f)[0];
+    // « Toutes les places » : absent de la formule v1, lu dans la brique tableau (#2013, F4g)
+    const tableau = playedTableauOf(f);
     return {
       customFormula,
       ...deriveSettingsFromFormula(customFormula),
+      ...(tableau ? { playAllPositions: tableau.allPlaces } : {}),
       // Tour en vagues au 1er tour : l'ordre suit les tailles de poule (2 à 10, docs/adr/0043)
       ...(firstPool && isWavesOrder(firstPool.boutOrder)
         ? { poolBoutOrder: firstPool.boutOrder }

@@ -344,6 +344,52 @@ describe('tableau arrêté à N (ADR-0037, D2)', () => {
     expect(rankingFiltersOf(base)).toEqual([]);
   });
 
+  it('tieBreakByVictory : posé, retiré par null ou false, aller et retour (docs/adr/0043, F4e)', () => {
+    const base = formulaOf(epee());
+    expect('tieBreakByVictory' in base.general).toBe(false);
+    const f = applyOperationsV2(
+      epee(),
+      [{ op: 'setGeneral', settings: { tieBreakByVictory: true } }],
+      id
+    );
+    expect(f.general.tieBreakByVictory).toBe(true);
+    expect(operationsBetweenV2(base, f)).toEqual([
+      { op: 'setGeneral', settings: { tieBreakByVictory: true } },
+    ]);
+    expect(operationsBetweenV2(f, base)).toEqual([
+      { op: 'setGeneral', settings: { tieBreakByVictory: null } },
+    ]);
+    // null ou false : clé absente (défaut : selon l'arme) ; les autres réglages généraux restent
+    const withIt = { ...epee(), settings: { ...epee().settings, formula: f } };
+    for (const off of [null, false]) {
+      const again = applyOperationsV2(
+        withIt,
+        [{ op: 'setGeneral', settings: { tieBreakByVictory: off, restTimeSeconds: 45 } }],
+        id
+      );
+      expect('tieBreakByVictory' in again.general).toBe(false);
+      expect(again.general.restTimeSeconds).toBe(45);
+    }
+    // Un réglage voisin ne touche pas celui-ci
+    const other = applyOperationsV2(
+      withIt,
+      [{ op: 'setGeneral', settings: { rankingFilters: ['category'] } }],
+      id
+    );
+    expect(other.general.tieBreakByVictory).toBe(true);
+  });
+
+  it('tieBreakByVictory : une valeur qui n’est pas un booléen est refusée', () => {
+    for (const bad of ['oui', 1, {}])
+      expect(() =>
+        applyOperationsV2(
+          epee(),
+          [{ op: 'setGeneral', settings: { tieBreakByVictory: bad as never } }],
+          id
+        )
+      ).toThrow(/tieBreakByVictory.*booléen/);
+  });
+
   it('filtres du classement final invalides : refus de l’opération et remarque bloquante', () => {
     expect(() =>
       applyOperationsV2(epee(), [{ op: 'setGeneral', settings: { rankingFilters: ['club'] } }], id)

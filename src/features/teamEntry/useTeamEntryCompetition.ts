@@ -9,6 +9,7 @@ import type { Fencer, PoolRanking } from '../../shared/types';
 import { logger, LogCategory } from '@shared/services/logger';
 import type { useFencerManagement } from '../../renderer/hooks/useFencerManagement';
 import { createRapieresSession } from '../../shared/domain/rapieres/rapieres.types';
+import { rapieresLevelNumber } from '../../shared/domain/rapieres/rapieresEntry';
 import type { RapieresTeamInfo } from '../../shared/domain/rapieres/rapieres.types';
 import type { TeamRankingStats } from './TeamRankingPanel';
 import type { useWavesSessionState } from '../poolWaves/useWavesSessionState';
@@ -61,6 +62,8 @@ export function useTeamEntryCompetition({
                 ...teamFencerFields({
                   name: tm.name,
                   info: { level: tm.level, fencers: tm.fencers },
+                  // Ancienne vue dédiée : trois niveaux fixes, rang 1 à 3
+                  level: rapieresLevelNumber(tm.level),
                 }),
                 gender: Gender.MIXED,
                 nationality: 'FRA',

@@ -817,3 +817,47 @@ describe('exportResultsXMLFFE — FIE 3.3 (#1957)', () => {
     expect(xml).toContain('<Match ID="1" Date="15.03.2026" Heure="09:05">');
   });
 });
+
+// ============================================================================
+// Entrée en équipes : pas de membres dans les exports (docs/adr/0043, F4c)
+// ============================================================================
+
+describe('tireur-binôme : exports fédéraux et CSV sans membres (docs/adr/0043, F4c)', () => {
+  const binome = makeFencer('b1', 1, {
+    lastName: 'Les Mousquetaires',
+    firstName: 'Duo',
+    members: [
+      { lastName: 'Athos', firstName: 'Olivier', gender: 'M', birthDate: '1990-04-12' },
+      { lastName: 'Milady', firstName: 'Constance', gender: 'F', birthDate: '1985-11-03' },
+    ],
+    level: 2,
+    handicap: true,
+  });
+  const forbidden = ['Athos', 'Olivier', 'Milady', 'Constance', '1990-04-12', '1985-11-03'];
+  const noMember = (out: string) => {
+    for (const word of forbidden) expect(out).not.toContain(word);
+  };
+
+  it('XML FFE : le binôme est exporté sous son nom, sans ses membres', () => {
+    const xml = exportResultsXMLFFE(
+      makeCompetition(),
+      [makeRanking(binome)],
+      [{ rank: 1, fencer: binome }],
+      undefined,
+      undefined,
+      [binome]
+    );
+    expect(xml).toContain('Les Mousquetaires');
+    noMember(xml);
+  });
+
+  it('CSV du classement et CSV des statistiques : sans membres', () => {
+    const ranking = [makeRanking(binome)];
+    const csv = exportRankingCSV(ranking);
+    expect(csv).toContain('Les Mousquetaires');
+    noMember(csv);
+    const stats = exportDetailedStatsCSV(makeCompetition(), [], ranking);
+    expect(stats).toContain('Les Mousquetaires');
+    noMember(stats);
+  });
+});
