@@ -16,6 +16,7 @@ import { CONTRACT_MCP_TOOLS } from '../api/mcpAdapter';
 import type { CommandContext } from './context';
 import { teamStateView } from './teams';
 import { invoke } from '../api/engine';
+import { computeTeamFinalRanking } from '../../../shared/utils/pdfExport/teamPdf';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -501,5 +502,72 @@ d('Petite finale (docs/adr/0044, G0c)', () => {
       [`${comp.id}-t1-0`, `${comp.id}-t1-1`].sort()
     );
     expect(tableauOf(comp.id)).toHaveLength(2);
+  });
+});
+
+d('Classement final dans getCompetitionState (docs/adr/0044, G0d)', () => {
+  it('épreuve sans formule d’équipe : même résultat que l’écran (computeTeamFinalRanking)', async () => {
+    const comp = competition(Weapon.EPEE);
+    await teamsRegistered(comp.id, ['A', 'B', 'C', 'D']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    for (const m of db.getTeamMatchesByCompetition(comp.id)) await playMatch(comp.id, m.id);
+    expect((await stateOf(comp.id)).teams.finalRanking.provisional).toBe(true);
+    await call('generateTeamTableau', { competitionId: comp.id });
+    for (const m of tableauOf(comp.id)) await playMatch(comp.id, m.id);
+    for (const m of tableauOf(comp.id).filter(x => x.status !== 'finished'))
+      await playMatch(comp.id, m.id);
+    const teams = (await stateOf(comp.id)).teams;
+    const byId = new Map(db.getTeamsByCompetition(comp.id).map(t => [t.id, t]));
+    const screen = computeTeamFinalRanking(
+      teams.poolRanking.map((r: { teamId: string }) => byId.get(r.teamId)!),
+      db.getTeamTableauMatches(comp.id, comp.id)
+    );
+    expect(teams.finalRanking).toEqual({
+      rows: screen.rows.map(r => ({ teamId: r.team.id, rank: r.rank })),
+      provisional: false,
+    });
+    expect(teams.finalRanking.rows.map((r: { rank: number }) => r.rank)).toEqual([1, 2, 3, 3]);
+  });
+
+  it('formule d’équipe : petite finale, puis équipes éliminées à l’issue des poules', async () => {
+    const comp = competition(Weapon.FOIL, {
+      formula: teamFormula({
+        pool: {
+          sizeMin: 3,
+          sizeMax: 6,
+          // Ex aequo à la barre départagés au rang d'entrée : 4 qualifiés exactement
+          qualification: { mode: 'fixed_count', count: 4, ties: 'initial_ranking' },
+        },
+        tableau: { thirdPlace: true },
+      }),
+    });
+    await teamsRegistered(comp.id, ['A', 'B', 'C', 'D', 'E']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    for (const m of db.getTeamMatchesByCompetition(comp.id)) await playMatch(comp.id, m.id);
+    const out = await call('generateTeamTableau', { competitionId: comp.id });
+    expect(out.size).toBe(4);
+    const inTableau = out.slots.flatMap((s: { teamAId: string; teamBId: string }) => [
+      s.teamAId,
+      s.teamBId,
+    ]);
+    const cut = db.getTeamsByCompetition(comp.id).find(t => !inTableau.includes(t.id))!;
+    const [s1, s2] = tableauOf(comp.id);
+    await playMatch(comp.id, s1.id, 'A');
+    await playMatch(comp.id, s2.id, 'B');
+    await playMatch(comp.id, `${comp.id}-t1-0`, 'A');
+    await playMatch(comp.id, `${comp.id}-t1-1`, 'B');
+    const final = match(`${comp.id}-t1-0`);
+    const third = match(`${comp.id}-t1-1`);
+    const { rows, provisional } = (await stateOf(comp.id)).teams.finalRanking;
+    expect(provisional).toBe(false);
+    expect(rows).toEqual([
+      { teamId: final.teamAId, rank: 1 },
+      { teamId: final.teamBId, rank: 2 },
+      { teamId: third.teamBId, rank: 3 },
+      { teamId: third.teamAId, rank: 4 },
+      // Équipe coupée à l'issue des poules, hors tableau
+      { teamId: cut.id, rank: 5 },
+    ]);
+    expect(divergences(comp.id)).toEqual([]);
   });
 });

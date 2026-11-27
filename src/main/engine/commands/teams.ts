@@ -44,7 +44,10 @@ import type { Card } from '../../../shared/types';
 import { PASSIVITY_TYPE_PREFIX } from '../../../shared/domain/teams/passivityCardTypes';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
-import { EVENT, recordEvents } from './eventLog';
+import { EVENT, readJournal, recordEvents } from './eventLog';
+import { projectCompetition } from '../../../shared/domain/journal/projectCompetition';
+import { teamFinalRanking } from '../../../shared/domain/teams/teamFinalRanking';
+import { tableauSeedIds } from '../../../shared/domain/teams/teamTableau';
 
 type Ops = typeof teamSetupOperations;
 export type TeamsHandler<N extends keyof Ops> = (
@@ -508,6 +511,12 @@ export function teamsState(ctx: CommandContext, comp: Competition): TeamsStateDT
           tied: false,
         }));
   const cards = ctx.db.teams.getTeamCardsByCompetition(comp.id);
+  const final = finalRankingOf(
+    ctx,
+    comp,
+    ranking.map(r => r.team),
+    tableau
+  );
   return {
     format,
     teamSize: format === 'laser-arena' ? teamSizeOf(comp.settings) : teamRuleOf(comp).starters,
@@ -531,7 +540,44 @@ export function teamsState(ctx: CommandContext, comp: Competition): TeamsStateDT
       tied: r.tied,
     })),
     withdrawn: [...withdrawn.values()],
+    finalRanking: {
+      rows: final.rows.map(r => ({ teamId: r.team.id, rank: r.rank })),
+      provisional: final.provisional,
+    },
   };
+}
+
+/**
+ * Classement final des équipes (teamFinalRanking, docs/adr/0044). Épreuve sans formule
+ * d'équipe : sur le classement de poule, comme l'écran (même résultat). Formule d'équipe :
+ * têtes de série du tableau tiré (journal), puis les équipes éliminées à l'issue des poules ;
+ * avant le tableau, classement de poule ou rang d'entrée sans poule.
+ */
+function finalRankingOf(
+  ctx: CommandContext,
+  comp: Competition,
+  poolOrder: TeamRow[],
+  tableau: TeamMatchRow[]
+) {
+  const formula = teamFormulaOf(comp);
+  if (!formula) return teamFinalRanking(poolOrder, tableau);
+  const teams = ctx.db.teams.getTeamsByCompetition(comp.id) as TeamRow[];
+  const byId = new Map(teams.map(t => [t.id, t]));
+  const fact = projectCompetition(readJournal(ctx, comp.id)).teams?.tableau;
+  const hasPools = formula.phases.some(p => p.kind === 'pool');
+  if (!fact) {
+    const order = hasPools
+      ? poolOrder
+      : entryRankedTeams(ctx, comp, poolOrder, teamRuleOf(comp).starters);
+    return teamFinalRanking(order, tableau);
+  }
+  const seeds = tableauSeedIds(fact).flatMap(id => byId.get(id) ?? []);
+  const inTableau = new Set(seeds.map(t => t.id));
+  return teamFinalRanking(
+    seeds,
+    tableau,
+    poolOrder.filter(t => !inTableau.has(t.id))
+  );
 }
 
 /** Rencontres et relais des tables, comparés au journal rejoué (compareWithState) */

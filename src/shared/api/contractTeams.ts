@@ -116,6 +116,15 @@ export const TeamsStateSchema = z.object({
   ),
   /** Équipes retirées ou exclues (docs/adr/0028) : hors classement de poule */
   withdrawn: z.array(TeamWithdrawalSchema),
+  /**
+   * Classement final (teamFinalRanking, docs/adr/0044) : perdants ex aequo par tour, départagés
+   * par le classement d'entrée du tableau ; petite finale ; éliminées à l'issue des poules
+   * ensuite. provisional : tableau pas terminé (ou pas encore tiré).
+   */
+  finalRanking: z.object({
+    rows: z.array(z.object({ teamId: z.string(), rank: z.number().int() })),
+    provisional: z.boolean(),
+  }),
 });
 export type TeamsStateDTO = z.infer<typeof TeamsStateSchema>;
 
