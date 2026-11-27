@@ -1,8 +1,10 @@
 /**
  * BPM - Escrime - Rang d'entrée effectif d'une équipe (ADR-0044) : `ranking` saisi ou importé ;
  * à défaut, somme des classements des titulaires, à condition que chacun en ait un ; puis le nom.
- * Les équipes classées passent devant les autres. Sert au serpentin des poules d'équipes, au
- * placement du tableau sans poule et au carton noir P. Domaine pur.
+ * Les équipes au rang saisi passent devant celles au rang calculé, chacune dans l'ordre de son
+ * rang ; puis les équipes sans rang, au nom. Les deux échelles ne se mélangent pas (ADR-0044
+ * amendée). Sert au serpentin des poules d'équipes, au placement du tableau sans poule et au
+ * carton noir P. Domaine pur.
  * Licensed under GPL-3.0
  */
 import type { TeamRow } from './team.types';
