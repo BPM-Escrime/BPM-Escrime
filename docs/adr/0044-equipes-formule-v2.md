@@ -1,6 +1,6 @@
 # ADR-0044 — Les épreuves par équipes (relais FIE) suivent la formule v2 : règle de rencontre par phase, poules d'équipes, rang d'entrée (migration 55)
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-27)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-27) ; amendée le 2026-11-27 (formule d'équipe reconnue par `general.teamMatch`, rangs saisis devant les rangs calculés, classement de poules au ratio V/M, remplaçant choisi ; validé par le mainteneur)
 - **Date** : 2026-11-27
 - **Tickets** : #1948 (lot 0, étape G0), #1043 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (phases), [ADR-0024](0024-tableaux-separes-equipes-moteur.md) (équipes par le moteur), [ADR-0040](0040-ex-aequo-a-la-barre.md) (coupe), [ADR-0041](0041-controles-structure-mode-expert.md) (contrôles) ; s'appuie sur [ADR-0007](0007-format-evenement.md), [ADR-0008](0008-nommage-contrat.md), [ADR-0011](0011-migrations-schema-3-0.md), [ADR-0028](0028-cartons-equipe-moteur.md)
 
@@ -61,6 +61,12 @@
 - **Où elle se règle** : `general.teamMatch` pour la formule entière. Un tour de poules ou un
   tableau peut la surcharger par `teamMatch`, champ par champ. Le domaine lit la règle d'une
   phase par `teamMatchRuleOf(formula, ref)`. Ce champ n'est lu que si l'épreuve est par équipes.
+- **Formule d'équipe** : une formule enregistrée fait foi pour le déroulé par équipes si elle
+  porte `general.teamMatch`. Le moteur le pose à toute écriture de la formule d'une épreuve par
+  équipes en relais FIE, et à sa création. Une épreuve existante dont la formule ne le porte
+  pas garde la poule unique jusqu'à la prochaine écriture de sa formule. _(Amendé le
+  2026-11-27 : ajoute la reconnaissance d'une formule d'équipe ; l'ADR ne disait pas comment
+  distinguer une formule « individuelle » enregistrée.)_
 - **Formule absente** (épreuve existante) : la règle se lit dans les réglages d'épreuve
   actuels :
   - `minTeamSize` donne `starters` ;
@@ -75,7 +81,8 @@
   rencontre déjà créée ne change pas si la formule change ensuite.
 - **Rôle du moteur** : il contrôle les remplaçants (`reserves`) à l'inscription
   (`assignTeamFencer`) et au remplacement (`substituteTeamFencer`). Aujourd'hui, seul l'écran le
-  fait.
+  fait. Le remplaçant qui entre se choisit (`inFencerId`, facultatif ; absent : le premier
+  remplaçant). _(Amendé le 2026-11-27 : ajoute le choix du remplaçant.)_
 
 **Phases d'une épreuve par équipes**
 
@@ -95,7 +102,11 @@
   Une poule unique tous contre tous en est le cas particulier : une poule de la taille de
   l'effectif.
 
-- **Classement de poule** : inchangé (victoires, indice des relais, indice des touches).
+- **Classement de poule**, toutes poules confondues : ratio victoires / rencontres, puis indice
+  des relais, puis indice des touches. Une poule unique donne le classement d'aujourd'hui.
+  _(Amendé le 2026-11-27 : remplace « inchangé (victoires, indice des relais, indice des
+  touches) » ; avec des poules de tailles inégales, les victoires brutes désavantagent les
+  petites poules.)_
 - **Tableau d'équipes** : placé au classement d'entrée du tableau, c'est-à-dire le classement
   de poule ou, sans poule, le rang d'entrée. La petite finale (`thirdPlace`) se règle dans la
   formule. « Toutes les places » en équipes relève du lot 2 (G2) : refusé en G0
@@ -123,7 +134,10 @@
   2. à défaut, la somme des classements des titulaires, à condition que chacun en ait un ;
   3. puis le nom.
 
-  Les équipes classées passent devant les autres. Le rang effectif sert au serpentin, au
+  Les équipes au rang saisi passent devant celles au rang calculé, chacune dans l'ordre de son
+  rang ; puis les équipes sans rang, au nom. Les deux échelles ne se mélangent pas. _(Amendé le
+  2026-11-27 : remplace « Les équipes classées passent devant les autres. ».)_ Le rang effectif
+  sert au serpentin, au
   placement du tableau sans poule, et au carton noir P (au lieu du nom).
 
 **Contrôles et classement final**
