@@ -95,7 +95,7 @@ npm run e2e:debug                                 # mode debug
 
 | Domaine | Fichiers | Tests |
 |---|---:|---:|
-| `src/shared/utils/` | 83 | 891 |
+| `src/shared/utils/` | 83 | 893 |
 | `src/shared/services/` | 8 | 83 |
 | Feature `analytics` (`src/features/analytics/`) | 3 | 13 |
 | Feature `doubleelimination` (`src/features/doubleelimination/`) | 1 | 13 |
@@ -103,13 +103,13 @@ npm run e2e:debug                                 # mode debug
 | Feature `matchAuditLog` (`src/features/matchAuditLog/`) | 1 | 9 |
 | Feature `pdfTemplates` (`src/features/pdfTemplates/`) | 1 | 6 |
 | Feature `penalties` (`src/features/penalties/`) | 3 | 36 |
-| Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
+| Feature `rapieres` (`src/features/rapieres/`) | 5 | 21 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
-| `src/database/` | 25 | 284 |
-| `src/main/` | 165 | 1479 |
+| `src/database/` | 26 | 295 |
+| `src/main/` | 168 | 1498 |
 | `src/renderer/services/` | 14 | 70 |
 | `src/renderer/hooks/` | 44 | 237 |
-| `src/renderer/components/` | 145 | 833 |
+| `src/renderer/components/` | 146 | 855 |
 | E2E Playwright (`e2e/`) | 23 | 58 |
 | `src/remote/` | 60 | 443 |
 | `src/renderer/api/` | 10 | 46 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 61 | 801 |
+| `src/shared/domain/` | 67 | 864 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **669** | **5419** |
+| **Total** | **681** | **5540** |
 
-Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 658 fichiers, 5482 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -141,7 +141,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/blackCardRanking.test.ts</code> — 10 tests</summary>
+<summary><code>src/shared/utils/blackCardRanking.test.ts</code> — 11 tests</summary>
 
 - **isBlackCarded**
   - exclusion avec motif black\_card uniquement
@@ -154,6 +154,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - ex aequo 3e AU-DESSUS de l'exclu : inchangés
   - plusieurs cartons noirs
   - idempotent
+  - prédicat : tout exclu au bas sans rang (classement final générique, ADR-0043, F4d)
   - exclu simple (sans carton noir) : rang conservé
 
 </details>
@@ -958,7 +959,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/utils/multiFormatExport.test.ts</code> — 57 tests</summary>
+<summary><code>src/shared/utils/multiFormatExport.test.ts</code> — 58 tests</summary>
 
 - **exportRankingCSV**
   - includes header row
@@ -989,7 +990,8 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - maps ELIMINATED to E
   - **carton noir (#1418)**
     - rang vide (NULL) pour le carton noir, les suivants remontent
-    - exclusion simple : rang conservé
+    - poules seules : les ex aequo du classement des poules sont gardés (ADR-0043, F4d)
+    - exclusion simple : sans rang, les suivants remontent (FIE o.74, ADR-0043 amendée, F4d)
 - **exportDetailedStatsCSV**
   - includes competition title in header
   - includes VMoy and DMoy columns
@@ -2150,6 +2152,17 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/features/rapieres/RapieresRankingPanel.test.tsx</code> — 4 tests</summary>
+
+- **RapieresRankingPanel : filtres**
+  - sans réglage de la formule : catégorie, sexe, niveau et HANDI (épreuve inchangée)
+  - niveau : équipes seules, rangs depuis 1 ; HANDI cumulable
+  - PDF : classement filtré, critères dans le sous-titre
+  - filtres de la formule : seuls ceux-là sont proposés
+
+</details>
+
+<details>
 <summary><code>src/features/rapieres/rapieresImport.test.ts</code> — 10 tests</summary>
 
 - **rapieresImport (#1211)**
@@ -2330,6 +2343,16 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - **migration 53 : catégorie du tireur**
   - base 52 : tireur existant gardé, catégorie nulle, puis écrite
   - rejouée sans erreur (colonne déjà présente)
+
+</details>
+
+<details>
+<summary><code>src/database/migrations/fencerTeamEntry.test.ts</code> — 3 tests</summary>
+
+- **migration 54 : entrée en équipes (binômes)**
+  - cite l’ADR-0043 dans sa description
+  - base 53 : tireur existant gardé, colonnes nulles, puis écrites
+  - rejouée sans erreur (colonnes déjà présentes)
 
 </details>
 
@@ -2532,7 +2555,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/database/repos/privacyRepo.test.ts</code> — 12 tests</summary>
+<summary><code>src/database/repos/privacyRepo.test.ts</code> — 19 tests</summary>
 
 - **identityKey / scrubIdentityInJson**
   - regroupe par licence, sinon par nom sans accents
@@ -2548,6 +2571,14 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - membre sans licence : pas rattaché à un homonyme d’une autre date de naissance (#1882)
   - competitionIdsOf : compétitions de la personne (#1882)
   - supprime une compétition sans laisser de données orphelines
+  - **équipe : membres, niveau, HANDI (docs/adr/0043)**
+    - les membres, le niveau et le marqueur HANDI sont lus et mis à jour
+    - un tireur individuel n’a ni membres, ni niveau, ni marqueur
+    - l’export de la personne emporte les membres de l’équipe
+    - un membre nommé retrouve l’équipe qui le porte
+    - l’anonymisation efface les membres du tireur et de la session
+    - l’effacement emporte les membres du tireur et de la session
+    - la suppression du tireur supprime ses membres
 
 </details>
 
@@ -2602,7 +2633,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/database/validation.test.ts</code> — 87 tests</summary>
+<summary><code>src/database/validation.test.ts</code> — 88 tests</summary>
 
 - **ValidationError**
   - est une instance de Error
@@ -2681,6 +2712,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - rejette une nationalité invalide
   - accepte une nationalité 2 lettres
   - rejette une date de naissance dans le futur
+  - équipe (docs/adr/0043) : membres, niveau, marqueur HANDI
 - **validateMatchData**
   - accepte des données valides
   - rejette un maxScore de 0
@@ -3327,13 +3359,14 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/dataFiles.test.ts</code> — 12 tests</summary>
+<summary><code>src/main/engine/commands/dataFiles.test.ts</code> — 13 tests</summary>
 
 - getCompetitionFile rend une base SQLite autonome, rouverte par openCompetitionFile
 - archive chiffrée : mot de passe requis, faux, puis bon ; mot de passe trop court refusé
 - toute la base chiffrée (competitionId nul) ; fichier qui n’est pas une sauvegarde : invalid\_file
 - contenu qui n’est pas du base64 : invalid\_input
 - export puis réimport : mise à jour par licence, ajout sinon ; statut jamais importé
+- équipe (docs/adr/0043) : membres, niveau et marqueur HANDI suivent le tireur
 - archive invalide : invalid\_file ; épreuve inconnue : competition\_not\_found
 - export puis import : photo appliquée au tireur de même licence
 - sauvegarde .bpclub rechargée ; club déjà présent : club\_exists, sauf replace
@@ -3386,13 +3419,24 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/fencers.test.ts</code> — 5 tests</summary>
+<summary><code>src/main/engine/commands/fencers.test.ts</code> — 7 tests</summary>
 
 - registerFencers : inscrit, statut pointé admis, doublons signalés
 - updateFencerDetails : identité seulement, champ effacé par null
 - catégorie du tireur (docs/adr/0039) : inscrite, modifiée, effacée, refusée hors codes
+- équipe (docs/adr/0043) : membres, niveau, HANDI ; catégorie et sexe déduits des membres
+- équipe sans date de naissance : catégorie et sexe inchangés
 - setFencerRankings et unregisterFencers : avant le tirage seulement
 - listFencers : ordre des dossards, dates ISO
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/finalRankingEngine.test.ts</code> — 3 tests</summary>
+
+- resultsData : tableau, non-qualifiés dans l’ordre des poules, exclus au bas sans rang
+- exports FFF et HTML : même classement, exclus absents du FFF
+- XML (GREG) : mêmes rangs, exclus sans classement
 
 </details>
 
@@ -3699,7 +3743,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/sport.test.ts</code> — 34 tests</summary>
+<summary><code>src/main/engine/commands/sport.test.ts</code> — 35 tests</summary>
 
 - poules → arbitres → scores → tableau → classement final → exports
 - régénérer des poules jouées exige replace
@@ -3733,6 +3777,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - adjustRanking : ordre du DT, classements de poule alignés, RankingAdjusted
 - skipPools puis tableau ; clearTableau retire le tableau
 - composition écrite dans l’état ; journal sans nom ; tireur inconnu refusé
+- alias (docs/adr/0043, F4c) : écrit aussi membres, niveau, HANDI, catégorie et sexe sur le tireur
 - **validation des scores de poule (identique à l’écran)**
   - score max, égalité, vainqueur contraire
   - statut spécial au perdant, priorité marquée
@@ -3830,6 +3875,19 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - annulation d’un rouge : escalade recalculée, palier de nouveau strict
 - épreuve antérieure : cartons en table sans événement, pas de faux écart
 - give\_team\_card, give\_relay\_card, cancel\_\*, withdraw\_team (écriture sportive)
+
+</details>
+
+<details>
+<summary><code>src/main/engine/commands/teamEntry.test.ts</code> — 7 tests</summary>
+
+- individuelle par défaut ; équipes de 2 avec libellés ; retour à l’individuelle
+- entrée %j refusée _(each)_
+- répartition du tour : serpentin par défaut, « par niveau » réglable, valeur inconnue refusée
+- aucun par défaut ; critères réglables, vides ou null : retirés
+- critères %j refusés _(each)_
+- « par niveau » : équipes de même niveau regroupées, les plus faibles dans la 1re poule
+- serpentin (défaut) : niveaux mélangés, tirage inchangé
 
 </details>
 
@@ -4937,6 +4995,18 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - planning tireur : matchs de tableau terminés lus en base
   - planning tireur : 404 inconnu, 400 identifiant invalide
   - ETA publique : null sans session ou en entraînement
+
+</details>
+
+<details>
+<summary><code>src/main/remote/routes/publicFinalResults.test.ts</code> — 5 tests</summary>
+
+- **publicFinalResults**
+  - aucun résultat de tableau : pas de classement final
+  - le tableau, puis les non-qualifiés dans l’ordre des poules
+  - exclu, même après son entrée au tableau : au bas sans rang, les autres renumérotés
+  - liste courante : le statut du tireur est rafraîchi
+  - tableaux des groupes : chaque groupe avec ses non-qualifiés
 
 </details>
 
@@ -6247,7 +6317,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/AddFencerModal.test.tsx</code> — 8 tests</summary>
+<summary><code>src/renderer/components/AddFencerModal.test.tsx</code> — 10 tests</summary>
 
 - **AddFencerModal**
   - fenêtre de saisie : un clic à côté ne la ferme pas
@@ -6258,6 +6328,9 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - département choisi dans la liste transmis (#1504)
   - Ajouter garde la modale ouverte et vide le formulaire
   - la liste déroulante des nationalités sélectionne le code
+- **AddFencerModal : entrée en équipes (docs/adr/0043, F4c)**
+  - saisie des membres, du niveau et du marqueur HANDI ; pas de prénom propre
+  - refuse une équipe sans membre nommé
 
 </details>
 
@@ -6501,12 +6574,16 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/EditFencerModal.test.tsx</code> — 3 tests</summary>
+<summary><code>src/renderer/components/EditFencerModal.test.tsx</code> — 6 tests</summary>
 
 - **EditFencerModal**
   - préremplit les champs depuis le tireur
   - enregistre les modifications (nom en majuscules) puis ferme
   - le bouton fermer ferme la modale
+- **EditFencerModal : entrée en équipes (docs/adr/0043, F4c)**
+  - préremplit les membres et le niveau ; individuel : aucun champ d’équipe
+  - niveau et marqueur modifiés ; catégorie saisie gardée tant que les naissances ne changent pas
+  - une date de naissance modifiée laisse le moteur recalculer la catégorie
 
 </details>
 
@@ -6531,7 +6608,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/FencerList.test.tsx</code> — 5 tests</summary>
+<summary><code>src/renderer/components/FencerList.test.tsx</code> — 6 tests</summary>
 
 - **FencerList**
   - affiche les tireurs
@@ -6539,6 +6616,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - colonne nationalité masquée par défaut, affichable avec drapeau
   - le bouton ajouter déclenche onAddFencer
   - abandon : sans modale, toast Annuler qui restaure le statut
+  - entrée en équipes (docs/adr/0043) : colonne Niveau et marqueur HANDI
 
 </details>
 
@@ -6755,6 +6833,22 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - bascule vers l’onglet pointage
   - la croix en haut à droite déclenche onClose, plus de bouton Fermer en pied (#1858)
   - propose l’impression du QR Code (#1858)
+
+</details>
+
+<details>
+<summary><code>src/renderer/components/ResultsView.filters.test.tsx</code> — 9 tests</summary>
+
+- **Résultats : filtres du classement final**
+  - aucun filtre réglé : rien n’est proposé, classement complet inchangé
+  - formule sans filtres : rien n’est proposé non plus
+  - seuls les critères réglés sont proposés, avec les valeurs présentes
+  - filtre : lignes gardées, rangs depuis 1, ex aequo conservés
+  - niveaux de la formule : libellés saisis tels quels
+  - CSV : classement filtré
+  - PDF du classement et impression : classement filtré, critères dans le titre
+  - XML fédéral et FFF : classement complet, jamais filtré
+  - champion et podium : toujours ceux du classement complet
 
 </details>
 
@@ -7505,7 +7599,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 24 tests</summary>
+<summary><code>src/renderer/components/formula/FormulaEditor.test.tsx</code> — 31 tests</summary>
 
 - **FormulaEditor (formule v2)**
   - frise : appel, poules, tableau, classement ; pas de « + Classement »
@@ -7535,6 +7629,15 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - mode expert : option proposée avant un tableau, 4 qualifiés par défaut
   - niveau simple : option absente (réglage expert)
   - rapières : formule experte, mode expert rallumé ; tous qualifiés ou têtes de poule (ADR-0043)
+- **FormulaEditor : entrée en équipes et répartition par niveau (docs/adr/0043, F4c)**
+  - entrée individuelle par défaut ; équipes de 2 avec les libellés par défaut
+  - libellés des niveaux modifiables ; retour à l’individuelle retire le réglage
+  - répartition : serpentin par défaut, par niveau réglable (réglage expert)
+  - niveau simple : ni entrée en équipes ni répartition
+- **FormulaEditor : filtres du classement final (docs/adr/0043, F4d)**
+  - aucun filtre par défaut ; critères cochés dans l’ordre canonique (réglage expert)
+  - tout décocher retire le réglage
+  - niveau simple : pas de filtres du classement
 
 </details>
 
@@ -9714,6 +9817,27 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/fencers/teamEntry.test.ts</code> — 12 tests</summary>
+
+- **catégorie d’équipe**
+  - lit l’année de naissance depuis AAAA-MM-JJ
+  - moyenne des années de naissance, saison au 1er septembre
+  - âge moyen décimal arrondi au-dessus (39,5 ans → 40 → V1)
+  - catégories jeunes d’après l’âge de fin de saison
+  - une seule date connue : elle sert ; aucune : undefined (catégorie saisie)
+  - la date de saison est injectée (pas d’horloge)
+- **sexe d’équipe**
+  - commun : celui des membres ; différent : mixte
+  - indéterminé (undefined) si un sexe manque
+- **niveau et libellés**
+  - niveaux par défaut du plus faible au plus fort (liste des rapières), le plus grand est le plus fort
+  - codes par défaut traduits, libellé saisi tel quel
+  - rang de regroupement : du plus faible au plus fort, sans niveau en dernier
+  - noms des membres en majuscules, séparés par « / »
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/fencers/withdrawal.test.ts</code> — 6 tests</summary>
 
 - **planWithdrawal**
@@ -9982,7 +10106,7 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/formula/formulaV2Operations.test.ts</code> — 16 tests</summary>
+<summary><code>src/shared/domain/formula/formulaV2Operations.test.ts</code> — 20 tests</summary>
 
 - **frise sur la formule v2 (ADR-0036)**
   - mêmes briques autorisées que la frise de l’écran
@@ -10001,6 +10125,10 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - pas de Tour Quest avec un tableau arrêté
   - dernier tour d’après retiré : le tableau va de nouveau jusqu’à la finale
   - opérations entre deux formules : aller et retour
+  - entrée en équipes et répartition par niveau : aller et retour (docs/adr/0043)
+  - entrée ou répartition invalide : remarque bloquante sur la formule
+  - filtres du classement final : aller et retour, ordre canonique, vide = retiré (docs/adr/0043, F4d)
+  - filtres du classement final invalides : refus de l’opération et remarque bloquante
   - réglages plats : vainqueurs de poule lus au tour qui précède le tableau
 
 </details>
@@ -10281,13 +10409,20 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/shared/domain/pools/poolDraw.test.ts</code> — 4 tests</summary>
+<summary><code>src/shared/domain/pools/poolDraw.test.ts</code> — 10 tests</summary>
 
 - **tirage des poules : fonction unique (#1979, lot 4)**
   - défaut : classement puis club et région dans le chapeau
   - buildPools (MCP) et drawPools (écran) donnent le même tirage par défaut
   - critères de l’écran transmis au MCP : même résultat
   - ni tireur ni poule : aucun tirage
+- **répartition par niveau (docs/adr/0043, F4c)**
+  - séparation : « par niveau » ajoutée et activée, serpentin inchangé
+  - rang : du plus faible (niveau 1) au plus fort, sans niveau en dernier
+  - équipes de même niveau regroupées, poule après poule, tailles équilibrées
+  - écran (critères + rang) et moteur (distribution) : même tirage
+  - rapières : la répartition par le rang du mode spécial et par le niveau du tireur est la même
+  - serpentin : distribution absente ou « serpentine » = tirage par défaut
 
 </details>
 
@@ -10356,6 +10491,23 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/shared/domain/ranking/finalRanking.test.ts</code> — 10 tests</summary>
+
+- **finalRanking**
+  - sans tableau : classement des poules, rangs 1…n, « Poules »
+  - tableau puis éliminés des poules dans l’ordre des poules
+  - 3es ex aequo : les éliminés des poules suivent le nombre de lignes du tableau
+  - tableau arrêté : rangs du classement final, ex aequo compris, « Tableau de N »
+  - carton noir : rang perdu, en dernier, les suivants remontent
+  - égalités du tableau gardées sans exclu : 3es ex aequo, puis 5e
+  - rang des poules gardé, égalités comprises (XML fédéral) ; l’exclu reste au bas sans rang
+  - exclu, même après son entrée au tableau : au bas sans rang, les autres renumérotés (FIE o.74)
+  - exclu parmi les non-qualifiés (motif autre que le carton noir) : au bas sans rang
+  - statut rafraîchi : le tireur figé est remplacé, le rang reste
+
+</details>
+
+<details>
 <summary><code>src/shared/domain/ranking/poolHeads.test.ts</code> — 14 tests</summary>
 
 - **poolHeadsCut : count 4**
@@ -10375,6 +10527,39 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - 'initial\_ranking' : départagés par le rang d'entrée, le quota est tenu
   - 'draw' : tirage au sort avec le hasard injecté, le quota est tenu
   - pas d’ex aequo à la barre : rien à proposer
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/ranking/rankingFilters.test.ts</code> — 13 tests</summary>
+
+- **filterRanking : renumération depuis 1, ex aequo gardés**
+  - sans critère : classement rendu tel quel, y compris sans valeur connue
+  - un critère : seuls les classés qui le passent, rangs depuis 1
+  - critères cumulables
+  - un classé sans valeur connue ne passe aucun critère retenu
+  - ex aequo conservés et renumérotés : 1, 1, 3
+  - ex aequo conservés : le suivant d’un groupe garde le rang de sa position
+  - lignes sans rang (carton noir) : gardées sans rang, derrière les classés
+  - ne modifie pas le classement d’origine
+- **critères de la formule**
+  - liste valide : critères connus et distincts
+  - normalisation : ordre canonique, sans inconnu ni doublon
+  - un filtre posé hors des critères proposés est ignoré
+  - valeurs proposées : catégories dans l’ordre des âges, sexes M F X, niveaux croissants
+  - valeurs d’un tireur
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/ranking/resultsRanking.test.ts</code> — 5 tests</summary>
+
+- **resultsRanking**
+  - classement complet : le tableau, puis les non-qualifiés dans l’ordre des poules
+  - un exclu du tableau : au bas sans rang, les autres renumérotés
+  - tableaux séparés : le groupe affiché et ses non-qualifiés seulement
+  - épreuve scindée : sans les tireurs partis dans une branche
+  - tableau arrêté : restants, éliminés du tableau « Tableau de N », puis les autres
 
 </details>
 
@@ -10453,8 +10638,6 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
 
 - **Tournoi des rapières (#1118)**
   - libellé des tireurs de l’équipe
-  - **répartition**
-    - regroupe par niveau, tailles équilibrées
   - **qualification**
     - mode %s : toutes les équipes au tableau _(each)_
     - mode semis : 4 équipes
@@ -10465,8 +10648,39 @@ Unitaires : 646 fichiers, 5361 tests. E2E : 23 fichiers, 58 tests (comptage stat
     - filtre par catégorie d’équipe (moyenne des années de naissance, #1441)
     - filtre par sexe d’équipe : M, F, mixte ; sexe incomplet exclu (#1441)
     - filtres cumulables (niveau + sexe)
+    - filtres génériques : HANDI est un critère à part, pas une catégorie (docs/adr/0043, F4d)
     - rapieresPoolNumbers : numéro de poule par équipe
-    - final : tableau, puis non qualifiées, exclues en dernier
+    - final : tableau, puis non qualifiées ; exclue au bas sans rang (ADR-0043 amendée, F4d)
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/rapieres/rapieresEntry.test.ts</code> — 9 tests</summary>
+
+- **niveaux des rapières comme niveaux de la formule**
+  - 1 = débutant, 2 = intermédiaire, 3 = expert (le plus grand est le plus fort), et retour
+- **rapieresTeamEntry : composition → champs du tireur**
+  - membres, niveau, catégorie (moyenne des naissances) et sexe mixte
+  - HANDI devient le marqueur handicap, plus une catégorie
+  - sans date de naissance : catégorie saisie des membres
+  - membre sans nom : non écrit
+- **rapieresInfoOf : champs du tireur de préférence, sinon la session**
+  - le tireur porte la composition : elle prime sur la session
+  - tireur sans composition : la session (alias de compatibilité) ; sans rien : undefined
+  - écriture puis lecture : composition conservée
+  - rapieresTeamsOf fusionne : tireurs d’abord, session pour les autres
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/rapieres/rapieresFinalRankingParity.test.ts</code> — 4 tests</summary>
+
+- **classement final : rapières (mergeFinalRanking) et générique (finalRanking)**
+  - %s : même classement _(each)_
+  - le classement complet liste les non-qualifiées après le tableau (écran, comme le moteur)
+  - **équipe exclue, carton noir**
+    - équipe %s après son entrée au tableau : au bas sans rang, les autres renumérotées _(each)_
+    - équipe exclue avant le tableau : au bas sans rang, comme une exclue du tableau
 
 </details>
 
