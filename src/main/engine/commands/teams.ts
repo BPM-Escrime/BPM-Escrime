@@ -20,11 +20,21 @@ import {
   relayMaxScore,
   teamFormatOf,
   teamSizeOf,
+  type TeamPoolsDraw,
 } from '../../../shared/domain/teams/relay';
 import { calculateTeamPoolRanking } from '../../../shared/domain/teams/teamCalculations';
 import { teamEntryRanking } from '../../../shared/domain/teams/teamEntryRanking';
-import { teamFormulaOf, teamMatchRuleOf } from '../../../shared/domain/teams/teamMatchRule';
-import type { PhaseRef, TeamMatchRule } from '../../../shared/domain/formula/formulaV2';
+import {
+  relayPairsOf,
+  teamFormulaOf,
+  teamMatchRuleOf,
+} from '../../../shared/domain/teams/teamMatchRule';
+import type {
+  PhaseRef,
+  PoolRoundPhase,
+  TeamMatchRule,
+} from '../../../shared/domain/formula/formulaV2';
+import { calculateOptimalPoolCount } from '../../../shared/domain/pools/poolDistribution';
 import { calculateLaserArenaPoolRanking } from '../../../shared/domain/teams/laserArenaCalculations';
 import {
   withoutWithdrawnTeams,
@@ -214,6 +224,23 @@ export function assignTeamFencer(
       `Tireur déjà dans une autre équipe (${other}) : le retirer d’abord`
     );
   }
+  // Remplaçants de la règle de rencontre (docs/adr/0044) : contrôlés par le moteur
+  if (input.isReserve) {
+    const comp = getCompetitionOrThrow(ctx, competitionId);
+    const max = teamRuleOf(comp).reserves;
+    const team = (ctx.db.teams.getTeamsByCompetition(competitionId) as TeamRow[]).find(
+      t => t.id === teamId
+    );
+    const others = (team?.fencers ?? []).filter(f => f.isReserve && f.fencerId !== fencerId);
+    if (others.length + 1 > max) {
+      throw new CommandError(
+        'invalid_composition',
+        max === 0
+          ? 'Pas de remplaçant dans la règle de rencontre'
+          : `Remplaçants : ${max} au plus par équipe (règle de rencontre)`
+      );
+    }
+  }
   if (!input.dryRun) {
     ctx.db.teams.upsertTeamFencer(teamId, fencerId, input.teamOrder, !!input.isReserve);
     changed(ctx, competitionId);
@@ -241,20 +268,73 @@ export function unassignTeamFencer(
 
 // ─── Tirage des poules d'équipes (journalisé) ───────────────────────────────
 
+/**
+ * Tirage des poules de la formule (docs/adr/0044) : formule d'équipe (tour de poules : taille,
+ * ordre des rencontres) ou nombre de poules demandé ; undefined : épreuve existante sans formule
+ * d'équipe, poule unique tous contre tous (rejouée à l'identique). Arène : jamais.
+ */
+function teamPoolsDraw(
+  comp: Competition,
+  teams: TeamRow[],
+  rule: TeamMatchRule,
+  poolCount: number | undefined,
+  random: () => number
+): TeamPoolsDraw | undefined {
+  if (teamFormatOf(comp.settings) !== 'fie-relay') return undefined;
+  const formula = teamFormulaOf(comp);
+  if (!formula && poolCount === undefined) return undefined;
+  const round = formula?.phases.find((p): p is PoolRoundPhase => p.kind === 'pool');
+  if (formula && !round) {
+    throw new CommandError(
+      'no_pools',
+      'Formule de l’épreuve sans tour de poules : tirer le tableau d’équipes'
+    );
+  }
+  const n = teams.length;
+  const count =
+    poolCount ??
+    (n < 2 || !round
+      ? 1
+      : calculateOptimalPoolCount(
+          n,
+          Math.max(2, round.sizeMin),
+          Math.max(2, round.sizeMin, round.sizeMax)
+        ));
+  if (n >= 2 && count > Math.floor(n / 2)) {
+    throw new CommandError(
+      'invalid_pool_count',
+      `Trop de poules pour ${n} équipes (2 équipes par poule au moins)`
+    );
+  }
+  return {
+    poolCount: count,
+    boutOrder: round?.boutOrder ?? 'fie',
+    starters: rule.starters,
+    pairs: relayPairsOf(rule),
+    random,
+  };
+}
+
 export function generateTeamPools(
   ctx: CommandContext,
-  input: { competitionId: string; replace?: boolean; dryRun?: boolean },
+  input: { competitionId: string; poolCount?: number; replace?: boolean; dryRun?: boolean },
   /** Heure injectée : created_at des rencontres, qui fixe leur rang dans la poule */
-  now: Date = new Date()
+  now: Date = new Date(),
+  /** Hasard injecté : positions dans la poule (FIE §3) */
+  random: () => number = Math.random
 ) {
   const comp = teamCompetitionOrThrow(ctx, input.competitionId);
   const teams = ctx.db.teams.getTeamsByCompetition(comp.id) as TeamRow[];
-  const plan = planTeamPools(comp.id, teams, comp.weapon, comp.settings);
+  const rule = teamRuleOf(comp, { kind: 'pool', round: 0 });
+  const draw = teamPoolsDraw(comp, teams, rule, input.poolCount, random);
+  // Formule : serpentin au rang d'entrée effectif ; sans formule : ordre des noms (inchangé)
+  const ordered = draw ? entryRankedTeams(ctx, comp, teams, rule.starters) : teams;
+  const plan = planTeamPools(comp.id, ordered, comp.weapon, comp.settings, draw);
   if (isTeamPoolsRefusal(plan)) {
     if (plan.code === 'team_incomplete') {
       throw new CommandError(
         'team_incomplete',
-        `Titulaires manquants (${teamSizeOf(comp.settings)} par équipe) : ${plan.teamIds.join(', ')}`
+        `Titulaires manquants (${plan.teamSize} par équipe) : ${plan.teamIds.join(', ')}`
       );
     }
     throw new CommandError(
@@ -287,7 +367,11 @@ export function generateTeamPools(
   if (input.dryRun) return { dryRun: true, ...out };
 
   ctx.db.teams.deleteTeamPoolMatches(comp.id);
-  const maxScore = relayMaxScore(comp.weapon, comp.settings);
+  // Palier de la règle de rencontre du tour (relais FIE) ; plafond d'un assaut (arène)
+  const maxScore =
+    teamFormatOf(comp.settings) === 'laser-arena'
+      ? relayMaxScore(comp.weapon, comp.settings)
+      : rule.relayStep;
   plan.matches.forEach((m, k) => {
     // Une milliseconde par rencontre : ordre stable de la poule (getTeamMatchDetail)
     const createdAt = new Date(now.getTime() + k).toISOString();
@@ -426,7 +510,7 @@ export function teamsState(ctx: CommandContext, comp: Competition): TeamsStateDT
   const cards = ctx.db.teams.getTeamCardsByCompetition(comp.id);
   return {
     format,
-    teamSize: teamSizeOf(comp.settings),
+    teamSize: format === 'laser-arena' ? teamSizeOf(comp.settings) : teamRuleOf(comp).starters,
     teams: teams.map(t => ({
       ...t,
       ranking: t.ranking ?? null,

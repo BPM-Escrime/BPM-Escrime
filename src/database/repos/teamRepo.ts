@@ -309,6 +309,8 @@ export class TeamRepo {
       fencerBId: string;
       scoreA: number;
       scoreB: number;
+      /** Palier du relais, figé à la création de la rencontre (docs/adr/0044) */
+      maxScore: number;
       status: string;
     }>;
   } | null {
@@ -336,6 +338,7 @@ export class TeamRepo {
         fencerBId: b.fencer_b_id as string,
         scoreA: Number(b.score_a),
         scoreB: Number(b.score_b),
+        maxScore: Number(b.max_score),
         status: b.status as string,
       })),
     };

@@ -16,6 +16,7 @@ import {
   resolveTeamTableauSlot,
 } from './teamCalculations';
 import { calculateLaserArenaPoolRanking } from './laserArenaCalculations';
+import { generateSeedingChart } from '../../utils/tableCalculations';
 import { applyRematchAvoidanceSwap, buildPoolPairHistory } from './laserArenaBracketRules';
 import { planRelays, teamTableauMatchId, type RelayPlan, type TeamFormat } from './relay';
 
@@ -80,6 +81,21 @@ export function planTeamTableau(rankedTeams: TeamRow[]): TeamTableauPlan {
   return { size, slots };
 }
 
+/**
+ * Têtes de série d'un tableau tiré (fait du journal) : identifiants des équipes dans l'ordre
+ * d'entrée du tableau (tête de série 1 d'abord), retrouvé par la table de placement
+ */
+export function tableauSeedIds(tableau: TeamTableauPlan): string[] {
+  const chart = generateSeedingChart(tableau.size);
+  const seeded: Array<{ id: string; seed: number }> = [];
+  for (const s of tableau.slots) {
+    const pos = s.position * 2;
+    if (s.teamAId) seeded.push({ id: s.teamAId, seed: chart[pos] });
+    if (s.teamBId) seeded.push({ id: s.teamBId, seed: chart[pos + 1] });
+  }
+  return seeded.sort((a, b) => a.seed - b.seed).map(x => x.id);
+}
+
 /** Case suivante du vainqueur ; null : finale */
 export function nextTableauSlot(
   round: number,
@@ -88,9 +104,26 @@ export function nextTableauSlot(
   return round > 1 ? { round: round / 2, position: Math.floor(position / 2) } : null;
 }
 
+/** Case de la petite finale (docs/adr/0044) : tour de la finale, position 1 */
+export const THIRD_PLACE_SLOT = { round: 1, position: 1 } as const;
+
+/** Rencontre de tableau : la petite finale ? */
+export const isThirdPlaceSlot = (m: { round?: number | null; position?: number | null }) =>
+  m.round === THIRD_PLACE_SLOT.round && m.position === THIRD_PLACE_SLOT.position;
+
+/** Règle de rencontre du tableau (docs/adr/0044) : ordre des relais, petite finale */
+export interface TeamTableauOptions {
+  /** Paires des relais (`relayPairsOf`) ; défaut : ordre de l'arme (`relayOrderFor`) */
+  pairs?: ReadonlyArray<readonly [number, number]>;
+  /** Petite finale entre les perdants des demi-finales (formule, `thirdPlace`) */
+  thirdPlace?: boolean;
+}
+
 /**
  * Rencontres à créer : toute case dont les deux équipes sont connues et qui n'a pas encore de
  * rencontre, du premier tour à la finale. Identifiants déterministes (`${cid}-t${tour}-${pos}`).
+ * Petite finale (`thirdPlace`) : case `t1-1`, créée dès que les deux demi-finales jouées sont
+ * terminées (pas de petite finale si une demi-finale est un exempt).
  */
 export function planTeamTableauMatches(
   competitionId: string,
@@ -98,7 +131,8 @@ export function planTeamTableauMatches(
   existing: readonly TeamTableauMatchState[],
   teams: readonly TeamRow[],
   teamSize: number,
-  weapon: Weapon
+  weapon: Weapon,
+  options: TeamTableauOptions = {}
 ): TeamTableauMatchPlan[] {
   const teamById = new Map(teams.map(t => [t.id, t]));
   const placements: (TeamRow | null)[] = new Array(tableau.size).fill(null);
@@ -140,7 +174,7 @@ export function planTeamTableauMatches(
         position,
         teamAId: slot.teamA.id,
         teamBId: slot.teamB.id,
-        relays: planRelays(matchId, slot.teamA, slot.teamB, teamSize, weapon),
+        relays: planRelays(matchId, slot.teamA, slot.teamB, teamSize, weapon, options.pairs),
       });
       // Rencontre à jouer : son vainqueur n'est pas encore connu
       byKey.set(`${round}-${position}`, {
@@ -156,5 +190,30 @@ export function planTeamTableauMatches(
       });
     }
   }
+  const third = options.thirdPlace && tableau.size >= 4 ? thirdPlaceTeams() : null;
+  if (third) {
+    const { round, position } = THIRD_PLACE_SLOT;
+    const matchId = teamTableauMatchId(competitionId, round, position);
+    out.push({
+      matchId,
+      round,
+      position,
+      teamAId: third[0].id,
+      teamBId: third[1].id,
+      relays: planRelays(matchId, third[0], third[1], teamSize, weapon, options.pairs),
+    });
+  }
   return out;
+
+  /** Perdants des deux demi-finales terminées, si la petite finale n'existe pas encore */
+  function thirdPlaceTeams(): [TeamRow, TeamRow] | null {
+    if (byKey.has(`${THIRD_PLACE_SLOT.round}-${THIRD_PLACE_SLOT.position}`)) return null;
+    const losers = [0, 1].map(position => {
+      const slot = resolveTeamTableauSlot(2, position, tableau.size, placements, byKey, teamById);
+      const m = slot.match;
+      if (!m || m.status !== 'finished' || !m.winnerId || !slot.teamA || !slot.teamB) return null;
+      return m.winnerId === slot.teamA.id ? slot.teamB : slot.teamA;
+    });
+    return losers[0] && losers[1] ? [losers[0], losers[1]] : null;
+  }
 }

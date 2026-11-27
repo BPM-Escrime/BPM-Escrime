@@ -28,14 +28,25 @@ import {
   type RelayScore,
 } from '../../../shared/domain/teams/relay';
 import {
+  isThirdPlaceSlot,
   nextTableauSlot,
   planTeamTableau,
   planTeamTableauMatches,
   rankTeamsForTableau,
+  tableauSeedIds,
+  THIRD_PLACE_SLOT,
   type TeamTableauMatchPlan,
   type TeamTableauMatchState,
+  type TeamTableauOptions,
   type TeamTableauPlan,
 } from '../../../shared/domain/teams/teamTableau';
+import { relayPairsOf, teamFormulaOf } from '../../../shared/domain/teams/teamMatchRule';
+import { teamTableauEntry } from '../../../shared/domain/teams/teamTableauEntry';
+import {
+  phaseSettings,
+  tableauQualificationOf,
+  type PhaseRef,
+} from '../../../shared/domain/formula/formulaV2';
 import { projectCompetition } from '../../../shared/domain/journal/projectCompetition';
 import { relayPenaltyTouches } from '../../../shared/domain/teams/teamCards';
 import {
@@ -45,7 +56,13 @@ import {
 import type { NewJournalEvent } from '../../../database/repos/eventLogRepo';
 import { CommandError, type CommandContext } from './context';
 import { EVENT, readJournal, recordEvents } from './eventLog';
-import { changed, teamCompetitionOrThrow, withdrawnTeams } from './teams';
+import {
+  changed,
+  entryRankedTeams,
+  teamCompetitionOrThrow,
+  teamRuleOf,
+  withdrawnTeams,
+} from './teams';
 
 type Ops = typeof teamRelayOperations;
 type Handler<N extends keyof Ops> = (
@@ -79,6 +96,46 @@ const relayScores = (m: MatchRow): RelayScore[] =>
 
 /** Rencontre de tableau (tableau d'équipes : table_id posé, tour et position) */
 const isTableau = (m: MatchRow) => m.tableId !== null && m.round !== null && m.position !== null;
+
+/** Phase d'une rencontre : tableau ou tour de poules (docs/adr/0044) */
+const phaseOfMatch = (m: MatchRow): PhaseRef =>
+  isTableau(m) ? { kind: 'tableau' } : { kind: 'pool', round: 0 };
+
+/**
+ * Règle de rencontre du tableau (docs/adr/0044) : titulaires, ordre des relais et palier de la
+ * phase, petite finale de la formule d'équipe ; épreuve sans formule d'équipe : réglages
+ * d'épreuve, sans petite finale (inchangé)
+ */
+export function tableauSetup(comp: Competition): {
+  teamSize: number;
+  maxScore: number;
+  options: TeamTableauOptions;
+} {
+  const rule = teamRuleOf(comp, { kind: 'tableau' });
+  const formula = teamFormulaOf(comp);
+  const arena = teamFormatOf(comp.settings) === 'laser-arena';
+  return {
+    teamSize: arena ? teamSizeOf(comp.settings) : rule.starters,
+    maxScore: arena ? relayMaxScore(comp.weapon, comp.settings) : rule.relayStep,
+    options: {
+      ...(arena ? {} : { pairs: relayPairsOf(rule) }),
+      thirdPlace: !!(formula && phaseSettings(formula, { kind: 'tableau' })?.thirdPlace),
+    },
+  };
+}
+
+/**
+ * Règle de relais d'une rencontre (palier, cible) : figée à sa création avec la règle de sa
+ * phase (docs/adr/0044) ; formule d'équipe : palier et titulaires lus dans ses relais (une
+ * formule changée ensuite ne la change pas) ; sinon réglages d'épreuve (inchangé)
+ */
+export function matchRelayRule(comp: Competition, m: MatchRow) {
+  const base = relayRuleOf(comp.weapon, comp.settings);
+  if (!teamFormulaOf(comp) || m.bouts.length === 0) return base;
+  const starters = Math.round(Math.sqrt(m.bouts.length));
+  const stepSize = m.bouts[0].maxScore;
+  return { ...base, stepSize, target: stepSize * starters * starters };
+}
 
 /** Rencontre jouée : un relais au moins commencé ou terminé */
 export const played = (m: { status: string; bouts: Array<{ status: string }> }) =>
@@ -114,6 +171,41 @@ function tableauOf(ctx: CommandContext, comp: Competition): TeamTableauPlan {
   return planTeamTableau(rankTeamsForTableau(teams, matches, teamFormatOf(comp.settings)));
 }
 
+/** Équipes du tableau tiré, dans l'ordre d'entrée (têtes de série, fait du journal) */
+export function tableauSeeds(ctx: CommandContext, comp: Competition): TeamRow[] {
+  const byId = new Map(teamsOf(ctx, comp).map(t => [t.id, t]));
+  return tableauSeedIds(tableauOf(ctx, comp)).flatMap(id => byId.get(id) ?? []);
+}
+
+/**
+ * Classement d'entrée du tableau (docs/adr/0044) : formule d'équipe, classement de poule coupé
+ * par la qualification du tour (cutAtBar), ou rang d'entrée sans tour de poules ; sinon
+ * classement de poule de l'écran (inchangé). Équipes retirées exclues (o.99.8).
+ */
+export function tableauEntryOf(
+  ctx: CommandContext,
+  comp: Competition,
+  random?: () => number
+): { qualified: TeamRow[]; eliminated: TeamRow[] } {
+  const ranked = rankable(ctx, comp);
+  const formula = teamFormulaOf(comp);
+  if (!formula) {
+    return {
+      qualified: rankTeamsForTableau(ranked.teams, ranked.matches, teamFormatOf(comp.settings)),
+      eliminated: [],
+    };
+  }
+  const starters = teamRuleOf(comp).starters;
+  return teamTableauEntry({
+    teams: ranked.teams,
+    poolMatches: ranked.matches,
+    entryOrder: entryRankedTeams(ctx, comp, ranked.teams, starters),
+    hasPools: formula.phases.some(p => p.kind === 'pool'),
+    qualification: tableauQualificationOf(formula),
+    random,
+  });
+}
+
 /** Rencontre d'une équipe retirée ou exclue : plus de relais (docs/adr/0028 § 4) */
 export function assertNoWithdrawnTeam(ctx: CommandContext, comp: Competition, m: MatchRow) {
   const withdrawn = withdrawnTeams(ctx, comp.id);
@@ -129,12 +221,12 @@ function insertTableauMatches(
   plans: TeamTableauMatchPlan[],
   now: Date
 ): NewJournalEvent[] {
-  const maxScore = relayMaxScore(comp.weapon, comp.settings);
+  const { maxScore, teamSize } = tableauSetup(comp);
   return plans.map((m, k) => {
     if (!m.relays) {
       throw new CommandError(
         'team_incomplete',
-        `Titulaires manquants (${teamSizeOf(comp.settings)} par équipe) : rencontre ${m.matchId}`
+        `Titulaires manquants (${teamSize} par équipe) : rencontre ${m.matchId}`
       );
     }
     // Une milliseconde par rencontre : ordre stable de création
@@ -171,9 +263,15 @@ function insertTableauMatches(
 export function generateTeamTableau(
   ctx: CommandContext,
   input: { competitionId: string; replace?: boolean; dryRun?: boolean },
-  now: Date = new Date()
+  now: Date = new Date(),
+  /** Hasard injecté : ex aequo à la barre tirés au sort (ADR-0040) */
+  random: () => number = Math.random
 ) {
   const comp = teamCompetitionOrThrow(ctx, input.competitionId);
+  const formula = teamFormulaOf(comp);
+  if (formula && !formula.phases.some(p => p.kind === 'tableau')) {
+    throw new CommandError('no_direct_elimination', 'Formule de l’épreuve sans tableau');
+  }
   const teams = teamsOf(ctx, comp);
   if (teams.length < 2) {
     throw new CommandError(
@@ -181,7 +279,8 @@ export function generateTeamTableau(
       `Au moins 2 équipes (${teams.length} inscrite(s))`
     );
   }
-  const teamSize = teamSizeOf(comp.settings);
+  const setup = tableauSetup(comp);
+  const teamSize = setup.teamSize;
   const incomplete = teams.filter(t => titulars(t, teamSize).length < teamSize).map(t => t.id);
   if (incomplete.length > 0) {
     throw new CommandError(
@@ -193,6 +292,10 @@ export function generateTeamTableau(
   const ranked = rankable(ctx, comp);
   if (ranked.matches.some(m => m.status !== 'finished')) {
     throw new CommandError('pools_not_complete', 'Rencontres de poule non terminées');
+  }
+  // Formule d'équipe avec un tour de poules : poules tirées et jouées d'abord
+  if (formula?.phases.some(p => p.kind === 'pool') && ranked.matches.length === 0) {
+    throw new CommandError('pools_not_complete', 'Poules d’équipes pas encore tirées');
   }
   const existing = tableauMatchesOf(ctx, comp);
   if (existing.length > 0) {
@@ -206,10 +309,20 @@ export function generateTeamTableau(
       throw new CommandError('bracket_has_scores', 'Relais du tableau d’équipes déjà joués');
     }
   }
-  const tableau = planTeamTableau(
-    rankTeamsForTableau(ranked.teams, ranked.matches, teamFormatOf(comp.settings))
+  const qualified = tableauEntryOf(ctx, comp, random).qualified;
+  if (qualified.length < 2) {
+    throw new CommandError('not_enough_qualifiers', 'Moins de 2 équipes qualifiées');
+  }
+  const tableau = planTeamTableau(qualified);
+  const plans = planTeamTableauMatches(
+    comp.id,
+    tableau,
+    [],
+    teams,
+    teamSize,
+    comp.weapon,
+    setup.options
   );
-  const plans = planTeamTableauMatches(comp.id, tableau, [], teams, teamSize, comp.weapon);
   const out = { size: tableau.size, slots: tableau.slots, matchIds: plans.map(m => m.matchId) };
   if (input.dryRun) return { dryRun: true, ...out };
 
@@ -243,13 +356,15 @@ export function decideTeamMatch(
     const existing = tableauMatchesOf(ctx, comp).map(x =>
       x.id === m.id ? { ...x, status: 'finished', winnerId: winnerTeamId } : x
     );
+    const setup = tableauSetup(comp);
     plans = planTeamTableauMatches(
       comp.id,
       tableauOf(ctx, comp),
       existing,
       teamsOf(ctx, comp),
-      teamSizeOf(comp.settings),
-      comp.weapon
+      setup.teamSize,
+      comp.weapon,
+      setup.options
     );
   }
   const scheduledMatchIds = plans.map(p => p.matchId);
@@ -309,7 +424,7 @@ export function recordRelayScore(
     );
   }
   const format = teamFormatOf(comp.settings);
-  const rule = relayRuleOf(comp.weapon, comp.settings);
+  const rule = matchRelayRule(comp, m);
   // t.41.1 : palier dépassé d'autant de touches que de cartons rouges adverses du relais
   const penalties = relayPenaltyTouches(
     bout,
@@ -356,13 +471,15 @@ export function recordRelayScore(
     const existing = tableauMatchesOf(ctx, comp).map(x =>
       x.id === m.id ? { ...x, status: 'finished', winnerId: winnerTeamId } : x
     );
+    const setup = tableauSetup(comp);
     plans = planTeamTableauMatches(
       comp.id,
       tableauOf(ctx, comp),
       existing,
       teamsOf(ctx, comp),
-      teamSizeOf(comp.settings),
-      comp.weapon
+      setup.teamSize,
+      comp.weapon,
+      setup.options
     );
   }
   const out = {
@@ -423,10 +540,14 @@ export function reopenRelay(
   // Tableau : la rencontre suivante, formée avec le vainqueur, ne doit pas avoir commencé
   const removed: string[] = [];
   const next =
-    isTableau(m) && m.status === 'finished' ? nextTableauSlot(m.round!, m.position!) : null;
-  if (next) {
+    isTableau(m) && m.status === 'finished' && !isThirdPlaceSlot(m)
+      ? nextTableauSlot(m.round!, m.position!)
+      : null;
+  // Demi-finale : la petite finale, formée avec son perdant, suit aussi (docs/adr/0044)
+  const slots = next ? [next, ...(m.round === 2 ? [THIRD_PLACE_SLOT] : [])] : [];
+  for (const slot of slots) {
     const following = tableauMatchesOf(ctx, comp).find(
-      x => x.round === next.round && x.position === next.position
+      x => x.round === slot.round && x.position === slot.position
     );
     if (following && played(following)) {
       throw new CommandError(
@@ -502,7 +623,9 @@ export function substituteTeamFencer(
     throw new CommandError('team_not_found', `Équipe absente de la rencontre : ${input.teamId}`);
   }
   const team = teamsOf(ctx, comp).find(t => t.id === input.teamId);
-  const pool = team ? reserves(team) : [];
+  // Remplaçants de la règle de rencontre de la phase (docs/adr/0044)
+  const allowed = teamRuleOf(comp, phaseOfMatch(m)).reserves;
+  const pool = team ? reserves(team).slice(0, allowed) : [];
   const key = side === 'A' ? 'fencerAId' : 'fencerBId';
   const reserveUsed = pool.some(id => m.bouts.some(b => b[key] === id));
   const plan = planSubstitution(

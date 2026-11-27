@@ -265,3 +265,241 @@ d('Rang d’entrée d’une équipe (docs/adr/0044, G0b)', () => {
     expect(match(id)).toMatchObject({ status: 'finished', winnerId: b });
   });
 });
+
+const tableauOf = (id: string) => db.getTeamTableauMatches(id, id);
+
+/** Rang (ordre) d'un titulaire dans son équipe */
+const orderOf = (competitionId: string, fencerId: string) =>
+  db
+    .getTeamsByCompetition(competitionId)
+    .flatMap(t => t.fencers)
+    .find(f => f.fencerId === fencerId)?.teamOrder;
+
+d('Poules d’équipes lues dans la formule (docs/adr/0044, G0c)', () => {
+  it('formule d’équipe : poules de la taille du tour, serpentin au rang d’entrée, journal, rejeu', async () => {
+    const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+    // Rang d'entrée : 1 … 7 dans l'ordre inverse des noms
+    const names = ['G', 'F', 'E', 'D', 'C', 'B', 'A'];
+    const t = await teamsRegistered(
+      comp.id,
+      names.map((name, i) => ({ name, ranking: i + 1 }))
+    );
+    const out = await call('generateTeamPools', { competitionId: comp.id, commandId: 'tp' });
+    // 7 équipes, poules de 3 à 4 : 2 poules ; serpentin 1-4-5 / 2-3-6-7
+    expect(out.pools.map((p: { teamIds: string[] }) => [...p.teamIds].sort())).toEqual([
+      [t[0], t[3], t[4]].sort(),
+      [t[1], t[2], t[5], t[6]].sort(),
+    ]);
+    expect(out.matchIds).toHaveLength(3 + 6);
+    expect(out.relayCount).toBe(9 * 9);
+    expect(events(comp.id).map(e => e.type)).toEqual([
+      'TeamPoolsGenerated',
+      ...Array(9).fill('TeamMatchScheduled'),
+    ]);
+    expect(divergences(comp.id)).toEqual([]);
+  });
+
+  it('formule « individuelle » enregistrée (sans general.teamMatch) : poule unique par nom, à l’identique', async () => {
+    const individual = { ...teamFormula(), general: {} };
+    const comp = competition(Weapon.EPEE, { formula: individual });
+    const t = await teamsRegistered(comp.id, ['F', 'E', 'D', 'C', 'B', 'A']);
+    const out = await call('generateTeamPools', { competitionId: comp.id });
+    const byName = [...t].reverse();
+    expect(out.pools).toEqual([{ number: 1, teamIds: byName }]);
+    // Tous contre tous i < j, dans l'ordre des noms
+    expect(match(`${comp.id}-p1-1`)).toMatchObject({ teamAId: byName[0], teamBId: byName[1] });
+    expect(out.matchIds).toHaveLength(15);
+  });
+
+  it('poolCount : nombre de poules demandé (aussi sans formule) ; trop de poules refusé', async () => {
+    const comp = competition(Weapon.FOIL);
+    await teamsRegistered(comp.id, ['A', 'B', 'C', 'D']);
+    await reject('generateTeamPools', { competitionId: comp.id, poolCount: 3 }).toMatchObject({
+      code: 'invalid_pool_count',
+    });
+    const out = await call('generateTeamPools', { competitionId: comp.id, poolCount: 2 });
+    expect(out.pools.map((p: { teamIds: string[] }) => p.teamIds.length)).toEqual([2, 2]);
+    expect(out.matchIds).toEqual([`${comp.id}-p1-1`, `${comp.id}-p2-1`]);
+    expect(divergences(comp.id)).toEqual([]);
+  });
+
+  it('tableau seul : pas de poules (no_pools) ; tableau placé au rang d’entrée', async () => {
+    const comp = competition(Weapon.SABRE, { formula: teamFormula({ pool: null }) });
+    const [a, b, c, dd] = await teamsRegistered(comp.id, [
+      { name: 'A', ranking: 4 },
+      { name: 'B', ranking: 3 },
+      { name: 'C', ranking: 2 },
+      { name: 'D', ranking: 1 },
+    ]);
+    await reject('generateTeamPools', { competitionId: comp.id }).toMatchObject({
+      code: 'no_pools',
+    });
+    const out = await call('generateTeamTableau', { competitionId: comp.id });
+    // Têtes de série D, C, B, A : 1-4 (D-A), 3-2 (B-C)
+    expect(out.slots).toEqual([
+      { round: 2, position: 0, teamAId: dd, teamBId: a, isBye: false },
+      { round: 2, position: 1, teamAId: b, teamBId: c, isBye: false },
+    ]);
+    expect(divergences(comp.id)).toEqual([]);
+  });
+
+  it('qualification du tour vers le tableau : nombre, coupe à la barre (ADR-0040)', async () => {
+    const comp = competition(Weapon.EPEE, {
+      formula: teamFormula({ pool: { qualification: { mode: 'fixed_count', count: 2 } } }),
+    });
+    await teamsRegistered(comp.id, ['A', 'B', 'C', 'D']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    await reject('generateTeamTableau', { competitionId: comp.id }).toMatchObject({
+      code: 'pools_not_complete',
+    });
+    // L'équipe A de chaque rencontre gagne
+    for (const m of db.getTeamMatchesByCompetition(comp.id)) await playMatch(comp.id, m.id);
+    const ranking = (await stateOf(comp.id)).teams.poolRanking as Array<{ teamId: string }>;
+    const out = await call('generateTeamTableau', { competitionId: comp.id });
+    expect(out.size).toBe(2);
+    expect(out.slots).toEqual([
+      {
+        round: 1,
+        position: 0,
+        teamAId: ranking[0].teamId,
+        teamBId: ranking[1].teamId,
+        isBye: false,
+      },
+    ]);
+    expect(divergences(comp.id)).toEqual([]);
+  });
+
+  it('formule avec tour de poules : tableau refusé avant le tirage des poules', async () => {
+    const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+    await teamsRegistered(comp.id, ['A', 'B', 'C']);
+    await reject('generateTeamTableau', { competitionId: comp.id }).toMatchObject({
+      code: 'pools_not_complete',
+    });
+  });
+});
+
+d('Règle de rencontre de la phase (docs/adr/0044, G0c)', () => {
+  it('relais créés avec la règle de leur phase ; rencontre figée si la formule change', async () => {
+    const formula = teamFormula({
+      pool: { teamMatch: { relayOrder: 'rotation' } },
+      tableau: { teamMatch: { relayStep: 3 } },
+    });
+    const comp = competition(Weapon.EPEE, { formula });
+    await teamsRegistered(comp.id, ['A', 'B', 'C']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    // Poule : rotation (1-1 d'abord), palier 5 de la règle générale
+    const first = match(`${comp.id}-p1-1`);
+    expect(first.bouts.every(r => r.maxScore === 5)).toBe(true);
+    expect(orderOf(comp.id, first.bouts[0].fencerAId)).toBe(1);
+    expect(orderOf(comp.id, first.bouts[0].fencerBId)).toBe(1);
+    for (const m of db.getTeamMatchesByCompetition(comp.id)) await playMatch(comp.id, m.id);
+    await call('generateTeamTableau', { competitionId: comp.id });
+    const [semi] = tableauOf(comp.id);
+    const t = match(semi.id);
+    // Tableau : palier 3, ordre FIE o.99.3 (3-6 d'abord)
+    expect(t.bouts.every(r => r.maxScore === 3)).toBe(true);
+    expect(orderOf(comp.id, t.bouts[0].fencerAId)).toBe(3);
+    // La formule change : la rencontre créée garde son palier (cumul 4 au relais 1 refusé)
+    const changed = teamFormula({ tableau: { teamMatch: { relayStep: 6 } } });
+    db.updateCompetition(comp.id, {
+      settings: { ...db.getCompetition(comp.id)!.settings, formula: changed },
+    } as never);
+    await reject('recordRelayScore', {
+      competitionId: comp.id,
+      matchId: semi.id,
+      relay: 1,
+      scoreA: 4,
+      scoreB: 0,
+    }).toMatchObject({ code: 'score_above_max' });
+    await call('recordRelayScore', {
+      competitionId: comp.id,
+      matchId: semi.id,
+      relay: 1,
+      scoreA: 3,
+      scoreB: 1,
+    });
+    expect(divergences(comp.id)).toEqual([]);
+  });
+
+  it('remplaçants contrôlés par le moteur à l’inscription (assignTeamFencer)', async () => {
+    const comp = competition(Weapon.EPEE, { formula: teamFormula({ rule: { reserves: 2 } }) });
+    const [a] = await teamsRegistered(comp.id, ['A'], 3, 2);
+    await reject('assignTeamFencer', {
+      competitionId: comp.id,
+      teamId: a,
+      fencerId: fencer(comp.id, 'A6'),
+      teamOrder: 6,
+      isReserve: true,
+    }).toMatchObject({ code: 'invalid_composition' });
+    // Sans remplaçant dans la règle
+    const none = competition(Weapon.EPEE, { formula: teamFormula({ rule: { reserves: 0 } }) });
+    const [n] = await teamsRegistered(none.id, ['N'], 3, 0);
+    await reject('assignTeamFencer', {
+      competitionId: none.id,
+      teamId: n,
+      fencerId: fencer(none.id, 'N4'),
+      teamOrder: 4,
+      isReserve: true,
+    }).toMatchObject({ code: 'invalid_composition' });
+    // Épreuve sans formule : teamReserveCount (1 par défaut)
+    const legacy = competition(Weapon.EPEE);
+    const [l] = await teamsRegistered(legacy.id, ['L'], 3, 1);
+    await reject('assignTeamFencer', {
+      competitionId: legacy.id,
+      teamId: l,
+      fencerId: fencer(legacy.id, 'L5'),
+      teamOrder: 5,
+      isReserve: true,
+    }).toMatchObject({ code: 'invalid_composition' });
+  });
+
+  it('remplaçants contrôlés au remplacement (substituteTeamFencer) : règle de la phase', async () => {
+    const formula = teamFormula({ pool: { teamMatch: { reserves: 0 } } });
+    const comp = competition(Weapon.EPEE, { formula });
+    await teamsRegistered(comp.id, ['A', 'B', 'C']);
+    await call('generateTeamPools', { competitionId: comp.id });
+    const id = `${comp.id}-p1-1`;
+    const m = match(id);
+    await reject('substituteTeamFencer', {
+      competitionId: comp.id,
+      matchId: id,
+      teamId: m.teamAId,
+      outFencerId: m.bouts[0].fencerAId,
+    }).toMatchObject({ code: 'no_reserve' });
+  });
+});
+
+d('Petite finale (docs/adr/0044, G0c)', () => {
+  it('perdants des demi-finales en petite finale ; rouvrir une demi-finale la retire', async () => {
+    const comp = competition(Weapon.FOIL, {
+      formula: teamFormula({ pool: null, tableau: { thirdPlace: true } }),
+    });
+    await teamsRegistered(comp.id, [
+      { name: 'A', ranking: 1 },
+      { name: 'B', ranking: 2 },
+      { name: 'C', ranking: 3 },
+      { name: 'D', ranking: 4 },
+    ]);
+    await call('generateTeamTableau', { competitionId: comp.id });
+    const [s1, s2] = tableauOf(comp.id);
+    await playMatch(comp.id, s1.id, 'A');
+    expect(tableauOf(comp.id)).toHaveLength(2);
+    await playMatch(comp.id, s2.id, 'A');
+    expect(tableauOf(comp.id).map(m => [m.round, m.position])).toEqual(
+      expect.arrayContaining([
+        [1, 0],
+        [1, 1],
+      ])
+    );
+    const third = match(`${comp.id}-t1-1`);
+    expect([third.teamAId, third.teamBId]).toEqual([s1.teamBId, s2.teamBId]);
+    expect(divergences(comp.id)).toEqual([]);
+
+    // Rouvrir la 2e demi-finale : finale et petite finale non commencées retirées
+    const reopened = await call('reopenRelay', { competitionId: comp.id, matchId: s2.id });
+    expect([...reopened.removedMatchIds].sort()).toEqual(
+      [`${comp.id}-t1-0`, `${comp.id}-t1-1`].sort()
+    );
+    expect(tableauOf(comp.id)).toHaveLength(2);
+  });
+});

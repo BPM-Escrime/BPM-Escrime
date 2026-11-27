@@ -20,7 +20,8 @@ import type {
   TeamMatchRow,
   TeamRow,
 } from '../../../shared/domain/teams/team.types';
-import { relayRuleOf, teamFormatOf } from '../../../shared/domain/teams/relay';
+import { teamFormatOf } from '../../../shared/domain/teams/relay';
+import { teamFormulaOf } from '../../../shared/domain/teams/teamMatchRule';
 import { hasPassivityCards, passivityCardFor } from '../../../shared/domain/teams/passivityCards';
 import { rankTeamsForTableau } from '../../../shared/domain/teams/teamTableau';
 import { relayCardFor, teamCardFor } from '../../../shared/domain/teams/teamCards';
@@ -42,7 +43,13 @@ import {
   teamRuleOf,
   withdrawnTeams,
 } from './teams';
-import { decideTeamMatch, matchOrThrow, type MatchRow } from './teamRelays';
+import {
+  decideTeamMatch,
+  matchOrThrow,
+  matchRelayRule,
+  tableauSeeds,
+  type MatchRow,
+} from './teamRelays';
 import { applyWithdrawal } from './withdrawal';
 
 type Ops = typeof teamCardOperations;
@@ -329,7 +336,10 @@ function passivityRanks(ctx: CommandContext, comp: Competition, m: MatchRow) {
     pools,
     new Set(withdrawnTeams(ctx, comp.id).keys())
   );
-  const ranked = rankTeamsForTableau(teams, matches, teamFormatOf(comp.settings));
+  // Formule d'équipe : têtes de série du tableau tiré (classement d'entrée du tableau)
+  const ranked = teamFormulaOf(comp)
+    ? tableauSeeds(ctx, comp)
+    : rankTeamsForTableau(teams, matches, teamFormatOf(comp.settings));
   const rank = (id: string) => {
     const i = ranked.findIndex(t => t.id === id);
     return i < 0 ? null : i + 1;
@@ -382,7 +392,7 @@ export function givePassivityCard(
         nextTeamMatchStarted(ordered, m.id, m.teamAId) ||
         nextTeamMatchStarted(ordered, m.id, m.teamBId),
       ...passivityRanks(ctx, comp, m),
-      target: relayRuleOf(comp.weapon, comp.settings).target,
+      target: matchRelayRule(comp, m).target,
       liveScore: input.liveScore ?? null,
     },
     prior: ctx.db.teams.getPassivityCards(m.id),

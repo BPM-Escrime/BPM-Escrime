@@ -923,11 +923,12 @@ Aucun argument.
 
 ### `generate_team_pools` — Tirer les poules d’équipes
 
-*⚠️ écriture, destructif.* Épreuve par équipes : tire les poules d’équipes et crée leurs rencontres, chacune avec ses relais fixés (titulaires par ordre, ordre FIE des relais à 3 en épée, fleuret, sabre). Relais FIE : poule unique, tous contre tous. Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes seulement. Refus : épreuve individuelle (unsupported_format), moins de 2 équipes ou arène hors 8/12 (invalid_composition), titulaires manquants (team_incomplete), poules déjà tirées sans « replace » (draw_done), relais déjà joués (pools_have_scores), tableau d’équipes créé (bracket_exists). Journal : TeamPoolsGenerated, puis un TeamMatchScheduled par rencontre.
+*⚠️ écriture, destructif.* Épreuve par équipes : tire les poules d’équipes et crée leurs rencontres, chacune avec ses relais fixés (titulaires par ordre, ordre des relais de la règle de rencontre du tour : FIE o.99.3 à 3 titulaires ou rotation). Relais FIE avec une formule d’équipe (general.teamMatch, docs/adr/0044) : poules du tour de la formule comme en individuel (taille de poule, nombre optimal ou « poolCount », serpentin au rang d’entrée effectif des équipes, clubs séparés, ordre officiel des rencontres, positions tirées au sort), relais et palier de la règle du tour ; sans formule d’équipe : poule unique tous contre tous dans l’ordre des noms (« poolCount » : poules comme ci-dessus). Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes seulement. Refus : épreuve individuelle (unsupported_format), moins de 2 équipes ou arène hors 8/12 (invalid_composition), titulaires manquants (team_incomplete), formule sans tour de poules (no_pools), plus de poules que la moitié des équipes (invalid_pool_count), poules déjà tirées sans « replace » (draw_done), relais déjà joués (pools_have_scores), tableau d’équipes créé (bracket_exists). Journal : TeamPoolsGenerated, puis un TeamMatchScheduled par rencontre.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `poolCount` | integer |  | Nombre de poules (défaut : formule d’équipe, sinon poule unique ; docs/adr/0044) |
 | `replace` | boolean |  | Remplacer des poules déjà tirées dont aucun relais n’est joué |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |

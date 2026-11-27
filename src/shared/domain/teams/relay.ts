@@ -6,7 +6,8 @@
  * rencontre. Ni heure ni hasard : l'appelant fournit tout.
  * Licensed under GPL-3.0
  */
-import { Weapon, type CompetitionSettings } from '../../types';
+import { Weapon, type CompetitionSettings, type Fencer, type PoolBoutOrder } from '../../types';
+import { distributePools, planPoolMatches, type PoolSeparation } from '../pools/poolDraw';
 import type { TeamRow } from './team.types';
 import { getTeamTargetRule, relayOrderFor } from './teamCalculations';
 import { getLaserArenaBoutCap } from './laserArenaCalculations';
@@ -122,20 +123,21 @@ export interface RelayPlan {
 
 /**
  * Relais d'une rencontre, fixés à sa création : `N²` relais dans l'ordre de l'arme
- * (`relayOrderFor` : ordre FIE à 3 titulaires en épée, fleuret, sabre). null : titulaires
- * manquants d'un côté.
+ * (`relayOrderFor` : ordre FIE à 3 titulaires en épée, fleuret, sabre), ou dans l'ordre de la
+ * règle de rencontre de la phase (`pairs`, docs/adr/0044). null : titulaires manquants d'un côté.
  */
 export function planRelays(
   matchId: string,
   teamA: TeamRow,
   teamB: TeamRow,
   teamSize: number,
-  weapon: Weapon
+  weapon: Weapon,
+  pairs: ReadonlyArray<readonly [number, number]> = relayOrderFor(teamSize, weapon)
 ): RelayPlan[] | null {
   const a = titulars(teamA, teamSize);
   const b = titulars(teamB, teamSize);
   if (a.length < teamSize || b.length < teamSize) return null;
-  return relayOrderFor(teamSize, weapon).map(([i, j], k) => ({
+  return pairs.map(([i, j], k) => ({
     relayId: relayId(matchId, k + 1),
     order: k + 1,
     fencerAId: a[i],
@@ -166,27 +168,65 @@ export interface TeamPoolsPlan {
 export type TeamPoolsRefusal =
   | { code: 'not_enough_teams'; count: number }
   | { code: 'arena_team_count'; count: number }
-  | { code: 'team_incomplete'; teamIds: string[] };
+  | { code: 'team_incomplete'; teamIds: string[]; teamSize: number };
 
 /**
- * Poules d'équipes, dans l'ordre des équipes fourni (celui de l'écran : par nom).
- * Relais FIE : poule unique, tous contre tous (i < j). Arène Sabre Laser : calendrier figé du
- * règlement, 8 ou 12 équipes seulement. Chaque rencontre porte ses relais.
+ * Tirage des poules d'équipes d'une formule (docs/adr/0044) : comme le tour individuel,
+ * serpentin au rang d'entrée (ordre des équipes fourni), séparation par club, ordre des
+ * rencontres de la table officielle pour la taille de poule ; relais dans l'ordre de la règle
+ * de rencontre de la phase. Positions dans la poule tirées au sort (FIE §3, hasard injecté).
+ */
+export interface TeamPoolsDraw {
+  poolCount: number;
+  boutOrder: PoolBoutOrder;
+  /** Titulaires de la règle de rencontre du tour */
+  starters: number;
+  /** Paires des relais de la règle de rencontre du tour (`relayPairsOf`) */
+  pairs: ReadonlyArray<readonly [number, number]>;
+  random: () => number;
+}
+
+/** Serpentin au rang d'entrée, puis clubs séparés dans le chapeau (défaut du tour individuel) */
+const TEAM_POOL_SEPARATION: readonly PoolSeparation[] = [
+  { key: 'byRanking', enabled: true },
+  { key: 'byClub', enabled: true },
+];
+
+/** Équipe vue comme un tireur du tirage : rang d'entrée (position), club, nom */
+const asEntrant = (team: TeamRow, entryRank: number): Fencer =>
+  ({
+    id: team.id,
+    lastName: team.name,
+    firstName: '',
+    club: team.club,
+    ranking: entryRank,
+  }) as unknown as Fencer;
+
+/**
+ * Poules d'équipes, dans l'ordre des équipes fourni (sans formule : celui de l'écran, par nom ;
+ * avec `draw` : l'ordre d'entrée effectif, teamEntryRanking).
+ * Relais FIE sans `draw` : poule unique, tous contre tous (i < j), épreuve existante rejouée à
+ * l'identique. Relais FIE avec `draw` : poules de la formule (docs/adr/0044), la poule unique en
+ * est le cas particulier. Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes
+ * seulement. Chaque rencontre porte ses relais.
  */
 export function planTeamPools(
   competitionId: string,
   teams: TeamRow[],
   weapon: Weapon,
-  settings?: Partial<TeamSettings> | null
+  settings?: Partial<TeamSettings> | null,
+  draw?: TeamPoolsDraw
 ): TeamPoolsPlan | TeamPoolsRefusal {
   if (teams.length < 2) return { code: 'not_enough_teams', count: teams.length };
-  const teamSize = teamSizeOf(settings);
+  const arena = teamFormatOf(settings) === 'laser-arena';
+  const teamSize = !arena && draw ? draw.starters : teamSizeOf(settings);
+  const pairsOf = !arena && draw ? draw.pairs : undefined;
   const incomplete = teams.filter(t => titulars(t, teamSize).length < teamSize).map(t => t.id);
-  if (incomplete.length > 0) return { code: 'team_incomplete', teamIds: incomplete };
+  if (incomplete.length > 0) return { code: 'team_incomplete', teamIds: incomplete, teamSize };
 
   const pairs: Array<{ pool: number; round: number | null; a: TeamRow; b: TeamRow }> = [];
   let pools: TeamPoolsPlan['pools'];
-  if (teamFormatOf(settings) === 'laser-arena') {
+  if (arena) {
     const schedule = getLaserArenaPoolSchedule(teams.length);
     if (!schedule) return { code: 'arena_team_count', count: teams.length };
     const byPool = new Map<number, string[]>();
@@ -203,6 +243,22 @@ export function planTeamPools(
         number,
         teamIds: teams.map(t => t.id).filter(id => ids.includes(id)),
       }));
+  } else if (draw) {
+    const byId = new Map(teams.map(t => [t.id, t]));
+    const drawn = distributePools(
+      teams.map((t, i) => asEntrant(t, i + 1)),
+      { poolCount: draw.poolCount, separation: TEAM_POOL_SEPARATION, random: draw.random }
+    );
+    pools = drawn.map((entrants, index) => {
+      const plan = planPoolMatches(entrants, {
+        separation: TEAM_POOL_SEPARATION,
+        boutOrder: draw.boutOrder,
+      });
+      const placed = plan.positions.map(e => byId.get(e.id)!);
+      for (const [x, y] of plan.bouts)
+        pairs.push({ pool: index + 1, round: null, a: placed[x - 1], b: placed[y - 1] });
+      return { number: index + 1, teamIds: placed.map(t => t.id) };
+    });
   } else {
     for (let i = 0; i < teams.length; i++) {
       for (let j = i + 1; j < teams.length; j++) {
@@ -223,7 +279,7 @@ export function planTeamPools(
       round: p.round,
       teamAId: p.a.id,
       teamBId: p.b.id,
-      relays: planRelays(matchId, p.a, p.b, teamSize, weapon)!,
+      relays: planRelays(matchId, p.a, p.b, teamSize, weapon, pairsOf)!,
     };
   });
   return { pools, matches };
