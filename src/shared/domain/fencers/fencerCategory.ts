@@ -23,6 +23,19 @@ export const FENCER_CATEGORIES = [
   'V4',
 ] as const satisfies readonly `${Category}`[];
 
+/**
+ * Catégorie d'une compétition fille de scission (docs/adr/0039) : la plus jeune des catégories
+ * de la branche (V3 + V4 → V3) ; sans catégorie de branche, celle de l'épreuve d'origine.
+ */
+export function splitDaughterCategory(
+  branchCategories: readonly Category[] | undefined,
+  sourceCategory: Category
+): Category {
+  if (!branchCategories?.length) return sourceCategory;
+  const order = FENCER_CATEGORIES as readonly string[];
+  return [...branchCategories].sort((a, b) => order.indexOf(a) - order.indexOf(b))[0];
+}
+
 /** Code reconnu (U17, M17, SEN, Senior, V1…), sinon undefined */
 export function normalizeFencerCategory(v: unknown): Category | undefined {
   return normalizeAgeCategory(v) as Category | undefined;

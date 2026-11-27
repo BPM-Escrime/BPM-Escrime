@@ -49,6 +49,7 @@ import { computeEffectiveTableauRanking } from '../../../shared/domain/ranking/t
 import { rankingAfterStage, tableauStagesOf } from '../../../shared/domain/tableau/tableauStage';
 import { areAllPoolsComplete } from '../../../shared/domain/pools/poolCompletion';
 import { isTableauEligible } from '../../../shared/domain/fencers/fencerStatus';
+import { splitDaughterCategory } from '../../../shared/domain/fencers/fencerCategory';
 import { computeOverallRankingAllRoundsFor } from '../../../shared/utils/poolOrchestration';
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
@@ -288,7 +289,7 @@ export function splitCompetition(
     );
     const daughter = ctx.db.createCompetition({
       ...data,
-      category: branch.categories?.length === 1 ? branch.categories[0] : source.category,
+      category: splitDaughterCategory(branch.categories, source.category),
       settings: {
         ...data.settings,
         ...flatSettingsOf(bf, source.weapon),

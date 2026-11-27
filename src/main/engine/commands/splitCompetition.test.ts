@@ -99,7 +99,7 @@ const withBranches = (
 /** Épreuve à la formule donnée : 8 tireurs pointés, sexes et catégories alternés */
 function competition(
   formula: FormulaV2,
-  category = (i: number) => (i % 2 ? Category.V2 : Category.V1)
+  category = (i: number): Category => (i % 2 ? Category.V2 : Category.V1)
 ) {
   const comp = db.createCompetition({
     title: 'Coupe',
@@ -330,6 +330,21 @@ d('splitCompetition après un tour de poules (docs/adr/0039)', () => {
     const v2 = db.getCompetition(out.branches[1].competitionId)!;
     expect(v2.category).toBe(Category.V2);
     expect(db.getFencersByCompetition(v2.id).every(c => c.category === Category.V2)).toBe(true);
+  });
+
+  it('par catégorie : plusieurs catégories dans la branche → la plus jeune (V3 + V4 → V3)', async () => {
+    const f = withBranches(rankSplit(), 'category', [
+      { label: 'V1', phases: branchPhases('tableau', fctx, newId), categories: [Category.V1] },
+      {
+        label: 'V3-V4',
+        phases: branchPhases('tableau', fctx, newId),
+        categories: [Category.V4, Category.V3],
+      },
+    ]);
+    const comp = competition(f, i => [Category.V1, Category.V3, Category.V4][i % 3]);
+    await playPools(comp.id);
+    const out = await call('splitCompetition', { competitionId: comp.id });
+    expect(db.getCompetition(out.branches[1].competitionId)!.category).toBe(Category.V3);
   });
 
   it('split_value_missing : tireur sans catégorie ; la simulation le liste sans refuser', async () => {
