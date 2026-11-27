@@ -286,7 +286,7 @@ describe('Tournoi des rapières (#1118)', () => {
       expect(rapieresPoolNumbers([pool(1, ['x']), pool(2, ['y'])])).toEqual({ x: 1, y: 2 });
     });
 
-    it('final : tableau, puis non qualifiées, exclues en dernier', () => {
+    it('final : tableau, puis non qualifiées ; exclue au bas sans rang (ADR-0043 amendée, F4d)', () => {
       const [a, b, c, d] = ['a', 'b', 'c', 'd'].map(id => fencer(id));
       d.status = FencerStatus.EXCLUDED;
       const overall = [a, b, c, d].map((f, i) => ({ fencer: f, rank: i + 1 }) as never);
@@ -303,7 +303,7 @@ describe('Tournoi des rapières (#1118)', () => {
         { teamId: 'b', rank: 1 },
         { teamId: 'a', rank: 2 },
         { teamId: 'c', rank: 3 },
-        { teamId: 'd', rank: 4 },
+        { teamId: 'd', rank: null },
       ]);
     });
   });

@@ -153,7 +153,6 @@ function play_(sc: Scenario) {
     });
   return {
     overall: withStatus(overall) as PoolRanking[],
-    cutRanking: withStatus(cut.ranking) as PoolRanking[],
     finalResults: withStatus(finalResults),
   };
 }
@@ -209,51 +208,46 @@ describe('classement final : rapières (mergeFinalRanking) et générique (final
     );
   });
 
-  // Écarts constatés, à trancher par le mainteneur avant le retrait (F4e) : `it.fails` garde
-  // l'égalité attendue par l'ADR-0043 sans changer le comportement, et signale (échec) le jour où
-  // l'écart disparaît. Ces trois tests sont à retirer une fois la règle tranchée.
-  describe('écarts à trancher avant F4e', () => {
-    it.fails(
-      'équipe exclue après son entrée au tableau : le générique la laisse à son rang, mergeFinalRanking la renvoie en dernier et renumérote',
-      () => {
-        const sc: Scenario = {
-          pools: 2,
-          size: 4,
-          mode: 'normal',
-          after: { t3: FencerStatus.EXCLUDED },
-        };
-        const { overall, finalResults } = play_(sc);
-        // générique : t6:1 t3:2 t1:3 t8:3 t5:5 t2:6 t7:7 t4:8 ; rapières : t6:1 t1:2 t8:2 t5:4 …
-        expect(ids(generic(finalResults, overall))).toEqual(
-          ids(mergeFinalRanking(finalResults, overall))
-        );
+  // Exclu, même après son entrée au tableau : au bas sans classement (rang « - »), les autres
+  // renumérotés ; carton noir : même comportement (FIE o.74, docs/adr/0043 amendée, F4d)
+  describe('équipe exclue, carton noir', () => {
+    it.each([
+      ['exclue', { after: { t3: FencerStatus.EXCLUDED } }],
+      ['exclue sur carton noir', { blackCard: ['t3'] }],
+    ])(
+      'équipe %s après son entrée au tableau : au bas sans rang, les autres renumérotées',
+      (_n, extra) => {
+        const { overall, finalResults } = play_({ pools: 2, size: 4, mode: 'normal', ...extra });
+        const rows = generic(finalResults, overall);
+        expect(rows[rows.length - 1]).toEqual({ teamId: 't3', rank: null });
+        // Les autres : renumérotées sans trou (1 … 7), 7 équipes classées
+        const ranked = rows.slice(0, -1).map(r => r.rank as number);
+        expect(ranked[0]).toBe(1);
+        expect(Math.max(...ranked)).toBe(7);
+        expect(ids(mergeFinalRanking(finalResults, overall))).toEqual(ids(rows));
       }
     );
 
-    it.fails(
-      'équipe exclue sur carton noir : le générique lui retire le rang (« - », en dernier), mergeFinalRanking lui donne le dernier numéro',
-      () => {
-        const { overall, finalResults } = play_({
-          pools: 2,
-          size: 4,
-          mode: 'normal',
-          blackCard: ['t3'],
-        });
-        expect(ids(generic(finalResults, overall))).toEqual(
-          ids(mergeFinalRanking(finalResults, overall))
-        );
-      }
-    );
+    it('équipe exclue avant le tableau : au bas sans rang, comme une exclue du tableau', () => {
+      const { overall, finalResults } = play_({
+        pools: 2,
+        size: 4,
+        mode: 'semis',
+        before: { t2: FencerStatus.EXCLUDED },
+      });
+      const rows = generic(finalResults, overall);
+      expect(rows[rows.length - 1]).toEqual({ teamId: 't2', rank: null });
+      expect(rows.slice(0, -1).map(r => r.rank)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+      expect(ids(mergeFinalRanking(finalResults, overall))).toEqual(ids(rows));
+    });
+  });
 
-    it.fails(
-      'écran des résultats : le classement des poules reçu est celui des qualifiés (tableauCut), les équipes non qualifiées ne sont pas listées (mergeFinalRanking les liste toutes, d’après le classement complet)',
-      () => {
-        const { overall, cutRanking, finalResults } = play_({ pools: 2, size: 4, mode: 'semis' });
-        // écran générique : 4 lignes (qualifiés) ; rapières : 8 lignes
-        expect(ids(generic(finalResults, cutRanking))).toEqual(
-          ids(mergeFinalRanking(finalResults, overall))
-        );
-      }
-    );
+  it('le classement complet liste les non-qualifiées après le tableau (écran, comme le moteur)', () => {
+    const { overall, finalResults } = play_({ pools: 2, size: 4, mode: 'semis' });
+    expect(finalResults).toHaveLength(4);
+    const rows = generic(finalResults, overall);
+    expect(rows).toHaveLength(8);
+    expect(rows.slice(4).map(r => r.rank)).toEqual([5, 6, 7, 8]);
+    expect(ids(mergeFinalRanking(finalResults, overall))).toEqual(ids(rows));
   });
 });

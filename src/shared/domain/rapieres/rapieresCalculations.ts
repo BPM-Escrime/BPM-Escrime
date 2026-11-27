@@ -5,7 +5,8 @@
  * Licensed under GPL-3.0
  */
 
-import { Fencer, FencerStatus, PoolRanking } from '../../types';
+import type { Fencer, PoolRanking } from '../../types';
+import { finalRanking } from '../ranking/finalRanking';
 import { POOL_WAVES_SIZE } from '../pools/waves';
 import type { RankingFilterKey, RankingSubject } from '../ranking/rankingFilters';
 import { RapieresFencer, RapieresTeamInfo } from './rapieres.types';
@@ -83,38 +84,16 @@ export function rapieresPoolNumbers(
 // ─── Classement final ────────────────────────────────────────────────────────
 
 /**
- * Classement final des équipes : résultats du tableau, puis équipes non qualifiées dans
- * l'ordre du classement de poules ; équipes exclues en dernier.
+ * Classement final des équipes : celui du classement final générique (`finalRanking`) : le
+ * tableau, puis les non-qualifiées dans l'ordre des poules ; une équipe exclue au bas sans rang
+ * (`null`), les autres renumérotées (docs/adr/0043 amendée, F4d). Alias jusqu'à F4e.
  */
 export function mergeFinalRanking(
   tableauResults: { fencer: Fencer; rank: number }[],
   overall: PoolRanking[]
-): { teamId: string; rank: number }[] {
-  const rows = [...tableauResults]
-    .sort((a, b) => a.rank - b.rank)
-    .map(r => ({
-      teamId: r.fencer.id,
-      rank: r.rank,
-      excluded: r.fencer.status === FencerStatus.EXCLUDED,
-    }));
-  const placed = new Set(rows.map(r => r.teamId));
-  let next = rows.reduce((max, r) => Math.max(max, r.rank), 0);
-  for (const r of overall) {
-    if (placed.has(r.fencer.id)) continue;
-    placed.add(r.fencer.id);
-    rows.push({
-      teamId: r.fencer.id,
-      rank: ++next,
-      excluded: r.fencer.status === FencerStatus.EXCLUDED,
-    });
-  }
-  const ordered = [...rows.filter(r => !r.excluded), ...rows.filter(r => r.excluded)];
-  // Exclues déplacées : rangs renumérotés en conservant les ex æquo du tableau
-  const result: { teamId: string; rank: number }[] = [];
-  ordered.forEach((r, i) => {
-    const prev = ordered[i - 1];
-    const tied = !!prev && !r.excluded && !prev.excluded && prev.rank === r.rank;
-    result.push({ teamId: r.teamId, rank: tied ? result[i - 1].rank : i + 1 });
-  });
-  return result;
+): { teamId: string; rank: number | null }[] {
+  return finalRanking({ finalResults: tableauResults, poolRanking: overall }).map(r => ({
+    teamId: r.fencer.id,
+    rank: r.rank,
+  }));
 }

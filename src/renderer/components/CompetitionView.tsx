@@ -27,6 +27,7 @@ import CompetitionPropertiesModal from './CompetitionPropertiesModal';
 import {
   defaultSplitCompetitionTitle,
   extractSplitGroupRanking,
+  filterSplitGroup,
 } from '../../shared/domain/ranking/splitGroups';
 import PoolPrepView from './PoolPrepView';
 import { TEAM_PHASE_VIEWS, isTeamPhase } from './competition/teamPhases';
@@ -348,15 +349,30 @@ const CompetitionView: React.FC<CompetitionViewProps> = (props: CompetitionViewP
     return computeOverallRanking(poolHistory[pre - 1] ?? []).filter(r => seeds.has(r.fencer.id));
   }, [closedStage, storedFormula, poolHistory, computeOverallRanking]);
 
-  // Tableau arrêté (docs/adr/0037) : restants, puis éliminés du tableau (Q5), puis les autres
+  // Classement final : classement complet des poules (comme le moteur), pas la seule coupe du
+  // tableau : les non-qualifiés suivent le tableau (docs/adr/0043 amendée, F4d). Tableau arrêté
+  // (docs/adr/0037) : restants, puis éliminés du tableau (Q5), puis les autres. Tableaux séparés :
+  // le groupe affiché (docs/adr/0024).
   const stagedRanking = React.useMemo(
     () =>
       originFinalRanking(
-        effectiveTableauRanking,
+        filterSplitGroup(
+          overallRanking,
+          postPoolSplitCriteria,
+          activeSplitGroup,
+          splitOffCompetitionIds
+        ),
         competitionCore.stageHistory,
         competitionCore.splitHistory
       ),
-    [effectiveTableauRanking, competitionCore.stageHistory, competitionCore.splitHistory]
+    [
+      overallRanking,
+      postPoolSplitCriteria,
+      activeSplitGroup,
+      splitOffCompetitionIds,
+      competitionCore.stageHistory,
+      competitionCore.splitHistory,
+    ]
   );
 
   return (

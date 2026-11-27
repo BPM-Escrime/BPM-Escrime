@@ -12,6 +12,7 @@ const f = (id: string, status = FencerStatus.CHECKED_IN, exclusionReason?: strin
 const pr = (fencer: Fencer, rank: number): PoolRanking => ({ fencer, rank }) as PoolRanking;
 const out = (rows: ReturnType<typeof finalRanking>) =>
   rows.map(r => `${r.fencer.id}:${r.rank}:${r.eliminatedAt ?? ''}`);
+const out_ = (rows: ReturnType<typeof finalRanking>) => rows.map(r => `${r.fencer.id}:${r.rank}`);
 
 describe('finalRanking', () => {
   const [a, b, c, d, e] = ['a', 'b', 'c', 'd', 'e'].map(id => f(id));
@@ -66,6 +67,28 @@ describe('finalRanking', () => {
       poolRanking: [pr(black, 1), pr(b, 2), pr(c, 3)],
     });
     expect(out(rows)).toEqual(['b:1:Finale', 'c:2:Poules', 'a:null:Vainqueur']);
+  });
+
+  it('exclu, même après son entrée au tableau : au bas sans rang, les autres renumérotés (FIE o.74)', () => {
+    const out = f('b', FencerStatus.EXCLUDED);
+    const rows = finalRanking({
+      finalResults: [
+        { rank: 1, fencer: a, eliminatedAt: 'Vainqueur' },
+        { rank: 2, fencer: out, eliminatedAt: 'Finale' },
+        { rank: 3, fencer: c, eliminatedAt: 'Demi-finales' },
+      ],
+      poolRanking: [pr(a, 1), pr(out, 2), pr(c, 3), pr(d, 4), pr(e, 5)],
+    });
+    expect(out_(rows)).toEqual(['a:1', 'c:2', 'd:3', 'e:4', 'b:null']);
+  });
+
+  it('exclu parmi les non-qualifiés (motif autre que le carton noir) : au bas sans rang', () => {
+    const x = f('d', FencerStatus.EXCLUDED, 'other');
+    const rows = finalRanking({
+      finalResults: [{ rank: 1, fencer: a, eliminatedAt: 'Vainqueur' }],
+      poolRanking: [pr(a, 1), pr(b, 2), pr(x, 3), pr(c, 4)],
+    });
+    expect(out_(rows)).toEqual(['a:1', 'b:2', 'c:3', 'd:null']);
   });
 
   it('statut rafraîchi : le tireur figé est remplacé, le rang reste', () => {

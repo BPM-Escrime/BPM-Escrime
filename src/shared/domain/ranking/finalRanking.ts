@@ -1,11 +1,11 @@
 /**
  * BPM - Escrime - Classement final de l'épreuve (écran des résultats, CSV, PDF)
  * Résultats du tableau, puis éliminés des poules dans l'ordre du classement des poules ; sans
- * tableau, le classement des poules. Le carton noir fait perdre le rang (#1418). Règle sortie de
- * ResultsView sans changement de comportement (docs/adr/0043, F4d : générique, filtres dérivés).
- * Domaine pur.
+ * tableau, le classement des poules. Un exclu (carton noir compris, #1418) est au bas sans rang.
+ * Règle unique de l'écran, des exports et du moteur (docs/adr/0043, F4d). Domaine pur.
  * Licensed under GPL-3.0
  */
+import { FencerStatus } from '../../types';
 import type { Fencer, PoolRanking } from '../../types';
 import { poolEliminatedAt } from '../../utils/forfeit';
 import { applyBlackCardRanking } from '../../utils/blackCardRanking';
@@ -71,7 +71,12 @@ export function finalRanking({
     return [...finalResults.map(r => ({ ...r, fencer: refresh(r.fencer) })), ...poolEliminated];
   })();
 
-  // Carton noir (#1418) : rang perdu (« - »), en bas de liste, les suivants remontent ;
+  // Exclu (y compris après son entrée au tableau, carton noir compris) : inscrit au bas sans
+  // classement (rang « - »), les autres sont renumérotés (FIE o.74, docs/adr/0043 amendée, F4d) ;
   // ex aequo départagés par le classement de composition du tableau (rang de poules)
-  return applyBlackCardRanking(base, new Map(poolRanking.map(pr => [pr.fencer.id, pr.rank])));
+  return applyBlackCardRanking(
+    base,
+    new Map(poolRanking.map(pr => [pr.fencer.id, pr.rank])),
+    f => f.status === FencerStatus.EXCLUDED
+  );
 }

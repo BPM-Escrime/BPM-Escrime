@@ -397,15 +397,15 @@ describe('exportResultsXMLFFE', () => {
       expect(rankOf(xml, 'Deux')).toBe('');
     });
 
-    it('exclusion simple : rang conservé', () => {
+    it('exclusion simple : sans rang, les suivants remontent (FIE o.74, ADR-0043 amendée, F4d)', () => {
       const out = { ...f2, status: FencerStatus.EXCLUDED };
       const xml = exportResultsXMLFFE(makeCompetition(), ranking, finals, undefined, undefined, [
         f1,
         out,
         f3,
       ]);
-      expect(rankOf(xml, 'Deux')).toBe('2');
-      expect(rankOf(xml, 'Trois')).toBe('3');
+      expect(rankOf(xml, 'Deux')).toBe('');
+      expect(rankOf(xml, 'Trois')).toBe('2');
     });
   });
 });

@@ -14,7 +14,7 @@ import {
   Referee,
 } from '../types';
 import { getActiveLocale } from './localeFormat';
-import { applyBlackCardRanking } from './blackCardRanking';
+import { finalRanking, type TableauResult } from '../domain/ranking/finalRanking';
 import { GREG_DEFAULT_LEVEL } from './gregPublication';
 import type { TeamResultForFFF } from './fencerExport';
 
@@ -370,19 +370,13 @@ export function exportResultsXMLFFE(
     const l = live.get(f.id);
     return l ? { ...f, status: l.status, exclusionReason: l.exclusionReason } : f;
   };
-  const inFinal = new Set(finalResults.map(r => r.fencer?.id));
+  // Classement final : une seule règle pour l'écran, les exports et le moteur (docs/adr/0043, F4d)
   const finalRankMap = new Map<string, number | null>();
-  for (const r of applyBlackCardRanking(
-    [
-      ...finalResults
-        .filter(r => r.fencer?.id)
-        .map(r => ({ rank: r.rank, fencer: fresh(r.fencer) })),
-      ...poolRanking
-        .filter(r => !inFinal.has(r.fencer.id))
-        .map(r => ({ rank: r.rank, fencer: fresh(r.fencer) })),
-    ],
-    new Map(poolRanking.map(r => [r.fencer.id, r.rank]))
-  )) {
+  for (const r of finalRanking({
+    finalResults: finalResults.filter(r => r.fencer?.id) as TableauResult[],
+    poolRanking,
+    refresh: fresh,
+  })) {
     finalRankMap.set(r.fencer.id, r.rank);
   }
 

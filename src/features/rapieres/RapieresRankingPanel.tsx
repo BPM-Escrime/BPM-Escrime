@@ -61,7 +61,8 @@ const loadHidden = (): string[] => {
 
 export interface RapieresRankedTeam {
   teamId: string;
-  rank: number;
+  /** null : exclue, au bas sans classement (« - », docs/adr/0043, F4d) */
+  rank: number | null;
 }
 
 export interface RapieresTeamStats {
@@ -175,7 +176,7 @@ const RapieresRankingPanel: React.FC<RapieresRankingPanelProps> = ({
     const info = teams[r.teamId];
     const s = stats.get(r.teamId) ?? { victories: 0, matches: 0, index: 0, touchesGiven: 0 };
     const cells: Record<string, string | number> = {
-      rank: r.rank,
+      rank: r.rank ?? '-',
       team: team?.lastName ?? '?',
       fencers: info ? info.fencers.map(fencerName).join(' · ') : (team?.firstName ?? ''),
       pool: poolOf?.[r.teamId] ?? '',
