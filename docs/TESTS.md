@@ -106,10 +106,10 @@ npm run e2e:debug                                 # mode debug
 | Feature `rapieres` (`src/features/rapieres/`) | 4 | 17 |
 | Feature `teams` (`src/features/teams/`) | 1 | 7 |
 | `src/database/` | 25 | 284 |
-| `src/main/` | 162 | 1442 |
+| `src/main/` | 162 | 1446 |
 | `src/renderer/services/` | 14 | 70 |
-| `src/renderer/hooks/` | 42 | 228 |
-| `src/renderer/components/` | 142 | 803 |
+| `src/renderer/hooks/` | 43 | 231 |
+| `src/renderer/components/` | 143 | 819 |
 | E2E Playwright (`e2e/`) | 23 | 58 |
 | `src/remote/` | 60 | 443 |
 | `src/renderer/api/` | 10 | 46 |
@@ -119,11 +119,11 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/styles/` | 5 | 17 |
 | `src/renderer/utils/` | 1 | 1 |
 | `src/shared/api/` | 3 | 12 |
-| `src/shared/domain/` | 58 | 715 |
+| `src/shared/domain/` | 59 | 753 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **658** | **5257** |
+| **Total** | **661** | **5318** |
 
-Unitaires : 635 fichiers, 5199 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 638 fichiers, 5260 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -3287,7 +3287,7 @@ Unitaires : 635 fichiers, 5199 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 14 tests</summary>
+<summary><code>src/main/engine/commands/competitionFormula.test.ts</code> — 17 tests</summary>
 
 - liste : fournis puis personnels, standard du contexte
 - enregistrer une copie, la retrouver, la supprimer ; un modèle fourni est refusé
@@ -3303,6 +3303,9 @@ Unitaires : 635 fichiers, 5199 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - bornes du tour 2 refusées
 - réglages plats écrits sans formula : formule retirée, reconstruite à la lecture
 - modèle appliqué ou choisi à la création : formula enregistrée
+- S3 : refus invalid\_settings, une remarque par ligne avec la clé de la phase
+- S4 : l’effectif connu borne la somme des parts d’une scission par rang
+- S6 : après un tour joué, la phase commencée ne se retire plus
 
 </details>
 
@@ -3686,9 +3689,10 @@ Unitaires : 635 fichiers, 5199 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/main/engine/commands/station.test.ts</code> — 38 tests</summary>
+<summary><code>src/main/engine/commands/station.test.ts</code> — 39 tests</summary>
 
 - lit les valeurs par défaut, modifie puis relit
+- mode expert de l’éditeur de formule : éteint par défaut, préférence du poste (ADR-0041)
 - refuse une clé inconnue ou les dossiers de l’agent (schéma), une valeur invalide (dépôt)
 - résout le nombre de pistes : journée, sinon salle par défaut
 - reprise des réglages localStorage : « missing » ne remplace pas, « write » écrit
@@ -5927,6 +5931,16 @@ Unitaires : 635 fichiers, 5199 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/hooks/useFormulaExpert.test.tsx</code> — 3 tests</summary>
+
+- **useFormulaExpert**
+  - hors poste : éteint, valable pour l’édition en cours seulement
+  - au poste : lit la préférence puis l’écrit par updateStationSettings
+  - écriture refusée : la valeur revient
+
+</details>
+
+<details>
 <summary><code>src/renderer/hooks/useGregAutoPublish.test.ts</code> — 2 tests</summary>
 
 - **useGregAutoPublish**
@@ -7445,6 +7459,31 @@ Unitaires : 635 fichiers, 5199 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
+<summary><code>src/renderer/components/formula/FormulaEditorRemarks.test.tsx</code> — 15 tests</summary>
+
+- **remarques en direct sur la carte de la phase (ADR-0041)**
+  - formule valide : aucune remarque
+  - S3 : la remarque s’affiche sur la phase fautive, pas sur les autres
+  - la remarque disparaît dès que l’erreur est corrigée
+  - formule entière : remarque en tête (plus de 5 tours)
+  - S6 : phase commencée retirée, remarque sur sa clé ou en tête
+- **mode expert de l’éditeur (ADR-0041, Q17)**
+  - niveau simple : ni Tour Quest ni scission au « ＋ », ni tableau arrêté, ni réglages avancés
+  - niveau simple : la fin de frise ne propose pas la scission
+  - interrupteur : expert allumé propose scission, ex aequo, arrêt du tableau, ordre des matchs
+  - préférence allumée : expert d’emblée
+  - formule qui contient de l’expert : mode rallumé pour cette édition, préférence intacte
+  - tableau arrêté déjà dans la formule : expert rallumé, tableau arrêté réglable
+- **Organisation ▸ Formule : Enregistrer grisé tant qu’une remarque bloque**
+  - formule valide : Enregistrer actif
+  - remarque bloquante : Enregistrer grisé, remarque sur la phase
+  - phase commencée : sa suppression grise Enregistrer (S6)
+- **avertissements dans l’aperçu (ADR-0041)**
+  - poules de moins de 4 tireurs, moins de 4 qualifiés, plus de 3 tours
+
+</details>
+
+<details>
 <summary><code>src/renderer/components/guidedTourFlags.test.ts</code> — 6 tests</summary>
 
 - **guidedTour**
@@ -7966,11 +8005,12 @@ Unitaires : 635 fichiers, 5199 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/renderer/components/ties/TiesAtBar.test.tsx</code> — 4 tests</summary>
+<summary><code>src/renderer/components/ties/TiesAtBar.test.tsx</code> — 5 tests</summary>
 
 - **éditeur de formule : ex aequo à la barre (ADR-0040)**
   - règle à nombre fixé : réglage proposé, gardé quand le mode change
   - tous qualifiés : pas de réglage (aucune barre)
+  - niveau simple : réglage réservé au mode expert (ADR-0041)
   - scission par rang : réglage sur le nombre de la branche
 - **fenêtre de confirmation : choose**
   - un bouton par choix ; la valeur cliquée est rendue
@@ -9712,6 +9752,59 @@ Unitaires : 635 fichiers, 5199 tests. E2E : 23 fichiers, 58 tests (comptage stat
 - **tableau arrêté à N, tours après le tableau (ADR-0037, D2)**
   - déroulé : poules, tableau arrêté, poules des restants
   - partie en cours : avant la clôture, tours d’avant et tableau ; après, plus de tableau
+
+</details>
+
+<details>
+<summary><code>src/shared/domain/formula/formulaStructure.test.ts</code> — 38 tests</summary>
+
+- **remarques situées (ADR-0041)**
+  - formule par défaut : aucune remarque
+  - chaque remarque porte un code snake\_case et la clé de sa phase
+  - formule entière : phase null
+  - message du moteur : une remarque par ligne avec la clé de phase
+- **S1 : au moins une phase de combat**
+  - formule sans phase, ou réduite à une scission
+  - chaque branche, sur la carte de la scission
+- **S3 : le nombre fixé suffit à la phase suivante**
+  - tour de poules suivi de poules : au moins sizeMin
+  - suivi d’un tableau : au moins 2
+  - suivi d’un tableau arrêté : plus de stopAt
+  - un pourcentage ne bloque pas (avertissement de la simulation)
+  - part d’une branche par rang vers sa première phase
+- **S4 : le nombre se répartit en poules de sizeMin à sizeMax**
+  - 8 qualifiés ne font pas des poules de 5 à 7 ; 10 et 16 oui
+  - part d’une branche vers un tour de poules
+  - somme des parts sous l’effectif connu
+  - splitIssues rend aussi des remarques situées sur la scission
+- **S5 : chaque branche finit par une phase qui classe**
+  - branche terminée par un tableau arrêté
+  - branche : tableau arrêté suivi de poules, valide
+- **S6 : phases commencées**
+  - rien de commencé, ou structure respectée : aucune remarque
+  - une phase commencée ne se retire pas
+  - ne change pas de nature, rien ne s’insère avant elle
+  - un tour inséré après la dernière phase commencée est permis
+- **formulaProgress : phases commencées d’après l’état de session**
+  - rien : aucune phase
+  - poules du tour courant lancées, ou tours clos dans l’historique
+  - tableau tiré : les tours qui le précèdent sont commencés
+  - tableau tiré dans un groupe (tableaux séparés)
+  - étape close : tableau arrêté commencé, tour d’après en cours
+  - scission faite
+  - Tour Quest ouvert
+- **avertissements de la simulation (ADR-0041)**
+  - poules de moins de 4 tireurs
+  - moins de 4 qualifiés
+  - plus de la moitié d’exempts au premier tour du tableau (taille automatique)
+  - taille de tableau imposée : la taille effective compte
+  - plus de 3 tours de poules
+- **mode expert : briques et réglages**
+  - formule par défaut : simple
+  - scission, Tour Quest, tableau arrêté
+  - réglages avancés : ex aequo, cumul, ordre libre, barème à zones
+  - formule rendue par les opérations (aucun expert par défaut)
+  - briques proposées : le niveau simple retire Tour Quest et scission
 
 </details>
 
