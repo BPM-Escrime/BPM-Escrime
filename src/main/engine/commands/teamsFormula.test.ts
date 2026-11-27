@@ -935,6 +935,19 @@ d(
       });
     });
 
+    it('formule sans règle de rencontre (épreuve existante) : un réglage plat reporté pose la règle (ADR-0044)', async () => {
+      const legacy = teamFormula();
+      delete (legacy.general as { teamMatch?: unknown }).teamMatch;
+      const comp = competition(Weapon.EPEE, { formula: legacy });
+      await call('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { defaultTableMaxScore: 40 },
+      });
+      const formula = db.getCompetition(comp.id)!.settings!.formula!;
+      expect(formula.general.teamMatch).toBeDefined();
+      expect(formula.phases.find(p => p.kind === 'tableau')).toMatchObject({ maxScore: 40 });
+    });
+
     it('formule sans règle de rencontre (épreuve existante) : réglage de structure écrit, formule relue', async () => {
       const legacy = teamFormula();
       delete (legacy.general as { teamMatch?: unknown }).teamMatch;

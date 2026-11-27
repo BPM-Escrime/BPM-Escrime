@@ -336,7 +336,9 @@ export function updateCompetitionSettings(
     const merged = weaponChanged
       ? null
       : withFlatSettings(
-          isFieRelayTeamEvent(next) ? stored : withoutTeamMatch(stored),
+          // Épreuve par équipes en relais FIE : la règle de rencontre est posée à toute écriture
+          // de la formule, report d'un réglage plat compris (ADR-0044)
+          isFieRelayTeamEvent(next) ? withTeamMatch(stored, comp) : withoutTeamMatch(stored),
           Object.fromEntries(flatKeys.map(k => [k, (patch as Record<string, unknown>)[k]]))
         );
     if (merged) {
