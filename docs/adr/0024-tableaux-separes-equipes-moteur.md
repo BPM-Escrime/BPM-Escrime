@@ -1,6 +1,6 @@
 # ADR-0024 — Tableaux séparés et épreuves par équipes passent par le moteur
 
-- **Statut** : Acceptée (2026-11-23)
+- **Statut** : Acceptée (2026-11-23) ; amendée le 2026-11-27 (poules, placement du tableau et ordre des relais lus dans la formule d'équipe, ADR-0044 ; validé par le mainteneur)
 - **Date** : 2026-11-23
 - **Tickets** : #2100, #1980, #1981 (épique #1978)
 
@@ -121,8 +121,10 @@ le reste.
 `teamRelayLive.ts`, `laserArenaCalculations.ts`) :
 
 - **Rencontre** : deux équipes, `N²` relais. Les tireurs et l'ordre des relais
-  (`relayOrderFor(teamSize, weapon)`) sont fixés à la création de la rencontre, à partir des
-  titulaires classés par `teamOrder`. Une rencontre créée garde son ordre.
+  (`relayOrderFor(teamSize, weapon)` sans formule d'équipe ; sinon la règle de rencontre de la
+  phase, [ADR-0044](0044-equipes-formule-v2.md)) sont fixés à la création de la rencontre, à
+  partir des titulaires classés par `teamOrder`. Une rencontre créée garde son ordre. _(Amendé le
+  2026-11-27 : remplace « (`relayOrderFor(teamSize, weapon)`) » ; ADR-0044.)_
 - **Relais** : le fait enregistré est le score **du relais**, pas le cumul. Le cumul, le palier
   (`min(ordre × pas, cible)` en relais FIE, plafond par assaut en arène Sabre Laser) et le
   vainqueur du relais se calculent.
@@ -141,15 +143,15 @@ le reste.
 
 **Commandes** (verbe + objet, [ADR-0008](0008-nommage-contrat.md)) :
 
-| Commande                                 | Rôle                                                                                                                                                                                                                                     | Journal                                                                            |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `registerTeam`, `unregisterTeam`         | Créer, supprimer une équipe (nom, club). Suppression refusée après le tirage                                                                                                                                                             | Non : inscription ([ADR-0018](0018-commandes-inscription.md))                      |
-| `assignTeamFencer`, `unassignTeamFencer` | Titulaire ou remplaçant, ordre. Refusé après le tirage                                                                                                                                                                                   | Non : inscription                                                                  |
-| `generateTeamPools`                      | Rencontres de poule et leurs relais. Relais FIE : poule unique tous contre tous. Arène Sabre Laser : calendrier figé de 8 ou 12 équipes, sinon refus                                                                                     | `TeamPoolsGenerated`, puis un `TeamMatchScheduled` par rencontre                   |
-| `generateTeamTableau`                    | Placement du classement de poule (évitement de revanche en arène), rencontres du premier tour                                                                                                                                            | `TeamTableauGenerated`, `TeamMatchScheduled`                                       |
-| `recordRelayScore`                       | `{ competitionId, matchId, relay, scoreA, scoreB, winner?, expectedRevision?, commandId? }`. Termine le relais. Si la rencontre se termine : vainqueur, puis, au tableau, rencontre suivante créée dès que ses deux équipes sont connues | `RelayScoreRecorded`, puis `TeamMatchDecided` et `TeamMatchScheduled` selon le cas |
-| `reopenRelay`                            | Rouvre le dernier relais terminé pour correction (PREV de l'appareil, remise à zéro de l'écran). Refus si une rencontre suivante du tableau a commencé (`next_match_played`)                                                             | `RelayReopened`                                                                    |
-| `substituteTeamFencer`                   | `{ competitionId, matchId, teamId, outFencerId }`                                                                                                                                                                                        | `TeamFencerSubstituted`                                                            |
+| Commande                                 | Rôle                                                                                                                                                                                                                                                                                                | Journal                                                                            |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `registerTeam`, `unregisterTeam`         | Créer, supprimer une équipe (nom, club). Suppression refusée après le tirage                                                                                                                                                                                                                        | Non : inscription ([ADR-0018](0018-commandes-inscription.md))                      |
+| `assignTeamFencer`, `unassignTeamFencer` | Titulaire ou remplaçant, ordre. Refusé après le tirage                                                                                                                                                                                                                                              | Non : inscription                                                                  |
+| `generateTeamPools`                      | Rencontres de poule et leurs relais. Relais FIE : poules lues dans la formule d'équipe (ADR-0044) ; sans formule d'équipe, poule unique tous contre tous _(amendé le 2026-11-27 : remplace « poule unique tous contre tous »)_. Arène Sabre Laser : calendrier figé de 8 ou 12 équipes, sinon refus | `TeamPoolsGenerated`, puis un `TeamMatchScheduled` par rencontre                   |
+| `generateTeamTableau`                    | Placement au classement d'entrée du tableau : classement de poule coupé par la qualification, ou rang d'entrée sans poule (ADR-0044) ; évitement de revanche en arène ; rencontres du premier tour _(amendé le 2026-11-27 : remplace « Placement du classement de poule »)_                         | `TeamTableauGenerated`, `TeamMatchScheduled`                                       |
+| `recordRelayScore`                       | `{ competitionId, matchId, relay, scoreA, scoreB, winner?, expectedRevision?, commandId? }`. Termine le relais. Si la rencontre se termine : vainqueur, puis, au tableau, rencontre suivante créée dès que ses deux équipes sont connues                                                            | `RelayScoreRecorded`, puis `TeamMatchDecided` et `TeamMatchScheduled` selon le cas |
+| `reopenRelay`                            | Rouvre le dernier relais terminé pour correction (PREV de l'appareil, remise à zéro de l'écran). Refus si une rencontre suivante du tableau a commencé (`next_match_played`)                                                                                                                        | `RelayReopened`                                                                    |
+| `substituteTeamFencer`                   | `{ competitionId, matchId, teamId, outFencerId }`                                                                                                                                                                                                                                                   | `TeamFencerSubstituted`                                                            |
 
 `generatePools`, `recordScore` et `generateTableau` gardent `unsupported_format` pour une épreuve
 par équipes, avec un message qui nomme la commande d'équipe. Outils MCP : mêmes noms en
@@ -260,6 +262,7 @@ le champ `group`.
     > après un redémarrage. Pour une épreuve en cours tirée avec une version précédente, seul le
     > tableau du groupe affiché au dernier enregistrement est repris ; les tableaux des autres
     > groupes, qui n'étaient pas enregistrés, ne sont pas récupérés : ils sont à tirer de nouveau.
+
   - Équipes : les rencontres et relais en base sont repris tels quels (UUID). Le journal de ces
     épreuves est incomplet. `rebuildCompetitionState` part alors des tables, comme pour toute
     épreuve antérieure au premier palier.
