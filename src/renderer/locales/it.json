@@ -799,7 +799,8 @@
     "confirmPassivityBlack": "Il nero P decide l’incontro a favore di {{team}} (totale delle frazioni concluse, poi classifica). Registrare prima la frazione in corso. Confermare?",
     "passivityBlackConfirm": "Dare il nero P",
     "passivityCardGiven": "Cartellino P dato",
-    "passivityMatchDecided": "Nero P: {{team}} vince l’incontro"
+    "passivityMatchDecided": "Nero P: {{team}} vince l’incontro",
+    "substituteIn": "-- riserva entrante ({{team}}) --"
   },
   "kiosk": {
     "tbd": "Da definire",
@@ -2065,7 +2066,12 @@
     "fie_title": "Tocchi cumulati (regola FIE)",
     "touches_plus": "Tocchi+",
     "touches_minus": "Tocchi-",
-    "fencer_removed": "Schermidore rimosso dalla squadra"
+    "fencer_removed": "Schermidore rimosso dalla squadra",
+    "entry_rank": "Posizione d'ingresso",
+    "entry_rank_ph": "Facoltativo",
+    "entry_rank_badge": "Posizione {{n}}",
+    "entry_rank_save": "Salva la posizione",
+    "final_ranking_provisional": "(provvisoria)"
   },
   "formulaPhase": {
     "n_touches": "{{n}} tocchi",
@@ -4735,7 +4741,19 @@
     "entry_levels_hint": "Etichette separate da virgole, dalla più debole alla più forte; l’ultima è il livello più forte.",
     "distribution_hint": "Per livello: le squadre dello stesso livello sono raggruppate, dalla più debole alla più forte, girone dopo girone.",
     "ranking_filters": "Filtri della classifica finale",
-    "ranking_filters_hint": "Criteri per filtrare la classifica finale (schermo, PDF, CSV): una classifica filtrata viene rinumerata da 1. Solo visualizzazione: la classifica pubblicata resta quella completa."
+    "ranking_filters_hint": "Criteri per filtrare la classifica finale (schermo, PDF, CSV): una classifica filtrata viene rinumerata da 1. Solo visualizzazione: la classifica pubblicata resta quella completa.",
+    "team_match": "Regola dell'incontro (squadre)",
+    "team_match_phase": "Regola dell'incontro della fase",
+    "team_match_hint": "Obiettivo dell'incontro: scaglione × titolari². Ordine FIE (o.99.3) solo con 3 titolari.",
+    "team_match_phase_hint": "Campo vuoto: regola generale della formula.",
+    "team_starters": "Titolari",
+    "team_reserves": "Riserve",
+    "team_relay_step": "Scaglione (stoccate)",
+    "team_relay_order": "Ordine delle frazioni",
+    "team_relay_order_fie": "Ordine FIE (o.99.3)",
+    "team_relay_order_rotation": "Rotazione",
+    "team_relay_order_general": "Regola generale",
+    "arena_read_only": "Arena Sciabola Laser: formula di un modello fisso, non modificabile."
   },
   "formulaHelp": {
     "open": "Aiuto: {{topic}}",

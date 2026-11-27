@@ -48,6 +48,8 @@ export interface TeamCompetitionData {
   passivityCards: Record<string, PassivityCardDTO[]>;
   /** Équipes retirées (abandon) ou exclues (noir individuel), par équipe */
   withdrawn: Record<string, TeamWithdrawalDTO>;
+  /** Classement final du moteur (teamFinalRanking, docs/adr/0044), jamais recalculé ici */
+  finalRanking: TeamsStateDTO['finalRanking'];
 }
 
 const EMPTY: TeamCompetitionData = {
@@ -59,6 +61,7 @@ const EMPTY: TeamCompetitionData = {
   teamCards: {},
   passivityCards: {},
   withdrawn: {},
+  finalRanking: { rows: [], provisional: true },
 };
 
 /** Bloc « teams » au format de l'écran */
@@ -73,6 +76,7 @@ function fromBlock(block: TeamsStateDTO): TeamCompetitionData {
     teamCards: Object.fromEntries(all.map(m => [m.id, m.teamCards])),
     passivityCards: Object.fromEntries(all.map(m => [m.id, m.passivityCards])),
     withdrawn: Object.fromEntries(block.withdrawn.map(w => [w.teamId, w])),
+    finalRanking: block.finalRanking ?? EMPTY.finalRanking,
   };
 }
 

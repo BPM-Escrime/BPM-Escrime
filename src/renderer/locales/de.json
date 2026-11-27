@@ -799,7 +799,8 @@
     "confirmPassivityBlack": "Schwarz P entscheidet die Begegnung zugunsten von {{team}} (Summe der beendeten Staffeln, dann Rangliste). Zuerst die laufende Staffel speichern. Bestätigen?",
     "passivityBlackConfirm": "Schwarz P geben",
     "passivityCardGiven": "P-Karte gegeben",
-    "passivityMatchDecided": "Schwarz P: {{team}} gewinnt die Begegnung"
+    "passivityMatchDecided": "Schwarz P: {{team}} gewinnt die Begegnung",
+    "substituteIn": "-- einwechselnder Ersatz ({{team}}) --"
   },
   "kiosk": {
     "ranking": "Rangliste",
@@ -2065,7 +2066,12 @@
     "fie_title": "Kumulierte Treffer (FIE-Regel)",
     "touches_plus": "Treffer+",
     "touches_minus": "Treffer-",
-    "fencer_removed": "Fechter aus dem Team entfernt"
+    "fencer_removed": "Fechter aus dem Team entfernt",
+    "entry_rank": "Setzrang",
+    "entry_rank_ph": "Optional",
+    "entry_rank_badge": "Rang {{n}}",
+    "entry_rank_save": "Rang speichern",
+    "final_ranking_provisional": "(vorläufig)"
   },
   "formulaPhase": {
     "n_touches": "{{n}} Treffer",
@@ -4735,7 +4741,19 @@
     "entry_levels_hint": "Bezeichnungen durch Kommas getrennt, vom schwächsten zum stärksten; die letzte ist das stärkste Niveau.",
     "distribution_hint": "Nach Niveau: Teams desselben Niveaus werden zusammengefasst, vom schwächsten zum stärksten, Gruppe für Gruppe.",
     "ranking_filters": "Filter der Endrangliste",
-    "ranking_filters_hint": "Kriterien zum Filtern der Endrangliste (Bildschirm, PDF, CSV): Eine gefilterte Rangliste wird ab 1 neu nummeriert. Nur Anzeige: Die veröffentlichte Rangliste bleibt die vollständige Rangliste."
+    "ranking_filters_hint": "Kriterien zum Filtern der Endrangliste (Bildschirm, PDF, CSV): Eine gefilterte Rangliste wird ab 1 neu nummeriert. Nur Anzeige: Die veröffentlichte Rangliste bleibt die vollständige Rangliste.",
+    "team_match": "Begegnungsregel (Teams)",
+    "team_match_phase": "Begegnungsregel dieser Phase",
+    "team_match_hint": "Ziel einer Begegnung: Stufe × Stammfechter². FIE-Reihenfolge (o.99.3) nur mit 3 Stammfechtern.",
+    "team_match_phase_hint": "Leeres Feld: allgemeine Regel der Formel.",
+    "team_starters": "Stammfechter",
+    "team_reserves": "Ersatzfechter",
+    "team_relay_step": "Stufe (Treffer)",
+    "team_relay_order": "Reihenfolge der Staffeln",
+    "team_relay_order_fie": "FIE-Reihenfolge (o.99.3)",
+    "team_relay_order_rotation": "Rotation",
+    "team_relay_order_general": "Allgemeine Regel",
+    "arena_read_only": "Lichtschwert-Arena: Formel einer festen Vorlage, nicht änderbar."
   },
   "formulaHelp": {
     "open": "Hilfe: {{topic}}",

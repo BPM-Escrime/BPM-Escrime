@@ -54,8 +54,11 @@ export interface RelayHandlers {
   /** Rencontre dont le dernier relais finit à égalité au tableau : vainqueur à désigner */
   pendingTieMatchId: string | null;
   onResolveTie: (winner: 'A' | 'B') => void;
-  /** Le remplaçant de l'équipe entre à la place du tireur sortant (substituteTeamFencer) */
-  onSubstitute: (matchId: string, teamId: string, outFencerId: string) => void;
+  /**
+   * Le remplaçant de l'équipe entre à la place du tireur sortant (substituteTeamFencer) ;
+   * `inFencerId` : remplaçant choisi (absent : le premier, docs/adr/0044)
+   */
+  onSubstitute: (matchId: string, teamId: string, outFencerId: string, inFencerId?: string) => void;
   /** Équipe incomplète sans remplaçant qui abandonne (withdrawTeam, o.99.7.a) ; relais FIE */
   onWithdrawTeam?: (matchId: string, teamId: string) => void;
 }
@@ -508,7 +511,7 @@ const TeamPoolView: React.FC<Props> = ({
                             ),
                           ]}
                           fencerName={fencerName}
-                          onSubstitute={out => relay.onSubstitute(m.id, team.id, out)}
+                          onSubstitute={(out, inId) => relay.onSubstitute(m.id, team.id, out, inId)}
                         />
                       ) : (
                         <div key={side} />
@@ -639,16 +642,21 @@ const RelayCardBadge: React.FC<{ card: RelayCardDTO; onCancel?: () => void }> = 
   );
 };
 
-/** Remplacement : tireur sortant choisi parmi ceux des relais à tirer de l'équipe */
-const SubstitutePicker: React.FC<{
+/**
+ * Remplacement : tireur sortant choisi parmi ceux des relais à tirer de l'équipe ; plusieurs
+ * remplaçants : celui qui entre se choisit (inFencerId, docs/adr/0044)
+ */
+export const SubstitutePicker: React.FC<{
   side: 'A' | 'B';
   team: TeamRow;
   fencerIds: string[];
   fencerName: (id: string) => string;
-  onSubstitute: (outFencerId: string) => void;
+  onSubstitute: (outFencerId: string, inFencerId?: string) => void;
 }> = ({ side, team, fencerIds, fencerName, onSubstitute }) => {
   const { t } = useTranslation();
   const [out, setOut] = useState('');
+  const reserves = team.fencers.filter(f => f.isReserve).map(f => f.fencerId);
+  const [inId, setInId] = useState('');
   return (
     <div className={`flex items-center gap-1 flex-wrap ${side === 'B' ? 'justify-end' : ''}`}>
       <select
@@ -664,11 +672,27 @@ const SubstitutePicker: React.FC<{
           </option>
         ))}
       </select>
+      {reserves.length > 1 && (
+        <select
+          aria-label={t('teams.substituteIn', { team: team.name })}
+          value={inId}
+          onChange={e => setInId(e.target.value)}
+          className="border border-gray-300 rounded px-1.5 py-1 text-xs"
+        >
+          <option value="">{t('teams.substituteIn', { team: team.name })}</option>
+          {reserves.map(id => (
+            <option key={id} value={id}>
+              {fencerName(id)}
+            </option>
+          ))}
+        </select>
+      )}
       <button
         onClick={() => {
           if (!out) return;
-          onSubstitute(out);
+          onSubstitute(out, inId || undefined);
           setOut('');
+          setInId('');
         }}
         disabled={!out}
         className="px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-40"

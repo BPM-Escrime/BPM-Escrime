@@ -799,7 +799,8 @@
     "confirmPassivityBlack": "Black P decides the match for {{team}} (total of the finished relays, then ranking). Record the current relay first. Confirm?",
     "passivityBlackConfirm": "Give black P",
     "passivityCardGiven": "P card given",
-    "passivityMatchDecided": "Black P: {{team}} wins the match"
+    "passivityMatchDecided": "Black P: {{team}} wins the match",
+    "substituteIn": "-- incoming reserve ({{team}}) --"
   },
   "kiosk": {
     "ranking": "Ranking",
@@ -2065,7 +2066,12 @@
     "fie_title": "Cumulative touches (FIE rule)",
     "touches_plus": "Touches+",
     "touches_minus": "Touches-",
-    "fencer_removed": "Fencer removed from team"
+    "fencer_removed": "Fencer removed from team",
+    "entry_rank": "Entry rank",
+    "entry_rank_ph": "Optional",
+    "entry_rank_badge": "Rank {{n}}",
+    "entry_rank_save": "Save rank",
+    "final_ranking_provisional": "(provisional)"
   },
   "formulaPhase": {
     "n_touches": "{{n}} touches",
@@ -4735,7 +4741,19 @@
     "entry_levels_hint": "Labels separated by commas, weakest to strongest; the last is the strongest level.",
     "distribution_hint": "By level: teams of the same level are grouped together, from weakest to strongest, pool after pool.",
     "ranking_filters": "Final ranking filters",
-    "ranking_filters_hint": "Criteria offered to filter the final ranking (screen, PDF, CSV): a filtered ranking is renumbered from 1. Display only: the published ranking remains the full ranking."
+    "ranking_filters_hint": "Criteria offered to filter the final ranking (screen, PDF, CSV): a filtered ranking is renumbered from 1. Display only: the published ranking remains the full ranking.",
+    "team_match": "Team match rule",
+    "team_match_phase": "Match rule for this phase",
+    "team_match_hint": "Match target: step × starters². FIE order (o.99.3) with 3 starters only.",
+    "team_match_phase_hint": "Empty field: the formula's general rule.",
+    "team_starters": "Starters",
+    "team_reserves": "Reserves",
+    "team_relay_step": "Step (hits)",
+    "team_relay_order": "Relay order",
+    "team_relay_order_fie": "FIE order (o.99.3)",
+    "team_relay_order_rotation": "Rotation",
+    "team_relay_order_general": "General rule",
+    "arena_read_only": "Lightsaber arena: fixed-template formula, cannot be changed."
   },
   "formulaHelp": {
     "open": "Help: {{topic}}",

@@ -9,6 +9,9 @@
  * giveTeamCard, giveRelayCard, cancelTeamCard, cancelRelayCard, withdrawTeam ; succès affiché
  * après la réponse du moteur (docs/adr/0005). Cartons P (relais FIE, t.124, #2227) par
  * givePassivityCard : essai à blanc, confirmation du noir P (il décide la rencontre), envoi.
+ * Formule d'équipe (docs/adr/0044) : rang d'entrée saisi (registerTeam, updateTeam), tableau
+ * seul sans poules, palier de la rencontre lu dans ses relais, petite finale, remplaçant choisi,
+ * classement final lu dans le bloc « teams » (teamFinalRanking du moteur).
  * Licensed under GPL-3.0
  */
 
@@ -28,6 +31,12 @@ import {
   teamFormatOf,
 } from '../../shared/domain/teams/relay';
 import { rankTeamsForTableau } from '../../shared/domain/teams/teamTableau';
+import {
+  hasTeamPools,
+  teamFormulaOf,
+  teamMatchRuleOf,
+} from '../../shared/domain/teams/teamMatchRule';
+import { teamEntryRanking } from '../../shared/domain/teams/teamEntryRanking';
 import { hasPassivityCards } from '../../shared/domain/teams/passivityCards';
 import TeamPoolView, { CardHandlers, CardTarget, RelayHandlers } from './TeamPoolView';
 import TeamTableauView from './TeamTableauView';
@@ -60,6 +69,12 @@ interface Props {
   onNavigate?: (view: TeamViewMode) => void;
 }
 
+/** Rang saisi : entier ≥ 1, sinon aucun */
+const parseRank = (v: string): number | undefined => {
+  const n = parseInt(v, 10);
+  return Number.isInteger(n) && n >= 1 ? n : undefined;
+};
+
 /** Score du relais en cours, compté à l'écran jusqu'à la fin du relais */
 type Draft = { scoreA: number; scoreB: number };
 
@@ -88,6 +103,9 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   const isLaserArena = competition.settings?.teamFormat === 'laser-arena';
   const format = teamFormatOf(competition.settings);
   const rule = relayRuleOf(competition.weapon, competition.settings);
+  // Formule d'équipe (docs/adr/0044) : poules ou tableau seul ; règle de rencontre du tableau
+  const teamFormula = teamFormulaOf(competition);
+  const teamPools = hasTeamPools(competition);
   const boutCap = getLaserArenaBoutCap();
   const competitionId = competition.id;
   const { confirm } = useConfirm();
@@ -103,6 +121,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     teamCards,
     passivityCards,
     withdrawn,
+    finalRanking,
     loading,
     run,
   } = useTeamCompetition(competitionId);
@@ -111,6 +130,9 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   // Création équipe
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamClub, setNewTeamClub] = useState('');
+  // Rang d'entrée (docs/adr/0044) : facultatif, 1 = la meilleure
+  const [newTeamRanking, setNewTeamRanking] = useState('');
+  const [rankDraft, setRankDraft] = useState('');
   const [creating, setCreating] = useState(false);
 
   // Edition fencer assignment
@@ -155,18 +177,26 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     setCreating(true);
     try {
       const club = newTeamClub.trim();
+      const ranking = parseRank(newTeamRanking);
       const out = await run('registerTeam', {
         competitionId,
         name: newTeamName.trim(),
         ...(club ? { club } : {}),
+        ...(ranking ? { ranking } : {}),
       });
       if (out) {
         setNewTeamName('');
         setNewTeamClub('');
+        setNewTeamRanking('');
       }
     } finally {
       setCreating(false);
     }
+  };
+
+  // ── Rang d'entrée d'une équipe (updateTeam, avant le tirage ; vide : rang retiré) ──
+  const handleSaveRanking = async (teamId: string) => {
+    await run('updateTeam', { competitionId, teamId, ranking: parseRank(rankDraft) ?? null });
   };
 
   // ── Supprimer équipe ──────────────────────────────────────────────────────────
@@ -214,7 +244,12 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   const handleGenerateTableau = async () => {
     const replace = tableauMatches.length > 0;
     if (replace && !(await confirm(t('teams.confirmRegenerate')))) return;
-    await run('generateTeamTableau', { competitionId, ...(replace ? { replace } : {}) });
+    const out = await run('generateTeamTableau', {
+      competitionId,
+      ...(replace ? { replace } : {}),
+    });
+    // Formule d'équipe sans poules : le tableau suit l'appel (docs/adr/0044)
+    if (out && !teamPools) onNavigate?.('tableau');
   };
 
   // ── Relais en cours : touches comptées à l'écran, fin envoyée au moteur ───────
@@ -253,9 +288,17 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     const before = isLaserArena
       ? { scoreA: 0, scoreB: 0 }
       : relayCumulative(relayScoresOf(match), bout.boutOrder - 1);
-    const cap = relayCap(bout.boutOrder, format, rule);
+    // Formule d'équipe : palier et cible figés dans les relais de la rencontre, comme le moteur
+    // (docs/adr/0044) ; sinon réglages d'épreuve
+    const step = match.bouts[0]?.maxScore ?? rule.stepSize;
+    const matchRule =
+      teamFormula && !isLaserArena
+        ? { ...rule, stepSize: step, target: step * match.bouts.length }
+        : rule;
+    const cap = relayCap(bout.boutOrder, format, matchRule);
     // Relais en points (Sabre Laser) : la dernière touche peut dépasser le palier (cible C, #2188)
-    const ceiling = !isLaserArena && rule.mode === 'points' ? cap + relayOvershoot(rule) : cap;
+    const ceiling =
+      !isLaserArena && matchRule.mode === 'points' ? cap + relayOvershoot(matchRule) : cap;
     const clamp = (v: number, prior: number) => Math.max(0, Math.min(v, ceiling - prior));
     const next: Draft = {
       scoreA: clamp(cur.scoreA + (side === 'B' ? 0 : points), before.scoreA),
@@ -281,8 +324,14 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
         ?.bouts.find(b => b.id === pendingTie.boutId);
       if (bout) void endRelay(pendingTie.matchId, bout, pendingTie.draft, winner);
     },
-    onSubstitute: (matchId, teamId, outFencerId) =>
-      void run('substituteTeamFencer', { competitionId, matchId, teamId, outFencerId }),
+    onSubstitute: (matchId, teamId, outFencerId, inFencerId) =>
+      void run('substituteTeamFencer', {
+        competitionId,
+        matchId,
+        teamId,
+        outFencerId,
+        ...(inFencerId ? { inFencerId } : {}),
+      }),
     onWithdrawTeam: (matchId, teamId) => void handleWithdrawTeam(matchId, teamId),
   };
 
@@ -410,11 +459,23 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     .map(r => ({ ...r, team: teamById.get(r.teamId) }))
     .filter((r): r is typeof r & { team: TeamRow } => !!r.team);
   const rankedTeamsForBracket = rankings.map(r => r.team);
-  // Placement affiché du tableau (exempts, cases en attente) : même règle que le moteur
-  const bracketSeeding = useMemo(
-    () => rankTeamsForTableau(teams, matches, format),
-    [teams, matches, format]
-  );
+  // Placement affiché du tableau (exempts, cases en attente) : même règle que le moteur ;
+  // formule d'équipe sans poules : rang d'entrée (docs/adr/0044)
+  const tableauStarters = teamMatchRuleOf(
+    teamFormula,
+    { kind: 'tableau' },
+    competition.settings,
+    competition.weapon
+  ).starters;
+  const bracketSeeding = useMemo(() => {
+    if (teamPools) return rankTeamsForTableau(teams, matches, format);
+    const ranks = new Map(fencers.map(f => [f.id, f.ranking]));
+    return teamEntryRanking(teams, tableauStarters, id => ranks.get(id));
+  }, [teams, matches, format, teamPools, fencers, tableauStarters]);
+  // Classement final du moteur (docs/adr/0044) : équipes dans l'ordre, rang du moteur
+  const finalRows = finalRanking.rows
+    .map(r => ({ rank: r.rank, team: teamById.get(r.teamId) }))
+    .filter((r): r is { rank: number; team: TeamRow } => !!r.team);
 
   const canExportPdf =
     (view === 'pool' && matches.length > 0) ||
@@ -447,13 +508,12 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   // Résultats pour la fédération (#1949) : classement final, noms d'équipe et licences conservés
   const handleExportFederal = async (kind: 'fff' | 'xml') => {
     try {
-      const [{ computeTeamFinalRanking }, fff, xml] = await Promise.all([
-        import('../../shared/utils/pdfExport/teamPdf'),
+      const [fff, xml] = await Promise.all([
         import('../../shared/utils/fencerExport'),
         import('../../shared/utils/multiFormatExport'),
       ]);
-      const { rows } = computeTeamFinalRanking(rankedTeamsForBracket, tableauMatches);
-      const results = rows.map(r => ({
+      // Classement final lu dans l'état (teamFinalRanking du moteur, docs/adr/0044)
+      const results = finalRows.map(r => ({
         rank: r.rank,
         name: r.team.name,
         club: r.team.club,
@@ -485,12 +545,21 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
 
   const toolbarButtons = (
     <>
-      {view === 'teams' && teams.length >= 2 && (
+      {view === 'teams' && teams.length >= 2 && teamPools && (
         <button
           onClick={handleGeneratePool}
           className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           {t('teamManager.generate_pool')}
+        </button>
+      )}
+      {/* Formule d'équipe sans tour de poules : tableau au rang d'entrée (docs/adr/0044) */}
+      {view === 'teams' && teams.length >= 2 && !teamPools && (
+        <button
+          onClick={() => void handleGenerateTableau()}
+          className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          {t('teams.tableauGenerate', { count: teams.length })}
         </button>
       )}
       {canExportPdf && (
@@ -542,6 +611,23 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </div>
+            <div className="w-28">
+              <label
+                htmlFor="new-team-ranking"
+                className="text-xs font-medium text-gray-500 block mb-1"
+              >
+                {t('teamManager.entry_rank')}
+              </label>
+              <input
+                id="new-team-ranking"
+                type="number"
+                min={1}
+                value={newTeamRanking}
+                onChange={e => setNewTeamRanking(e.target.value)}
+                placeholder={t('teamManager.entry_rank_ph')}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
             <button
               onClick={handleCreateTeam}
               disabled={creating || !newTeamName.trim()}
@@ -576,6 +662,11 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                   <div>
                     <span className="font-semibold text-gray-900">{team.name}</span>
                     <span className="text-sm text-gray-400 ml-2">{team.club}</span>
+                    {team.ranking != null && (
+                      <span className="ml-2 text-xs text-gray-500">
+                        {t('teamManager.entry_rank_badge', { n: team.ranking })}
+                      </span>
+                    )}
                     {withdrawn[team.id] && (
                       <span className="ml-2 text-xs text-red-600 font-semibold">
                         {t(
@@ -598,7 +689,10 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setEditTeamId(isEditing ? null : team.id)}
+                      onClick={() => {
+                        setEditTeamId(isEditing ? null : team.id);
+                        setRankDraft(team.ranking != null ? String(team.ranking) : '');
+                      }}
                       className="text-xs px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
                     >
                       {isEditing ? 'Fermer' : 'Gérer'}
@@ -716,6 +810,29 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
                       <label htmlFor={`res-${team.id}`} className="text-sm text-gray-600">
                         {t('teamManager.reserve_max', { n: reserveCount })}
                       </label>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`rank-${team.id}`}
+                        className="text-xs text-gray-600 block mb-1"
+                      >
+                        {t('teamManager.entry_rank')}
+                      </label>
+                      <input
+                        id={`rank-${team.id}`}
+                        type="number"
+                        min={1}
+                        value={rankDraft}
+                        onChange={e => setRankDraft(e.target.value)}
+                        placeholder={t('teamManager.entry_rank_ph')}
+                        className="w-20 border border-gray-300 rounded px-2 py-1.5 text-sm"
+                      />
+                      <button
+                        onClick={() => void handleSaveRanking(team.id)}
+                        className="ml-1 px-2 py-1.5 text-xs rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      >
+                        {t('teamManager.entry_rank_save')}
+                      </button>
                     </div>
                     <button
                       onClick={handleUpsertFencer}
@@ -1043,6 +1160,32 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
             </table>
           )}
         </div>
+      )}
+      {/* Classement final du moteur (teamFinalRanking, docs/adr/0044) */}
+      {view === 'ranking' && !isLaserArena && tableauMatches.length > 0 && finalRows.length > 0 && (
+        <section className="mt-4" aria-label={t('results.final_ranking')}>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">
+            {t('results.final_ranking')}
+            {finalRanking.provisional && (
+              <span className="ml-2 text-xs text-gray-400 font-normal">
+                {t('teamManager.final_ranking_provisional')}
+              </span>
+            )}
+          </h3>
+          <table className="min-w-full text-sm" data-testid="team-final-ranking">
+            <tbody className="divide-y divide-gray-100">
+              {finalRows.map(r => (
+                <tr key={r.team.id}>
+                  <td className="px-3 py-2 text-center font-bold text-gray-400 w-8">{r.rank}</td>
+                  <td className="px-3 py-2 font-semibold text-gray-900">
+                    {r.team.name}
+                    <span className="text-xs text-gray-400 font-normal ml-2">{r.team.club}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
       )}
       {/* Équipes retirées (o.99.7.a, « N'a pas terminé ») ou exclues (o.99.7.b, sans rang) */}
       {view === 'ranking' && Object.keys(withdrawn).length > 0 && (

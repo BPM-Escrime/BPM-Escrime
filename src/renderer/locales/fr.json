@@ -799,7 +799,8 @@
     "confirmPassivityBlack": "Noir P : il décide la rencontre en faveur de {{team}} (score cumulé des relais terminés, puis classement). Enregistrez d'abord le relais en cours. Confirmer ?",
     "passivityBlackConfirm": "Donner le noir P",
     "passivityCardGiven": "Carton P donné",
-    "passivityMatchDecided": "Noir P : {{team}} gagne la rencontre"
+    "passivityMatchDecided": "Noir P : {{team}} gagne la rencontre",
+    "substituteIn": "-- remplaçant entrant ({{team}}) --"
   },
   "kiosk": {
     "tbd": "À déterminer",
@@ -2065,7 +2066,12 @@
     "fie_title": "Touches cumulées (règle FIE)",
     "touches_plus": "Touches+",
     "touches_minus": "Touches-",
-    "fencer_removed": "Tireur retiré de l'équipe"
+    "fencer_removed": "Tireur retiré de l'équipe",
+    "entry_rank": "Rang d'entrée",
+    "entry_rank_ph": "Facultatif",
+    "entry_rank_badge": "Rang {{n}}",
+    "entry_rank_save": "Enregistrer le rang",
+    "final_ranking_provisional": "(provisoire)"
   },
   "formulaPhase": {
     "n_touches": "{{n}} touches",
@@ -4735,7 +4741,19 @@
     "entry_levels_hint": "Libellés séparés par des virgules, du plus faible au plus fort ; le dernier est le niveau le plus fort.",
     "distribution_hint": "Par niveau : les équipes de même niveau sont regroupées, du plus faible au plus fort, poule après poule.",
     "ranking_filters": "Filtres du classement final",
-    "ranking_filters_hint": "Critères proposés pour filtrer le classement final (écran, PDF, CSV) : un classement filtré est renuméroté depuis 1. Simple affichage : le classement publié reste le classement complet."
+    "ranking_filters_hint": "Critères proposés pour filtrer le classement final (écran, PDF, CSV) : un classement filtré est renuméroté depuis 1. Simple affichage : le classement publié reste le classement complet.",
+    "team_match": "Règle de rencontre (équipes)",
+    "team_match_phase": "Règle de rencontre de la phase",
+    "team_match_hint": "Cible d'une rencontre : palier × titulaires². Ordre FIE (o.99.3) à 3 titulaires seulement.",
+    "team_match_phase_hint": "Champ vide : règle générale de la formule.",
+    "team_starters": "Titulaires",
+    "team_reserves": "Remplaçants",
+    "team_relay_step": "Palier (touches)",
+    "team_relay_order": "Ordre des relais",
+    "team_relay_order_fie": "Ordre FIE (o.99.3)",
+    "team_relay_order_rotation": "Rotation",
+    "team_relay_order_general": "Règle générale",
+    "arena_read_only": "Arène Sabre Laser : formule d'un modèle fixe, non modifiable."
   },
   "formulaHelp": {
     "open": "Aide : {{topic}}",

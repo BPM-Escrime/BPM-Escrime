@@ -27,6 +27,7 @@ vi.mock('../hooks/useTeamCompetition', () => ({
     teamCards: {},
     passivityCards,
     withdrawn: {},
+    finalRanking: { rows: [], provisional: true },
     loading: false,
     run,
   }),
