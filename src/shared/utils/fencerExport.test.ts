@@ -235,3 +235,39 @@ describe('encodeFFFWin1252', () => {
     expect(Array.from(encodeFFFWin1252('中'))).toEqual([0x3f]);
   });
 });
+
+describe('tireur-binôme : listes et résultats FFF sans membres (docs/adr/0043, F4c)', () => {
+  const binome = makeFencer({
+    lastName: 'Les Mousquetaires',
+    firstName: 'Duo',
+    members: [
+      { lastName: 'Athos', firstName: 'Olivier', gender: 'M', birthDate: '1990-04-12' },
+      { lastName: 'Milady', firstName: 'Constance', gender: 'F', birthDate: '1985-11-03' },
+    ],
+  });
+  const noMember = (out: string) => {
+    for (const word of [
+      'Athos',
+      'ATHOS',
+      'Olivier',
+      'Milady',
+      'MILADY',
+      'Constance',
+      '1990',
+      '1985',
+    ])
+      expect(out).not.toContain(word);
+  };
+
+  it('liste FFF, liste TXT et résultats FFF : le nom d’équipe seul', () => {
+    const list = exportFencersToFFF(LIST_COMP, [binome]);
+    expect(list).toContain('LES MOUSQUETAIRES');
+    noMember(list);
+    const txt = exportFencersToTXT([binome]);
+    expect(txt).toContain('LES MOUSQUETAIRES');
+    noMember(txt);
+    const results = exportResultsToFFF(LIST_COMP, [{ rank: 1, fencer: binome }]);
+    expect(results).toContain('LES MOUSQUETAIRES');
+    noMember(results);
+  });
+});

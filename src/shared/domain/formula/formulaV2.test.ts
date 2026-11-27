@@ -25,6 +25,7 @@ import {
   phaseSettings,
   poolBoutOrderOfRound,
   tableauQualificationOf,
+  tieBreakByVictoryOf,
   type FormulaV2,
 } from './formulaV2';
 
@@ -330,5 +331,38 @@ describe('ordre des matchs du tour tiré (ADR-0042 : réglages du tour)', () => 
     expect(poolBoutOrderOfRound({ formula: f }, 2)).toBe('free');
     expect(poolBoutOrderOfRound({ poolBoutOrder: 'free' }, 1)).toBe('free');
     expect(poolBoutOrderOfRound(undefined, 1)).toBeUndefined();
+  });
+});
+
+describe('départage par vainqueur désigné : tieBreakByVictoryOf (docs/adr/0043, F4e)', () => {
+  const withGeneral = (general: FormulaV2['general']): Partial<CompetitionSettings> => ({
+    formula: { version: 2, general, phases: [] },
+  });
+
+  it('armes olympiques et Sabre Laser : toujours, quelle que soit la formule', () => {
+    for (const weapon of [Weapon.EPEE, Weapon.FOIL, Weapon.SABRE, Weapon.LASER]) {
+      expect(tieBreakByVictoryOf(weapon, undefined)).toBe(true);
+      expect(tieBreakByVictoryOf(weapon, withGeneral({}))).toBe(true);
+    }
+  });
+
+  it('arme « Autre » : par défaut non, oui si la formule le demande (valeur lue)', () => {
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, undefined)).toBe(false);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, {})).toBe(false);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, withGeneral({}))).toBe(false);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, withGeneral({ tieBreakByVictory: true }))).toBe(true);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, withGeneral({ tieBreakByVictory: false }))).toBe(
+      false
+    );
+    expect(tieBreakByVictoryOf(undefined, withGeneral({ tieBreakByVictory: true }))).toBe(true);
+  });
+
+  it('ancienne épreuve rapières (specialMode, sans formule) : lue comme la formule des rapières', () => {
+    const legacy: Partial<CompetitionSettings> = { specialMode: 'rapieres' };
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, legacy)).toBe(true);
+    // Même avec des réglages plats enregistrés, sans formule
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, { ...legacy, defaultPoolMaxScore: 5 })).toBe(true);
+    // Une épreuve « Autre » sans mode spécial reste au défaut
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, { defaultPoolMaxScore: 5 })).toBe(false);
   });
 });

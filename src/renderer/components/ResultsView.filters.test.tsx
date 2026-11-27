@@ -2,7 +2,7 @@
 /**
  * Résultats : filtres du classement final de la formule (docs/adr/0043, F4d). Proposés seulement
  * s'ils sont réglés ; classement filtré renuméroté depuis 1 pour l'écran, le CSV, le PDF et la
- * copie ; XML fédéral et FFF gardent le classement complet.
+ * copie ; XML fédéral, FFF et livre PDF signé gardent le classement complet.
  */
 import '@testing-library/jest-dom';
 import React from 'react';
@@ -12,11 +12,12 @@ import type { Competition, Fencer, PoolRanking } from '../../shared/types';
 import { Category, FencerStatus, Gender } from '../../shared/types';
 import type { RankingFilterKey } from '../../shared/domain/ranking/rankingFilters';
 
-const { xml, fff, rankingPdf, printPdf } = vi.hoisted(() => ({
+const { xml, fff, rankingPdf, printPdf, fullPdf } = vi.hoisted(() => ({
   xml: vi.fn((..._args: unknown[]) => '<xml/>'),
   fff: vi.fn((..._args: unknown[]) => 'fff'),
   rankingPdf: vi.fn(async (..._args: unknown[]) => undefined),
   printPdf: vi.fn(async (..._args: unknown[]) => undefined),
+  fullPdf: vi.fn(async (..._args: unknown[]) => undefined),
 }));
 vi.mock('../hooks/useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 vi.mock('../api/BpmClientContext', () => ({ useBpmClient: () => ({ call: vi.fn() }) }));
@@ -32,7 +33,7 @@ vi.mock('../../shared/utils/fencerExport', () => ({
 vi.mock('../../shared/utils/pdfExport', () => ({
   exportResultsToPDF: rankingPdf,
   printResultsHTML: printPdf,
-  exportFullCompetitionPDF: vi.fn(),
+  exportFullCompetitionPDF: fullPdf,
 }));
 vi.mock('./results/resultsExportData', () => ({
   loadExportFencers: async () => [],
@@ -213,6 +214,26 @@ describe('Résultats : filtres du classement final', () => {
     expect(finals.map(r => r.fencer.id)).toEqual(['A', 'B', 'C', 'D']);
     exportMenu('results.export_fff');
     expect((fff.mock.calls[0][1] as unknown[]).length).toBe(4);
+  });
+
+  it('livre PDF signé : classement complet, jamais filtré (docs/adr/0043, F4d)', async () => {
+    view(['handicap']);
+    fireEvent.click(screen.getByLabelText('rankingFilters.handicap_only'));
+    expect(rows()).toHaveLength(2);
+    exportMenu('results.export_pdf_full_signed');
+    fireEvent.click(screen.getByRole('button', { name: 'results.book_generate' }));
+    await waitFor(() => expect(fullPdf).toHaveBeenCalled());
+    const data = fullPdf.mock.calls[0][0] as {
+      finalResults: Array<{ rank: number; fencer: Fencer }>;
+      overallRanking: PoolRanking[];
+    };
+    expect(data.finalResults.map(r => [r.rank, r.fencer.id])).toEqual([
+      [1, 'A'],
+      [2, 'B'],
+      [3, 'C'],
+      [3, 'D'],
+    ]);
+    expect(data.overallRanking).toBe(pool);
   });
 
   it('champion et podium : toujours ceux du classement complet', () => {

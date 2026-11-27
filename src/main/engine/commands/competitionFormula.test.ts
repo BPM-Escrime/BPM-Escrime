@@ -11,6 +11,7 @@ import { contract } from '../../../shared/api/contract';
 import type { CommandContext } from './context';
 import { invoke } from '../api/engine';
 import { effectiveSettings } from './sport';
+import { tieBreakByVictoryOf } from '../../../shared/domain/formula/formulaV2';
 
 vi.mock('better-sqlite3-multiple-ciphers', async () => ({
   default: (await import('../../../database/testing/nodeSqliteDatabase')).NodeSqliteDatabase,
@@ -281,6 +282,48 @@ d('formule v2 écrite et lue par phase (docs/adr/0036)', () => {
       minPoolSize: 2,
       maxPoolSize: 10,
     });
+  });
+
+  it('tieBreakByVictory : posé et retiré par le contrat, lu par la formule (docs/adr/0043, F4e)', async () => {
+    const other = db.createCompetition({
+      title: 'Autre',
+      date: new Date('2026-12-06'),
+      weapon: Weapon.CUSTOM,
+      gender: Gender.MIXED,
+      category: Category.SENIOR,
+      settings: buildDefaultCompetitionSettings({
+        weapon: Weapon.CUSTOM,
+        category: Category.SENIOR,
+      }) as never,
+    });
+    const read = () => db.getCompetition(other.id)!.settings;
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, read())).toBe(false);
+    await op('updateCompetitionFormula', {
+      competitionId: other.id,
+      operations: [{ op: 'setGeneral', settings: { tieBreakByVictory: true } }],
+    });
+    expect(read()?.formula?.general.tieBreakByVictory).toBe(true);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, read())).toBe(true);
+    const f = await op('getCompetitionFormula', { competitionId: other.id });
+    expect(f.formula.general.tieBreakByVictory).toBe(true);
+    await op('updateCompetitionFormula', {
+      competitionId: other.id,
+      operations: [{ op: 'setGeneral', settings: { tieBreakByVictory: null } }],
+    });
+    expect('tieBreakByVictory' in (read()?.formula?.general ?? {})).toBe(false);
+    expect(tieBreakByVictoryOf(Weapon.CUSTOM, read())).toBe(false);
+  });
+
+  it('tieBreakByVictory non booléen : refus invalid_settings, rien d’écrit', async () => {
+    await expect(
+      op('updateCompetitionFormula', {
+        competitionId,
+        operations: [{ op: 'setGeneral', settings: { tieBreakByVictory: 'oui' } }],
+      })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
+    expect(db.getCompetition(competitionId)!.settings?.formula?.general.tieBreakByVictory).toBe(
+      undefined
+    );
   });
 
   it('bornes du tour 2 refusées', async () => {
