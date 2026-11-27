@@ -338,16 +338,39 @@ d('formule v2 écrite et lue par phase (docs/adr/0036)', () => {
     ).rejects.toMatchObject({ code: 'invalid_settings' });
   });
 
-  it('réglages plats écrits sans formula : formule retirée, reconstruite à la lecture', async () => {
+  it('réglages plats écrits sans formula : reportés dans la formule (ADR-0036 amendée), ou formule retirée pour la structure', async () => {
     await op('updateCompetitionFormula', {
       competitionId,
-      operations: [{ op: 'insertPhase', brick: 'pool', at: 1 }],
+      operations: [
+        { op: 'insertPhase', brick: 'pool', at: 1 },
+        {
+          op: 'setPhase',
+          phase: 'pool-0',
+          settings: { qualification: { mode: 'fixed_count', count: 10 } },
+        },
+      ],
     });
     expect(db.getCompetition(competitionId)?.settings?.formula).toBeDefined();
-    await op('updateCompetitionSettings', { competitionId, settings: { defaultPoolMaxScore: 4 } });
-    const comp = db.getCompetition(competitionId)!;
-    expect(comp.settings?.formula).toBeUndefined();
+    // Réglage qui a sa place dans la formule : reporté, tous les tours de poules, formule gardée
+    await op('updateCompetitionSettings', {
+      competitionId,
+      settings: { defaultPoolMaxScore: 4, thirdPlaceMatch: true, restTimeSeconds: 90 },
+    });
+    let comp = db.getCompetition(competitionId)!;
+    expect(comp.settings?.formula?.phases[0]).toMatchObject({
+      maxScore: 4,
+      qualification: { mode: 'fixed_count', count: 10 },
+    });
+    expect(comp.settings?.formula?.phases[1]).toMatchObject({ maxScore: 4 });
+    expect(comp.settings?.formula?.phases.find(p => p.kind === 'tableau')).toMatchObject({
+      thirdPlace: true,
+    });
+    expect(comp.settings?.formula?.general.restTimeSeconds).toBe(90);
     expect(effectiveSettings(comp, 2).poolMaxScore).toBe(4);
+    // Réglage de structure : formule périmée, retirée et relue depuis les réglages plats
+    await op('updateCompetitionSettings', { competitionId, settings: { poolWinnersOnly: true } });
+    comp = db.getCompetition(competitionId)!;
+    expect(comp.settings?.formula).toBeUndefined();
     // Réglage sans rapport avec la formule : formule gardée
     await op('updateCompetitionFormula', {
       competitionId,
@@ -486,11 +509,14 @@ d('contrôles de structure en direct (docs/adr/0041)', () => {
     ).toMatchObject({ qualification: { mode: 'fixed_count', count: 8 } });
     // Réglage hors formule : admis
     await op('updateCompetitionSettings', { competitionId, settings: { expertMode: true } });
-    // Autre réglage plat (Q15) : admis, même si la règle du tour (nombre) n'est pas plate
+    // Autre réglage plat (Q15) : admis, reporté dans la formule, la règle du tour clos gardée
     await op('updateCompetitionSettings', {
       competitionId,
       settings: { defaultTableTimerSeconds: 240 },
     });
+    expect(
+      db.getCompetition(competitionId)?.settings?.formula?.phases.find(p => p.kind === 'pool')
+    ).toMatchObject({ qualification: { mode: 'fixed_count', count: 8 } });
     // Qualification changée par un réglage plat : refusée
     await expect(
       op('updateCompetitionSettings', { competitionId, settings: { poolWinnersOnly: true } })

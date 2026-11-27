@@ -27,6 +27,7 @@ import {
   poolBoutOrderOfRound,
   tableauQualificationOf,
   tieBreakByVictoryOf,
+  withFlatSettings,
   type FormulaV2,
 } from './formulaV2';
 
@@ -387,5 +388,64 @@ describe('départage par vainqueur désigné : tieBreakByVictoryOf (docs/adr/004
     expect(tieBreakByVictoryOf(Weapon.CUSTOM, { ...legacy, defaultPoolMaxScore: 5 })).toBe(true);
     // Une épreuve « Autre » sans mode spécial reste au défaut
     expect(tieBreakByVictoryOf(Weapon.CUSTOM, { defaultPoolMaxScore: 5 })).toBe(false);
+  });
+});
+
+describe('withFlatSettings : réglages plats reportés dans la formule (ADR-0036 amendée)', () => {
+  const twoRounds = (): FormulaV2 => {
+    const f = formulaOf({
+      weapon: Weapon.EPEE,
+      category: Category.SENIOR,
+      settings: { ...buildDefaultCompetitionSettings(Weapon.EPEE), poolRounds: 2 },
+    });
+    return {
+      ...f,
+      phases: f.phases.map((p, i) =>
+        i === 0 && p.kind === 'pool'
+          ? { ...p, qualification: { mode: 'fixed_count' as const, count: 10 } }
+          : p
+      ),
+    };
+  };
+
+  it('scores, durées, tailles des poules (tous les tours), tableau et repos ; le reste gardé', () => {
+    const f = twoRounds();
+    const out = withFlatSettings(f, {
+      defaultPoolMaxScore: 4,
+      poolSizeMax: 8,
+      defaultTableTimerSeconds: 240,
+      playAllPositions: true,
+      restTimeSeconds: 90,
+    })!;
+    const pools = out.phases.filter(p => p.kind === 'pool');
+    expect(pools.map(p => [p.maxScore, p.sizeMax])).toEqual([
+      [4, 8],
+      [4, 8],
+    ]);
+    expect(pools[0]).toMatchObject({ qualification: { mode: 'fixed_count', count: 10 } });
+    expect(playedTableauOf(out)).toMatchObject({ timerSeconds: 240, allPlaces: true });
+    expect(out.general.restTimeSeconds).toBe(90);
+  });
+
+  it('structure ou phase absente : null (formule retirée, relue à plat)', () => {
+    const f = twoRounds();
+    expect(withFlatSettings(f, { poolRounds: 1 })).toBeNull();
+    expect(withFlatSettings(f, { poolWinnersOnly: true })).toBeNull();
+    expect(withFlatSettings(f, { hasDirectElimination: false })).toBeNull();
+    const noTableau = { ...f, phases: f.phases.filter(p => p.kind !== 'tableau') };
+    expect(withFlatSettings(noTableau, { thirdPlaceMatch: true })).toBeNull();
+  });
+
+  it('compétition couplée : tableau des branches restées mis à jour', () => {
+    const f = formulaOf({
+      weapon: Weapon.EPEE,
+      category: Category.SENIOR,
+      settings: {
+        ...buildDefaultCompetitionSettings(Weapon.EPEE),
+        postPoolSplitCriteria: 'gender',
+      },
+    });
+    const out = withFlatSettings(f, { thirdPlaceMatch: true })!;
+    expect(playedTableauOf(out)).toMatchObject({ thirdPlace: true });
   });
 });

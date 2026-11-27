@@ -137,23 +137,15 @@ function storedProgress(
 export function assertProgressLock(
   ctx: CommandContext,
   comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings },
-  next: CompetitionSettings,
-  flatOnly = false
+  next: CompetitionSettings
 ): void {
-  const read = (settings: CompetitionSettings | undefined) =>
-    formulaOf({ weapon: comp.weapon, category: comp.category, settings });
-  // Réglages plats seuls : comparés à la lecture plate de l'épreuve (sans `formula`), pour ne
-  // juger que ce qu'ils changent ; la règle d'un tour non représentable à plat (nombre, têtes de
-  // poule) n'est pas jugée changée par un autre réglage plat (S6, « autres réglages » : Q15)
-  const flat = (settings: CompetitionSettings | undefined) =>
-    read({ ...settings, formula: undefined } as CompetitionSettings);
-  const { stored, progress } = storedProgress(
-    ctx,
-    comp,
-    flatOnly ? flat(comp.settings) : undefined
-  );
+  const { stored, progress } = storedProgress(ctx, comp);
   if (progress.length === 0) return;
-  const issues = progressIssues(flatOnly ? flat(next) : read(next), progress, stored);
+  const issues = progressIssues(
+    formulaOf({ weapon: comp.weapon, category: comp.category, settings: next }),
+    progress,
+    stored
+  );
   if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
 }
 

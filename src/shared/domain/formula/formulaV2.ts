@@ -563,6 +563,65 @@ export function tableauQualificationOf(f: FormulaV2): AdvancementRule | undefine
 // ── Écriture : réglages plats dérivés ─────────────────────────────────────
 
 /**
+ * Réglages plats reportés dans la formule enregistrée (ADR-0036 amendée, 2026-11-27) : un réglage
+ * plat qui a sa place dans la formule (scores, durées, repos, tailles et ordre des poules,
+ * petite finale, toutes les places du tableau) la met à jour au lieu de la retirer. Comme la
+ * relecture plate, un réglage des poules vaut pour tous les tours de poules de la formule.
+ * null : le patch touche la structure (tours, qualification, tableau, Tour Quest, scission) ou
+ * une phase absente ; la formule est alors retirée et relue depuis les réglages plats.
+ */
+export function withFlatSettings(
+  f: FormulaV2,
+  patch: Partial<CompetitionSettings>
+): FormulaV2 | null {
+  const keys = Object.keys(patch) as Array<keyof CompetitionSettings>;
+  const POOL: Partial<Record<keyof CompetitionSettings, keyof PoolRoundPhase>> = {
+    defaultPoolMaxScore: 'maxScore',
+    defaultPoolTimerSeconds: 'timerSeconds',
+    poolSizeMin: 'sizeMin',
+    poolSizeMax: 'sizeMax',
+    poolBoutOrder: 'boutOrder',
+  };
+  const TABLEAU: Partial<Record<keyof CompetitionSettings, keyof TableauPhase>> = {
+    defaultTableMaxScore: 'maxScore',
+    defaultTableTimerSeconds: 'timerSeconds',
+    thirdPlaceMatch: 'thirdPlace',
+    playAllPositions: 'allPlaces',
+  };
+  if (keys.some(k => !(k in POOL) && !(k in TABLEAU) && k !== 'restTimeSeconds')) return null;
+  const poolList = pools(f);
+  const tableau = playedTableauOf(f);
+  if (keys.some(k => k in POOL) && poolList.length === 0) return null;
+  if (keys.some(k => k in TABLEAU) && !tableau) return null;
+  const set = <T extends object>(phase: T, map: Partial<Record<string, keyof T>>): T => {
+    const out = { ...phase } as Record<string, unknown>;
+    for (const k of keys) {
+      const field = map[k];
+      if (field && patch[k] !== undefined) out[field as string] = patch[k];
+    }
+    return out as T;
+  };
+  const replaced = new Map<FormulaPhaseV2, FormulaPhaseV2>();
+  for (const pool of poolList) replaced.set(pool, set(pool, POOL));
+  if (tableau) replaced.set(tableau, set(tableau, TABLEAU));
+  const mapPhases = (list: FormulaPhaseV2[]): FormulaPhaseV2[] =>
+    list.map(p => {
+      const r = replaced.get(p);
+      if (r) return r;
+      if (p.kind !== 'split') return p;
+      return { ...p, branches: p.branches.map(b => ({ ...b, phases: mapPhases(b.phases) })) };
+    });
+  return {
+    ...f,
+    phases: mapPhases(f.phases),
+    general:
+      patch.restTimeSeconds !== undefined
+        ? { ...f.general, restTimeSeconds: patch.restTimeSeconds }
+        : f.general,
+  };
+}
+
+/**
  * Réglages plats écrits avec `formula` tant que des lecteurs plats existent (ADR-0036) :
  * valeurs du premier tour et du tableau. Arme « Autre » : mêmes réglages que
  * deriveSettingsFromFormula, plus `customFormula` v1 équivalente.

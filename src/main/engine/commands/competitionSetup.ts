@@ -21,7 +21,11 @@ import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
 import { assertProgressLock, compatibleTemplate } from './competitionFormula';
 import { templateToSettings } from '../../../shared/domain/formula/formulaTemplate';
-import { formulaOf } from '../../../shared/domain/formula/formulaV2';
+import {
+  flatSettingsOf,
+  formulaOf,
+  withFlatSettings,
+} from '../../../shared/domain/formula/formulaV2';
 import {
   validateFormulaSettings,
   type FormulaIssue,
@@ -37,9 +41,10 @@ function assertFormula(issues: FormulaIssue[]): void {
 }
 
 /**
- * Réglages plats de la formule : écrits sans `formula` (anciennes fenêtres, agent par
- * updateCompetitionSettings), ils rendent la formule v2 enregistrée périmée. Elle est alors
- * retirée et reconstruite à la lecture depuis ces réglages (ADR-0036).
+ * Réglages plats de la formule, écrits sans `formula` (anciennes fenêtres, agent par
+ * updateCompetitionSettings) : reportés dans la formule v2 enregistrée quand ils y ont leur place
+ * (`withFlatSettings`) ; sinon ils la rendent périmée, et elle est retirée et reconstruite à la
+ * lecture depuis ces réglages (ADR-0036 amendée).
  */
 const FORMULA_FLAT_KEYS: ReadonlySet<string> = new Set([
   'poolRounds',
@@ -271,24 +276,34 @@ export function updateCompetitionSettings(
   if (Object.keys(patch).length) {
     update.settings = { ...comp.settings, ...patch } as CompetitionSettings;
   }
-  // Formule v2 périmée : réglages plats écrits sans elle, ou arme changée (autre modèle)
-  const staleFormula =
-    comp.settings?.formula &&
-    !('formula' in patch) &&
-    (Object.keys(patch).some(k => FORMULA_FLAT_KEYS.has(k)) ||
-      (input.weapon !== undefined && input.weapon !== comp.weapon));
-  if (staleFormula) {
-    const { formula: _stale, ...rest } = (update.settings ?? comp.settings) as CompetitionSettings;
-    update.settings = rest as CompetitionSettings;
+  const flatKeys = Object.keys(patch).filter(k => FORMULA_FLAT_KEYS.has(k));
+  const weaponChanged = input.weapon !== undefined && input.weapon !== comp.weapon;
+  if (comp.settings?.formula && !('formula' in patch) && (flatKeys.length || weaponChanged)) {
+    const base = (update.settings ?? comp.settings) as CompetitionSettings;
+    // Réglage plat qui a sa place dans la formule : reporté dans la formule enregistrée, gardée
+    // avec ses réglages dérivés (ADR-0036 amendée) ; sinon (structure, arme changée) : formule
+    // périmée, retirée et relue depuis les réglages plats
+    const merged = weaponChanged
+      ? null
+      : withFlatSettings(
+          formulaOf({ weapon: comp.weapon, category: comp.category, settings: comp.settings }),
+          Object.fromEntries(flatKeys.map(k => [k, (patch as Record<string, unknown>)[k]]))
+        );
+    if (merged) {
+      update.settings = {
+        ...base,
+        ...flatSettingsOf(merged, comp.weapon),
+        formula: merged,
+      } as CompetitionSettings;
+    } else {
+      const { formula: _stale, ...rest } = base;
+      update.settings = rest as CompetitionSettings;
+    }
   }
-  // Verrou S6 (docs/adr/0041, ADR-0043 F4b) : formule ou réglages plats écrits après le début
-  if ('formula' in patch || Object.keys(patch).some(k => FORMULA_FLAT_KEYS.has(k))) {
-    assertProgressLock(
-      ctx,
-      comp,
-      (update.settings ?? comp.settings) as CompetitionSettings,
-      !('formula' in patch)
-    );
+  // Verrou S6 (docs/adr/0041, ADR-0043 F4b) : formule ou réglages plats écrits après le début,
+  // jugés sur la formule qui en résulte
+  if ('formula' in patch || flatKeys.length) {
+    assertProgressLock(ctx, comp, (update.settings ?? comp.settings) as CompetitionSettings);
   }
   const changed = [
     ...Object.keys(update).filter(k => k !== 'settings'),
