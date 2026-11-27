@@ -1,6 +1,6 @@
 # ADR-0043 — Tournoi des rapières en briques génériques de la formule, fin du mode spécial
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (poules de 2 à 15 en vagues classiques ; ordre d'entrée des têtes de poule ; niveaux de la liste des rapières, du plus faible au plus fort ; exports des membres ; classement final générique (non-qualifiés, exclus et carton noir sans rang) et périmètre des filtres ; validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (poules de 2 à 15 en vagues classiques ; ordre d'entrée des têtes de poule ; niveaux de la liste des rapières, du plus faible au plus fort ; exports des membres ; classement final générique (non-qualifiés, exclus et carton noir sans rang) et périmètre des filtres ; validé par le mainteneur) ; amendée le 2026-11-27 (F4e : réglage général `tieBreakByVictory` ajouté ; mode de tableau hérité et règle des demi-finales d'une ancienne épreuve ; ordre classique réglé par `waves_classic` ; alias retirés ; validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F4, décision D8), #1948, #1441, #1118 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (phases), [ADR-0040](0040-ex-aequo-a-la-barre.md) (qualification), [ADR-0039](0039-scission-competitions-filles.md) (catégorie du tireur), s'appuie sur [ADR-0007](0007-format-evenement.md), [ADR-0008](0008-nommage-contrat.md), [ADR-0011](0011-migrations-schema-3-0.md), [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -39,8 +39,9 @@
 - Commandes (ADR-0008) : `launchPoolWave`, `endPoolWaves` (outils `launch_pool_wave`,
   `end_pool_waves`) ; événements (ADR-0007) : `PoolWaveLaunched { wave, matchIds }`,
   `PoolWavesEnded { ended }`. Les anciens noms restent lus au rejeu (projection, comparaison,
-  reconstruction) ; les anciennes commandes et outils restent comme alias jusqu'à F4e, puis
-  sont retirés.
+  reconstruction) ; les anciennes commandes et outils sont retirés à F4e (`launchRapieresWave`,
+  `endRapieresWaves`). _(Amendé le 2026-11-27 : remplace « les anciennes commandes et outils
+  restent comme alias jusqu'à F4e, puis sont retirés. »)_
 - Les tablettes suivent la vague active du tour en vagues (canal `setActiveWave` inchangé) ; le
   tour est terminé quand toutes les vagues sont jouées ou arrêtées, comme aujourd'hui.
 
@@ -82,7 +83,8 @@ birthDate? }]`), `fencers.level` (`INTEGER NULL`, indice dans `levels` à partir
   membres suivent le tireur : export, RGPD (export et effacement de la personne),
   suppression. »)_
 - Commandes d'inscription et de modification du tireur : champs `members`, `level`,
-  `handicap` optionnels (ADR-0018). `setRapieresTeams` devient un alias jusqu'à F4e.
+  `handicap` optionnels (ADR-0018). `setRapieresTeams` est retiré à F4e. _(Amendé
+  le 2026-11-27 : remplace « `setRapieresTeams` devient un alias jusqu'à F4e. »)_
 - Catégorie d'une équipe = moyenne des années de naissance des membres, arrondie au-dessus,
   saison au 1ᵉʳ septembre (règle actuelle, domaine pur, date injectée), écrite dans
   `fencers.category` (ADR-0039) et modifiable à la main. Sexe de l'équipe : celui des membres
@@ -116,16 +118,23 @@ birthDate? }]`), `fencers.level` (`INTEGER NULL`, indice dans `levels` à partir
 - Le modèle fourni « Tournoi des rapières » devient une formule v2 en briques : arme
   « Autre », règles modernes, un tour en vagues (poules de 2 à 10, `distribution: 'byLevel'`),
   entrée en binômes, tableau, filtres du classement (catégorie, sexe, niveau, HANDI), départage
-  par la victoire (réglage général existant `tieBreakByVictory`). `specialMode` n'est plus
-  écrit.
+  par la victoire (réglage général `tieBreakByVictory` de la formule, opération `setGeneral`,
+  ajouté à F4e : il n'existait que comme propriété d'écran déduite de l'arme). `specialMode`
+  n'est plus écrit. _(Amendé le 2026-11-27 : remplace « (réglage général existant
+  `tieBreakByVictory`) ».)_
 - **Lecture de compatibilité, sans réécriture en base** : `formulaOf` lit une épreuve
   `specialMode: 'rapieres'` comme la formule ci-dessus (mode de tableau lu dans
-  `rapieres.tableauMode`) ; la clé de session `rapieres` est lue comme alias (`waves`, membres,
+  `rapieres.tableauMode`, qualification « demi-finales » par l'ancienne règle, égalités
+  départagées par l'ordre des poules ; petite finale et toutes les places lues dans les
+  réglages enregistrés) ; la clé de session `rapieres` est lue comme alias (`waves`, membres,
   niveau, catégorie) tant qu'elle existe ; les événements `Rapieres*` restent lisibles au
   rejeu. Une épreuve rapières existante se rejoue et s'affiche à l'identique.
 - Les tests `isRapieres` / `specialMode` du moteur, du domaine et de l'écran sont remplacés par
   la lecture des briques ; `assertSupported` ne refuse plus que les épreuves par équipes
   (ADR-0042 amendée en conséquence au lot F4e) ; le MCP pilote les vagues.
+- Le choix de l'ordre classique à la validation des poules disparaît de l'écran : il se règle
+  dans la formule (`boutOrder: 'waves_classic'`), ancienne épreuve comprise. _(Ajouté le
+  2026-11-27, F4e.)_
 
 ## Conséquences
 
