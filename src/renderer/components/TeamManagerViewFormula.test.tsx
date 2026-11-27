@@ -319,6 +319,37 @@ describe('TeamManagerView — tableau tiré par le moteur (teams.tableauSeeds, d
   });
 });
 
+describe('TeamManagerView — PDF du classement lu dans l’état (teams.finalRanking, docs/adr/0044)', () => {
+  it('PDF du classement : classement final du moteur, équipe coupée comprise', async () => {
+    data.teams = [team('ta', 'Alpha'), team('tb', 'Bravo'), team('tc', 'Charlie')];
+    data.tableauSeeds = ['ta', 'tb'];
+    data.tableauMatches = [
+      { ...tableauMatch('f', 1, 0, 'ta', 'tb'), status: 'finished', winnerId: 'tb' },
+    ];
+    data.finalRanking = {
+      rows: [
+        { teamId: 'tb', rank: 1 },
+        { teamId: 'ta', rank: 2 },
+        { teamId: 'tc', rank: 3 },
+      ],
+      provisional: false,
+    };
+    show('ranking', { formula: tableauOnly });
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(frT('teams.pdfExport')) }));
+    await waitFor(() => expect(pdf.exportTeamRankingToPDF).toHaveBeenCalled());
+    const [, ranking] = pdf.exportTeamRankingToPDF.mock.calls[0] as unknown as [
+      unknown,
+      { rows: Array<{ rank: number; team: { id: string } }>; provisional: boolean },
+    ];
+    expect(ranking.rows.map(r => [r.rank, r.team.id])).toEqual([
+      [1, 'tb'],
+      [2, 'ta'],
+      [3, 'tc'],
+    ]);
+    expect(ranking.provisional).toBe(false);
+  });
+});
+
 describe('TeamManagerView — remplaçant choisi (inFencerId, docs/adr/0044)', () => {
   it('deux remplaçants : celui qui entre se choisit', async () => {
     data.poolMatches = [

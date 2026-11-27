@@ -453,7 +453,6 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   const rankings = poolRanking
     .map(r => ({ ...r, team: teamById.get(r.teamId) }))
     .filter((r): r is typeof r & { team: TeamRow } => !!r.team);
-  const rankedTeamsForBracket = rankings.map(r => r.team);
   // Placement affiché du tableau (exempts, cases en attente) : têtes de série du tableau tiré
   // par le moteur, ou, avant le tirage, classement d'entrée coupé par la qualification
   // (teams.tableauSeeds, docs/adr/0044), jamais recalculé ici
@@ -462,11 +461,12 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
   const finalRows = finalRanking.rows
     .map(r => ({ rank: r.rank, team: teamById.get(r.teamId) }))
     .filter((r): r is { rank: number; team: TeamRow } => !!r.team);
+  const finalRankingView = { rows: finalRows, provisional: finalRanking.provisional };
 
   const canExportPdf =
     (view === 'pool' && matches.length > 0) ||
     (view === 'tableau' && bracketSeeding.length >= 2 && tableauMatches.length > 0) ||
-    (view === 'ranking' && rankedTeamsForBracket.length > 0);
+    (view === 'ranking' && finalRows.length > 0);
 
   const handleExportPdf = async () => {
     try {
@@ -475,7 +475,8 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
       if (view === 'pool') await pdf.exportTeamPoolsToPDF(opts, matches);
       else if (view === 'tableau')
         await pdf.exportTeamTableauToPDF(opts, bracketSeeding, tableauMatches);
-      else await pdf.exportTeamRankingToPDF(opts, rankedTeamsForBracket, tableauMatches);
+      // Classement final de l'état (teamFinalRanking du moteur, docs/adr/0044)
+      else await pdf.exportTeamRankingToPDF(opts, finalRankingView);
     } catch (e) {
       showToast(`${t('teams.pdfError')} : ${(e as Error).message}`, 'error');
     }
@@ -485,7 +486,14 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
     try {
       const pdf = await import('../../shared/utils/pdfExport/teamPdf');
       const opts = { title: competition.title, teams, fencerName, isLaserArena };
-      await pdf.exportTeamBookToPDF(opts, matches, rankedTeamsForBracket, tableauMatches, order);
+      await pdf.exportTeamBookToPDF(
+        opts,
+        matches,
+        bracketSeeding,
+        tableauMatches,
+        finalRankingView,
+        order
+      );
     } catch (e) {
       showToast(`${t('teams.pdfError')} : ${(e as Error).message}`, 'error');
     }
@@ -556,7 +564,7 @@ export const TeamManagerView: React.FC<Props> = ({ competition, fencers, view, o
           ↓ {t('teams.pdfExport')}
         </button>
       )}
-      {(matches.length > 0 || rankedTeamsForBracket.length > 0) && (
+      {(matches.length > 0 || finalRows.length > 0) && (
         <button
           onClick={() => setIsBookModalOpen(true)}
           className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-100"

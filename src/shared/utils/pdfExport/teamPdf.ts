@@ -74,7 +74,7 @@ export function groupTeamPools(
 
 /**
  * Classement final des équipes : domaine (`teamFinalRanking`, docs/adr/0044), même résultat
- * qu'avant ; gardé ici pour l'écran, les PDF et les exports.
+ * qu'avant. Les PDF ne l'appellent plus : ils lisent le classement de l'état (teams.finalRanking).
  */
 export function computeTeamFinalRanking(
   rankedTeams: TeamRow[],
@@ -279,12 +279,18 @@ export function generateTeamTableauHTML(
   );
 }
 
+/** Classement final des équipes tel que le moteur le rend (teams.finalRanking, docs/adr/0044) */
+export interface TeamFinalRankingView {
+  rows: TeamFinalRankingRow[];
+  provisional: boolean;
+}
+
+/** Classement final : lu dans l'état (teamFinalRanking du moteur), jamais recalculé ici */
 export function generateTeamRankingHTML(
   opts: TeamPdfOptions,
-  rankedTeams: TeamRow[],
-  tableauMatches: TeamMatchRow[]
+  ranking: TeamFinalRankingView
 ): string {
-  const { rows, provisional } = computeTeamFinalRanking(rankedTeams, tableauMatches);
+  const { rows, provisional } = ranking;
   const body = `
   <table>
     <thead><tr><th style="width:12mm">${pdfT('col_rank', 'Rg')}</th><th style="text-align:left">${pdfT('col_team', 'Équipe')}</th><th style="text-align:left">${pdfT('col_club', 'Club')}</th><th style="text-align:left">${pdfT('fencers', 'Tireurs')}</th></tr></thead>
@@ -334,22 +340,23 @@ export async function exportTeamTableauToPDF(
 
 export async function exportTeamRankingToPDF(
   opts: TeamPdfOptions,
-  rankedTeams: TeamRow[],
-  tableauMatches: TeamMatchRow[]
+  ranking: TeamFinalRankingView
 ): Promise<void> {
-  if (rankedTeams.length === 0) throw new Error(pdfT('team_none', 'Aucune équipe'));
-  await savePDF(
-    generateTeamRankingHTML(opts, rankedTeams, tableauMatches),
-    'classement-equipes.pdf'
-  );
+  if (ranking.rows.length === 0) throw new Error(pdfT('team_none', 'Aucune équipe'));
+  await savePDF(generateTeamRankingHTML(opts, ranking), 'classement-equipes.pdf');
 }
 
-/** Dossier équipes : page de garde, sommaire, poules, tableau, classement (#1325) */
+/**
+ * Dossier équipes : page de garde, sommaire, poules, tableau, classement (#1325). `rankedTeams` :
+ * têtes de série du tableau tiré (teams.tableauSeeds) ; `ranking` : classement final de l'état
+ * (teams.finalRanking), docs/adr/0044.
+ */
 export async function exportTeamBookToPDF(
   opts: TeamPdfOptions,
   matches: TeamMatchRow[],
   rankedTeams: TeamRow[],
   tableauMatches: TeamMatchRow[],
+  ranking: TeamFinalRankingView,
   sectionOrder?: BookSectionKind[]
 ): Promise<void> {
   const items: BookItem[] = [];
@@ -365,11 +372,11 @@ export async function exportTeamBookToPDF(
       title: pdfT('team_tableau_title', 'Tableau équipes'),
       html: generateTeamTableauHTML(opts, rankedTeams, tableauMatches),
     });
-  if (rankedTeams.length > 0)
+  if (ranking.rows.length > 0)
     items.push({
       kind: 'teamRanking',
       title: pdfT('team_ranking_title', 'Classement équipes'),
-      html: generateTeamRankingHTML(opts, rankedTeams, tableauMatches),
+      html: generateTeamRankingHTML(opts, ranking),
     });
   await exportBookPDF({
     items,

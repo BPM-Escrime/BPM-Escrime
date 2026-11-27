@@ -157,9 +157,31 @@ describe('teamPdf', () => {
 
   it('HTML classement : rangs et tireurs titulaires', () => {
     const teams = ['A', 'B', 'C', 'D'].map(team);
-    const html = generateTeamRankingHTML(opts(teams), teams, tableau4(teams, ['A', 'B'], 'A'));
+    const html = generateTeamRankingHTML(
+      opts(teams),
+      computeTeamFinalRanking(teams, tableau4(teams, ['A', 'B'], 'A'))
+    );
     expect(html).toContain('Classement équipes —');
     expect(html).toContain('NOMA1 P');
+  });
+
+  it('HTML classement : classement de l’état rendu tel quel, jamais recalculé (ADR-0044)', () => {
+    const teams = ['A', 'B', 'C', 'D', 'E'].map(team);
+    // Classement du moteur : tableau de 4, équipe E coupée à l'issue des poules (5e)
+    const ranking = {
+      rows: [
+        { rank: 1, team: teams[1] },
+        { rank: 2, team: teams[0] },
+        { rank: 3, team: teams[3] },
+        { rank: 4, team: teams[2] },
+        { rank: 5, team: teams[4] },
+      ],
+      provisional: false,
+    };
+    const html = generateTeamRankingHTML(opts(teams), ranking);
+    const order = ['B', 'A', 'D', 'C', 'E'].map(id => html.indexOf(`Équipe ${id}</td>`));
+    expect(order.every((at, i) => at > 0 && (i === 0 || at > order[i - 1]))).toBe(true);
+    expect(html).not.toContain('provisoire');
   });
 
   it('export : passe par savePDF (dialogue + impression HTML)', async () => {
@@ -191,7 +213,14 @@ describe('teamPdf', () => {
       },
     };
     const teams = ['A', 'B'].map(team);
-    await exportTeamBookToPDF(opts(teams), [match('A', 'B')], teams, [], ['teamRanking']);
+    await exportTeamBookToPDF(
+      opts(teams),
+      [match('A', 'B')],
+      teams,
+      [],
+      computeTeamFinalRanking(teams, []),
+      ['teamRanking']
+    );
     const html = printHtmlToPDF.mock.calls[0][0] as string;
     expect(html).toContain('Sommaire');
     expect(html).toContain('Classement équipes');
@@ -201,7 +230,9 @@ describe('teamPdf', () => {
 
   it('dossier équipes sans donnée : erreur explicite', async () => {
     vi.stubGlobal('localStorage', { getItem: () => null });
-    await expect(exportTeamBookToPDF(opts([]), [], [], [])).rejects.toThrow('Aucune donnée');
+    await expect(
+      exportTeamBookToPDF(opts([]), [], [], [], { rows: [], provisional: true })
+    ).rejects.toThrow('Aucune donnée');
     vi.unstubAllGlobals();
   });
 });

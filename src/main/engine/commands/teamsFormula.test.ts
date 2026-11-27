@@ -19,6 +19,7 @@ import { matchRelayRule } from './teamRelays';
 import { invoke } from '../api/engine';
 import {
   computeTeamFinalRanking,
+  generateTeamRankingHTML,
   generateTeamTableauHTML,
 } from '../../../shared/utils/pdfExport/teamPdf';
 
@@ -912,5 +913,74 @@ d('Têtes de série du tableau dans getCompetitionState (docs/adr/0044, tableauS
     const out = await call('generateTeamTableau', { competitionId: comp.id });
     expect(out.size).toBe(8);
     expect((await stateOf(comp.id)).teams.tableauSeeds).toEqual([dd, c, b, a, e]);
+  });
+});
+
+d('PDF du classement des équipes = classement du moteur (docs/adr/0044)', () => {
+  /** PDF du classement bâti sur teams.finalRanking de l'état, comme l'écran */
+  async function rankingPdf(competitionId: string) {
+    const { finalRanking } = (await stateOf(competitionId)).teams;
+    const teams = db.getTeamsByCompetition(competitionId);
+    const byId = new Map(teams.map(t => [t.id, t]));
+    const rows = finalRanking.rows.map((r: { teamId: string; rank: number }) => ({
+      rank: r.rank,
+      team: byId.get(r.teamId)!,
+    }));
+    const html = generateTeamRankingHTML(
+      { title: 'Coupe', teams, fencerName: id => id, isLaserArena: false },
+      { rows, provisional: finalRanking.provisional }
+    );
+    return { rows, html };
+  }
+  /** Rangs et équipes lus dans le PDF, dans l'ordre des lignes */
+  const pdfRows = (html: string, names: string[]) =>
+    names
+      .map(name => ({ name, at: html.indexOf(`>${name}</td>`) }))
+      .filter(x => x.at > 0)
+      .sort((a, b) => a.at - b.at)
+      .map(x => x.name);
+
+  it('coupe après les poules : équipe coupée après le tableau, petite finale', async () => {
+    const comp = competition(Weapon.FOIL, {
+      formula: teamFormula({
+        pool: {
+          sizeMin: 3,
+          sizeMax: 6,
+          qualification: { mode: 'fixed_count', count: 4, ties: 'initial_ranking' },
+        },
+        tableau: { thirdPlace: true },
+      }),
+    });
+    const names = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo'];
+    await teamsRegistered(comp.id, names);
+    await call('generateTeamPools', { competitionId: comp.id });
+    for (const m of db.getTeamMatchesByCompetition(comp.id)) await playMatch(comp.id, m.id);
+    await call('generateTeamTableau', { competitionId: comp.id });
+    const [s1, s2] = tableauOf(comp.id);
+    await playMatch(comp.id, s1.id, 'B');
+    await playMatch(comp.id, s2.id, 'A');
+    await playMatch(comp.id, `${comp.id}-t1-0`, 'B');
+    await playMatch(comp.id, `${comp.id}-t1-1`, 'A');
+    const { rows, html } = await rankingPdf(comp.id);
+    expect(rows.map((r: { rank: number }) => r.rank)).toEqual([1, 2, 3, 4, 5]);
+    expect(pdfRows(html, names)).toEqual(rows.map((r: { team: { name: string } }) => r.team.name));
+    expect(html).not.toContain('provisoire');
+  });
+
+  it('tableau seul : classement du tableau placé au rang d’entrée', async () => {
+    const comp = competition(Weapon.SABRE, { formula: teamFormula({ pool: null }) });
+    const names = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo'];
+    await teamsRegistered(
+      comp.id,
+      names.map((name, i) => ({ name, ranking: 5 - i }))
+    );
+    await call('generateTeamTableau', { competitionId: comp.id });
+    for (let k = 0; k < 3; k++)
+      for (const m of tableauOf(comp.id).filter(x => x.status !== 'finished'))
+        await playMatch(comp.id, m.id, 'B');
+    const { rows, html } = await rankingPdf(comp.id);
+    expect(rows).toHaveLength(5);
+    expect(pdfRows(html, names)).toEqual(rows.map((r: { team: { name: string } }) => r.team.name));
+    expect(html).not.toContain('provisoire');
   });
 });
