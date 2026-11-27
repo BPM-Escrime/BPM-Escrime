@@ -25,7 +25,9 @@ const BUDGETS = {
   // Relevé de 9.50 à 9.60 MiB (26 nov. 2026) : F2 de #2013, ADR-0041 (contrôles S1 à S6, remarques
   // situées, mode expert de l'éditeur ; ≈ 9.54 MiB). Le build dev n'est pas minifié : le code et ses
   // commentaires comptent en entier.
-  total: 9.6 * MiB,
+  // Relevé de 9.60 à 9.75 MiB (27 nov. 2026, accord du mainteneur) : F4 de #2013, ADR-0043
+  // (vagues, têtes de poule, binômes ; ≈ 9.61 MiB). F4e retire le code du mode spécial.
+  total: 9.75 * MiB,
 };
 
 function walkJsFiles(dir) {
