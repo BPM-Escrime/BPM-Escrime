@@ -111,7 +111,7 @@ npm run e2e:debug                                 # mode debug
 | `src/renderer/hooks/` | 41 | 220 |
 | `src/renderer/components/` | 141 | 798 |
 | E2E Playwright (`e2e/`) | 23 | 58 |
-| `src/remote/` | 60 | 442 |
+| `src/remote/` | 60 | 443 |
 | `src/renderer/api/` | 10 | 46 |
 | `src/renderer/contexts/` | 1 | 9 |
 | `src/renderer/dt/` | 2 | 7 |
@@ -121,9 +121,9 @@ npm run e2e:debug                                 # mode debug
 | `src/shared/api/` | 3 | 12 |
 | `src/shared/domain/` | 56 | 693 |
 | `src/shared/platform/` | 3 | 32 |
-| **Total** | **653** | **5205** |
+| **Total** | **653** | **5206** |
 
-Unitaires : 630 fichiers, 5147 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
+Unitaires : 630 fichiers, 5148 tests. E2E : 23 fichiers, 58 tests (comptage statique ; `it.each` / `describe.each` comptent pour 1).
 
 ## Inventaire détaillé
 
@@ -8639,7 +8639,7 @@ Unitaires : 630 fichiers, 5147 tests. E2E : 23 fichiers, 58 tests (comptage stat
 </details>
 
 <details>
-<summary><code>src/remote/js/refereeCards.test.ts</code> — 17 tests</summary>
+<summary><code>src/remote/js/refereeCards.test.ts</code> — 18 tests</summary>
 
 - **refereeCards.js cartons**
   - modernYellowOrRed : rouge si déjà jaune ou rouge
@@ -8654,6 +8654,7 @@ Unitaires : 630 fichiers, 5147 tests. E2E : 23 fichiers, 58 tests (comptage stat
   - passivityWinner : parité avec le module partagé (matchEndValidation.ts, #1829)
   - passivityCardAllowed : pas de carton P à 14:14, parité avec le domaine (#2214)
   - cardFromGroup olympique : parité avec determineCardType (domain/penalties/cards.ts, #2207)
+  - Sabre Laser : carton par groupe, parité tablette / domaine (#2209)
   - Sabre Laser : points des cartons, parité tablette / domaine (provisoire, #2208)
   - motifs olympiques de la tablette = motifs FIE du domaine, mêmes groupes (t.163, #2207)
   - referee.html charge le module et délègue
