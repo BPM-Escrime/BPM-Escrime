@@ -5,7 +5,11 @@ export function renderSection(section: WikiSection, idx: number): React.ReactNod
   switch (section.type) {
     case 'h2':
       return (
-        <h2 key={idx} className="wiki-article-renderer-1">
+        <h2
+          key={idx}
+          id={section.anchor ? `wiki-${section.anchor}` : undefined}
+          className="wiki-article-renderer-1"
+        >
           {section.text}
         </h2>
       );

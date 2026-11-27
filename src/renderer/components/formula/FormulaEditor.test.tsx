@@ -31,6 +31,7 @@ vi.mock('../../hooks/useFormulaExpert', async () => {
 });
 
 import { FormulaEditor } from './FormulaEditor';
+import { WikiHelpProvider } from '../../contexts/WikiHelpContext';
 import { formulaSettingsUpdate } from './CompetitionFormulaModal';
 import NewCompetitionModal from '../NewCompetitionModal';
 import { Category, CompetitionSettings, Gender, Weapon } from '../../../shared/types';
@@ -641,5 +642,49 @@ describe('FormulaEditor : filtres du classement final (docs/adr/0043, F4d)', () 
     expect(screen.queryByLabelText('rankingFilters.category')).toBeNull();
     expect(screen.queryByTestId('formula-editor-ranking-filters')).toBeNull();
     prefs.expert = true;
+  });
+});
+
+describe('FormulaEditor : aide intégrée (#2013 F5)', () => {
+  const withHelp = (open: (t: { article: string; anchor?: string }) => void) =>
+    render(
+      <WikiHelpProvider value={open}>
+        <Harness weapon={Weapon.EPEE} />
+      </WikiHelpProvider>
+    );
+
+  it('un « ? » par phase affichée, vers la section de sa brique', () => {
+    const open = vi.fn();
+    withHelp(open);
+    fireEvent.click(screen.getByTestId('formula-help-pools'));
+    expect(open).toHaveBeenLastCalledWith({ article: 'formula-bricks', anchor: 'pools' });
+    fireEvent.click(screen.getByTestId('formula-step-tableau'));
+    fireEvent.click(screen.getByTestId('formula-help-tableau'));
+    expect(open).toHaveBeenLastCalledWith({ article: 'formula-bricks', anchor: 'tableau' });
+    // Un seul lien de brique à la fois : celui de la phase sélectionnée
+    expect(screen.queryByTestId('formula-help-pools')).toBeNull();
+  });
+
+  it('tableau arrêté : la section du tableau arrêté', () => {
+    const open = vi.fn();
+    withHelp(open);
+    fireEvent.click(screen.getByTestId('formula-step-tableau'));
+    fireEvent.change(document.getElementById('tableau-stop-at')!, { target: { value: '8' } });
+    fireEvent.click(screen.getByTestId('formula-step-tableau'));
+    fireEvent.click(screen.getByTestId('formula-help-stopped-tableau'));
+    expect(open).toHaveBeenLastCalledWith({
+      article: 'formula-bricks',
+      anchor: 'stopped-tableau',
+    });
+  });
+
+  it('mode expert : lien vers sa section ; sans fournisseur du wiki, aucun lien', () => {
+    const open = vi.fn();
+    const { unmount } = withHelp(open);
+    fireEvent.click(screen.getByTestId('formula-help-expert'));
+    expect(open).toHaveBeenLastCalledWith({ article: 'formula-bricks', anchor: 'expert' });
+    unmount();
+    render(<Harness weapon={Weapon.EPEE} />);
+    expect(document.querySelector('.formula-help-link')).toBeNull();
   });
 });

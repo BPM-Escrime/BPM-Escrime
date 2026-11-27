@@ -1,5 +1,5 @@
 import type { WikiArticle, WikiLang } from './wiki.types';
-import { ADVANCED_ARTICLES } from './wikiAdvancedArticles';
+import { SECONDARY_ARTICLES } from './wikiFormulaArticle';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ARTICLES: WikiArticle[] = [
@@ -1942,7 +1942,7 @@ export const ARTICLES: WikiArticle[] = [
       ],
     },
   },
-  ...ADVANCED_ARTICLES,
+  ...SECONDARY_ARTICLES,
 ];
 
 // ─── Category labels ─────────────────────────────────────────────────────────

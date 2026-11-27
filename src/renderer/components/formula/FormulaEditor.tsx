@@ -58,6 +58,8 @@ import { AdvancementRuleEditor } from './AdvancementRuleEditor';
 import { ScoringZoneEditor } from './ScoringZoneEditor';
 import { FormulaSimulationPreview } from './FormulaSimulationPreview';
 import { SplitPhaseEditor } from './SplitPhaseEditor';
+import { FormulaHelpLink } from './FormulaHelpLink';
+import { helpTopicOfPhase } from './formulaHelp';
 
 /** Taille d'une poule hors tour en vagues */
 const POOL_SIZE = { min: 3, max: 64 } as const;
@@ -794,6 +796,7 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
         <small className="u-hint">
           {forced ? t('formulaEditor.expert_forced') : t('formulaEditor.expert_hint')}
         </small>
+        <FormulaHelpLink topic="expert" />
       </div>
       {renderRemarks(headRemarks, 'formula-remarks')}
       <nav className="formula-frieze" aria-label={t('properties.frieze_label')}>
@@ -802,6 +805,12 @@ export const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
       <div className="formula-builder-content">
         <div className="formula-editor__settings">
+          {/* Aide intégrée : section du guide qui décrit la brique de la phase affichée (F5) */}
+          {current && (
+            <div className="formula-editor__help-row">
+              <FormulaHelpLink topic={helpTopicOfPhase(current, formula)} />
+            </div>
+          )}
           {current &&
             current.kind !== 'split' &&
             renderRemarks(remarksOf(current.key), 'phase-remarks')}

@@ -4737,6 +4737,20 @@
     "ranking_filters": "最終排名篩選",
     "ranking_filters_hint": "供篩選最終排名（畫面、PDF、CSV）的條件：篩選後的排名由 1 重新編號。僅為顯示：公布的排名仍為完整排名。"
   },
+  "formulaHelp": {
+    "open": "說明：{{topic}}",
+    "topic_pools": "分組循環賽",
+    "topic_qualification": "階段之間的晉級",
+    "topic_quest": "Quest 回合",
+    "topic_tableau": "淘汰賽表",
+    "topic_stopped_tableau": "在 N 人時停止的淘汰賽表",
+    "topic_split": "分拆為子賽事",
+    "topic_waves": "分批回合",
+    "topic_team_entry": "組隊報名",
+    "topic_ranking_filters": "篩選排名",
+    "topic_expert": "專家模式",
+    "topic_checks": "結構檢查"
+  },
   "formulaTemplates": {
     "template": "賽制範本",
     "search_ph": "搜尋範本",

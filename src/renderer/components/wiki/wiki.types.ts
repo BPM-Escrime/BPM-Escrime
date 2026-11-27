@@ -4,6 +4,8 @@ export interface WikiSection {
   type: 'h2' | 'h3' | 'p' | 'ul' | 'ol' | 'tip' | 'warning' | 'kbd';
   text?: string;
   items?: string[];
+  /** Ancre d'un titre h2 : cible d'un lien d'aide (`id="wiki-<ancre>"`, #2013 F5) */
+  anchor?: string;
   shortcuts?: { key: string; desc: string }[];
 }
 
