@@ -1,6 +1,6 @@
 # ADR-0037 — Déroulé généré par la formule v2 : navigation, 0 tour de poules, tableau arrêté à N, phase après un tableau
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b, retrait de la dernière phase d'après, Q5, scission ouverte au MCP, publication GREG / FTP du classement du tableau arrêté) ; amendée le 2026-11-26 (formules à plusieurs tours ouvertes au MCP, ADR-0042, validé par le mainteneur)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : Q5 « par tour, puis rang d'entrée » ; découpage D1 / D2) ; amendée le 2026-11-25 (D2b, validé par le mainteneur : navigation dérivée par `formulaSteps.ts`, pas d'identifiant indexé pour une seule phase après le tableau, section « Écran (D2b) ») ; amendée le 2026-11-26 (scission après un tableau arrêté, [ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur : D2b, retrait de la dernière phase d'après, Q5, scission ouverte au MCP, publication GREG / FTP du classement du tableau arrêté) ; amendée le 2026-11-26 (formules à plusieurs tours ouvertes au MCP, ADR-0042, validé par le mainteneur) ; amendée le 2026-11-27 (F4e : fin du mode spécial, `assertSupported` ne refuse plus que les épreuves par équipes, ADR-0043, validé par le mainteneur)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape D ; question Q5), #1948 ; complète [ADR-0036](0036-formule-v2-arbre-par-phase.md), [ADR-0007](0007-format-evenement.md) et [ADR-0017](0017-projections-etat-epreuve.md)
 
@@ -96,8 +96,9 @@ eliminatedIds }`.
   `skipPools`. D2 ajoute une commande, un événement et une clé d'état de session.
 - Le serveur MCP pilote les formules à plusieurs tours et le tableau arrêté : le moteur tire
   lui-même les tours suivants et le tableau ([ADR-0042](0042-moteur-formules-multi-tours.md)) ;
-  `assertSupported` ne refuse plus que les épreuves par équipes et le mode spécial. _(Amendé le
-  2026-11-26, étape F3 : remplace « Le serveur MCP continue de refuser plusieurs tours de poules
+  `assertSupported` ne refuse plus que les épreuves par équipes. _(Amendé le 2026-11-27, lot F4e
+  ([ADR-0043](0043-rapieres-briques-generiques.md)) : remplace « `assertSupported` ne refuse
+  plus que les épreuves par équipes et le mode spécial. ».)_ _(Amendé le 2026-11-26, étape F3 : remplace « Le serveur MCP continue de refuser plusieurs tours de poules
   (`assertSupported`) pour le tirage des poules et du tableau sans placement fourni par l'écran ;
   seule la scission (`split_competition`, ADR-0039) lui est ouverte dès l'étape E, y compris
   après plusieurs tours ou un tableau arrêté. L'ouverture au MCP du reste des formules à
