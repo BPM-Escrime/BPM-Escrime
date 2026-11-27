@@ -486,6 +486,15 @@ d('contrôles de structure en direct (docs/adr/0041)', () => {
     ).toMatchObject({ qualification: { mode: 'fixed_count', count: 8 } });
     // Réglage hors formule : admis
     await op('updateCompetitionSettings', { competitionId, settings: { expertMode: true } });
+    // Autre réglage plat (Q15) : admis, même si la règle du tour (nombre) n'est pas plate
+    await op('updateCompetitionSettings', {
+      competitionId,
+      settings: { defaultTableTimerSeconds: 240 },
+    });
+    // Qualification changée par un réglage plat : refusée
+    await expect(
+      op('updateCompetitionSettings', { competitionId, settings: { poolWinnersOnly: true } })
+    ).rejects.toMatchObject({ code: 'invalid_settings' });
   });
 
   it('ADR-0043 F4b : petite finale et « toutes les places » modifiables jusqu’au tirage du tableau', async () => {

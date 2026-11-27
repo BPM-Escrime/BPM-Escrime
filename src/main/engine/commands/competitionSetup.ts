@@ -283,7 +283,12 @@ export function updateCompetitionSettings(
   }
   // Verrou S6 (docs/adr/0041, ADR-0043 F4b) : formule ou réglages plats écrits après le début
   if ('formula' in patch || Object.keys(patch).some(k => FORMULA_FLAT_KEYS.has(k))) {
-    assertProgressLock(ctx, comp, (update.settings ?? comp.settings) as CompetitionSettings);
+    assertProgressLock(
+      ctx,
+      comp,
+      (update.settings ?? comp.settings) as CompetitionSettings,
+      !('formula' in patch)
+    );
   }
   const changed = [
     ...Object.keys(update).filter(k => k !== 'settings'),

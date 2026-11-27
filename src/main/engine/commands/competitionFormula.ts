@@ -114,14 +114,14 @@ export function applyFormulaTemplate(
 /** Formule enregistrée et avancement de l'épreuve (S6, docs/adr/0041) */
 function storedProgress(
   ctx: CommandContext,
-  comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings }
-) {
-  const session = readSession(ctx, comp.id);
-  const stored = formulaOf({
+  comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings },
+  stored: FormulaV2 = formulaOf({
     weapon: comp.weapon,
     category: comp.category,
     settings: comp.settings,
-  });
+  })
+) {
+  const session = readSession(ctx, comp.id);
   const progress = formulaProgress(stored, {
     ...session,
     questStarted: session.currentPhase === PHASE.quest,
@@ -137,15 +137,23 @@ function storedProgress(
 export function assertProgressLock(
   ctx: CommandContext,
   comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings },
-  next: CompetitionSettings
+  next: CompetitionSettings,
+  flatOnly = false
 ): void {
-  const { stored, progress } = storedProgress(ctx, comp);
-  if (progress.length === 0) return;
-  const issues = progressIssues(
-    formulaOf({ weapon: comp.weapon, category: comp.category, settings: next }),
-    progress,
-    stored
+  const read = (settings: CompetitionSettings | undefined) =>
+    formulaOf({ weapon: comp.weapon, category: comp.category, settings });
+  // Réglages plats seuls : comparés à la lecture plate de l'épreuve (sans `formula`), pour ne
+  // juger que ce qu'ils changent ; la règle d'un tour non représentable à plat (nombre, têtes de
+  // poule) n'est pas jugée changée par un autre réglage plat (S6, « autres réglages » : Q15)
+  const flat = (settings: CompetitionSettings | undefined) =>
+    read({ ...settings, formula: undefined } as CompetitionSettings);
+  const { stored, progress } = storedProgress(
+    ctx,
+    comp,
+    flatOnly ? flat(comp.settings) : undefined
   );
+  if (progress.length === 0) return;
+  const issues = progressIssues(flatOnly ? flat(next) : read(next), progress, stored);
   if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
 }
 
