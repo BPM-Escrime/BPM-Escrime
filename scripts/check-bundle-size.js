@@ -19,7 +19,9 @@ const DT_DIR = path.join(__dirname, '..', 'dist', 'remote', 'dt');
 const BUDGETS = {
   // Vue DT dans un navigateur (ADR-0020, webpack.dt.config.js) : dt.js ≈ 1.65 MiB en build dev (nov. 2026)
   dt: 2.25 * MiB,
-  initial: 2.75 * MiB,
+  // Relevé de 2.75 à 2.85 MiB (27 nov. 2026, accord du mainteneur) : G0 de #1948, ADR-0044
+  // (règle de rencontre des équipes, éditeur et écran des équipes ; ≈ 2.83 MiB).
+  initial: 2.85 * MiB,
   chunk: 1.25 * MiB, // CompetitionView ≈ 1.23 MiB en build dev (25 nov. 2026, modales rares en React.lazy)
   // ≈ 9.25 MiB en build dev (25 nov. 2026 ; 9.00 MiB avec ADR-0028 lots C1-C3, 8.51 MiB avec #1981).
   // Relevé de 9.50 à 9.60 MiB (26 nov. 2026) : F2 de #2013, ADR-0041 (contrôles S1 à S6, remarques
