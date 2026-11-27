@@ -4737,6 +4737,20 @@
     "ranking_filters": "Filtres du classement final",
     "ranking_filters_hint": "Critères proposés pour filtrer le classement final (écran, PDF, CSV) : un classement filtré est renuméroté depuis 1. Simple affichage : le classement publié reste le classement complet."
   },
+  "formulaHelp": {
+    "open": "Aide : {{topic}}",
+    "topic_pools": "tour de poules",
+    "topic_qualification": "qualification entre phases",
+    "topic_quest": "Tour Quest",
+    "topic_tableau": "tableau",
+    "topic_stopped_tableau": "tableau arrêté à N",
+    "topic_split": "scission en compétitions filles",
+    "topic_waves": "tour en vagues",
+    "topic_team_entry": "entrée en équipes",
+    "topic_ranking_filters": "classements filtrés",
+    "topic_expert": "mode expert",
+    "topic_checks": "contrôles de structure"
+  },
   "formulaTemplates": {
     "template": "Modèle de formule",
     "search_ph": "Rechercher un modèle",

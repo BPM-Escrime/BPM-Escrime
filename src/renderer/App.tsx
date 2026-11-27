@@ -47,6 +47,7 @@ import PrintDialogHost from './components/print/PrintDialogHost';
 import { PlatformProvider, usePlatform } from './platform/PlatformContext';
 import { ConfirmProvider, useConfirm } from './components/ConfirmDialog';
 import { TranslationProvider, useTranslation } from './contexts/TranslationContext';
+import { WikiHelpProvider, type WikiTarget } from './contexts/WikiHelpContext';
 import { executeSlashCommand, SHOW_SHORTCUTS_EVENT } from './services/slashCommands';
 import { saveActiveSection } from './components/settingsModal.helpers';
 import { ErrorBoundary, CompetitionErrorBoundary } from './components/ErrorBoundary';
@@ -69,6 +70,16 @@ const AppContent: React.FC = () => {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showWikiModal, setShowWikiModal] = useState(false);
+  // Aide intégrée (#2013 F5) : section du wiki demandée par un écran (lien « ? » de la formule)
+  const [wikiTarget, setWikiTarget] = useState<WikiTarget | undefined>(undefined);
+  const openWikiAt = useCallback((target: WikiTarget) => {
+    setWikiTarget(target);
+    setShowWikiModal(true);
+  }, []);
+  const openWiki = useCallback(() => {
+    setWikiTarget(undefined);
+    setShowWikiModal(true);
+  }, []);
   const [showWifiQR, setShowWifiQR] = useState(false);
   const [showTVRemote, setShowTVRemote] = useState(false);
   const [showArenaPlanner, setShowArenaPlanner] = useState(false);
@@ -208,7 +219,7 @@ const AppContent: React.FC = () => {
         openSettings: () => setShowSettingsModal(true),
         openTraining: () => !trainingActive && setShowTrainingModal(true),
         openWifi: () => setShowWifiQR(true),
-        openWiki: () => setShowWikiModal(true),
+        openWiki,
         openAbout: () => setShowAboutModal(true),
         openReport: () => setShowReportIssueModal(true),
         openHelp: () => window.dispatchEvent(new Event(SHOW_SHORTCUTS_EVENT)),
@@ -246,7 +257,7 @@ const AppContent: React.FC = () => {
   );
 
   return (
-    <>
+    <WikiHelpProvider value={openWikiAt}>
       <Suspense fallback={null}>
         <UpdateNotification />
       </Suspense>
@@ -285,7 +296,7 @@ const AppContent: React.FC = () => {
             if (!trainingActive) setShowTrainingModal(true);
             else setShowTrainingPanel(v => !v);
           }}
-          onWiki={() => setShowWikiModal(true)}
+          onWiki={openWiki}
           onWifiQR={() => setShowWifiQR(true)}
           onTVRemote={() => setShowTVRemote(true)}
           onArenaPlanner={() => setShowArenaPlanner(true)}
@@ -421,7 +432,11 @@ const AppContent: React.FC = () => {
 
         {showWikiModal && (
           <Suspense fallback={null}>
-            <WikiModal onClose={() => setShowWikiModal(false)} />
+            <WikiModal
+              onClose={() => setShowWikiModal(false)}
+              initialArticleId={wikiTarget?.article}
+              initialAnchor={wikiTarget?.anchor}
+            />
           </Suspense>
         )}
 
@@ -521,7 +536,7 @@ const AppContent: React.FC = () => {
           </Suspense>
         )}
       </div>
-    </>
+    </WikiHelpProvider>
   );
 };
 

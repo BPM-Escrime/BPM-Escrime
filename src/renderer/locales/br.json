@@ -4737,6 +4737,20 @@
     "ranking_filters": "Siloù ar renkadur diwezhañ",
     "ranking_filters_hint": "Dibarzhioù evit silañ ar renkadur diwezhañ (skramm, PDF, CSV) : ur renkadur silet a vez niverennet adalek 1. Diskwel hepken : ar renkadur embannet a chom ar renkadur klok."
   },
+  "formulaHelp": {
+    "open": "Skoazell : {{topic}}",
+    "topic_pools": "tro poulloù",
+    "topic_qualification": "kalafikadur etre fazennoù",
+    "topic_quest": "tro Quest",
+    "topic_tableau": "taolenn",
+    "topic_stopped_tableau": "taolenn paouezet e N",
+    "topic_split": "rannadur e kenstrivadegoù merc’h",
+    "topic_waves": "tro gant tonnoù",
+    "topic_team_entry": "enskrivadur dre skipailhoù",
+    "topic_ranking_filters": "renkadurioù sil",
+    "topic_expert": "mod arbennigour",
+    "topic_checks": "gwiriadennoù ar framm"
+  },
   "formulaTemplates": {
     "template": "Patrom furmulenn",
     "search_ph": "Klask ur patrom",

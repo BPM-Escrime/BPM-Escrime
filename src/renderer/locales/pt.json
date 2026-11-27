@@ -4737,6 +4737,20 @@
     "ranking_filters": "Filtros da classificação final",
     "ranking_filters_hint": "Critérios para filtrar a classificação final (ecrã, PDF, CSV): uma classificação filtrada é renumerada a partir de 1. Apenas visualização: a classificação publicada continua a ser a completa."
   },
+  "formulaHelp": {
+    "open": "Ajuda: {{topic}}",
+    "topic_pools": "ronda de poules",
+    "topic_qualification": "qualificação entre fases",
+    "topic_quest": "ronda Quest",
+    "topic_tableau": "quadro",
+    "topic_stopped_tableau": "quadro parado em N",
+    "topic_split": "divisão em competições filhas",
+    "topic_waves": "ronda por ondas",
+    "topic_team_entry": "inscrição por equipas",
+    "topic_ranking_filters": "classificações filtradas",
+    "topic_expert": "modo especialista",
+    "topic_checks": "controlos de estrutura"
+  },
   "formulaTemplates": {
     "template": "Modelo de fórmula",
     "search_ph": "Procurar um modelo",

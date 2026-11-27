@@ -6,6 +6,7 @@
  */
 import React, { useState } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
+import { FormulaHelpLink } from './FormulaHelpLink';
 import { DEFAULT_TEAM_LEVELS, TEAM_SIZE } from '../../../shared/domain/fencers/teamEntry';
 import type { FormulaEntry } from '../../../shared/domain/formula/formulaV2';
 
@@ -40,6 +41,7 @@ const FormulaEntryFields: React.FC<FormulaEntryFieldsProps> = ({ id, entry, onCh
       <label className="form-label" htmlFor={`${id}-entry-kind`}>
         {t('formulaEditor.entry')}
       </label>
+      <FormulaHelpLink topic="team-entry" />
       <select
         id={`${id}-entry-kind`}
         className="form-input form-select"

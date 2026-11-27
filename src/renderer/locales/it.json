@@ -4737,6 +4737,20 @@
     "ranking_filters": "Filtri della classifica finale",
     "ranking_filters_hint": "Criteri per filtrare la classifica finale (schermo, PDF, CSV): una classifica filtrata viene rinumerata da 1. Solo visualizzazione: la classifica pubblicata resta quella completa."
   },
+  "formulaHelp": {
+    "open": "Aiuto: {{topic}}",
+    "topic_pools": "turno di gironi",
+    "topic_qualification": "qualificazione tra le fasi",
+    "topic_quest": "turno Quest",
+    "topic_tableau": "tabellone",
+    "topic_stopped_tableau": "tabellone fermato a N",
+    "topic_split": "scissione in competizioni figlie",
+    "topic_waves": "turno a ondate",
+    "topic_team_entry": "iscrizione a squadre",
+    "topic_ranking_filters": "classifiche filtrate",
+    "topic_expert": "modalità esperto",
+    "topic_checks": "controlli di struttura"
+  },
   "formulaTemplates": {
     "template": "Modello di formula",
     "search_ph": "Cerca un modello",

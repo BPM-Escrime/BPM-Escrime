@@ -6,6 +6,7 @@
  */
 import React from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
+import { FormulaHelpLink } from './FormulaHelpLink';
 import {
   normalizeRankingFilterKeys,
   RANKING_FILTER_KEYS,
@@ -27,6 +28,7 @@ const FormulaRankingFilterFields: React.FC<FormulaRankingFilterFieldsProps> = ({
   return (
     <fieldset className="form-group" data-testid={`${id}-ranking-filters`}>
       <legend className="form-label">{t('formulaEditor.ranking_filters')}</legend>
+      <FormulaHelpLink topic="ranking-filters" />
       {RANKING_FILTER_KEYS.map(key => (
         <div key={key}>
           <label>

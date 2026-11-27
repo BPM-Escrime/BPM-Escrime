@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import {
@@ -16,14 +16,20 @@ import { Icon } from './common/Icon';
 
 interface Props {
   onClose: () => void;
+  /** Article ouvert d'emblée (aide intégrée, #2013 F5) ; absent : démarrage rapide */
+  initialArticleId?: string;
+  /** Ancre d'un titre de cet article, amenée en vue à l'ouverture */
+  initialAnchor?: string;
 }
 
-const WikiModal: React.FC<Props> = ({ onClose }) => {
+const WikiModal: React.FC<Props> = ({ onClose, initialArticleId, initialAnchor }) => {
   const { language, t } = useTranslation();
   const ref = useFocusTrap<HTMLDivElement>(true, onClose);
   const lang = getLang(language);
 
-  const [selectedId, setSelectedId] = useState<string>('quickstart');
+  const [selectedId, setSelectedId] = useState<string>(
+    ARTICLES.some(a => a.id === initialArticleId) ? (initialArticleId as string) : 'quickstart'
+  );
   const [query, setQuery] = useState('');
 
   const filteredArticles = useMemo(() => {
@@ -50,6 +56,12 @@ const WikiModal: React.FC<Props> = ({ onClose }) => {
     () => ARTICLES.find(a => a.id === selectedId) ?? ARTICLES[0],
     [selectedId]
   );
+
+  // Aide intégrée : section demandée amenée en vue une fois l'article affiché
+  useEffect(() => {
+    if (!initialAnchor) return;
+    document.getElementById(`wiki-${initialAnchor}`)?.scrollIntoView?.({ block: 'start' });
+  }, [initialAnchor, initialArticleId]);
 
   const handleSelect = useCallback((id: string) => {
     setSelectedId(id);

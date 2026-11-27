@@ -4737,6 +4737,20 @@
     "ranking_filters": "Final ranking filters",
     "ranking_filters_hint": "Criteria offered to filter the final ranking (screen, PDF, CSV): a filtered ranking is renumbered from 1. Display only: the published ranking remains the full ranking."
   },
+  "formulaHelp": {
+    "open": "Help: {{topic}}",
+    "topic_pools": "pool round",
+    "topic_qualification": "qualification between phases",
+    "topic_quest": "Quest round",
+    "topic_tableau": "bracket",
+    "topic_stopped_tableau": "bracket stopped at N",
+    "topic_split": "split into child competitions",
+    "topic_waves": "waves round",
+    "topic_team_entry": "team entry",
+    "topic_ranking_filters": "filtered rankings",
+    "topic_expert": "expert mode",
+    "topic_checks": "structure checks"
+  },
   "formulaTemplates": {
     "template": "Formula template",
     "search_ph": "Search templates",

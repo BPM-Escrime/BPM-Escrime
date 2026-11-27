@@ -4737,6 +4737,20 @@
     "ranking_filters": "Filter der Endrangliste",
     "ranking_filters_hint": "Kriterien zum Filtern der Endrangliste (Bildschirm, PDF, CSV): Eine gefilterte Rangliste wird ab 1 neu nummeriert. Nur Anzeige: Die veröffentlichte Rangliste bleibt die vollständige Rangliste."
   },
+  "formulaHelp": {
+    "open": "Hilfe: {{topic}}",
+    "topic_pools": "Pool-Runde",
+    "topic_qualification": "Qualifikation zwischen Phasen",
+    "topic_quest": "Quest-Runde",
+    "topic_tableau": "Tableau",
+    "topic_stopped_tableau": "bei N angehaltenes Tableau",
+    "topic_split": "Aufteilung in Tochter-Wettkämpfe",
+    "topic_waves": "Wellen-Runde",
+    "topic_team_entry": "Teameintrag",
+    "topic_ranking_filters": "gefilterte Ranglisten",
+    "topic_expert": "Expertenmodus",
+    "topic_checks": "Strukturprüfungen"
+  },
   "formulaTemplates": {
     "template": "Formelvorlage",
     "search_ph": "Vorlage suchen",

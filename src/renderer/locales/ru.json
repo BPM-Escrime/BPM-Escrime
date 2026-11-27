@@ -4737,6 +4737,20 @@
     "ranking_filters": "Фильтры итогового рейтинга",
     "ranking_filters_hint": "Критерии фильтрации итогового рейтинга (экран, PDF, CSV): отфильтрованный рейтинг нумеруется заново с 1. Только отображение: опубликованный рейтинг остаётся полным."
   },
+  "formulaHelp": {
+    "open": "Справка: {{topic}}",
+    "topic_pools": "круг групп",
+    "topic_qualification": "квалификация между фазами",
+    "topic_quest": "круг Quest",
+    "topic_tableau": "сетка",
+    "topic_stopped_tableau": "сетка, остановленная на N",
+    "topic_split": "разделение на дочерние соревнования",
+    "topic_waves": "круг волнами",
+    "topic_team_entry": "командная заявка",
+    "topic_ranking_filters": "отфильтрованные рейтинги",
+    "topic_expert": "режим эксперта",
+    "topic_checks": "проверки структуры"
+  },
   "formulaTemplates": {
     "template": "Шаблон формулы",
     "search_ph": "Найти шаблон",
