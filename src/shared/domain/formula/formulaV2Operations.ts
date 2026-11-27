@@ -130,7 +130,6 @@ export function canRemoveV2(f: FormulaV2, phase: FriezePhase): boolean {
     const tableau = f.phases[at] as TableauPhase | undefined;
     if (tableau?.stopAt) {
       const pre = f.phases.slice(0, at).filter(isPool).length;
-      const post = f.phases.slice(at + 1).filter(isPool).length;
       // Dernier tour d'après : retiré avec l'arrêt du tableau (removeV2)
       if (phase.round < pre && pre <= 1) return false;
     }
