@@ -18,6 +18,7 @@ import {
   applyOperationsV2,
   formulaV2Issues,
   formulaViewV2,
+  type FormulaScope,
 } from '../../../shared/domain/formula/formulaV2Operations';
 import {
   flatSettingsOf,
@@ -192,11 +193,55 @@ export function assertProgressLock(
   if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
 }
 
+/** Épreuve telle qu'elle sera après l'écriture : arme, type, réglages (format par équipes) */
+interface NextCompetition {
+  weapon: Weapon;
+  isTeamEvent?: boolean;
+  settings?: Partial<CompetitionSettings> | null;
+}
+
+/** Périmètre du jugement de la formule (ADR-0041, ADR-0044) : arme, type, format, effectifs */
+function formulaScope(ctx: CommandContext, competitionId: string, next: NextCompetition) {
+  const scope: FormulaScope = {
+    weapon: next.weapon,
+    isTeamEvent: !!next.isTeamEvent,
+    fencerCount: ctx.db.getFencersByCompetition(competitionId).length,
+    teamFormat: teamFormatOf(next.settings),
+    teamCount: next.isTeamEvent
+      ? ctx.db.teams.getTeamsByCompetition(competitionId).length
+      : undefined,
+  };
+  return scope;
+}
+
 /**
- * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0036), après le jugement de la
- * formule (bornes, S1 à S6 ; une remarque par ligne avec la clé de sa phase, ADR-0041) ; `extra` :
- * autres réglages écrits avec elle (origine, mode spécial). Phases commencées (S6) : lues dans
- * l'état de session, par rapport à la formule enregistrée.
+ * Jugement de la formule écrite (docs/adr/0041 : « le moteur refuse une formule fautive à
+ * l'écriture ») : bornes, S1 à S6, contrôles d'équipe (ADR-0044) ; une remarque par ligne avec la
+ * clé de sa phase. Même refus par `updateCompetitionFormula`, `applyFormulaTemplate` et
+ * `updateCompetitionSettings` avec `settings.formula`. Phases commencées (S6) : lues dans l'état
+ * de session ou les rencontres d'équipe, par rapport à la formule enregistrée.
+ */
+export function assertFormulaV2(
+  ctx: CommandContext,
+  comp: {
+    id: string;
+    weapon: Weapon;
+    category: Category;
+    isTeamEvent?: boolean;
+    settings?: CompetitionSettings;
+  },
+  next: NextCompetition,
+  formula: FormulaV2
+): void {
+  const { stored, progress } = storedProgress(ctx, comp);
+  const issues = formulaV2Issues(formula, formulaScope(ctx, comp.id, next), progress, stored);
+  if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
+}
+
+/**
+ * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0036) ; `extra` : autres réglages
+ * écrits avec elle (origine, mode spécial). Jugée par `updateCompetitionSettings`
+ * (`assertFormulaV2`), qui l'enregistre.
  */
 export function writeFormula(
   ctx: CommandContext,
@@ -213,23 +258,9 @@ export function writeFormula(
 ) {
   // Arène Sabre Laser : formule d'un modèle fixe, non modifiable (ADR-0044)
   assertFormulaWritable(comp);
-  const { stored, progress } = storedProgress(ctx, comp);
   // Épreuve par équipes en relais FIE : la formule écrite porte sa règle de rencontre et fait
   // foi pour les phases ; ailleurs, `teamMatch` est retiré (ADR-0044)
   const formula = withTeamMatch(written, comp);
-  const issues = formulaV2Issues(
-    formula,
-    {
-      weapon: comp.weapon,
-      isTeamEvent: !!comp.isTeamEvent,
-      fencerCount: ctx.db.getFencersByCompetition(comp.id).length,
-      teamFormat: teamFormatOf(comp.settings),
-      teamCount: comp.isTeamEvent ? ctx.db.teams.getTeamsByCompetition(comp.id).length : undefined,
-    },
-    progress,
-    stored
-  );
-  if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
   // Épreuve enregistrée en mode spécial rapières : la formule écrite fait désormais foi, le mode
   // n'est plus lu (docs/adr/0043, F4e) ; après le tirage, la clé reste (figée), la formule gardant
   // ses briques par la lecture de compatibilité

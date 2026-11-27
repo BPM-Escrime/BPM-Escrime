@@ -692,7 +692,8 @@ export const contract = {
   updateCompetitionSettings: command({
     description:
       'Arme, sexe, catégorie, format par équipes et réglages (fusion de premier niveau ; clé inconnue ou valeur invalide refusées à l’entrée). ' +
-      'Arme, format par équipes, mode spécial et formule à la carte figés (« draw_done ») après le tirage. Tablettes prévenues.',
+      'Arme, format par équipes, mode spécial et formule à la carte figés (« draw_done ») après le tirage. ' +
+      '`settings.formula` jugée comme par updateCompetitionFormula (bornes, S1 à S6, contrôles d’équipe ; « invalid_settings »). Tablettes prévenues.',
     input: z.object({
       competitionId: CompetitionId,
       weapon: WeaponEnum.optional(),

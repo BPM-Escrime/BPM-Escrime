@@ -94,7 +94,8 @@ function teamFormula(
       id: 'pool-1',
       sizeMin: 3,
       sizeMax: 4,
-      maxScore: 45,
+      // Bornes du tour de poules (1 à 15) ; la cible d'une rencontre vient de la règle
+      maxScore: 15,
       timerSeconds: 180,
       qualification: { mode: 'all' },
       seeding: 'previous_round',
@@ -822,6 +823,58 @@ d('updateCompetitionSettings avec settings.formula (docs/adr/0044, Formule d’�
     });
   });
 });
+
+d(
+  'updateCompetitionSettings avec settings.formula : même jugement que updateCompetitionFormula (docs/adr/0041, ADR-0044)',
+  () => {
+    it('rotation à 3 titulaires en épée refusée (invalid_team_match), rien d’écrit', async () => {
+      const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+      const before = db.getCompetition(comp.id)!.settings!;
+      await reject('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { formula: teamFormula({ rule: { relayOrder: 'rotation' } }) },
+      }).toMatchObject({
+        code: 'invalid_settings',
+        message: expect.stringContaining('ordre FIE des relais imposé'),
+      });
+      expect(db.getCompetition(comp.id)!.settings).toEqual(before);
+    });
+
+    it('brique Tour Quest refusée pour une épreuve par équipes (team_brick_unsupported)', async () => {
+      const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+      const quest = teamFormula();
+      quest.phases.splice(1, 0, { kind: 'quest', id: 'quest', config: { enabled: true } } as never);
+      await reject('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { formula: quest },
+        dryRun: true,
+      }).toMatchObject({
+        code: 'invalid_settings',
+        message: expect.stringContaining('Tour Quest refusé'),
+      });
+    });
+
+    it('formule valide acceptée ; effectif d’équipes jugé (S3) comme par updateCompetitionFormula', async () => {
+      const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+      await call('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { formula: teamFormula({ tableau: { thirdPlace: true } }) },
+      });
+      expect(db.getCompetition(comp.id)!.settings!.formula!.phases[1]).toMatchObject({
+        kind: 'tableau',
+        thirdPlace: true,
+      });
+      await teamsRegistered(comp.id, ['A', 'B']);
+      await reject('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { formula: teamFormula({ pool: { sizeMin: 3, sizeMax: 6 } }) },
+      }).toMatchObject({
+        code: 'invalid_settings',
+        message: expect.stringContaining('2 équipe(s)'),
+      });
+    });
+  }
+);
 
 d('Cible d’une rencontre = relayStep × starters² (docs/adr/0044)', () => {
   it('formule d’équipe palier 4, 3 titulaires : cible 36 ; score_above_max au-delà', async () => {

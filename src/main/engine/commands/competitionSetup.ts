@@ -20,6 +20,7 @@ import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
 import {
+  assertFormulaV2,
   assertFormulaWritable,
   assertProgressLock,
   compatibleTemplate,
@@ -274,6 +275,23 @@ export function updateCompetitionSettings(
       `Poules tirées ou tableau généré : réglage figé (${frozen.join(', ')})`
     );
   }
+  const next = {
+    weapon: input.weapon ?? comp.weapon,
+    isTeamEvent: input.isTeamEvent ?? !!comp.isTeamEvent,
+    settings: { ...comp.settings, ...patch } as CompetitionSettings,
+  };
+  // Arène Sabre Laser : formule d'un modèle fixe, non modifiable (ADR-0044)
+  if (
+    'formula' in patch &&
+    JSON.stringify(patch.formula ?? null) !== JSON.stringify(comp.settings?.formula ?? null)
+  )
+    assertFormulaWritable(next);
+  // Formule écrite : même jugement que updateCompetitionFormula (bornes, S1 à S6, contrôles
+  // d'équipe ; docs/adr/0041, ADR-0044), seulement quand `formula` est dans le patch. Par
+  // équipes en relais FIE, la formule porte sa règle de rencontre ; ailleurs, `teamMatch` est
+  // retiré (ADR-0044)
+  const writtenFormula = patch.formula ? withTeamMatch(patch.formula, next) : undefined;
+  if (writtenFormula) assertFormulaV2(ctx, comp, next, writtenFormula);
   // Seuls les réglages modifiés sont jugés : une épreuve 2.0 hors bornes reste modifiable
   if (Object.keys(patch).length) {
     assertFormula(
@@ -292,23 +310,9 @@ export function updateCompetitionSettings(
   if (input.gender !== undefined) update.gender = input.gender;
   if (input.category !== undefined) update.category = input.category;
   if (input.isTeamEvent !== undefined) update.isTeamEvent = input.isTeamEvent;
-  const next = {
-    weapon: input.weapon ?? comp.weapon,
-    isTeamEvent: input.isTeamEvent ?? !!comp.isTeamEvent,
-    settings: { ...comp.settings, ...patch } as CompetitionSettings,
-  };
-  // Arène Sabre Laser : formule d'un modèle fixe, non modifiable (ADR-0044)
-  if (
-    'formula' in patch &&
-    JSON.stringify(patch.formula ?? null) !== JSON.stringify(comp.settings?.formula ?? null)
-  )
-    assertFormulaWritable(next);
   if (Object.keys(patch).length) {
     update.settings = next.settings;
-    // Formule écrite, ou type d'épreuve changé : par équipes en relais FIE, la formule porte sa
-    // règle de rencontre et fait foi pour les phases ; ailleurs, `teamMatch` est retiré, ni lu
-    // ni écrit (ADR-0044)
-    if (patch.formula) update.settings.formula = withTeamMatch(patch.formula, next);
+    if (writtenFormula) update.settings.formula = writtenFormula;
   }
   const flatKeys = Object.keys(patch).filter(k => FORMULA_FLAT_KEYS.has(k));
   const weaponChanged = input.weapon !== undefined && input.weapon !== comp.weapon;
@@ -353,9 +357,9 @@ export function updateCompetitionSettings(
     if (base && stripped && stripped !== base.formula)
       update.settings = { ...base, formula: stripped };
   }
-  // Verrou S6 (docs/adr/0041, ADR-0043 F4b) : formule ou réglages plats écrits après le début,
-  // jugés sur la formule qui en résulte
-  if ('formula' in patch || flatKeys.length) {
+  // Verrou S6 (docs/adr/0041, ADR-0043 F4b) : réglages plats (ou formule retirée) écrits après le
+  // début, jugés sur la formule qui en résulte ; formule écrite : déjà jugée (assertFormulaV2)
+  if (!writtenFormula && ('formula' in patch || flatKeys.length)) {
     assertProgressLock(ctx, comp, (update.settings ?? comp.settings) as CompetitionSettings);
   }
   const changed = [
