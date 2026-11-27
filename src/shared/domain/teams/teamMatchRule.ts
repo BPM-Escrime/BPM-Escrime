@@ -104,6 +104,18 @@ export function teamFormulaOf(comp: {
   return f?.general.teamMatch ? f : undefined;
 }
 
+/**
+ * Phase des poules d'équipes (ADR-0044) : formule d'équipe avec un tour de poules ; épreuve
+ * sans formule d'équipe (existante, arène) : poule unique, comme avant
+ */
+export function hasTeamPools(comp: {
+  isTeamEvent?: boolean;
+  settings?: Partial<CompetitionSettings> | null;
+}): boolean {
+  const f = teamFormulaOf(comp);
+  return !f || f.phases.some(p => p.kind === 'pool');
+}
+
 /** Épreuve par équipes en relais FIE : seule épreuve dont la formule lit `teamMatch` (ADR-0044) */
 export const isFieRelayTeamEvent = (comp: {
   isTeamEvent?: boolean;
@@ -201,11 +213,21 @@ function ruleIssues(
 }
 
 /** Qualifications admises vers le tableau d'équipes : tous, nombre, pourcentage (ADR-0044) */
-const TEAM_QUALIFICATIONS: ReadonlyArray<AdvancementRule['mode']> = [
+export const TEAM_QUALIFICATIONS: ReadonlyArray<AdvancementRule['mode']> = [
   'all',
   'fixed_count',
   'percentage',
 ];
+
+/**
+ * Brique proposée par l'éditeur d'une épreuve par équipes en relais FIE (ADR-0044) : un tour de
+ * poules (un seul), puis un tableau ; Tour Quest et scission refusés
+ */
+export function teamBrickAllowed(f: FormulaV2, brick: 'pool' | 'quest' | 'tableau' | 'split') {
+  if (brick === 'tableau') return true;
+  if (brick === 'pool') return !f.phases.some(p => p.kind === 'pool');
+  return false;
+}
 
 /** `n` équipes se répartissent-elles en poules de `min` à `max` ? */
 const poolable = (n: number, min: number, max: number) =>

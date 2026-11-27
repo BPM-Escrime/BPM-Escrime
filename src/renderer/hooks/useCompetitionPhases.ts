@@ -45,6 +45,11 @@ interface UseCompetitionPhasesParams {
   tableauFirst?: boolean;
   /** Tableau arrêté déjà clos (docs/adr/0037) : onglet gardé, en consultation */
   closedTableau?: boolean;
+  /**
+   * Épreuve par équipes : phase teampool affichée (ADR-0044) ; false : formule d'équipe sans
+   * tour de poules (tableau seul). Défaut : affichée (épreuve sans formule d'équipe)
+   */
+  teamPoolPhase?: boolean;
 }
 
 /** Ordre des phases, onglets de navigation, accessibilité des étapes (poules, tableau, résultats). */
@@ -73,16 +78,21 @@ export function useCompetitionPhases({
   refereeFeatureEnabled,
   tableauFirst = false,
   closedTableau = false,
+  teamPoolPhase = true,
 }: UseCompetitionPhasesParams) {
   const { t } = useTranslation();
   const phaseOrder = useMemo<Phase[]>(() => {
-    if (isTeamEvent) return ['checkin', 'teams', 'teampool', 'teamtableau', 'teamranking'];
+    // Équipes : phases de la formule d'équipe, teampool seulement avec un tour de poules
+    if (isTeamEvent)
+      return teamPoolPhase
+        ? ['checkin', 'teams', 'teampool', 'teamtableau', 'teamranking']
+        : ['checkin', 'teams', 'teamtableau', 'teamranking'];
     if (tableauFirst) return ['checkin', 'ranking', 'tableau', 'results'];
     if (!questEnabled) return ['checkin', 'poolprep', 'pools', 'ranking', 'tableau', 'results'];
     if (questConfig?.hasPreliminaryPools)
       return ['checkin', 'poolprep', 'pools', 'quest', 'ranking', 'tableau', 'results'];
     return ['checkin', 'quest', 'ranking', 'tableau', 'results'];
-  }, [isTeamEvent, tableauFirst, questEnabled, questConfig?.hasPreliminaryPools]);
+  }, [isTeamEvent, teamPoolPhase, tableauFirst, questEnabled, questConfig?.hasPreliminaryPools]);
 
   // Réinitialiser currentPhase si elle n'existe plus dans le nouveau phaseOrder
   useEffect(() => {
@@ -124,13 +134,15 @@ export function useCompetitionPhases({
     }
   }, [canAdvanceFromPools, questNoPool, currentPhase]);
 
-  const teamPhases = (Object.keys(TEAM_PHASE_VIEWS) as TeamPhase[]).map((id, i) => ({
-    id,
-    label: t(`phases.${id}`),
-    icon: TEAM_PHASE_ICONS[i],
-    disabled: false,
-    title: undefined as string | undefined,
-  }));
+  const teamPhases = (Object.keys(TEAM_PHASE_VIEWS) as TeamPhase[])
+    .map((id, i) => ({
+      id,
+      label: t(`phases.${id}`),
+      icon: TEAM_PHASE_ICONS[i],
+      disabled: false,
+      title: undefined as string | undefined,
+    }))
+    .filter(p => teamPoolPhase || p.id !== 'teampool');
 
   const { prepLocked, poolsLocked } = poolTabLock({
     pools,
