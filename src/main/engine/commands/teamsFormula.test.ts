@@ -761,6 +761,18 @@ d('Formule d’une épreuve par équipes écrite par le moteur (docs/adr/0044, G
     expect(db.getCompetition(arena.id)!.settings!.formula).toEqual(before);
   });
 
+  it('arène Sabre Laser : un réglage de structure ne retire pas la formule figée (ADR-0036 amendée, ADR-0044)', async () => {
+    const fixed = teamFormula();
+    const arena = competition(Weapon.LASER, { teamFormat: 'laser-arena', formula: fixed });
+    const before = db.getCompetition(arena.id)!.settings!.formula;
+    expect(before).toBeDefined();
+    await call('updateCompetitionSettings', {
+      competitionId: arena.id,
+      settings: { hasDirectElimination: false },
+    });
+    expect(db.getCompetition(arena.id)!.settings!.formula).toEqual(before);
+  });
+
   it('épreuve individuelle : teamMatch (général et de phase) retiré à l’écriture, aucun réglage d’équipe dérivé', async () => {
     const solo = db.createCompetition({
       title: 'Individuel',
