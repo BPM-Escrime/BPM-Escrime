@@ -293,6 +293,13 @@ function teamPoolsDraw(
   if (teamFormatOf(comp.settings) !== 'fie-relay') return undefined;
   const formula = teamFormulaOf(comp);
   if (!formula && poolCount === undefined) return undefined;
+  // Sans formule d'équipe, l'épreuve garde la poule unique (ADR-0044) : poolCount refusé
+  if (!formula) {
+    throw new CommandError(
+      'invalid_pool_count',
+      'Nombre de poules : épreuve sans formule d’équipe, poule unique (enregistrer la formule d’abord)'
+    );
+  }
   // Tour de poules lu par phaseSettings (ADR-0036, ADR-0044)
   const round = formula ? teamPoolRoundOf(formula) : undefined;
   if (formula && !round) {

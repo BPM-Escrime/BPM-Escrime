@@ -354,15 +354,19 @@ d('Poules d’équipes lues dans la formule (docs/adr/0044, G0c)', () => {
     expect(out.matchIds).toHaveLength(15);
   });
 
-  it('poolCount : nombre de poules demandé (aussi sans formule) ; trop de poules refusé', async () => {
-    const comp = competition(Weapon.FOIL);
+  it('poolCount : nombre de poules demandé (formule d’équipe) ; trop de poules refusé ; sans formule d’équipe, poule unique gardée', async () => {
+    const legacy = competition(Weapon.FOIL);
+    await teamsRegistered(legacy.id, ['A', 'B', 'C', 'D']);
+    await reject('generateTeamPools', { competitionId: legacy.id, poolCount: 2 }).toMatchObject({
+      code: 'invalid_pool_count',
+    });
+    const comp = competition(Weapon.FOIL, { formula: teamFormula() });
     await teamsRegistered(comp.id, ['A', 'B', 'C', 'D']);
     await reject('generateTeamPools', { competitionId: comp.id, poolCount: 3 }).toMatchObject({
       code: 'invalid_pool_count',
     });
     const out = await call('generateTeamPools', { competitionId: comp.id, poolCount: 2 });
     expect(out.pools.map((p: { teamIds: string[] }) => p.teamIds.length)).toEqual([2, 2]);
-    expect(out.matchIds).toEqual([`${comp.id}-p1-1`, `${comp.id}-p2-1`]);
     expect(divergences(comp.id)).toEqual([]);
   });
 

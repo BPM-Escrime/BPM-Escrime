@@ -241,7 +241,7 @@ export const teamSetupOperations = {
   generateTeamPools: command({
     description:
       'Épreuve par équipes : tire les poules d’équipes et crée leurs rencontres, chacune avec ses relais fixés (titulaires par ordre, ordre des relais de la règle de rencontre du tour : FIE o.99.3 à 3 titulaires ou rotation). ' +
-      'Relais FIE avec une formule d’équipe (general.teamMatch, docs/adr/0044) : poules du tour de la formule comme en individuel (taille de poule, nombre optimal ou « poolCount », serpentin au rang d’entrée effectif des équipes, clubs séparés, ordre officiel des rencontres, positions tirées au sort), relais et palier de la règle du tour ; sans formule d’équipe : poule unique tous contre tous dans l’ordre des noms (« poolCount » : poules comme ci-dessus). Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes seulement. ' +
+      'Relais FIE avec une formule d’équipe (general.teamMatch, docs/adr/0044) : poules du tour de la formule comme en individuel (taille de poule, nombre optimal ou « poolCount », serpentin au rang d’entrée effectif des équipes, clubs séparés, ordre officiel des rencontres, positions tirées au sort), relais et palier de la règle du tour ; sans formule d’équipe : poule unique tous contre tous dans l’ordre des noms (« poolCount » refusé, invalid_pool_count). Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes seulement. ' +
       'Refus : épreuve individuelle (unsupported_format), moins de 2 équipes ou arène hors 8/12 (invalid_composition), titulaires manquants (team_incomplete), formule sans tour de poules (no_pools), plus de poules que la moitié des équipes (invalid_pool_count), poules déjà tirées sans « replace » (draw_done), relais déjà joués (pools_have_scores), tableau d’équipes créé (bracket_exists). ' +
       'Journal : TeamPoolsGenerated, puis un TeamMatchScheduled par rencontre.',
     input: z.object({
@@ -253,7 +253,7 @@ export const teamSetupOperations = {
         .max(100)
         .optional()
         .describe(
-          'Nombre de poules (défaut : formule d’équipe, sinon poule unique ; docs/adr/0044)'
+          'Nombre de poules (formule d’équipe seulement ; défaut : nombre optimal ; docs/adr/0044)'
         ),
       replace: z
         .boolean()

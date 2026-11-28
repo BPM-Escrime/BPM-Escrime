@@ -248,6 +248,50 @@ describe('Classement toutes poules confondues : ratio V/M (docs/adr/0044 amendé
   });
 });
 
+describe('Classement toutes poules confondues : départages (ADR-0044 amendée)', () => {
+  const relays = (aWins: number, bWins: number) => [
+    ...Array.from({ length: aWins }, () => ({
+      status: 'finished',
+      winnerId: 'fa',
+      fencerAId: 'fa',
+      fencerBId: 'fb',
+    })),
+    ...Array.from({ length: bWins }, () => ({
+      status: 'finished',
+      winnerId: 'fb',
+      fencerAId: 'fa',
+      fencerBId: 'fb',
+    })),
+  ];
+  const withBouts = (m: TeamMatchRow, aWins: number, bWins: number): TeamMatchRow =>
+    ({ ...m, bouts: relays(aWins, bWins) }) as unknown as TeamMatchRow;
+  const teams = ['A', 'B', 'C', 'D'].map(id => team(id));
+
+  it('ratio égal : indice des relais, puis indice des touches', () => {
+    // Deux poules de 2 : A et C gagnent leur seule rencontre (ratio 1)
+    // A : relais 6-3 (+3) ; C : relais 5-4 (+1) → A devant C
+    const byRelays = [
+      withBouts(finished('1', 'A', 'B', 'A', 45, 40, 1), 6, 3),
+      withBouts(finished('2', 'C', 'D', 'C', 45, 20, 2), 5, 4),
+    ];
+    expect(
+      calculateTeamOverallRanking(teams, byRelays)
+        .map(r => r.team.id)
+        .slice(0, 2)
+    ).toEqual(['A', 'C']);
+    // Indice des relais égal (+1 chacun) : indice des touches, C (+25) devant A (+5)
+    const byTouches = [
+      withBouts(finished('1', 'A', 'B', 'A', 45, 40, 1), 5, 4),
+      withBouts(finished('2', 'C', 'D', 'C', 45, 20, 2), 5, 4),
+    ];
+    expect(
+      calculateTeamOverallRanking(teams, byTouches)
+        .map(r => r.team.id)
+        .slice(0, 2)
+    ).toEqual(['C', 'A']);
+  });
+});
+
 describe('Tableau d’équipes : petite finale, têtes de série (docs/adr/0044)', () => {
   const teams = ['A', 'B', 'C', 'D'].map(id => team(id));
   const tableau = planTeamTableau(teams);
