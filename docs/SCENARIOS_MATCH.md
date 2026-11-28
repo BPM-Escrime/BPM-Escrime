@@ -84,8 +84,9 @@ Option **annonce des cartons** activée dans la saisie distante.
    lourde » → jaune, +3 ROUGE. Annonce « revalorisation blanc → jaune ».
 4. Tap **J** pour ROUGE → « Groupe 2 — … → Jaune » ; choix « Touche d'estoc » → jaune,
    +3 VERT.
-5. Tap **R** pour ROUGE → « Groupe 3 — Rouge direct » ; choix « Comportement
-   antisportif » → rouge, +5 VERT.
+5. Tap **R** pour ROUGE → « Groupe 3 — … → Rouge » ; choix « Comportement
+   antisportif » → rouge, +5 VERT. Une 2ᵉ faute du 3ᵉ groupe donne le noir : la tablette
+   ouvre la confirmation du carton noir (fin du combat, #2209).
 6. Tap **J**, puis **✕ Annuler — carton donné sans annonce** → jaune sans motif.
 
 ---
