@@ -1203,6 +1203,39 @@ d('Têtes de série du tableau dans getCompetitionState (docs/adr/0044, tableauS
   });
 });
 
+d(
+  'Noir P au tableau d’une formule d’équipe : classement d’entrée du tableau (docs/adr/0044, ADR-0028)',
+  () => {
+    it('tableau sans poule : à égalité, le noir P donne la rencontre à la meilleure tête de série, pas au nom', async () => {
+      const comp = competition(Weapon.EPEE, { formula: teamFormula({ pool: null }) });
+      // Au nom, Alpha passerait devant ; au rang d'entrée, Delta est tête de série n° 1
+      const [alpha, , , delta] = await teamsRegistered(comp.id, [
+        { name: 'Alpha', ranking: 4 },
+        { name: 'Bravo', ranking: 3 },
+        { name: 'Charlie', ranking: 2 },
+        { name: 'Delta', ranking: 1 },
+      ]);
+      await call('generateTeamTableau', { competitionId: comp.id });
+      const m = tableauOf(comp.id).find(
+        (x: { teamAId?: string; teamBId?: string }) =>
+          [x.teamAId, x.teamBId].includes(alpha) && [x.teamAId, x.teamBId].includes(delta)
+      ) as { id: string };
+      expect(m).toBeDefined();
+      await call('recordRelayScore', {
+        competitionId: comp.id,
+        matchId: m.id,
+        relay: 1,
+        scoreA: 2,
+        scoreB: 2,
+      });
+      for (let k = 0; k < 3; k++)
+        await call('givePassivityCard', { competitionId: comp.id, matchId: m.id });
+      expect(match(m.id)).toMatchObject({ status: 'finished', winnerId: delta });
+      expect(divergences(comp.id)).toEqual([]);
+    });
+  }
+);
+
 d('PDF du classement des équipes = classement du moteur (docs/adr/0044)', () => {
   /** PDF du classement bâti sur teams.finalRanking de l'état, comme l'écran */
   async function rankingPdf(competitionId: string) {
