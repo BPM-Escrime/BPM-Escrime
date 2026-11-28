@@ -340,6 +340,12 @@ d('Poules d’équipes lues dans la formule (docs/adr/0044, G0c)', () => {
       expect(readFileSync(join(__dirname, file), 'utf8')).not.toMatch(
         /phases\.(find|some|filter)\(/
       );
+    // Domaine de la règle de rencontre : surcharge de phase lue par phaseSettings seulement
+    const rule = readFileSync(
+      join(__dirname, '../../../shared/domain/teams/teamMatchRule.ts'),
+      'utf8'
+    );
+    expect(rule).not.toMatch(/playedTableauOf\(|phases\.find\(/);
   });
 
   it('formule « individuelle » enregistrée (sans general.teamMatch) : poule unique par nom, à l’identique', async () => {

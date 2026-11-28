@@ -10,7 +10,6 @@
 import { Weapon, type AdvancementRule, type CompetitionSettings } from '../../types';
 import {
   phaseSettings,
-  playedTableauOf,
   readableFormulaOf,
   type FormulaPhaseV2,
   type FormulaV2,
@@ -63,7 +62,8 @@ function defined(rule: Partial<TeamMatchRule> | undefined | null): Partial<TeamM
 
 /** Surcharge de la phase `ref` ; rien sans phase ou sans surcharge */
 function phaseOverride(f: FormulaV2, ref: PhaseRef): Partial<TeamMatchRule> {
-  const phase = ref.kind === 'tableau' ? playedTableauOf(f) : phaseSettings(f, ref);
+  // Lecture par phase : une seule entrée, phaseSettings (ADR-0036)
+  const phase = phaseSettings(f, ref);
   return defined(phase?.teamMatch);
 }
 
