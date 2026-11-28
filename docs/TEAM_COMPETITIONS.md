@@ -118,7 +118,7 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
    avec la fin du relais (`winner`) ; l'appareil de piste transmet sa priorité (`Prio`
    Cyrano, `priority` OPP2) : ACK et rencontre décidée, sans priorité NAK (#2191).
 3. **Tableau** : rien n'est créé à l'ouverture. Les poules terminées, « Générer le
-   tableau » le tire (`generateTeamTableau`, têtes de série = classement de poule). Les
+   tableau » le tire (`generateTeamTableau`, têtes de série = classement de poule coupé par la qualification de la formule, ou rang d'entrée sans poule, [ADR-0044](adr/0044-equipes-formule-v2.md)). Les
    tours suivants se créent dans le moteur au fur et à mesure des résultats ; « Tirer de
    nouveau le tableau » le refait tant qu'aucun relais n'y est joué.
 4. **Classement** : classement des équipes (victoires, relais individuels
@@ -141,8 +141,8 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
 
 **Les deux formats :**
 
-- Remplacement en cours de match : c'est toujours le premier remplaçant de l'équipe qui
-  entre, un seul par équipe et par rencontre (o.99.5, o.99.6).
+- Remplacement en cours de match : le remplaçant choisi entre (sinon le premier remplaçant de
+  l'équipe), un seul par équipe et par rencontre (o.99.5, o.99.6).
 - Passage au moteur en cours ([ADR-0024](adr/0024-tableaux-separes-equipes-moteur.md)) :
   inscription des équipes, composition et tirage des poules existent comme commandes du
   contrat (`registerTeam`, `assignTeamFencer`, `generateTeamPools`, outil MCP
@@ -206,8 +206,8 @@ phases individuelles poules/tableau disparaissent). Après l'appel, « Composer 
   rouge P est dans le score saisi). Noir P : la rencontre est décidée (`TeamMatchDecided`, même
   commande) pour l'équipe au score supérieur des **relais terminés** (enregistrer d'abord le
   relais en cours), à égalité pour l'équipe au meilleur classement : rang du tableau (classement
-  après les poules, qui est aussi le « tableau en cours » de la FFE dès M15) ; en poule, faute de
-  classement initial d'équipe dans le logiciel, classement de poule du moment. Rencontre déjà
+  après les poules, qui est aussi le « tableau en cours » de la FFE dès M15) ; en poule, rang
+  d'entrée de l'équipe (rang saisi ou importé, sinon somme des classements des titulaires, ADR-0044). Rencontre déjà
   tirée jusqu'au bout : noir P accepté s'il confirme le résultat (ou s'il départage une égalité
   de poule), refusé sinon (`match_finished`). Stockage : `team_match_cards`, `team_id` NULL,
   `type` `p_yellow` / `p_red` / `p_black` (migration 49) ; bloc `teams` : `passivityCards`.
