@@ -109,11 +109,14 @@ _(Amendé le 2026-11-26 : `branches: SplitBranch[]` remplace
   qui a sa place dans la formule (scores, durées, repos, tailles et ordre des poules de tous les
   tours, petite finale, toutes les places) est reporté dans la formule enregistrée, gardée
   (`withFlatSettings`) ; un réglage de structure (tours, qualification, tableau, Tour Quest) ou
-  un changement d'arme la retire, et elle est relue depuis les réglages plats (exception : formule
-  d'une épreuve par équipes en relais FIE, [ADR-0044](0044-equipes-formule-v2.md), où un réglage de
-  structure qui la retirerait est refusé ; _amendé le 2026-11-27 : ajoute cette exception,
-  ADR-0044_ ; et formule figée d'une épreuve en arène Sabre Laser, ni reportée ni retirée,
-  [ADR-0044](0044-equipes-formule-v2.md) ; _amendé le 2026-11-28 : ajoute l'arène_). _(Amendé le 2026-11-27 : remplace « Une version antérieure de l'application qui ouvre la base continue donc de fonctionner. » seule ; jusque-là, tout réglage plat retirait la formule, perdant qualification, binômes et filtres, ADR-0041 S6.)_
+  un changement d'arme la retire, et elle est relue depuis les réglages plats. Exceptions
+  ([ADR-0044](0044-equipes-formule-v2.md)) : formule d'une épreuve par équipes en relais FIE, où un
+  réglage de structure qui la retirerait est refusé ; formule figée d'une épreuve en arène Sabre
+  Laser, ni reportée ni retirée. _(Amendé le 2026-11-27 : remplace « Une version antérieure de
+  l'application qui ouvre la base continue donc de fonctionner. » seule ; jusque-là, tout réglage
+  plat retirait la formule, perdant qualification, binômes et filtres, ADR-0041 S6. Amendé le
+  2026-11-27, puis le 2026-11-28 : remplace « un changement d'arme la retire, et elle est relue
+  depuis les réglages plats. » ; exceptions des formules d'équipe et de l'arène, ADR-0044.)_
 - Une épreuve existante ne reçoit `formula` qu'à sa prochaine modification de formule. Aucune
   réécriture de masse.
 
