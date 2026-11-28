@@ -190,7 +190,10 @@ l'historique du tireur :
 | -------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
 | 1                    | Blanc → Jaune → Jaune | Contre-attaque, touche lourde, sortie sans autorisation, commencer avant « Combattez ! » |
 | 2                    | Jaune → Rouge → Rouge | Acte violent, touche d'estoc, sortie volontaire pour éviter une touche, bras non armé    |
-| 3                    | Rouge direct          | Combat non loyal, comportement antisportif, trouble de l'ordre                           |
+| 3                    | Rouge → Noir          | Combat non loyal, comportement antisportif, trouble de l'ordre                           |
+
+Récidive du 3ᵉ groupe : la tablette ouvre la confirmation du carton noir (exclusion, fin du
+combat), comme le bouton **N** (#2209).
 
 En escrime olympique (épée, fleuret, sabre) : groupes et motifs du tableau t.170 du règlement
 technique FIE, numérotation FIE portée sur la feuille (t.163). Pas de blanc. **J** ouvre les
