@@ -111,7 +111,8 @@ _(Amendé le 2026-11-26 : `branches: SplitBranch[]` remplace
   (`withFlatSettings`) ; un réglage de structure (tours, qualification, tableau, Tour Quest) ou
   un changement d'arme la retire, et elle est relue depuis les réglages plats (exception : formule
   d'une épreuve par équipes en relais FIE, [ADR-0044](0044-equipes-formule-v2.md), où un réglage de
-  structure qui la retirerait est refusé). _(Amendé le 2026-11-27 : remplace « Une version antérieure de l'application qui ouvre la base continue donc de fonctionner. » seule ; jusque-là, tout réglage plat retirait la formule, perdant qualification, binômes et filtres, ADR-0041 S6.)_
+  structure qui la retirerait est refusé ; _amendé le 2026-11-27 : ajoute cette exception,
+  ADR-0044_). _(Amendé le 2026-11-27 : remplace « Une version antérieure de l'application qui ouvre la base continue donc de fonctionner. » seule ; jusque-là, tout réglage plat retirait la formule, perdant qualification, binômes et filtres, ADR-0041 S6.)_
 - Une épreuve existante ne reçoit `formula` qu'à sa prochaine modification de formule. Aucune
   réécriture de masse.
 

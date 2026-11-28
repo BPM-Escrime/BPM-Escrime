@@ -935,6 +935,13 @@ d(
       });
     });
 
+    it('changement d’arme avant le tirage : la formule d’équipe est retirée (ADR-0044, ADR-0036)', async () => {
+      const comp = competition(Weapon.EPEE, { formula: teamFormula() });
+      expect(db.getCompetition(comp.id)!.settings!.formula!.general.teamMatch).toBeDefined();
+      await call('updateCompetitionSettings', { competitionId: comp.id, weapon: 'F' });
+      expect(db.getCompetition(comp.id)!.settings!.formula).toBeUndefined();
+    });
+
     it('formule sans règle de rencontre (épreuve existante) : un réglage plat reporté pose la règle (ADR-0044)', async () => {
       const legacy = teamFormula();
       delete (legacy.general as { teamMatch?: unknown }).teamMatch;
