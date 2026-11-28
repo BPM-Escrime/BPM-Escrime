@@ -1,6 +1,6 @@
 # ADR-0044 — Les épreuves par équipes (relais FIE) suivent la formule v2 : règle de rencontre par phase, poules d'équipes, rang d'entrée (migration 55)
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-27) ; amendée le 2026-11-27 (formule d'équipe reconnue par `general.teamMatch`, rangs saisis devant les rangs calculés, classement de poules au ratio V/M, remplaçant choisi ; validé par le mainteneur) ; amendée le 2026-11-27 (ordre FIE imposé à 3 titulaires en épée, fleuret et sabre, o.99.3 ; validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-27) ; amendée le 2026-11-27 (formule d'équipe reconnue par `general.teamMatch`, rangs saisis devant les rangs calculés, classement de poules au ratio V/M, remplaçant choisi ; validé par le mainteneur) ; amendée le 2026-11-27 (ordre FIE imposé à 3 titulaires en épée, fleuret et sabre, o.99.3 ; validé par le mainteneur) ; amendée le 2026-11-27 (réglage plat de structure refusé pour une formule d'équipe ; validé par le mainteneur)
 - **Date** : 2026-11-27
 - **Tickets** : #1948 (lot 0, étape G0), #1043 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (phases), [ADR-0024](0024-tableaux-separes-equipes-moteur.md) (équipes par le moteur), [ADR-0040](0040-ex-aequo-a-la-barre.md) (coupe), [ADR-0041](0041-controles-structure-mode-expert.md) (contrôles) ; s'appuie sur [ADR-0007](0007-format-evenement.md), [ADR-0008](0008-nommage-contrat.md), [ADR-0011](0011-migrations-schema-3-0.md), [ADR-0028](0028-cartons-equipe-moteur.md)
 
@@ -71,6 +71,12 @@
   pas garde la poule unique jusqu'à la prochaine écriture de sa formule. _(Amendé le
   2026-11-27 : ajoute la reconnaissance d'une formule d'équipe ; l'ADR ne disait pas comment
   distinguer une formule « individuelle » enregistrée.)_
+- **Réglage plat de structure** : pour une épreuve par équipes en relais FIE dont la formule porte
+  `general.teamMatch`, un réglage plat de structure écrit sans `formula` (tours, tableau…) qui
+  retirerait la formule d'équipe est refusé (`invalid_settings`, renvoi à
+  `updateCompetitionFormula`), par exception à l'ADR-0036 (écriture). Un changement d'arme avant le
+  tirage la retire toujours. _(Amendé le 2026-11-27 : ajoute cette exception ; sans elle,
+  l'épreuve retomberait en poule unique sans le dire.)_
 - **Formule absente** (épreuve existante) : la règle se lit dans les réglages d'épreuve
   actuels :
   - `minTeamSize` donne `starters` ;
