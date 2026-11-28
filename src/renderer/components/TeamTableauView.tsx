@@ -6,7 +6,8 @@
  * touche double épée, zones Sabre Laser, cartons). Rencontres tirées et avancées par le
  * moteur (generateTeamTableau, recordRelayScore) : le tableau se tire par le bouton, jamais à
  * l'ouverture (docs/adr/0024, lot E3) ; exempts et cases en attente affichés d'après le
- * placement du classement de poule.
+ * placement du classement de poule. Petite finale (case round 1, position 1, docs/adr/0044)
+ * affichée après la finale.
  * Licensed under GPL-3.0
  */
 
@@ -123,6 +124,40 @@ const TeamTableauView: React.FC<Props> = ({
   const rounds: number[] = [];
   for (let r = tableSize / 2; r >= 1; r /= 2) rounds.push(r);
 
+  /** Rencontre réelle du tableau : saisie par la vue des rencontres (TeamPoolView) */
+  const renderMatch = (match: TeamMatchRow) => (
+    <TeamPoolView
+      key={match.id}
+      teams={teams}
+      matches={[match]}
+      weapon={weapon}
+      targetRule={targetRule}
+      isEpee={isEpee}
+      isLaserPoints={isLaserPoints}
+      fencerName={fencerName}
+      scoringMatchId={scoringMatchId}
+      onToggleScoring={onToggleScoring}
+      onScoreBout={onScoreBout}
+      relay={relay}
+      boutCards={boutCards}
+      cardTarget={cardTarget}
+      onSetCardTarget={onSetCardTarget}
+      selectedReason={selectedReason}
+      onSelectReason={onSelectReason}
+      onAddCard={onAddCard}
+      emptyLabel=""
+      isLaserArena={isLaserArena}
+      boutCap={boutCap}
+      matchCards={matchCards}
+      passivityCards={passivityCards}
+      cards={cards}
+      withdrawn={withdrawn}
+      onAssignArena={onAssignArena}
+    />
+  );
+  // Petite finale (docs/adr/0044) : case round 1, position 1, tirée par le moteur
+  const thirdPlace = matchesByKey.get('1-1');
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
@@ -173,40 +208,19 @@ const TeamTableauView: React.FC<Props> = ({
                 );
               }
 
-              return (
-                <TeamPoolView
-                  key={slot.match.id}
-                  teams={teams}
-                  matches={[slot.match]}
-                  weapon={weapon}
-                  targetRule={targetRule}
-                  isEpee={isEpee}
-                  isLaserPoints={isLaserPoints}
-                  fencerName={fencerName}
-                  scoringMatchId={scoringMatchId}
-                  onToggleScoring={onToggleScoring}
-                  onScoreBout={onScoreBout}
-                  relay={relay}
-                  boutCards={boutCards}
-                  cardTarget={cardTarget}
-                  onSetCardTarget={onSetCardTarget}
-                  selectedReason={selectedReason}
-                  onSelectReason={onSelectReason}
-                  onAddCard={onAddCard}
-                  emptyLabel=""
-                  isLaserArena={isLaserArena}
-                  boutCap={boutCap}
-                  matchCards={matchCards}
-                  passivityCards={passivityCards}
-                  cards={cards}
-                  withdrawn={withdrawn}
-                  onAssignArena={onAssignArena}
-                />
-              );
+              return renderMatch(slot.match);
             })}
           </div>
         </div>
       ))}
+      {thirdPlace && (
+        <div data-testid="team-third-place">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">
+            {t('tableau.round_third_place')}
+          </h3>
+          {renderMatch(thirdPlace)}
+        </div>
+      )}
     </div>
   );
 };

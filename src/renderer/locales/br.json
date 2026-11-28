@@ -799,7 +799,8 @@
     "confirmPassivityBlack": "Du P a zivizo an emgav evit {{team}} (skor an erlec’hiadennoù echu, ha goude ar renkadur). Enrollit da gentañ an erlec’hiadenn o ren. Kadarnaat ?",
     "passivityBlackConfirm": "Reiñ an du P",
     "passivityCardGiven": "Karten P roet",
-    "passivityMatchDecided": "Du P : {{team}} a c’hounez an emgav"
+    "passivityMatchDecided": "Du P : {{team}} a c’hounez an emgav",
+    "substituteIn": "-- erlec'hiad o tont e-barzh ({{team}}) --"
   },
   "kiosk": {
     "tbd": "Da benn-diviz",
@@ -2065,7 +2066,12 @@
     "fie_title": "Taolioù berniet (reolenn FIE)",
     "touches_plus": "Taolioù+",
     "touches_minus": "Taolioù-",
-    "fencer_removed": "Ergerzher lamet diouzh ar skipailh"
+    "fencer_removed": "Ergerzher lamet diouzh ar skipailh",
+    "entry_rank": "Renk enmont",
+    "entry_rank_ph": "Diret",
+    "entry_rank_badge": "Renk {{n}}",
+    "entry_rank_save": "Enrollañ ar renk",
+    "final_ranking_provisional": "(da c'hortoz)"
   },
   "formulaPhase": {
     "n_touches": "{{n}} taol",
@@ -4735,7 +4741,19 @@
     "entry_levels_hint": "Anvioù dispartiet gant virgulennoù, eus ar gwanañ d’ar c’hreñvañ ; an hini diwezhañ eo al live kreñvañ.",
     "distribution_hint": "Dre live : strollet eo ar skipailhoù eus an hevelep live, eus an hini gwanañ d’an hini kreñvañ, poull goude poull.",
     "ranking_filters": "Siloù ar renkadur diwezhañ",
-    "ranking_filters_hint": "Dibarzhioù evit silañ ar renkadur diwezhañ (skramm, PDF, CSV) : ur renkadur silet a vez niverennet adalek 1. Diskwel hepken : ar renkadur embannet a chom ar renkadur klok."
+    "ranking_filters_hint": "Dibarzhioù evit silañ ar renkadur diwezhañ (skramm, PDF, CSV) : ur renkadur silet a vez niverennet adalek 1. Diskwel hepken : ar renkadur embannet a chom ar renkadur klok.",
+    "team_match": "Reolenn an emgann (skipailhoù)",
+    "team_match_phase": "Reolenn an emgann evit ar prantad-mañ",
+    "team_match_hint": "Pal an emgann : derez × titularien². Urzh FIE (o.99.3) gant 3 titular hepken.",
+    "team_match_phase_hint": "Maezienn c'houllo : reolenn hollek ar formulenn.",
+    "team_starters": "Titularien",
+    "team_reserves": "Erlec'hidi",
+    "team_relay_step": "Derez (taolioù)",
+    "team_relay_order": "Urzh an erlec'hiadennoù",
+    "team_relay_order_fie": "Urzh FIE (o.99.3)",
+    "team_relay_order_rotation": "Treiñ",
+    "team_relay_order_general": "Reolenn hollek",
+    "arena_read_only": "Tachenn Sabrenn Laser : formulenn ur patrom start, n'haller ket kemmañ anezhi."
   },
   "formulaHelp": {
     "open": "Skoazell : {{topic}}",

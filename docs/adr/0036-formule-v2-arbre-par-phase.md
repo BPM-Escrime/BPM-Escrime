@@ -1,6 +1,6 @@
 # ADR-0036 — Formule v2 : un arbre de phases pour toutes les armes, lu par phase par le moteur, sans migration de schéma
 
-- **Statut** : Acceptée (arbitrage du 2026-11-25 : arbre, sans migration SQL, réglage de répartition du tour suivant, nouvelle clé `settings.formula`) ; amendée le 2026-11-26 (forme de `SplitPhase.branches` : `SplitBranch[]` d'[ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur) ; amendée le 2026-11-26 (lecture d'une formule d'avant E3 avec la compétition couplée, validé par le mainteneur) ; amendée le 2026-11-27 (réglages plats reportés dans la formule enregistrée, validé par le mainteneur)
+- **Statut** : Acceptée (arbitrage du 2026-11-25 : arbre, sans migration SQL, réglage de répartition du tour suivant, nouvelle clé `settings.formula`) ; amendée le 2026-11-26 (forme de `SplitPhase.branches` : `SplitBranch[]` d'[ADR-0039](0039-scission-competitions-filles.md), validé par le mainteneur) ; amendée le 2026-11-26 (lecture d'une formule d'avant E3 avec la compétition couplée, validé par le mainteneur) ; amendée le 2026-11-27 (réglages plats reportés dans la formule enregistrée, validé par le mainteneur) ; amendée le 2026-11-27 (exception des formules d'équipe, ADR-0044, validé par le mainteneur) ; amendée le 2026-11-28 (formule figée de l'arène Sabre Laser, ADR-0044, validé par le mainteneur)
 - **Date** : 2026-11-25
 - **Tickets** : #2013 (étape C ; questions Q3, Q4, Q19), #1948 (ex-lot 0) ; complète [ADR-0012](0012-formule-domaine.md), [ADR-0032](0032-formule-interface-unique-apercu.md) et [ADR-0033](0033-modeles-de-formule.md), soumise à [ADR-0011](0011-migrations-schema-3-0.md)
 
@@ -109,7 +109,14 @@ _(Amendé le 2026-11-26 : `branches: SplitBranch[]` remplace
   qui a sa place dans la formule (scores, durées, repos, tailles et ordre des poules de tous les
   tours, petite finale, toutes les places) est reporté dans la formule enregistrée, gardée
   (`withFlatSettings`) ; un réglage de structure (tours, qualification, tableau, Tour Quest) ou
-  un changement d'arme la retire, et elle est relue depuis les réglages plats. _(Amendé le 2026-11-27 : remplace « Une version antérieure de l'application qui ouvre la base continue donc de fonctionner. » seule ; jusque-là, tout réglage plat retirait la formule, perdant qualification, binômes et filtres, ADR-0041 S6.)_
+  un changement d'arme la retire, et elle est relue depuis les réglages plats. Exceptions
+  ([ADR-0044](0044-equipes-formule-v2.md)) : formule d'une épreuve par équipes en relais FIE, où un
+  réglage de structure qui la retirerait est refusé ; formule figée d'une épreuve en arène Sabre
+  Laser, ni reportée ni retirée. _(Amendé le 2026-11-27 : remplace « Une version antérieure de
+  l'application qui ouvre la base continue donc de fonctionner. » seule ; jusque-là, tout réglage
+  plat retirait la formule, perdant qualification, binômes et filtres, ADR-0041 S6. Amendé le
+  2026-11-27, puis le 2026-11-28 : remplace « un changement d'arme la retire, et elle est relue
+  depuis les réglages plats. » ; exceptions des formules d'équipe et de l'arène, ADR-0044.)_
 - Une épreuve existante ne reçoit `formula` qu'à sa prochaine modification de formule. Aucune
   réécriture de masse.
 

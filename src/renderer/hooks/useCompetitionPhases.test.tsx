@@ -24,6 +24,7 @@ import {
 vi.mock('./useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 import { useCompetitionPhases } from './useCompetitionPhases';
+import { hasTeamPools } from '../../shared/domain/teams/teamMatchRule';
 
 const settings = buildDefaultCompetitionSettings({
   weapon: Weapon.EPEE,
@@ -141,5 +142,61 @@ describe('navigation dérivée de formulaSteps (ADR-0037)', () => {
     );
     expect(expectedTabs(f)).toContain('tableau');
     expect(screenTabs(f, 0)).toEqual(expectedTabs(f));
+  });
+});
+
+/** Onglets d'une épreuve par équipes, réglés comme useCompetitionPhaseFlow (hasTeamPools) */
+const teamTabs = (comp: { settings?: Partial<CompetitionSettings> }) => {
+  const { result } = renderHook(() =>
+    useCompetitionPhases({
+      isTeamEvent: true,
+      currentPhase: 'checkin',
+      setCurrentPhase: () => undefined,
+      setRankingValidated: () => undefined,
+      rankingValidated: false,
+      skipPoolPhase: false,
+      poolsLaunched: false,
+      pools: [],
+      poolHistory: [],
+      areAllPoolsComplete: () => false,
+      isWaves: false,
+      wavesEnded: false,
+      currentPoolRound: 1,
+      poolRounds: 1,
+      hasDirectElimination: true,
+      finalResults: [],
+      tableauMatches: [],
+      questEnabled: false,
+      questNoPool: false,
+      questConfig: undefined,
+      auditLogEnabled: false,
+      refereeFeatureEnabled: false,
+      teamPoolPhase: hasTeamPools({ isTeamEvent: true, settings: comp.settings }),
+    })
+  );
+  return result.current.phases.map(p => p.id);
+};
+
+describe('phases d’une épreuve par équipes tirées de la formule (docs/adr/0044)', () => {
+  const RULE = { starters: 3, reserves: 1, relayStep: 5, relayOrder: 'fie' as const };
+  const ALL = ['checkin', 'teams', 'teampool', 'teamtableau', 'teamranking'];
+
+  it('sans formule d’équipe (épreuve existante, formule « individuelle ») : phases d’avant', () => {
+    expect(teamTabs({ settings })).toEqual(ALL);
+    expect(teamTabs({ settings: { ...settings, formula: formulaOf(ctx) } })).toEqual(ALL);
+  });
+
+  it('formule d’équipe avec un tour de poules : teampool affichée', () => {
+    const f = formulaOf(ctx);
+    const team = { ...f, general: { ...f.general, teamMatch: RULE } };
+    expect(teamTabs({ settings: { ...settings, formula: team } })).toEqual(ALL);
+  });
+
+  it('formule d’équipe sans tour de poules (tableau seul) : pas de teampool', () => {
+    const f = applyOperationsV2(ctx, [{ op: 'removePhase', phase: 'pool-0' }], () => 'x');
+    const team = { ...f, general: { ...f.general, teamMatch: RULE } };
+    expect(teamTabs({ settings: { ...settings, formula: team } })).toEqual(
+      ALL.filter(id => id !== 'teampool')
+    );
   });
 });

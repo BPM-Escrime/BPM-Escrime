@@ -6,7 +6,7 @@
  * Licensed under GPL-3.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Competition, CompetitionSettings, Weapon } from '../../../shared/types';
 import { ApiError } from '../../../shared/api/client';
 import {
@@ -33,6 +33,12 @@ import { Button } from '../common/Button';
 import { useToast } from '../Toast';
 import { FormulaEditor } from './FormulaEditor';
 import { FormulaTemplatePicker } from './FormulaTemplatePicker';
+import { isArenaTeamEvent, withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
+import { teamFormatOf } from '../../../shared/domain/teams/relay';
+import {
+  teamFormulaProgress,
+  type TeamProgressMatches,
+} from '../../../shared/domain/teams/teamFormulaProgress';
 
 /** Réglages de l'épreuve après modification de la formule (affichage immédiat, fonction pure) */
 export function formulaSettingsUpdate(
@@ -65,8 +71,40 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
   const client = useBpmClient();
   const { showToast } = useToast();
   const { weapon, category } = competition;
-  const [formula, setFormula] = useState<FormulaV2>(() => formulaOf(competition));
+  // Épreuve par équipes en relais FIE : formule d'équipe, avec sa règle de rencontre (ADR-0044) ;
+  // arène Sabre Laser : modèle fixe, en consultation seulement
+  const teamFormat = competition.isTeamEvent ? teamFormatOf(competition.settings) : undefined;
+  const readOnly = isArenaTeamEvent(competition);
+  const [formula, setFormula] = useState<FormulaV2>(() =>
+    withTeamMatch(formulaOf(competition), competition)
+  );
   const [saving, setSaving] = useState(false);
+  // Équipes inscrites (S3, S4 sur l'effectif d'équipes, ADR-0044) et rencontres d'équipe
+  // (phases commencées, S6) : bloc « teams » du moteur
+  const [teamCount, setTeamCount] = useState<number | undefined>(undefined);
+  const [teamMatches, setTeamMatches] = useState<TeamProgressMatches | undefined>(undefined);
+  useEffect(() => {
+    if (!competition.isTeamEvent) return;
+    let alive = true;
+    void (async () => {
+      try {
+        const out = await client.query('getCompetitionState', { competitionId: competition.id });
+        const block = out?.state?.teams;
+        if (!alive) return;
+        setTeamCount(block?.teams.length || undefined);
+        if (block)
+          setTeamMatches({
+            poolMatches: block.poolMatches ?? [],
+            tableauMatches: block.tableauMatches ?? [],
+          });
+      } catch {
+        // Effectif inconnu : S3, S4 jugés par le moteur à l'écriture
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [client, competition.id, competition.isTeamEvent]);
   // Modèle d'origine (docs/adr/0033) : gardé tant qu'on n'en choisit pas un autre
   const [origin, setOrigin] = useState(competition.settings?.formulaOrigin);
   const templates = useFormulaTemplates({
@@ -79,10 +117,20 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
   const knownFencerCount = competition.fencerCount || undefined;
   // Formule enregistrée : la qualification des phases commencées ne change plus (S6)
   const [stored] = useState<FormulaV2>(() => formulaOf(competition));
+  // Épreuve par équipes : phases commencées lues dans ses rencontres, même fonction que le
+  // moteur (teamFormulaProgress, ADR-0041 S6, ADR-0044)
+  const started =
+    competition.isTeamEvent && teamMatches ? teamFormulaProgress(stored, teamMatches) : progress;
   const remarks = formulaV2Issues(
     formula,
-    { weapon, isTeamEvent: !!competition.isTeamEvent, fencerCount: knownFencerCount },
-    progress,
+    {
+      weapon,
+      isTeamEvent: !!competition.isTeamEvent,
+      fencerCount: knownFencerCount,
+      teamFormat,
+      teamCount,
+    },
+    started,
     stored
   );
 
@@ -165,7 +213,7 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
           <Button
             type="button"
             variant="primary"
-            disabled={saving || remarks.length > 0}
+            disabled={saving || readOnly || remarks.length > 0}
             data-testid="formula-modal-save"
             onClick={() => void save()}
           >
@@ -174,15 +222,17 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
         </>
       }
     >
-      <FormulaTemplatePicker
-        templates={templates.templates}
-        selectedId={selected?.id ?? null}
-        onSelect={selectTemplate}
-        state={state}
-        deviations={deviations}
-        onReset={selected ? () => selectTemplate(selected) : undefined}
-        onSaveAs={templates.available ? saveAs : undefined}
-      />
+      {!readOnly && (
+        <FormulaTemplatePicker
+          templates={templates.templates}
+          selectedId={selected?.id ?? null}
+          onSelect={selectTemplate}
+          state={state}
+          deviations={deviations}
+          onReset={selected ? () => selectTemplate(selected) : undefined}
+          onSaveAs={templates.available ? saveAs : undefined}
+        />
+      )}
       <FormulaEditor
         weapon={weapon}
         category={category}
@@ -190,8 +240,11 @@ export const CompetitionFormulaModal: React.FC<Props> = ({
         onChange={setFormula}
         fencerCount={competition.fencerCount || 32}
         isTeamEvent={!!competition.isTeamEvent}
+        teamFormat={teamFormat}
+        teamCount={teamCount}
+        readOnly={readOnly}
         knownFencerCount={knownFencerCount}
-        progress={progress}
+        progress={started}
         stored={stored}
         remarks={remarks}
       />

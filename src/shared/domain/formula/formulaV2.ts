@@ -45,6 +45,22 @@ export type LegacyTableauSettings = Pick<
 /** Répartition d'un tour de poules : serpentin (défaut) ou par niveau (équipes, docs/adr/0043) */
 export type PoolDistribution = 'serpentine' | 'byLevel';
 
+/** Ordre des relais d'une rencontre par équipes : FIE o.99.3 (3 titulaires) ou rotation (ADR-0044) */
+export type TeamRelayOrder = 'fie' | 'rotation';
+
+/**
+ * Règle de rencontre d'une épreuve par équipes en relais FIE (ADR-0044) : titulaires (2 à 4),
+ * remplaçants (0 à 2), palier en touches, ordre des relais ('fie' à 3 titulaires seulement).
+ * Cible d'une rencontre : `relayStep × starters²`. Lue par `teamMatchRuleOf`
+ * (shared/domain/teams/teamMatchRule).
+ */
+export interface TeamMatchRule {
+  starters: number;
+  reserves: number;
+  relayStep: number;
+  relayOrder: TeamRelayOrder;
+}
+
 /** Entrée (ADR-0043) : individuelle ou en binômes ; `levels` : du plus faible (niveau 1) au plus fort */
 export type FormulaEntry = { kind: 'individual' } | { kind: 'team'; size: 2; levels: string[] };
 
@@ -66,6 +82,8 @@ export interface PoolRoundPhase {
   boutOrder: PoolBoutOrder;
   /** Répartition (réglage expert, ADR-0043) : serpentin (défaut, absent) ou par niveau */
   distribution?: PoolDistribution;
+  /** Épreuve par équipes : surcharge de la règle de rencontre, champ par champ (ADR-0044) */
+  teamMatch?: Partial<TeamMatchRule>;
   legacy?: LegacyPoolSettings;
 }
 
@@ -86,6 +104,8 @@ export interface TableauPhase {
   scoring?: CustomScoringConfig;
   /** Étape D : tableau arrêté quand il reste N tireurs (tableau intercalé) */
   stopAt?: number;
+  /** Épreuve par équipes : surcharge de la règle de rencontre, champ par champ (ADR-0044) */
+  teamMatch?: Partial<TeamMatchRule>;
   legacy?: LegacyTableauSettings;
 }
 
@@ -150,6 +170,13 @@ export interface FormulaV2 {
      * l'ont toujours ; ce réglage l'ouvre à l'arme « Autre ». Absent : selon l'arme.
      */
     tieBreakByVictory?: boolean;
+    /**
+     * Règle de rencontre d'une épreuve par équipes en relais FIE (ADR-0044) ; lue seulement si
+     * l'épreuve est par équipes. Présente : la formule de l'épreuve par équipes fait foi (poules,
+     * qualification, tableau) ; absente : formule « individuelle » enregistrée avant G0, relue
+     * avec la règle des réglages d'épreuve et une poule unique.
+     */
+    teamMatch?: TeamMatchRule;
   };
   name?: string;
   notes?: string;
@@ -565,7 +592,8 @@ export function tableauQualificationOf(f: FormulaV2): AdvancementRule | undefine
 /**
  * Réglages plats reportés dans la formule enregistrée (ADR-0036 amendée, 2026-11-27) : un réglage
  * plat qui a sa place dans la formule (scores, durées, repos, tailles et ordre des poules,
- * petite finale, toutes les places du tableau) la met à jour au lieu de la retirer. Comme la
+ * petite finale, toutes les places du tableau ; règle de rencontre générale des équipes si la
+ * formule en a une, ADR-0044) la met à jour au lieu de la retirer. Comme la
  * relecture plate, un réglage des poules vaut pour tous les tours de poules de la formule.
  * null : le patch touche la structure (tours, qualification, tableau, Tour Quest, scission) ou
  * une phase absente ; la formule est alors retirée et relue depuis les réglages plats.
@@ -588,7 +616,14 @@ export function withFlatSettings(
     thirdPlaceMatch: 'thirdPlace',
     playAllPositions: 'allPlaces',
   };
-  if (keys.some(k => !(k in POOL) && !(k in TABLEAU) && k !== 'restTimeSeconds')) return null;
+  // Règle de rencontre générale des équipes (ADR-0044) : reportée si la formule en a une
+  const TEAM: Partial<Record<keyof CompetitionSettings, keyof TeamMatchRule>> = {
+    minTeamSize: 'starters',
+    teamReserveCount: 'reserves',
+    teamRelayStepSize: 'relayStep',
+  };
+  if (keys.some(k => !(k in POOL) && !(k in TABLEAU) && !(k in TEAM) && k !== 'restTimeSeconds'))
+    return null;
   const poolList = pools(f);
   const tableau = playedTableauOf(f);
   if (keys.some(k => k in POOL) && poolList.length === 0) return null;
@@ -611,13 +646,23 @@ export function withFlatSettings(
       if (p.kind !== 'split') return p;
       return { ...p, branches: p.branches.map(b => ({ ...b, phases: mapPhases(b.phases) })) };
     });
+  let general =
+    patch.restTimeSeconds !== undefined
+      ? { ...f.general, restTimeSeconds: patch.restTimeSeconds }
+      : f.general;
+  if (general.teamMatch && keys.some(k => k in TEAM))
+    general = { ...general, teamMatch: set(general.teamMatch, TEAM) };
+  return { ...f, phases: mapPhases(f.phases), general };
+}
+
+/** Réglages plats de la règle de rencontre générale des équipes (ADR-0044) ; vide sans elle */
+function teamFlatSettingsOf(f: FormulaV2): Partial<CompetitionSettings> {
+  const rule = f.general.teamMatch;
+  if (!rule) return {};
   return {
-    ...f,
-    phases: mapPhases(f.phases),
-    general:
-      patch.restTimeSeconds !== undefined
-        ? { ...f.general, restTimeSeconds: patch.restTimeSeconds }
-        : f.general,
+    minTeamSize: rule.starters,
+    teamReserveCount: rule.reserves,
+    teamRelayStepSize: rule.relayStep,
   };
 }
 
@@ -646,6 +691,7 @@ export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<Competitio
         ? { poolBoutOrder: firstPool.boutOrder }
         : {}),
       ...(postPoolSplitCriteria ? { postPoolSplitCriteria } : {}),
+      ...teamFlatSettingsOf(f),
     };
   }
   const list = pools(f);
@@ -671,6 +717,7 @@ export function flatSettingsOf(f: FormulaV2, weapon: Weapon): Partial<Competitio
     poolWinnersOnly: (beforeTableau ?? last)?.qualification.mode === 'pool_winner',
     restTimeSeconds: f.general.restTimeSeconds ?? 60,
     postPoolSplitCriteria,
+    ...teamFlatSettingsOf(f),
   };
   if (first) {
     out.defaultPoolMaxScore = first.maxScore;

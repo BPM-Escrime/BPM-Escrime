@@ -37,6 +37,22 @@ export function getRelayCap(relayIndex: number, stepSize: number): number {
 }
 
 /**
+ * Plafond affiché d'un relais : palier figé dans les relais de la rencontre (`maxScore`, règle de
+ * sa phase, docs/adr/0044), sinon celui de la règle générale ; cible = palier × nombre de relais.
+ * Le mode « points » du Sabre Laser garde la règle générale.
+ */
+export function matchRelayCap(
+  bouts: ReadonlyArray<{ maxScore?: number | null }>,
+  relayIndex: number,
+  rule: { stepSize: number; target: number; mode?: string }
+): number {
+  const frozen = rule.mode === 'points' ? undefined : (bouts[0]?.maxScore ?? undefined);
+  const step = frozen ?? rule.stepSize;
+  const target = frozen !== undefined ? frozen * bouts.length : rule.target;
+  return Math.min(getRelayCap(relayIndex, step), target);
+}
+
+/**
  * Generate the relay pairing order for a team of `teamSize` fencers.
  * Diagonal round-robin (1v1,2v2,3v3,1v2,2v3,3v1,1v3,2v1,3v2 for N=3): N "rounds" of N
  * pairings, each round shifting the opponent index by one, producing N² relais where
@@ -304,6 +320,59 @@ export function calculateTeamPoolRanking(
       b.victories - a.victories ||
       b.boutsWon - b.boutsLost - (a.boutsWon - a.boutsLost) ||
       b.pointsFor - b.pointsAgainst - (a.pointsFor - a.pointsAgainst)
+  );
+}
+
+/** Rencontres terminées d'une équipe */
+function finishedCount(teamId: string, matches: TeamMatchRow[]): number {
+  return matches.filter(
+    m => m.status === 'finished' && (m.teamAId === teamId || m.teamBId === teamId)
+  ).length;
+}
+
+/** Ligne du classement toutes poules confondues : ratio victoires / rencontres */
+export interface TeamOverallRankingRow extends TeamPoolRankingRow {
+  /** Victoires / rencontres terminées (0 sans rencontre) */
+  ratio: number;
+}
+
+/** Plusieurs poules d'équipes parmi ces rencontres ? */
+const multiplePools = (matches: TeamMatchRow[]) =>
+  new Set(matches.map(m => m.poolNumber ?? 1)).size > 1;
+
+/**
+ * Classement de poule toutes poules confondues (docs/adr/0044, amendement du 2026-11-27) :
+ * ratio victoires / rencontres, puis indice des relais, puis indice des touches. Poule unique :
+ * exactement `calculateTeamPoolRanking` (victoires brutes), le classement d'avant.
+ */
+export function calculateTeamOverallRanking(
+  teams: TeamRow[],
+  matches: TeamMatchRow[]
+): TeamOverallRankingRow[] {
+  const rows = calculateTeamPoolRanking(teams, matches).map(r => {
+    const n = finishedCount(r.team.id, matches);
+    return { ...r, ratio: n > 0 ? r.victories / n : 0 };
+  });
+  if (!multiplePools(matches)) return rows;
+  return [...rows].sort(
+    (a, b) =>
+      b.ratio - a.ratio ||
+      b.boutsWon - b.boutsLost - (a.boutsWon - a.boutsLost) ||
+      b.pointsFor - b.pointsAgainst - (a.pointsFor - a.pointsAgainst)
+  );
+}
+
+/** Deux lignes à égalité au classement toutes poules confondues (même rang) */
+export function sameOverallStanding(
+  a: TeamOverallRankingRow,
+  b: TeamOverallRankingRow,
+  matches: TeamMatchRow[]
+): boolean {
+  const first = multiplePools(matches) ? a.ratio === b.ratio : a.victories === b.victories;
+  return (
+    first &&
+    a.boutsWon - a.boutsLost === b.boutsWon - b.boutsLost &&
+    a.pointsFor - a.pointsAgainst === b.pointsFor - b.pointsAgainst
   );
 }
 

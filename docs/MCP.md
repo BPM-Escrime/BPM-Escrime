@@ -195,7 +195,7 @@ compris) reste à faire, de même que le calcul du tableau déplacé de `src/ren
 
 <!-- outils-mcp:début (généré par npm run docs:mcp, ne pas éditer) -->
 
-## Référence des outils (75)
+## Référence des outils (76)
 
 Générée depuis les schémas des outils (`src/main/mcp/*Tools.ts`).
 
@@ -367,7 +367,7 @@ Aucun argument.
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
 
-### En écriture, sur autorisation (54)
+### En écriture, sur autorisation (55)
 
 ### `create_competition` — Créer une épreuve
 
@@ -796,7 +796,7 @@ Aucun argument.
 
 ### `update_competition_formula` — Modifier la formule d’une épreuve
 
-*écriture.* Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau | split, position « at » comme insertOptions ; split : scission, toujours en dernier, après un tour de poules ou un tableau arrêté, docs/adr/0039), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode all | percentage | fixed_count | fixed_bracket | pool_winner | pool_heads, count, percentage } ou qualifiers ; pool_heads, têtes de poule puis suivants jusqu’à count (premiers de chaque poule, puis deuxièmes… ; ordre d’entrée au tableau : au moins deux rangs de poule pris en entier, rang par rang, chacun dans l’ordre des poules (A1, B1, A2, B2), sinon tous les qualifiés dans l’ordre du classement général ; réglage avancé, avant un tableau ; plus de poules que de qualifiés refusé ; ex aequo à la barre sur le dernier rang pris ; docs/adr/0043), seeding previous_round | cumulative, boutOrder fie | free | waves | waves_classic (réglage avancé ; vagues : poules de 2 à 10, vagues classiques de 2 à 15, docs/adr/0043), distribution serpentine | byLevel (expert : équipes de même niveau regroupées, du plus faible au plus fort ; null : serpentin, docs/adr/0043), scoring ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring ; Tour Quest qualifiersCount ; scission criterion gender | category | rank | manual, branches [{ label, phases, gender, categories, take, stayInCompetition }] ; stayInCompetition : scission par sexe, toutes les branches réduites à un tableau ou aucune (compétition couplée, tableaux séparés dans l’épreuve) ; « tableau » règle alors le tableau des branches restées), setGeneral (restTimeSeconds, ruleSet, entry { kind individual } ou { kind team, size 2, levels [du plus faible, niveau 1, au plus fort] } (binômes, expert ; null : individuelle, docs/adr/0043) ; rankingFilters [category | gender | level | handicap] (expert : filtres proposés pour le classement final affiché, les PDF et le CSV ; renumérote depuis 1, un affichage sans compétition fille ni publication distincte ; null ou liste vide : aucun filtre, docs/adr/0043) ; tieBreakByVictory (arme « Autre » : une égalité en fin de temps se tranche par un vainqueur désigné, tirage au sort puis minute supplémentaire, comme l’épée, le fleuret, le sabre et le Sabre Laser ; true ou null : selon l’arme, docs/adr/0043) ; postPoolSplitCriteria : gender pose la compétition couplée, scission par sexe dont les deux branches restent, null la retire). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour, structure contrôlée (au moins une phase de combat, nombre de qualifiés suffisant et réparti en poules, branche terminée par une phase qui classe, phases déjà commencées de l’épreuve conservées, avec la règle de qualification qui y mène ou qui sort d’un tour de poules clos, docs/adr/0041) ; refus : invalid_settings, une remarque par ligne avec la clé de la phase en cause ([pool-0], [tableau], [split], [formule] pour la formule entière), draw_done.
+*écriture.* Modifie la formule d’une épreuve par une liste d’opérations appliquées dans l’ordre, tout ou rien : insertPhase (brique pool | quest | tableau | split, position « at » comme insertOptions ; split : scission, toujours en dernier, après un tour de poules ou un tableau arrêté, docs/adr/0039), removePhase (clé de phase), setPhase (clé, réglages de cette phase seule : tour de poules sizeMin, sizeMax, maxScore, timerSeconds, qualification { mode all | percentage | fixed_count | fixed_bracket | pool_winner | pool_heads, count, percentage } ou qualifiers ; pool_heads, têtes de poule puis suivants jusqu’à count (premiers de chaque poule, puis deuxièmes… ; ordre d’entrée au tableau : au moins deux rangs de poule pris en entier, rang par rang, chacun dans l’ordre des poules (A1, B1, A2, B2), sinon tous les qualifiés dans l’ordre du classement général ; réglage avancé, avant un tableau ; plus de poules que de qualifiés refusé ; ex aequo à la barre sur le dernier rang pris ; docs/adr/0043), seeding previous_round | cumulative, boutOrder fie | free | waves | waves_classic (réglage avancé ; vagues : poules de 2 à 10, vagues classiques de 2 à 15, docs/adr/0043), distribution serpentine | byLevel (expert : équipes de même niveau regroupées, du plus faible au plus fort ; null : serpentin, docs/adr/0043), scoring, teamMatch ; tableau maxScore, timerSeconds, thirdPlace, allPlaces, scoring, teamMatch ; Tour Quest qualifiersCount ; scission criterion gender | category | rank | manual, branches [{ label, phases, gender, categories, take, stayInCompetition }] ; stayInCompetition : scission par sexe, toutes les branches réduites à un tableau ou aucune (compétition couplée, tableaux séparés dans l’épreuve) ; « tableau » règle alors le tableau des branches restées), setGeneral (restTimeSeconds, ruleSet, entry { kind individual } ou { kind team, size 2, levels [du plus faible, niveau 1, au plus fort] } (binômes, expert ; null : individuelle, docs/adr/0043) ; rankingFilters [category | gender | level | handicap] (expert : filtres proposés pour le classement final affiché, les PDF et le CSV ; renumérote depuis 1, un affichage sans compétition fille ni publication distincte ; null ou liste vide : aucun filtre, docs/adr/0043) ; tieBreakByVictory (arme « Autre » : une égalité en fin de temps se tranche par un vainqueur désigné, tirage au sort puis minute supplémentaire, comme l’épée, le fleuret, le sabre et le Sabre Laser ; true ou null : selon l’arme, docs/adr/0043) ; teamMatch { starters 2-4, reserves 0-2, relayStep, relayOrder fie | rotation } (épreuve par équipes en relais FIE : règle de rencontre de la formule, surchargée champ par champ par le teamMatch d’un tour de poules ou du tableau ; fie à 3 titulaires seulement, imposé à 3 titulaires en épée, fleuret et sabre (rotation refusée, o.99.3) ; null : réglages d’épreuve ; briques admises : un tour de poules puis un tableau, ou un tableau seul, sinon team_brick_unsupported, docs/adr/0044); postPoolSplitCriteria : gender pose la compétition couplée, scission par sexe dont les deux branches restent, null la retire). Les anciens noms poolMaxScore, poolTimerSeconds, poolSizeMin, poolSizeMax, poolBoutOrder s’appliquent à tous les tours. Bornes jugées tour par tour, structure contrôlée (au moins une phase de combat, nombre de qualifiés suffisant et réparti en poules, branche terminée par une phase qui classe, phases déjà commencées de l’épreuve conservées, avec la règle de qualification qui y mène ou qui sort d’un tour de poules clos, docs/adr/0041) ; refus : invalid_settings, une remarque par ligne avec la clé de la phase en cause ([pool-0], [tableau], [split], [formule] pour la formule entière), draw_done.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -906,13 +906,29 @@ Aucun argument.
 | `expectedRevision` | integer |  | Révision attendue du journal de l’épreuve (revision_conflict sinon) ; refusée avec « eventDayId » (une révision par épreuve) |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
 
-### `generate_team_pools` — Tirer les poules d’équipes
+### `update_team` — Modifier une équipe
 
-*⚠️ écriture, destructif.* Épreuve par équipes : tire les poules d’équipes et crée leurs rencontres, chacune avec ses relais fixés (titulaires par ordre, ordre FIE des relais à 3 en épée, fleuret, sabre). Relais FIE : poule unique, tous contre tous. Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes seulement. Refus : épreuve individuelle (unsupported_format), moins de 2 équipes ou arène hors 8/12 (invalid_composition), titulaires manquants (team_incomplete), poules déjà tirées sans « replace » (draw_done), relais déjà joués (pools_have_scores), tableau d’équipes créé (bracket_exists). Journal : TeamPoolsGenerated, puis un TeamMatchScheduled par rencontre.
+*écriture.* Épreuve par équipes : modifie le nom, le club ou le rang d’entrée d’une équipe (ranking null : rang retiré, rang calculé sur les classements des titulaires puis le nom, docs/adr/0044). Sans journal (docs/adr/0018). Refus : épreuve individuelle (unsupported_format), équipe inconnue (team_not_found), après le tirage (draw_done).
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
 | `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `teamId` | string | oui | Identifiant de l’équipe |
+| `name` | string |  | Nouveau nom |
+| `club` | string |  | Nouveau club |
+| `ranking` | integer / null |  |  |
+| `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
+| `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
+| `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |
+
+### `generate_team_pools` — Tirer les poules d’équipes
+
+*⚠️ écriture, destructif.* Épreuve par équipes : tire les poules d’équipes et crée leurs rencontres, chacune avec ses relais fixés (titulaires par ordre, ordre des relais de la règle de rencontre du tour : FIE o.99.3 à 3 titulaires ou rotation). Relais FIE avec une formule d’équipe (general.teamMatch, docs/adr/0044) : poules du tour de la formule comme en individuel (taille de poule, nombre optimal ou « poolCount », serpentin au rang d’entrée effectif des équipes, clubs séparés, ordre officiel des rencontres, positions tirées au sort), relais et palier de la règle du tour ; sans formule d’équipe : poule unique tous contre tous dans l’ordre des noms (« poolCount » refusé, invalid_pool_count). Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes seulement. Refus : épreuve individuelle (unsupported_format), moins de 2 équipes ou arène hors 8/12 (invalid_composition), titulaires manquants (team_incomplete), formule sans tour de poules (no_pools), plus de poules que la moitié des équipes (invalid_pool_count), poules déjà tirées sans « replace » (draw_done), relais déjà joués (pools_have_scores), tableau d’équipes créé (bracket_exists). Journal : TeamPoolsGenerated, puis un TeamMatchScheduled par rencontre.
+
+| Argument | Type | Requis | Description |
+|---|---|---|---|
+| `competitionId` | string | oui | Identifiant de la compétition (list_competitions) |
+| `poolCount` | integer |  | Nombre de poules (formule d’équipe seulement ; défaut : nombre optimal ; docs/adr/0044) |
 | `replace` | boolean |  | Remplacer des poules déjà tirées dont aucun relais n’est joué |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
@@ -960,7 +976,7 @@ Aucun argument.
 
 ### `substitute_team_fencer` — Faire entrer le remplaçant
 
-*écriture.* Épreuve par équipes : le remplaçant de l’équipe prend la place du tireur sortant dans les relais non terminés de la rencontre (o.99.5, o.99.6). Un seul remplaçant par équipe et par rencontre. Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). Journal : TeamFencerSubstituted.
+*écriture.* Épreuve par équipes : le remplaçant de l’équipe prend la place du tireur sortant dans les relais non terminés de la rencontre (o.99.5, o.99.6). Un seul remplaçant par équipe et par rencontre. Remplaçant choisi par « inFencerId » (facultatif ; absent : le premier remplaçant ; remplaçants admis par la règle de rencontre de la phase, docs/adr/0044). Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), « inFencerId » qui n’est pas un remplaçant de l’équipe (invalid_composition), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). Journal : TeamFencerSubstituted.
 
 | Argument | Type | Requis | Description |
 |---|---|---|---|
@@ -968,6 +984,7 @@ Aucun argument.
 | `matchId` | string | oui | Identifiant de la rencontre (getCompetitionState, bloc « teams ») |
 | `teamId` | string | oui | Équipe du tireur sortant |
 | `outFencerId` | string | oui | Tireur sortant |
+| `inFencerId` | string |  | Remplaçant qui entre (défaut : le premier remplaçant de l’équipe, docs/adr/0044) |
 | `dryRun` | boolean |  | Décrit le résultat sans rien écrire |
 | `expectedRevision` | integer |  | Révision attendue du journal : refus « revision_conflict » si une autre commande du contrat a écrit entre-temps. |
 | `commandId` | string |  | Identifiant de la commande, choisi par l’appelant (UUID) : une commande rejouée avec le même identifiant n’écrit rien et est refusée par « command_already_applied » (renvoi après une coupure réseau) |

@@ -15,6 +15,7 @@ import {
   getTeamMatchWinner,
   getTeamTargetRule,
   getRelayCap,
+  matchRelayCap,
   calculateTeamPoolRanking,
   placeRankedTeamsInTable,
   resolveTeamTableauSlot,
@@ -433,5 +434,20 @@ describe('placeRankedTeamsInTable / resolveTeamTableauSlot', () => {
     expect(final.isBye).toBe(false);
     expect(final.team).toBeNull();
     expect(final.teamA).toBeNull();
+  });
+});
+
+describe('matchRelayCap : plafond affiché d’un relais (docs/adr/0044)', () => {
+  const general = { stepSize: 5, target: 45 };
+  const bouts = (step: number) => Array.from({ length: 9 }, () => ({ maxScore: step }));
+
+  it('palier figé dans les relais de la rencontre (règle de la phase), pas la règle générale', () => {
+    expect(matchRelayCap(bouts(4), 0, general)).toBe(4);
+    expect(matchRelayCap(bouts(4), 8, general)).toBe(36);
+  });
+
+  it('sans palier figé : règle générale ; mode points du Sabre Laser : règle générale', () => {
+    expect(matchRelayCap([], 2, general)).toBe(15);
+    expect(matchRelayCap(bouts(4), 8, { ...general, mode: 'points' })).toBe(45);
   });
 });

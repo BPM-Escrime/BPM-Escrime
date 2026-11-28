@@ -139,6 +139,7 @@ describe('relay : tirage des poules d’équipes', () => {
     expect(planTeamPools('c', [team('A'), team('B', 2)], Weapon.EPEE)).toEqual({
       code: 'team_incomplete',
       teamIds: ['B'],
+      teamSize: 3,
     });
   });
 });

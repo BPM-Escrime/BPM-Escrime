@@ -15,6 +15,10 @@ import {
   calculateLaserArenaMatchScore,
   calculateLaserArenaPoolRanking,
 } from '../../domain/teams/laserArenaCalculations';
+import {
+  teamFinalRanking,
+  type TeamFinalRankingRow as DomainTeamFinalRankingRow,
+} from '../../domain/teams/teamFinalRanking';
 import { savePDF, BASE_CSS, pdfLang, pdfT } from './core';
 import { getActiveLocale } from '../localeFormat';
 import { exportBookPDF, type BookItem } from './bookPdf';
@@ -28,10 +32,7 @@ export interface TeamPdfOptions {
   isLaserArena?: boolean;
 }
 
-export interface TeamFinalRankingRow {
-  rank: number;
-  team: TeamRow;
-}
+export type TeamFinalRankingRow = DomainTeamFinalRankingRow<TeamRow>;
 
 const esc = (s: string | number | null | undefined) =>
   String(s ?? '')
@@ -72,58 +73,14 @@ export function groupTeamPools(
 }
 
 /**
- * Classement final : vainqueur du tableau 1er, finaliste 2e, perdants d'un tour de N matchs
- * classés N+1 ex æquo (3e, 5e, 9e…), départage par ordre de tête de série. Équipes encore
- * en lice en tête (classement provisoire). Sans tableau : ordre de poule.
+ * Classement final des équipes : domaine (`teamFinalRanking`, docs/adr/0044), même résultat
+ * qu'avant. Les PDF ne l'appellent plus : ils lisent le classement de l'état (teams.finalRanking).
  */
 export function computeTeamFinalRanking(
   rankedTeams: TeamRow[],
   tableauMatches: TeamMatchRow[]
 ): { rows: TeamFinalRankingRow[]; provisional: boolean } {
-  if (tableauMatches.length === 0 || rankedTeams.length < 2) {
-    return {
-      rows: rankedTeams.map((team, i) => ({ rank: i + 1, team })),
-      provisional: tableauMatches.length === 0 && rankedTeams.length >= 2,
-    };
-  }
-  const tableSize = calculateTableSize(rankedTeams.length);
-  const placements = placeRankedTeamsInTable(rankedTeams, tableSize);
-  const teamById = new Map(rankedTeams.map(t => [t.id, t]));
-  const matchesByKey = new Map(tableauMatches.map(m => [`${m.round}-${m.position}`, m]));
-  const eliminatedAt = new Map<string, number>();
-  let championId: string | null = null;
-
-  for (let round = tableSize / 2; round >= 1; round /= 2) {
-    for (let position = 0; position < round; position++) {
-      const slot = resolveTeamTableauSlot(
-        round,
-        position,
-        tableSize,
-        placements,
-        matchesByKey,
-        teamById
-      );
-      if (round === 1 && slot.isBye && slot.team) championId = slot.team.id;
-      const m = slot.match;
-      if (!m || m.status !== 'finished' || !m.winnerId || !slot.teamA || !slot.teamB) continue;
-      const loser = m.winnerId === slot.teamA.id ? slot.teamB : slot.teamA;
-      eliminatedAt.set(loser.id, round);
-      if (round === 1) championId = m.winnerId;
-    }
-  }
-
-  const seed = new Map(rankedTeams.map((t, i) => [t.id, i]));
-  // Clé : champion 0, encore en lice 0.5, éliminé au tour de N matchs → N
-  const key = (t: TeamRow) =>
-    t.id === championId ? 0 : (eliminatedAt.get(t.id) ?? (championId ? Infinity : 0.5));
-  const sorted = [...rankedTeams].sort(
-    (a, b) => key(a) - key(b) || (seed.get(a.id) ?? 0) - (seed.get(b.id) ?? 0)
-  );
-  const rows = sorted.map((team, i) => {
-    const elim = eliminatedAt.get(team.id);
-    return { rank: team.id === championId ? 1 : elim !== undefined ? elim + 1 : i + 1, team };
-  });
-  return { rows, provisional: championId === null };
+  return teamFinalRanking(rankedTeams, tableauMatches);
 }
 
 // ─── HTML ─────────────────────────────────────────────────────────────────────
@@ -322,12 +279,18 @@ export function generateTeamTableauHTML(
   );
 }
 
+/** Classement final des équipes tel que le moteur le rend (teams.finalRanking, docs/adr/0044) */
+export interface TeamFinalRankingView {
+  rows: TeamFinalRankingRow[];
+  provisional: boolean;
+}
+
+/** Classement final : lu dans l'état (teamFinalRanking du moteur), jamais recalculé ici */
 export function generateTeamRankingHTML(
   opts: TeamPdfOptions,
-  rankedTeams: TeamRow[],
-  tableauMatches: TeamMatchRow[]
+  ranking: TeamFinalRankingView
 ): string {
-  const { rows, provisional } = computeTeamFinalRanking(rankedTeams, tableauMatches);
+  const { rows, provisional } = ranking;
   const body = `
   <table>
     <thead><tr><th style="width:12mm">${pdfT('col_rank', 'Rg')}</th><th style="text-align:left">${pdfT('col_team', 'Équipe')}</th><th style="text-align:left">${pdfT('col_club', 'Club')}</th><th style="text-align:left">${pdfT('fencers', 'Tireurs')}</th></tr></thead>
@@ -377,22 +340,23 @@ export async function exportTeamTableauToPDF(
 
 export async function exportTeamRankingToPDF(
   opts: TeamPdfOptions,
-  rankedTeams: TeamRow[],
-  tableauMatches: TeamMatchRow[]
+  ranking: TeamFinalRankingView
 ): Promise<void> {
-  if (rankedTeams.length === 0) throw new Error(pdfT('team_none', 'Aucune équipe'));
-  await savePDF(
-    generateTeamRankingHTML(opts, rankedTeams, tableauMatches),
-    'classement-equipes.pdf'
-  );
+  if (ranking.rows.length === 0) throw new Error(pdfT('team_none', 'Aucune équipe'));
+  await savePDF(generateTeamRankingHTML(opts, ranking), 'classement-equipes.pdf');
 }
 
-/** Dossier équipes : page de garde, sommaire, poules, tableau, classement (#1325) */
+/**
+ * Dossier équipes : page de garde, sommaire, poules, tableau, classement (#1325). `rankedTeams` :
+ * têtes de série du tableau tiré (teams.tableauSeeds) ; `ranking` : classement final de l'état
+ * (teams.finalRanking), docs/adr/0044.
+ */
 export async function exportTeamBookToPDF(
   opts: TeamPdfOptions,
   matches: TeamMatchRow[],
   rankedTeams: TeamRow[],
   tableauMatches: TeamMatchRow[],
+  ranking: TeamFinalRankingView,
   sectionOrder?: BookSectionKind[]
 ): Promise<void> {
   const items: BookItem[] = [];
@@ -408,11 +372,11 @@ export async function exportTeamBookToPDF(
       title: pdfT('team_tableau_title', 'Tableau équipes'),
       html: generateTeamTableauHTML(opts, rankedTeams, tableauMatches),
     });
-  if (rankedTeams.length > 0)
+  if (ranking.rows.length > 0)
     items.push({
       kind: 'teamRanking',
       title: pdfT('team_ranking_title', 'Classement équipes'),
-      html: generateTeamRankingHTML(opts, rankedTeams, tableauMatches),
+      html: generateTeamRankingHTML(opts, ranking),
     });
   await exportBookPDF({
     items,

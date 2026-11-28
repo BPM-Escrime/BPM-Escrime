@@ -23,6 +23,7 @@ import { useCompetitionCore } from './useCompetitionCore';
 import { usePoolCorrection } from './usePoolCorrection';
 import { useToast } from '../../components/Toast';
 import { startsWithTableau } from '../../../shared/domain/formula/formulaSteps';
+import { hasTeamPools } from '../../../shared/domain/teams/teamMatchRule';
 import { tableauQualificationOf } from '../../../shared/domain/formula/formulaV2';
 
 type Ctx = CompetitionViewProps &
@@ -154,6 +155,8 @@ export function useCompetitionPhaseFlow(ctx: Ctx) {
     tableauFirst:
       !!competition.settings?.formula && startsWithTableau(competition.settings.formula),
     closedTableau: !hasDirectElimination && ctx.stageHistory.length > 0,
+    // Équipes : phase teampool seulement si la formule d'équipe a un tour de poules (ADR-0044)
+    teamPoolPhase: hasTeamPools(competition),
   });
   useRemoteCheckinSync({
     competitionId: competition.id,

@@ -26,6 +26,12 @@ const ExpectedRevision = z
   );
 const Revision = z.number().int().optional();
 const Name = z.string().trim().min(1).max(200);
+const TeamRanking = z
+  .number()
+  .int()
+  .min(1)
+  .max(100000)
+  .describe('Rang d’entrée de l’équipe (1 = la meilleure, docs/adr/0044)');
 
 // ─── Bloc « teams » de getCompetitionState ──────────────────────────────────
 
@@ -85,12 +91,14 @@ export const TeamsStateSchema = z.object({
       id: z.string(),
       name: z.string(),
       club: z.string(),
+      /** Rang d'entrée saisi ou importé (docs/adr/0044) ; null : rang calculé (teamEntryRanking) */
+      ranking: z.number().int().nullable(),
       fencers: z.array(TeamFencerSchema),
     })
   ),
   poolMatches: z.array(TeamMatchSchema),
   tableauMatches: z.array(TeamMatchSchema),
-  /** Classement de poule (dérivé) : relais FIE par victoires, arène par points marqués */
+  /** Classement de poule (dérivé) : relais FIE au ratio V/M toutes poules confondues (poule unique : victoires, docs/adr/0044), arène par points marqués */
   poolRanking: z.array(
     z.object({
       teamId: z.string(),
@@ -108,28 +116,69 @@ export const TeamsStateSchema = z.object({
   ),
   /** Équipes retirées ou exclues (docs/adr/0028) : hors classement de poule */
   withdrawn: z.array(TeamWithdrawalSchema),
+  /**
+   * Têtes de série du tableau, dans l'ordre d'entrée (docs/adr/0044) : tableau tiré par le
+   * moteur (TeamTableauGenerated) ; avant le tirage, classement d'entrée coupé par la
+   * qualification du tour (teamTableauEntry), ou rang d'entrée sans poule. Placement du
+   * tableau de l'écran et des PDF.
+   */
+  tableauSeeds: z.array(z.string()),
+  /**
+   * Classement final (teamFinalRanking, docs/adr/0044) : perdants ex aequo par tour, départagés
+   * par le classement d'entrée du tableau ; petite finale ; éliminées à l'issue des poules
+   * ensuite. provisional : tableau pas terminé (ou pas encore tiré).
+   */
+  finalRanking: z.object({
+    rows: z.array(z.object({ teamId: z.string(), rank: z.number().int() })),
+    provisional: z.boolean(),
+  }),
 });
 export type TeamsStateDTO = z.infer<typeof TeamsStateSchema>;
 
-const TeamSchema = z.object({ id: z.string(), name: z.string(), club: z.string() });
+const TeamSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  club: z.string(),
+  ranking: z.number().int().nullable(),
+});
 
 // ─── Opérations ─────────────────────────────────────────────────────────────
 
 export const teamSetupOperations = {
   registerTeam: command({
     description:
-      'Épreuve par équipes : inscrit une équipe (nom, club ; club = nom par défaut). Inscription (docs/adr/0018), sans journal. ' +
+      'Épreuve par équipes : inscrit une équipe (nom, club ; club = nom par défaut ; rang d’entrée facultatif, docs/adr/0044). Inscription (docs/adr/0018), sans journal. ' +
       'Refus : épreuve individuelle (unsupported_format).',
     input: z.object({
       competitionId: CompetitionId,
       name: Name.describe('Nom de l’équipe'),
       club: Name.optional().describe('Club (défaut : le nom)'),
+      ranking: TeamRanking.optional(),
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
       commandId: CommandId,
     }),
     output: z.object({ dryRun: z.boolean(), team: TeamSchema.nullable(), revision: Revision }),
     permission: 'fencers:write',
+  }),
+
+  updateTeam: command({
+    description:
+      'Épreuve par équipes : modifie le nom, le club ou le rang d’entrée d’une équipe (ranking null : rang retiré, rang calculé sur les classements des titulaires puis le nom, docs/adr/0044). Sans journal (docs/adr/0018). ' +
+      'Refus : épreuve individuelle (unsupported_format), équipe inconnue (team_not_found), après le tirage (draw_done).',
+    input: z.object({
+      competitionId: CompetitionId,
+      teamId: Id.describe('Identifiant de l’équipe'),
+      name: Name.optional().describe('Nouveau nom'),
+      club: Name.optional().describe('Nouveau club'),
+      ranking: TeamRanking.nullable().optional(),
+      dryRun: DryRun,
+      expectedRevision: ExpectedRevision,
+      commandId: CommandId,
+    }),
+    output: z.object({ dryRun: z.boolean(), team: TeamSchema.nullable(), revision: Revision }),
+    permission: 'fencers:write',
+    mcp: { name: 'update_team', title: 'Modifier une équipe' },
   }),
 
   unregisterTeam: command({
@@ -191,12 +240,21 @@ export const teamSetupOperations = {
 
   generateTeamPools: command({
     description:
-      'Épreuve par équipes : tire les poules d’équipes et crée leurs rencontres, chacune avec ses relais fixés (titulaires par ordre, ordre FIE des relais à 3 en épée, fleuret, sabre). ' +
-      'Relais FIE : poule unique, tous contre tous. Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes seulement. ' +
-      'Refus : épreuve individuelle (unsupported_format), moins de 2 équipes ou arène hors 8/12 (invalid_composition), titulaires manquants (team_incomplete), poules déjà tirées sans « replace » (draw_done), relais déjà joués (pools_have_scores), tableau d’équipes créé (bracket_exists). ' +
+      'Épreuve par équipes : tire les poules d’équipes et crée leurs rencontres, chacune avec ses relais fixés (titulaires par ordre, ordre des relais de la règle de rencontre du tour : FIE o.99.3 à 3 titulaires ou rotation). ' +
+      'Relais FIE avec une formule d’équipe (general.teamMatch, docs/adr/0044) : poules du tour de la formule comme en individuel (taille de poule, nombre optimal ou « poolCount », serpentin au rang d’entrée effectif des équipes, clubs séparés, ordre officiel des rencontres, positions tirées au sort), relais et palier de la règle du tour ; sans formule d’équipe : poule unique tous contre tous dans l’ordre des noms (« poolCount » refusé, invalid_pool_count). Arène Sabre Laser : calendrier figé du règlement, 8 ou 12 équipes seulement. ' +
+      'Refus : épreuve individuelle (unsupported_format), moins de 2 équipes ou arène hors 8/12 (invalid_composition), titulaires manquants (team_incomplete), formule sans tour de poules (no_pools), plus de poules que la moitié des équipes (invalid_pool_count), poules déjà tirées sans « replace » (draw_done), relais déjà joués (pools_have_scores), tableau d’équipes créé (bracket_exists). ' +
       'Journal : TeamPoolsGenerated, puis un TeamMatchScheduled par rencontre.',
     input: z.object({
       competitionId: CompetitionId,
+      poolCount: z
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe(
+          'Nombre de poules (formule d’équipe seulement ; défaut : nombre optimal ; docs/adr/0044)'
+        ),
       replace: z
         .boolean()
         .optional()
@@ -332,13 +390,17 @@ export const teamRelayOperations = {
   substituteTeamFencer: command({
     description:
       'Épreuve par équipes : le remplaçant de l’équipe prend la place du tireur sortant dans les relais non terminés de la rencontre (o.99.5, o.99.6). Un seul remplaçant par équipe et par rencontre. ' +
-      'Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). ' +
+      'Remplaçant choisi par « inFencerId » (facultatif ; absent : le premier remplaçant ; remplaçants admis par la règle de rencontre de la phase, docs/adr/0044). ' +
+      'Refus : rencontre inconnue (match_not_found), équipe absente de la rencontre (team_not_found), tireur absent de la rencontre (fencer_not_found), pas de remplaçant (no_reserve), « inFencerId » qui n’est pas un remplaçant de l’équipe (invalid_composition), remplaçant déjà entré (reserve_used), plus aucun relais à tirer pour ce tireur (no_later_relay). ' +
       'Journal : TeamFencerSubstituted.',
     input: z.object({
       competitionId: CompetitionId,
       matchId: MatchId,
       teamId: Id.describe('Équipe du tireur sortant'),
       outFencerId: Id.describe('Tireur sortant'),
+      inFencerId: Id.optional().describe(
+        'Remplaçant qui entre (défaut : le premier remplaçant de l’équipe, docs/adr/0044)'
+      ),
       dryRun: DryRun,
       expectedRevision: ExpectedRevision,
       commandId: CommandId,

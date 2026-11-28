@@ -62,7 +62,10 @@ function draftTemplates(): FormulaTemplate[] {
           two_rounds: { ...standard, poolRounds: 2, poolRoundQualifiers: [0] },
           pools_only: { ...standard, hasDirectElimination: false },
         };
-        for (const [code, draft] of Object.entries(variants)) {
+        // Épreuve par équipes en relais FIE (épée, fleuret, sabre) : un tour de poules puis un
+        // tableau, ou un tableau seul (docs/adr/0044) ; ni 2 tours, ni poules seules
+        const offered = team && weapon !== Weapon.LASER ? { standard } : variants;
+        for (const [code, draft] of Object.entries(offered)) {
           out.push({
             id: `bpm/${weapon}/${category}/${team ? 'team' : 'ind'}/${code}`,
             source: 'provided',

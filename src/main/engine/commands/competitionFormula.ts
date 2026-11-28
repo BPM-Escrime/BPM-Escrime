@@ -18,6 +18,7 @@ import {
   applyOperationsV2,
   formulaV2Issues,
   formulaViewV2,
+  type FormulaScope,
 } from '../../../shared/domain/formula/formulaV2Operations';
 import {
   flatSettingsOf,
@@ -38,6 +39,25 @@ import { progressIssues } from '../../../shared/domain/formula/formulaStructure'
 import { readSession } from './sessionView';
 import { PHASE } from './sport';
 import { allFormulaTemplates } from './formulaTemplates';
+import { teamFormulaProgress } from '../../../shared/domain/teams/teamFormulaProgress';
+import { isArenaTeamEvent, withTeamMatch } from '../../../shared/domain/teams/teamMatchRule';
+import { teamFormatOf } from '../../../shared/domain/teams/relay';
+
+/**
+ * Épreuve en arène Sabre Laser : sa formule reste celle d'un modèle fixe, non modifiable
+ * (ADR-0044) ; refus de toute écriture (updateCompetitionFormula, applyFormulaTemplate,
+ * updateCompetitionSettings avec `settings.formula`)
+ */
+export function assertFormulaWritable(comp: {
+  isTeamEvent?: boolean;
+  settings?: Partial<CompetitionSettings> | null;
+}): void {
+  if (isArenaTeamEvent(comp))
+    throw new CommandError(
+      'unsupported_format',
+      'Arène Sabre Laser : la formule est celle d’un modèle fixe, non modifiable'
+    );
+}
 
 const newPhaseId = () => `phase_${randomUUID()}`;
 
@@ -97,6 +117,7 @@ export function applyFormulaTemplate(
   input: { competitionId: string; templateId: string; dryRun?: boolean }
 ) {
   const comp = getCompetitionOrThrow(ctx, input.competitionId);
+  assertFormulaWritable(comp);
   const template = compatibleTemplate(ctx, input.templateId, {
     weapon: comp.weapon,
     category: comp.category,
@@ -111,16 +132,33 @@ export function applyFormulaTemplate(
   return writeFormula(ctx, comp, formula, patch, input.dryRun);
 }
 
-/** Formule enregistrée et avancement de l'épreuve (S6, docs/adr/0041) */
+/**
+ * Formule enregistrée et avancement de l'épreuve (S6, docs/adr/0041) : état de session, ou,
+ * pour une épreuve par équipes, ses rencontres (poules tirées, tableau tiré : ADR-0044), par
+ * la même fonction du domaine que l'écran
+ */
 function storedProgress(
   ctx: CommandContext,
-  comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings },
+  comp: {
+    id: string;
+    weapon: Weapon;
+    category: Category;
+    isTeamEvent?: boolean;
+    settings?: CompetitionSettings;
+  },
   stored: FormulaV2 = formulaOf({
     weapon: comp.weapon,
     category: comp.category,
     settings: comp.settings,
   })
 ) {
+  if (comp.isTeamEvent) {
+    const progress = teamFormulaProgress(stored, {
+      poolMatches: ctx.db.teams.getTeamMatchesByCompetition(comp.id),
+      tableauMatches: ctx.db.teams.getTeamTableauMatches(comp.id, comp.id),
+    });
+    return { stored, progress };
+  }
   const session = readSession(ctx, comp.id);
   const progress = formulaProgress(stored, {
     ...session,
@@ -136,7 +174,13 @@ function storedProgress(
  */
 export function assertProgressLock(
   ctx: CommandContext,
-  comp: { id: string; weapon: Weapon; category: Category; settings?: CompetitionSettings },
+  comp: {
+    id: string;
+    weapon: Weapon;
+    category: Category;
+    isTeamEvent?: boolean;
+    settings?: CompetitionSettings;
+  },
   next: CompetitionSettings
 ): void {
   const { stored, progress } = storedProgress(ctx, comp);
@@ -149,11 +193,83 @@ export function assertProgressLock(
   if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
 }
 
+/** Épreuve telle qu'elle sera après l'écriture : arme, type, réglages (format par équipes) */
+interface NextCompetition {
+  weapon: Weapon;
+  isTeamEvent?: boolean;
+  settings?: Partial<CompetitionSettings> | null;
+}
+
+/** Périmètre du jugement de la formule (ADR-0041, ADR-0044) : arme, type, format, effectifs */
+function formulaScope(ctx: CommandContext, competitionId: string, next: NextCompetition) {
+  const scope: FormulaScope = {
+    weapon: next.weapon,
+    isTeamEvent: !!next.isTeamEvent,
+    fencerCount: ctx.db.getFencersByCompetition(competitionId).length,
+    teamFormat: teamFormatOf(next.settings),
+    teamCount: next.isTeamEvent
+      ? ctx.db.teams.getTeamsByCompetition(competitionId).length
+      : undefined,
+  };
+  return scope;
+}
+
 /**
- * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0036), après le jugement de la
- * formule (bornes, S1 à S6 ; une remarque par ligne avec la clé de sa phase, ADR-0041) ; `extra` :
- * autres réglages écrits avec elle (origine, mode spécial). Phases commencées (S6) : lues dans
- * l'état de session, par rapport à la formule enregistrée.
+ * Jugement de la formule écrite (docs/adr/0041 : « le moteur refuse une formule fautive à
+ * l'écriture ») : bornes, S1 à S6, contrôles d'équipe (ADR-0044) ; une remarque par ligne avec la
+ * clé de sa phase. Même refus par `updateCompetitionFormula`, `applyFormulaTemplate` et
+ * `updateCompetitionSettings` avec `settings.formula`. Phases commencées (S6) : lues dans l'état
+ * de session ou les rencontres d'équipe, par rapport à la formule enregistrée.
+ */
+export function assertFormulaV2(
+  ctx: CommandContext,
+  comp: {
+    id: string;
+    weapon: Weapon;
+    category: Category;
+    isTeamEvent?: boolean;
+    settings?: CompetitionSettings;
+  },
+  next: NextCompetition,
+  formula: FormulaV2
+): void {
+  const { stored, progress } = storedProgress(ctx, comp);
+  const issues = formulaV2Issues(formula, formulaScope(ctx, comp.id, next), progress, stored);
+  if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
+}
+
+/**
+ * Formule d'équipe retouchée par des réglages plats (ADR-0036 amendée, ADR-0044) : formule qui
+ * en résulte jugée par `formulaV2Issues` (contrôles d'équipe compris). Seules les remarques
+ * nouvelles refusent : une épreuve 2.0 hors bornes reste modifiable. S6 : `assertProgressLock`.
+ */
+export function assertFormulaNotWorse(
+  ctx: CommandContext,
+  competitionId: string,
+  next: NextCompetition,
+  before: FormulaV2,
+  after: FormulaV2,
+  /** Formule qui devient formule d'équipe : les remarques d'équipe ne sont jamais tolérées */
+  becomesTeamFormula = false
+): void {
+  const scope = formulaScope(ctx, competitionId, next);
+  const key = (r: { code: string; phase: string | null; message: string }) =>
+    `${r.code}|${r.phase}|${r.message}`;
+  const teamCode = (code: string) =>
+    code === 'team_brick_unsupported' || code === 'invalid_team_match' || code.startsWith('teams_');
+  const known = new Set(
+    formulaV2Issues(before, scope)
+      .filter(r => !(becomesTeamFormula && teamCode(r.code)))
+      .map(key)
+  );
+  const issues = formulaV2Issues(after, scope).filter(r => !known.has(key(r)));
+  if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
+}
+
+/**
+ * Écrit la formule v2 avec ses réglages plats dérivés (ADR-0036) ; `extra` : autres réglages
+ * écrits avec elle (origine, mode spécial). Jugée par `updateCompetitionSettings`
+ * (`assertFormulaV2`), qui l'enregistre.
  */
 export function writeFormula(
   ctx: CommandContext,
@@ -164,22 +280,15 @@ export function writeFormula(
     isTeamEvent?: boolean;
     settings?: CompetitionSettings;
   },
-  formula: FormulaV2,
+  written: FormulaV2,
   extra: Partial<CompetitionSettings>,
   dryRun?: boolean
 ) {
-  const { stored, progress } = storedProgress(ctx, comp);
-  const issues = formulaV2Issues(
-    formula,
-    {
-      weapon: comp.weapon,
-      isTeamEvent: !!comp.isTeamEvent,
-      fencerCount: ctx.db.getFencersByCompetition(comp.id).length,
-    },
-    progress,
-    stored
-  );
-  if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
+  // Arène Sabre Laser : formule d'un modèle fixe, non modifiable (ADR-0044)
+  assertFormulaWritable(comp);
+  // Épreuve par équipes en relais FIE : la formule écrite porte sa règle de rencontre et fait
+  // foi pour les phases ; ailleurs, `teamMatch` est retiré (ADR-0044)
+  const formula = withTeamMatch(written, comp);
   // Épreuve enregistrée en mode spécial rapières : la formule écrite fait désormais foi, le mode
   // n'est plus lu (docs/adr/0043, F4e) ; après le tirage, la clé reste (figée), la formule gardant
   // ses briques par la lecture de compatibilité

@@ -799,7 +799,8 @@
     "confirmPassivityBlack": "La negra P decideix l’encontre a favor de {{team}} (total dels relleus acabats, després classificació). Enregistreu primer el relleu en curs. Confirmar?",
     "passivityBlackConfirm": "Donar la negra P",
     "passivityCardGiven": "Targeta P donada",
-    "passivityMatchDecided": "Negra P: {{team}} guanya l’encontre"
+    "passivityMatchDecided": "Negra P: {{team}} guanya l’encontre",
+    "substituteIn": "-- suplent que entra ({{team}}) --"
   },
   "kiosk": {
     "tbd": "Per determinar",
@@ -2065,7 +2066,12 @@
     "fie_title": "Tocats acumulats (regla FIE)",
     "touches_plus": "Tocats+",
     "touches_minus": "Tocats-",
-    "fencer_removed": "Tirador retirat de l'equip"
+    "fencer_removed": "Tirador retirat de l'equip",
+    "entry_rank": "Rang d'entrada",
+    "entry_rank_ph": "Opcional",
+    "entry_rank_badge": "Rang {{n}}",
+    "entry_rank_save": "Desa el rang",
+    "final_ranking_provisional": "(provisional)"
   },
   "formulaPhase": {
     "n_touches": "{{n}} tocats",
@@ -4735,7 +4741,19 @@
     "entry_levels_hint": "Etiquetes separades per comes, de la més feble a la més forta; l’última és el nivell més fort.",
     "distribution_hint": "Per nivell: els equips del mateix nivell s’agrupen, del més feble al més fort, poule rere poule.",
     "ranking_filters": "Filtres de la classificació final",
-    "ranking_filters_hint": "Criteris per filtrar la classificació final (pantalla, PDF, CSV): una classificació filtrada es renumera des de 1. Només és una vista: la classificació publicada continua sent la completa."
+    "ranking_filters_hint": "Criteris per filtrar la classificació final (pantalla, PDF, CSV): una classificació filtrada es renumera des de 1. Només és una vista: la classificació publicada continua sent la completa.",
+    "team_match": "Regla de l'encontre (equips)",
+    "team_match_phase": "Regla de l'encontre d'aquesta fase",
+    "team_match_hint": "Objectiu de l'encontre: esglaó × titulars². Ordre FIE (o.99.3) només amb 3 titulars.",
+    "team_match_phase_hint": "Camp buit: regla general de la fórmula.",
+    "team_starters": "Titulars",
+    "team_reserves": "Suplents",
+    "team_relay_step": "Esglaó (tocats)",
+    "team_relay_order": "Ordre dels relleus",
+    "team_relay_order_fie": "Ordre FIE (o.99.3)",
+    "team_relay_order_rotation": "Rotació",
+    "team_relay_order_general": "Regla general",
+    "arena_read_only": "Arena Sabre Làser: fórmula d'un model fix, no modificable."
   },
   "formulaHelp": {
     "open": "Ajuda: {{topic}}",

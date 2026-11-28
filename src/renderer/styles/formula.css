@@ -1134,3 +1134,11 @@ button.formula-frieze__step {
   background: var(--color-primary);
   color: #fff;
 }
+
+/* Corps de l'éditeur : désactivé en consultation (arène Sabre Laser, ADR-0044) */
+.formula-editor__body {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}

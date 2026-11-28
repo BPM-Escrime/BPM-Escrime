@@ -799,7 +799,8 @@
     "confirmPassivityBlack": "La negra P decide el encuentro a favor de {{team}} (total de los relevos terminados, luego clasificación). Registre primero el relevo en curso. ¿Confirmar?",
     "passivityBlackConfirm": "Dar la negra P",
     "passivityCardGiven": "Tarjeta P dada",
-    "passivityMatchDecided": "Negra P: {{team}} gana el encuentro"
+    "passivityMatchDecided": "Negra P: {{team}} gana el encuentro",
+    "substituteIn": "-- suplente que entra ({{team}}) --"
   },
   "kiosk": {
     "tbd": "Por determinar",
@@ -2065,7 +2066,12 @@
     "fie_title": "Tocados acumulados (regla FIE)",
     "touches_plus": "Tocados+",
     "touches_minus": "Tocados-",
-    "fencer_removed": "Tirador retirado del equipo"
+    "fencer_removed": "Tirador retirado del equipo",
+    "entry_rank": "Puesto de entrada",
+    "entry_rank_ph": "Opcional",
+    "entry_rank_badge": "Puesto {{n}}",
+    "entry_rank_save": "Guardar el puesto",
+    "final_ranking_provisional": "(provisional)"
   },
   "formulaPhase": {
     "n_touches": "{{n}} tocados",
@@ -4735,7 +4741,19 @@
     "entry_levels_hint": "Etiquetas separadas por comas, de la más débil a la más fuerte; la última es el nivel más fuerte.",
     "distribution_hint": "Por nivel: los equipos del mismo nivel se agrupan, del más débil al más fuerte, poule tras poule.",
     "ranking_filters": "Filtros de la clasificación final",
-    "ranking_filters_hint": "Criterios para filtrar la clasificación final (pantalla, PDF, CSV): una clasificación filtrada se renumera desde 1. Solo es una vista: la clasificación publicada sigue siendo la completa."
+    "ranking_filters_hint": "Criterios para filtrar la clasificación final (pantalla, PDF, CSV): una clasificación filtrada se renumera desde 1. Solo es una vista: la clasificación publicada sigue siendo la completa.",
+    "team_match": "Regla del encuentro (equipos)",
+    "team_match_phase": "Regla del encuentro de la fase",
+    "team_match_hint": "Objetivo del encuentro: escalón × titulares². Orden FIE (o.99.3) solo con 3 titulares.",
+    "team_match_phase_hint": "Campo vacío: regla general de la fórmula.",
+    "team_starters": "Titulares",
+    "team_reserves": "Suplentes",
+    "team_relay_step": "Escalón (tocados)",
+    "team_relay_order": "Orden de los relevos",
+    "team_relay_order_fie": "Orden FIE (o.99.3)",
+    "team_relay_order_rotation": "Rotación",
+    "team_relay_order_general": "Regla general",
+    "arena_read_only": "Arena Sable Láser: fórmula de un modelo fijo, no modificable."
   },
   "formulaHelp": {
     "open": "Ayuda: {{topic}}",

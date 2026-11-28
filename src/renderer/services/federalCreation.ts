@@ -83,6 +83,8 @@ export async function applyFederalImport(
         competitionId,
         name: team.name,
         ...(team.club ? { club: team.club } : {}),
+        // Rang d'entrée quand le fichier fédéral le porte (docs/adr/0044)
+        ...(team.ranking ? { ranking: team.ranking } : {}),
       });
       if (!row) continue;
       counts.teams++;

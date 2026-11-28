@@ -799,7 +799,8 @@
     "confirmPassivityBlack": "黑 P 判 {{team}} 勝出本場（已完成接力的總分，其次為排名）。請先記錄進行中的接力。確認？",
     "passivityBlackConfirm": "給予黑 P",
     "passivityCardGiven": "已給予 P 牌",
-    "passivityMatchDecided": "黑 P：{{team}} 勝出本場"
+    "passivityMatchDecided": "黑 P：{{team}} 勝出本場",
+    "substituteIn": "-- 入替後備（{{team}}）--"
   },
   "kiosk": {
     "tbd": "待定",
@@ -2065,7 +2066,12 @@
     "fie_title": "累計擊中（FIE 規則）",
     "touches_plus": "擊中+",
     "touches_minus": "被擊中-",
-    "fencer_removed": "已將劍手移出隊伍"
+    "fencer_removed": "已將劍手移出隊伍",
+    "entry_rank": "入場排名",
+    "entry_rank_ph": "選填",
+    "entry_rank_badge": "排名 {{n}}",
+    "entry_rank_save": "儲存排名",
+    "final_ranking_provisional": "（暫定）"
   },
   "formulaPhase": {
     "n_touches": "{{n}} 劍",
@@ -4735,7 +4741,19 @@
     "entry_levels_hint": "以逗號分隔，由最弱至最強；最後一個為最強級別。",
     "distribution_hint": "按級別：同級別隊伍集中編組，由最弱至最強，逐組分配。",
     "ranking_filters": "最終排名篩選",
-    "ranking_filters_hint": "供篩選最終排名（畫面、PDF、CSV）的條件：篩選後的排名由 1 重新編號。僅為顯示：公布的排名仍為完整排名。"
+    "ranking_filters_hint": "供篩選最終排名（畫面、PDF、CSV）的條件：篩選後的排名由 1 重新編號。僅為顯示：公布的排名仍為完整排名。",
+    "team_match": "隊際對賽規則",
+    "team_match_phase": "本階段對賽規則",
+    "team_match_hint": "對賽目標：每輪分數 × 正選人數²。FIE 次序（o.99.3）只適用於 3 名正選。",
+    "team_match_phase_hint": "留空：採用賽制的一般規則。",
+    "team_starters": "正選",
+    "team_reserves": "後備",
+    "team_relay_step": "每輪分數（擊中）",
+    "team_relay_order": "接力次序",
+    "team_relay_order_fie": "FIE 次序（o.99.3）",
+    "team_relay_order_rotation": "輪換",
+    "team_relay_order_general": "一般規則",
+    "arena_read_only": "光劍競技場：固定範本賽制，不可修改。"
   },
   "formulaHelp": {
     "open": "說明：{{topic}}",

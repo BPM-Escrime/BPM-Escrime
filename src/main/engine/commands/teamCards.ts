@@ -20,7 +20,8 @@ import type {
   TeamMatchRow,
   TeamRow,
 } from '../../../shared/domain/teams/team.types';
-import { relayRuleOf, teamFormatOf } from '../../../shared/domain/teams/relay';
+import { teamFormatOf } from '../../../shared/domain/teams/relay';
+import { teamFormulaOf } from '../../../shared/domain/teams/teamMatchRule';
 import { hasPassivityCards, passivityCardFor } from '../../../shared/domain/teams/passivityCards';
 import { rankTeamsForTableau } from '../../../shared/domain/teams/teamTableau';
 import { relayCardFor, teamCardFor } from '../../../shared/domain/teams/teamCards';
@@ -34,8 +35,21 @@ import { planWithdrawal } from '../../../shared/domain/fencers/withdrawal';
 import type { NewJournalEvent } from '../../../database/repos/eventLogRepo';
 import { CommandError, type CommandContext } from './context';
 import { EVENT, recordEvents } from './eventLog';
-import { changed, relayCardDTO, teamCompetitionOrThrow, withdrawnTeams } from './teams';
-import { decideTeamMatch, matchOrThrow, type MatchRow } from './teamRelays';
+import {
+  changed,
+  entryRankedTeams,
+  relayCardDTO,
+  teamCompetitionOrThrow,
+  teamRuleOf,
+  withdrawnTeams,
+} from './teams';
+import {
+  decideTeamMatch,
+  matchOrThrow,
+  matchRelayRule,
+  tableauSeeds,
+  type MatchRow,
+} from './teamRelays';
 import { applyWithdrawal } from './withdrawal';
 
 type Ops = typeof teamCardOperations;
@@ -296,19 +310,36 @@ export function giveRelayCard(
 // ─── Carton P (non-combativité, t.124) ──────────────────────────────────────
 
 /**
- * Classement des deux équipes pour le noir P à égalité de score (t.124.2.c) : celui qui place
- * les équipes au tableau, calculé sur les poules (équipes retirées exclues, o.99.8). Au
- * tableau, c'est le rang du tableau en cours (FFE dès M15) ; en poule, le logiciel n'a pas de
- * classement initial d'équipe (inscription par nom) : classement de poule du moment.
+ * Classement des deux équipes pour le noir P à égalité de score (t.124.2.c). En poule : rang
+ * d'entrée effectif des équipes (rang saisi, somme des classements des titulaires, puis le nom ;
+ * docs/adr/0044). Au tableau : celui qui place les équipes au tableau, calculé sur les poules
+ * (équipes retirées exclues, o.99.8), rang du tableau en cours (FFE dès M15).
  */
 function passivityRanks(ctx: CommandContext, comp: Competition, m: MatchRow) {
+  if (m.tableId === null || m.round === null || m.position === null) {
+    const teams = ctx.db.teams.getTeamsByCompetition(comp.id) as TeamRow[];
+    const entry = entryRankedTeams(
+      ctx,
+      comp,
+      teams,
+      teamRuleOf(comp, { kind: 'pool', round: 0 }).starters
+    );
+    const rank = (id: string) => {
+      const i = entry.findIndex(t => t.id === id);
+      return i < 0 ? null : i + 1;
+    };
+    return { rankA: rank(m.teamAId), rankB: rank(m.teamBId) };
+  }
   const pools = ctx.db.teams.getTeamMatchesByCompetition(comp.id) as TeamMatchRow[];
   const { teams, matches } = withoutWithdrawnTeams(
     ctx.db.teams.getTeamsByCompetition(comp.id) as TeamRow[],
     pools,
     new Set(withdrawnTeams(ctx, comp.id).keys())
   );
-  const ranked = rankTeamsForTableau(teams, matches, teamFormatOf(comp.settings));
+  // Formule d'équipe : têtes de série du tableau tiré (classement d'entrée du tableau)
+  const ranked = teamFormulaOf(comp)
+    ? tableauSeeds(ctx, comp)
+    : rankTeamsForTableau(teams, matches, teamFormatOf(comp.settings));
   const rank = (id: string) => {
     const i = ranked.findIndex(t => t.id === id);
     return i < 0 ? null : i + 1;
@@ -361,7 +392,7 @@ export function givePassivityCard(
         nextTeamMatchStarted(ordered, m.id, m.teamAId) ||
         nextTeamMatchStarted(ordered, m.id, m.teamBId),
       ...passivityRanks(ctx, comp, m),
-      target: relayRuleOf(comp.weapon, comp.settings).target,
+      target: matchRelayRule(comp, m).target,
       liveScore: input.liveScore ?? null,
     },
     prior: ctx.db.teams.getPassivityCards(m.id),

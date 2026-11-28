@@ -98,7 +98,11 @@ function storedSplit(comp: Competition): { formula: FormulaV2; split: SplitPhase
   if (!formula || split?.kind !== 'split') {
     throw new CommandError('invalid_settings', 'Formule sans scission en dernière phase');
   }
-  const issues = formulaV2Issues(formula, { weapon: comp.weapon, isTeamEvent: !!comp.isTeamEvent });
+  const issues = formulaV2Issues(formula, {
+    weapon: comp.weapon,
+    isTeamEvent: !!comp.isTeamEvent,
+    teamFormat: comp.settings?.teamFormat,
+  });
   if (issues.length) {
     throw new CommandError('invalid_settings', remarksMessage(issues));
   }

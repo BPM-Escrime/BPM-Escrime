@@ -19,13 +19,28 @@ import {
 import { CommandError, type CommandContext } from './context';
 import { getCompetitionOrThrow } from './competitions';
 import { drawDone } from './fencers';
-import { assertProgressLock, compatibleTemplate } from './competitionFormula';
+import {
+  assertFormulaNotWorse,
+  assertFormulaV2,
+  assertFormulaWritable,
+  assertProgressLock,
+  compatibleTemplate,
+} from './competitionFormula';
 import { templateToSettings } from '../../../shared/domain/formula/formulaTemplate';
 import {
   flatSettingsOf,
   formulaOf,
   withFlatSettings,
 } from '../../../shared/domain/formula/formulaV2';
+import {
+  isArenaTeamEvent,
+  isFieRelayTeamEvent,
+  teamFormulaIssues,
+  withoutTeamMatch,
+  withTeamMatch,
+} from '../../../shared/domain/teams/teamMatchRule';
+import { remarksMessage } from '../../../shared/domain/formula/formulaRemarks';
+import { teamFormatOf } from '../../../shared/domain/teams/relay';
 import {
   validateFormulaSettings,
   type FormulaIssue,
@@ -64,6 +79,10 @@ const FORMULA_FLAT_KEYS: ReadonlySet<string> = new Set([
   'poolSizeMax',
   'questConfig',
   'customFormula',
+  // Règle de rencontre générale des équipes (ADR-0044) : reportée dans `general.teamMatch`
+  'minTeamSize',
+  'teamReserveCount',
+  'teamRelayStepSize',
 ]);
 
 /** Réglages figés une fois les poules tirées (ou le tableau généré) : ils changent les règles */
@@ -154,20 +173,33 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
     ...fromTemplate,
     ...patch,
   } as CompetitionSettings;
-  // Modèle choisi : formule v2 enregistrée dès la création (ADR-0036)
-  const settings: CompetitionSettings =
-    input.templateId && !merged.formula
-      ? {
-          ...merged,
-          formula: formulaOf({ weapon: input.weapon, category: input.category, settings: merged }),
-        }
-      : merged;
+  // Modèle choisi : formule v2 enregistrée dès la création (ADR-0036). Épreuve par équipes en
+  // relais FIE : formule d'équipe dès la création, avec sa règle de rencontre (docs/adr/0044)
+  const team = { weapon: input.weapon, isTeamEvent: !!input.isTeamEvent, settings: merged };
+  const teamFormula = !!input.isTeamEvent && teamFormatOf(merged) === 'fie-relay';
+  const formula =
+    merged.formula ??
+    (input.templateId || teamFormula
+      ? formulaOf({ weapon: input.weapon, category: input.category, settings: merged })
+      : undefined);
+  const settings: CompetitionSettings = formula
+    ? { ...merged, formula: withTeamMatch(formula, team) }
+    : merged;
   assertFormula(
     validateFormulaSettings(settings, undefined, {
       weapon: input.weapon,
       isTeamEvent: !!input.isTeamEvent,
     })
   );
+  // Formule d'équipe créée : contrôles d'équipe (briques, règle de rencontre ; ADR-0044)
+  if (teamFormula && settings.formula) {
+    const issues = teamFormulaIssues(settings.formula, {
+      weapon: input.weapon,
+      isTeamEvent: true,
+      teamFormat: teamFormatOf(merged),
+    });
+    if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
+  }
   if (input.dryRun) return { dryRun: true, competitionId: null };
   const created = ctx.db.createCompetition({
     title: input.title.trim(),
@@ -255,6 +287,23 @@ export function updateCompetitionSettings(
       `Poules tirées ou tableau généré : réglage figé (${frozen.join(', ')})`
     );
   }
+  const next = {
+    weapon: input.weapon ?? comp.weapon,
+    isTeamEvent: input.isTeamEvent ?? !!comp.isTeamEvent,
+    settings: { ...comp.settings, ...patch } as CompetitionSettings,
+  };
+  // Arène Sabre Laser : formule d'un modèle fixe, non modifiable (ADR-0044)
+  if (
+    'formula' in patch &&
+    JSON.stringify(patch.formula ?? null) !== JSON.stringify(comp.settings?.formula ?? null)
+  )
+    assertFormulaWritable(next);
+  // Formule écrite : même jugement que updateCompetitionFormula (bornes, S1 à S6, contrôles
+  // d'équipe ; docs/adr/0041, ADR-0044), seulement quand `formula` est dans le patch. Par
+  // équipes en relais FIE, la formule porte sa règle de rencontre ; ailleurs, `teamMatch` est
+  // retiré (ADR-0044)
+  const writtenFormula = patch.formula ? withTeamMatch(patch.formula, next) : undefined;
+  if (writtenFormula) assertFormulaV2(ctx, comp, next, writtenFormula);
   // Seuls les réglages modifiés sont jugés : une épreuve 2.0 hors bornes reste modifiable
   if (Object.keys(patch).length) {
     assertFormula(
@@ -274,19 +323,33 @@ export function updateCompetitionSettings(
   if (input.category !== undefined) update.category = input.category;
   if (input.isTeamEvent !== undefined) update.isTeamEvent = input.isTeamEvent;
   if (Object.keys(patch).length) {
-    update.settings = { ...comp.settings, ...patch } as CompetitionSettings;
+    update.settings = next.settings;
+    if (writtenFormula) update.settings.formula = writtenFormula;
   }
   const flatKeys = Object.keys(patch).filter(k => FORMULA_FLAT_KEYS.has(k));
   const weaponChanged = input.weapon !== undefined && input.weapon !== comp.weapon;
-  if (comp.settings?.formula && !('formula' in patch) && (flatKeys.length || weaponChanged)) {
+  // Arène Sabre Laser : réglages plats sans report dans la formule figée (ADR-0044)
+  if (
+    comp.settings?.formula &&
+    !isArenaTeamEvent(next) &&
+    !('formula' in patch) &&
+    (flatKeys.length || weaponChanged)
+  ) {
     const base = (update.settings ?? comp.settings) as CompetitionSettings;
     // Réglage plat qui a sa place dans la formule : reporté dans la formule enregistrée, gardée
     // avec ses réglages dérivés (ADR-0036 amendée) ; sinon (structure, arme changée) : formule
     // périmée, retirée et relue depuis les réglages plats
+    const stored = formulaOf({
+      weapon: comp.weapon,
+      category: comp.category,
+      settings: comp.settings,
+    });
     const merged = weaponChanged
       ? null
       : withFlatSettings(
-          formulaOf({ weapon: comp.weapon, category: comp.category, settings: comp.settings }),
+          // Épreuve par équipes en relais FIE : la règle de rencontre est posée à toute écriture
+          // de la formule, report d'un réglage plat compris (ADR-0044)
+          isFieRelayTeamEvent(next) ? withTeamMatch(stored, comp) : withoutTeamMatch(stored),
           Object.fromEntries(flatKeys.map(k => [k, (patch as Record<string, unknown>)[k]]))
         );
     if (merged) {
@@ -300,10 +363,52 @@ export function updateCompetitionSettings(
       update.settings = rest as CompetitionSettings;
     }
   }
-  // Verrou S6 (docs/adr/0041, ADR-0043 F4b) : formule ou réglages plats écrits après le début,
-  // jugés sur la formule qui en résulte
-  if ('formula' in patch || flatKeys.length) {
+  // Épreuve devenue individuelle ou arène : règle de rencontre retirée de la formule
+  // enregistrée, ni lue ni écrite hors épreuve par équipes en relais FIE (ADR-0044)
+  if ((input.isTeamEvent !== undefined || 'teamFormat' in patch) && !isFieRelayTeamEvent(next)) {
+    const base = update.settings ?? comp.settings;
+    const stripped = base?.formula ? withoutTeamMatch(base.formula) : undefined;
+    if (base && stripped && stripped !== base.formula)
+      update.settings = { ...base, formula: stripped };
+  }
+  // Verrou S6 (docs/adr/0041, ADR-0043 F4b) : réglages plats (ou formule retirée) écrits après le
+  // début, jugés sur la formule qui en résulte ; formule écrite : déjà jugée (assertFormulaV2)
+  if (!writtenFormula && ('formula' in patch || flatKeys.length)) {
     assertProgressLock(ctx, comp, (update.settings ?? comp.settings) as CompetitionSettings);
+  }
+  // Épreuve par équipes en relais FIE à formule d'équipe (`general.teamMatch`, ADR-0044 : elle
+  // fait foi pour le déroulé) : un réglage plat la retouche sans la perdre ; un réglage de
+  // structure qui la retirerait (ADR-0036 amendée) ferait retomber l'épreuve en poule unique,
+  // sans contrôle d'équipe : refusé, la formule se modifie par updateCompetitionFormula
+  const storedTeamFormula = comp.settings?.formula?.general.teamMatch
+    ? comp.settings.formula
+    : undefined;
+  if (
+    storedTeamFormula &&
+    isFieRelayTeamEvent(next) &&
+    !('formula' in patch) &&
+    !weaponChanged &&
+    flatKeys.length
+  ) {
+    const result = (update.settings ?? comp.settings)?.formula;
+    if (!result?.general.teamMatch)
+      throw new CommandError(
+        'invalid_settings',
+        `Épreuve par équipes : ${flatKeys.join(', ')} retirerait la formule d’équipe (règle de rencontre, phases) ; modifier la formule (updateCompetitionFormula)`
+      );
+    assertFormulaNotWorse(ctx, comp.id, next, storedTeamFormula, result);
+  } else if (
+    comp.settings?.formula &&
+    isFieRelayTeamEvent(next) &&
+    !('formula' in patch) &&
+    !weaponChanged &&
+    flatKeys.length
+  ) {
+    // Formule « individuelle » enregistrée qui devient formule d'équipe au report d'un réglage
+    // plat (règle posée, ADR-0044) : jugée par les contrôles d'équipe, sans tolérance
+    const result = (update.settings ?? comp.settings)?.formula;
+    if (result?.general.teamMatch)
+      assertFormulaNotWorse(ctx, comp.id, next, comp.settings.formula, result, true);
   }
   const changed = [
     ...Object.keys(update).filter(k => k !== 'settings'),

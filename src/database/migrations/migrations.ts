@@ -1412,4 +1412,17 @@ export const ALL_MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 55,
+    description: 'Rang d’entrée d’une équipe, teams.ranking (docs/adr/0044)',
+    up(db) {
+      // Rang d'entrée saisi ou importé (1 = le meilleur) ; NULL = non classée, rang calculé
+      // par le domaine (teamEntryRanking)
+      try {
+        db.run(`ALTER TABLE teams ADD COLUMN ranking INTEGER`);
+      } catch {
+        /* colonne déjà présente */
+      }
+    },
+  },
 ];
