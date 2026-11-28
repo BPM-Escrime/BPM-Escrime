@@ -37,6 +37,22 @@ export function getRelayCap(relayIndex: number, stepSize: number): number {
 }
 
 /**
+ * Plafond affiché d'un relais : palier figé dans les relais de la rencontre (`maxScore`, règle de
+ * sa phase, docs/adr/0044), sinon celui de la règle générale ; cible = palier × nombre de relais.
+ * Le mode « points » du Sabre Laser garde la règle générale.
+ */
+export function matchRelayCap(
+  bouts: ReadonlyArray<{ maxScore?: number | null }>,
+  relayIndex: number,
+  rule: { stepSize: number; target: number; mode?: string }
+): number {
+  const frozen = rule.mode === 'points' ? undefined : (bouts[0]?.maxScore ?? undefined);
+  const step = frozen ?? rule.stepSize;
+  const target = frozen !== undefined ? frozen * bouts.length : rule.target;
+  return Math.min(getRelayCap(relayIndex, step), target);
+}
+
+/**
  * Generate the relay pairing order for a team of `teamSize` fencers.
  * Diagonal round-robin (1v1,2v2,3v3,1v2,2v3,3v1,1v3,2v1,3v2 for N=3): N "rounds" of N
  * pairings, each round shifting the opponent index by one, producing N² relais where

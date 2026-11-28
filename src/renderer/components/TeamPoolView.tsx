@@ -15,7 +15,7 @@ import { TipButton } from './Tooltip';
 import React, { useState } from 'react';
 import { CardReason, TargetZone, Weapon, ZONE_POINTS } from '../../shared/types';
 import { TeamRow, TeamMatchRow, TeamBoutRow } from '../../shared/domain/teams/team.types';
-import { TeamTargetRule, getRelayCap } from '../../shared/domain/teams/teamCalculations';
+import { TeamTargetRule, matchRelayCap } from '../../shared/domain/teams/teamCalculations';
 import { LaserArenaBoutCap } from '../../shared/domain/teams/laserArenaCalculations';
 import { CARD_REASON_LABELS } from '../../shared/utils/cardSystem';
 import { getAvailableReasons } from '../../shared/domain/penalties/cards';
@@ -260,10 +260,8 @@ const TeamPoolView: React.FC<Props> = ({
                   const locked = done || !current;
                   const cap = isLaserArena
                     ? (boutCap?.maxTouches ?? 5)
-                    : Math.min(
-                        getRelayCap(bout.boutOrder - 1, targetRule.stepSize),
-                        targetRule.target
-                      );
+                    : // Palier de la phase, figé dans les relais de la rencontre (docs/adr/0044)
+                      matchRelayCap(m.bouts, bout.boutOrder - 1, targetRule);
                   const cardsA = (boutCards[bout.id] ?? []).filter(
                     c => c.fencerId === bout.fencerAId
                   );
