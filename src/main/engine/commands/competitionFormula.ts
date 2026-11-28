@@ -248,12 +248,20 @@ export function assertFormulaNotWorse(
   competitionId: string,
   next: NextCompetition,
   before: FormulaV2,
-  after: FormulaV2
+  after: FormulaV2,
+  /** Formule qui devient formule d'équipe : les remarques d'équipe ne sont jamais tolérées */
+  becomesTeamFormula = false
 ): void {
   const scope = formulaScope(ctx, competitionId, next);
   const key = (r: { code: string; phase: string | null; message: string }) =>
     `${r.code}|${r.phase}|${r.message}`;
-  const known = new Set(formulaV2Issues(before, scope).map(key));
+  const teamCode = (code: string) =>
+    code === 'team_brick_unsupported' || code === 'invalid_team_match' || code.startsWith('teams_');
+  const known = new Set(
+    formulaV2Issues(before, scope)
+      .filter(r => !(becomesTeamFormula && teamCode(r.code)))
+      .map(key)
+  );
   const issues = formulaV2Issues(after, scope).filter(r => !known.has(key(r)));
   if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
 }

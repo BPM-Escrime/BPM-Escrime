@@ -35,9 +35,11 @@ import {
 import {
   isArenaTeamEvent,
   isFieRelayTeamEvent,
+  teamFormulaIssues,
   withoutTeamMatch,
   withTeamMatch,
 } from '../../../shared/domain/teams/teamMatchRule';
+import { remarksMessage } from '../../../shared/domain/formula/formulaRemarks';
 import { teamFormatOf } from '../../../shared/domain/teams/relay';
 import {
   validateFormulaSettings,
@@ -189,6 +191,15 @@ export function createCompetition(ctx: CommandContext, input: CreateCompetitionI
       isTeamEvent: !!input.isTeamEvent,
     })
   );
+  // Formule d'équipe créée : contrôles d'équipe (briques, règle de rencontre ; ADR-0044)
+  if (teamFormula && settings.formula) {
+    const issues = teamFormulaIssues(settings.formula, {
+      weapon: input.weapon,
+      isTeamEvent: true,
+      teamFormat: teamFormatOf(merged),
+    });
+    if (issues.length) throw new CommandError('invalid_settings', remarksMessage(issues));
+  }
   if (input.dryRun) return { dryRun: true, competitionId: null };
   const created = ctx.db.createCompetition({
     title: input.title.trim(),
@@ -386,6 +397,18 @@ export function updateCompetitionSettings(
         `Épreuve par équipes : ${flatKeys.join(', ')} retirerait la formule d’équipe (règle de rencontre, phases) ; modifier la formule (updateCompetitionFormula)`
       );
     assertFormulaNotWorse(ctx, comp.id, next, storedTeamFormula, result);
+  } else if (
+    comp.settings?.formula &&
+    isFieRelayTeamEvent(next) &&
+    !('formula' in patch) &&
+    !weaponChanged &&
+    flatKeys.length
+  ) {
+    // Formule « individuelle » enregistrée qui devient formule d'équipe au report d'un réglage
+    // plat (règle posée, ADR-0044) : jugée par les contrôles d'équipe, sans tolérance
+    const result = (update.settings ?? comp.settings)?.formula;
+    if (result?.general.teamMatch)
+      assertFormulaNotWorse(ctx, comp.id, next, comp.settings.formula, result, true);
   }
   const changed = [
     ...Object.keys(update).filter(k => k !== 'settings'),

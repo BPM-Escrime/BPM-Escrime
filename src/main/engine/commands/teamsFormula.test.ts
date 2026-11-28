@@ -946,6 +946,21 @@ d(
       expect(db.getCompetition(comp.id)!.settings!.formula).toBeUndefined();
     });
 
+    it('formule « individuelle » à 2 tours qui deviendrait formule d’équipe au report : contrôles d’équipe, refus', async () => {
+      const legacy = teamFormula();
+      delete (legacy.general as { teamMatch?: unknown }).teamMatch;
+      const twoRounds = {
+        ...legacy,
+        phases: [legacy.phases[0], { ...legacy.phases[0], id: 'p2' }, ...legacy.phases.slice(1)],
+      };
+      const comp = competition(Weapon.EPEE, { formula: twoRounds });
+      await reject('updateCompetitionSettings', {
+        competitionId: comp.id,
+        settings: { defaultTableMaxScore: 40 },
+      }).toMatchObject({ code: 'invalid_settings' });
+      expect(db.getCompetition(comp.id)!.settings!.formula!.general.teamMatch).toBeUndefined();
+    });
+
     it('formule sans règle de rencontre (épreuve existante) : un réglage plat reporté pose la règle (ADR-0044)', async () => {
       const legacy = teamFormula();
       delete (legacy.general as { teamMatch?: unknown }).teamMatch;
@@ -1083,6 +1098,22 @@ d('Formule d’équipe posée à la création (docs/adr/0044, amendement « Form
     expect(settings.formula?.phases.map(p => p.kind)).toEqual(['pool', 'tableau']);
     await teamsRegistered(competitionId, ['A', 'B', 'C']);
     expect((await call('generateTeamPools', { competitionId })).pools).toHaveLength(1);
+  });
+
+  it('formule créée jugée par les contrôles d’équipe : 2 tours de poules refusés ; modèles « équipes » sans 2 tours ni poules seules', async () => {
+    await expect(create({ poolRounds: 2, poolRoundQualifiers: [0] })).rejects.toMatchObject({
+      code: 'invalid_settings',
+    });
+    const r = await call('listFormulaTemplates', {
+      weapon: 'E',
+      category: 'SEN',
+      isTeamEvent: true,
+    });
+    const codes = (r.templates as Array<{ id: string }>)
+      .map(t => t.id)
+      .filter(id => id.includes('/team/'));
+    expect(codes).toContain('bpm/E/SEN/team/standard');
+    expect(codes.some(id => id.endsWith('/two_rounds') || id.endsWith('/pools_only'))).toBe(false);
   });
 
   it('arène Sabre Laser, épreuve individuelle : pas de règle de rencontre posée', async () => {
