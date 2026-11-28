@@ -541,6 +541,31 @@ d('Règle de rencontre de la phase (docs/adr/0044, G0c)', () => {
     });
   });
 
+  it('tableau sans poule tiré : composition et inscription figées (ADR-0024 amendée, ADR-0044)', async () => {
+    const comp = competition(Weapon.EPEE, { formula: teamFormula({ pool: null }) });
+    const [a, b] = await teamsRegistered(comp.id, ['A', 'B', 'C', 'D']);
+    await call('generateTeamTableau', { competitionId: comp.id });
+    await reject('assignTeamFencer', {
+      competitionId: comp.id,
+      teamId: a,
+      fencerId: fencer(comp.id, 'A9'),
+      teamOrder: 5,
+      isReserve: true,
+    }).toMatchObject({ code: 'draw_done' });
+    const member = db.getTeamsByCompetition(comp.id).find(t => t.id === a)!.fencers[0].fencerId;
+    await reject('unassignTeamFencer', {
+      competitionId: comp.id,
+      teamId: a,
+      fencerId: member,
+    }).toMatchObject({ code: 'draw_done' });
+    await reject('unregisterTeam', { competitionId: comp.id, teamId: b }).toMatchObject({
+      code: 'draw_done',
+    });
+    await reject('updateTeam', { competitionId: comp.id, teamId: b, ranking: 1 }).toMatchObject({
+      code: 'draw_done',
+    });
+  });
+
   it('remplaçants contrôlés par le moteur à l’inscription (assignTeamFencer)', async () => {
     const comp = competition(Weapon.EPEE, { formula: teamFormula({ rule: { reserves: 2 } }) });
     const [a] = await teamsRegistered(comp.id, ['A'], 3, 2);
