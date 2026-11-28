@@ -1,6 +1,6 @@
 # ADR-0024 — Tableaux séparés et épreuves par équipes passent par le moteur
 
-- **Statut** : Acceptée (2026-11-23) ; amendée le 2026-11-27 (poules, placement du tableau et ordre des relais lus dans la formule d'équipe, ADR-0044 ; validé par le mainteneur) ; amendée le 2026-11-27 (champs `ranking`, `inFencerId` et commande `updateTeam` dans la table, ADR-0044 ; validé par le mainteneur)
+- **Statut** : Acceptée (2026-11-23) ; amendée le 2026-11-27 (poules, placement du tableau et ordre des relais lus dans la formule d'équipe, ADR-0044 ; validé par le mainteneur) ; amendée le 2026-11-27 (champs `ranking`, `inFencerId` et commande `updateTeam` dans la table, ADR-0044 ; validé par le mainteneur) ; amendée le 2026-11-28 (composition figée au tirage du tableau sans poule, ADR-0044 ; validé par le mainteneur)
 - **Date** : 2026-11-23
 - **Tickets** : #2100, #1980, #1981 (épique #1978)
 
@@ -138,8 +138,9 @@ le reste.
 - **Identifiants déterministes** pour les rencontres créées par le moteur :
   `${competitionId}-t${tour}-${position}` au tableau, `${matchId}-r${ordre}` pour un relais. Les
   rencontres déjà en base gardent leur UUID.
-- **Composition** : modifiable jusqu'au tirage des poules d'équipes. Ensuite, seul le
-  remplacement la change.
+- **Composition** : modifiable jusqu'au tirage des poules d'équipes, ou du tableau d'équipes
+  quand la formule n'a pas de poule (ADR-0044). Ensuite, seul le remplacement la change.
+  _(Amendé le 2026-11-28 : remplace « modifiable jusqu'au tirage des poules d'équipes. ».)_
 
 **Commandes** (verbe + objet, [ADR-0008](0008-nommage-contrat.md)) :
 

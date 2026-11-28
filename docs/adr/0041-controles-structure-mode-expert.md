@@ -1,6 +1,6 @@
 # ADR-0041 — Contrôles de structure de la formule (S1 à S6) en direct, mode expert de l'éditeur
 
-- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (S6 : qualification menant à une phase commencée verrouillée, validé par le mainteneur) ; amendée le 2026-11-27 (S6 : qualification sortant d'un tour de poules clos verrouillée, validé par le mainteneur) ; amendée le 2026-11-27 (S6 : mode d'un tableau tiré verrouillé, verrou aussi par les réglages plats, validé par le mainteneur)
+- **Statut** : Acceptée (validée par le mainteneur le 2026-11-26) ; amendée le 2026-11-27 (S6 : qualification menant à une phase commencée verrouillée, validé par le mainteneur) ; amendée le 2026-11-27 (S6 : qualification sortant d'un tour de poules clos verrouillée, validé par le mainteneur) ; amendée le 2026-11-27 (S6 : mode d'un tableau tiré verrouillé, verrou aussi par les réglages plats, validé par le mainteneur) ; amendée le 2026-11-28 (S6 : avancement d'une épreuve par équipes lu dans les rencontres d'équipe, validé par le mainteneur)
 - **Date** : 2026-11-26
 - **Tickets** : #2013 (étape F, lot F2 ; questions Q17, S1 à S6), #1948 ; précise [ADR-0036](0036-formule-v2-arbre-par-phase.md) (grammaire de la frise), [ADR-0032](0032-formule-interface-unique-apercu.md) (éditeur unique, aperçu), [ADR-0012](0012-formule-domaine.md) (validation)
 
@@ -41,7 +41,11 @@
   - **S5** : chaque branche se termine par une phase qui classe (tour de poules ou tableau
     complet), jamais par un tableau arrêté.
   - **S6** : avec `progress` (tours joués, tableau tiré, étapes closes, scission faite, lu dans
-    l'état de session par le moteur et par l'écran), une phase commencée ne se retire pas, ne
+    l'état de session par le moteur et par l'écran ; pour une épreuve par équipes, dans les
+    rencontres d'équipe tirées, poules et tableau, par le même calcul côté moteur et côté écran,
+    [ADR-0024](0024-tableaux-separes-equipes-moteur.md), [ADR-0044](0044-equipes-formule-v2.md) ;
+    _amendé le 2026-11-28 : remplace « lu dans l'état de session par le moteur et par l'écran) »_),
+    une phase commencée ne se retire pas, ne
     change pas de nature, et rien ne s'insère avant elle ; la règle de qualification qui sort
     d'un tour de poules clos (`closePoolRound`), ou qui mène à une phase commencée, ne change
     plus ; le mode d'un tableau tiré (petite finale, « toutes les places ») non plus. Ses autres
